@@ -1,0 +1,21 @@
+<datafile>
+	<header>
+		<name>-insert name-</name>
+		<description>-insert description-</description>
+<!--	<category>Standard DatFile</category> -->
+		<version>-insert version-</version>
+		<date>-insert date-</date>
+		<author>-insert author-</author>
+<!--	<email>-insert email-</email> -->
+		<homepage>-insert homepage-</homepage>
+		<url>-insert url-</url>
+<!--	<comment>-insert comment-</comment> -->
+<!--	<clrmamepro/> -->
+	</header>
+	<game name="">
+		<category>Games</category>
+		<description>foo</description>
+<!--	<year>????</year> -->
+<!--	<manufacturer>????</manufacturer> -->
+	</game>
+</datafile>

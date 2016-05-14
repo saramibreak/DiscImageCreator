@@ -1,0 +1,307 @@
+================================= Change Log ==================================
+*2011-11-xx
+*2012-03-21
+*2012-05-26
+http://www.mediafire.com/?d4erewg5zbvtjma
+*2012-06-20
+http://www.mediafire.com/?78v9tp30o82ca2b
+*2012-07-01
+http://www.mediafire.com/?el57y5whhic2bz7
+*2012-07-07
+http://www.mediafire.com/?ro6zxax547pnifi
+forgot
+
+*2012-11-02
+http://www.mediafire.com/?j258gadpvpffpnq
+[DC]
+delete .offset .toc file
+ => integration .log file
+create .gdi file
+ => need fix index of track2 manually
+
+[other]
+create unicode version
+
+*2012-12-28
+http://www.mediafire.com/?t84vdvk60cipx3i
+support CDG(CD Graphics)
+fix Paragraph Boundary
+
+*2012-12-29
+http://www.mediafire.com/?6j70xu3awnyfbl6
+fix crashing in x86 build
+delete bom in unicode build
+
+*2013-01-03
+http://www.mediafire.com/?1ruflslt9v975b3
+fix checking & data of subchannel
+
+*2013-01-05
+http://www.mediafire.com/?octpobk6qnzp7jn
+refactoring
+improved subchannel data
+
+*2013-01-07
+http://www.mediafire.com/?2667q8f7ab1syau
+refactoring
+add STORAGE ADAPTER DESCRIPTOR log
+=> for getting alignmentMask of drive
+
+*2013-01-17
+http://www.mediafire.com/?7sbj5nluwtevv47
+improved PC Engine CD dumping
+1. if subchannel and TOC don't sync, TOC has priority.
+2. if audio sector exists in data track, their sector is descrambled.
+
+*2013-01-18
+http://www.mediafire.com/?uc2web2xkdw52zx
+fix checking subchannel(RelativeTime)
+
+*2013-01-19
+http://www.mediafire.com/?w1585tm93k9vso9
+fix ReadTOCText function
+=> because mmc1 drive isn't defined.
+
+*2013-01-24
+http://www.mediafire.com/?l8z42uu6wb0i8un
+fix subchannel reading
+ plextor + audio only disc => read cd command(0xbe) + read subchannel(0x100[pack])
+=> because if R-W channel bit is full on, reading speed is very slow.
+
+*2013-01-29
+http://www.mediafire.com/?5sivdapd7ysdpcr
+fix cue file of CD-TEXT Disc.
+
+*2013-01-30
+http://www.mediafire.com/?931v52igjl4qbr6
+fix crash close/stop command.
+add OS version log.
+
+*2013-02-03
+http://www.mediafire.com/?yej1m0db6b6a7t0
+improved CD-TEXT analyze.
+=> support unicode flag
+
+*2013-02-22
+http://www.mediafire.com/?ldsv1lwebz1lq0d
+add Macintosh disc log.
+fix x64 reading.
+=>padded with a multiple of four the DataTransferLength of CDROM_READ_TOC_EX_FORMAT_FULL_TOC
+fix logic
+=>if combined offset is plus and can't read lead-out, tool doesn't work.
+  Or if combined offset is minus and can't read lead-in, tool doesn't work.
+
+*2013-03-07
+http://www.mediafire.com/?j7r14knf62kkzsc
+fixed ripping CD-TEXT disc.
+improved ripping MCN(EAN) including disc.
+
+*2013-03-09
+http://www.mediafire.com/?suyd5pwrb034rsr
+fixed ccd file (added FLAGS)
+improved ripping CD including INDEX 0 in Track 1 disc.
+
+*2013-03-27
+http://www.mediafire.com/?f9sv2rnmg1lgiyt
+fixed ripping DVD DL
+fixed ISO9660 PVD log
+added DiscInformation(0x51) log
+added reading floppy (WIP)
+
+*2013-04-07
+http://www.mediafire.com/?iiui97cbtvi7v9f
+added C2 error log (check only one, not re-read)
+
+*2013-06-19
+http://www.mediafire.com/?hf5fr3mmeqvxm6q/
+added "pre" argument for ripping index0 in track1 (for SaGaFrontier Original Soundtrack Disc3)
+added "isrc" argument for ignoring invalid ISRC (for Valis II[PCE])
+Divided log (drive, disc, error)
+
+*2013-11-24
+http://www.mediafire.com/?ja083rxnjk7km9l/
+rewrote many code
+added reread and fix sector for C2 error disc. (Supported C2 error flag in 0xD8 command)
+added "add" argument for audio only disc. (offset correction manually)
+added "fua" argument for DVD (to defeat the cache)
+added store scrambled image to scm file
+added output hash (crc32, md5, sha1) to log file.
+added check & autodetect data order (main+c2+sub or main+sub+c2)
+added check process. (if isobuster running, don't run this tool)
+fixed return Win API error log message
+fixed ccd file (PregapMode)
+improved EAN sector reading
+improved ripping GD-ROM
+  added "-rgd" command for HD area (integrated "-ra", "-dec", "-split")
+  omitted "-dec", "-split" command
+
+*2013-12-17
+http://www.mediafire.com/?o9rdgpkq6cmx8qh/
+fixed output hash file (support over 4GB file)
+fixed create file
+  if subdirectory don't exist, create it.
+fixed DiscInformation(0x51) log
+
+*2013-12-21
+http://www.mediafire.com/?vjo27xx3jgcv37y/
+fixed create file
+  if subdirectory don't exist, create it. (re-fix)
+
+*2014-01-10
+http://www.mediafire.com/?rex9fufshe16k3u/
+refactoring
+fixed StorageQueryProperty log
+
+*2014-06-21
+http://www.mediafire.com/?dv2wb1qp2h2yie1/
+rewrote many code
+- changed: argment format
+- added: reset command (for PLEXTOR only)
+- added: /l option (for PlayStation LibCrypt disc)
+- added: /m option (for [MCD]WonderMega Collection)
+- added: /r option (for ripping from last to first)
+- added: cue file for img file
+- added: xxx_infolog.txt (for no error info)
+- added: using GetProductInfo, CreateMutex
+- added: fixes SubRtoW
+- added: exec EccEdc.exe
+- added: checking main data (A header exist or not) (for [PCE]Faerie Dust Story - Meikyuu no Elfeene)
+- added: CDI directive in cue
+- added: output a list of file in 3DO disc in xxx_disclog.txt (using the code of http://kaele.com/~kashima/games/3do_dir.html)
+- added: PCE log in 1st/2nd sector of 1st track to xxx_disclog.txt
+- added: Hash of .img to xxx_disclog.txt
+- added: writing multiple indexes for track 1 to cue file
+- added: SpeedRead (for PLEXTOR only)
+- added: output EEPROM (for PLEXTOR only)
+- deleted: CDG directive in cue
+- improved: SubQ of adr 2(=EAN sector)(if adr is correct but EAN data is wrong, fixed it.)
+- improved: SubQ of adr 3(=ISRC sector)(if adr is correct but ISRC data is wrong, fixed it.)
+- improved: ripping AMSF from 00:00:00 to 00:01:74
+- improved: /c2 option (support PX-4824)
+- fixed: checking a product id of a plextor drive(CD-R   PREMIUM)
+- fixed: ripping a floppy disk
+- fixed: ScsiGetAddress (Don't call this function if you use a drive via USB.)
+- fixed: ripping a MCN sector on LBA 0 in track 1 only disc
+- fixed: allocate memory in ReadTOCFull
+- fixed: analize SubQ(relative time)
+- fixed: transfer length (because speed down gd-rom ripping)
+- fixed: c2 error fix logic
+- fixed: check CD+G per track (for [MCD]WonderMega Collection)
+
+*2014-10-17
+http://www.mediafire.com/?yoejwfgut0p7xeh/
+- added: eject command (eject the tray)
+- added: start command (spin up the disc)
+- added: /f option of cd command (But I don't know whether or not a cache is clear.)
+- added: Output log of mode sense (page code: 0x2a)
+- added: fix AFrame of Adr 2,3 of SubQ(=MCN, ISRC)
+- improved: fix Adr 2 of SubQ(check whether or not adr is correct.)
+- improved: fix Adr 2 of SubQ(Sub[19] & 0x0f => 0 and Sub[20] => 0)
+- improved: Adr fixing logic
+- improved: fix weird tracknum of subchannel
+- improved: DC ripping speed
+- fixed: c2 file size
+- fixed: C2 rereading doesn't work
+- fixed: /m option
+
+*2015-02-27
+http://www.mediafire.com/?3ojaadqlch27abg/
+- added: fix subchannel for GD
+- added: padding to 0x55 for unreadable sector
+- added: path table record and directory record for CD to _infolog.txt
+  => for searching specific file to protect (RingPROTECH => PROTECT.PRO, SafeDisc => 00000001.LT1, 00000001.TMP)
+- added: /rc option for CD
+  => I don't test it enough because I have a bit of RingPROTECH disc and SafeDisc.
+- added: If any of R-W area is padded with 0xff, detect it.
+- changed: beep sound
+- changed: _disclog.txt for GD
+- changed: output a list of file in 3DO code
+- fixed: /r option
+- fixed: if ModeSense10 is error, exec continuous.
+- fixed: SubQ Track
+- fixed: Cue file for CDTEXT
+- improved: detecting MCN sector
+
+*2015-05-14
+http://www.mediafire.com/?jjusoanzbacq7g2/
+- added: Plextor scsi drive, PX-S88T
+- added: Flag for supporting ModeSense, ReadBufferCapacity, SetCDSpeed
+- added: If semaphore time error occurs, exec sleep(25000) (Because if it doesn't exec sleep, next ScsiPassThroughDirect fails.)
+- added: /c val4 option (to set c2 offset)
+- added: /s option (for reading subchannel precisely)
+- changed: devided errorlog.txt to suberrorlog.txt and c2errorlog.txt
+- changed: from READ_CD(0xbe) to READ_D8(0xd8) or READ12(0xa8) (for old plextor drive)
+- fixed: reread doesn't work from 20150227
+- fixed: startstop doesn't work command from 20150227
+- fixed: If ReadDiscInformation, ModeSense10, ReadBufferCapacity, SetCDSpeed is alway return TRUE;
+- fixed: If GetConfiguration fails, sets CD-TEXT flag manually. (Ultraplex is TRUE)
+- fixed: If ModeSense fails, sets drive buffer size manually. (Ultraplex is 512, PX-W1210S is 4096, PX-S88T is 2048)
+- fixed: MINIMUM_DRIVE_BUF_SIZE is from 256 to 512.
+- fixed: IsValidSubQTrack()
+- fixed: Set false SetCDSpeed, 0xd8 & subch 0x08 in PX-W1210TA forcibly
+- fixed: Buf size for executing EccEdc.
+- fixed: Transfer length for volume descriptor.
+
+*2015-09-13
+http://www.mediafire.com/?aiknhj2bescnfff/
+- added: /be & /d8 option for cd
+- added: check sector for PC-FX 
+- added: log file for main channel, exec command
+- added: coded about codelock
+- added: old scsi drive (Tested PX-12TS, PX-20TS)
+- changed: log file name
+- changed: scramble.bin to generating dynamically (thanks gorelord4e)
+- fixed: IsValidSubQIdx
+- fixed: didn't apply the combined offset to the audio only disc
+- fixed: detect adr sector
+- fixed: Label Gate CD, XCP disc
+- fixed: SafeDisc 3.15.XXX, 1.35.000
+- fixed: data length disc that isn't per 2048byte (e.g. commandos - BEL)
+- fixed: LBA counter
+- fixed: smartE disc
+- fixed: SafeDisc when using 0xBE
+- fixed: check main sector
+- fixed: Output volume descriptor for CDI (caesar's boxing)
+- fixed: audio command (LBA -75 and lead-out)
+- fixed: check arg
+- fixed: DirectoryRecord
+- fixed: compare string of directory (strncmp -> _strnicmp)
+- fixed: invalid track number of first pregap sector
+- improved: c2 error fixing
+- deleted: streaming bit for DVD
+- deleted: MINIMUM_DRIVE_BUF_SIZE
+- deleted: /c val4 option
+
+*2015-11-28
+http://www.mediafire.com/?q56ny0liey5tioi/
+- changed: checking MCN ISRC sector before ripping per track
+      (for PC Game Best Series Vol. 42 - J.B. Harold Series: Kiss of Murder - Satsui no Kuchizuke)
+- added: /se option for securom
+- added: pack option in /be for cd command
+- added: lead-in subchannel P, R-W fixing (Q haven't coded yet)
+- added: some command-line message
+- added: a debug log when it fails the reading cd
+- fixed: a disc having the DirectoryLength above the MaximumTransferLength(65536, 131072...)
+- fixed: overdumped .img file except plextor drive
+- fixed: Don't read over the MaxTransferLength in checking exe
+- fixed: allocate memory from a variable-length to a fixed length (delete realloc)
+- improved: checking EXE, reading DirectoryRecord
+
+*2016-01-27
+http://www.mediafire.com/?cq86367z87fyef2/
+- changed: Visual Studio 2013 to 2015
+- added: /raw option for cd command (highly experimental, buggy)
+   => For the multi-session at present. I don't test it enough. Probably can get
+    the lead-out of the 1st session but can't get the lead-in of the 2nd session.
+- deleted: /i option for valis II etc. (specific ISRC)
+   => Because check by the crc16.
+- improved: checking adr sector
+- fixed: didn't write ISRC in cue and ccd from 2015-11-28 ver.
+- fixed: dividing the track for multi-session disc which the track 02 is session 2
+- fixed: crash using 'audio' command in the disc with ISRC sector
+
+*2016-02-29
+- changed: some log message
+- added: the eeprom log of PLEXTOR PX-712, PX-755, PX760 (the value of BookType, AutoStrategy)
+- fixed: didn't work /se option from 2016-01-27 ver.
+- fixed: error check of the fd command.

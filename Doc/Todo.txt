@@ -1,0 +1,73 @@
+==================================== TODO =====================================
+. fix C2 error disc per byte.
+  A number of error bytes per sector according to the 294-bytes C2-error part
+  in each sector and to take the good bytes from each rereading, instead of
+  trying to reread the entire sector without errors.
+
+. support cue file for multisession disc
+  SESSION directives
+
+. support mdf/mds (for SecuROM v4 or higher, StarForce, CD-Cops)
+
+. support twin sector disc (for ALPHA-ROM, ROOT, TAGES)
+
+. support illegal or fake TOC disc (for CDS-100)
+
+. support 0xd8 ripping of SONY, PIONEER
+  ftp://ftp.t10.org/t10/document.95/95-104r0.pdf
+  http://www.pioneerelectronics.com/pio/pe/images/portal/cit_3424/31636562SCSI-2RefManV31.pdf
+   => I don't have these old drive yet.
+
+. check the SubRtoW of the PSX
+   => Sub[35] (The last of the SubR), Sub[47] (The last of the SubS),
+      Sub[59] (The last of the SubT), Sub[71] (The last of the SubU),
+      Sub[83] (The last of the SubV), Sub[95] (The last of the SubW)
+      If submode is 'Raw', these byte is 0x01, 0x02 or 0x03 in some game.
+      If submode is 'Pack', these byte is all 0x00.
+      => Which is the right data?
+
+. check parity P, Q for CD+G
+  https://webstore.iec.ch/publication/3885
+  [quote]
+  Read-Solomon code over GF(2^6)
+   Polynominal:
+    P(X) = X^6 + X + 1
+   1 symbol = 6 bit
+   The parity matrix WHq is:
+    Hq = { 1  1  1 1}
+         {a3 a2 a1 1}
+   The primitive element a of GF(2^6) is:
+         msb      lsb
+    a = (0 0 0 0 1 0)
+   The parity symbols Q0 = D - S24n+2 and Q1 = D - S24n+3 are defined to satisfy
+   the following equation:
+    Hq x Vq = 0
+   where
+         {D - S24n}
+    Vq = {D - S24n + 1}
+         {D - S24n + 2}
+         {D - S24n + 3}
+   This Q-parity system combined with scrambling and interleaving can correct
+   an error burst of 59 subcoding symbols on the disc by using a single symbol
+   correcting strategy (symbols 0, 1, 2 and 3 only)
+  [/quote]
+   => I can't understand these document.
+
+. read lead-in precisely
+  http://senbee.seesaa.net/article/20732055.html
+  http://www.13thmonkey.org/documentation/SCSI/mmc6r02g.pdf p43
+  [quote]
+   Addressing in the program area begins with 00:00:00. This advances up through the Lead-out.
+   The last frame in the Lead-in is 99:59:74 and decreases as the spiral is followed toward the center of the disc.
+   The Lead-in is typically 3 to 4 minutes in length.
+  [/quote]
+   => I don't know the precise length of the Lead-in. I want the specification about the Lead-in/out.
+
+. read DVD as 2064 byte
+  http://forum.redump.org/topic/3808/raw-dvd-dumping-discussion/
+  http://www.13thmonkey.org/documentation/SCSI/mmc6r02g.pdf p59
+  [quote]
+   A DVD data sector contains 2 064 bytes, containing 2 048 bytes of main data and 16 bytes of additional
+   information.
+  [/quote]
+   => Does use Read Buffer command(0x3c) or Hitachi specific command(0xE7) to dump the raw data?
