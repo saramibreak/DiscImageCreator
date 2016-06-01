@@ -1566,6 +1566,7 @@ BOOL ReadCDAll(
 	LPBYTE pNextBuf = NULL;
 	LPBYTE pNextNextBuf = NULL;
 	PC2_ERROR_PER_SECTOR pC2ErrorPerSector = NULL;
+	C2_ERROR_ALLOCATION_CONTEXT c2ErrorContext = { FALSE };
 	DISC_PER_SECTOR discPerSector = { 0 };
 	INT nMainDataType = scrambled;
 	if (pExtArg->byBe) {
@@ -1607,11 +1608,11 @@ BOOL ReadCDAll(
 			DRIVE_DATA_ORDER dataOrder = DRIVE_DATA_ORDER::MainC2Sub;
 
 			if (!InitC2ErrorData(pExtArg, 
-				&pC2ErrorPerSector, pDevice->TRANSFER.dwAllBufLen)) {
+				&pC2ErrorPerSector, pDevice->TRANSFER.dwAllBufLen, &c2ErrorContext)) {
 				throw FALSE;
 			}
 			if (!ReadCDForCheckingByteOrder(pExtArg, pDevice, &dataOrder)) {
-				TerminateC2ErrorData(pExtArg, pDevice, &pC2ErrorPerSector);
+				TerminateC2ErrorData(pExtArg, pDevice, &pC2ErrorPerSector, &c2ErrorContext);
 				pDevice->FEATURE.byC2ErrorData = FALSE;
 				SetBufferSizeForReadCD(pDevice, DRIVE_DATA_ORDER::NoC2);
 			}
@@ -2061,7 +2062,7 @@ BOOL ReadCDAll(
 			FreeAndNull(pNextNextBuf);
 		}
 	}
-	TerminateC2ErrorData(pExtArg, pDevice, &pC2ErrorPerSector);
+	TerminateC2ErrorData(pExtArg, pDevice, &pC2ErrorPerSector, &c2ErrorContext);
 
 	return bRet;
 }
@@ -2106,6 +2107,7 @@ BOOL ReadCDPartial(
 	LPBYTE pNextBuf = NULL;
 	LPBYTE pNextNextBuf = NULL;
 	PC2_ERROR_PER_SECTOR pC2ErrorPerSector = NULL;
+	C2_ERROR_ALLOCATION_CONTEXT c2ErrorContext = { FALSE };
 	DISC_PER_SECTOR discPerSector = { 0 };
 	INT nMainDataType = scrambled;
 	if (*pExecType == data || pExtArg->byBe) {
@@ -2137,11 +2139,11 @@ BOOL ReadCDPartial(
 			DRIVE_DATA_ORDER dataOrder = DRIVE_DATA_ORDER::MainC2Sub;
 
 			if (!InitC2ErrorData(pExtArg,
-				&pC2ErrorPerSector, pDevice->TRANSFER.dwAllBufLen)) {
+				&pC2ErrorPerSector, pDevice->TRANSFER.dwAllBufLen, &c2ErrorContext)) {
 				throw FALSE;
 			}
 			if (!ReadCDForCheckingByteOrder(pExtArg, pDevice, &dataOrder)) {
-				TerminateC2ErrorData(pExtArg, pDevice, &pC2ErrorPerSector);
+				TerminateC2ErrorData(pExtArg, pDevice, &pC2ErrorPerSector, &c2ErrorContext);
 				pDevice->FEATURE.byC2ErrorData = FALSE;
 				SetBufferSizeForReadCD(pDevice, DRIVE_DATA_ORDER::NoC2);
 			}
@@ -2360,7 +2362,7 @@ BOOL ReadCDPartial(
 			FreeAndNull(pNextNextBuf);
 		}
 	}
-	TerminateC2ErrorData(pExtArg, pDevice, &pC2ErrorPerSector);
+	TerminateC2ErrorData(pExtArg, pDevice, &pC2ErrorPerSector, &c2ErrorContext);
 
 	if (bRet && *pExecType == gd) {
 		if (!DescrambleMainChannelForGD(pszPath)) {

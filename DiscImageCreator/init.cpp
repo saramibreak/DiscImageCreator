@@ -11,7 +11,8 @@ extern BYTE g_aSyncHeader[SYNC_SIZE];
 BOOL InitC2ErrorData(
 	PEXT_ARG pExtArg,
 	PC2_ERROR_PER_SECTOR* pC2ErrorPerSector,
-	DWORD dwAllBufLen
+	DWORD dwAllBufLen,
+	PC2_ERROR_ALLOCATION_CONTEXT pC2Context
 	)
 {
 	BOOL bRet = TRUE;
@@ -20,41 +21,66 @@ BOOL InitC2ErrorData(
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
-	try {
+
+	SIZE_T packedTotalSize = pExtArg->dwMaxC2ErrorNum * (CD_RAW_SECTOR_SIZE * sizeof(WORD) + CD_RAW_SECTOR_SIZE * sizeof(WORD) + dwAllBufLen * sizeof(BYTE) + dwAllBufLen * sizeof(BYTE));
+	PUCHAR packedAlloc = (PUCHAR)calloc(packedTotalSize, sizeof(BYTE));
+	if (packedAlloc) {
+		pC2Context->bIsPackedAlloc = TRUE;
+
+		OutputString(_T("\rAllocating packed memory for C2 errors: %lu\n"), pExtArg->dwMaxC2ErrorNum);
+
 		for (DWORD n = 0; n < pExtArg->dwMaxC2ErrorNum; n++) {
-			OutputString(_T("\rAllocating memory for C2 errors: %lu/%lu"), 
-				n + 1, pExtArg->dwMaxC2ErrorNum);
-			if (NULL == ((*pC2ErrorPerSector)[n].lpErrorBytePos = 
-				(PSHORT)calloc(CD_RAW_SECTOR_SIZE, sizeof(WORD)))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				OutputString(_T("\n"));
-				throw FALSE;
-			}
-			if (NULL == ((*pC2ErrorPerSector)[n].lpErrorBytePosBackup = 
-				(PSHORT)calloc(CD_RAW_SECTOR_SIZE, sizeof(WORD)))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				OutputString(_T("\n"));
-				throw FALSE;
-			}
-			if (NULL == ((*pC2ErrorPerSector)[n].lpBufNoC2Sector = 
-				(LPBYTE)calloc(dwAllBufLen, sizeof(BYTE)))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				OutputString(_T("\n"));
-				throw FALSE;
-			}
-			if (NULL == ((*pC2ErrorPerSector)[n].lpBufNoC2SectorBackup = 
-				(LPBYTE)calloc(dwAllBufLen, sizeof(BYTE)))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				OutputString(_T("\n"));
-				throw FALSE;
-			}
+			(*pC2ErrorPerSector)[n].lpErrorBytePos = (PSHORT)packedAlloc;
+			packedAlloc += CD_RAW_SECTOR_SIZE * sizeof(WORD);
+			(*pC2ErrorPerSector)[n].lpErrorBytePosBackup = (PSHORT)packedAlloc;
+			packedAlloc += CD_RAW_SECTOR_SIZE * sizeof(WORD);
+			(*pC2ErrorPerSector)[n].lpBufNoC2Sector = (PBYTE)packedAlloc;
+			packedAlloc += dwAllBufLen * sizeof(BYTE);
+			(*pC2ErrorPerSector)[n].lpBufNoC2SectorBackup = (PBYTE)packedAlloc;
+			packedAlloc += dwAllBufLen * sizeof(BYTE);
+
 			(*pC2ErrorPerSector)[n].byErrorFlag = RETURNED_NO_C2_ERROR_1ST;
 		}
-		OutputString(_T("\n"));
+	} else {
+		pC2Context->bIsPackedAlloc = FALSE;
+
+		try {
+			for (DWORD n = 0; n < pExtArg->dwMaxC2ErrorNum; n++) {
+				OutputString(_T("\rAllocating memory for C2 errors: %lu/%lu"),
+					n + 1, pExtArg->dwMaxC2ErrorNum);
+				if (NULL == ((*pC2ErrorPerSector)[n].lpErrorBytePos =
+					(PSHORT)calloc(CD_RAW_SECTOR_SIZE, sizeof(WORD)))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					OutputString(_T("\n"));
+					throw FALSE;
+				}
+				if (NULL == ((*pC2ErrorPerSector)[n].lpErrorBytePosBackup =
+					(PSHORT)calloc(CD_RAW_SECTOR_SIZE, sizeof(WORD)))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					OutputString(_T("\n"));
+					throw FALSE;
+				}
+				if (NULL == ((*pC2ErrorPerSector)[n].lpBufNoC2Sector =
+					(LPBYTE)calloc(dwAllBufLen, sizeof(BYTE)))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					OutputString(_T("\n"));
+					throw FALSE;
+				}
+				if (NULL == ((*pC2ErrorPerSector)[n].lpBufNoC2SectorBackup =
+					(LPBYTE)calloc(dwAllBufLen, sizeof(BYTE)))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					OutputString(_T("\n"));
+					throw FALSE;
+				}
+				(*pC2ErrorPerSector)[n].byErrorFlag = RETURNED_NO_C2_ERROR_1ST;
+			}
+			OutputString(_T("\n"));
+		}
+		catch (BOOL bErr) {
+			bRet = bErr;
+		}
 	}
-	catch (BOOL bErr) {
-		bRet = bErr;
-	}
+	
 	return bRet;
 }
 
@@ -411,19 +437,27 @@ BOOL InitLogFile(
 VOID TerminateC2ErrorData(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
-	PC2_ERROR_PER_SECTOR* pC2ErrorPerSector
+	PC2_ERROR_PER_SECTOR* pC2ErrorPerSector,
+	PC2_ERROR_ALLOCATION_CONTEXT pC2Context
 	)
 {
 	if (*pC2ErrorPerSector && pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
-		for (DWORD i = 0; i < pExtArg->dwMaxC2ErrorNum; i++) {
-			OutputString(_T("\rFreeing allocated memory for C2 errors: %lu/%lu"), 
-				i + 1, pExtArg->dwMaxC2ErrorNum);
-			FreeAndNull((*pC2ErrorPerSector)[i].lpErrorBytePos);
-			FreeAndNull((*pC2ErrorPerSector)[i].lpErrorBytePosBackup);
-			FreeAndNull((*pC2ErrorPerSector)[i].lpBufNoC2Sector);
-			FreeAndNull((*pC2ErrorPerSector)[i].lpBufNoC2SectorBackup);
+		if (pC2Context->bIsPackedAlloc) {
+			OutputString(_T("\rFreeing allocated memory for C2 errors: %lu\n"), pExtArg->dwMaxC2ErrorNum);
+
+			FreeAndNull((*pC2ErrorPerSector)[0].lpErrorBytePos);
+		} else {
+			for (DWORD i = 0; i < pExtArg->dwMaxC2ErrorNum; i++) {
+				OutputString(_T("\rFreeing allocated memory for C2 errors: %lu/%lu"),
+					i + 1, pExtArg->dwMaxC2ErrorNum);
+				FreeAndNull((*pC2ErrorPerSector)[i].lpErrorBytePos);
+				FreeAndNull((*pC2ErrorPerSector)[i].lpErrorBytePosBackup);
+				FreeAndNull((*pC2ErrorPerSector)[i].lpBufNoC2Sector);
+				FreeAndNull((*pC2ErrorPerSector)[i].lpBufNoC2SectorBackup);
+			}
+			OutputString(_T("\n"));
 		}
-		OutputString(_T("\n"));
+
 		FreeAndNull(*pC2ErrorPerSector);
 	}
 }

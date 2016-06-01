@@ -284,6 +284,10 @@ typedef struct _C2_ERROR_PER_SECTOR {
 	LPBYTE lpBufNoC2SectorBackup;
 } C2_ERROR_PER_SECTOR, *PC2_ERROR_PER_SECTOR;
 
+typedef struct _C2_ERROR_ALLOCATION_CONTEXT {
+	BOOL bIsPackedAlloc;
+} C2_ERROR_ALLOCATION_CONTEXT, *PC2_ERROR_ALLOCATION_CONTEXT;
+
 #pragma pack(push, cdbsp, 1)
 typedef union _CDBSP {
 	// ftp://ftp.t10.org/t10/document.95/95-104r0.pdf

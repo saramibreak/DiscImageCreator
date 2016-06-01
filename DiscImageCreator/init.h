@@ -7,7 +7,8 @@
 BOOL InitC2ErrorData(
 	PEXT_ARG pExtArg,
 	PC2_ERROR_PER_SECTOR* pC2ErrorPerSector,
-	DWORD dwAllBufLen
+	DWORD dwAllBufLen,
+	PC2_ERROR_ALLOCATION_CONTEXT pC2Context
 	);
 
 BOOL InitLBAPerTrack(
@@ -52,7 +53,8 @@ BOOL InitLogFile(
 VOID TerminateC2ErrorData(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
-	PC2_ERROR_PER_SECTOR* pC2ErrorPerSector
+	PC2_ERROR_PER_SECTOR* pC2ErrorPerSector,
+	PC2_ERROR_ALLOCATION_CONTEXT pC2Context
 	);
 
 VOID TerminateLBAPerTrack(
