@@ -448,13 +448,20 @@ BOOL ReadCDForCheckingSubRtoW(
 	LPBYTE pBuf = NULL;
 	LPBYTE lpBuf = NULL;
 	if (!GetAlignedCallocatedBuffer(pDevice, &pBuf,
-		CD_RAW_SECTOR_WITH_SUBCODE_SIZE, &lpBuf, _T(__FUNCTION__), __LINE__)) {
+		CD_RAW_SECTOR_WITH_C2_AND_SUBCODE_SIZE, &lpBuf, _T(__FUNCTION__), __LINE__)) {
 		return FALSE;
 	}
 	BYTE lpCmd[CDB12GENERIC_LENGTH] = { 0 };
+	BOOL bC2 = FALSE;
 	if (pExtArg->byD8 || pDevice->byPlxtrDrive) {
 		CDB::_PLXTR_READ_CDDA cdb = { 0 };
-		SetReadD8Command(pDevice, &cdb, 1, CDFLAG::_PLXTR_READ_CDDA::MainPack);
+		if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
+			SetReadD8Command(pDevice, &cdb, 1, CDFLAG::_PLXTR_READ_CDDA::MainC2Raw);
+			bC2 = TRUE;
+		}
+		else {
+			SetReadD8Command(pDevice, &cdb, 1, CDFLAG::_PLXTR_READ_CDDA::MainPack);
+		}
 		memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
 	}
 	else {
@@ -465,152 +472,156 @@ BOOL ReadCDForCheckingSubRtoW(
 	}
 
 	for (BYTE i = 0; i < pDisc->SCSI.toc.LastTrack; i++) {
-		if ((pDisc->SCSI.toc.TrackData[i].Control & AUDIO_DATA_TRACK) == 0) {
-			try {
-				INT nTmpLBA = pDisc->SCSI.lpFirstLBAListOnToc[i] + 100;
-				if (!ExecReadCD(pExtArg, pDevice, lpCmd, nTmpLBA, lpBuf,
-					CD_RAW_SECTOR_WITH_SUBCODE_SIZE, _T(__FUNCTION__), __LINE__)) {
-					throw FALSE;
-				}
-				BYTE lpSubcode[CD_RAW_READ_SUBCODE_SIZE] = { 0 };
-				BYTE lpSubcodeOrg[CD_RAW_READ_SUBCODE_SIZE] = { 0 };
+		try {
+			INT nTmpLBA = pDisc->SCSI.lpFirstLBAListOnToc[i] + 100;
+			if (!ExecReadCD(pExtArg, pDevice, lpCmd, nTmpLBA, lpBuf,
+				CD_RAW_SECTOR_WITH_C2_AND_SUBCODE_SIZE, _T(__FUNCTION__), __LINE__)) {
+				throw FALSE;
+			}
+			BYTE lpSubcode[CD_RAW_READ_SUBCODE_SIZE] = { 0 };
+			BYTE lpSubcodeOrg[CD_RAW_READ_SUBCODE_SIZE] = { 0 };
+			if (bC2) {
+				AlignRowSubcode(lpBuf + CD_RAW_SECTOR_WITH_C2_294_SIZE, lpSubcode);
+				memcpy(lpSubcodeOrg, lpBuf + CD_RAW_SECTOR_WITH_C2_294_SIZE, CD_RAW_READ_SUBCODE_SIZE);
+			}
+			else {
 				AlignRowSubcode(lpBuf + CD_RAW_SECTOR_SIZE, lpSubcode);
 				memcpy(lpSubcodeOrg, lpBuf + CD_RAW_SECTOR_SIZE, CD_RAW_READ_SUBCODE_SIZE);
-				OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR_WITH_TRACK_F(Check CD+G), i + 1);
-				OutputCDSub96Align(lpSubcode, nTmpLBA);
+			}
+			OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR_WITH_TRACK_F(Check CD+G), i + 1);
+			OutputCDSub96Align(lpSubcode, nTmpLBA);
 
-				SUB_R_TO_W scRW[4] = { 0 };
-				BYTE tmpCode[24] = { 0 };
-				INT nRtoW = 0;
-				BOOL bCDG = FALSE;
-				BOOL bCDEG = FALSE;
-				for (INT k = 0; k < 4; k++) {
-					for (INT j = 0; j < 24; j++) {
-						tmpCode[j] = (BYTE)(*(lpSubcodeOrg + (k * 24 + j)) & 0x3f);
-					}
-					memcpy(&scRW[k], tmpCode, sizeof(scRW[k]));
-					switch (scRW[k].command) {
-					case 0: // MODE 0, ITEM 0
-						break;
-					case 8: // MODE 1, ITEM 0
-						break;
-					case 9: // MODE 1, ITEM 1
-						bCDG = TRUE;
-						break;
-					case 10: // MODE 1, ITEM 2
-						bCDEG = TRUE;
-						break;
-					case 20: // MODE 2, ITEM 4
-						break;
-					case 24: // MODE 3, ITEM 0
-						break;
-					case 56: // MODE 7, ITEM 0
-						break;
-					default:
-						break;
-					}
+			SUB_R_TO_W scRW[4] = { 0 };
+			BYTE tmpCode[24] = { 0 };
+			INT nRtoW = 0;
+			BOOL bCDG = FALSE;
+			BOOL bCDEG = FALSE;
+			for (INT k = 0; k < 4; k++) {
+				for (INT j = 0; j < 24; j++) {
+					tmpCode[j] = (BYTE)(*(lpSubcodeOrg + (k * 24 + j)) & 0x3f);
 				}
-				INT nR = 0;
-				INT nS = 0;
-				INT nT = 0;
-				INT nU = 0;
-				INT nV = 0;
-				INT nW = 0;
-				for (INT j = 24; j < CD_RAW_READ_SUBCODE_SIZE; j++) {
-					if (24 <= j && j < 36) {
-						nR += lpSubcode[j];
-					}
-					else if (36 <= j && j < 48) {
-						nS += lpSubcode[j];
-					}
-					else if (48 <= j && j < 60) {
-						nT += lpSubcode[j];
-					}
-					else if (60 <= j && j < 72) {
-						nU += lpSubcode[j];
-					}
-					else if (72 <= j && j < 84) {
-						nV += lpSubcode[j];
-					}
-					else if (84 <= j && j < CD_RAW_READ_SUBCODE_SIZE) {
-						nW += lpSubcode[j];
-					}
-					nRtoW += lpSubcode[j];
+				memcpy(&scRW[k], tmpCode, sizeof(scRW[k]));
+				switch (scRW[k].command) {
+				case 0: // MODE 0, ITEM 0
+					break;
+				case 8: // MODE 1, ITEM 0
+					break;
+				case 9: // MODE 1, ITEM 1
+					bCDG = TRUE;
+					break;
+				case 10: // MODE 1, ITEM 2
+					bCDEG = TRUE;
+					break;
+				case 20: // MODE 2, ITEM 4
+					break;
+				case 24: // MODE 3, ITEM 0
+					break;
+				case 56: // MODE 7, ITEM 0
+					break;
+				default:
+					break;
 				}
-				// 0xff * 72 = 0x47b8
-				if (nRtoW == 0x47b8) {
-					// Why R-W bit is full? Basically, a R-W bit should be off except CD+G or CD-MIDI
-					//  Alanis Morissette - Jagged Little Pill (UK)
-					//  WipEout 2097: The Soundtrack
-					//  and more..
-					// Sub Channel LBA 75
-					// 	  +0 +1 +2 +3 +4 +5 +6 +7 +8 +9 +A +B
-					// 	P 00 00 00 00 00 00 00 00 00 00 00 00
-					// 	Q 01 01 01 00 01 00 00 00 03 00 2c b9
-					// 	R ff ff ff ff ff ff ff ff ff ff ff ff
-					// 	S ff ff ff ff ff ff ff ff ff ff ff ff
-					// 	T ff ff ff ff ff ff ff ff ff ff ff ff
-					// 	U ff ff ff ff ff ff ff ff ff ff ff ff
-					// 	V ff ff ff ff ff ff ff ff ff ff ff ff
-					// 	W ff ff ff ff ff ff ff ff ff ff ff ff
-					pDisc->SUB.lpRtoWList[i] = SUB_RTOW_TYPE::Full;
-					OutputDiscLogA("\tRtoW is 0xff\n");
+			}
+			INT nR = 0;
+			INT nS = 0;
+			INT nT = 0;
+			INT nU = 0;
+			INT nV = 0;
+			INT nW = 0;
+			for (INT j = 24; j < CD_RAW_READ_SUBCODE_SIZE; j++) {
+				if (24 <= j && j < 36) {
+					nR += lpSubcode[j];
+				}
+				else if (36 <= j && j < 48) {
+					nS += lpSubcode[j];
+				}
+				else if (48 <= j && j < 60) {
+					nT += lpSubcode[j];
+				}
+				else if (60 <= j && j < 72) {
+					nU += lpSubcode[j];
+				}
+				else if (72 <= j && j < 84) {
+					nV += lpSubcode[j];
+				}
+				else if (84 <= j && j < CD_RAW_READ_SUBCODE_SIZE) {
+					nW += lpSubcode[j];
+				}
+				nRtoW += lpSubcode[j];
+			}
+			// 0xff * 72 = 0x47b8
+			if (nRtoW == 0x47b8) {
+				// Why R-W bit is full? Basically, a R-W bit should be off except CD+G or CD-MIDI
+				//  Alanis Morissette - Jagged Little Pill (UK)
+				//  WipEout 2097: The Soundtrack
+				//  and more..
+				// Sub Channel LBA 75
+				// 	  +0 +1 +2 +3 +4 +5 +6 +7 +8 +9 +A +B
+				// 	P 00 00 00 00 00 00 00 00 00 00 00 00
+				// 	Q 01 01 01 00 01 00 00 00 03 00 2c b9
+				// 	R ff ff ff ff ff ff ff ff ff ff ff ff
+				// 	S ff ff ff ff ff ff ff ff ff ff ff ff
+				// 	T ff ff ff ff ff ff ff ff ff ff ff ff
+				// 	U ff ff ff ff ff ff ff ff ff ff ff ff
+				// 	V ff ff ff ff ff ff ff ff ff ff ff ff
+				// 	W ff ff ff ff ff ff ff ff ff ff ff ff
+				pDisc->SUB.lpRtoWList[i] = SUB_RTOW_TYPE::Full;
+				OutputDiscLogA("\tAll RtoW is 0xff\n");
+			}
+			else {
+				BOOL bAnyFull = FALSE;
+				// 0xff * 12 = 0xbf4
+				if (nR == 0xbf4) {
+					OutputDiscLogA("\tAll R is 0xff\n");
+					bAnyFull = TRUE;
+				}
+				if (nS == 0xbf4) {
+					OutputDiscLogA("\tAll S is 0xff\n");
+					bAnyFull = TRUE;
+				}
+				if (nT == 0xbf4) {
+					OutputDiscLogA("\tAll T is 0xff\n");
+					bAnyFull = TRUE;
+				}
+				if (nU == 0xbf4) {
+					OutputDiscLogA("\tAll U is 0xff\n");
+					bAnyFull = TRUE;
+				}
+				if (nV == 0xbf4) {
+					OutputDiscLogA("\tAll V is 0xff\n");
+					bAnyFull = TRUE;
+				}
+				if (nW == 0xbf4) {
+					OutputDiscLogA("\tAll W is 0xff\n");
+					bAnyFull = TRUE;
+				}
+				if (bAnyFull) {
+					pDisc->SUB.lpRtoWList[i] = SUB_RTOW_TYPE::AnyFull;
 				}
 				else {
-					BOOL bFull = FALSE;
-					// 0xff * 12 = 0xbf4
-					if (nR == 0xbf4) {
-						pDisc->SUB.lpRtoWList[i] |= SUB_RTOW_TYPE::RFull;
-						OutputDiscLogA("\tAll R is 0xff\n");
-						bFull = TRUE;
+					if (bCDG && nRtoW > 0 && nRtoW != 0x200) {
+						pDisc->SUB.lpRtoWList[i] = SUB_RTOW_TYPE::CDG;
+						OutputDiscLogA("\tCD+G\n");
 					}
-					if (nS == 0xbf4) {
-						pDisc->SUB.lpRtoWList[i] |= SUB_RTOW_TYPE::SFull;
-						OutputDiscLogA("\tAll S is 0xff\n");
-						bFull = TRUE;
+					else if (bCDEG && nRtoW > 0 && nRtoW != 0x200) {
+						pDisc->SUB.lpRtoWList[i] = SUB_RTOW_TYPE::CDG;
+						OutputDiscLogA("\tCD+EG\n");
 					}
-					if (nT == 0xbf4) {
-						pDisc->SUB.lpRtoWList[i] |= SUB_RTOW_TYPE::TFull;
-						OutputDiscLogA("\tAll T is 0xff\n");
-						bFull = TRUE;
+					else if ((0 <= nR && nR <= 0x03) && (0 <= nS && nS <= 0x03) &&
+						(0 <= nT && nT <= 0x03) && (0 <= nU && nU <= 0x03) &&
+						(0 <= nV && nV <= 0x03) && (0 <= nW && nW <= 0x03) && nRtoW != 0) {
+						pDisc->SUB.lpRtoWList[i] = SUB_RTOW_TYPE::PSXSpecific;
+						OutputDiscLogA("\tRandom data exists (PSX)\n");
 					}
-					if (nU == 0xbf4) {
-						pDisc->SUB.lpRtoWList[i] |= SUB_RTOW_TYPE::UFull;
-						OutputDiscLogA("\tAll U is 0xff\n");
-						bFull = TRUE;
-					}
-					if (nV == 0xbf4) {
-						pDisc->SUB.lpRtoWList[i] |= SUB_RTOW_TYPE::VFull;
-						OutputDiscLogA("\tAll V is 0xff\n");
-						bFull = TRUE;
-					}
-					if (nW == 0xbf4) {
-						pDisc->SUB.lpRtoWList[i] |= SUB_RTOW_TYPE::WFull;
-						OutputDiscLogA("\tAll W is 0xff\n");
-						bFull = TRUE;
-					}
-					if (!bFull) {
-						if (bCDG && nRtoW > 0 && nRtoW != 0x200) {
-							pDisc->SUB.lpRtoWList[i] = SUB_RTOW_TYPE::CDG;
-							OutputDiscLogA("\tCD+G\n");
-						}
-						else if (bCDEG && nRtoW > 0 && nRtoW != 0x200) {
-							pDisc->SUB.lpRtoWList[i] = SUB_RTOW_TYPE::CDG;
-							OutputDiscLogA("\tCD+EG\n");
-						}
-						else {
-							pDisc->SUB.lpRtoWList[i] = SUB_RTOW_TYPE::Zero;
-							OutputDiscLogA("\tNothing\n");
-						}
+					else {
+						pDisc->SUB.lpRtoWList[i] = SUB_RTOW_TYPE::Zero;
+						OutputDiscLogA("\tNothing\n");
 					}
 				}
 			}
-			catch (BOOL bErr) {
-				bRet = bErr;
-			}
 		}
-		else {
-			pDisc->SUB.lpRtoWList[i] = SUB_RTOW_TYPE::Zero;
+		catch (BOOL bErr) {
+			bRet = bErr;
 		}
 		OutputString(
 			_T("\rChecking SubRtoW (Track) %2u/%2u"), i + 1, pDisc->SCSI.toc.LastTrack);
@@ -1606,12 +1617,12 @@ BOOL ReadCDAll(
 			}
 			if (dataOrder == DRIVE_DATA_ORDER::MainSubC2) {
 				OutputDriveLogA(
-					"=> Byte order of this drive is main + sub + c2\n");
+					"\tByte order of this drive is main + sub + c2\n");
 				SetBufferSizeForReadCD(pDevice, DRIVE_DATA_ORDER::MainSubC2);
 			}
 			else if (dataOrder == DRIVE_DATA_ORDER::MainC2Sub) {
 				OutputDriveLogA(
-					"=> Byte order of this drive is main + c2 + sub\n");
+					"\tByte order of this drive is main + c2 + sub\n");
 			}
 		}
 #ifdef _DEBUG
@@ -2136,12 +2147,12 @@ BOOL ReadCDPartial(
 			}
 			if (dataOrder == DRIVE_DATA_ORDER::MainSubC2) {
 				OutputDriveLogA(
-					"=> Byte order of this drive is main + sub + c2\n");
+					"\tByte order of this drive is main + sub + c2\n");
 				SetBufferSizeForReadCD(pDevice, DRIVE_DATA_ORDER::MainSubC2);
 			}
 			else if (dataOrder == DRIVE_DATA_ORDER::MainC2Sub) {
 				OutputDriveLogA(
-					"=> Byte order of this drive is main + c2 + sub\n");
+					"\tByte order of this drive is main + c2 + sub\n");
 			}
 		}
 		// store main+(c2)+sub data

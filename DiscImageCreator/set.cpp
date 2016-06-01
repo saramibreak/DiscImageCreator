@@ -1145,8 +1145,16 @@ VOID UpdateTmpSubQDataForMCN(
 	)
 {
 	// Subchannel pattern on MCN Sector
+	// Tomb Raider III - Adventures of Lara Croft (Europe)(Mac)
+	if (pDisc->SCSI.toc.LastTrack == 1) {
+		pSubQ->present.byTrackNum = 1;
+		pSubQ->present.byIndex = 1;
+		if (nLBA > 0) {
+			pSubQ->present.nRelativeTime += 1;
+		}
+	}
 	// pattern 1: pregap sector.
-	if (IsValidPregapSector(pDisc, pSubQ, nLBA)) {
+	else if (IsValidPregapSector(pDisc, pSubQ, nLBA)) {
 		BOOL bValidPre = FALSE;
 		// pattern 1-1: prev sector is audio.
 		if ((pSubQ->prev.byCtl & AUDIO_DATA_TRACK) == 0) {
