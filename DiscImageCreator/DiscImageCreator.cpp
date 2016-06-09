@@ -1035,16 +1035,16 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			else if (!_tcsncmp(argv[i - 1], _T("/p"), 2)) {
 				pExtArg->byPre = TRUE;
 			}
-			else if (!_tcsncmp(argv[i - 1], _T("/r"), 2)) {
-				pExtArg->byReverse = TRUE;
-			}
-			else if (!_tcsncmp(argv[i - 1], _T("/raw"), 4)) {
-				pExtArg->byRawDump = TRUE;
-			}
 			else if (!_tcsncmp(argv[i - 1], _T("/rc"), 3)) {
 				if (!SetOptionRc(argc, argv, pExtArg, &i)) {
 					return FALSE;
 				}
+			}
+			else if (!_tcsncmp(argv[i - 1], _T("/raw"), 4)) {
+				pExtArg->byRawDump = TRUE;
+			}
+			else if (!_tcsncmp(argv[i - 1], _T("/r"), 2)) {
+				pExtArg->byReverse = TRUE;
 			}
 			else if (!_tcsncmp(argv[i - 1], _T("/se"), 3)) {
 				pExtArg->byIntentionalSub = TRUE;
