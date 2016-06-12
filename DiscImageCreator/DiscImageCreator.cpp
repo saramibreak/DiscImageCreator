@@ -1010,7 +1010,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				}
 			}
 			else if (!_tcsncmp(argv[i - 1], _T("/be"), 3)) {
-				if (SetOptionBe(argc, argv, pExtArg, &i)) {
+				if (!SetOptionBe(argc, argv, pExtArg, &i)) {
 					return FALSE;
 				}
 			}
