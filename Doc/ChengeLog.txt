@@ -301,7 +301,18 @@ http://www.mediafire.com/?cq86367z87fyef2/
 - fixed: crash using 'audio' command in the disc with ISRC sector
 
 *2016-02-29
+http://www.mediafire.com/?sv0d434ujk92007/
 - changed: some log message
 - added: the eeprom log of PLEXTOR PX-712, PX-755, PX760 (the value of BookType, AutoStrategy)
 - fixed: didn't work /se option from 2016-01-27 ver.
 - fixed: error check of the fd command.
+
+*2016-04-11
+http://www.mediafire.com/?z4wj8lg5ax8fdf5/
+- added: read/write xml for the datfile (using xmllite).
+- fixed: crash occured with relative path.
+
+*2016-06-02
+- added: analyze specific subchannel of psx
+- added: single C2 Error allocation if possible (routine is much faster in debug build) (coded by reentrant)
+- improved: analyze subchannel of the MCN Sector and the track 1 only disc.

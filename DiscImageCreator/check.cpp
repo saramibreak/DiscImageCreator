@@ -1554,42 +1554,42 @@ VOID CheckAndFixSubRtoW(
 	UNREFERENCED_PARAMETER(lpBuf);
 	UNREFERENCED_PARAMETER(pDevice);
 #endif
-	if (pDisc->SUB.lpRtoWList[byCurrentTrackNum - 1] != SUB_RTOW_TYPE::CDG &&
-		pDisc->SUB.lpRtoWList[byCurrentTrackNum - 1] != SUB_RTOW_TYPE::Full) {
+	if (pDisc->SUB.lpRtoWList[byCurrentTrackNum - 1] == SUB_RTOW_TYPE::Zero ||
+		pDisc->SUB.lpRtoWList[byCurrentTrackNum - 1] == SUB_RTOW_TYPE::PSXSpecific) {
 		for (INT j = 24; j < CD_RAW_READ_SUBCODE_SIZE; j++) {
 			if (lpSubcode[j] != 0) {
-				if (24 <= j && j < 36 && 
-					(pDisc->SUB.lpRtoWList[byCurrentTrackNum - 1] & SUB_RTOW_TYPE::RFull) != SUB_RTOW_TYPE::RFull) {
+				if ((24 <= j && j <= 34) ||
+					(j == 35 && pDisc->SUB.lpRtoWList[byCurrentTrackNum - 1] == SUB_RTOW_TYPE::Zero)) {
 					OutputSubErrorWithLBALogA("R[%02d]:[%#04x] -> [0x00]\n"
 						, nLBA, byCurrentTrackNum, j, lpSubcode[j]);
 					lpSubcode[j] = 0;
 				}
-				else if (36 <= j && j < 48 &&
-					(pDisc->SUB.lpRtoWList[byCurrentTrackNum - 1] & SUB_RTOW_TYPE::SFull) != SUB_RTOW_TYPE::SFull) {
+				else if ((36 <= j && j <= 46) ||
+					(j == 47 && pDisc->SUB.lpRtoWList[byCurrentTrackNum - 1] == SUB_RTOW_TYPE::Zero)) {
 					OutputSubErrorWithLBALogA("S[%02d]:[%#04x] -> [0x00]\n"
 						, nLBA, byCurrentTrackNum, j, lpSubcode[j]);
 					lpSubcode[j] = 0;
 				}
-				else if (48 <= j && j < 60 &&
-					(pDisc->SUB.lpRtoWList[byCurrentTrackNum - 1] & SUB_RTOW_TYPE::TFull) != SUB_RTOW_TYPE::TFull) {
+				else if ((48 <= j && j <= 58) ||
+					(j == 59 && pDisc->SUB.lpRtoWList[byCurrentTrackNum - 1] == SUB_RTOW_TYPE::Zero)) {
 					OutputSubErrorWithLBALogA("T[%02d]:[%#04x] -> [0x00]\n"
 						, nLBA, byCurrentTrackNum, j, lpSubcode[j]);
 					lpSubcode[j] = 0;
 				}
-				else if (60 <= j && j < 72 &&
-					(pDisc->SUB.lpRtoWList[byCurrentTrackNum - 1] & SUB_RTOW_TYPE::UFull) != SUB_RTOW_TYPE::UFull) {
+				else if ((60 <= j && j <= 70) ||
+					(j == 71 && pDisc->SUB.lpRtoWList[byCurrentTrackNum - 1] == SUB_RTOW_TYPE::Zero)) {
 					OutputSubErrorWithLBALogA("U[%02d]:[%#04x] -> [0x00]\n"
 						, nLBA, byCurrentTrackNum, j, lpSubcode[j]);
 					lpSubcode[j] = 0;
 				}
-				else if (72 <= j && j < 84 &&
-					(pDisc->SUB.lpRtoWList[byCurrentTrackNum - 1] & SUB_RTOW_TYPE::VFull) != SUB_RTOW_TYPE::VFull) {
+				else if ((72 <= j && j <= 82) ||
+					(j == 83 && pDisc->SUB.lpRtoWList[byCurrentTrackNum - 1] == SUB_RTOW_TYPE::Zero)) {
 					OutputSubErrorWithLBALogA("V[%02d]:[%#04x] -> [0x00]\n"
 						, nLBA, byCurrentTrackNum, j, lpSubcode[j]);
 					lpSubcode[j] = 0;
 				}
-				else if (84 <= j && j < CD_RAW_READ_SUBCODE_SIZE &&
-					(pDisc->SUB.lpRtoWList[byCurrentTrackNum - 1] & SUB_RTOW_TYPE::WFull) != SUB_RTOW_TYPE::WFull) {
+				else if ((84 <= j && j <= 94) ||
+					(j == 95 && pDisc->SUB.lpRtoWList[byCurrentTrackNum - 1] == SUB_RTOW_TYPE::Zero)) {
 					OutputSubErrorWithLBALogA("W[%02d]:[%#04x] -> [0x00]\n"
 						, nLBA, byCurrentTrackNum, j, lpSubcode[j]);
 					lpSubcode[j] = 0;

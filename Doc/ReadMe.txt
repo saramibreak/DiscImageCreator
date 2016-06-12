@@ -48,6 +48,9 @@
 ** 20160120 - 
  Visual Studio 2015 (including WDK)
 
+* Source Code
+ https://github.com/saramibreak/DiscImageCreator
+
 * License
  See License.txt.
  About driveOffset.txt.

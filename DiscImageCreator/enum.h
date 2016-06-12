@@ -118,13 +118,9 @@ typedef enum _DRIVE_DATA_ORDER {
 } DRIVE_DATA_ORDER, *PDRIVE_DATA_ORDER;
 
 typedef enum _SUB_RTOW_TYPE {
-	Zero = 0,
-	CDG = 1,
-	RFull = 1 << 1,
-	SFull = 1 << 2,
-	TFull = 1 << 3,
-	UFull = 1 << 4,
-	VFull = 1 << 5,
-	WFull = 1 << 6,
-	Full = RFull | SFull | TFull | UFull | VFull | WFull
+	Zero,
+	CDG,
+	Full,
+	AnyFull,
+	PSXSpecific
 } SUB_RTOW_TYPE, *PSUB_RTOW_TYPE;
