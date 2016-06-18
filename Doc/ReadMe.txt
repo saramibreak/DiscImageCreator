@@ -33,7 +33,7 @@
    - SecuRom 3
     - PLEXTOR
        PX-4824A (ecc/edc of the 2 sector doesn't match)
-   - CDS200, Label Gate, XCP
+   - CDS100, CDS200, Label Gate, XCP
     - PLEXTOR
        PX-4824A (doesn't get the TOC correctly)
 
@@ -106,6 +106,7 @@
     no signal sector                    => LaserLock, RingPROTECH, ProRing
     Intensional(deliberate) C1/C2 error => Cactus Data Shield 200, CodeLock
     characteristic track                => CD Lock
+    Fake TOC                            => Cactus Data Shield 100
 
 * Supported Disc? (I haven't tested these yet)
  - Acorn Archimedes
@@ -131,8 +132,6 @@
      To store DPM, you need to use the Alcohol 120/52% (http://www.alcohol-soft.com/)
     duplicated(double, triple) sector => Alpha-ROM, ROOT, TAGES
      It can read in reverse, but specifications are not decided in redump.org
-    Fake TOC                          => Cactus Data Shield 100
-     Can't analyze the illegal TOC at the present.
  - HD DVD & Blu-ray Disc
     I don't have a drive, so I can't test.
  - Nintendo GameCube & Wii
@@ -142,7 +141,7 @@
 ============================= Ripping information =============================
 * Preparation
  Download and install Visual C++ Redistributable Packages.
-  http://www.microsoft.com/en-us/download/details.aspx?id=40784
+  https://www.microsoft.com/en-us/download/details.aspx?id=51682
  EccEdc checking tool (for CD)
   http://www.mediafire.com/?ls3xlze3op452a5/
   Put it to directory of DiscImageCreator.exe.

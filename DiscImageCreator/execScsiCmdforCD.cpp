@@ -1910,7 +1910,10 @@ BOOL ReadCDAll(
 
 		if (!pExtArg->byReverse) {
 			if (pDisc->SCSI.toc.FirstTrack == pDisc->SCSI.toc.LastTrack) {
-				pDisc->SUB.lpFirstLBAListOnSub[0][1] = pDisc->SCSI.lpLastLBAListOnToc[0];
+				// Jurassic Park Interactive (Japan)
+				if (pDisc->SUB.lpFirstLBAListOnSub[0][2] == -1) {
+					pDisc->SUB.lpFirstLBAListOnSub[0][1] = pDisc->SCSI.lpLastLBAListOnToc[0];
+				}
 			}
 			for (INT i = 0; i < pDisc->SCSI.toc.LastTrack; i++) {
 				BOOL bErr = FALSE;
