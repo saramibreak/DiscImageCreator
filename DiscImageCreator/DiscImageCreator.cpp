@@ -230,7 +230,7 @@ int calculatingHash(CComPtr<IXmlWriter> pWriter)
 						HRESULT hr = S_OK;
 						if (FAILED(hr = pWriter->WriteStartElement(NULL, L"rom", NULL))) {
 							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-							OutputErrorString(_T("error is %08.8lx\n"), hr);
+							OutputErrorString(_T("[L:%d] Dat error: %08.8lx\n"), __LINE__, hr);
 							bRet = FALSE;
 							break;
 						}
@@ -249,7 +249,7 @@ int calculatingHash(CComPtr<IXmlWriter> pWriter)
 #endif
 						if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"name", NULL, wszFnameForDat))) {
 							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-							OutputErrorString(_T("error is %08.8lx\n"), hr);
+							OutputErrorString(_T("[L:%d] Dat error: %08.8lx\n"), __LINE__, hr);
 							bRet = FALSE;
 							break;
 						}
@@ -258,7 +258,7 @@ int calculatingHash(CComPtr<IXmlWriter> pWriter)
 						buf[127] = 0;
 						if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"size", NULL, buf))) {
 							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-							OutputErrorString(_T("error is %08.8lx\n"), hr);
+							OutputErrorString(_T("[L:%d] Dat error: %08.8lx\n"), __LINE__, hr);
 							bRet = FALSE;
 							break;
 						}
@@ -266,7 +266,7 @@ int calculatingHash(CComPtr<IXmlWriter> pWriter)
 						buf[127] = 0;
 						if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"crc", NULL, buf))) {
 							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-							OutputErrorString(_T("error is %08.8lx\n"), hr);
+							OutputErrorString(_T("[L:%d] Dat error: %08.8lx\n"), __LINE__, hr);
 							bRet = FALSE;
 							break;
 						}
@@ -277,7 +277,7 @@ int calculatingHash(CComPtr<IXmlWriter> pWriter)
 						buf[127] = 0;
 						if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"md5", NULL, buf))) {
 							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-							OutputErrorString(_T("error is %08.8lx\n"), hr);
+							OutputErrorString(_T("[L:%d] Dat error: %08.8lx\n"), __LINE__, hr);
 							bRet = FALSE;
 							break;
 						}
@@ -290,13 +290,13 @@ int calculatingHash(CComPtr<IXmlWriter> pWriter)
 						buf[127] = 0;
 						if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"sha1", NULL, buf))) {
 							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-							OutputErrorString(_T("error is %08.8lx\n"), hr);
+							OutputErrorString(_T("[L:%d] Dat error: %08.8lx\n"), __LINE__, hr);
 							bRet = FALSE;
 							break;
 						}
 						if (FAILED(hr = pWriter->WriteEndElement())) {
 							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-							OutputErrorString(_T("error is %08.8lx\n"), hr);
+							OutputErrorString(_T("[L:%d] Dat error: %08.8lx\n"), __LINE__, hr);
 							bRet = FALSE;
 							break;
 						}
@@ -349,22 +349,22 @@ int readWriteDat(_TCHAR* pszFullPath)
 	CComPtr<IStream> pReadStream;
 	if (FAILED(hr = SHCreateStreamOnFileW(wszDefaultDat, STGM_READ, &pReadStream))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(_T("error is %08.8lx\n"), hr);
+		OutputErrorString(_T("[L:%d] Dat error: %08.8lx\n"), __LINE__, hr);
 		return FALSE;
 	}
 	if (FAILED(hr = CreateXmlReader(__uuidof(IXmlReader), reinterpret_cast<void**>(&pReader), 0))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(_T("error is %08.8lx\n"), hr);
+		OutputErrorString(_T("[L:%d] Dat error: %08.8lx\n"), __LINE__, hr);
 		return FALSE;
 	}
 	if (FAILED(hr = pReader->SetInput(pReadStream))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(_T("error is %08.8lx\n"), hr);
+		OutputErrorString(_T("[L:%d] Dat error: %08.8lx\n"), __LINE__, hr);
 		return FALSE;
 	}
 	if (FAILED(hr = pReader->SetProperty(XmlReaderProperty_DtdProcessing, DtdProcessing_Parse))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(_T("error is %08.8lx\n"), hr);
+		OutputErrorString(_T("[L:%d] Dat error: %08.8lx\n"), __LINE__, hr);
 		return FALSE;
 	}
 
@@ -390,34 +390,34 @@ int readWriteDat(_TCHAR* pszFullPath)
 	CComPtr<IStream> pWriteStream;
 	if (FAILED(hr = SHCreateStreamOnFileW(wszPathForDat, STGM_CREATE | STGM_WRITE, &pWriteStream))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(_T("error is %08.8lx\n"), hr);
+		OutputErrorString(_T("[L:%d] Dat error: %08.8lx\n"), __LINE__, hr);
 		return FALSE;
 	}
 	if (FAILED(hr = CreateXmlWriter(__uuidof(IXmlWriter), reinterpret_cast<void**>(&pWriter), 0))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(_T("error is %08.8lx\n"), hr);
+		OutputErrorString(_T("[L:%d] Dat error: %08.8lx\n"), __LINE__, hr);
 		return FALSE;
 	}
 	if (FAILED(hr = pWriter->SetOutput(pWriteStream))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(_T("error is %08.8lx\n"), hr);
+		OutputErrorString(_T("[L:%d] Dat error: %08.8lx\n"), __LINE__, hr);
 		return FALSE;
 	}
 	if (FAILED(hr = pWriter->SetProperty(XmlWriterProperty_Indent, TRUE))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(_T("error is %08.8lx\n"), hr);
+		OutputErrorString(_T("[L:%d] Dat error: %08.8lx\n"), __LINE__, hr);
 		return FALSE;
 	}
 
 	if (FAILED(hr = pWriter->WriteStartDocument(XmlStandalone_Omit))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(_T("error is %08.8lx\n"), hr);
+		OutputErrorString(_T("[L:%d] Dat error: %08.8lx\n"), __LINE__, hr);
 		return FALSE;
 	}
 	if (FAILED(hr = pWriter->WriteDocType(L"datafile"
 		, L"-//Logiqx//DTD ROM Management Datafile//EN", L"http://www.logiqx.com/Dats/datafile.dtd", NULL))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(_T("error is %08.8lx\n"), hr);
+		OutputErrorString(_T("[L:%d] Dat error: %08.8lx\n"), __LINE__, hr);
 		return FALSE;
 	}
 	
@@ -429,11 +429,11 @@ int readWriteDat(_TCHAR* pszFullPath)
 		case XmlNodeType_Element:
 			if (FAILED(hr = pReader->GetLocalName(&pwszLocalName, NULL))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				OutputErrorString(_T("error is %08.8lx\n"), hr);
+				OutputErrorString(_T("[L:%d] Dat error: %08.8lx\n"), __LINE__, hr);
 				return FALSE;
 			}
 			else if (!pwszLocalName) {
-				OutputErrorString(_T("LocalName is NULL, L:%d\n"), __LINE__);
+				OutputErrorString(_T("[L:%d] LocalName is NULL\n"), __LINE__);
 				return FALSE;
 			}
 			if (!wcsncmp(pwszLocalName, L"game", 4)) {
@@ -444,22 +444,22 @@ int readWriteDat(_TCHAR* pszFullPath)
 					LPCWSTR pwszAttributeName = NULL;
 					if (FAILED(hr = pReader->GetLocalName(&pwszAttributeName, NULL))) {
 						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-						OutputErrorString(_T("error is %08.8lx\n"), hr);
+						OutputErrorString(_T("[L:%d] Dat error: %08.8lx\n"), __LINE__, hr);
 						return FALSE;
 					}
 					else if (!pwszAttributeName) {
-						OutputErrorString(_T("AttributeName is NULL, L:%d\n"), __LINE__);
+						OutputErrorString(_T("[L:%d] AttributeName is NULL\n"), __LINE__);
 						return FALSE;
 					}
 					if (!wcsncmp(pwszAttributeName, L"name", 4)) {
 						if (FAILED(hr = pWriter->WriteStartElement(NULL, pwszLocalName, NULL))) {
 							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-							OutputErrorString(_T("error is %08.8lx\n"), hr);
+							OutputErrorString(_T("[L:%d] Dat error: %08.8lx\n"), __LINE__, hr);
 							return FALSE;
 						}
 						if (FAILED(hr = pWriter->WriteAttributeString(NULL, pwszAttributeName, NULL, pCurrentDir))) {
 							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-							OutputErrorString(_T("error is %08.8lx\n"), hr);
+							OutputErrorString(_T("[L:%d] Dat error: %08.8lx\n"), __LINE__, hr);
 							return FALSE;
 						}
 					}
@@ -468,7 +468,7 @@ int readWriteDat(_TCHAR* pszFullPath)
 			else {
 				if (FAILED(hr = pWriter->WriteStartElement(NULL, pwszLocalName, NULL))) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					OutputErrorString(_T("error is %08.8lx\n"), hr);
+					OutputErrorString(_T("[L:%d] Dat error: %08.8lx\n"), __LINE__, hr);
 					return FALSE;
 				}
 			}
@@ -476,7 +476,7 @@ int readWriteDat(_TCHAR* pszFullPath)
 		case XmlNodeType_Text:
 			if (FAILED(hr = pReader->GetValue(&pwszValue, NULL))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				OutputErrorString(_T("error is %08.8lx\n"), hr);
+				OutputErrorString(_T("[L:%d] Dat error: %08.8lx\n"), __LINE__, hr);
 				return FALSE;
 			}
 			else if (!pwszValue) {
@@ -486,14 +486,14 @@ int readWriteDat(_TCHAR* pszFullPath)
 			if (!wcsncmp(pwszLocalName, L"description", 11) && !wcsncmp(pwszValue, L"foo", 3)) {
 				if (FAILED(hr = pWriter->WriteString(pCurrentDir))) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					OutputErrorString(_T("error is %08.8lx\n"), hr);
+					OutputErrorString(_T("[L:%d] Dat error: %08.8lx\n"), __LINE__, hr);
 					return FALSE;
 				}
 			}
 			else {
 				if (FAILED(hr = pWriter->WriteString(pwszValue))) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					OutputErrorString(_T("error is %08.8lx\n"), hr);
+					OutputErrorString(_T("[L:%d] Dat error: %08.8lx\n"), __LINE__, hr);
 					return FALSE;
 				}
 			}
@@ -501,11 +501,11 @@ int readWriteDat(_TCHAR* pszFullPath)
 		case XmlNodeType_EndElement:
 			if (FAILED(hr = pReader->GetLocalName(&pwszLocalName, NULL))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				OutputErrorString(_T("error is %08.8lx\n"), hr);
+				OutputErrorString(_T("[L:%d] Dat error: %08.8lx\n"), __LINE__, hr);
 				return FALSE;
 			}
 			else if (!pwszLocalName) {
-				OutputErrorString(_T("LocalName is NULL, L:%d\n"), __LINE__);
+				OutputErrorString(_T("[L:%d] LocalName is NULL\n"), __LINE__);
 				return FALSE;
 			}
 			if (!wcsncmp(pwszLocalName, L"game", 4)) {
@@ -515,7 +515,7 @@ int readWriteDat(_TCHAR* pszFullPath)
 			}
 			if (FAILED(hr = pWriter->WriteEndElement())) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				OutputErrorString(_T("error is %08.8lx\n"), hr);
+				OutputErrorString(_T("[L:%d] Dat error: %08.8lx\n"), __LINE__, hr);
 				return FALSE;
 			}
 			break;
@@ -535,12 +535,12 @@ int readWriteDat(_TCHAR* pszFullPath)
 #if 0
 			if (FAILED(hr = pWriter->WriteWhitespace(L"\n"))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				OutputErrorString(_T("error is %08.8lx\n"), hr);
+				OutputErrorString(_T("[L:%d] Dat error: %08.8lx\n"), __LINE__, hr);
 				return FALSE;
 			}
 			if (FAILED(hr = pWriter->WriteWhitespace(L"\t"))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				OutputErrorString(_T("error is %08.8lx\n"), hr);
+				OutputErrorString(_T("[L:%d] Dat error: %08.8lx\n"), __LINE__, hr);
 				return FALSE;
 			}
 #endif
@@ -553,12 +553,12 @@ int readWriteDat(_TCHAR* pszFullPath)
 	}
 	if (FAILED(hr = pWriter->WriteEndDocument())) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(_T("error is %08.8lx\n"), hr);
+		OutputErrorString(_T("[L:%d] Dat error: %08.8lx\n"), __LINE__, hr);
 		return FALSE;
 	}
 	if (FAILED(hr = pWriter->Flush())) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(_T("error is %08.8lx\n"), hr);
+		OutputErrorString(_T("[L:%d] Dat error: %08.8lx\n"), __LINE__, hr);
 		return FALSE;
 	}
 	return TRUE;

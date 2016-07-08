@@ -1263,52 +1263,59 @@ VOID OutputCDSubToLog(
 	)
 {
 	CONST INT BufSize = 256;
+	_TCHAR szSub0[BufSize] = { 0 };
+	_sntprintf(szSub0, BufSize,
+		_T(STR_LBA "P[%02x], Q[%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x]{")
+		, nLBA, nLBA, lpSubcode[0], lpSubcode[12], lpSubcode[13], lpSubcode[14]
+		, lpSubcode[15], lpSubcode[16], lpSubcode[17], lpSubcode[18], lpSubcode[19]
+		, lpSubcode[20], lpSubcode[21], lpSubcode[22], lpSubcode[23]);
+
 	_TCHAR szSub[BufSize] = { 0 };
 	// Ctl
 	switch ((lpSubcode[12] >> 4) & 0x0f) {
 	case 0:
 		_sntprintf(szSub, BufSize,
-			_T(STR_LBA "Audio, 2ch, Copy NG, Pre-emphasis No, "), nLBA, nLBA);
+			_T("Audio, 2ch, Copy NG, Pre-emphasis No, "));
 		break;
 	case AUDIO_WITH_PREEMPHASIS:
 		_sntprintf(szSub, BufSize,
-			_T(STR_LBA "Audio, 2ch, Copy NG, Pre-emphasis Yes, "), nLBA, nLBA);
+			_T("Audio, 2ch, Copy NG, Pre-emphasis Yes, "));
 		break;
 	case DIGITAL_COPY_PERMITTED:
 		_sntprintf(szSub, BufSize,
-			_T(STR_LBA "Audio, 2ch, Copy OK, Pre-emphasis No, "), nLBA, nLBA);
+			_T("Audio, 2ch, Copy OK, Pre-emphasis No, "));
 		break;
 	case DIGITAL_COPY_PERMITTED | AUDIO_WITH_PREEMPHASIS:
 		_sntprintf(szSub, BufSize,
-			_T(STR_LBA "Audio, 2ch, Copy OK, Pre-emphasis Yes, "), nLBA, nLBA);
+			_T("Audio, 2ch, Copy OK, Pre-emphasis Yes, "));
 		break;
 	case AUDIO_DATA_TRACK:
 		_sntprintf(szSub, BufSize,
-			_T(STR_LBA " Data,      Copy NG,                  "), nLBA, nLBA);
+			_T(" Data,      Copy NG,                  "));
 		break;
 	case AUDIO_DATA_TRACK | DIGITAL_COPY_PERMITTED:
 		_sntprintf(szSub, BufSize,
-			_T(STR_LBA " Data,      Copy OK,                  "), nLBA, nLBA);
+			_T(" Data,      Copy OK,                  "));
 		break;
 	case TWO_FOUR_CHANNEL_AUDIO:
 		_sntprintf(szSub, BufSize,
-			_T(STR_LBA "Audio, 4ch, Copy NG, Pre-emphasis No, "), nLBA, nLBA);
+			_T("Audio, 4ch, Copy NG, Pre-emphasis No, "));
 		break;
 	case TWO_FOUR_CHANNEL_AUDIO | AUDIO_WITH_PREEMPHASIS:
 		_sntprintf(szSub, BufSize,
-			_T(STR_LBA "Audio, 4ch, Copy NG, Pre-emphasis Yes, "), nLBA, nLBA);
+			_T("Audio, 4ch, Copy NG, Pre-emphasis Yes, "));
 		break;
 	case TWO_FOUR_CHANNEL_AUDIO | DIGITAL_COPY_PERMITTED:
 		_sntprintf(szSub, BufSize,
-			_T(STR_LBA "Audio, 4ch, Copy OK, Pre-emphasis No, "), nLBA, nLBA);
+			_T("Audio, 4ch, Copy OK, Pre-emphasis No, "));
 		break;
 	case TWO_FOUR_CHANNEL_AUDIO | DIGITAL_COPY_PERMITTED | AUDIO_WITH_PREEMPHASIS:
 		_sntprintf(szSub, BufSize,
-			_T(STR_LBA "Audio, 4ch, Copy OK, Pre-emphasis Yes, "), nLBA, nLBA);
+			_T("Audio, 4ch, Copy OK, Pre-emphasis Yes, "));
 		break;
 	default:
 		_sntprintf(szSub, BufSize,
-			_T(STR_LBA "Unknown,                               "), nLBA, nLBA);
+			_T("Unknown,                               "));
 		break;
 	}
 
@@ -1320,23 +1327,23 @@ VOID OutputCDSubToLog(
 			// lead-in area
 			if (lpSubcode[14] == 0xa0) {
 				_sntprintf(szSub2, BufSize,
-					_T("Point[%02x], AMSF[%02x:%02x:%02x], TrackNumOf1stTrack[%02x], ProgramAreaFormat[%02x], "),
+					_T("Point[%02x], AMSF[%02x:%02x:%02x], TrackNumOf1stTrack[%02x], ProgramAreaFormat[%02x]"),
 					lpSubcode[14], lpSubcode[15], lpSubcode[16], lpSubcode[17], lpSubcode[19], lpSubcode[20]);
 			}
 			else if (lpSubcode[14] == 0xa1) {
 				_sntprintf(szSub2, BufSize,
-					_T("Point[%02x], AMSF[%02x:%02x:%02x], TrackNumOfLastTrack[%02x], "),
+					_T("Point[%02x], AMSF[%02x:%02x:%02x], TrackNumOfLastTrack[%02x]"),
 					lpSubcode[14], lpSubcode[15], lpSubcode[16], lpSubcode[17], lpSubcode[19]);
 			}
 			else if (lpSubcode[14] == 0xa2) {
 				_sntprintf(szSub2, BufSize,
-					_T("Point[%02x], AMSF[%02x:%02x:%02x], StartTimeOfLead-out[%02x:%02x:%02x], "),
+					_T("Point[%02x], AMSF[%02x:%02x:%02x], StartTimeOfLead-out[%02x:%02x:%02x]"),
 					lpSubcode[14], lpSubcode[15], lpSubcode[16], lpSubcode[17],
 					lpSubcode[19], lpSubcode[20], lpSubcode[21]);
 			}
 			else {
 				_sntprintf(szSub2, BufSize,
-					_T("Point[%02x], AMSF[%02x:%02x:%02x], StartTimeOfTrack[%02x:%02x:%02x], "),
+					_T("Point[%02x], AMSF[%02x:%02x:%02x], StartTimeOfTrack[%02x:%02x:%02x]"),
 					lpSubcode[14], lpSubcode[15], lpSubcode[16], lpSubcode[17],
 					lpSubcode[19], lpSubcode[20], lpSubcode[21]);
 			}
@@ -1344,13 +1351,13 @@ VOID OutputCDSubToLog(
 		else if (lpSubcode[13] == 0xaa) {
 			// lead-out area
 			_sntprintf(szSub2, BufSize,
-				_T("LeadOut  , Idx[%02x], RMSF[%02x:%02x:%02x], AMSF[%02x:%02x:%02x], "),
+				_T("LeadOut  , Idx[%02x], RMSF[%02x:%02x:%02x], AMSF[%02x:%02x:%02x]"),
 				lpSubcode[14], lpSubcode[15], lpSubcode[16], lpSubcode[17],
 				lpSubcode[19], lpSubcode[20], lpSubcode[21]);
 		}
 		else {
 			_sntprintf(szSub2, BufSize,
-				_T("Track[%02x], Idx[%02x], RMSF[%02x:%02x:%02x], AMSF[%02x:%02x:%02x], "),
+				_T("Track[%02x], Idx[%02x], RMSF[%02x:%02x:%02x], AMSF[%02x:%02x:%02x]"),
 				lpSubcode[13], lpSubcode[14], lpSubcode[15], lpSubcode[16],
 				lpSubcode[17], lpSubcode[19], lpSubcode[20], lpSubcode[21]);
 		}
@@ -1364,7 +1371,7 @@ VOID OutputCDSubToLog(
 		strncpy(szCatalog, pDisc->SUB.szCatalog, sizeof(szCatalog) / sizeof(szCatalog[0]));
 #endif
 		_sntprintf(szSub2, BufSize,
-			_T("MediaCatalogNumber [%13s], AMSF[     :%02x], "), szCatalog, lpSubcode[21]);
+			_T("MediaCatalogNumber [%13s], AMSF[     :%02x]"), szCatalog, lpSubcode[21]);
 		break;
 	}
 	case ADR_ENCODES_ISRC: {
@@ -1380,7 +1387,7 @@ VOID OutputCDSubToLog(
 			strncpy(szISRC, pDisc->SUB.pszISRC[byTrackNum - 1], sizeof(szISRC) / sizeof(szISRC[0]));
 #endif
 			_sntprintf(szSub2, BufSize,
-				_T("ItnStdRecordingCode [%12s], AMSF[     :%02x], "), szISRC, lpSubcode[21]);
+				_T("ItnStdRecordingCode [%12s], AMSF[     :%02x]"), szISRC, lpSubcode[21]);
 		}
 		break;
 	}
@@ -1388,35 +1395,35 @@ VOID OutputCDSubToLog(
 		if (lpSubcode[13] == 0) {
 			if (lpSubcode[14] == 0xb0) {
 				_sntprintf(szSub2, BufSize,
-					_T("Point[%02x], StartTimeForTheNextSession[%02x:%02x:%02x], NumberOfDifferentMode-5[%02x], OutermostLead-out[%02x:%02x:%02x], "),
+					_T("Point[%02x], StartTimeForTheNextSession[%02x:%02x:%02x], NumberOfDifferentMode-5[%02x], OutermostLead-out[%02x:%02x:%02x]"),
 					lpSubcode[14], lpSubcode[15], lpSubcode[16], lpSubcode[17],
 					lpSubcode[18], lpSubcode[19], lpSubcode[20], lpSubcode[21]);
 			}
 			else if (lpSubcode[14] == 0xb1) {
 				_sntprintf(szSub2, BufSize,
-					_T("Point[%02x], NumberOfSkipIntervalPointers[%02x], NumberOfSkipTrackAssignmentsInPoint[%02x], "),
+					_T("Point[%02x], NumberOfSkipIntervalPointers[%02x], NumberOfSkipTrackAssignmentsInPoint[%02x]"),
 					lpSubcode[14], lpSubcode[19], lpSubcode[20]);
 			}
 			else if (lpSubcode[14] == 0xb2 || lpSubcode[14] == 0xb3 || lpSubcode[14] == 0xb4) {
 				_sntprintf(szSub2, BufSize,
-					_T("Point[%02x], TrackNumberToSkipUponPlayback[%02x %02x %02x %02x %02x %02x %02x], "),
+					_T("Point[%02x], TrackNumberToSkipUponPlayback[%02x %02x %02x %02x %02x %02x %02x]"),
 					lpSubcode[14], lpSubcode[15], lpSubcode[16], lpSubcode[17],
 					lpSubcode[18], lpSubcode[19], lpSubcode[20], lpSubcode[21]);
 			}
 			else if (lpSubcode[14] == 0xc0) {
 				_sntprintf(szSub2, BufSize,
-					_T("Point[%02x], OptimumRecordingPower[%02x], StartTimeOfTheFirstLead-in[%02x:%02x:%02x], "),
+					_T("Point[%02x], OptimumRecordingPower[%02x], StartTimeOfTheFirstLead-in[%02x:%02x:%02x]"),
 					lpSubcode[14], lpSubcode[15], lpSubcode[19], lpSubcode[20], lpSubcode[21]);
 			}
 			else if (lpSubcode[14] == 0xc1) {
 				_sntprintf(szSub2, BufSize,
-					_T("Point[%02x], CopyOfInfoFromA1Point[%02x %02x %02x %02x %02x %02x %02x], "),
+					_T("Point[%02x], CopyOfInfoFromA1Point[%02x %02x %02x %02x %02x %02x %02x]"),
 					lpSubcode[14], lpSubcode[15], lpSubcode[16], lpSubcode[17],
 					lpSubcode[18], lpSubcode[19], lpSubcode[20], lpSubcode[21]);
 			}
 			else {
 				_sntprintf(szSub2, BufSize,
-					_T("Point[%02x], SkipIntervalStopTime[%02x:%02x:%02x], SkipIntervalStartTime[%02x:%02x:%02x], "),
+					_T("Point[%02x], SkipIntervalStopTime[%02x:%02x:%02x], SkipIntervalStartTime[%02x:%02x:%02x]"),
 					lpSubcode[14], lpSubcode[15], lpSubcode[16], lpSubcode[17],
 					lpSubcode[19], lpSubcode[20], lpSubcode[21]);
 			}
@@ -1424,7 +1431,7 @@ VOID OutputCDSubToLog(
 		else if (lpSubcode[13] == 0xaa) {
 			// lead-out area
 			_sntprintf(szSub2, BufSize,
-				_T("LeadOutAdr5, Track[%02u], Idx[%02x], StartTime[%02x:%02x:%02x], "),
+				_T("LeadOutAdr5, Track[%02u], Idx[%02x], StartTime[%02x:%02x:%02x]"),
 				BcdToDec((BYTE)(lpSubcode[14] >> 4 & 0x0f)), lpSubcode[14] & 0x0f,
 				lpSubcode[19], lpSubcode[20], lpSubcode[21]);
 		}
@@ -1433,7 +1440,7 @@ VOID OutputCDSubToLog(
 		if (lpSubcode[13] == 0) {
 			if (lpSubcode[14] == 0xb1) {
 				_sntprintf(szSub2, BufSize,
-					_T("Point[%02x], 15[%02x], 16[%02x], 17[%02x], 18[%02x], 19[%02x], 20[%02x], 21[%02x], "),
+					_T("Point[%02x], 15[%02x], 16[%02x], 17[%02x], 18[%02x], 19[%02x], 20[%02x], 21[%02x]"),
 					lpSubcode[14], lpSubcode[15], lpSubcode[16], lpSubcode[17],
 					lpSubcode[18], lpSubcode[19], lpSubcode[20], lpSubcode[21]);
 			}
@@ -1441,7 +1448,7 @@ VOID OutputCDSubToLog(
 		break;
 	default:
 		_sntprintf(szSub2, BufSize,
-			_T("Adr[%02x], Track[%02x], Idx[%02x], RMSF[%02x:%02x:%02x], AMSF[%02x:%02x:%02x], "),
+			_T("Adr[%02x], Track[%02x], Idx[%02x], RMSF[%02x:%02x:%02x], AMSF[%02x:%02x:%02x]"),
 			lpSubcode[12], lpSubcode[13], lpSubcode[14], lpSubcode[15], lpSubcode[16],
 			lpSubcode[17], lpSubcode[19], lpSubcode[20], lpSubcode[21]);
 		break;
@@ -1450,7 +1457,7 @@ VOID OutputCDSubToLog(
 	SUB_R_TO_W scRW[4] = { 0 };
 	BYTE tmpCode[24] = { 0 };
 	_TCHAR szSub3[128] = { 0 };
-	_tcsncat(szSub3, _T("RtoW["), 5);
+	_tcsncat(szSub3, _T("}, RtoW["), 8);
 	for (INT i = 0; i < 4; i++) {
 		for (INT j = 0; j < 24; j++) {
 			tmpCode[j] = (BYTE)(*(lpSubcodeRaw + (i * 24 + j)) & 0x3f);
@@ -1489,5 +1496,5 @@ VOID OutputCDSubToLog(
 			_tcsncat(szSub3, _T("]\n"), 2);
 		}
 	}
-	_ftprintf(fpParse, _T("%s%s%s"), szSub, szSub2, szSub3);
+	_ftprintf(fpParse, _T("%s%s%s%s"), szSub0, szSub, szSub2, szSub3);
 }

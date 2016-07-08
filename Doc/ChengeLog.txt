@@ -313,6 +313,11 @@ http://www.mediafire.com/?z4wj8lg5ax8fdf5/
 - fixed: crash occured with relative path.
 
 *2016-06-02
+http://www.mediafire.com/?mhif8c7s3iayqac/
 - added: analyze specific subchannel of psx
 - added: single C2 Error allocation if possible (routine is much faster in debug build) (coded by reentrant)
 - improved: analyze subchannel of the MCN Sector and the track 1 only disc.
+
+*2016-06-18
+- changed: some log message
+- fixed: cue of track 1 only and index 2 disc (Jurassic Park Interactive (Japan))
