@@ -1,0 +1,8 @@
+Debug/
+Debug_ANSI/
+Release/
+Release_ANSI/
+ipch/
+.vs/
+DiscImageCreator.VC.*
+DiscImageCreator.vcxproj.user
