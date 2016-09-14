@@ -2096,8 +2096,9 @@ BOOL ReadCDPartial(
 		_tcsncpy(szPlusFnameTxt, _T("_sub"), size);
 		_tcsncpy(szExt, _T(".bin"), size);
 	}
-	FILE* fpBin = 
-		CreateOrOpenFile(pszPath, NULL, NULL, NULL, NULL, szExt, _T("wb"), 0, 0);
+	_TCHAR pszBinPath[_MAX_PATH] = { 0 };
+	FILE* fpBin =
+		CreateOrOpenFile(pszPath, NULL, pszBinPath, NULL, NULL, szExt, _T("wb"), 0, 0);
 	if (!fpBin) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
@@ -2346,7 +2347,7 @@ BOOL ReadCDPartial(
 		}
 		FcloseAndNull(fpBin);
 		if (*pExecType == data) {
-			ExecEccEdc(FALSE, pszPath, pDisc->PROTECT.ERROR_SECTOR);
+			ExecEccEdc(FALSE, pszBinPath, pDisc->PROTECT.ERROR_SECTOR);
 		}
 	}
 	catch (BOOL ret) {

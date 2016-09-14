@@ -103,10 +103,11 @@
     bad(error) sector                   => SafeDisc, SmartE, Cactus Data Shield 300
     weak sector                         => SafeDisc v2 or higher
     unique data on subchannel           => LibCrypt, SecuROM(v1 - v4.8x)
-    no signal sector                    => LaserLock, RingPROTECH, ProRing
     Intensional(deliberate) C1/C2 error => Cactus Data Shield 200, CodeLock
     characteristic track                => CD Lock
     Fake TOC                            => Cactus Data Shield 100
+    Pregap                              => Key2Audio
+    read errors?                        => PhenoProtect
 
 * Supported Disc? (I haven't tested these yet)
  - Acorn Archimedes
@@ -125,12 +126,18 @@
  - VM Labs NUON DVD
  - VTech V.Flash
 
+* Probably Unsupported Disc
+    no signal sector                    => LaserLock, RingPROTECH, ProRing
+     The result doesn't match at each drives.
+    ???                                 => ProtectCD-VOB
+     I don't know in detail
+
 * Unsupported Disc
  - Protected Disc
-    different frequency               => SecuROM(v5 or higher), StarForce, CD-Cops
+    different frequency                 => SecuROM(v5 or higher), StarForce, CD-Cops
      These needs DPM(Data position measurement). cue, ccd doesn't support DPM.
      To store DPM, you need to use the Alcohol 120/52% (http://www.alcohol-soft.com/)
-    duplicated(double, triple) sector => Alpha-ROM, ROOT, TAGES
+    duplicated(double, triple) sector   => Alpha-ROM, ROOT, TAGES
      It can read in reverse, but specifications are not decided in redump.org
  - HD DVD & Blu-ray Disc
     I don't have a drive, so I can't test.

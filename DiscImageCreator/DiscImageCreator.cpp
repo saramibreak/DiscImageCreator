@@ -1106,18 +1106,27 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 		}
 
 		for (INT i = 8; i <= argc; i++) {
-			if (!_tcsncmp(argv[i - 1], _T("/c2"), 3)) {
+			if (!_tcsncmp(argv[i - 1], _T("/a"), 2)) {
+				if (!SetOptionA(argc, argv, pExtArg, &i)) {
+					return FALSE;
+				}
+			}
+			else if (!_tcsncmp(argv[i - 1], _T("/be"), 3)) {
+				if (!SetOptionBe(argc, argv, pExtArg, &i)) {
+					return FALSE;
+				}
+			}
+			else if (!_tcsncmp(argv[i - 1], _T("/d8"), 3)) {
+				pExtArg->byBe = FALSE;
+				pExtArg->byD8 = TRUE;
+			}
+			else if (!_tcsncmp(argv[i - 1], _T("/c2"), 3)) {
 				if (!SetOptionC2(argc, argv, pExtArg, &i)) {
 					return FALSE;
 				}
 			}
 			else if (!_tcsncmp(argv[i - 1], _T("/s"), 2)) {
 				if (!SetOptionS(argc, argv, pExtArg, &i)) {
-					return FALSE;
-				}
-			}
-			else if (!_tcsncmp(argv[i - 1], _T("/a"), 2)) {
-				if (!SetOptionA(argc, argv, pExtArg, &i)) {
 					return FALSE;
 				}
 			}
@@ -1198,7 +1207,7 @@ void printUsage(void)
 		_T("\t\tRipping a CD from a to z\n")
 		_T("\t\tFor PLEXTOR or drive that can scramble ripping\n")
 		_T("\tdata <DriveLetter> <Filename> <DriveSpeed(0-72)> <StartLBA> <EndLBA+1>\n")
-		_T("\t      [/c2 (val1) (val2) (val3)] [/s (val)]\n")
+		_T("\t     [/be (str) or /d8] [/c2 (val1) (val2) (val3)] [/s (val)]\n")
 		_T("\t\tRipping a CD from start to end (using 'all' flag)\n")
 		_T("\t\tFor no PLEXTOR or drive that can't scramble ripping\n")
 		_T("\taudio <DriveLetter> <Filename> <DriveSpeed(0-72)> <StartLBA> <EndLBA+1>\n")

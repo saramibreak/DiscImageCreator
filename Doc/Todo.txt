@@ -7,49 +7,72 @@
 . support cue file for multisession disc
   SESSION directives
 
-. support mdf/mds (for SecuROM v4 or higher, StarForce, CD-Cops)
+. support mdf/mds (for SecuROM v5 or higher, StarForce, CD-Cops)
 
 . support twin sector disc (for ALPHA-ROM, ROOT, TAGES)
-
-. support illegal or fake TOC disc (for CDS-100)
 
 . support 0xd8 ripping of SONY, PIONEER
   ftp://ftp.t10.org/t10/document.95/95-104r0.pdf
   http://www.pioneerelectronics.com/pio/pe/images/portal/cit_3424/31636562SCSI-2RefManV31.pdf
    => I don't have these old drive yet.
 
-. check the SubRtoW of the PSX
-   => Sub[35] (The last of the SubR), Sub[47] (The last of the SubS),
-      Sub[59] (The last of the SubT), Sub[71] (The last of the SubU),
-      Sub[83] (The last of the SubV), Sub[95] (The last of the SubW)
-      If submode is 'Raw', these byte is 0x01, 0x02 or 0x03 in some game.
-      If submode is 'Pack', these byte is all 0x00.
-      => Which is the right data?
-
 . check parity P, Q for CD+G
-  https://webstore.iec.ch/publication/3885
+  https://webstore.iec.ch/publication/3885 p24
   [quote]
-  Read-Solomon code over GF(2^6)
-   Polynominal:
-    P(X) = X^6 + X + 1
+  19.3 Error Correction parity P
+  (24, 20)Read-Solomon code over GF(2^6)
+   Polynominal: P(X) = X^6 + X + 1
    1 symbol = 6 bit
-   The parity matrix WHq is:
-    Hq = { 1  1  1 1}
-         {a3 a2 a1 1}
+
+   The parity matrix WHp is:
+               {  1   1   1 . . .  1 1}
+          Hp = {a23 a22 a21 . . . a1 1}
+               {a46 a44 a42 . . . a2 1}
+               {a69 a66 a63 . . . a3 1}
+
    The primitive element a of GF(2^6) is:
+
+                   msb      lsb
+              a = (0 0 0 0 1 0)
+
+   The parity symbols P0 = P - S24n+20 and P1 = P - S24n+21, P2 = P - S24n+22 and P3 = P - S24n+23
+   are defined to satisfy the following question:
+
+              Hp X Vp = 0
+   where
+               {D - S24n}
+          Vp = {D - S24n+1}
+               {D - S24n+2}
+               {D - S24n+3}
+                  :
+               {D - S24n+23}
+  
+  19.7 Error Correction parity Q
+  (4, 2)Read-Solomon code over GF(2^6)
+   Polynominal: P(X) = X^6 + X + 1
+   1 symbol = 6 bit
+
+   The parity matrix WHq is:
+          Hq = { 1  1  1 1}
+               {a3 a2 a1 1}
+
+   The primitive element a of GF(2^6) is:
+
          msb      lsb
     a = (0 0 0 0 1 0)
-   The parity symbols Q0 = D - S24n+2 and Q1 = D - S24n+3 are defined to satisfy
-   the following equation:
-    Hq x Vq = 0
+
+   The parity symbols Q0 = D - S24n+2 and Q1 = D - S24n+3 are defined to satisfy the following
+   equation:
+               Hq x Vq = 0
    where
-         {D - S24n}
-    Vq = {D - S24n + 1}
-         {D - S24n + 2}
-         {D - S24n + 3}
-   This Q-parity system combined with scrambling and interleaving can correct
-   an error burst of 59 subcoding symbols on the disc by using a single symbol
-   correcting strategy (symbols 0, 1, 2 and 3 only)
+               {D - S24n}
+          Vq = {D - S24n + 1}
+               {D - S24n + 2}
+               {D - S24n + 3}
+
+   This Q-parity system combined with scrambling and interleaving can correct an error burst of
+   59 subcoding symbols on the disc by using a single symbol correcting strategy (symbols 0, 1, 2
+   and 3 only).
   [/quote]
    => I can't understand these document.
 

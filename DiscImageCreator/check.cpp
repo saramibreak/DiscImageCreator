@@ -1808,7 +1808,19 @@ VOID CheckAndFixMainHeader(
 			BYTE ctl = 0;
 			INT nAdd = 0;
 
-			if (0 <= nOfs && nOfs < 2352) {
+			if (-4704 <= nOfs && nOfs < -2352) {
+				if (2 <= pExtArg->dwSubAddionalNum) {
+					ctl = pDiscPerSector->subQ.nextNext.byCtl;
+					nAdd += 2;
+				}
+			}
+			else if (-2352 <= nOfs && nOfs < 0) {
+				if (1 <= pExtArg->dwSubAddionalNum) {
+					ctl = pDiscPerSector->subQ.next.byCtl;
+					nAdd++;
+				}
+			}
+			else if (0 <= nOfs && nOfs < 2352) {
 				ctl = pDiscPerSector->subQ.present.byCtl;
 			}
 			else if (2352 <= nOfs && nOfs < 4704) {
