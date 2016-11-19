@@ -2913,7 +2913,7 @@ VOID OutputAdditionalSenseCode(
 		break;
 	default:
 		if (byAsc >= SCSI_ADSENSE_VENDOR_UNIQUE || byAscq >= 0x80) {
-			OutputErrorString(_T(" VENDER UNIQUE ERROR)"));
+			OutputErrorString(_T("VENDER UNIQUE ERROR"));
 		}
 		else {
 			OutputErrorString(_T("OTHER"));

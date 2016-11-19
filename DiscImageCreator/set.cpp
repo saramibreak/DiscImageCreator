@@ -15,6 +15,7 @@ VOID SetReadCDCommand(
 	CDB::_READ_CD* cdb,
 	CDFLAG::_READ_CD::_EXPECTED_SECTOR_TYPE type,
 	DWORD dwTransferLen,
+	CDFLAG::_READ_CD::_ERROR_FLAGS c2,
 	CDFLAG::_READ_CD::_SUB_CHANNEL_SELECTION Sub,
 	BOOL bCheckReading
 	)
@@ -27,7 +28,7 @@ VOID SetReadCDCommand(
 	cdb->TransferBlocks[2] = LOBYTE(LOWORD(dwTransferLen));
 	if (!bCheckReading && pDevice->FEATURE.byC2ErrorData &&
 		(pExtArg && pExtArg->byC2)) {
-		cdb->ErrorFlags = CDFLAG::_READ_CD::byte294;
+		cdb->ErrorFlags = c2;
 	}
 	cdb->IncludeEDC = TRUE;
 	cdb->IncludeUserData = TRUE;

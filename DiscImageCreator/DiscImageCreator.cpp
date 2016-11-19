@@ -661,8 +661,10 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 				else {
 					ReadDriveInformation(pExtArg, &devData, pDisc, s_dwSpeed);
 					ReadDiscInformation(pExtArg, &devData);
-					if (!ReadTOC(pExtArg, pExecType, &devData, pDisc)) {
-						throw FALSE;
+					if (*pExecType != dvd) {
+						if (!ReadTOC(pExtArg, pExecType, &devData, pDisc)) {
+							throw FALSE;
+						}
 					}
 					if (discData.SCSI.wCurrentMedia == ProfileCdrom || 
 						discData.SCSI.wCurrentMedia == ProfileCdRecordable ||
@@ -1168,7 +1170,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 	}
 	else {
 		if (argc > 1) {
-			OutputErrorString(_T("Unknown command: [%s]\n"), argv[1]);
+			OutputErrorString(_T("Invalid argument\n"));
 		}
 		return FALSE;
 	}

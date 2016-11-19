@@ -38,9 +38,11 @@ typedef enum _MAIN_DATA_TYPE {
 
 typedef enum _PROTECT_TYPE {
 	no,
+	cdidx,
 	codelock,
 	laserlock,
 	proring,
+	protectCDVOB,
 	safeDiscLite,
 	safeDisc,
 	smartE

@@ -16,13 +16,10 @@ VOID OutputFsVolumeRecognitionSequence(
 	);
 
 VOID OutputDVDStructureFormat(
-	PDISC pDisc,
 	BYTE byFormatCode,
 	WORD wFormatLength,
 	LPBYTE lpFormat,
-	LPBYTE lpLayerNum,
-	UINT uiNum,
-	BOOL bSuccesssReadToc
+	LPDWORD lpdwSectorLength
 	);
 
 VOID OutputDVDCopyrightManagementInformation(
