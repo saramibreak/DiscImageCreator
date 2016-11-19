@@ -16,8 +16,9 @@
           Useful tool for PLEXTOR.
    - HL-DT-ST
      - UH12NS30 (Combined Offset minus disc only)
- GD: http://forum.redump.org/post/14552/#p14552
-   and TSSTcorp(TS-H353A, TS-H352C, TS-H192C)
+ GD: TSSTcorp(TS-H353A, TS-H352C, TS-H192C)
+     http://forum.redump.org/post/14552/#p14552 <- This drive might be supported too.
+   
  DVD: All supported drive
  Floppy: All supported drive
 
@@ -55,7 +56,7 @@
  See License.txt.
  About driveOffset.txt.
   http://www.accuraterip.com/driveoffsets.htm
-  Copyright (c) 2015 Illustrate. All Rights Reserved.
+  Copyright (c) 2016 Illustrate. All Rights Reserved.
  About _external folder
   scramble data to CD: Copyright (c) 2015 Jonathan Gevaryahu
   crc16: http://oku.edu.mie-u.ac.jp/~okumura/algo/
@@ -101,9 +102,10 @@
 * Support WIP (Because I haven't enough to test)
  - Protected Disc
     bad(error) sector                   => SafeDisc, SmartE, Cactus Data Shield 300
+                                           ProtectCD-VOB
     weak sector                         => SafeDisc v2 or higher
     unique data on subchannel           => LibCrypt, SecuROM(v1 - v4.8x)
-    Intensional(deliberate) C1/C2 error => Cactus Data Shield 200, CodeLock
+    Intensional(deliberate) C1/C2 error => Cactus Data Shield 200
     characteristic track                => CD Lock
     Fake TOC                            => Cactus Data Shield 100
     Pregap                              => Key2Audio
@@ -127,10 +129,10 @@
  - VTech V.Flash
 
 * Probably Unsupported Disc
-    no signal sector                    => LaserLock, RingPROTECH, ProRing
+    no signal sector => LaserLock, RingPROTECH, ProRing
      The result doesn't match at each drives.
-    ???                                 => ProtectCD-VOB
-     I don't know in detail
+    read error       => CodeLock
+     Compared to CloneCD or CD Manipulator, a plextor detects a double error.
 
 * Unsupported Disc
  - Protected Disc
@@ -148,7 +150,7 @@
 ============================= Ripping information =============================
 * Preparation
  Download and install Visual C++ Redistributable Packages.
-  https://www.microsoft.com/en-us/download/details.aspx?id=51682
+  https://www.microsoft.com/en-us/download/details.aspx?id=53587
  EccEdc checking tool (for CD)
   http://www.mediafire.com/?ls3xlze3op452a5/
   Put it to directory of DiscImageCreator.exe.

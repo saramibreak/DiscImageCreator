@@ -119,7 +119,13 @@ VOID OutputFsDirectoryRecord(
 				}
 			}
 		}
-		if (!strncmp(fname, "LASERLOK.IN", 11)) {
+		if (!strncmp(fname, "CD.IDX", 6)) {
+			pDisc->PROTECT.byExist = cdidx;
+			strncpy(pDisc->PROTECT.name, fname, 6);
+			pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)dwExtentPos;
+			pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(dwDataLen / DISC_RAW_READ_SIZE - 1);
+		}
+		else if (!strncmp(fname, "LASERLOK.IN", 11)) {
 			pDisc->PROTECT.byExist = laserlock;
 			strncpy(pDisc->PROTECT.name, fname, 11);
 			pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)dwExtentPos;
@@ -1042,14 +1048,18 @@ VOID OutputFsImageSectionHeader(
 		, pIsh->Name, pIsh->VirtualAddress, pIsh->SizeOfRawData, pIsh->PointerToRawData
 		, pIsh->PointerToRelocations, pIsh->PointerToLinenumbers, pIsh->NumberOfRelocations
 		, pIsh->NumberOfLinenumbers, pIsh->Characteristics
-		);
+	);
 	// for Codelock
 	if (!strncmp((LPCH)pIsh->Name, "icd1", 4)) {
 		pDisc->PROTECT.byExist = codelock;
 		strcpy(pDisc->PROTECT.name, pDisc->PROTECT.pNameForExe[nIdx]);
 		pDisc->PROTECT.ERROR_SECTOR.nExtentPos = pDisc->PROTECT.nNextLBAOfLastVolDesc;
-		pDisc->PROTECT.ERROR_SECTOR.nSectorSize 
+		pDisc->PROTECT.ERROR_SECTOR.nSectorSize
 			= pDisc->PROTECT.nPrevLBAOfPathTablePos - pDisc->PROTECT.nNextLBAOfLastVolDesc;
+	}
+	// for ProtectCD-VOB
+	else if (!strncmp((LPCH)pIsh->Name, ".vob.pcd", 8)) {
+		pDisc->PROTECT.byExist = protectCDVOB;
 	}
 }
 

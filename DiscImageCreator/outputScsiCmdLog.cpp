@@ -942,7 +942,7 @@ VOID OutputGetConfigurationFeatureReserved(
 	)
 {
 	OutputDriveLogA(
-		"\tReserved. FeatureCode[%#04x]\n"
+		"\tReserved (FeatureCode[%#04x])\n"
 		"\t\tData: ", MAKEWORD(pReserved->Header.FeatureCode[1], pReserved->Header.FeatureCode[0]));
 	for (INT i = 0; i < pReserved->Header.AdditionalLength; i++) {
 		OutputDriveLogA("%02x", pReserved->Data[i]);
@@ -955,7 +955,7 @@ VOID OutputGetConfigurationFeatureVendorSpecific(
 	)
 {
 	OutputDriveLogA(
-		"\tVendorSpecific. FeatureCode[%#04x]\n"
+		"\tVendorSpecific (FeatureCode[%#04x])\n"
 		"\t\tVendorSpecificData: ",
 		MAKEWORD(pVendorSpecific->Header.FeatureCode[1], pVendorSpecific->Header.FeatureCode[0]));
 	for (INT i = 0; i < pVendorSpecific->Header.AdditionalLength; i++) {

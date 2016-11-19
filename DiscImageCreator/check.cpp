@@ -1739,6 +1739,7 @@ VOID CheckAndFixMainHeader(
 {
 	LPBYTE lpWorkBuf = pDiscPerSector->data.present + pDisc->MAIN.uiMainDataSlideSize;
 	BOOL bHeader = IsValidMainDataHeader(lpWorkBuf);
+	INT idx = byCurrentTrackNum - 1;
 	if (bHeader) {
 		if (pDisc->PROTECT.byExist == smartE &&
 			(pDisc->PROTECT.ERROR_SECTOR.nExtentPos <= nLBA &&
@@ -1774,34 +1775,53 @@ VOID CheckAndFixMainHeader(
 		}
 	}
 	else {
-		if (pExtArg->byReadContinue && pDisc->PROTECT.byExist &&
-			(pDisc->PROTECT.ERROR_SECTOR.nExtentPos <= nLBA &&
-				nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize)) {
-			lpWorkBuf[15] = pDiscPerSector->mainHeader.present[15];
+		if (pExtArg->byReadContinue && pDisc->PROTECT.byExist) {
+			if (pDisc->PROTECT.ERROR_SECTOR.nExtentPos <= nLBA &&
+				nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize) {
+				lpWorkBuf[15] = pDiscPerSector->mainHeader.present[15];
+			}
+			if ((pDisc->PROTECT.byExist == protectCDVOB &&
+				(pDisc->SCSI.toc.TrackData[idx].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK &&
+				pDiscPerSector->subQ.present.byCtl == AUDIO_DATA_TRACK)) {
+				if (pDisc->PROTECT.ERROR_SECTOR.nExtentPos == 0) {
+					// 1st error sector
+					pDisc->PROTECT.ERROR_SECTOR.nExtentPos = nLBA;
+					pDisc->PROTECT.ERROR_SECTOR.nSectorSize = pDisc->SCSI.nAllLength - nLBA - 1;
+				}
+				// forced to set scrambled data to reserved byte
+				lpWorkBuf[0x814] = 0x48;
+				lpWorkBuf[0x815] = 0x64;
+				lpWorkBuf[0x816] = 0x36;
+				lpWorkBuf[0x817] = 0xab;
+				lpWorkBuf[0x818] = 0x56;
+				lpWorkBuf[0x819] = 0xff;
+				lpWorkBuf[0x81a] = 0x7e;
+				lpWorkBuf[0x81b] = 0xc0;
+			}
 		}
 	}
 	UpdateTmpMainHeader(&pDiscPerSector->mainHeader,
 		lpWorkBuf, pDiscPerSector->subQ.present.byCtl, nMainDataType);
-#if 0
-	if (nLBA >= 979 && 989 >= nLBA) {
-		OutputCDMain(fileMainError, pDiscPerSector->mainHeader.present, nLBA, CD_RAW_SECTOR_SIZE);
-	}
-#endif
+
 	if (!bHeader) {
-		if (pExtArg->byReadContinue && pDisc->PROTECT.byExist &&
-			(pDisc->PROTECT.ERROR_SECTOR.nExtentPos <= nLBA &&
+		if (pExtArg->byReadContinue && pDisc->PROTECT.byExist) {
+			if ((pDisc->PROTECT.byExist == protectCDVOB &&
+				(pDisc->SCSI.toc.TrackData[idx].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK &&
+				pDiscPerSector->subQ.present.byCtl == AUDIO_DATA_TRACK) ||
+				(pDisc->PROTECT.ERROR_SECTOR.nExtentPos <= nLBA &&
 				nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize)) {
-			OutputMainErrorWithLBALogA(
-				"This sector is data, but the header doesn't exist. So, the header is generated\n"
-				, nLBA, byCurrentTrackNum);
+				OutputMainErrorWithLBALogA(
+					"This sector is data, but the header doesn't exist, so the header is generated\n"
+					, nLBA, byCurrentTrackNum);
 #ifdef _DEBUG
-			OutputCDMain(fileMainError, lpWorkBuf, nLBA, MAINHEADER_MODE1_SIZE);
+				OutputCDMain(fileMainError, lpWorkBuf, nLBA, MAINHEADER_MODE1_SIZE);
 #endif
-			memcpy(lpWorkBuf,
-				pDiscPerSector->mainHeader.present, MAINHEADER_MODE1_SIZE);
+				memcpy(lpWorkBuf,
+					pDiscPerSector->mainHeader.present, MAINHEADER_MODE1_SIZE);
 #ifdef _DEBUG
-			OutputCDMain(fileMainError, lpWorkBuf, nLBA, MAINHEADER_MODE1_SIZE);
+				OutputCDMain(fileMainError, lpWorkBuf, nLBA, MAINHEADER_MODE1_SIZE);
 #endif
+			}
 		}
 		else {
 			INT nOfs = pDisc->MAIN.nCombinedOffset;

@@ -282,7 +282,6 @@ BOOL ReadDVDStructure(
 	WORD wDataSize = pDescHeader->Length - sizeof(pDescHeader->Length);
 	WORD wEntrySize = wDataSize / sizeof(DVD_STRUCTURE_LIST_ENTRY);
 
-	BYTE byLayerNum = 0;
 	OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDStructure));
 	OutputDriveLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDStructureList));
 	for (WORD i = 0; i < wEntrySize; i++) {
@@ -335,27 +334,12 @@ BOOL ReadDVDStructure(
 			OutputErrorString(_T("Failure - Format %02x\n"), pEntry->FormatCode);
 		}
 		else {
-			OutputDVDStructureFormat(pDisc, pEntry->FormatCode, 
+			DWORD dwSectorLen = 0;
+			OutputDVDStructureFormat(pEntry->FormatCode, 
 				wFormatLen - sizeof(DVD_DESCRIPTOR_HEADER), 
-				lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), &byLayerNum, 0,
-				pDevice->bySuccessReadToc);
-			if (byLayerNum == 1 &&
-				(pEntry->FormatCode == 0 || pEntry->FormatCode == 0x01 || 
-				pEntry->FormatCode == 0x04 || pEntry->FormatCode == 0x10 || 
-				pEntry->FormatCode == 0x12 || pEntry->FormatCode == 0x15)) {
-				cdb.LayerNumber = byLayerNum;
-
-				if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, 
-					lpFormat, wFormatLen, &byScsiStatus, _T(__FUNCTION__), __LINE__) ||
-					byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-					OutputErrorString(_T("Failure - Format %02x\n"), pEntry->FormatCode);
-				}
-				else {
-					OutputDVDStructureFormat(pDisc, pEntry->FormatCode,
-						wFormatLen - sizeof(DVD_DESCRIPTOR_HEADER), 
-						lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), &byLayerNum,
-						1, pDevice->bySuccessReadToc);
-				}
+				lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), &dwSectorLen);
+			if (pEntry->FormatCode == DvdPhysicalDescriptor) {
+				pDisc->SCSI.nAllLength = (INT)dwSectorLen;
 			}
 		}
 		FreeAndNull(lpFormat);

@@ -10,6 +10,7 @@ VOID SetReadCDCommand(
 	CDB::_READ_CD* cdb,
 	CDFLAG::_READ_CD::_EXPECTED_SECTOR_TYPE type,
 	DWORD dwTransferLen,
+	CDFLAG::_READ_CD::_ERROR_FLAGS c2,
 	CDFLAG::_READ_CD::_SUB_CHANNEL_SELECTION Sub,
 	BOOL bCheckReading
 	);
