@@ -1035,7 +1035,7 @@ VOID OutputFsImageSectionHeader(
 {
 	OutputVolDescLogA(
 		"\t========== Image Section Header (%u byte) ==========\n"
-		"\t                Name: %8.s\n"
+		"\t                Name: %.8s\n"
 		"\t      VirtualAddress: %08lx\n"
 		"\t       SizeOfRawData: %08lx\n"
 		"\t    PointerToRawData: %08lx\n"
