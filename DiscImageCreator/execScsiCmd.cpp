@@ -150,6 +150,7 @@ BOOL ReadTOCFull(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
+	PDISC_PER_SECTOR pDiscPerSector,
 	FILE* fpCcd
 	)
 {
@@ -180,8 +181,8 @@ BOOL ReadTOCFull(
 			return FALSE;
 		}
 		for (BYTE i = 0; i < pDisc->SCSI.toc.LastTrack; i++) {
-			if (!ReadCDForCheckingSubQAdr(pExtArg
-				, pDevice, pDisc, lpCmd, lpBuf, nOfs, i, &byMode, 1, fpCcd)) {
+			if (!ReadCDForCheckingSubQAdr(pExtArg, pDevice, pDisc
+				, pDiscPerSector, lpCmd, lpBuf, nOfs, i, &byMode, 1, fpCcd)) {
 				return FALSE;
 			}
 			if (bySessionNum < 1) {
@@ -252,8 +253,8 @@ BOOL ReadTOCFull(
 				}
 			}
 			if (pTocData[i].Point < 100) {
-				if (!ReadCDForCheckingSubQAdr(pExtArg, pDevice, pDisc, lpCmd, lpBuf, nOfs
-					, (BYTE)(pTocData[i].Point - 1), &byMode, pTocData[i].SessionNumber, fpCcd)) {
+				if (!ReadCDForCheckingSubQAdr(pExtArg, pDevice, pDisc, pDiscPerSector, lpCmd, lpBuf
+					, nOfs, (BYTE)(pTocData[i].Point - 1), &byMode, pTocData[i].SessionNumber, fpCcd)) {
 					throw FALSE;
 				}
 				if (bySessionNum < pTocData[i].SessionNumber) {

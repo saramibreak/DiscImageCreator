@@ -74,7 +74,12 @@
    59 subcoding symbols on the disc by using a single symbol correcting strategy (symbols 0, 1, 2
    and 3 only).
   [/quote]
-   => I can't understand these document.
+   => ISO/IEC 10149:1995 (http://standards.iso.org/ittf/PubliclyAvailableStandards/index.html)
+      14.5 P-Parity field p17, 14.6 Q-Parity field p17, Annex A pp25-28
+       This document is the specification of the CD-ROM, and these pages are described about
+      EDC(Error Detection Code), ECC(Error Correction Code).
+       EDC, ECC is coded by "ecm - Encoder/decoder for Error Code Modeler format" of Neill Corlett.
+      So, I can use these documents and source codes as reference, but I don't understand these yet.
 
 . read lead-in precisely
   http://senbee.seesaa.net/article/20732055.html

@@ -107,9 +107,10 @@ VOID OutputTocWithPregap(
 VOID OutputCDOffset(
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
-	BOOL bGetDriveOfs,
+	BOOL bGetDriveOffset,
 	INT nDriveSampleOffset,
-	INT nDriveOffset
+	INT nDriveOffset,
+	INT nSubchOffset
 	);
 
 VOID OutputCDC2Error296(

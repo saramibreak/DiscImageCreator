@@ -11,21 +11,24 @@
 
 #pragma warning(disable:4710 4711)
 #pragma warning(push)
-#pragma warning(disable:4091 4191 4365 4514 4668 4820 4987)
+#pragma warning(disable:4091 4191 4365 4514 4668 4820 4917 4987)
+#pragma comment(lib, "Advapi32.lib")
 #include <stddef.h>
 #include <stdio.h>
 #include <shlwapi.h>
+#pragma comment(lib, "shlwapi.lib")
+#include <imagehlp.h>
+#pragma comment(lib, "imagehlp.lib")
 #include <tchar.h>
 #include <time.h>
 #if 0
 #include <TlHelp32.h>
 #endif
 #include <windows.h>
-#include <winioctl.h>
-#include <WinSock.h>
 #ifdef UNICODE
 #include <fcntl.h>
 #include <io.h>
+#include <Shlobj.h>
 #endif
 
 // XML

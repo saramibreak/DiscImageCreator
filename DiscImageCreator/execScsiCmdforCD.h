@@ -30,6 +30,7 @@ BOOL ReadCDForCheckingSubQAdr(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
+	PDISC_PER_SECTOR pDiscPerSector,
 	LPBYTE lpCmd,
 	LPBYTE lpBuf,
 	INT nOfs,
@@ -56,7 +57,7 @@ BOOL ReadCDAll(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
-	PMAIN_HEADER pMain,
+	PDISC_PER_SECTOR pDiscPerSector,
 	LPCTSTR pszPath,
 	FILE* fpCcd
 	);
@@ -66,7 +67,7 @@ BOOL ReadCDPartial(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
-	PMAIN_HEADER pMain,
+	PDISC_PER_SECTOR pDiscPerSector,
 	LPCTSTR pszPath,
 	INT nStart,
 	INT nEnd,

@@ -709,7 +709,7 @@ VOID SetCDOffset(
 			pDisc->MAIN.nOffsetStart = 0;
 			pDisc->MAIN.nOffsetEnd = 0;
 			pDisc->MAIN.nFixStartLBA = 0;
-			pDisc->MAIN.nFixEndLBA = pDisc->SCSI.nAllLength;
+			pDisc->MAIN.nFixEndLBA = nEndLBA;
 		}
 		else {
 			pDisc->MAIN.uiMainDataSlideSize =
@@ -735,7 +735,7 @@ VOID SetCDOffset(
 			pDisc->MAIN.nOffsetStart = 0;
 			pDisc->MAIN.nOffsetEnd = 0;
 			pDisc->MAIN.nFixStartLBA = 0;
-			pDisc->MAIN.nFixEndLBA = pDisc->SCSI.nAllLength;
+			pDisc->MAIN.nFixEndLBA = nEndLBA;
 		}
 		else {
 			pDisc->MAIN.uiMainDataSlideSize =
@@ -760,7 +760,7 @@ VOID SetCDOffset(
 		pDisc->MAIN.nOffsetStart = 0;
 		pDisc->MAIN.nOffsetEnd = 0;
 		pDisc->MAIN.nFixStartLBA = 0;
-		pDisc->MAIN.nFixEndLBA = pDisc->SCSI.nAllLength;
+		pDisc->MAIN.nFixEndLBA = nEndLBA;
 	}
 }
 

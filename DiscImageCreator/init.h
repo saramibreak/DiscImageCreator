@@ -30,7 +30,8 @@ BOOL InitTocTextData(
 VOID InitMainDataHeader(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
-	PMAIN_HEADER pMain
+	PMAIN_HEADER pMain,
+	INT nLBA
 	);
 
 BOOL InitProtectData(

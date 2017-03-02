@@ -1612,7 +1612,7 @@ VOID CheckAndFixSubChannel(
 	BOOL bSecuRom
 	)
 {
-	if (pDevice->byPlxtrDrive == PLXTR_DRIVE_TYPE::PXS88T) {
+	if (pDisc->SUB.nSubchOffset) {
 		SetTmpSubQDataFromBuffer(&pDiscPerSector->subQ.next, pDiscPerSector->subcode.next);
 		if (1 <= pExtArg->dwSubAddionalNum) {
 			SetTmpSubQDataFromBuffer(&pDiscPerSector->subQ.nextNext, pDiscPerSector->subcode.nextNext);

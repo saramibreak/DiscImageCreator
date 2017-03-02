@@ -2,6 +2,7 @@
  * This code is released under the Microsoft Public License (MS-PL). See License.txt, below.
  */
 #include "struct.h"
+#include "convert.h"
 #include "init.h"
 #include "output.h"
 
@@ -186,18 +187,21 @@ BOOL InitTocTextData(
 VOID InitMainDataHeader(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
-	PMAIN_HEADER pMain
+	PMAIN_HEADER pMain,
+	INT nLBA
 	)
 {
 	memcpy(pMain->present, g_aSyncHeader, sizeof(g_aSyncHeader));
+	BYTE m, s, f;
+	LBAtoMSF(nLBA + 150, &m, &s, &f);
 	if (!pExtArg->byBe && *pExecType != data) {
-		pMain->present[12] = 0x01;
-		pMain->present[13] = 0x82;
+		pMain->present[12] = (BYTE)(DecToBcd(m) ^ 0x01);
+		pMain->present[13] = (BYTE)(DecToBcd(s) ^ 0x80);
 	}
 	else {
-		pMain->present[13] = 2;
+		pMain->present[13] = (BYTE)(DecToBcd(s));
 	}
-	pMain->present[14] = (BYTE)-1;
+	pMain->present[14] = (BYTE)(DecToBcd(f) - 1);
 }
 
 BOOL InitProtectData(

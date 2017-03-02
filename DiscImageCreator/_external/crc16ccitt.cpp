@@ -38,25 +38,61 @@ unsigned int GetCrc16CCITT(int n, byte c[])
 	return ~r & 0xFFFFU;
 }
 #if 0
-byte crc6_lut[256];
+// ref
+// https://en.wikipedia.org/wiki/Cyclic_redundancy_check
+// https://en.wikipedia.org/wiki/Reed%E2%80%93Solomon_error_correction
+#define CRCPOLY2  0x03U  /* x^{6}+x^{1}++1 */
+byte ecc_f_lut[64];
+byte ecc_b_lut[64];
 
 void MakeCrc6ITUTable(void)
 {
-	size_t i;
-	for (i = 0; i < 256; i++) {
-		size_t j;
-		for (byte bit = 8; bit > 0; --bit) {
-			j = (i << 1) ^ (i & 0x80 ? 0x03 : 0);
-		}
-		crc6_lut[i] = j;
+	unsigned int i, j, r;
+
+	for (i = 0; i <= 0x3f; i++) {
+		r = i;
+		for (j = 0; j < 6; j++)
+			if (r & 0x20U) r = (r << 1) ^ CRCPOLY2;
+			else             r <<= 1;
+			ecc_f_lut[i] = r & 0x3FU;
+			ecc_b_lut[i ^ r] = i;
 	}
 }
 
-byte GetCrc6ITU(int n, byte c[], int i)
-{
-	unsigned char tmp = c[i];
-	tmp = c[i] ^ crc6_lut[tmp];
-	return crc6_lut[tmp];
+char ecc6_checkpq(
+	const byte* data,
+	size_t major_count,
+	size_t minor_count,
+	size_t major_mult,
+	size_t minor_inc,
+	const byte* ecc
+) {
+	size_t size = major_count * minor_count;
+	size_t major;
+	for (major = 0; major < major_count; major++) {
+		size_t index = (major >> 1) * major_mult + (major & 1);
+		byte ecc_a = 0;
+		byte ecc_b = 0;
+		size_t minor;
+		for (minor = 0; minor < minor_count; minor++) {
+			byte temp = data[index];
+			index += minor_inc;
+			if (index >= size) {
+				index -= size;
+			}
+			ecc_a ^= temp;
+			ecc_b ^= temp;
+			ecc_a = ecc_f_lut[ecc_a];
+		}
+		ecc_a = ecc_b_lut[ecc_f_lut[ecc_a] ^ ecc_b];
+		if (
+			ecc[major] != (ecc_a) ||
+			ecc[major + major_count] != (ecc_a ^ ecc_b)
+			) {
+			return 0;
+		}
+	}
+	return 1;
 }
 #endif
 #pragma warning(pop)

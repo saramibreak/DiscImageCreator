@@ -21,8 +21,8 @@ FILE* CreateOrOpenFile(
 	LPCTSTR pszPath,
 	LPCTSTR pszPlusFname,
 	LPTSTR pszOutPath,
-	LPTSTR pszFname,
 	LPTSTR pszFnameAndExt,
+	LPTSTR pszFname,
 	LPCTSTR pszExt,
 	LPCTSTR pszMode,
 	BYTE byTrackNum,
@@ -60,17 +60,17 @@ FILE* CreateOrOpenFile(
 	}
 	szDstPath[_MAX_PATH - 1] = 0;
 
-	if (pszFname) {
-		// size of pszFname must be _MAX_FNAME.
-		ZeroMemory(pszFname, _MAX_FNAME);
-		_tsplitpath(szDstPath, NULL, NULL, szFname, szExt);
-		_sntprintf(pszFname, _MAX_FNAME, _T("%s%s"), szFname, szExt);
-	}
 	if (pszFnameAndExt) {
 		// size of pszFnameAndExt must be _MAX_FNAME.
 		ZeroMemory(pszFnameAndExt, _MAX_FNAME);
+		_tsplitpath(szDstPath, NULL, NULL, szFname, szExt);
+		_sntprintf(pszFnameAndExt, _MAX_FNAME, _T("%s%s"), szFname, szExt);
+	}
+	if (pszFname) {
+		// size of pszFname must be _MAX_FNAME.
+		ZeroMemory(pszFname, _MAX_FNAME);
 		_tsplitpath(szDstPath, NULL, NULL, szFname, NULL);
-		_sntprintf(pszFnameAndExt, _MAX_FNAME, _T("%s"), szFname);
+		_sntprintf(pszFname, _MAX_FNAME, _T("%s"), szFname);
 	}
 	if (pszOutPath) {
 		// size of pszOutPath must be _MAX_PATH.
@@ -88,8 +88,8 @@ FILE* CreateOrOpenFileW(
 	LPCWSTR pszPath,
 	LPCWSTR pszPlusFname,
 	LPWSTR pszOutPath,
-	LPWSTR pszFname,
 	LPWSTR pszFnameAndExt,
+	LPWSTR pszFname,
 	LPCWSTR pszExt,
 	LPCWSTR pszMode,
 	BYTE byTrackNum,
@@ -127,17 +127,17 @@ FILE* CreateOrOpenFileW(
 	}
 	szDstPath[_MAX_PATH - 1] = 0;
 
-	if (pszFname) {
-		// size of pszFname must be _MAX_PATH.
-		ZeroMemory(pszFname, _MAX_FNAME);
-		_wsplitpath(szDstPath, NULL, NULL, szFname, szExt);
-		_snwprintf(pszFname, _MAX_FNAME, L"%s%s", szFname, szExt);
-	}
 	if (pszFnameAndExt) {
 		// size of pszFnameAndExt must be _MAX_PATH.
 		ZeroMemory(pszFnameAndExt, _MAX_FNAME);
+		_wsplitpath(szDstPath, NULL, NULL, szFname, szExt);
+		_snwprintf(pszFnameAndExt, _MAX_FNAME, L"%s%s", szFname, szExt);
+	}
+	if (pszFname) {
+		// size of pszFname must be _MAX_PATH.
+		ZeroMemory(pszFname, _MAX_FNAME);
 		_wsplitpath(szDstPath, NULL, NULL, szFname, NULL);
-		_snwprintf(pszFnameAndExt, _MAX_FNAME, L"%s", szFname);
+		_snwprintf(pszFname, _MAX_FNAME, L"%s", szFname);
 	}
 	if (pszOutPath) {
 		// size of pszOutPath must be _MAX_PATH.
@@ -155,8 +155,8 @@ FILE* CreateOrOpenFileA(
 	LPCSTR pszPath,
 	LPCSTR pszPlusFname,
 	LPSTR pszOutPath,
-	LPSTR pszFname,
 	LPSTR pszFnameAndExt,
+	LPSTR pszFname,
 	LPCSTR pszExt,
 	LPCSTR pszMode,
 	BYTE byTrackNum,
@@ -194,17 +194,17 @@ FILE* CreateOrOpenFileA(
 	}
 	szDstPath[_MAX_PATH - 1] = 0;
 
-	if (pszFname) {
-		// size of pszFname must be _MAX_FNAME.
-		ZeroMemory(pszFname, _MAX_FNAME);
-		_splitpath(szDstPath, szDrive, szDir, szFname, szExt);
-		_snprintf(pszFname, _MAX_FNAME, "%s%s", szFname, szExt);
-	}
 	if (pszFnameAndExt) {
 		// size of pszFnameAndExt must be _MAX_FNAME.
 		ZeroMemory(pszFnameAndExt, _MAX_FNAME);
-		_splitpath(szDstPath, szDrive, szDir, szFname, szExt);
-		_snprintf(pszFnameAndExt, _MAX_FNAME, "%s", szFname);
+		_splitpath(szDstPath, NULL, NULL, szFname, szExt);
+		_snprintf(pszFnameAndExt, _MAX_FNAME, "%s%s", szFname, szExt);
+	}
+	if (pszFname) {
+		// size of pszFname must be _MAX_FNAME.
+		ZeroMemory(pszFname, _MAX_FNAME);
+		_splitpath(szDstPath, NULL, NULL, szFname, NULL);
+		_snprintf(pszFname, _MAX_FNAME, "%s", szFname);
 	}
 	if (pszOutPath) {
 		// size of pszOutPath must be _MAX_PATH.
@@ -769,9 +769,11 @@ VOID WriteErrorBuffer(
 	PDISC_PER_SECTOR pDiscPerSector,
 	LPBYTE lpScrambledBuf,
 	INT nLBA,
+	BYTE byCurrentTrackNum,
 	FILE* fpImg,
 	FILE* fpSub,
-	FILE* fpC2
+	FILE* fpC2,
+	FILE* fpParse
 	)
 {
 	UINT uiSize = 0;
@@ -835,10 +837,13 @@ VOID WriteErrorBuffer(
 			}
 		}
 	}
-
 	OutputLogA(standardErr | fileMainError,
 		"LBA[%06d, %#07x] Read error. padding [%ubyte]\n", nLBA, nLBA, uiSize);
-	fwrite(pDiscPerSector->subcode.present, sizeof(BYTE), CD_RAW_READ_SUBCODE_SIZE, fpSub);
+
+	BYTE lpSubcodeRaw[CD_RAW_READ_SUBCODE_SIZE] = { 0 };
+	AlignColumnSubcode(pDiscPerSector->subcode.present, lpSubcodeRaw);
+	WriteSubChannel(pDisc, lpSubcodeRaw
+		, pDiscPerSector->subcode.present, nLBA, byCurrentTrackNum, fpSub, fpParse);
 
 	if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
 		fwrite(pDiscPerSector->data.present + pDevice->TRANSFER.dwBufC2Offset
@@ -929,8 +934,7 @@ BOOL WriteParsingSubfile(
 				}
 			}
 			byPrevTrackNum = byTrackNum;
-			OutputCDSubToLog(&discData, 
-				&data[i], lpSubcodeRtoW, nLBA, byTrackNum, fpParse);
+			OutputCDSubToLog(&discData, &data[i], lpSubcodeRtoW, nLBA, byTrackNum, fpParse);
 			OutputString(
 				_T("\rParse sub(Size) %8d/%8lu"), i + CD_RAW_READ_SUBCODE_SIZE, dwFileSize);
 		}
@@ -1006,9 +1010,9 @@ BOOL SplitFileForGD(
 	)
 {
 	BOOL bRet = TRUE;
-	_TCHAR pszFnameAndExt[_MAX_PATH] = { 0 };
+	_TCHAR pszFname[_MAX_PATH] = { 0 };
 	FILE* fpImg = CreateOrOpenFile(pszPath, NULL,
-		NULL, NULL, pszFnameAndExt, _T(".img2"), _T("rb"), 0, 0);
+		NULL, NULL, pszFname, _T(".img2"), _T("rb"), 0, 0);
 	if (!fpImg) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
@@ -1058,29 +1062,25 @@ BOOL SplitFileForGD(
 			_ftprintf(fpGdi,
 				_T("1 %5d 4 2352 \"%s (Track %u).bin\" 0\n")
 				_T("2 [fix] 0 2352 \"%s (Track %u).bin\" 0\n"),
-				0, pszFnameAndExt, 1,
-				pszFnameAndExt, 2);
+				0, pszFname, 1,	pszFname, 2);
 		}
 		else if (10 <= byMaxTrackNum && lMaxLBA <= 99999) {
 			_ftprintf(fpGdi,
 				_T(" 1 %5d 4 2352 \"%s (Track %02u).bin\" 0\n")
 				_T(" 2 [fix] 0 2352 \"%s (Track %02u).bin\" 0\n"),
-				0, pszFnameAndExt, 1,
-				pszFnameAndExt, 2);
+				0, pszFname, 1, pszFname, 2);
 		}
 		else if (byMaxTrackNum <= 9 && 100000 <= lMaxLBA) {
 			_ftprintf(fpGdi,
 				_T("1 %6d 4 2352 \"%s (Track %u).bin\" 0\n")
 				_T("2  [fix] 0 2352 \"%s (Track %u).bin\" 0\n"),
-				0, pszFnameAndExt, 1,
-				pszFnameAndExt, 2);
+				0, pszFname, 1,	pszFname, 2);
 		}
 		else if (10 <= byMaxTrackNum && 100000 <= lMaxLBA) {
 			_ftprintf(fpGdi,
 				_T(" 1 %6d 4 2352 \"%s (Track %02u).bin\" 0\n")
 				_T(" 2  [fix] 0 2352 \"%s (Track %02u).bin\" 0\n"),
-				0, pszFnameAndExt, 1,
-				pszFnameAndExt, 2);
+				0, pszFname, 1,	pszFname, 2);
 		}
 
 		BYTE byTrackNum = 3;
@@ -1102,19 +1102,19 @@ BOOL SplitFileForGD(
 			}
 			if (byMaxTrackNum <= 9 && lMaxLBA <= 99999) {
 				_ftprintf(fpGdi, _T("%u %5ld %u 2352 \"%s (Track %u).bin\" 0\n"),
-					byTrackNum, lpToc[byTrackNum - 3], byCtl, pszFnameAndExt, byTrackNum);
+					byTrackNum, lpToc[byTrackNum - 3], byCtl, pszFname, byTrackNum);
 			}
 			else if (10 <= byMaxTrackNum && lMaxLBA <= 99999) {
 				_ftprintf(fpGdi, _T("%2u %5ld %u 2352 \"%s (Track %02u).bin\" 0\n"),
-					byTrackNum, lpToc[byTrackNum - 3], byCtl, pszFnameAndExt, byTrackNum);
+					byTrackNum, lpToc[byTrackNum - 3], byCtl, pszFname, byTrackNum);
 			}
 			else if (byMaxTrackNum <= 9 && 100000 <= lMaxLBA) {
 				_ftprintf(fpGdi, _T("%u %6ld %u 2352 \"%s (Track %u).bin\" 0\n"),
-					byTrackNum, lpToc[byTrackNum - 3], byCtl, pszFnameAndExt, byTrackNum);
+					byTrackNum, lpToc[byTrackNum - 3], byCtl, pszFname, byTrackNum);
 			}
 			else if (10 <= byMaxTrackNum && 100000 <= lMaxLBA) {
 				_ftprintf(fpGdi, _T("%2u %6ld %u 2352 \"%s (Track %02u).bin\" 0\n"),
-					byTrackNum, lpToc[byTrackNum - 3], byCtl, pszFnameAndExt, byTrackNum);
+					byTrackNum, lpToc[byTrackNum - 3], byCtl, pszFname, byTrackNum);
 			}
 		}
 		LONG lToc = 
@@ -1152,7 +1152,7 @@ BOOL SplitFileForGD(
 	return bRet;
 }
 
-VOID DescrambleMainChannel(
+VOID DescrambleMainChannelAll(
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
 	LPBYTE lpScrambledBuf,
@@ -1218,6 +1218,38 @@ VOID DescrambleMainChannel(
 			OutputString(_T("\n"));
 		}
 	}
+}
+
+VOID DescrambleMainChannelPartial(
+	INT nStartLBA,
+	INT nEndLBA,
+	LPBYTE lpScrambledBuf,
+	FILE* fpImg
+)
+{
+	BYTE aSrcBuf[CD_RAW_SECTOR_SIZE] = { 0 };
+	LONG lSeekPtr = 0;
+
+	for (; nStartLBA <= nEndLBA; nStartLBA++, lSeekPtr++) {
+		// ファイルを読み書き両用モードで開いている時は 注意が必要です。
+		// 読み込みを行った後に書き込みを行う場合やその逆を行う場合は、 
+		// 必ずfseekを呼ばなければなりません。もしこれを忘れると、
+		// 場合によってはバッファー内と 実際にディスクに描き込まれた
+		// データに矛盾が生じ、正確に書き込まれない場合や、
+		// 嘘の データを読み込む場合があります。
+		fseek(fpImg, lSeekPtr * CD_RAW_SECTOR_SIZE, SEEK_SET);
+		fread(aSrcBuf, sizeof(BYTE), sizeof(aSrcBuf), fpImg);
+		fseek(fpImg, -CD_RAW_SECTOR_SIZE, SEEK_CUR);
+		if (IsValidMainDataHeader(aSrcBuf)) {
+			for (INT n = 0; n < CD_RAW_SECTOR_SIZE; n++) {
+				aSrcBuf[n] ^= lpScrambledBuf[n];
+			}
+			fwrite(aSrcBuf, sizeof(BYTE), sizeof(aSrcBuf), fpImg);
+		}
+		OutputString(
+			_T("\rDescrambling data sector of img(LBA) %6d/%6d"), nStartLBA, nEndLBA);
+	}
+	OutputString(_T("\n"));
 }
 
 BOOL CreateBin(

@@ -285,8 +285,8 @@ FILE* CreateOrOpenFile(
 	LPCTSTR pszPath,
 	LPCTSTR pszPlusFname,
 	LPTSTR pszOutPath,
-	LPTSTR pszFname,
 	LPTSTR pszFnameAndExt,
+	LPTSTR pszFname,
 	LPCTSTR pszExt,
 	LPCTSTR pszMode,
 	BYTE byTrackNum,
@@ -297,8 +297,8 @@ FILE* CreateOrOpenFileW(
 	LPCWSTR pszPath,
 	LPCWSTR pszPlusFname,
 	LPWSTR pszOutPath,
-	LPWSTR pszFname,
 	LPWSTR pszFnameAndExt,
+	LPWSTR pszFname,
 	LPCWSTR pszExt,
 	LPCWSTR pszMode,
 	BYTE byTrackNum,
@@ -309,8 +309,8 @@ FILE* CreateOrOpenFileA(
 	LPCSTR pszPath,
 	LPCSTR pszPlusFname,
 	LPSTR pszOutPath,
-	LPSTR pszFname,
 	LPSTR pszFnameAndExt,
+	LPSTR pszFname,
 	LPCSTR pszExt,
 	LPCSTR pszMode,
 	BYTE byTrackNum,
@@ -400,9 +400,11 @@ VOID WriteErrorBuffer(
 	PDISC_PER_SECTOR pDiscPerSector,
 	LPBYTE lpScrambledBuf,
 	INT nLBA,
+	BYTE byCurrentTrackNum,
 	FILE* fpImg,
 	FILE* fpSub,
-	FILE* fpC2
+	FILE* fpC2,
+	FILE* fpParse
 	);
 
 BOOL WriteParsingSubfile(
@@ -417,12 +419,19 @@ BOOL SplitFileForGD(
 	LPCTSTR pszPath
 	);
 
-VOID DescrambleMainChannel(
+VOID DescrambleMainChannelAll(
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
 	LPBYTE lpScrambledBuf,
 	FILE* fpImg
 	);
+
+VOID DescrambleMainChannelPartial(
+	INT nStartLBA,
+	INT nEndLBA,
+	LPBYTE lpScrambledBuf,
+	FILE* fpImg
+);
 
 BOOL CreateBinCueCcd(
 	PEXT_ARG pExtArg,

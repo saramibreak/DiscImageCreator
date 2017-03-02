@@ -310,7 +310,7 @@ int calculatingHash(CComPtr<IXmlWriter> pWriter)
 	return bRet;
 }
 
-int readWriteDat(_TCHAR* pszFullPath)
+int readWriteDat(void)
 {
 	WCHAR wszDir[_MAX_DIR] = { 0 };
 #ifndef UNICODE
@@ -369,19 +369,22 @@ int readWriteDat(_TCHAR* pszFullPath)
 	}
 
 	WCHAR wszPathForDat[_MAX_PATH] = { 0 };
+	_TCHAR szPathWithoutExtension[_MAX_FNAME] = { 0 };
+	_sntprintf(szPathWithoutExtension, _MAX_FNAME, _T("%s\\%s\\%s"), s_szDrive, s_szDir, s_szFname);
+	szPathWithoutExtension[_MAX_FNAME - 1] = 0;
 #ifndef UNICODE
 	if(!MultiByteToWideChar(CP_ACP, 0
-		, pszFullPath, sizeof(s_szCurrentdir) / sizeof(s_szCurrentdir[0])
+		, szPathWithoutExtension, sizeof(szPathWithoutExtension) / sizeof(szPathWithoutExtension[0])
 		, wszPathForDat, sizeof(wszPathForDat) / sizeof(wszPathForDat[0]))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
 #else
 	size = sizeof(wszPathForDat) / sizeof(wszPathForDat[0]);
-	wcsncpy(wszPathForDat, pszFullPath, size);
+	wcsncpy(wszPathForDat, szPathWithoutExtension, size);
 	wszPathForDat[size - 1] = 0;
 #endif
-	if(!PathRenameExtensionW(wszPathForDat, L".dat")) {
+	if(!PathAddExtensionW(wszPathForDat, L".dat")) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
@@ -683,7 +686,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 								throw FALSE;
 							}
 						}
-						InitMainDataHeader(pExecType, pExtArg, &mainHeader);
+						InitMainDataHeader(pExecType, pExtArg, &mainHeader, s_nStartLBA);
 						if (!InitSubData(pExecType, &pDisc)) {
 							throw FALSE;
 						}
@@ -702,15 +705,22 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 #if 0
 						MakeCrc6ITUTable();
 #endif
-						if (*pExecType != data) {
-							if (!ReadCDForSearchingOffset(pExecType, pExtArg, &devData, pDisc)) {
-								throw FALSE;
-							}
+						if (!ReadCDForSearchingOffset(pExecType, pExtArg, &devData, pDisc)) {
+							throw FALSE;
+						}
+						if (pDisc->SUB.nSubchOffset && pExtArg->dwSubAddionalNum == 0) {
+							OutputString(
+								_T("Warning: Subch offset exists in this drive. Changed /s 0 to /s 1.\n"));
+							pExtArg->dwSubAddionalNum = 1;
+						}
+						if (*pExecType == data && (pExtArg->byD8 || devData.byPlxtrDrive) || *pExecType != data) {
 							if (!ReadCDForCheckingReadInOut(pExtArg, &devData, pDisc)) {
 								throw FALSE;
 							}
 						}
-						if (!ReadTOCFull(pExtArg, &devData, &discData, fpCcd)) {
+						DISC_PER_SECTOR discPerSector = { 0 };
+						memcpy(&discPerSector.mainHeader, &mainHeader, sizeof(MAIN_HEADER));
+						if (!ReadTOCFull(pExtArg, &devData, &discData, &discPerSector, fpCcd)) {
 							throw FALSE;
 						}
 						if (!pExtArg->byReverse) {
@@ -723,28 +733,33 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 								if (!ReadCDForFileSystem(pExtArg, &devData, pDisc)) {
 									throw FALSE;
 								}
+								if (pExtArg->byReadContinue && pDisc->PROTECT.byExist == no) {
+									OutputString(
+										_T("Warning: Protection can't be detected. /rc option is ignored.\n"));
+									pExtArg->byReadContinue = FALSE;
+								}
 							}
 						}
 						if (*pExecType == cd) {
 							bRet = ReadCDAll(pExecType, pExtArg,
-								&devData, pDisc, &mainHeader, pszFullPath, fpCcd);
+								&devData, pDisc, &discPerSector, pszFullPath, fpCcd);
 						}
 						else if (*pExecType == gd) {
 							if (!ReadCDForGDTOC(pExtArg, &devData, pDisc)) {
 								throw FALSE;
 							}
 							bRet = ReadCDPartial(pExecType, pExtArg, &devData,
-								pDisc, &mainHeader, pszFullPath, FIRST_LBA_FOR_GD,
+								pDisc, &discPerSector, pszFullPath, FIRST_LBA_FOR_GD,
 								549149 + 1, CDFLAG::_READ_CD::CDDA);
 						}
 						else if (*pExecType == data) {
 							bRet = ReadCDPartial(pExecType, pExtArg, &devData,
-								pDisc, &mainHeader, pszFullPath, s_nStartLBA,
+								pDisc, &discPerSector, pszFullPath, s_nStartLBA,
 								s_nEndLBA, CDFLAG::_READ_CD::All);
 						}
 						else if (*pExecType == audio) {
 							bRet = ReadCDPartial(pExecType, pExtArg, &devData,
-								pDisc, &mainHeader, pszFullPath, s_nStartLBA,
+								pDisc, &discPerSector, pszFullPath, s_nStartLBA,
 								s_nEndLBA, CDFLAG::_READ_CD::CDDA);
 						}
 					}
@@ -776,7 +791,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 						}
 					}
 					if (bRet && (*pExecType == cd || *pExecType == dvd || *pExecType == gd)) {
-						bRet = readWriteDat(pszFullPath);
+						bRet = readWriteDat();
 					}
 				}
 			}
@@ -828,10 +843,17 @@ int printAndSetPath(_TCHAR* szPathFromArg, _TCHAR* pszFullPath)
 		}
 		if (!PathFileExists(pszFullPath)) {
 			OutputErrorString(_T("%s doesn't exist, so create.\n"), pszFullPath);
-			if (!CreateDirectory(pszFullPath, NULL)) {
+#ifdef UNICODE
+			if (SHCreateDirectory(NULL, pszFullPath)) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				return FALSE;
 			}
+#else
+			if (!MakeSureDirectoryPathExists(pszFullPath)) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				return FALSE;
+			}
+#endif
 		}
 		if (!PathAppend(pszFullPath, s_szFname)) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -841,6 +863,20 @@ int printAndSetPath(_TCHAR* szPathFromArg, _TCHAR* pszFullPath)
 	}
 	else {
 		_tcsncpy(pszFullPath, szPathFromArg, _MAX_PATH);
+		if (!PathFileExists(s_szDir)) {
+			OutputErrorString(_T("%s doesn't exist, so create.\n"), pszFullPath);
+#ifdef UNICODE
+			if (SHCreateDirectory(NULL, s_szDir)) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				return FALSE;
+			}
+#else
+			if (!MakeSureDirectoryPathExists(pszFullPath)) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				return FALSE;
+			}
+#endif
+		}
 	}
 	OutputString(
 		_T("CurrentDirectory\n")
@@ -1106,6 +1142,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			OutputErrorString(_T("Bad arg: [%s] Please integer\n"), endptr);
 			return FALSE;
 		}
+		pExtArg->dwSubAddionalNum = 1;
 
 		for (INT i = 8; i <= argc; i++) {
 			if (!_tcsncmp(argv[i - 1], _T("/a"), 2)) {
@@ -1124,6 +1161,11 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			}
 			else if (!_tcsncmp(argv[i - 1], _T("/c2"), 3)) {
 				if (!SetOptionC2(argc, argv, pExtArg, &i)) {
+					return FALSE;
+				}
+			}
+			else if (!_tcsncmp(argv[i - 1], _T("/rc"), 3)) {
+				if (!SetOptionRc(argc, argv, pExtArg, &i)) {
 					return FALSE;
 				}
 			}
@@ -1209,11 +1251,12 @@ void printUsage(void)
 		_T("\t\tRipping a CD from a to z\n")
 		_T("\t\tFor PLEXTOR or drive that can scramble ripping\n")
 		_T("\tdata <DriveLetter> <Filename> <DriveSpeed(0-72)> <StartLBA> <EndLBA+1>\n")
-		_T("\t     [/be (str) or /d8] [/c2 (val1) (val2) (val3)] [/s (val)]\n")
+		_T("\t     [/be (str) or /d8] [/c2 (val1) (val2) (val3)] [/rc (val)] [/s (val)]\n")
 		_T("\t\tRipping a CD from start to end (using 'all' flag)\n")
 		_T("\t\tFor no PLEXTOR or drive that can't scramble ripping\n")
 		_T("\taudio <DriveLetter> <Filename> <DriveSpeed(0-72)> <StartLBA> <EndLBA+1>\n")
-		_T("\t      [/a (val)]\n")
+		_T("\t      [/a (val)] [/be (str) or /d8] [/c2 (val1) (val2) (val3)]\n")
+		_T("\t      [/rc (val)] [/s (val)]\n")
 		_T("\t\tRipping a CD from start to end (using 'cdda' flag)\n")
 		_T("\t\tFor dumping a lead-in, lead-out mainly\n")
 		_T("\tgd <DriveLetter> <Filename> <DriveSpeed(0-72)>\n")

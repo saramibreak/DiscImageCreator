@@ -148,6 +148,7 @@ typedef struct _DISC {
 		BYTE byIndex0InTrack1;
 		BYTE byCatalog;
 		BYTE padding1;
+		INT nSubchOffset;
 		INT nFirstLBAForMCN[3][2];
 		INT nRangeLBAForMCN[3][2];
 		INT nPrevMCNSector;

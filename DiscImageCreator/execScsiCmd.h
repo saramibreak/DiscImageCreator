@@ -28,6 +28,7 @@ BOOL ReadTOCFull(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
+	PDISC_PER_SECTOR pDiscPerSector,
 	FILE* fpCcd
 	);
 

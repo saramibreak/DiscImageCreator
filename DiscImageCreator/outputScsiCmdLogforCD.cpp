@@ -1129,13 +1129,14 @@ VOID OutputTocWithPregap(
 VOID OutputCDOffset(
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
-	BOOL bGetDriveOfs,
+	BOOL bGetDriveOffset,
 	INT nDriveSampleOffset,
-	INT nDriveOffset
+	INT nDriveOffset,
+	INT nSubchOffset
 	)
 {
 	OutputDiscLogA("======= Offset");
-	if (bGetDriveOfs) {
+	if (bGetDriveOffset) {
 		OutputDiscLogA(
 			"(Drive offset data referes to http://www.accuraterip.com) =======");
 	}
@@ -1175,6 +1176,10 @@ VOID OutputCDOffset(
 	}
 	OutputDiscLogA(
 		"\tOverread sector: %d\n", pDisc->MAIN.nAdjustSectorNum);
+	if (nSubchOffset != 0xff) {
+		OutputDiscLogA(
+			"\tSubch Offset: %d\n", nSubchOffset);
+	}
 }
 
 VOID OutputCDC2Error296(
