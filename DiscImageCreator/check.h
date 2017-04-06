@@ -28,6 +28,7 @@ BOOL IsValidPlextorDrive(
 	);
 
 BOOL IsValidPregapSector(
+	PEXEC_TYPE pExecType,
 	PDISC pDisc,
 	PSUB_Q pSubQ,
 	INT nLBA
@@ -38,8 +39,8 @@ BOOL IsValidLibCryptSector(
 	INT nLBA
 	);
 
-BOOL IsValidIntentionalSubErrorSector(
-	BOOL bIntentionalSubError,
+BOOL IsValidIntentionalSubSector(
+	BOOL bIntentionalSub,
 	PDISC pDisc,
 	INT nLBA
 	);

@@ -443,7 +443,7 @@ BOOL GetConfiguration(
 				lpConf + sizeof(GET_CONFIGURATION_HEADER), dwAllLen - sizeof(GET_CONFIGURATION_HEADER));
 			if (pDevice->byPlxtrDrive == (BYTE)PLXTR_DRIVE_TYPE::PXW1210A ||
 				pDevice->byPlxtrDrive == (BYTE)PLXTR_DRIVE_TYPE::PXW1210S) {
-				// Somehow SetCDSpeed fails in PX-W1210...
+				// Somehow SetDiscSpeed fails in PX-W1210...
 				pDevice->FEATURE.bySetCDSpeed = FALSE;
 			}
 		}
@@ -546,18 +546,32 @@ BOOL ReadBufferCapacity(
 	return TRUE;
 }
 
-// https://msdn.microsoft.com/ja-jp/library/ff551396(v=vs.85).aspx
-BOOL SetCDSpeed(
+BOOL SetDiscSpeed(
+	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
-	DWORD dwCDSpeedNum
+	DWORD dwDiscSpeedNum
 	)
 {
-	if (pDevice->FEATURE.bySetCDSpeed) {
+	if ((*pExecType == cd || *pExecType == gd || *pExecType == audio || *pExecType == data)
+		&& pDevice->FEATURE.bySetCDSpeed || *pExecType == dvd) {
 		WORD wSpeed = 0;
+		// https://msdn.microsoft.com/en-us/library/windows/hardware/ff551368(v=vs.85).aspx
+		// https://msdn.microsoft.com/ja-jp/library/ff551396(v=vs.85).aspx
 		_declspec(align(4)) CDROM_SET_SPEED setspeed;
-		if (0 < dwCDSpeedNum && dwCDSpeedNum <= DRIVE_MAX_SPEED) {
-			wSpeed = (WORD)(CD_RAW_SECTOR_SIZE * 75 * dwCDSpeedNum / 1000);
+		if ((*pExecType == cd || *pExecType == gd || *pExecType == audio || *pExecType == data) &&
+			0 < dwDiscSpeedNum && dwDiscSpeedNum <= CD_DRIVE_MAX_SPEED) {
+			// 2048 x 75 = 153600 B -> 150 KiB
+			// 2352 x 75 = 176400 B -> 172,265625 KiB
+			wSpeed = (WORD)(CD_RAW_SECTOR_SIZE * 75 * dwDiscSpeedNum / 1000);
+			setspeed.ReadSpeed = wSpeed;
+		}
+		else if (*pExecType == dvd &&
+			0 < dwDiscSpeedNum && dwDiscSpeedNum <= DVD_DRIVE_MAX_SPEED) {
+			// Read and write speeds for the first DVD drives and players were of
+			// 1,385 kB/s (1,353 KiB/s); this speed is usually called "1x".
+			// 2048 x 75 x 9 = 1384448 B -> 1352 KiB
+			wSpeed = (WORD)(DISC_RAW_READ_SIZE * 676 * dwDiscSpeedNum / 1000);
 			setspeed.ReadSpeed = wSpeed;
 		}
 		else {
@@ -567,8 +581,8 @@ BOOL SetCDSpeed(
 		CDB::_SET_CD_SPEED cdb = { 0 };
 		cdb.OperationCode = SCSIOP_SET_CD_SPEED;
 		REVERSE_BYTES_SHORT(&cdb.ReadSpeed, &wSpeed);
+		// https://msdn.microsoft.com/en-us/library/windows/hardware/ff551370(v=vs.85).aspx
 		setspeed.RequestType = CdromSetSpeed;
-		setspeed.RotationControl = CdromDefaultRotation;
 
 		BYTE byScsiStatus = 0;
 		if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, &setspeed, 
@@ -718,6 +732,7 @@ BOOL ReadEeprom(
 }
 
 BOOL ReadDriveInformation(
+	PEXEC_TYPE pExexType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
@@ -746,13 +761,13 @@ BOOL ReadDriveInformation(
 		ReadEeprom(pExtArg, pDevice);
 		SetSpeedRead(pExtArg, pDevice, TRUE);
 	}
-	// 5th: get currentMedia, if use CD-Text, C2 error, modesense, readbuffercapacity, setcdspeed or not here.
+	// 5th: get currentMedia, if use CD-Text, C2 error, modesense, readbuffercapacity, SetDiscSpeed or not here.
 	if (!GetConfiguration(pExtArg, pDevice, pDisc)) {
 		return FALSE;
 	}
 	ModeSense10(pExtArg, pDevice);
 	ReadBufferCapacity(pExtArg, pDevice);
-	SetCDSpeed(pExtArg, pDevice, dwCDSpeed);
+	SetDiscSpeed(pExexType, pExtArg, pDevice, dwCDSpeed);
 
 	return TRUE;
 }

@@ -837,7 +837,7 @@ VOID WriteErrorBuffer(
 			}
 		}
 	}
-	OutputLogA(standardErr | fileMainError,
+	OutputLogA(standardError | fileMainError,
 		"LBA[%06d, %#07x] Read error. padding [%ubyte]\n", nLBA, nLBA, uiSize);
 
 	BYTE lpSubcodeRaw[CD_RAW_READ_SUBCODE_SIZE] = { 0 };
@@ -868,20 +868,19 @@ BOOL WriteParsingSubfile(
 	FILE* fpSub = NULL;
 	DWORD dwTrackAllocSize = MAXIMUM_NUMBER_TRACKS + 10 + 1;
 	try {
-		fpSub = CreateOrOpenFile(
-			pszSubfile, NULL, NULL, NULL, NULL, _T(".sub"), _T("rb"), 0, 0);
-		if (!fpSub) {
+		if (NULL == (fpSub = CreateOrOpenFile(
+			pszSubfile, NULL, NULL, NULL, NULL, _T(".sub"), _T("rb"), 0, 0))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
 		DWORD dwFileSize = GetFileSize(0, fpSub);
-		data = (LPBYTE)calloc(dwFileSize, sizeof(BYTE));
-		if (!data) {
+		if (NULL == (data = (LPBYTE)calloc(dwFileSize, sizeof(BYTE)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
 		size_t uiReadSize = fread(data, sizeof(BYTE), dwFileSize, fpSub);
 		FcloseAndNull(fpSub);
+
 		if (uiReadSize < CD_RAW_READ_SUBCODE_SIZE) {
 			throw FALSE;
 		}
@@ -936,7 +935,7 @@ BOOL WriteParsingSubfile(
 			byPrevTrackNum = byTrackNum;
 			OutputCDSubToLog(&discData, &data[i], lpSubcodeRtoW, nLBA, byTrackNum, fpParse);
 			OutputString(
-				_T("\rParse sub(Size) %8d/%8lu"), i + CD_RAW_READ_SUBCODE_SIZE, dwFileSize);
+				_T("\rParsing sub (Size) %8d/%8lu"), i + CD_RAW_READ_SUBCODE_SIZE, dwFileSize);
 		}
 		OutputString(_T("\n"));
 	}
@@ -966,42 +965,37 @@ BOOL DescrambleMainChannelForGD(
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
-	FILE* fpImg = NULL;
-	try {
-		if (NULL == (fpImg = CreateOrOpenFile(
-			pszPath, NULL, NULL, NULL, NULL, _T(".img2"), _T("wb"), 0, 0))) {
-			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-			throw FALSE;
-		}
-		DWORD dwFileSize = GetFileSize(0, fpScm);
-		DWORD dwAllSectorVal = dwFileSize / CD_RAW_SECTOR_SIZE;
-		BYTE bufScm[CD_RAW_SECTOR_SIZE] = { 0 };
-		BYTE bufImg[CD_RAW_SECTOR_SIZE] = { 0 };
-		for (DWORD i = 0; i < dwAllSectorVal; i++) {
-			fread(bufScm, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpScm);
-			if (IsValidMainDataHeader(bufScm)) {
-				if (bufScm[0x0C] == 0xC3 && bufScm[0x0D] == 0x84 && bufScm[0x0E] >= 0x00) {
-					break;
-				}
-				for (INT j = 0; j < CD_RAW_SECTOR_SIZE; j++) {
-					bufImg[j] = (BYTE)(bufScm[j] ^ scrambled_table[j]);
-				}
-				fwrite(bufImg, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpImg);
-			}
-			else {
-				// copy audio data
-				fwrite(bufScm, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpImg);
-			}
-			OutputString(_T("\rDescrambling File(LBA) %6lu/%6lu"), i, dwAllSectorVal);
-		}
-		OutputString(_T("\n"));
-		FcloseAndNull(fpImg);
+	FILE* fpImg = CreateOrOpenFile(
+		pszPath, NULL, NULL, NULL, NULL, _T(".img2"), _T("wb"), 0, 0);
+	if (!fpImg) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		FcloseAndNull(fpScm);
+		return FALSE;
 	}
-	catch (BOOL bErr) {
-		bRet = bErr;
+	DWORD dwFileSize = GetFileSize(0, fpScm);
+	DWORD dwAllSectorVal = dwFileSize / CD_RAW_SECTOR_SIZE;
+	BYTE bufScm[CD_RAW_SECTOR_SIZE] = { 0 };
+	BYTE bufImg[CD_RAW_SECTOR_SIZE] = { 0 };
+	for (DWORD i = 0; i < dwAllSectorVal; i++) {
+		fread(bufScm, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpScm);
+		if (IsValidMainDataHeader(bufScm)) {
+			if (bufScm[0x0C] == 0xC3 && bufScm[0x0D] == 0x84 && bufScm[0x0E] >= 0x00) {
+				break;
+			}
+			for (INT j = 0; j < CD_RAW_SECTOR_SIZE; j++) {
+				bufImg[j] = (BYTE)(bufScm[j] ^ scrambled_table[j]);
+			}
+			fwrite(bufImg, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpImg);
+		}
+		else {
+			// copy audio data
+			fwrite(bufScm, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpImg);
+		}
+		OutputString(_T("\rDescrambling img (LBA) %6lu/%6lu"), i, dwAllSectorVal);
 	}
-	FcloseAndNull(fpScm);
+	OutputString(_T("\n"));
 	FcloseAndNull(fpImg);
+	FcloseAndNull(fpScm);
 	return bRet;
 }
 
@@ -1124,7 +1118,6 @@ BOOL SplitFileForGD(
 
 		rewind(fpImg);
 		for (BYTE i = 3; i <= byMaxTrackNum; i++) {
-			OutputString(_T("\rSplit File(num) %2u/%2u"), i, byMaxTrackNum);
 			if (NULL == (fpBin = CreateOrOpenFile(pszPath, NULL, NULL,
 				NULL, NULL, _T(".bin"), _T("wb"), i, byMaxTrackNum))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -1140,6 +1133,7 @@ BOOL SplitFileForGD(
 			fwrite(lpBuf, sizeof(BYTE), size, fpBin);
 			FcloseAndNull(fpBin);
 			FreeAndNull(lpBuf);
+			OutputString(_T("\rSplitting img (Track) %2u/%2u"), i, byMaxTrackNum);
 		}
 		OutputString(_T("\n"));
 	}
@@ -1213,7 +1207,7 @@ VOID DescrambleMainChannelAll(
 				}
 #endif
 				OutputString(
-					_T("\rDescrambling data sector of img(LBA) %6d/%6d"), nFirstLBA, nLastLBA);
+					_T("\rDescrambling data sector of img (LBA) %6d/%6d"), nFirstLBA, nLastLBA);
 			}
 			OutputString(_T("\n"));
 		}
@@ -1247,7 +1241,7 @@ VOID DescrambleMainChannelPartial(
 			fwrite(aSrcBuf, sizeof(BYTE), sizeof(aSrcBuf), fpImg);
 		}
 		OutputString(
-			_T("\rDescrambling data sector of img(LBA) %6d/%6d"), nStartLBA, nEndLBA);
+			_T("\rDescrambling data sector of img (LBA) %6d/%6d"), nStartLBA, nEndLBA);
 	}
 	OutputString(_T("\n"));
 }
@@ -1345,6 +1339,7 @@ BOOL CreateBinCueCcd(
 		if (NULL == (fpCueSync = CreateOrOpenFile(
 			pszPath, _T(" (Subs indexes)"), NULL, NULL, NULL, _T(".cue"), _T(WFLAG), 0, 0))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			FcloseAndNull(fpCueSyncForImg);
 			return FALSE;
 		}
 		WriteCueForFirst(pDisc, bCanCDText, fpCueSyncForImg);
@@ -1354,10 +1349,11 @@ BOOL CreateBinCueCcd(
 
 	BOOL bRet = TRUE;
 	_TCHAR pszFname[_MAX_FNAME] = { 0 };
+	FILE* fpBin = NULL;
+	FILE* fpBinSync = NULL;
 	for (BYTE i = pDisc->SCSI.toc.FirstTrack; i <= pDisc->SCSI.toc.LastTrack; i++) {
-		FILE* fpBin = CreateOrOpenFile(pszPath, NULL, NULL, pszFname,
-			NULL, _T(".bin"), _T("wb"), i, pDisc->SCSI.toc.LastTrack);
-		if (!fpBin) {
+		if (NULL == (fpBin = CreateOrOpenFile(pszPath, NULL, NULL, pszFname,
+			NULL, _T(".bin"), _T("wb"), i, pDisc->SCSI.toc.LastTrack))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			bRet = FALSE;
 			break;
@@ -1367,12 +1363,10 @@ BOOL CreateBinCueCcd(
 		WriteCueForUnderFileDirective(pDisc, bCanCDText, i, fpCue);
 		WriteCcdForTrack(pDisc, i, fpCcd);
 
-		FILE* fpBinSync = NULL;
 		_TCHAR pszFnameSync[_MAX_FNAME] = { 0 };
 		if (pDisc->SUB.byDesync) {
-			fpBinSync = CreateOrOpenFile(pszPath, _T(" (Subs indexes)"), NULL, 
-				pszFnameSync, NULL, _T(".bin"), _T("wb"), i, pDisc->SCSI.toc.LastTrack);
-			if (!fpBinSync) {
+			if (NULL == (fpBinSync = CreateOrOpenFile(pszPath, _T(" (Subs indexes)"), NULL,
+				pszFnameSync, NULL, _T(".bin"), _T("wb"), i, pDisc->SCSI.toc.LastTrack))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				bRet = FALSE;
 				break;
@@ -1381,8 +1375,6 @@ BOOL CreateBinCueCcd(
 			WriteCueForFileDirective(pszFnameSync, fpCueSync);
 			WriteCueForUnderFileDirective(pDisc, bCanCDText, i, fpCueSync);
 		}
-		OutputString(
-			_T("\rCreating bin, cue and ccd (Track) %2u/%2u"), i, pDisc->SCSI.toc.LastTrack);
 
 		BYTE index = 0;
 		INT nLBAofFirstIdx = pDisc->SUB.lpFirstLBAListOnSub[i - 1][0];
@@ -1512,11 +1504,30 @@ BOOL CreateBinCueCcd(
 				break;
 			}
 		}
+		OutputString(
+			_T("\rCreating bin, cue and ccd (Track) %2u/%2u"), i, pDisc->SCSI.toc.LastTrack);
 	}
+	OutputString(_T("\n"));
+	FcloseAndNull(fpBinSync);
+	FcloseAndNull(fpBin);
 	FcloseAndNull(fpCueSyncForImg);
 	FcloseAndNull(fpCueSync);
-	OutputString(_T("\n"));
 	return bRet;
+}
+
+VOID OutputIntentionalSubchannel(
+	INT nLBA,
+	LPBYTE lpSubcode
+)
+{
+	BYTE m, s, f;
+	LBAtoMSF(nLBA + 150, &m, &s, &f);
+	OutputSubIntentionalLogA(
+		"MSF: %02d:%02d:%02d Q-Data: %02x%02x%02x %02x:%02x:%02x %02x %02x:%02x:%02x %02x%02x\n"
+		, m, s, f, lpSubcode[0], lpSubcode[1], lpSubcode[2], lpSubcode[3], lpSubcode[4], lpSubcode[5]
+		, lpSubcode[6], lpSubcode[7], lpSubcode[8], lpSubcode[9], lpSubcode[10], lpSubcode[11]
+	);
+
 }
 
 VOID OutputHashData(

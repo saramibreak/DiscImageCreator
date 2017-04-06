@@ -11,16 +11,17 @@
 
 #define STR_DOUBLE_HYPHEN_B		"========== "
 #define STR_DOUBLE_HYPHEN_E		" ==========\n"
-#define STR_LBA					"LBA[%06d, %#07x], "
-#define STR_SUBCH				"SubCh[%02x], "
+#define STR_LBA					"LBA[%06d, %#07x]: "
+#define STR_OPCODE				"Opcode[%#x]: "
+#define STR_SUBCH				"SubCh[%02x]: "
 #define STR_TRACK				"Track[%02u]: "
 #define STR_SUB					"Sub"
 #define STR_NO_SUPPORT			" doesn't support on this drive\n"
 
 #define OUTPUT_DHYPHEN_PLUS_STR(str)				STR_DOUBLE_HYPHEN_B #str STR_DOUBLE_HYPHEN_E
 #define OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(str)		STR_DOUBLE_HYPHEN_B STR_LBA #str STR_DOUBLE_HYPHEN_E
-#define OUTPUT_DHYPHEN_PLUS_STR_WITH_SUBCH_F(str)	STR_DOUBLE_HYPHEN_B STR_SUBCH #str STR_DOUBLE_HYPHEN_E
-#define OUTPUT_DHYPHEN_PLUS_STR_WITH_TRACK_F(str)	STR_DOUBLE_HYPHEN_B STR_TRACK #str STR_DOUBLE_HYPHEN_E
+#define OUTPUT_DHYPHEN_PLUS_STR_WITH_SUBCH_F(str)	STR_DOUBLE_HYPHEN_B STR_OPCODE STR_SUBCH #str STR_DOUBLE_HYPHEN_E
+#define OUTPUT_DHYPHEN_PLUS_STR_WITH_TRACK_F(str)	STR_DOUBLE_HYPHEN_B STR_OPCODE STR_SUBCH STR_TRACK #str STR_DOUBLE_HYPHEN_E
 #define OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA			STR_DOUBLE_HYPHEN_B STR_LBA "%s" STR_DOUBLE_HYPHEN_E
 #define OUTPUT_DHYPHEN_PLUS_STR_WITH_SUBCH			STR_DOUBLE_HYPHEN_B STR_SUBCH "%s" STR_DOUBLE_HYPHEN_E
 #define OUTPUT_DHYPHEN_PLUS_STR_WITH_TRACK			STR_DOUBLE_HYPHEN_B STR_TRACK "%s" STR_DOUBLE_HYPHEN_E
@@ -91,6 +92,9 @@ extern CHAR logBufferA[DISC_RAW_READ_SIZE];
 #define OutputSubInfoWithLBALogA(str, nLBA, track, ...) \
 	OutputDebugStringWithLBAExA(STR_LBA STR_TRACK str, nLBA, track, __VA_ARGS__)
 
+#define OutputSubIntentionalLogW(str, ...)		OutputDebugStringExW(str, __VA_ARGS__)
+#define OutputSubIntentionalLogA(str, ...)		OutputDebugStringExA(str, __VA_ARGS__)
+
 #define OutputSubErrorLogW(str, ...)	OutputDebugStringExW(str, __VA_ARGS__)
 #define OutputSubErrorLogA(str, ...)	OutputDebugStringExA(str, __VA_ARGS__)
 #define OutputSubErrorWithLBALogA(str, nLBA, track, ...) \
@@ -114,6 +118,7 @@ extern _LOG_FILE g_LogFile;
 	fflush(g_LogFile.fpMainInfo); \
 	fflush(g_LogFile.fpMainError); \
 	fflush(g_LogFile.fpSubInfo); \
+	fflush(g_LogFile.fpSubIntention); \
 	fflush(g_LogFile.fpSubError); \
 	fflush(g_LogFile.fpC2Error); \
 }
@@ -151,10 +156,13 @@ extern _LOG_FILE g_LogFile;
 #define OutputSubInfoWithLBALogA(str, nLBA, track, ...) \
 	fprintf(g_LogFile.fpSubInfo, STR_LBA STR_TRACK str, nLBA, nLBA, track, __VA_ARGS__);
 
+#define OutputSubIntentionalLogW(str, ...)		fwprintf(g_LogFile.fpSubIntention, str, __VA_ARGS__);
+#define OutputSubIntentionalLogA(str, ...)		fprintf(g_LogFile.fpSubIntention, str, __VA_ARGS__);
+
 #define OutputSubErrorLogW(str, ...)	fwprintf(g_LogFile.fpSubError, str, __VA_ARGS__);
+#define OutputSubErrorLogA(str, ...)	fprintf(g_LogFile.fpSubError, str, __VA_ARGS__);
 #define OutputSubErrorWithLBALogA(str, nLBA, track, ...) \
 	fprintf(g_LogFile.fpSubError, STR_LBA STR_TRACK STR_SUB str, nLBA, nLBA, track, __VA_ARGS__);
-#define OutputSubErrorLogA(str, ...)	fprintf(g_LogFile.fpSubError, str, __VA_ARGS__);
 
 #define OutputC2ErrorLogW(str, ...)		fwprintf(g_LogFile.fpC2Error, str, __VA_ARGS__);
 #define OutputC2ErrorLogA(str, ...)		fprintf(g_LogFile.fpC2Error, str, __VA_ARGS__);
@@ -167,7 +175,7 @@ extern _LOG_FILE g_LogFile;
 	if ((t & standardOut) == standardOut) { \
 		OutputStringW(str, __VA_ARGS__); \
 	} \
-	if ((t & standardErr) == standardErr) { \
+	if ((t & standardError) == standardError) { \
 		OutputErrorStringW(str, __VA_ARGS__); \
 	} \
 	if ((t & fileDisc) == fileDisc) { \
@@ -188,6 +196,9 @@ extern _LOG_FILE g_LogFile;
 	if ((t & fileSubInfo) == fileSubInfo) { \
 		OutputSubInfoLogW(str, __VA_ARGS__); \
 	} \
+	if ((t & fileSubIntention) == fileSubIntention) { \
+		OutputSubIntentionalLogW(str, __VA_ARGS__); \
+	} \
 	if ((t & fileSubError) == fileSubError) { \
 		OutputSubErrorLogW(str, __VA_ARGS__); \
 	} \
@@ -201,7 +212,7 @@ extern _LOG_FILE g_LogFile;
 	if ((t & standardOut) == standardOut) { \
 		OutputStringA(str, __VA_ARGS__); \
 	} \
-	if ((t & standardErr) == standardErr) { \
+	if ((t & standardError) == standardError) { \
 		OutputErrorStringA(str, __VA_ARGS__); \
 	} \
 	if ((t & fileDisc) == fileDisc) { \
@@ -222,6 +233,9 @@ extern _LOG_FILE g_LogFile;
 	if ((t & fileSubInfo) == fileSubInfo) { \
 		OutputSubInfoLogA(str, __VA_ARGS__); \
 	} \
+	if ((t & fileSubIntention) == fileSubIntention) { \
+		OutputSubIntentionalLogA(str, __VA_ARGS__); \
+	} \
 	if ((t & fileSubError) == fileSubError) { \
 		OutputSubErrorLogA(str, __VA_ARGS__); \
 	} \
@@ -236,33 +250,35 @@ extern _LOG_FILE g_LogFile;
 #define AFLAG "a, ccs=UTF-8"
 #define BOOLEAN_TO_STRING_TRUE_FALSE	BOOLEAN_TO_STRING_TRUE_FALSE_W
 #define BOOLEAN_TO_STRING_YES_NO		BOOLEAN_TO_STRING_YES_NO_W
-#define OutputString		OutputStringW
-#define OutputErrorString	OutputErrorStringW
-#define OutputDiscLog		OutputDiscLogW
-#define OutputVolDescLog	OutputVolDescLogW
-#define OutputDriveLog		OutputDriveLogW
-#define OutputMainInfoLog	OutputMainInfoLogW
-#define OutputMainErrorLog	OutputMainErrorLogW
-#define OutputSubInfoLog	OutputSubInfoLogW
-#define OutputSubErrorLog	OutputSubErrorLogW
-#define OutputC2ErrorLog	OutputC2ErrorLogW
-#define OutputLog			OutputLogW
+#define OutputString			OutputStringW
+#define OutputErrorString		OutputErrorStringW
+#define OutputDiscLog			OutputDiscLogW
+#define OutputVolDescLog		OutputVolDescLogW
+#define OutputDriveLog			OutputDriveLogW
+#define OutputMainInfoLog		OutputMainInfoLogW
+#define OutputMainErrorLog		OutputMainErrorLogW
+#define OutputSubInfoLog		OutputSubInfoLogW
+#define OutputSubIntentionalLog	OutputSubIntentionalLogW
+#define OutputSubErrorLog		OutputSubErrorLogW
+#define OutputC2ErrorLog		OutputC2ErrorLogW
+#define OutputLog				OutputLogW
 #else
 #define WFLAG "w"
 #define AFLAG "a"
 #define BOOLEAN_TO_STRING_TRUE_FALSE	BOOLEAN_TO_STRING_TRUE_FALSE_A
 #define BOOLEAN_TO_STRING_YES_NO		BOOLEAN_TO_STRING_YES_NO_A
-#define OutputString		OutputStringA
-#define OutputErrorString	OutputErrorStringA
-#define OutputDiscLog		OutputDiscLogA
-#define OutputVolDescLog	OutputVolDescLogA
-#define OutputDriveLog		OutputDriveLogA
-#define OutputMainInfoLog	OutputMainInfoLogA
-#define OutputMainErrorLog	OutputMainErrorLogA
-#define OutputSubInfoLog	OutputSubInfoLogA
-#define OutputSubErrorLog	OutputSubErrorLogA
-#define OutputC2ErrorLog	OutputC2ErrorLogA
-#define OutputLog			OutputLogA
+#define OutputString			OutputStringA
+#define OutputErrorString		OutputErrorStringA
+#define OutputDiscLog			OutputDiscLogA
+#define OutputVolDescLog		OutputVolDescLogA
+#define OutputDriveLog			OutputDriveLogA
+#define OutputMainInfoLog		OutputMainInfoLogA
+#define OutputMainErrorLog		OutputMainErrorLogA
+#define OutputSubInfoLog		OutputSubInfoLogA
+#define OutputSubIntentionalLog	OutputSubIntentionalLogA
+#define OutputSubErrorLog		OutputSubErrorLogA
+#define OutputC2ErrorLog		OutputC2ErrorLogA
+#define OutputLog				OutputLogA
 #endif
 
 #define FcloseAndNull(fp) \
@@ -444,6 +460,11 @@ BOOL CreateBinCueCcd(
 	FILE* fpCueForImg,
 	FILE* fpCcd
 	);
+
+VOID OutputIntentionalSubchannel(
+	INT nLBA,
+	LPBYTE lpSubcode
+);
 
 VOID OutputHashData(
 	FILE* fpHash,

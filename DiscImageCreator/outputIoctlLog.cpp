@@ -12,46 +12,46 @@ VOID OutputAdditionalSenseCodeQualifier0x00(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("NO ADDITIONAL SENSE INFORMATION"));
+		OutputLog(standardError | fileMainError, _T("NO ADDITIONAL SENSE INFORMATION"));
 		break;
 	case 0x06:
-		OutputErrorString(_T("I/O PROCESS TERMINATED"));
+		OutputLog(standardError | fileMainError, _T("I/O PROCESS TERMINATED"));
 		break;
 	case 0x11:
-		OutputErrorString(_T("AUDIO PLAY OPERATION IN PROGRES"));
+		OutputLog(standardError | fileMainError, _T("AUDIO PLAY OPERATION IN PROGRES"));
 		break;
 	case 0x12:
-		OutputErrorString(_T("AUDIO PLAY OPERATION PAUSED"));
+		OutputLog(standardError | fileMainError, _T("AUDIO PLAY OPERATION PAUSED"));
 		break;
 	case 0x13:
-		OutputErrorString(_T("AUDIO PLAY OPERATION SUCCESSFULLY COMPLETED"));
+		OutputLog(standardError | fileMainError, _T("AUDIO PLAY OPERATION SUCCESSFULLY COMPLETED"));
 		break;
 	case 0x14:
-		OutputErrorString(_T("AUDIO PLAY OPERATION STOPPED DUE TO ERROR"));
+		OutputLog(standardError | fileMainError, _T("AUDIO PLAY OPERATION STOPPED DUE TO ERROR"));
 		break;
 	case 0x15:
-		OutputErrorString(_T("NO CURRENT AUDIO STATUS TO RETURN"));
+		OutputLog(standardError | fileMainError, _T("NO CURRENT AUDIO STATUS TO RETURN"));
 		break;
 	case 0x16:
-		OutputErrorString(_T("OPERATION IN PROGRESS"));
+		OutputLog(standardError | fileMainError, _T("OPERATION IN PROGRESS"));
 		break;
 	case 0x17:
-		OutputErrorString(_T("CLEANING REQUESTED"));
+		OutputLog(standardError | fileMainError, _T("CLEANING REQUESTED"));
 		break;
 	case 0x1d:
-		OutputErrorString(_T("ATA PASS THROUGH INFORMATION AVAILABLE"));
+		OutputLog(standardError | fileMainError, _T("ATA PASS THROUGH INFORMATION AVAILABLE"));
 		break;
 	case 0x1e:
-		OutputErrorString(_T("CONFLICTING SA CREATION REQUE"));
+		OutputLog(standardError | fileMainError, _T("CONFLICTING SA CREATION REQUE"));
 		break;
 	case 0x1f:
-		OutputErrorString(_T("LOGICAL UNIT TRANSITIONING TO ANOTHER POWER CONDITION"));
+		OutputLog(standardError | fileMainError, _T("LOGICAL UNIT TRANSITIONING TO ANOTHER POWER CONDITION"));
 		break;
 	case 0x20:
-		OutputErrorString(_T("EXTENDED COPY INFORMATION AVAILABLE"));
+		OutputLog(standardError | fileMainError, _T("EXTENDED COPY INFORMATION AVAILABLE"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -62,10 +62,10 @@ VOID OutputAdditionalSenseCodeQualifier0x01(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("NO INDEX/SECTOR SIGNAL"));
+		OutputLog(standardError | fileMainError, _T("NO INDEX/SECTOR SIGNAL"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -76,10 +76,10 @@ VOID OutputAdditionalSenseCodeQualifier0x02(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("NO SEEK COMPLETE"));
+		OutputLog(standardError | fileMainError, _T("NO SEEK COMPLETE"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -90,10 +90,10 @@ VOID OutputAdditionalSenseCodeQualifier0x03(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("PERIPHERAL DEVICE WRITE FAULT"));
+		OutputLog(standardError | fileMainError, _T("PERIPHERAL DEVICE WRITE FAULT"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -104,85 +104,85 @@ VOID OutputAdditionalSenseCodeQualifier0x04(
 {
 	switch (byAscq) {
 	case SCSI_SENSEQ_CAUSE_NOT_REPORTABLE:
-		OutputErrorString(_T("LUN_NOT_READY - CAUSE_NOT_REPORTABLE"));
+		OutputLog(standardError | fileMainError, _T("LUN_NOT_READY - CAUSE_NOT_REPORTABLE"));
 		break;
 	case SCSI_SENSEQ_BECOMING_READY:
-		OutputErrorString(_T("LUN_NOT_READY - BECOMING_READY"));
+		OutputLog(standardError | fileMainError, _T("LUN_NOT_READY - BECOMING_READY"));
 		break;
 	case SCSI_SENSEQ_INIT_COMMAND_REQUIRED:
-		OutputErrorString(_T("LUN_NOT_READY - INIT_COMMAND_REQUIRED"));
+		OutputLog(standardError | fileMainError, _T("LUN_NOT_READY - INIT_COMMAND_REQUIRED"));
 		break;
 	case SCSI_SENSEQ_MANUAL_INTERVENTION_REQUIRED:
-		OutputErrorString(_T("LUN_NOT_READY - MANUAL_INTERVENTION_REQUIRED"));
+		OutputLog(standardError | fileMainError, _T("LUN_NOT_READY - MANUAL_INTERVENTION_REQUIRED"));
 		break;
 	case SCSI_SENSEQ_FORMAT_IN_PROGRESS:
-		OutputErrorString(_T("LUN_NOT_READY - FORMAT_IN_PROGRESS"));
+		OutputLog(standardError | fileMainError, _T("LUN_NOT_READY - FORMAT_IN_PROGRESS"));
 		break;
 	case SCSI_SENSEQ_REBUILD_IN_PROGRESS:
-		OutputErrorString(_T("LUN_NOT_READY - REBUILD_IN_PROGRESS"));
+		OutputLog(standardError | fileMainError, _T("LUN_NOT_READY - REBUILD_IN_PROGRESS"));
 		break;
 	case SCSI_SENSEQ_RECALCULATION_IN_PROGRESS:
-		OutputErrorString(_T("LUN_NOT_READY - RECALCULATION_IN_PROGRESS"));
+		OutputLog(standardError | fileMainError, _T("LUN_NOT_READY - RECALCULATION_IN_PROGRESS"));
 		break;
 	case SCSI_SENSEQ_OPERATION_IN_PROGRESS:
-		OutputErrorString(_T("LUN_NOT_READY - OPERATION_IN_PROGRESS"));
+		OutputLog(standardError | fileMainError, _T("LUN_NOT_READY - OPERATION_IN_PROGRESS"));
 		break;
 	case SCSI_SENSEQ_LONG_WRITE_IN_PROGRESS:
-		OutputErrorString(_T("LUN_NOT_READY - LONG_WRITE_IN_PROGRESS"));
+		OutputLog(standardError | fileMainError, _T("LUN_NOT_READY - LONG_WRITE_IN_PROGRESS"));
 		break;
 	case 0x09:
-		OutputErrorString(_T("LUN_NOT_READY - SELF-TEST IN PROGRESS"));
+		OutputLog(standardError | fileMainError, _T("LUN_NOT_READY - SELF-TEST IN PROGRESS"));
 		break;
 	case 0x0a:
-		OutputErrorString(_T("LUN_NOT_READY - ASYMMETRIC ACCESS STATE TRANSITION"));
+		OutputLog(standardError | fileMainError, _T("LUN_NOT_READY - ASYMMETRIC ACCESS STATE TRANSITION"));
 		break;
 	case 0x0b:
-		OutputErrorString(_T("LUN_NOT_READY - TARGET PORT IN STANDBY STATE"));
+		OutputLog(standardError | fileMainError, _T("LUN_NOT_READY - TARGET PORT IN STANDBY STATE"));
 		break;
 	case 0x0c:
-		OutputErrorString(_T("LUN_NOT_READY - TARGET PORT IN UNAVAILABLE STATE"));
+		OutputLog(standardError | fileMainError, _T("LUN_NOT_READY - TARGET PORT IN UNAVAILABLE STATE"));
 		break;
 	case 0x10:
-		OutputErrorString(_T("LUN_NOT_READY - AUXILIARY MEMORY NOT ACCESSIBLE"));
+		OutputLog(standardError | fileMainError, _T("LUN_NOT_READY - AUXILIARY MEMORY NOT ACCESSIBLE"));
 		break;
 	case 0x11:
-		OutputErrorString(_T("LUN_NOT_READY - NOTIFY (ENABLE SPINUP) REQUIRED"));
+		OutputLog(standardError | fileMainError, _T("LUN_NOT_READY - NOTIFY (ENABLE SPINUP) REQUIRED"));
 		break;
 	case 0x13:
-		OutputErrorString(_T("LUN_NOT_READY - SA CREATION IN PROGRESS"));
+		OutputLog(standardError | fileMainError, _T("LUN_NOT_READY - SA CREATION IN PROGRESS"));
 		break;
 	case 0x14:
-		OutputErrorString(_T("LUN_NOT_READY - SPACE ALLOCATION IN PROGRESS"));
+		OutputLog(standardError | fileMainError, _T("LUN_NOT_READY - SPACE ALLOCATION IN PROGRESS"));
 		break;
 	case 0x1a:
-		OutputErrorString(_T("LUN_NOT_READY - START STOP UNIT COMMAND IN PROGRESS"));
+		OutputLog(standardError | fileMainError, _T("LUN_NOT_READY - START STOP UNIT COMMAND IN PROGRESS"));
 		break;
 	case 0x1b:
-		OutputErrorString(_T("LUN_NOT_READY - SANITIZE IN PROGRESS"));
+		OutputLog(standardError | fileMainError, _T("LUN_NOT_READY - SANITIZE IN PROGRESS"));
 		break;
 	case 0x1c:
-		OutputErrorString(_T("LUN_NOT_READY - ADDITIONAL POWER USE NOT YET GRANTED"));
+		OutputLog(standardError | fileMainError, _T("LUN_NOT_READY - ADDITIONAL POWER USE NOT YET GRANTED"));
 		break;
 	case 0x1d:
-		OutputErrorString(_T("LUN_NOT_READY - CONFIGURATION IN PROGRESS"));
+		OutputLog(standardError | fileMainError, _T("LUN_NOT_READY - CONFIGURATION IN PROGRESS"));
 		break;
 	case 0x1e:
-		OutputErrorString(_T("LUN_NOT_READY - MICROCODE ACTIVATION REQUIRED"));
+		OutputLog(standardError | fileMainError, _T("LUN_NOT_READY - MICROCODE ACTIVATION REQUIRED"));
 		break;
 	case 0x1f:
-		OutputErrorString(_T("LUN_NOT_READY - MICROCODE DOWNLOAD REQUIRED"));
+		OutputLog(standardError | fileMainError, _T("LUN_NOT_READY - MICROCODE DOWNLOAD REQUIRED"));
 		break;
 	case 0x20:
-		OutputErrorString(_T("LUN_NOT_READY - LOGICAL UNIT RESET REQUIRED"));
+		OutputLog(standardError | fileMainError, _T("LUN_NOT_READY - LOGICAL UNIT RESET REQUIRED"));
 		break;
 	case 0x21:
-		OutputErrorString(_T("LUN_NOT_READY - HARD RESET REQUIRED"));
+		OutputLog(standardError | fileMainError, _T("LUN_NOT_READY - HARD RESET REQUIRED"));
 		break;
 	case 0x22:
-		OutputErrorString(_T("LUN_NOT_READY - POWER CYCLE REQUIRED"));
+		OutputLog(standardError | fileMainError, _T("LUN_NOT_READY - POWER CYCLE REQUIRED"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -193,10 +193,10 @@ VOID OutputAdditionalSenseCodeQualifier0x05(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("LOGICAL UNIT DOES NOT RESPOND TO SELECTION"));
+		OutputLog(standardError | fileMainError, _T("LOGICAL UNIT DOES NOT RESPOND TO SELECTION"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -207,10 +207,10 @@ VOID OutputAdditionalSenseCodeQualifier0x06(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("NO REFERENCE POSITION FOUND"));
+		OutputLog(standardError | fileMainError, _T("NO REFERENCE POSITION FOUND"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -221,10 +221,10 @@ VOID OutputAdditionalSenseCodeQualifier0x07(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("MULTIPLE PERIPHERAL DEVICES SELECTED"));
+		OutputLog(standardError | fileMainError, _T("MULTIPLE PERIPHERAL DEVICES SELECTED"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -235,22 +235,22 @@ VOID OutputAdditionalSenseCodeQualifier0x08(
 {
 	switch (byAscq) {
 	case SCSI_SENSEQ_COMM_FAILURE:
-		OutputErrorString(_T("LUN_COMMUNICATION - COMM_FAILURE"));
+		OutputLog(standardError | fileMainError, _T("LUN_COMMUNICATION - COMM_FAILURE"));
 		break;
 	case SCSI_SENSEQ_COMM_TIMEOUT:
-		OutputErrorString(_T("LUN_COMMUNICATION - COMM_TIMEOUT"));
+		OutputLog(standardError | fileMainError, _T("LUN_COMMUNICATION - COMM_TIMEOUT"));
 		break;
 	case SCSI_SENSEQ_COMM_PARITY_ERROR:
-		OutputErrorString(_T("LUN_COMMUNICATION - COMM_PARITY_ERROR"));
+		OutputLog(standardError | fileMainError, _T("LUN_COMMUNICATION - COMM_PARITY_ERROR"));
 		break;
 	case SCSI_SESNEQ_COMM_CRC_ERROR:
-		OutputErrorString(_T("LUN_COMMUNICATION - COMM_CRC_ERROR"));
+		OutputLog(standardError | fileMainError, _T("LUN_COMMUNICATION - COMM_CRC_ERROR"));
 		break;
 	case SCSI_SENSEQ_UNREACHABLE_TARGET:
-		OutputErrorString(_T("LUN_COMMUNICATION - UNREACHABLE_TARGET"));
+		OutputLog(standardError | fileMainError, _T("LUN_COMMUNICATION - UNREACHABLE_TARGET"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -261,22 +261,22 @@ VOID OutputAdditionalSenseCodeQualifier0x09(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("TRACK FOLLOWING ERROR"));
+		OutputLog(standardError | fileMainError, _T("TRACK FOLLOWING ERROR"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("TRACKING SERVO FAILURE"));
+		OutputLog(standardError | fileMainError, _T("TRACKING SERVO FAILURE"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("FOCUS SERVO FAILURE"));
+		OutputLog(standardError | fileMainError, _T("FOCUS SERVO FAILURE"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("SPINDLE SERVO FAILURE"));
+		OutputLog(standardError | fileMainError, _T("SPINDLE SERVO FAILURE"));
 		break;
 	case 0x04:
-		OutputErrorString(_T("HEAD SELECT FAULT"));
+		OutputLog(standardError | fileMainError, _T("HEAD SELECT FAULT"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -287,10 +287,10 @@ VOID OutputAdditionalSenseCodeQualifier0x0a(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("ERROR LOG OVERFLOW"));
+		OutputLog(standardError | fileMainError, _T("ERROR LOG OVERFLOW"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -301,37 +301,37 @@ VOID OutputAdditionalSenseCodeQualifier0x0b(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("WARNING"));
+		OutputLog(standardError | fileMainError, _T("WARNING"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("WARNING - SPECIFIED TEMPERATURE EXCEEDED"));
+		OutputLog(standardError | fileMainError, _T("WARNING - SPECIFIED TEMPERATURE EXCEEDED"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("WARNING - ENCLOSURE DEGRADED"));
+		OutputLog(standardError | fileMainError, _T("WARNING - ENCLOSURE DEGRADED"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("WARNING - BACKGROUND SELF-TEST FAILED"));
+		OutputLog(standardError | fileMainError, _T("WARNING - BACKGROUND SELF-TEST FAILED"));
 		break;
 	case 0x04:
-		OutputErrorString(_T("WARNING - BACKGROUND PRE-SCAN DETECTED MEDIUM ERROR"));
+		OutputLog(standardError | fileMainError, _T("WARNING - BACKGROUND PRE-SCAN DETECTED MEDIUM ERROR"));
 		break;
 	case 0x05:
-		OutputErrorString(_T("WARNING - BACKGROUND MEDIUM SCAN DETECTED MEDIUM ERROR"));
+		OutputLog(standardError | fileMainError, _T("WARNING - BACKGROUND MEDIUM SCAN DETECTED MEDIUM ERROR"));
 		break;
 	case 0x06:
-		OutputErrorString(_T("WARNING - NON-VOLATILE CACHE NOW VOLATILE"));
+		OutputLog(standardError | fileMainError, _T("WARNING - NON-VOLATILE CACHE NOW VOLATILE"));
 		break;
 	case 0x07:
-		OutputErrorString(_T("WARNING - DEGRADED POWER TO NON-VOLATILE CACHE"));
+		OutputLog(standardError | fileMainError, _T("WARNING - DEGRADED POWER TO NON-VOLATILE CACHE"));
 		break;
 	case 0x08:
-		OutputErrorString(_T("WARNING - POWER LOSS EXPECTED"));
+		OutputLog(standardError | fileMainError, _T("WARNING - POWER LOSS EXPECTED"));
 		break;
 	case 0x09:
-		OutputErrorString(_T("WARNING - DEVICE STATISTICS NOTIFICATION ACTIVE"));
+		OutputLog(standardError | fileMainError, _T("WARNING - DEVICE STATISTICS NOTIFICATION ACTIVE"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -342,49 +342,49 @@ VOID OutputAdditionalSenseCodeQualifier0x0c(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("WRITE ERROR"));
+		OutputLog(standardError | fileMainError, _T("WRITE ERROR"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("WRITE ERROR - AUTO REALLOCATION FAILED"));
+		OutputLog(standardError | fileMainError, _T("WRITE ERROR - AUTO REALLOCATION FAILED"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("WRITE ERROR - RECOMMEND REASSIGNMENT"));
+		OutputLog(standardError | fileMainError, _T("WRITE ERROR - RECOMMEND REASSIGNMENT"));
 		break;
 	case 0x04:
-		OutputErrorString(_T("WRITE ERROR - COMPRESSION CHECK MISCOMPARE ERROR"));
+		OutputLog(standardError | fileMainError, _T("WRITE ERROR - COMPRESSION CHECK MISCOMPARE ERROR"));
 		break;
 	case 0x05:
-		OutputErrorString(_T("WRITE ERROR - DATA EXPANSION OCCURRED DURING COMPRESSION"));
+		OutputLog(standardError | fileMainError, _T("WRITE ERROR - DATA EXPANSION OCCURRED DURING COMPRESSION"));
 		break;
 	case 0x06:
-		OutputErrorString(_T("WRITE ERROR - BLOCK NOT COMPRESSIBLE"));
+		OutputLog(standardError | fileMainError, _T("WRITE ERROR - BLOCK NOT COMPRESSIBLE"));
 		break;
 	case 0x07:
-		OutputErrorString(_T("WRITE ERROR - RECOVERY NEEDED"));
+		OutputLog(standardError | fileMainError, _T("WRITE ERROR - RECOVERY NEEDED"));
 		break;
 	case 0x08:
-		OutputErrorString(_T("WRITE ERROR - RECOVERY FAILED"));
+		OutputLog(standardError | fileMainError, _T("WRITE ERROR - RECOVERY FAILED"));
 		break;
 	case SCSI_SENSEQ_LOSS_OF_STREAMING:
-		OutputErrorString(_T("WRITE ERROR - LOSS OF STREAMING"));
+		OutputLog(standardError | fileMainError, _T("WRITE ERROR - LOSS OF STREAMING"));
 		break;
 	case SCSI_SENSEQ_PADDING_BLOCKS_ADDED:
-		OutputErrorString(_T("WRITE ERROR - PADDING BLOCKS ADDED"));
+		OutputLog(standardError | fileMainError, _T("WRITE ERROR - PADDING BLOCKS ADDED"));
 		break;
 	case 0x0b:
-		OutputErrorString(_T("WRITE ERROR - AUXILIARY MEMORY WRITE ERROR"));
+		OutputLog(standardError | fileMainError, _T("WRITE ERROR - AUXILIARY MEMORY WRITE ERROR"));
 		break;
 	case 0x0c:
-		OutputErrorString(_T("WRITE ERROR - UNEXPECTED UNSOLICITED DATA"));
+		OutputLog(standardError | fileMainError, _T("WRITE ERROR - UNEXPECTED UNSOLICITED DATA"));
 		break;
 	case 0x0d:
-		OutputErrorString(_T("WRITE ERROR - NOT ENOUGH UNSOLICITED DATA"));
+		OutputLog(standardError | fileMainError, _T("WRITE ERROR - NOT ENOUGH UNSOLICITED DATA"));
 		break;
 	case 0x0f:
-		OutputErrorString(_T("WRITE ERROR - DEFECTS IN ERROR WINDOW"));
+		OutputLog(standardError | fileMainError, _T("WRITE ERROR - DEFECTS IN ERROR WINDOW"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -395,25 +395,25 @@ VOID OutputAdditionalSenseCodeQualifier0x0d(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("ERROR DETECTED BY THIRD PARTY TEMPORARY INITIATOR"));
+		OutputLog(standardError | fileMainError, _T("ERROR DETECTED BY THIRD PARTY TEMPORARY INITIATOR"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("THIRD PARTY DEVICE FAILURE"));
+		OutputLog(standardError | fileMainError, _T("THIRD PARTY DEVICE FAILURE"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("COPY TARGET DEVICE NOT REACHABLE"));
+		OutputLog(standardError | fileMainError, _T("COPY TARGET DEVICE NOT REACHABLE"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("INCORRECT COPY TARGET DEVICE TYPE"));
+		OutputLog(standardError | fileMainError, _T("INCORRECT COPY TARGET DEVICE TYPE"));
 		break;
 	case 0x04:
-		OutputErrorString(_T("COPY TARGET DEVICE DATA UNDERRUN"));
+		OutputLog(standardError | fileMainError, _T("COPY TARGET DEVICE DATA UNDERRUN"));
 		break;
 	case 0x05:
-		OutputErrorString(_T("COPY TARGET DEVICE DATA OVERRUN"));
+		OutputLog(standardError | fileMainError, _T("COPY TARGET DEVICE DATA OVERRUN"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -424,19 +424,19 @@ VOID OutputAdditionalSenseCodeQualifier0x0e(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("INVALID INFORMATION UNIT"));
+		OutputLog(standardError | fileMainError, _T("INVALID INFORMATION UNIT"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("INFORMATION UNIT TOO SHORT"));
+		OutputLog(standardError | fileMainError, _T("INFORMATION UNIT TOO SHORT"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("INFORMATION UNIT TOO LONG"));
+		OutputLog(standardError | fileMainError, _T("INFORMATION UNIT TOO LONG"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("INVALID FIELD IN COMMAND INFORMATION UNIT"));
+		OutputLog(standardError | fileMainError, _T("INVALID FIELD IN COMMAND INFORMATION UNIT"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -447,19 +447,19 @@ VOID OutputAdditionalSenseCodeQualifier0x10(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("ID CRC OR ECC ERROR"));
+		OutputLog(standardError | fileMainError, _T("ID CRC OR ECC ERROR"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("LOGICAL BLOCK GUARD CHECK FAIL"));
+		OutputLog(standardError | fileMainError, _T("LOGICAL BLOCK GUARD CHECK FAIL"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("LOGICAL BLOCK APPLICATION TAG CHECK FAILED"));
+		OutputLog(standardError | fileMainError, _T("LOGICAL BLOCK APPLICATION TAG CHECK FAILED"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("LOGICAL BLOCK REFERENCE TAG CHECK FAILED"));
+		OutputLog(standardError | fileMainError, _T("LOGICAL BLOCK REFERENCE TAG CHECK FAILED"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -470,67 +470,67 @@ VOID OutputAdditionalSenseCodeQualifier0x11(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("UNRECOVERED READ ERROR"));
+		OutputLog(standardError | fileMainError, _T("UNRECOVERED READ ERROR"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("READ RETRIES EXHAUSTED"));
+		OutputLog(standardError | fileMainError, _T("READ RETRIES EXHAUSTED"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("ERROR TOO LONG TO CORRECT"));
+		OutputLog(standardError | fileMainError, _T("ERROR TOO LONG TO CORRECT"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("MULTIPLE READ ERRORS"));
+		OutputLog(standardError | fileMainError, _T("MULTIPLE READ ERRORS"));
 		break;
 	case 0x04:
-		OutputErrorString(_T("UNRECOVERED READ ERROR - AUTO REALLOCATE FAILED"));
+		OutputLog(standardError | fileMainError, _T("UNRECOVERED READ ERROR - AUTO REALLOCATE FAILED"));
 		break;
 	case 0x05:
-		OutputErrorString(_T("L-EC UNCORRECTABLE ERROR"));
+		OutputLog(standardError | fileMainError, _T("L-EC UNCORRECTABLE ERROR"));
 		break;
 	case 0x06:
-		OutputErrorString(_T("CIRC UNRECOVERED ERROR"));
+		OutputLog(standardError | fileMainError, _T("CIRC UNRECOVERED ERROR"));
 		break;
 	case 0x07:
-		OutputErrorString(_T("DATA RE-SYNCHRONIZATION ERROR"));
+		OutputLog(standardError | fileMainError, _T("DATA RE-SYNCHRONIZATION ERROR"));
 		break;
 	case 0x0a:
-		OutputErrorString(_T("MISCORRECTED ERROR"));
+		OutputLog(standardError | fileMainError, _T("MISCORRECTED ERROR"));
 		break;
 	case 0x0b:
-		OutputErrorString(_T("UNRECOVERED READ ERROR - RECOMMEND REASSIGNMENT"));
+		OutputLog(standardError | fileMainError, _T("UNRECOVERED READ ERROR - RECOMMEND REASSIGNMENT"));
 		break;
 	case 0x0c:
-		OutputErrorString(_T("UNRECOVERED READ ERROR - RECOMMEND REWRITE THE DATA"));
+		OutputLog(standardError | fileMainError, _T("UNRECOVERED READ ERROR - RECOMMEND REWRITE THE DATA"));
 		break;
 	case 0x0d:
-		OutputErrorString(_T("DE-COMPRESSION CRC ERROR"));
+		OutputLog(standardError | fileMainError, _T("DE-COMPRESSION CRC ERROR"));
 		break;
 	case 0x0e:
-		OutputErrorString(_T("CANNOT DECOMPRESS USING DECLARED ALGORITHM"));
+		OutputLog(standardError | fileMainError, _T("CANNOT DECOMPRESS USING DECLARED ALGORITHM"));
 		break;
 	case 0x0f:
-		OutputErrorString(_T("ERROR READING UPC/EAN NUMBER"));
+		OutputLog(standardError | fileMainError, _T("ERROR READING UPC/EAN NUMBER"));
 		break;
 	case 0x10:
-		OutputErrorString(_T("ERROR READING ISRC NUMBER"));
+		OutputLog(standardError | fileMainError, _T("ERROR READING ISRC NUMBER"));
 		break;
 	case 0x11:
-		OutputErrorString(_T("READ ERROR - LOSS OF STREAMING"));
+		OutputLog(standardError | fileMainError, _T("READ ERROR - LOSS OF STREAMING"));
 		break;
 	case 0x12:
-		OutputErrorString(_T("AUXILIARY MEMORY READ ERROR"));
+		OutputLog(standardError | fileMainError, _T("AUXILIARY MEMORY READ ERROR"));
 		break;
 	case 0x13:
-		OutputErrorString(_T("READ ERROR - FAILED RETRANSMISSION REQUEST"));
+		OutputLog(standardError | fileMainError, _T("READ ERROR - FAILED RETRANSMISSION REQUEST"));
 		break;
 	case 0x14:
-		OutputErrorString(_T("READ ERROR - LBA MARKED BAD BY APPLICATION CLIENT"));
+		OutputLog(standardError | fileMainError, _T("READ ERROR - LBA MARKED BAD BY APPLICATION CLIENT"));
 		break;
 	case 0x15:
-		OutputErrorString(_T("WRITE AFTER SANITIZE REQUIRED"));
+		OutputLog(standardError | fileMainError, _T("WRITE AFTER SANITIZE REQUIRED"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -541,10 +541,10 @@ VOID OutputAdditionalSenseCodeQualifier0x12(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("ADDRESS MARK NOT FOUND FOR ID FIELD"));
+		OutputLog(standardError | fileMainError, _T("ADDRESS MARK NOT FOUND FOR ID FIELD"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -555,10 +555,10 @@ VOID OutputAdditionalSenseCodeQualifier0x13(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("ADDRESS MARK NOT FOUND FOR DATA FIELD"));
+		OutputLog(standardError | fileMainError, _T("ADDRESS MARK NOT FOUND FOR DATA FIELD"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -569,19 +569,19 @@ VOID OutputAdditionalSenseCodeQualifier0x14(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("TRACK_ERROR - RECORDED ENTITY NOT FOUND"));
+		OutputLog(standardError | fileMainError, _T("TRACK_ERROR - RECORDED ENTITY NOT FOUND"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("TRACK_ERROR - RECORD NOT FOUND"));
+		OutputLog(standardError | fileMainError, _T("TRACK_ERROR - RECORD NOT FOUND"));
 		break;
 	case 0x05:
-		OutputErrorString(_T("TRACK_ERROR - RECORD NOT FOUND - RECOMMEND REASSIGNMENT"));
+		OutputLog(standardError | fileMainError, _T("TRACK_ERROR - RECORD NOT FOUND - RECOMMEND REASSIGNMENT"));
 		break;
 	case 0x06:
-		OutputErrorString(_T("TRACK_ERROR - RECORD NOT FOUND - DATA AUTO-REALLOCATED"));
+		OutputLog(standardError | fileMainError, _T("TRACK_ERROR - RECORD NOT FOUND - DATA AUTO-REALLOCATED"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -592,16 +592,16 @@ VOID OutputAdditionalSenseCodeQualifier0x15(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("SEEK_ERROR - RANDOM POSITIONING ERROR"));
+		OutputLog(standardError | fileMainError, _T("SEEK_ERROR - RANDOM POSITIONING ERROR"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("SEEK_ERROR - MECHANICAL POSITIONING ERROR"));
+		OutputLog(standardError | fileMainError, _T("SEEK_ERROR - MECHANICAL POSITIONING ERROR"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("SEEK_ERROR - POSITIONING ERROR DETECTED BY READ OF MEDIUM"));
+		OutputLog(standardError | fileMainError, _T("SEEK_ERROR - POSITIONING ERROR DETECTED BY READ OF MEDIUM"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -612,22 +612,22 @@ VOID OutputAdditionalSenseCodeQualifier0x16(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("DATA SYNCHRONIZATION MARK ERROR"));
+		OutputLog(standardError | fileMainError, _T("DATA SYNCHRONIZATION MARK ERROR"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("DATA SYNC ERROR - DATA REWRITTEN"));
+		OutputLog(standardError | fileMainError, _T("DATA SYNC ERROR - DATA REWRITTEN"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("DATA SYNC ERROR - RECOMMEND REWRITE"));
+		OutputLog(standardError | fileMainError, _T("DATA SYNC ERROR - RECOMMEND REWRITE"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("DATA SYNC ERROR - DATA AUTO-REALLOCATED"));
+		OutputLog(standardError | fileMainError, _T("DATA SYNC ERROR - DATA AUTO-REALLOCATED"));
 		break;
 	case 0x04:
-		OutputErrorString(_T("DATA SYNC ERROR - RECOMMEND REASSIGNMENT"));
+		OutputLog(standardError | fileMainError, _T("DATA SYNC ERROR - RECOMMEND REASSIGNMENT"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -638,37 +638,37 @@ VOID OutputAdditionalSenseCodeQualifier0x17(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("REC_DATA_NOECC - RECOVERED DATA WITH NO ERROR CORRECTION APPLIED"));
+		OutputLog(standardError | fileMainError, _T("REC_DATA_NOECC - RECOVERED DATA WITH NO ERROR CORRECTION APPLIED"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("REC_DATA_NOECC - RECOVERED DATA WITH RETRIES"));
+		OutputLog(standardError | fileMainError, _T("REC_DATA_NOECC - RECOVERED DATA WITH RETRIES"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("REC_DATA_NOECC - RECOVERED DATA WITH POSITIVE HEAD OFFSET"));
+		OutputLog(standardError | fileMainError, _T("REC_DATA_NOECC - RECOVERED DATA WITH POSITIVE HEAD OFFSET"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("REC_DATA_NOECC - RECOVERED DATA WITH NEGATIVE HEAD OFFSET"));
+		OutputLog(standardError | fileMainError, _T("REC_DATA_NOECC - RECOVERED DATA WITH NEGATIVE HEAD OFFSET"));
 		break;
 	case 0x04:
-		OutputErrorString(_T("REC_DATA_NOECC - RECOVERED DATA WITH RETRIES AND/OR CIRC APPLIED"));
+		OutputLog(standardError | fileMainError, _T("REC_DATA_NOECC - RECOVERED DATA WITH RETRIES AND/OR CIRC APPLIED"));
 		break;
 	case 0x05:
-		OutputErrorString(_T("REC_DATA_NOECC - RECOVERED DATA USING PREVIOUS SECTOR ID"));
+		OutputLog(standardError | fileMainError, _T("REC_DATA_NOECC - RECOVERED DATA USING PREVIOUS SECTOR ID"));
 		break;
 	case 0x06:
-		OutputErrorString(_T("REC_DATA_NOECC - RECOVERED DATA WITHOUT ECC - DATA AUTO-REALLOCATED"));
+		OutputLog(standardError | fileMainError, _T("REC_DATA_NOECC - RECOVERED DATA WITHOUT ECC - DATA AUTO-REALLOCATED"));
 		break;
 	case 0x07:
-		OutputErrorString(_T("REC_DATA_NOECC - RECOVERED DATA WITHOUT ECC - RECOMMEND REASSIGNMENT"));
+		OutputLog(standardError | fileMainError, _T("REC_DATA_NOECC - RECOVERED DATA WITHOUT ECC - RECOMMEND REASSIGNMENT"));
 		break;
 	case 0x08:
-		OutputErrorString(_T("REC_DATA_NOECC - RECOVERED DATA WITHOUT ECC - RECOMMEND REWRITE"));
+		OutputLog(standardError | fileMainError, _T("REC_DATA_NOECC - RECOVERED DATA WITHOUT ECC - RECOMMEND REWRITE"));
 		break;
 	case 0x09:
-		OutputErrorString(_T("REC_DATA_NOECC - RECOVERED DATA WITHOUT ECC - DATA REWRITTEN"));
+		OutputLog(standardError | fileMainError, _T("REC_DATA_NOECC - RECOVERED DATA WITHOUT ECC - DATA REWRITTEN"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -679,34 +679,34 @@ VOID OutputAdditionalSenseCodeQualifier0x18(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("REC_DATA_ECC - RECOVERED DATA WITH ERROR CORRECTION APPLIED"));
+		OutputLog(standardError | fileMainError, _T("REC_DATA_ECC - RECOVERED DATA WITH ERROR CORRECTION APPLIED"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("REC_DATA_ECC - RECOVERED DATA WITH ERROR CORR. & RETRIES APPLIED"));
+		OutputLog(standardError | fileMainError, _T("REC_DATA_ECC - RECOVERED DATA WITH ERROR CORR. & RETRIES APPLIED"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("REC_DATA_ECC - RECOVERED DATA - DATA AUTO-REALLOCATED"));
+		OutputLog(standardError | fileMainError, _T("REC_DATA_ECC - RECOVERED DATA - DATA AUTO-REALLOCATED"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("REC_DATA_ECC - RECOVERED DATA WITH CIRC"));
+		OutputLog(standardError | fileMainError, _T("REC_DATA_ECC - RECOVERED DATA WITH CIRC"));
 		break;
 	case 0x04:
-		OutputErrorString(_T("REC_DATA_ECC - RECOVERED DATA WITH L-EC"));
+		OutputLog(standardError | fileMainError, _T("REC_DATA_ECC - RECOVERED DATA WITH L-EC"));
 		break;
 	case 0x05:
-		OutputErrorString(_T("REC_DATA_ECC - RECOVERED DATA - RECOMMEND REASSIGNMENT"));
+		OutputLog(standardError | fileMainError, _T("REC_DATA_ECC - RECOVERED DATA - RECOMMEND REASSIGNMENT"));
 		break;
 	case 0x06:
-		OutputErrorString(_T("REC_DATA_ECC - RECOVERED DATA - RECOMMEND REWRITE"));
+		OutputLog(standardError | fileMainError, _T("REC_DATA_ECC - RECOVERED DATA - RECOMMEND REWRITE"));
 		break;
 	case 0x07:
-		OutputErrorString(_T("REC_DATA_ECC - RECOVERED DATA WITH ECC - DATA REWRITTEN"));
+		OutputLog(standardError | fileMainError, _T("REC_DATA_ECC - RECOVERED DATA WITH ECC - DATA REWRITTEN"));
 		break;
 	case 0x08:
-		OutputErrorString(_T("REC_DATA_ECC - RECOVERED DATA WITH LINKING"));
+		OutputLog(standardError | fileMainError, _T("REC_DATA_ECC - RECOVERED DATA WITH LINKING"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -717,19 +717,19 @@ VOID OutputAdditionalSenseCodeQualifier0x19(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("DEFECT LIST ERROR"));
+		OutputLog(standardError | fileMainError, _T("DEFECT LIST ERROR"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("DEFECT LIST NOT AVAILABLE"));
+		OutputLog(standardError | fileMainError, _T("DEFECT LIST NOT AVAILABLE"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("DEFECT LIST ERROR IN PRIMARY LIST"));
+		OutputLog(standardError | fileMainError, _T("DEFECT LIST ERROR IN PRIMARY LIST"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("DEFECT LIST ERROR IN GROWN LIST"));
+		OutputLog(standardError | fileMainError, _T("DEFECT LIST ERROR IN GROWN LIST"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -740,10 +740,10 @@ VOID OutputAdditionalSenseCodeQualifier0x1a(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("PARAMETER LIST LENGTH ERROR"));
+		OutputLog(standardError | fileMainError, _T("PARAMETER LIST LENGTH ERROR"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -754,10 +754,10 @@ VOID OutputAdditionalSenseCodeQualifier0x1b(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("SYNCHRONOUS DATA TRANSFER ERROR"));
+		OutputLog(standardError | fileMainError, _T("SYNCHRONOUS DATA TRANSFER ERROR"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -768,16 +768,16 @@ VOID OutputAdditionalSenseCodeQualifier0x1c(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("DEFECT LIST NOT FOUND"));
+		OutputLog(standardError | fileMainError, _T("DEFECT LIST NOT FOUND"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("PRIMARY DEFECT LIST NOT FOUND"));
+		OutputLog(standardError | fileMainError, _T("PRIMARY DEFECT LIST NOT FOUND"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("GROWN DEFECT LIST NOT FOUND"));
+		OutputLog(standardError | fileMainError, _T("GROWN DEFECT LIST NOT FOUND"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -788,13 +788,13 @@ VOID OutputAdditionalSenseCodeQualifier0x1d(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("MISCOMPARE DURING VERIFY OPERATION"));
+		OutputLog(standardError | fileMainError, _T("MISCOMPARE DURING VERIFY OPERATION"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("MISCOMPARE VERIFY OF UNMAPPED LBA"));
+		OutputLog(standardError | fileMainError, _T("MISCOMPARE VERIFY OF UNMAPPED LBA"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -805,10 +805,10 @@ VOID OutputAdditionalSenseCodeQualifier0x1e(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("RECOVERED ID WITH ECC CORRECTION"));
+		OutputLog(standardError | fileMainError, _T("RECOVERED ID WITH ECC CORRECTION"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -819,10 +819,10 @@ VOID OutputAdditionalSenseCodeQualifier0x1f(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("PARTIAL DEFECT LIST TRANSFER"));
+		OutputLog(standardError | fileMainError, _T("PARTIAL DEFECT LIST TRANSFER"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -833,31 +833,31 @@ VOID OutputAdditionalSenseCodeQualifier0x20(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("INVALID COMMAND OPERATION CODE"));
+		OutputLog(standardError | fileMainError, _T("INVALID COMMAND OPERATION CODE"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("ILLEGAL_COMMAND - ACCESS DENIED - INITIATOR PENDING-ENROLLED"));
+		OutputLog(standardError | fileMainError, _T("ILLEGAL_COMMAND - ACCESS DENIED - INITIATOR PENDING-ENROLLED"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("ILLEGAL_COMMAND - ACCESS DENIED - NO ACCESS RIGHTS"));
+		OutputLog(standardError | fileMainError, _T("ILLEGAL_COMMAND - ACCESS DENIED - NO ACCESS RIGHTS"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("ILLEGAL_COMMAND - ACCESS DENIED - INVALID MGMT ID KEY"));
+		OutputLog(standardError | fileMainError, _T("ILLEGAL_COMMAND - ACCESS DENIED - INVALID MGMT ID KEY"));
 		break;
 	case 0x08:
-		OutputErrorString(_T("ILLEGAL_COMMAND - ACCESS DENIED - ENROLLMENT CONFLICT"));
+		OutputLog(standardError | fileMainError, _T("ILLEGAL_COMMAND - ACCESS DENIED - ENROLLMENT CONFLICT"));
 		break;
 	case 0x09:
-		OutputErrorString(_T("ILLEGAL_COMMAND - ACCESS DENIED - INVALID LU IDENTIFIER"));
+		OutputLog(standardError | fileMainError, _T("ILLEGAL_COMMAND - ACCESS DENIED - INVALID LU IDENTIFIER"));
 		break;
 	case 0x0a:
-		OutputErrorString(_T("ILLEGAL_COMMAND - ACCESS DENIED - INVALID PROXY TOKEN"));
+		OutputLog(standardError | fileMainError, _T("ILLEGAL_COMMAND - ACCESS DENIED - INVALID PROXY TOKEN"));
 		break;
 	case 0x0b:
-		OutputErrorString(_T("ILLEGAL_COMMAND - ACCESS DENIED - ACL LUN CONFLICT"));
+		OutputLog(standardError | fileMainError, _T("ILLEGAL_COMMAND - ACCESS DENIED - ACL LUN CONFLICT"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -868,19 +868,19 @@ VOID OutputAdditionalSenseCodeQualifier0x21(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("LOGICAL BLOCK ADDRESS OUT OF RANGE"));
+		OutputLog(standardError | fileMainError, _T("LOGICAL BLOCK ADDRESS OUT OF RANGE"));
 		break;
 	case SCSI_SENSEQ_ILLEGAL_ELEMENT_ADDR:
-		OutputErrorString(_T("ILLEGAL_BLOCK - MISCOMPARE DURING VERIFY OPERATION"));
+		OutputLog(standardError | fileMainError, _T("ILLEGAL_BLOCK - MISCOMPARE DURING VERIFY OPERATION"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("ILLEGAL_BLOCK - INVALID ADDRESS FOR WRITE"));
+		OutputLog(standardError | fileMainError, _T("ILLEGAL_BLOCK - INVALID ADDRESS FOR WRITE"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("ILLEGAL_BLOCK - INVALID WRITE CROSSING LAYER JUMP"));
+		OutputLog(standardError | fileMainError, _T("ILLEGAL_BLOCK - INVALID WRITE CROSSING LAYER JUMP"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -891,10 +891,10 @@ VOID OutputAdditionalSenseCodeQualifier0x22(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("ILLEGAL FUNCTION"));
+		OutputLog(standardError | fileMainError, _T("ILLEGAL FUNCTION"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -905,40 +905,40 @@ VOID OutputAdditionalSenseCodeQualifier0x23(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("INVALID TOKEN OPERATION, CAUSE NOT REPORTABLE"));
+		OutputLog(standardError | fileMainError, _T("INVALID TOKEN OPERATION, CAUSE NOT REPORTABLE"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("INVALID TOKEN OPERATION, UNSUPPORTED TOKEN TYPE"));
+		OutputLog(standardError | fileMainError, _T("INVALID TOKEN OPERATION, UNSUPPORTED TOKEN TYPE"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("INVALID TOKEN OPERATION, REMOTE TOKEN USAGE NOT SUPPORTED"));
+		OutputLog(standardError | fileMainError, _T("INVALID TOKEN OPERATION, REMOTE TOKEN USAGE NOT SUPPORTED"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("INVALID TOKEN OPERATION, REMOTE ROD TOKEN CREATION NOT SUPPORTED"));
+		OutputLog(standardError | fileMainError, _T("INVALID TOKEN OPERATION, REMOTE ROD TOKEN CREATION NOT SUPPORTED"));
 		break;
 	case 0x04:
-		OutputErrorString(_T("INVALID TOKEN OPERATION, TOKEN UNKNOWN"));
+		OutputLog(standardError | fileMainError, _T("INVALID TOKEN OPERATION, TOKEN UNKNOWN"));
 		break;
 	case 0x05:
-		OutputErrorString(_T("INVALID TOKEN OPERATION, TOKEN CORRUPT"));
+		OutputLog(standardError | fileMainError, _T("INVALID TOKEN OPERATION, TOKEN CORRUPT"));
 		break;
 	case 0x06:
-		OutputErrorString(_T("INVALID TOKEN OPERATION, TOKEN REVOKED"));
+		OutputLog(standardError | fileMainError, _T("INVALID TOKEN OPERATION, TOKEN REVOKED"));
 		break;
 	case 0x07:
-		OutputErrorString(_T("INVALID TOKEN OPERATION, TOKEN EXPIRED"));
+		OutputLog(standardError | fileMainError, _T("INVALID TOKEN OPERATION, TOKEN EXPIRED"));
 		break;
 	case 0x08:
-		OutputErrorString(_T("INVALID TOKEN OPERATION, TOKEN CANCELLED"));
+		OutputLog(standardError | fileMainError, _T("INVALID TOKEN OPERATION, TOKEN CANCELLED"));
 		break;
 	case 0x09:
-		OutputErrorString(_T("INVALID TOKEN OPERATION, TOKEN DELETED"));
+		OutputLog(standardError | fileMainError, _T("INVALID TOKEN OPERATION, TOKEN DELETED"));
 		break;
 	case 0x0a:
-		OutputErrorString(_T("INVALID TOKEN OPERATION, INVALID TOKEN LENGTH"));
+		OutputLog(standardError | fileMainError, _T("INVALID TOKEN OPERATION, INVALID TOKEN LENGTH"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -949,16 +949,16 @@ VOID OutputAdditionalSenseCodeQualifier0x24(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("INVALID FIELD IN CDB"));
+		OutputLog(standardError | fileMainError, _T("INVALID FIELD IN CDB"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("CDB DECRYPTION ERROR"));
+		OutputLog(standardError | fileMainError, _T("CDB DECRYPTION ERROR"));
 		break;
 	case 0x08:
-		OutputErrorString(_T("INVALID XCDB"));
+		OutputLog(standardError | fileMainError, _T("INVALID XCDB"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -969,10 +969,10 @@ VOID OutputAdditionalSenseCodeQualifier0x25(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("LOGICAL UNIT NOT SUPPORTED"));
+		OutputLog(standardError | fileMainError, _T("LOGICAL UNIT NOT SUPPORTED"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -983,52 +983,52 @@ VOID OutputAdditionalSenseCodeQualifier0x26(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("INVALID FIELD IN PARAMETER LIST"));
+		OutputLog(standardError | fileMainError, _T("INVALID FIELD IN PARAMETER LIST"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("PARAMETER NOT SUPPORTED"));
+		OutputLog(standardError | fileMainError, _T("PARAMETER NOT SUPPORTED"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("PARAMETER VALUE INVALID"));
+		OutputLog(standardError | fileMainError, _T("PARAMETER VALUE INVALID"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("THRESHOLD PARAMETERS NOT SUPPORTED"));
+		OutputLog(standardError | fileMainError, _T("THRESHOLD PARAMETERS NOT SUPPORTED"));
 		break;
 	case 0x04:
-		OutputErrorString(_T("INVALID RELEASE OF PERSISTENT RESERVATION"));
+		OutputLog(standardError | fileMainError, _T("INVALID RELEASE OF PERSISTENT RESERVATION"));
 		break;
 	case 0x05:
-		OutputErrorString(_T("DATA DECRYPTION ERROR"));
+		OutputLog(standardError | fileMainError, _T("DATA DECRYPTION ERROR"));
 		break;
 	case 0x06:
-		OutputErrorString(_T("TOO MANY TARGET DESCRIPTORS"));
+		OutputLog(standardError | fileMainError, _T("TOO MANY TARGET DESCRIPTORS"));
 		break;
 	case 0x07:
-		OutputErrorString(_T("UNSUPPORTED SEGMENT DESCRIPTOR TYPE CODE"));
+		OutputLog(standardError | fileMainError, _T("UNSUPPORTED SEGMENT DESCRIPTOR TYPE CODE"));
 		break;
 	case 0x08:
-		OutputErrorString(_T("TOO MANY SEGMENT DESCRIPTORS"));
+		OutputLog(standardError | fileMainError, _T("TOO MANY SEGMENT DESCRIPTORS"));
 		break;
 	case 0x09:
-		OutputErrorString(_T("UNSUPPORTED SEGMENT DESCRIPTOR TYPE CODE"));
+		OutputLog(standardError | fileMainError, _T("UNSUPPORTED SEGMENT DESCRIPTOR TYPE CODE"));
 		break;
 	case 0x0a:
-		OutputErrorString(_T("UNEXPECTED INEXACT SEGMENT"));
+		OutputLog(standardError | fileMainError, _T("UNEXPECTED INEXACT SEGMENT"));
 		break;
 	case 0x0b:
-		OutputErrorString(_T("INLINE DATA LENGTH EXCEEDED"));
+		OutputLog(standardError | fileMainError, _T("INLINE DATA LENGTH EXCEEDED"));
 		break;
 	case 0x0c:
-		OutputErrorString(_T("INVALID OPERATION FOR COPY SOURCE OR DESTINATION"));
+		OutputLog(standardError | fileMainError, _T("INVALID OPERATION FOR COPY SOURCE OR DESTINATION"));
 		break;
 	case 0x0d:
-		OutputErrorString(_T("COPY SEGMENT GRANULARITY VIOLATION"));
+		OutputLog(standardError | fileMainError, _T("COPY SEGMENT GRANULARITY VIOLATION"));
 		break;
 	case 0x0e:
-		OutputErrorString(_T("INVALID PARAMETER WHILE PORT IS ENABLED"));
+		OutputLog(standardError | fileMainError, _T("INVALID PARAMETER WHILE PORT IS ENABLED"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1039,31 +1039,31 @@ VOID OutputAdditionalSenseCodeQualifier0x27(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("WRITE PROTECTED"));
+		OutputLog(standardError | fileMainError, _T("WRITE PROTECTED"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("HARDWARE WRITE PROTECTED"));
+		OutputLog(standardError | fileMainError, _T("HARDWARE WRITE PROTECTED"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("LOGICAL UNIT SOFTWARE WRITE PROTECTED"));
+		OutputLog(standardError | fileMainError, _T("LOGICAL UNIT SOFTWARE WRITE PROTECTED"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("ASSOCIATED WRITE PROTECT"));
+		OutputLog(standardError | fileMainError, _T("ASSOCIATED WRITE PROTECT"));
 		break;
 	case 0x04:
-		OutputErrorString(_T("PERSISTENT WRITE PROTECT"));
+		OutputLog(standardError | fileMainError, _T("PERSISTENT WRITE PROTECT"));
 		break;
 	case 0x05:
-		OutputErrorString(_T("PERMANENT WRITE PROTECT"));
+		OutputLog(standardError | fileMainError, _T("PERMANENT WRITE PROTECT"));
 		break;
 	case 0x06:
-		OutputErrorString(_T("CONDITIONAL WRITE PROTECT"));
+		OutputLog(standardError | fileMainError, _T("CONDITIONAL WRITE PROTECT"));
 		break;
 	case 0x07:
-		OutputErrorString(_T("SPACE ALLOCATION FAILED WRITE PROTECT"));
+		OutputLog(standardError | fileMainError, _T("SPACE ALLOCATION FAILED WRITE PROTECT"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1074,16 +1074,16 @@ VOID OutputAdditionalSenseCodeQualifier0x28(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("NOT READY TO READY CHANGE, MEDIUM MAY HAVE CHANGED"));
+		OutputLog(standardError | fileMainError, _T("NOT READY TO READY CHANGE, MEDIUM MAY HAVE CHANGED"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("IMPORT OR EXPORT ELEMENT ACCESSED"));
+		OutputLog(standardError | fileMainError, _T("IMPORT OR EXPORT ELEMENT ACCESSED"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("FORMAT-LAYER MAY HAVE CHANGED"));
+		OutputLog(standardError | fileMainError, _T("FORMAT-LAYER MAY HAVE CHANGED"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1094,31 +1094,31 @@ VOID OutputAdditionalSenseCodeQualifier0x29(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("POWER ON, RESET, OR BUS DEVICE RESET OCCURRED"));
+		OutputLog(standardError | fileMainError, _T("POWER ON, RESET, OR BUS DEVICE RESET OCCURRED"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("POWER ON OCCURRED"));
+		OutputLog(standardError | fileMainError, _T("POWER ON OCCURRED"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("SCSI BUS RESET OCCURRED"));
+		OutputLog(standardError | fileMainError, _T("SCSI BUS RESET OCCURRED"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("BUS DEVICE RESET FUNCTION OCCURRED"));
+		OutputLog(standardError | fileMainError, _T("BUS DEVICE RESET FUNCTION OCCURRED"));
 		break;
 	case 0x04:
-		OutputErrorString(_T("DEVICE INTERNAL RESET"));
+		OutputLog(standardError | fileMainError, _T("DEVICE INTERNAL RESET"));
 		break;
 	case 0x05:
-		OutputErrorString(_T("TRANSCEIVER MODE CHANGED TO SINGLE-ENDED"));
+		OutputLog(standardError | fileMainError, _T("TRANSCEIVER MODE CHANGED TO SINGLE-ENDED"));
 		break;
 	case 0x06:
-		OutputErrorString(_T("TRANSCEIVER MODE CHANGED TO LVD"));
+		OutputLog(standardError | fileMainError, _T("TRANSCEIVER MODE CHANGED TO LVD"));
 		break;
 	case 0x07:
-		OutputErrorString(_T("I_T NEXUS LOSS OCCURRED"));
+		OutputLog(standardError | fileMainError, _T("I_T NEXUS LOSS OCCURRED"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1129,49 +1129,49 @@ VOID OutputAdditionalSenseCodeQualifier0x2a(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("PARAMETERS CHANGED"));
+		OutputLog(standardError | fileMainError, _T("PARAMETERS CHANGED"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("MODE PARAMETERS CHANGED"));
+		OutputLog(standardError | fileMainError, _T("MODE PARAMETERS CHANGED"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("LOG PARAMETERS CHANGED"));
+		OutputLog(standardError | fileMainError, _T("LOG PARAMETERS CHANGED"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("RESERVATIONS PREEMPTED"));
+		OutputLog(standardError | fileMainError, _T("RESERVATIONS PREEMPTED"));
 		break;
 	case 0x04:
-		OutputErrorString(_T("RESERVATIONS RELEASED"));
+		OutputLog(standardError | fileMainError, _T("RESERVATIONS RELEASED"));
 		break;
 	case 0x05:
-		OutputErrorString(_T("REGISTRATIONS PREEMPTED"));
+		OutputLog(standardError | fileMainError, _T("REGISTRATIONS PREEMPTED"));
 		break;
 	case 0x06:
-		OutputErrorString(_T("ASYMMETRIC ACCESS STATE CHANGED"));
+		OutputLog(standardError | fileMainError, _T("ASYMMETRIC ACCESS STATE CHANGED"));
 		break;
 	case 0x07:
-		OutputErrorString(_T("IMPLICIT ASYMMETRIC ACCESS STATE TRANSITION FAILED"));
+		OutputLog(standardError | fileMainError, _T("IMPLICIT ASYMMETRIC ACCESS STATE TRANSITION FAILED"));
 		break;
 	case 0x08:
-		OutputErrorString(_T("PRIORITY CHANGED"));
+		OutputLog(standardError | fileMainError, _T("PRIORITY CHANGED"));
 		break;
 	case 0x09:
-		OutputErrorString(_T("CAPACITY DATA HAS CHANGED"));
+		OutputLog(standardError | fileMainError, _T("CAPACITY DATA HAS CHANGED"));
 		break;
 	case 0x0a:
-		OutputErrorString(_T("ERROR HISTORY I_T NEXUS CLEARED"));
+		OutputLog(standardError | fileMainError, _T("ERROR HISTORY I_T NEXUS CLEARED"));
 		break;
 	case 0x0b:
-		OutputErrorString(_T("ERROR HISTORY SNAPSHOT RELEASED"));
+		OutputLog(standardError | fileMainError, _T("ERROR HISTORY SNAPSHOT RELEASED"));
 		break;
 	case 0x10:
-		OutputErrorString(_T("TIMESTAMP CHANGED"));
+		OutputLog(standardError | fileMainError, _T("TIMESTAMP CHANGED"));
 		break;
 	case 0x14:
-		OutputErrorString(_T("SA CREATION CAPABILITIES DATA HAS CHANGED"));
+		OutputLog(standardError | fileMainError, _T("SA CREATION CAPABILITIES DATA HAS CHANGED"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1182,10 +1182,10 @@ VOID OutputAdditionalSenseCodeQualifier0x2b(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("COPY CANNOT EXECUTE SINCE HOST CANNOT DISCONNECT"));
+		OutputLog(standardError | fileMainError, _T("COPY CANNOT EXECUTE SINCE HOST CANNOT DISCONNECT"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1196,31 +1196,31 @@ VOID OutputAdditionalSenseCodeQualifier0x2c(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("COMMAND SEQUENCE ERROR"));
+		OutputLog(standardError | fileMainError, _T("COMMAND SEQUENCE ERROR"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("CURRENT PROGRAM AREA IS NOT EMPTY"));
+		OutputLog(standardError | fileMainError, _T("CURRENT PROGRAM AREA IS NOT EMPTY"));
 		break;
 	case 0x04:
-		OutputErrorString(_T("CURRENT PROGRAM AREA IS EMPTY"));
+		OutputLog(standardError | fileMainError, _T("CURRENT PROGRAM AREA IS EMPTY"));
 		break;
 	case 0x06:
-		OutputErrorString(_T("PERSISTENT PREVENT CONFLICT"));
+		OutputLog(standardError | fileMainError, _T("PERSISTENT PREVENT CONFLICT"));
 		break;
 	case 0x07:
-		OutputErrorString(_T("PREVIOUS BUSY STATUS"));
+		OutputLog(standardError | fileMainError, _T("PREVIOUS BUSY STATUS"));
 		break;
 	case 0x08:
-		OutputErrorString(_T("PREVIOUS TASK SET FULL STATUS"));
+		OutputLog(standardError | fileMainError, _T("PREVIOUS TASK SET FULL STATUS"));
 		break;
 	case 0x09:
-		OutputErrorString(_T("PREVIOUS RESERVATION CONFLICT STATUS"));
+		OutputLog(standardError | fileMainError, _T("PREVIOUS RESERVATION CONFLICT STATUS"));
 		break;
 	case 0x0c:
-		OutputErrorString(_T("ORWRITE GENERATION DOES NOT MATCH"));
+		OutputLog(standardError | fileMainError, _T("ORWRITE GENERATION DOES NOT MATCH"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1231,19 +1231,19 @@ VOID OutputAdditionalSenseCodeQualifier0x2e(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("INSUFFICIENT TIME FOR OPERATION"));
+		OutputLog(standardError | fileMainError, _T("INSUFFICIENT TIME FOR OPERATION"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("COMMAND TIMEOUT BEFORE PROCESSING"));
+		OutputLog(standardError | fileMainError, _T("COMMAND TIMEOUT BEFORE PROCESSING"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("COMMAND TIMEOUT DURING PROCESSING"));
+		OutputLog(standardError | fileMainError, _T("COMMAND TIMEOUT DURING PROCESSING"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("COMMAND TIMEOUT DURING PROCESSING DUE TO ERROR RECOVERY"));
+		OutputLog(standardError | fileMainError, _T("COMMAND TIMEOUT DURING PROCESSING DUE TO ERROR RECOVERY"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1254,19 +1254,19 @@ VOID OutputAdditionalSenseCodeQualifier0x2f(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("COMMANDS CLEARED BY ANOTHER INITIATOR"));
+		OutputLog(standardError | fileMainError, _T("COMMANDS CLEARED BY ANOTHER INITIATOR"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("COMMANDS CLEARED BY POWER LOSS NOTIFICATION"));
+		OutputLog(standardError | fileMainError, _T("COMMANDS CLEARED BY POWER LOSS NOTIFICATION"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("COMMANDS CLEARED BY DEVICE SERVER"));
+		OutputLog(standardError | fileMainError, _T("COMMANDS CLEARED BY DEVICE SERVER"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("SOME COMMANDS CLEARED BY QUEUING LAYER EVENT"));
+		OutputLog(standardError | fileMainError, _T("SOME COMMANDS CLEARED BY QUEUING LAYER EVENT"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1277,43 +1277,43 @@ VOID OutputAdditionalSenseCodeQualifier0x30(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("INCOMPATIBLE MEDIUM INSTALLED"));
+		OutputLog(standardError | fileMainError, _T("INCOMPATIBLE MEDIUM INSTALLED"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("CANNOT READ MEDIUM - UNKNOWN FORMAT"));
+		OutputLog(standardError | fileMainError, _T("CANNOT READ MEDIUM - UNKNOWN FORMAT"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("CANNOT READ MEDIUM - INCOMPATIBLE FORMAT"));
+		OutputLog(standardError | fileMainError, _T("CANNOT READ MEDIUM - INCOMPATIBLE FORMAT"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("CLEANING CARTRIDGE INSTALLED"));
+		OutputLog(standardError | fileMainError, _T("CLEANING CARTRIDGE INSTALLED"));
 		break;
 	case 0x04:
-		OutputErrorString(_T("CANNOT WRITE MEDIUM - UNKNOWN FORMAT"));
+		OutputLog(standardError | fileMainError, _T("CANNOT WRITE MEDIUM - UNKNOWN FORMAT"));
 		break;
 	case 0x05:
-		OutputErrorString(_T("CANNOT WRITE MEDIUM - INCOMPATIBLE FORMAT"));
+		OutputLog(standardError | fileMainError, _T("CANNOT WRITE MEDIUM - INCOMPATIBLE FORMAT"));
 		break;
 	case 0x06:
-		OutputErrorString(_T("CANNOT FORMAT MEDIUM - INCOMPATIBLE MEDIUM"));
+		OutputLog(standardError | fileMainError, _T("CANNOT FORMAT MEDIUM - INCOMPATIBLE MEDIUM"));
 		break;
 	case 0x07:
-		OutputErrorString(_T("CLEANING FAILURE"));
+		OutputLog(standardError | fileMainError, _T("CLEANING FAILURE"));
 		break;
 	case 0x08:
-		OutputErrorString(_T("CANNOT WRITE - APPLICATION CODE MISMATCH"));
+		OutputLog(standardError | fileMainError, _T("CANNOT WRITE - APPLICATION CODE MISMATCH"));
 		break;
 	case 0x09:
-		OutputErrorString(_T("CURRENT SESSION NOT FIXATED FOR APPEND"));
+		OutputLog(standardError | fileMainError, _T("CURRENT SESSION NOT FIXATED FOR APPEND"));
 		break;
 	case 0x0a:
-		OutputErrorString(_T("CLEANING REQUEST REJECTED"));
+		OutputLog(standardError | fileMainError, _T("CLEANING REQUEST REJECTED"));
 		break;
 	case 0x10:
-		OutputErrorString(_T("MEDIUM NOT FORMATTED"));
+		OutputLog(standardError | fileMainError, _T("MEDIUM NOT FORMATTED"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1324,19 +1324,19 @@ VOID OutputAdditionalSenseCodeQualifier0x31(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("MEDIUM FORMAT CORRUPTED"));
+		OutputLog(standardError | fileMainError, _T("MEDIUM FORMAT CORRUPTED"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("FORMAT COMMAND FAILED"));
+		OutputLog(standardError | fileMainError, _T("FORMAT COMMAND FAILED"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("ZONED FORMATTING FAILED DUE TO SPARE LINKING"));
+		OutputLog(standardError | fileMainError, _T("ZONED FORMATTING FAILED DUE TO SPARE LINKING"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("SANITIZE COMMAND FAILED"));
+		OutputLog(standardError | fileMainError, _T("SANITIZE COMMAND FAILED"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1347,13 +1347,13 @@ VOID OutputAdditionalSenseCodeQualifier0x32(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("NO DEFECT SPARE LOCATION AVAILABLE"));
+		OutputLog(standardError | fileMainError, _T("NO DEFECT SPARE LOCATION AVAILABLE"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("DEFECT LIST UPDATE FAILURE"));
+		OutputLog(standardError | fileMainError, _T("DEFECT LIST UPDATE FAILURE"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1364,10 +1364,10 @@ VOID OutputAdditionalSenseCodeQualifier0x34(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("ENCLOSURE FAILURE"));
+		OutputLog(standardError | fileMainError, _T("ENCLOSURE FAILURE"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1378,25 +1378,25 @@ VOID OutputAdditionalSenseCodeQualifier0x35(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("ENCLOSURE SERVICES FAILURE"));
+		OutputLog(standardError | fileMainError, _T("ENCLOSURE SERVICES FAILURE"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("UNSUPPORTED ENCLOSURE FUNCTION"));
+		OutputLog(standardError | fileMainError, _T("UNSUPPORTED ENCLOSURE FUNCTION"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("ENCLOSURE SERVICES UNAVAILABLE"));
+		OutputLog(standardError | fileMainError, _T("ENCLOSURE SERVICES UNAVAILABLE"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("ENCLOSURE SERVICES TRANSFER FAILURE"));
+		OutputLog(standardError | fileMainError, _T("ENCLOSURE SERVICES TRANSFER FAILURE"));
 		break;
 	case 0x04:
-		OutputErrorString(_T("ENCLOSURE SERVICES TRANSFER REFUSED"));
+		OutputLog(standardError | fileMainError, _T("ENCLOSURE SERVICES TRANSFER REFUSED"));
 		break;
 	case 0x05:
-		OutputErrorString(_T("ENCLOSURE SERVICES CHECKSUM ERROR"));
+		OutputLog(standardError | fileMainError, _T("ENCLOSURE SERVICES CHECKSUM ERROR"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1407,10 +1407,10 @@ VOID OutputAdditionalSenseCodeQualifier0x37(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("ROUNDED PARAMETER"));
+		OutputLog(standardError | fileMainError, _T("ROUNDED PARAMETER"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1421,10 +1421,10 @@ VOID OutputAdditionalSenseCodeQualifier0x38(
 {
 	switch (byAscq) {
 	case 0x07:
-		OutputErrorString(_T("THIN PROVISIONING SOFT THRESHOLD REACHED"));
+		OutputLog(standardError | fileMainError, _T("THIN PROVISIONING SOFT THRESHOLD REACHED"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1435,10 +1435,10 @@ VOID OutputAdditionalSenseCodeQualifier0x39(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("SAVING PARAMETERS NOT SUPPORTED"));
+		OutputLog(standardError | fileMainError, _T("SAVING PARAMETERS NOT SUPPORTED"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1449,22 +1449,22 @@ VOID OutputAdditionalSenseCodeQualifier0x3a(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("MEDIUM NOT PRESENT"));
+		OutputLog(standardError | fileMainError, _T("MEDIUM NOT PRESENT"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("MEDIUM NOT PRESENT - TRAY CLOSED"));
+		OutputLog(standardError | fileMainError, _T("MEDIUM NOT PRESENT - TRAY CLOSED"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("MEDIUM NOT PRESENT - TRAY OPEN"));
+		OutputLog(standardError | fileMainError, _T("MEDIUM NOT PRESENT - TRAY OPEN"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("MEDIUM NOT PRESENT - LOADABLE"));
+		OutputLog(standardError | fileMainError, _T("MEDIUM NOT PRESENT - LOADABLE"));
 		break;
 	case 0x04:
-		OutputErrorString(_T("MEDIUM NOT PRESENT - MEDIUM AUXILIARY MEMORY ACCESSIBLE"));
+		OutputLog(standardError | fileMainError, _T("MEDIUM NOT PRESENT - MEDIUM AUXILIARY MEMORY ACCESSIBLE"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1475,34 +1475,34 @@ VOID OutputAdditionalSenseCodeQualifier0x3b(
 {
 	switch (byAscq) {
 	case SCSI_SENSEQ_DESTINATION_FULL:
-		OutputErrorString(_T("MEDIUM DESTINATION ELEMENT FULL"));
+		OutputLog(standardError | fileMainError, _T("MEDIUM DESTINATION ELEMENT FULL"));
 		break;
 	case SCSI_SENSEQ_SOURCE_EMPTY:
-		OutputErrorString(_T("MEDIUM SOURCE ELEMENT EMPTY"));
+		OutputLog(standardError | fileMainError, _T("MEDIUM SOURCE ELEMENT EMPTY"));
 		break;
 	case 0x0f:
-		OutputErrorString(_T("END OF MEDIUM REACHED"));
+		OutputLog(standardError | fileMainError, _T("END OF MEDIUM REACHED"));
 		break;
 	case 0x11:
-		OutputErrorString(_T("MEDIUM MAGAZINE NOT ACCESSIBLE"));
+		OutputLog(standardError | fileMainError, _T("MEDIUM MAGAZINE NOT ACCESSIBLE"));
 		break;
 	case 0x12:
-		OutputErrorString(_T("MEDIUM MAGAZINE REMOVED"));
+		OutputLog(standardError | fileMainError, _T("MEDIUM MAGAZINE REMOVED"));
 		break;
 	case 0x13:
-		OutputErrorString(_T("MEDIUM MAGAZINE INSERTED"));
+		OutputLog(standardError | fileMainError, _T("MEDIUM MAGAZINE INSERTED"));
 		break;
 	case 0x14:
-		OutputErrorString(_T("MEDIUM MAGAZINE LOCKED"));
+		OutputLog(standardError | fileMainError, _T("MEDIUM MAGAZINE LOCKED"));
 		break;
 	case 0x15:
-		OutputErrorString(_T("MEDIUM MAGAZINE UNLOCKED"));
+		OutputLog(standardError | fileMainError, _T("MEDIUM MAGAZINE UNLOCKED"));
 		break;
 	case 0x16:
-		OutputErrorString(_T("MECHANICAL POSITIONING OR CHANGER ERROR"));
+		OutputLog(standardError | fileMainError, _T("MECHANICAL POSITIONING OR CHANGER ERROR"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1513,10 +1513,10 @@ VOID OutputAdditionalSenseCodeQualifier0x3d(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("INVALID BITS IN IDENTIFY MESSAGE"));
+		OutputLog(standardError | fileMainError, _T("INVALID BITS IN IDENTIFY MESSAGE"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1527,22 +1527,22 @@ VOID OutputAdditionalSenseCodeQualifier0x3e(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("LOGICAL UNIT HAS NOT SELF-CONFIGURED YET"));
+		OutputLog(standardError | fileMainError, _T("LOGICAL UNIT HAS NOT SELF-CONFIGURED YET"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("LOGICAL UNIT FAILURE"));
+		OutputLog(standardError | fileMainError, _T("LOGICAL UNIT FAILURE"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("TIMEOUT ON LOGICAL UNIT"));
+		OutputLog(standardError | fileMainError, _T("TIMEOUT ON LOGICAL UNIT"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("LOGICAL UNIT FAILED SELF-TEST"));
+		OutputLog(standardError | fileMainError, _T("LOGICAL UNIT FAILED SELF-TEST"));
 		break;
 	case 0x04:
-		OutputErrorString(_T("LOGICAL UNIT UNABLE TO UPDATE SELF-TEST LOG"));
+		OutputLog(standardError | fileMainError, _T("LOGICAL UNIT UNABLE TO UPDATE SELF-TEST LOG"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1553,73 +1553,73 @@ VOID OutputAdditionalSenseCodeQualifier0x3f(
 {
 	switch (byAscq) {
 	case SCSI_SENSEQ_TARGET_OPERATING_CONDITIONS_CHANGED:
-		OutputErrorString(_T("TARGET_OPERATING_CONDITIONS_CHANGED"));
+		OutputLog(standardError | fileMainError, _T("TARGET_OPERATING_CONDITIONS_CHANGED"));
 		break;
 	case SCSI_SENSEQ_MICROCODE_CHANGED:
-		OutputErrorString(_T("MICROCODE_CHANGED"));
+		OutputLog(standardError | fileMainError, _T("MICROCODE_CHANGED"));
 		break;
 	case SCSI_SENSEQ_OPERATING_DEFINITION_CHANGED:
-		OutputErrorString(_T("OPERATING_DEFINITION_CHANGED"));
+		OutputLog(standardError | fileMainError, _T("OPERATING_DEFINITION_CHANGED"));
 		break;
 	case SCSI_SENSEQ_INQUIRY_DATA_CHANGED:
-		OutputErrorString(_T("INQUIRY_DATA_CHANGED"));
+		OutputLog(standardError | fileMainError, _T("INQUIRY_DATA_CHANGED"));
 		break;
 	case SCSI_SENSEQ_COMPONENT_DEVICE_ATTACHED:
-		OutputErrorString(_T("COMPONENT_DEVICE_ATTACHED"));
+		OutputLog(standardError | fileMainError, _T("COMPONENT_DEVICE_ATTACHED"));
 		break;
 	case SCSI_SENSEQ_DEVICE_IDENTIFIER_CHANGED:
-		OutputErrorString(_T("DEVICE_IDENTIFIER_CHANGED"));
+		OutputLog(standardError | fileMainError, _T("DEVICE_IDENTIFIER_CHANGED"));
 		break;
 	case SCSI_SENSEQ_REDUNDANCY_GROUP_MODIFIED:
-		OutputErrorString(_T("REDUNDANCY_GROUP_MODIFIED"));
+		OutputLog(standardError | fileMainError, _T("REDUNDANCY_GROUP_MODIFIED"));
 		break;
 	case SCSI_SENSEQ_REDUNDANCY_GROUP_DELETED:
-		OutputErrorString(_T("REDUNDANCY_GROUP_DELETED"));
+		OutputLog(standardError | fileMainError, _T("REDUNDANCY_GROUP_DELETED"));
 		break;
 	case SCSI_SENSEQ_SPARE_MODIFIED:
-		OutputErrorString(_T("SPARE_MODIFIED"));
+		OutputLog(standardError | fileMainError, _T("SPARE_MODIFIED"));
 		break;
 	case SCSI_SENSEQ_SPARE_DELETED:
-		OutputErrorString(_T("SPARE_DELETED"));
+		OutputLog(standardError | fileMainError, _T("SPARE_DELETED"));
 		break;
 	case SCSI_SENSEQ_VOLUME_SET_MODIFIED:
-		OutputErrorString(_T("VOLUME_SET_MODIFIED"));
+		OutputLog(standardError | fileMainError, _T("VOLUME_SET_MODIFIED"));
 		break;
 	case SCSI_SENSEQ_VOLUME_SET_DELETED:
-		OutputErrorString(_T("VOLUME SET DELETED"));
+		OutputLog(standardError | fileMainError, _T("VOLUME SET DELETED"));
 		break;
 	case SCSI_SENSEQ_VOLUME_SET_DEASSIGNED:
-		OutputErrorString(_T("VOLUME SET DEASSIGNED"));
+		OutputLog(standardError | fileMainError, _T("VOLUME SET DEASSIGNED"));
 		break;
 	case SCSI_SENSEQ_VOLUME_SET_REASSIGNED:
-		OutputErrorString(_T("VOLUME SET REASSIGNED"));
+		OutputLog(standardError | fileMainError, _T("VOLUME SET REASSIGNED"));
 		break;
 	case SCSI_SENSEQ_REPORTED_LUNS_DATA_CHANGED:
-		OutputErrorString(_T("REPORTED_LUNS_DATA_CHANGED"));
+		OutputLog(standardError | fileMainError, _T("REPORTED_LUNS_DATA_CHANGED"));
 		break;
 	case SCSI_SENSEQ_ECHO_BUFFER_OVERWRITTEN:
-		OutputErrorString(_T("ECHO_BUFFER_OVERWRITTEN"));
+		OutputLog(standardError | fileMainError, _T("ECHO_BUFFER_OVERWRITTEN"));
 		break;
 	case SCSI_SENSEQ_MEDIUM_LOADABLE:
-		OutputErrorString(_T("MEDIUM LOADABLE"));
+		OutputLog(standardError | fileMainError, _T("MEDIUM LOADABLE"));
 		break;
 	case SCSI_SENSEQ_MEDIUM_AUXILIARY_MEMORY_ACCESSIBLE:
-		OutputErrorString(_T("MEDIUM_AUXILIARY_MEMORY_ACCESSIBLE"));
+		OutputLog(standardError | fileMainError, _T("MEDIUM_AUXILIARY_MEMORY_ACCESSIBLE"));
 		break;
 	case 0x12:
-		OutputErrorString(_T("iSCSI IP ADDRESS ADDED"));
+		OutputLog(standardError | fileMainError, _T("iSCSI IP ADDRESS ADDED"));
 		break;
 	case 0x13:
-		OutputErrorString(_T("iSCSI IP ADDRESS REMOVED"));
+		OutputLog(standardError | fileMainError, _T("iSCSI IP ADDRESS REMOVED"));
 		break;
 	case 0x14:
-		OutputErrorString(_T("iSCSI IP ADDRESS CHANGED"));
+		OutputLog(standardError | fileMainError, _T("iSCSI IP ADDRESS CHANGED"));
 		break;
 	case 0x15:
-		OutputErrorString(_T("INSPECT REFERRALS SENSE DESCRIPTORS"));
+		OutputLog(standardError | fileMainError, _T("INSPECT REFERRALS SENSE DESCRIPTORS"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1630,10 +1630,10 @@ VOID OutputAdditionalSenseCodeQualifier0x40(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("RAM FAILURE"));
+		OutputLog(standardError | fileMainError, _T("RAM FAILURE"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1644,10 +1644,10 @@ VOID OutputAdditionalSenseCodeQualifier0x41(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("DATA PATH FAILURE"));
+		OutputLog(standardError | fileMainError, _T("DATA PATH FAILURE"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1658,10 +1658,10 @@ VOID OutputAdditionalSenseCodeQualifier0x42(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("POWER-ON OR SELF-TEST FAILURE"));
+		OutputLog(standardError | fileMainError, _T("POWER-ON OR SELF-TEST FAILURE"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1672,10 +1672,10 @@ VOID OutputAdditionalSenseCodeQualifier0x43(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("MESSAGE ERROR"));
+		OutputLog(standardError | fileMainError, _T("MESSAGE ERROR"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1686,16 +1686,16 @@ VOID OutputAdditionalSenseCodeQualifier0x44(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("INTERNAL TARGET FAILURE"));
+		OutputLog(standardError | fileMainError, _T("INTERNAL TARGET FAILURE"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("PERSISTENT RESERVATION INFORMATION LOST"));
+		OutputLog(standardError | fileMainError, _T("PERSISTENT RESERVATION INFORMATION LOST"));
 		break;
 	case 0x71:
-		OutputErrorString(_T("ATA DEVICE FAILED SET FEATURES"));
+		OutputLog(standardError | fileMainError, _T("ATA DEVICE FAILED SET FEATURES"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1706,10 +1706,10 @@ VOID OutputAdditionalSenseCodeQualifier0x45(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("SELECT OR RESELECT FAILURE"));
+		OutputLog(standardError | fileMainError, _T("SELECT OR RESELECT FAILURE"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1720,10 +1720,10 @@ VOID OutputAdditionalSenseCodeQualifier0x46(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("UNSUCCESSFUL SOFT RESET"));
+		OutputLog(standardError | fileMainError, _T("UNSUCCESSFUL SOFT RESET"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1734,31 +1734,31 @@ VOID OutputAdditionalSenseCodeQualifier0x47(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("SCSI PARITY ERROR"));
+		OutputLog(standardError | fileMainError, _T("SCSI PARITY ERROR"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("DATA PHASE CRC ERROR DETECTED"));
+		OutputLog(standardError | fileMainError, _T("DATA PHASE CRC ERROR DETECTED"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("SCSI PARITY ERROR DETECTED DURING ST DATA PHASE"));
+		OutputLog(standardError | fileMainError, _T("SCSI PARITY ERROR DETECTED DURING ST DATA PHASE"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("INFORMATION UNIT iuCRC ERROR DETECTED"));
+		OutputLog(standardError | fileMainError, _T("INFORMATION UNIT iuCRC ERROR DETECTED"));
 		break;
 	case 0x04:
-		OutputErrorString(_T("ASYNCHRONOUS INFORMATION PROTECTION ERROR DETECTED"));
+		OutputLog(standardError | fileMainError, _T("ASYNCHRONOUS INFORMATION PROTECTION ERROR DETECTED"));
 		break;
 	case 0x05:
-		OutputErrorString(_T("PROTOCOL SERVICE CRC ERROR"));
+		OutputLog(standardError | fileMainError, _T("PROTOCOL SERVICE CRC ERROR"));
 		break;
 	case 0x06:
-		OutputErrorString(_T("PHY TEST FUNCTION IN PROGRESS"));
+		OutputLog(standardError | fileMainError, _T("PHY TEST FUNCTION IN PROGRESS"));
 		break;
 	case 0x7f:
-		OutputErrorString(_T("SOME COMMANDS CLEARED BY ISCSI PROTOCOL EVENT"));
+		OutputLog(standardError | fileMainError, _T("SOME COMMANDS CLEARED BY ISCSI PROTOCOL EVENT"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1769,10 +1769,10 @@ VOID OutputAdditionalSenseCodeQualifier0x48(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("INITIATOR DETECTED ERROR MESSAGE RECEIVED"));
+		OutputLog(standardError | fileMainError, _T("INITIATOR DETECTED ERROR MESSAGE RECEIVED"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1783,10 +1783,10 @@ VOID OutputAdditionalSenseCodeQualifier0x49(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("INVALID MESSAGE ERROR"));
+		OutputLog(standardError | fileMainError, _T("INVALID MESSAGE ERROR"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1797,10 +1797,10 @@ VOID OutputAdditionalSenseCodeQualifier0x4a(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("COMMAND PHASE ERROR"));
+		OutputLog(standardError | fileMainError, _T("COMMAND PHASE ERROR"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1811,73 +1811,73 @@ VOID OutputAdditionalSenseCodeQualifier0x4b(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("DATA PHASE ERROR"));
+		OutputLog(standardError | fileMainError, _T("DATA PHASE ERROR"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("INVALID TARGET PORT TRANSFER TAG RECEIVED"));
+		OutputLog(standardError | fileMainError, _T("INVALID TARGET PORT TRANSFER TAG RECEIVED"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("TOO MUCH WRITE DATA"));
+		OutputLog(standardError | fileMainError, _T("TOO MUCH WRITE DATA"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("ACK/NAK TIMEOUT"));
+		OutputLog(standardError | fileMainError, _T("ACK/NAK TIMEOUT"));
 		break;
 	case 0x04:
-		OutputErrorString(_T("NAK RECEIVED"));
+		OutputLog(standardError | fileMainError, _T("NAK RECEIVED"));
 		break;
 	case 0x05:
-		OutputErrorString(_T("DATA OFFSET ERROR"));
+		OutputLog(standardError | fileMainError, _T("DATA OFFSET ERROR"));
 		break;
 	case 0x06:
-		OutputErrorString(_T("INITIATOR RESPONSE TIMEOUT"));
+		OutputLog(standardError | fileMainError, _T("INITIATOR RESPONSE TIMEOUT"));
 		break;
 	case 0x07:
-		OutputErrorString(_T("CONNECTION LOST"));
+		OutputLog(standardError | fileMainError, _T("CONNECTION LOST"));
 		break;
 	case 0x08:
-		OutputErrorString(_T("DATA-IN BUFFER OVERFLOW - DATA BUFFER SIZE"));
+		OutputLog(standardError | fileMainError, _T("DATA-IN BUFFER OVERFLOW - DATA BUFFER SIZE"));
 		break;
 	case 0x09:
-		OutputErrorString(_T("DATA-IN BUFFER OVERFLOW - DATA BUFFER DESCRIPTOR AREA"));
+		OutputLog(standardError | fileMainError, _T("DATA-IN BUFFER OVERFLOW - DATA BUFFER DESCRIPTOR AREA"));
 		break;
 	case 0x0a:
-		OutputErrorString(_T("DATA-IN BUFFER ERROR"));
+		OutputLog(standardError | fileMainError, _T("DATA-IN BUFFER ERROR"));
 		break;
 	case 0x0b:
-		OutputErrorString(_T("DATA-OUT BUFFER OVERFLOW - DATA BUFFER SIZE"));
+		OutputLog(standardError | fileMainError, _T("DATA-OUT BUFFER OVERFLOW - DATA BUFFER SIZE"));
 		break;
 	case 0x0c:
-		OutputErrorString(_T("DATA-OUT BUFFER OVERFLOW - DATA BUFFER DESCRIPTOR AREA"));
+		OutputLog(standardError | fileMainError, _T("DATA-OUT BUFFER OVERFLOW - DATA BUFFER DESCRIPTOR AREA"));
 		break;
 	case 0x0d:
-		OutputErrorString(_T("DATA-OUT BUFFER ERROR"));
+		OutputLog(standardError | fileMainError, _T("DATA-OUT BUFFER ERROR"));
 		break;
 	case 0x0e:
-		OutputErrorString(_T("PCIE FABRIC ERROR"));
+		OutputLog(standardError | fileMainError, _T("PCIE FABRIC ERROR"));
 		break;
 	case 0x0f:
-		OutputErrorString(_T("PCIE COMPLETION TIMEOUT"));
+		OutputLog(standardError | fileMainError, _T("PCIE COMPLETION TIMEOUT"));
 		break;
 	case 0x10:
-		OutputErrorString(_T("PCIE COMPLETER ABORT"));
+		OutputLog(standardError | fileMainError, _T("PCIE COMPLETER ABORT"));
 		break;
 	case 0x11:
-		OutputErrorString(_T("PCIE POISONED TLP RECEIVED"));
+		OutputLog(standardError | fileMainError, _T("PCIE POISONED TLP RECEIVED"));
 		break;
 	case 0x12:
-		OutputErrorString(_T("PCIE ECRC CHECK FAILED"));
+		OutputLog(standardError | fileMainError, _T("PCIE ECRC CHECK FAILED"));
 		break;
 	case 0x13:
-		OutputErrorString(_T("PCIE UNSUPPORTED REQUEST"));
+		OutputLog(standardError | fileMainError, _T("PCIE UNSUPPORTED REQUEST"));
 		break;
 	case 0x14:
-		OutputErrorString(_T("PCIE ACS VIOLATION"));
+		OutputLog(standardError | fileMainError, _T("PCIE ACS VIOLATION"));
 		break;
 	case 0x15:
-		OutputErrorString(_T("PCIE TLP PREFIX BLOCKED"));
+		OutputLog(standardError | fileMainError, _T("PCIE TLP PREFIX BLOCKED"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1888,10 +1888,10 @@ VOID OutputAdditionalSenseCodeQualifier0x4c(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("LOGICAL UNIT FAILED SELF-CONFIGURATION"));
+		OutputLog(standardError | fileMainError, _T("LOGICAL UNIT FAILED SELF-CONFIGURATION"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1902,10 +1902,10 @@ VOID OutputAdditionalSenseCodeQualifier0x4e(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("OVERLAPPED COMMANDS ATTEMPTED"));
+		OutputLog(standardError | fileMainError, _T("OVERLAPPED COMMANDS ATTEMPTED"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1916,13 +1916,13 @@ VOID OutputAdditionalSenseCodeQualifier0x51(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("ERASE FAILURE"));
+		OutputLog(standardError | fileMainError, _T("ERASE FAILURE"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("ERASE FAILURE - INCOMPLETE ERASE OPERATION DETECTED"));
+		OutputLog(standardError | fileMainError, _T("ERASE FAILURE - INCOMPLETE ERASE OPERATION DETECTED"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1933,13 +1933,13 @@ VOID OutputAdditionalSenseCodeQualifier0x53(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("MEDIA LOAD OR EJECT FAILED"));
+		OutputLog(standardError | fileMainError, _T("MEDIA LOAD OR EJECT FAILED"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("MEDIUM REMOVAL PREVENTED"));
+		OutputLog(standardError | fileMainError, _T("MEDIUM REMOVAL PREVENTED"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1950,34 +1950,34 @@ VOID OutputAdditionalSenseCodeQualifier0x55(
 {
 	switch (byAscq) {
 	case 0x01:
-		OutputErrorString(_T("SYSTEM BUFFER FULL"));
+		OutputLog(standardError | fileMainError, _T("SYSTEM BUFFER FULL"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("INSUFFICIENT RESERVATION RESOURCES"));
+		OutputLog(standardError | fileMainError, _T("INSUFFICIENT RESERVATION RESOURCES"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("INSUFFICIENT RESOURCES"));
+		OutputLog(standardError | fileMainError, _T("INSUFFICIENT RESOURCES"));
 		break;
 	case 0x04:
-		OutputErrorString(_T("INSUFFICIENT REGISTRATION RESOURCES"));
+		OutputLog(standardError | fileMainError, _T("INSUFFICIENT REGISTRATION RESOURCES"));
 		break;
 	case 0x05:
-		OutputErrorString(_T("INSUFFICIENT ACCESS CONTROL RESOURCES"));
+		OutputLog(standardError | fileMainError, _T("INSUFFICIENT ACCESS CONTROL RESOURCES"));
 		break;
 	case 0x06:
-		OutputErrorString(_T("AUXILIARY MEMORY OUT OF SPACE"));
+		OutputLog(standardError | fileMainError, _T("AUXILIARY MEMORY OUT OF SPACE"));
 		break;
 	case 0x0b:
-		OutputErrorString(_T("INSUFFICIENT POWER FOR OPERATION"));
+		OutputLog(standardError | fileMainError, _T("INSUFFICIENT POWER FOR OPERATION"));
 		break;
 	case 0x0c:
-		OutputErrorString(_T("INSUFFICIENT RESOURCES TO CREATE ROD"));
+		OutputLog(standardError | fileMainError, _T("INSUFFICIENT RESOURCES TO CREATE ROD"));
 		break;
 	case 0x0d:
-		OutputErrorString(_T("INSUFFICIENT RESOURCES TO CREATE ROD TOKEN"));
+		OutputLog(standardError | fileMainError, _T("INSUFFICIENT RESOURCES TO CREATE ROD TOKEN"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -1988,10 +1988,10 @@ VOID OutputAdditionalSenseCodeQualifier0x57(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("UNABLE TO RECOVER TABLE-OF-CONTENTS"));
+		OutputLog(standardError | fileMainError, _T("UNABLE TO RECOVER TABLE-OF-CONTENTS"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -2002,10 +2002,10 @@ VOID OutputAdditionalSenseCodeQualifier0x58(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("GENERATION DOES NOT EXIST"));
+		OutputLog(standardError | fileMainError, _T("GENERATION DOES NOT EXIST"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -2016,10 +2016,10 @@ VOID OutputAdditionalSenseCodeQualifier0x59(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("UPDATED BLOCK READ"));
+		OutputLog(standardError | fileMainError, _T("UPDATED BLOCK READ"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -2030,19 +2030,19 @@ VOID OutputAdditionalSenseCodeQualifier0x5a(
 {
 	switch (byAscq) {
 	case SCSI_SENSEQ_STATE_CHANGE_INPUT:
-		OutputErrorString(_T("OPERATOR REQUEST OR STATE CHANGE INPUT"));
+		OutputLog(standardError | fileMainError, _T("OPERATOR REQUEST OR STATE CHANGE INPUT"));
 		break;
 	case SCSI_SENSEQ_MEDIUM_REMOVAL:
-		OutputErrorString(_T("OPERATOR MEDIUM REMOVAL REQUEST"));
+		OutputLog(standardError | fileMainError, _T("OPERATOR MEDIUM REMOVAL REQUEST"));
 		break;
 	case SCSI_SENSEQ_WRITE_PROTECT_ENABLE:
-		OutputErrorString(_T("OPERATOR SELECTED WRITE PROTECT"));
+		OutputLog(standardError | fileMainError, _T("OPERATOR SELECTED WRITE PROTECT"));
 		break;
 	case SCSI_SENSEQ_WRITE_PROTECT_DISABLE:
-		OutputErrorString(_T("OPERATOR SELECTED WRITE PERMIT"));
+		OutputLog(standardError | fileMainError, _T("OPERATOR SELECTED WRITE PERMIT"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -2053,19 +2053,19 @@ VOID OutputAdditionalSenseCodeQualifier0x5b(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("LOG EXCEPTION"));
+		OutputLog(standardError | fileMainError, _T("LOG EXCEPTION"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("THRESHOLD CONDITION MET"));
+		OutputLog(standardError | fileMainError, _T("THRESHOLD CONDITION MET"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("LOG COUNTER AT MAXIMUM"));
+		OutputLog(standardError | fileMainError, _T("LOG COUNTER AT MAXIMUM"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("LOG LIST CODES EXHAUSTED"));
+		OutputLog(standardError | fileMainError, _T("LOG LIST CODES EXHAUSTED"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -2076,16 +2076,16 @@ VOID OutputAdditionalSenseCodeQualifier0x5c(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("RPL STATUS CHANGE"));
+		OutputLog(standardError | fileMainError, _T("RPL STATUS CHANGE"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("SPINDLES SYNCHRONIZED"));
+		OutputLog(standardError | fileMainError, _T("SPINDLES SYNCHRONIZED"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("SPINDLES NOT SYNCHRONIZED"));
+		OutputLog(standardError | fileMainError, _T("SPINDLES NOT SYNCHRONIZED"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -2096,256 +2096,256 @@ VOID OutputAdditionalSenseCodeQualifier0x5d(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("FAILURE PREDICTION THRESHOLD EXCEEDED"));
+		OutputLog(standardError | fileMainError, _T("FAILURE PREDICTION THRESHOLD EXCEEDED"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("MEDIA FAILURE PREDICTION THRESHOLD EXCEEDED"));
+		OutputLog(standardError | fileMainError, _T("MEDIA FAILURE PREDICTION THRESHOLD EXCEEDED"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("LOGICAL UNIT FAILURE PREDICTION THRESHOLD EXCEEDED"));
+		OutputLog(standardError | fileMainError, _T("LOGICAL UNIT FAILURE PREDICTION THRESHOLD EXCEEDED"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("SPARE AREA EXHAUSTION PREDICTION THRESHOLD EXCEEDED"));
+		OutputLog(standardError | fileMainError, _T("SPARE AREA EXHAUSTION PREDICTION THRESHOLD EXCEEDED"));
 		break;
 	case 0x10:
-		OutputErrorString(_T("HARDWARE IMPENDING FAILURE GENERAL HARD DRIVE FAILURE"));
+		OutputLog(standardError | fileMainError, _T("HARDWARE IMPENDING FAILURE GENERAL HARD DRIVE FAILURE"));
 		break;
 	case 0x11:
-		OutputErrorString(_T("HARDWARE IMPENDING FAILURE DRIVE ERROR RATE TOO HIGH"));
+		OutputLog(standardError | fileMainError, _T("HARDWARE IMPENDING FAILURE DRIVE ERROR RATE TOO HIGH"));
 		break;
 	case 0x12:
-		OutputErrorString(_T("HARDWARE IMPENDING FAILURE DATA ERROR RATE TOO HIGH"));
+		OutputLog(standardError | fileMainError, _T("HARDWARE IMPENDING FAILURE DATA ERROR RATE TOO HIGH"));
 		break;
 	case 0x13:
-		OutputErrorString(_T("HARDWARE IMPENDING FAILURE SEEK ERROR RATE TOO HIGH"));
+		OutputLog(standardError | fileMainError, _T("HARDWARE IMPENDING FAILURE SEEK ERROR RATE TOO HIGH"));
 		break;
 	case 0x14:
-		OutputErrorString(_T("HARDWARE IMPENDING FAILURE TOO MANY BLOCK REASSIGNS"));
+		OutputLog(standardError | fileMainError, _T("HARDWARE IMPENDING FAILURE TOO MANY BLOCK REASSIGNS"));
 		break;
 	case 0x15:
-		OutputErrorString(_T("HARDWARE IMPENDING FAILURE ACCESS TIMES TOO HIGH"));
+		OutputLog(standardError | fileMainError, _T("HARDWARE IMPENDING FAILURE ACCESS TIMES TOO HIGH"));
 		break;
 	case 0x16:
-		OutputErrorString(_T("HARDWARE IMPENDING FAILURE START UNIT TIMES TOO HIGH"));
+		OutputLog(standardError | fileMainError, _T("HARDWARE IMPENDING FAILURE START UNIT TIMES TOO HIGH"));
 		break;
 	case 0x17:
-		OutputErrorString(_T("HARDWARE IMPENDING FAILURE CHANNEL PARAMETRICS"));
+		OutputLog(standardError | fileMainError, _T("HARDWARE IMPENDING FAILURE CHANNEL PARAMETRICS"));
 		break;
 	case 0x18:
-		OutputErrorString(_T("HARDWARE IMPENDING FAILURE CONTROLLER DETECTED"));
+		OutputLog(standardError | fileMainError, _T("HARDWARE IMPENDING FAILURE CONTROLLER DETECTED"));
 		break;
 	case 0x19:
-		OutputErrorString(_T("HARDWARE IMPENDING FAILURE THROUGHPUT PERFORMANCE"));
+		OutputLog(standardError | fileMainError, _T("HARDWARE IMPENDING FAILURE THROUGHPUT PERFORMANCE"));
 		break;
 	case 0x1a:
-		OutputErrorString(_T("HARDWARE IMPENDING FAILURE SEEK TIME PERFORMANCE"));
+		OutputLog(standardError | fileMainError, _T("HARDWARE IMPENDING FAILURE SEEK TIME PERFORMANCE"));
 		break;
 	case 0x1b:
-		OutputErrorString(_T("HARDWARE IMPENDING FAILURE SPIN-UP RETRY COUNT"));
+		OutputLog(standardError | fileMainError, _T("HARDWARE IMPENDING FAILURE SPIN-UP RETRY COUNT"));
 		break;
 	case 0x1c:
-		OutputErrorString(_T("HARDWARE IMPENDING FAILURE DRIVE CALIBRATION RETRY COUNT"));
+		OutputLog(standardError | fileMainError, _T("HARDWARE IMPENDING FAILURE DRIVE CALIBRATION RETRY COUNT"));
 		break;
 	case 0x20:
-		OutputErrorString(_T("CONTROLLER IMPENDING FAILURE GENERAL HARD DRIVE FAILURE"));
+		OutputLog(standardError | fileMainError, _T("CONTROLLER IMPENDING FAILURE GENERAL HARD DRIVE FAILURE"));
 		break;
 	case 0x21:
-		OutputErrorString(_T("CONTROLLER IMPENDING FAILURE DRIVE ERROR RATE TOO HIGH"));
+		OutputLog(standardError | fileMainError, _T("CONTROLLER IMPENDING FAILURE DRIVE ERROR RATE TOO HIGH"));
 		break;
 	case 0x22:
-		OutputErrorString(_T("CONTROLLER IMPENDING FAILURE DATA ERROR RATE TOO HIGH"));
+		OutputLog(standardError | fileMainError, _T("CONTROLLER IMPENDING FAILURE DATA ERROR RATE TOO HIGH"));
 		break;
 	case 0x23:
-		OutputErrorString(_T("CONTROLLER IMPENDING FAILURE SEEK ERROR RATE TOO HIGH"));
+		OutputLog(standardError | fileMainError, _T("CONTROLLER IMPENDING FAILURE SEEK ERROR RATE TOO HIGH"));
 		break;
 	case 0x24:
-		OutputErrorString(_T("CONTROLLER IMPENDING FAILURE TOO MANY BLOCK REASSIGNS"));
+		OutputLog(standardError | fileMainError, _T("CONTROLLER IMPENDING FAILURE TOO MANY BLOCK REASSIGNS"));
 		break;
 	case 0x25:
-		OutputErrorString(_T("CONTROLLER IMPENDING FAILURE ACCESS TIMES TOO HIGH"));
+		OutputLog(standardError | fileMainError, _T("CONTROLLER IMPENDING FAILURE ACCESS TIMES TOO HIGH"));
 		break;
 	case 0x26:
-		OutputErrorString(_T("CONTROLLER IMPENDING FAILURE START UNIT TIMES TOO HIGH"));
+		OutputLog(standardError | fileMainError, _T("CONTROLLER IMPENDING FAILURE START UNIT TIMES TOO HIGH"));
 		break;
 	case 0x27:
-		OutputErrorString(_T("CONTROLLER IMPENDING FAILURE CHANNEL PARAMETRICS"));
+		OutputLog(standardError | fileMainError, _T("CONTROLLER IMPENDING FAILURE CHANNEL PARAMETRICS"));
 		break;
 	case 0x28:
-		OutputErrorString(_T("CONTROLLER IMPENDING FAILURE CONTROLLER DETECTED"));
+		OutputLog(standardError | fileMainError, _T("CONTROLLER IMPENDING FAILURE CONTROLLER DETECTED"));
 		break;
 	case 0x29:
-		OutputErrorString(_T("CONTROLLER IMPENDING FAILURE THROUGHPUT PERFORMANCE"));
+		OutputLog(standardError | fileMainError, _T("CONTROLLER IMPENDING FAILURE THROUGHPUT PERFORMANCE"));
 		break;
 	case 0x2a:
-		OutputErrorString(_T("CONTROLLER IMPENDING FAILURE SEEK TIME PERFORMANCE"));
+		OutputLog(standardError | fileMainError, _T("CONTROLLER IMPENDING FAILURE SEEK TIME PERFORMANCE"));
 		break;
 	case 0x2b:
-		OutputErrorString(_T("CONTROLLER IMPENDING FAILURE SPIN-UP RETRY COUNT"));
+		OutputLog(standardError | fileMainError, _T("CONTROLLER IMPENDING FAILURE SPIN-UP RETRY COUNT"));
 		break;
 	case 0x2c:
-		OutputErrorString(_T("CONTROLLER IMPENDING FAILURE DRIVE CALIBRATION RETRY COUNT"));
+		OutputLog(standardError | fileMainError, _T("CONTROLLER IMPENDING FAILURE DRIVE CALIBRATION RETRY COUNT"));
 		break;
 	case 0x30:
-		OutputErrorString(_T("DATA CHANNEL IMPENDING FAILURE GENERAL HARD DRIVE FAILURE"));
+		OutputLog(standardError | fileMainError, _T("DATA CHANNEL IMPENDING FAILURE GENERAL HARD DRIVE FAILURE"));
 		break;
 	case 0x31:
-		OutputErrorString(_T("DATA CHANNEL IMPENDING FAILURE DRIVE ERROR RATE TOO HIGH"));
+		OutputLog(standardError | fileMainError, _T("DATA CHANNEL IMPENDING FAILURE DRIVE ERROR RATE TOO HIGH"));
 		break;
 	case 0x32:
-		OutputErrorString(_T("DATA CHANNEL IMPENDING FAILURE DATA ERROR RATE TOO HIGH"));
+		OutputLog(standardError | fileMainError, _T("DATA CHANNEL IMPENDING FAILURE DATA ERROR RATE TOO HIGH"));
 		break;
 	case 0x33:
-		OutputErrorString(_T("DATA CHANNEL IMPENDING FAILURE SEEK ERROR RATE TOO HIGH"));
+		OutputLog(standardError | fileMainError, _T("DATA CHANNEL IMPENDING FAILURE SEEK ERROR RATE TOO HIGH"));
 		break;
 	case 0x34:
-		OutputErrorString(_T("DATA CHANNEL IMPENDING FAILURE TOO MANY BLOCK REASSIGNS"));
+		OutputLog(standardError | fileMainError, _T("DATA CHANNEL IMPENDING FAILURE TOO MANY BLOCK REASSIGNS"));
 		break;
 	case 0x35:
-		OutputErrorString(_T("DATA CHANNEL IMPENDING FAILURE ACCESS TIMES TOO HIGH"));
+		OutputLog(standardError | fileMainError, _T("DATA CHANNEL IMPENDING FAILURE ACCESS TIMES TOO HIGH"));
 		break;
 	case 0x36:
-		OutputErrorString(_T("DATA CHANNEL IMPENDING FAILURE START UNIT TIMES TOO HIGH"));
+		OutputLog(standardError | fileMainError, _T("DATA CHANNEL IMPENDING FAILURE START UNIT TIMES TOO HIGH"));
 		break;
 	case 0x37:
-		OutputErrorString(_T("DATA CHANNEL IMPENDING FAILURE CHANNEL PARAMETRICS"));
+		OutputLog(standardError | fileMainError, _T("DATA CHANNEL IMPENDING FAILURE CHANNEL PARAMETRICS"));
 		break;
 	case 0x38:
-		OutputErrorString(_T("DATA CHANNEL IMPENDING FAILURE CONTROLLER DETECTED"));
+		OutputLog(standardError | fileMainError, _T("DATA CHANNEL IMPENDING FAILURE CONTROLLER DETECTED"));
 		break;
 	case 0x39:
-		OutputErrorString(_T("DATA CHANNEL IMPENDING FAILURE THROUGHPUT PERFORMANCE"));
+		OutputLog(standardError | fileMainError, _T("DATA CHANNEL IMPENDING FAILURE THROUGHPUT PERFORMANCE"));
 		break;
 	case 0x3a:
-		OutputErrorString(_T("DATA CHANNEL IMPENDING FAILURE SEEK TIME PERFORMANCE"));
+		OutputLog(standardError | fileMainError, _T("DATA CHANNEL IMPENDING FAILURE SEEK TIME PERFORMANCE"));
 		break;
 	case 0x3b:
-		OutputErrorString(_T("DATA CHANNEL IMPENDING FAILURE SPIN-UP RETRY COUNT"));
+		OutputLog(standardError | fileMainError, _T("DATA CHANNEL IMPENDING FAILURE SPIN-UP RETRY COUNT"));
 		break;
 	case 0x3c:
-		OutputErrorString(_T("DATA CHANNEL IMPENDING FAILURE DRIVE CALIBRATION RETRY COUNT"));
+		OutputLog(standardError | fileMainError, _T("DATA CHANNEL IMPENDING FAILURE DRIVE CALIBRATION RETRY COUNT"));
 		break;
 	case 0x40:
-		OutputErrorString(_T("SERVO IMPENDING FAILURE GENERAL HARD DRIVE FAILURE"));
+		OutputLog(standardError | fileMainError, _T("SERVO IMPENDING FAILURE GENERAL HARD DRIVE FAILURE"));
 		break;
 	case 0x41:
-		OutputErrorString(_T("SERVO IMPENDING FAILURE DRIVE ERROR RATE TOO HIGH"));
+		OutputLog(standardError | fileMainError, _T("SERVO IMPENDING FAILURE DRIVE ERROR RATE TOO HIGH"));
 		break;
 	case 0x42:
-		OutputErrorString(_T("SERVO IMPENDING FAILURE DATA ERROR RATE TOO HIGH"));
+		OutputLog(standardError | fileMainError, _T("SERVO IMPENDING FAILURE DATA ERROR RATE TOO HIGH"));
 		break;
 	case 0x43:
-		OutputErrorString(_T("SERVO IMPENDING FAILURE SEEK ERROR RATE TOO HIGH"));
+		OutputLog(standardError | fileMainError, _T("SERVO IMPENDING FAILURE SEEK ERROR RATE TOO HIGH"));
 		break;
 	case 0x44:
-		OutputErrorString(_T("SERVO IMPENDING FAILURE TOO MANY BLOCK REASSIGNS"));
+		OutputLog(standardError | fileMainError, _T("SERVO IMPENDING FAILURE TOO MANY BLOCK REASSIGNS"));
 		break;
 	case 0x45:
-		OutputErrorString(_T("SERVO IMPENDING FAILURE ACCESS TIMES TOO HIGH"));
+		OutputLog(standardError | fileMainError, _T("SERVO IMPENDING FAILURE ACCESS TIMES TOO HIGH"));
 		break;
 	case 0x46:
-		OutputErrorString(_T("SERVO IMPENDING FAILURE START UNIT TIMES TOO HIGH"));
+		OutputLog(standardError | fileMainError, _T("SERVO IMPENDING FAILURE START UNIT TIMES TOO HIGH"));
 		break;
 	case 0x47:
-		OutputErrorString(_T("SERVO IMPENDING FAILURE CHANNEL PARAMETRICS"));
+		OutputLog(standardError | fileMainError, _T("SERVO IMPENDING FAILURE CHANNEL PARAMETRICS"));
 		break;
 	case 0x48:
-		OutputErrorString(_T("SERVO IMPENDING FAILURE CONTROLLER DETECTED"));
+		OutputLog(standardError | fileMainError, _T("SERVO IMPENDING FAILURE CONTROLLER DETECTED"));
 		break;
 	case 0x49:
-		OutputErrorString(_T("SERVO IMPENDING FAILURE THROUGHPUT PERFORMANCE"));
+		OutputLog(standardError | fileMainError, _T("SERVO IMPENDING FAILURE THROUGHPUT PERFORMANCE"));
 		break;
 	case 0x4a:
-		OutputErrorString(_T("SERVO IMPENDING FAILURE SEEK TIME PERFORMANCE"));
+		OutputLog(standardError | fileMainError, _T("SERVO IMPENDING FAILURE SEEK TIME PERFORMANCE"));
 		break;
 	case 0x4b:
-		OutputErrorString(_T("SERVO IMPENDING FAILURE SPIN-UP RETRY COUNT"));
+		OutputLog(standardError | fileMainError, _T("SERVO IMPENDING FAILURE SPIN-UP RETRY COUNT"));
 		break;
 	case 0x4c:
-		OutputErrorString(_T("SERVO IMPENDING FAILURE DRIVE CALIBRATION RETRY COUNT"));
+		OutputLog(standardError | fileMainError, _T("SERVO IMPENDING FAILURE DRIVE CALIBRATION RETRY COUNT"));
 		break;
 	case 0x50:
-		OutputErrorString(_T("SPINDLE IMPENDING FAILURE GENERAL HARD DRIVE FAILURE"));
+		OutputLog(standardError | fileMainError, _T("SPINDLE IMPENDING FAILURE GENERAL HARD DRIVE FAILURE"));
 		break;
 	case 0x51:
-		OutputErrorString(_T("SPINDLE IMPENDING FAILURE DRIVE ERROR RATE TOO HIGH"));
+		OutputLog(standardError | fileMainError, _T("SPINDLE IMPENDING FAILURE DRIVE ERROR RATE TOO HIGH"));
 		break;
 	case 0x52:
-		OutputErrorString(_T("SPINDLE IMPENDING FAILURE DATA ERROR RATE TOO HIGH"));
+		OutputLog(standardError | fileMainError, _T("SPINDLE IMPENDING FAILURE DATA ERROR RATE TOO HIGH"));
 		break;
 	case 0x53:
-		OutputErrorString(_T("SPINDLE IMPENDING FAILURE SEEK ERROR RATE TOO HIGH"));
+		OutputLog(standardError | fileMainError, _T("SPINDLE IMPENDING FAILURE SEEK ERROR RATE TOO HIGH"));
 		break;
 	case 0x54:
-		OutputErrorString(_T("SPINDLE IMPENDING FAILURE TOO MANY BLOCK REASSIGNS"));
+		OutputLog(standardError | fileMainError, _T("SPINDLE IMPENDING FAILURE TOO MANY BLOCK REASSIGNS"));
 		break;
 	case 0x55:
-		OutputErrorString(_T("SPINDLE IMPENDING FAILURE ACCESS TIMES TOO HIGH"));
+		OutputLog(standardError | fileMainError, _T("SPINDLE IMPENDING FAILURE ACCESS TIMES TOO HIGH"));
 		break;
 	case 0x56:
-		OutputErrorString(_T("SPINDLE IMPENDING FAILURE START UNIT TIMES TOO HIGH"));
+		OutputLog(standardError | fileMainError, _T("SPINDLE IMPENDING FAILURE START UNIT TIMES TOO HIGH"));
 		break;
 	case 0x57:
-		OutputErrorString(_T("SPINDLE IMPENDING FAILURE CHANNEL PARAMETRICS"));
+		OutputLog(standardError | fileMainError, _T("SPINDLE IMPENDING FAILURE CHANNEL PARAMETRICS"));
 		break;
 	case 0x58:
-		OutputErrorString(_T("SPINDLE IMPENDING FAILURE CONTROLLER DETECTED"));
+		OutputLog(standardError | fileMainError, _T("SPINDLE IMPENDING FAILURE CONTROLLER DETECTED"));
 		break;
 	case 0x59:
-		OutputErrorString(_T("SPINDLE IMPENDING FAILURE THROUGHPUT PERFORMANCE"));
+		OutputLog(standardError | fileMainError, _T("SPINDLE IMPENDING FAILURE THROUGHPUT PERFORMANCE"));
 		break;
 	case 0x5a:
-		OutputErrorString(_T("SPINDLE IMPENDING FAILURE SEEK TIME PERFORMANCE"));
+		OutputLog(standardError | fileMainError, _T("SPINDLE IMPENDING FAILURE SEEK TIME PERFORMANCE"));
 		break;
 	case 0x5b:
-		OutputErrorString(_T("SPINDLE IMPENDING FAILURE SPIN-UP RETRY COUNT"));
+		OutputLog(standardError | fileMainError, _T("SPINDLE IMPENDING FAILURE SPIN-UP RETRY COUNT"));
 		break;
 	case 0x5c:
-		OutputErrorString(_T("SPINDLE IMPENDING FAILURE DRIVE CALIBRATION RETRY COUNT"));
+		OutputLog(standardError | fileMainError, _T("SPINDLE IMPENDING FAILURE DRIVE CALIBRATION RETRY COUNT"));
 		break;
 	case 0x60:
-		OutputErrorString(_T("FIRMWARE IMPENDING FAILURE GENERAL HARD DRIVE FAILURE"));
+		OutputLog(standardError | fileMainError, _T("FIRMWARE IMPENDING FAILURE GENERAL HARD DRIVE FAILURE"));
 		break;
 	case 0x61:
-		OutputErrorString(_T("FIRMWARE IMPENDING FAILURE DRIVE ERROR RATE TOO HIGH"));
+		OutputLog(standardError | fileMainError, _T("FIRMWARE IMPENDING FAILURE DRIVE ERROR RATE TOO HIGH"));
 		break;
 	case 0x62:
-		OutputErrorString(_T("FIRMWARE IMPENDING FAILURE DATA ERROR RATE TOO HIGH"));
+		OutputLog(standardError | fileMainError, _T("FIRMWARE IMPENDING FAILURE DATA ERROR RATE TOO HIGH"));
 		break;
 	case 0x63:
-		OutputErrorString(_T("FIRMWARE IMPENDING FAILURE SEEK ERROR RATE TOO HIGH"));
+		OutputLog(standardError | fileMainError, _T("FIRMWARE IMPENDING FAILURE SEEK ERROR RATE TOO HIGH"));
 		break;
 	case 0x64:
-		OutputErrorString(_T("FIRMWARE IMPENDING FAILURE TOO MANY BLOCK REASSIGNS"));
+		OutputLog(standardError | fileMainError, _T("FIRMWARE IMPENDING FAILURE TOO MANY BLOCK REASSIGNS"));
 		break;
 	case 0x65:
-		OutputErrorString(_T("FIRMWARE IMPENDING FAILURE ACCESS TIMES TOO HIGH"));
+		OutputLog(standardError | fileMainError, _T("FIRMWARE IMPENDING FAILURE ACCESS TIMES TOO HIGH"));
 		break;
 	case 0x66:
-		OutputErrorString(_T("FIRMWARE IMPENDING FAILURE START UNIT TIMES TOO HIGH"));
+		OutputLog(standardError | fileMainError, _T("FIRMWARE IMPENDING FAILURE START UNIT TIMES TOO HIGH"));
 		break;
 	case 0x67:
-		OutputErrorString(_T("FIRMWARE IMPENDING FAILURE CHANNEL PARAMETRICS"));
+		OutputLog(standardError | fileMainError, _T("FIRMWARE IMPENDING FAILURE CHANNEL PARAMETRICS"));
 		break;
 	case 0x68:
-		OutputErrorString(_T("FIRMWARE IMPENDING FAILURE CONTROLLER DETECTED"));
+		OutputLog(standardError | fileMainError, _T("FIRMWARE IMPENDING FAILURE CONTROLLER DETECTED"));
 		break;
 	case 0x69:
-		OutputErrorString(_T("FIRMWARE IMPENDING FAILURE THROUGHPUT PERFORMANCE"));
+		OutputLog(standardError | fileMainError, _T("FIRMWARE IMPENDING FAILURE THROUGHPUT PERFORMANCE"));
 		break;
 	case 0x6a:
-		OutputErrorString(_T("FIRMWARE IMPENDING FAILURE SEEK TIME PERFORMANCE"));
+		OutputLog(standardError | fileMainError, _T("FIRMWARE IMPENDING FAILURE SEEK TIME PERFORMANCE"));
 		break;
 	case 0x6b:
-		OutputErrorString(_T("FIRMWARE IMPENDING FAILURE SPIN-UP RETRY COUNT"));
+		OutputLog(standardError | fileMainError, _T("FIRMWARE IMPENDING FAILURE SPIN-UP RETRY COUNT"));
 		break;
 	case 0x6c:
-		OutputErrorString(_T("FIRMWARE IMPENDING FAILURE DRIVE CALIBRATION RETRY COUNT"));
+		OutputLog(standardError | fileMainError, _T("FIRMWARE IMPENDING FAILURE DRIVE CALIBRATION RETRY COUNT"));
 		break;
 	case 0xff:
-		OutputErrorString(_T("FAILURE PREDICTION THRESHOLD EXCEEDED (FALSE)"));
+		OutputLog(standardError | fileMainError, _T("FAILURE PREDICTION THRESHOLD EXCEEDED (FALSE)"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -2356,40 +2356,40 @@ VOID OutputAdditionalSenseCodeQualifier0x5e(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("LOW POWER CONDITION ON"));
+		OutputLog(standardError | fileMainError, _T("LOW POWER CONDITION ON"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("IDLE CONDITION ACTIVATED BY TIMER"));
+		OutputLog(standardError | fileMainError, _T("IDLE CONDITION ACTIVATED BY TIMER"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("STANDBY CONDITION ACTIVATED BY TIMER"));
+		OutputLog(standardError | fileMainError, _T("STANDBY CONDITION ACTIVATED BY TIMER"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("IDLE CONDITION ACTIVATED BY COMMAND"));
+		OutputLog(standardError | fileMainError, _T("IDLE CONDITION ACTIVATED BY COMMAND"));
 		break;
 	case 0x04:
-		OutputErrorString(_T("STANDBY CONDITION ACTIVATED BY COMMAND"));
+		OutputLog(standardError | fileMainError, _T("STANDBY CONDITION ACTIVATED BY COMMAND"));
 		break;
 	case 0x05:
-		OutputErrorString(_T("IDLE_B CONDITION ACTIVATED BY TIMER"));
+		OutputLog(standardError | fileMainError, _T("IDLE_B CONDITION ACTIVATED BY TIMER"));
 		break;
 	case 0x06:
-		OutputErrorString(_T("IDLE_B CONDITION ACTIVATED BY COMMAND"));
+		OutputLog(standardError | fileMainError, _T("IDLE_B CONDITION ACTIVATED BY COMMAND"));
 		break;
 	case 0x07:
-		OutputErrorString(_T("IDLE_C CONDITION ACTIVATED BY TIMER"));
+		OutputLog(standardError | fileMainError, _T("IDLE_C CONDITION ACTIVATED BY TIMER"));
 		break;
 	case 0x08:
-		OutputErrorString(_T("IDLE_C CONDITION ACTIVATED BY COMMAND"));
+		OutputLog(standardError | fileMainError, _T("IDLE_C CONDITION ACTIVATED BY COMMAND"));
 		break;
 	case 0x09:
-		OutputErrorString(_T("STANDBY_Y CONDITION ACTIVATED BY TIMER"));
+		OutputLog(standardError | fileMainError, _T("STANDBY_Y CONDITION ACTIVATED BY TIMER"));
 		break;
 	case 0x0a:
-		OutputErrorString(_T("STANDBY_Y CONDITION ACTIVATED BY COMMAND"));
+		OutputLog(standardError | fileMainError, _T("STANDBY_Y CONDITION ACTIVATED BY COMMAND"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -2400,13 +2400,13 @@ VOID OutputAdditionalSenseCodeQualifier0x63(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("END OF USER AREA ENCOUNTERED ON THIS TRACK"));
+		OutputLog(standardError | fileMainError, _T("END OF USER AREA ENCOUNTERED ON THIS TRACK"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("PACKET DOES NOT FIT IN AVAILABLE SPACE"));
+		OutputLog(standardError | fileMainError, _T("PACKET DOES NOT FIT IN AVAILABLE SPACE"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -2417,13 +2417,13 @@ VOID OutputAdditionalSenseCodeQualifier0x64(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("ILLEGAL MODE FOR THIS TRACK"));
+		OutputLog(standardError | fileMainError, _T("ILLEGAL MODE FOR THIS TRACK"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("INVALID PACKET SIZE"));
+		OutputLog(standardError | fileMainError, _T("INVALID PACKET SIZE"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -2434,10 +2434,10 @@ VOID OutputAdditionalSenseCodeQualifier0x65(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("VOLTAGE FAULT"));
+		OutputLog(standardError | fileMainError, _T("VOLTAGE FAULT"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -2448,10 +2448,10 @@ VOID OutputAdditionalSenseCodeQualifier0x67(
 {
 	switch (byAscq) {
 	case 0x0a:
-		OutputErrorString(_T("SET TARGET PORT GROUPS COMMAND FAILED"));
+		OutputLog(standardError | fileMainError, _T("SET TARGET PORT GROUPS COMMAND FAILED"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -2462,10 +2462,10 @@ VOID OutputAdditionalSenseCodeQualifier0x68(
 {
 	switch (byAscq) {
 	case 0x0a:
-		OutputErrorString(_T("SUBSIDIARY LOGICAL UNIT NOT CONFIGURED"));
+		OutputLog(standardError | fileMainError, _T("SUBSIDIARY LOGICAL UNIT NOT CONFIGURED"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -2476,31 +2476,31 @@ VOID OutputAdditionalSenseCodeQualifier0x6f(
 {
 	switch (byAscq) {
 	case SCSI_SENSEQ_AUTHENTICATION_FAILURE:
-		OutputErrorString(_T("COPY PROTECTION KEY EXCHANGE FAILURE - AUTHENTICATION FAILURE"));
+		OutputLog(standardError | fileMainError, _T("COPY PROTECTION KEY EXCHANGE FAILURE - AUTHENTICATION FAILURE"));
 		break;
 	case SCSI_SENSEQ_KEY_NOT_PRESENT:
-		OutputErrorString(_T("COPY PROTECTION KEY EXCHANGE FAILURE - KEY NOT PRESENT"));
+		OutputLog(standardError | fileMainError, _T("COPY PROTECTION KEY EXCHANGE FAILURE - KEY NOT PRESENT"));
 		break;
 	case SCSI_SENSEQ_KEY_NOT_ESTABLISHED:
-		OutputErrorString(_T("COPY PROTECTION KEY EXCHANGE FAILURE - KEY NOT ESTABLISHED"));
+		OutputLog(standardError | fileMainError, _T("COPY PROTECTION KEY EXCHANGE FAILURE - KEY NOT ESTABLISHED"));
 		break;
 	case SCSI_SENSEQ_READ_OF_SCRAMBLED_SECTOR_WITHOUT_AUTHENTICATION:
-		OutputErrorString(_T("READ OF SCRAMBLED SECTOR WITHOUT AUTHENTICATION"));
+		OutputLog(standardError | fileMainError, _T("READ OF SCRAMBLED SECTOR WITHOUT AUTHENTICATION"));
 		break;
 	case SCSI_SENSEQ_MEDIA_CODE_MISMATCHED_TO_LOGICAL_UNIT:
-		OutputErrorString(_T("MEDIA REGION CODE IS MISMATCHED TO LOGICAL UNIT REGION"));
+		OutputLog(standardError | fileMainError, _T("MEDIA REGION CODE IS MISMATCHED TO LOGICAL UNIT REGION"));
 		break;
 	case SCSI_SENSEQ_LOGICAL_UNIT_RESET_COUNT_ERROR:
-		OutputErrorString(_T("DRIVE REGION MUST BE PERMANENT/REGION RESET COUNT ERROR"));
+		OutputLog(standardError | fileMainError, _T("DRIVE REGION MUST BE PERMANENT/REGION RESET COUNT ERROR"));
 		break;
 	case 0x06:
-		OutputErrorString(_T("INSUFFICIENT BLOCK COUNT FOR BINDING NONCE RECORDING"));
+		OutputLog(standardError | fileMainError, _T("INSUFFICIENT BLOCK COUNT FOR BINDING NONCE RECORDING"));
 		break;
 	case 0x07:
-		OutputErrorString(_T("CONFLICT IN BINDING NONCE RECORDING"));
+		OutputLog(standardError | fileMainError, _T("CONFLICT IN BINDING NONCE RECORDING"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -2511,31 +2511,31 @@ VOID OutputAdditionalSenseCodeQualifier0x72(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("SESSION FIXATION ERROR"));
+		OutputLog(standardError | fileMainError, _T("SESSION FIXATION ERROR"));
 		break;
 	case 0x01:
-		OutputErrorString(_T("SESSION FIXATION ERROR WRITING LEAD-IN"));
+		OutputLog(standardError | fileMainError, _T("SESSION FIXATION ERROR WRITING LEAD-IN"));
 		break;
 	case 0x02:
-		OutputErrorString(_T("SESSION FIXATION ERROR WRITING LEAD-OUT"));
+		OutputLog(standardError | fileMainError, _T("SESSION FIXATION ERROR WRITING LEAD-OUT"));
 		break;
 	case 0x03:
-		OutputErrorString(_T("SESSION FIXATION ERROR - INCOMPLETE TRACK IN SESSION"));
+		OutputLog(standardError | fileMainError, _T("SESSION FIXATION ERROR - INCOMPLETE TRACK IN SESSION"));
 		break;
 	case 0x04:
-		OutputErrorString(_T("EMPTY OR PARTIALLY WRITTEN RESERVED TRACK"));
+		OutputLog(standardError | fileMainError, _T("EMPTY OR PARTIALLY WRITTEN RESERVED TRACK"));
 		break;
 	case 0x05:
-		OutputErrorString(_T("NO MORE TRACK RESERVATIONS ALLOWED"));
+		OutputLog(standardError | fileMainError, _T("NO MORE TRACK RESERVATIONS ALLOWED"));
 		break;
 	case 0x06:
-		OutputErrorString(_T("RMZ EXTENSION IS NOT ALLOWED"));
+		OutputLog(standardError | fileMainError, _T("RMZ EXTENSION IS NOT ALLOWED"));
 		break;
 	case 0x07:
-		OutputErrorString(_T("NO MORE TEST ZONE EXTENSIONS ARE ALLOWED"));
+		OutputLog(standardError | fileMainError, _T("NO MORE TEST ZONE EXTENSIONS ARE ALLOWED"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -2546,37 +2546,37 @@ VOID OutputAdditionalSenseCodeQualifier0x73(
 {
 	switch (byAscq) {
 	case 0x00:
-		OutputErrorString(_T("CD CONTROL ERROR"));
+		OutputLog(standardError | fileMainError, _T("CD CONTROL ERROR"));
 		break;
 	case SCSI_SENSEQ_POWER_CALIBRATION_AREA_ALMOST_FULL:
-		OutputErrorString(_T("POWER CALIBRATION AREA ALMOST FULL"));
+		OutputLog(standardError | fileMainError, _T("POWER CALIBRATION AREA ALMOST FULL"));
 		break;
 	case SCSI_SENSEQ_POWER_CALIBRATION_AREA_FULL:
-		OutputErrorString(_T("POWER CALIBRATION AREA IS FULL"));
+		OutputLog(standardError | fileMainError, _T("POWER CALIBRATION AREA IS FULL"));
 		break;
 	case SCSI_SENSEQ_POWER_CALIBRATION_AREA_ERROR:
-		OutputErrorString(_T("POWER CALIBRATION AREA ERROR"));
+		OutputLog(standardError | fileMainError, _T("POWER CALIBRATION AREA ERROR"));
 		break;
 	case SCSI_SENSEQ_PMA_RMA_UPDATE_FAILURE:
-		OutputErrorString(_T("PROGRAM MEMORY AREA UPDATE FAILURE"));
+		OutputLog(standardError | fileMainError, _T("PROGRAM MEMORY AREA UPDATE FAILURE"));
 		break;
 	case SCSI_SENSEQ_PMA_RMA_IS_FULL:
-		OutputErrorString(_T("RMA/PMA IS ALMOST FULL"));
+		OutputLog(standardError | fileMainError, _T("RMA/PMA IS ALMOST FULL"));
 		break;
 	case SCSI_SENSEQ_PMA_RMA_ALMOST_FULL:
-		OutputErrorString(_T("CURRENT POWER CALIBRATION AREA ALMOST FULL"));
+		OutputLog(standardError | fileMainError, _T("CURRENT POWER CALIBRATION AREA ALMOST FULL"));
 		break;
 	case 0x10:
-		OutputErrorString(_T("CURRENT POWER CALIBRATION AREA IS FULL"));
+		OutputLog(standardError | fileMainError, _T("CURRENT POWER CALIBRATION AREA IS FULL"));
 		break;
 	case 0x11:
-		OutputErrorString(_T("RDZ IS FULL"));
+		OutputLog(standardError | fileMainError, _T("RDZ IS FULL"));
 		break;
 	case 0x17:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -2587,34 +2587,34 @@ VOID OutputAdditionalSenseCodeQualifier0x74(
 {
 	switch (byAscq) {
 	case 0x08:
-		OutputErrorString(_T("DIGITAL SIGNATURE VALIDATION FAILURE"));
+		OutputLog(standardError | fileMainError, _T("DIGITAL SIGNATURE VALIDATION FAILURE"));
 		break;
 	case 0x0c:
-		OutputErrorString(_T("UNABLE TO DECRYPT PARAMETER LIST"));
+		OutputLog(standardError | fileMainError, _T("UNABLE TO DECRYPT PARAMETER LIST"));
 		break;
 	case 0x10:
-		OutputErrorString(_T("SA CREATION PARAMETER VALUE INVALID"));
+		OutputLog(standardError | fileMainError, _T("SA CREATION PARAMETER VALUE INVALID"));
 		break;
 	case 0x11:
-		OutputErrorString(_T("SA CREATION PARAMETER VALUE REJECTED"));
+		OutputLog(standardError | fileMainError, _T("SA CREATION PARAMETER VALUE REJECTED"));
 		break;
 	case 0x12:
-		OutputErrorString(_T("INVALID SA USAGE"));
+		OutputLog(standardError | fileMainError, _T("INVALID SA USAGE"));
 		break;
 	case 0x30:
-		OutputErrorString(_T("SA CREATION PARAMETER NOT SUPPORTED"));
+		OutputLog(standardError | fileMainError, _T("SA CREATION PARAMETER NOT SUPPORTED"));
 		break;
 	case 0x40:
-		OutputErrorString(_T("AUTHENTICATION FAILED"));
+		OutputLog(standardError | fileMainError, _T("AUTHENTICATION FAILED"));
 		break;
 	case 0x71:
-		OutputErrorString(_T("LOGICAL UNIT ACCESS NOT AUTHORIZED"));
+		OutputLog(standardError | fileMainError, _T("LOGICAL UNIT ACCESS NOT AUTHORIZED"));
 		break;
 	case 0x79:
-		OutputErrorString(_T("SECURITY CONFLICT IN TRANSLATED DEVICE"));
+		OutputLog(standardError | fileMainError, _T("SECURITY CONFLICT IN TRANSLATED DEVICE"));
 		break;
 	default:
-		OutputErrorString(_T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("OTHER"));
 		break;
 	}
 }
@@ -2913,14 +2913,14 @@ VOID OutputAdditionalSenseCode(
 		break;
 	default:
 		if (byAsc >= SCSI_ADSENSE_VENDOR_UNIQUE || byAscq >= 0x80) {
-			OutputErrorString(_T("VENDER UNIQUE ERROR"));
+			OutputLog(standardError | fileMainError, _T("VENDER UNIQUE ERROR"));
 		}
 		else {
-			OutputErrorString(_T("OTHER"));
+			OutputLog(standardError | fileMainError, _T("OTHER"));
 		}
 		break;
 	}
-	OutputErrorString(_T("\n"));
+	OutputLog(standardError | fileMainError, _T("\n"));
 }
 
 VOID OutputSenseKey(
@@ -2929,65 +2929,65 @@ VOID OutputSenseKey(
 {
 	switch (byKey) {
 	case SCSI_SENSE_NO_SENSE:
-		OutputErrorString(_T("NO_SENSE"));
+		OutputLog(standardError | fileMainError, _T("NO_SENSE"));
 		break;
 	case SCSI_SENSE_RECOVERED_ERROR:
-		OutputErrorString(_T("RECOVERED_ERROR"));
+		OutputLog(standardError | fileMainError, _T("RECOVERED_ERROR"));
 		break;
 	case SCSI_SENSE_NOT_READY:
-		OutputErrorString(_T("NOT_READY"));
+		OutputLog(standardError | fileMainError, _T("NOT_READY"));
 		break;
 	case SCSI_SENSE_MEDIUM_ERROR:
-		OutputErrorString(_T("MEDIUM_ERROR"));
+		OutputLog(standardError | fileMainError, _T("MEDIUM_ERROR"));
 		break;
 	case SCSI_SENSE_HARDWARE_ERROR:
-		OutputErrorString(_T("HARDWARE_ERROR"));
+		OutputLog(standardError | fileMainError, _T("HARDWARE_ERROR"));
 		break;
 	case SCSI_SENSE_ILLEGAL_REQUEST:
-		OutputErrorString(_T("ILLEGAL_REQUEST"));
+		OutputLog(standardError | fileMainError, _T("ILLEGAL_REQUEST"));
 		break;
 	case SCSI_SENSE_UNIT_ATTENTION:
-		OutputErrorString(_T("UNIT_ATTENTION"));
+		OutputLog(standardError | fileMainError, _T("UNIT_ATTENTION"));
 		break;
 	case SCSI_SENSE_DATA_PROTECT:
-		OutputErrorString(_T("DATA_PROTECT"));
+		OutputLog(standardError | fileMainError, _T("DATA_PROTECT"));
 		break;
 	case SCSI_SENSE_BLANK_CHECK:
-		OutputErrorString(_T("BLANK_CHECK"));
+		OutputLog(standardError | fileMainError, _T("BLANK_CHECK"));
 		break;
 	case SCSI_SENSE_UNIQUE:
-		OutputErrorString(_T("UNIQUE"));
+		OutputLog(standardError | fileMainError, _T("UNIQUE"));
 		break;
 	case SCSI_SENSE_COPY_ABORTED:
-		OutputErrorString(_T("COPY_ABORTED"));
+		OutputLog(standardError | fileMainError, _T("COPY_ABORTED"));
 		break;
 	case SCSI_SENSE_ABORTED_COMMAND:
-		OutputErrorString(_T("ABORTED_COMMAND"));
+		OutputLog(standardError | fileMainError, _T("ABORTED_COMMAND"));
 		break;
 	case SCSI_SENSE_EQUAL:
-		OutputErrorString(_T("EQUAL"));
+		OutputLog(standardError | fileMainError, _T("EQUAL"));
 		break;
 	case SCSI_SENSE_VOL_OVERFLOW:
-		OutputErrorString(_T("VOL_OVERFLOW"));
+		OutputLog(standardError | fileMainError, _T("VOL_OVERFLOW"));
 		break;
 	case SCSI_SENSE_MISCOMPARE:
-		OutputErrorString(_T("MISCOMPARE"));
+		OutputLog(standardError | fileMainError, _T("MISCOMPARE"));
 		break;
 	case SCSI_SENSE_RESERVED:
-		OutputErrorString(_T("RESERVED"));
+		OutputLog(standardError | fileMainError, _T("RESERVED"));
 		break;
 	default:
-		OutputErrorString(_T("UNKNOWN"));
+		OutputLog(standardError | fileMainError, _T("UNKNOWN"));
 		break;
 	}
-	OutputErrorString(_T(" - "));
+	OutputLog(standardError | fileMainError, _T(" - "));
 }
 
 VOID OutputSenseData(
 	PSENSE_DATA pSenseData
 	)
 {
-	OutputErrorString(
+	OutputLog(standardError | fileMainError, 
 		_T("\tSenseData Key-Asc-Ascq: %02x-%02x-%02x = ")
 		, pSenseData->SenseKey, pSenseData->AdditionalSenseCode
 		, pSenseData->AdditionalSenseCodeQualifier);
@@ -2995,7 +2995,7 @@ VOID OutputSenseData(
 	OutputAdditionalSenseCode(
 		pSenseData->AdditionalSenseCode, pSenseData->AdditionalSenseCodeQualifier);
 #ifdef _DEBUG
-	OutputErrorString(
+	OutputLog(standardError | fileMainError, 
 		_T("OtherSenseData\n")
 		_T("                  ErrorCode: %#x\n")
 		_T("                      Valid: %s\n")
@@ -3010,14 +3010,14 @@ VOID OutputSenseData(
 		BOOLEAN_TO_STRING_YES_NO(pSenseData->EndOfMedia),
 		BOOLEAN_TO_STRING_YES_NO(pSenseData->FileMark));
 	if (pSenseData->Valid) {
-		OutputErrorString(
+		OutputLog(standardError | fileMainError, 
 			_T("                Information: %u%u%u%u\n"),
 			pSenseData->Information[0],
 			pSenseData->Information[1],
 			pSenseData->Information[2],
 			pSenseData->Information[3]);
 	}
-	OutputErrorString(
+	OutputLog(standardError | fileMainError, 
 		_T("      AdditionalSenseLength: %u\n")
 		_T(" CommandSpecificInformation: %u%u%u%u\n")
 		_T("   FieldReplaceableUnitCode: %u\n")
@@ -3038,38 +3038,38 @@ VOID OutputScsiStatus(
 	BYTE byScsiStatus
 	)
 {
-	OutputErrorString(
+	OutputLog(standardError | fileMainError, 
 		_T("\tScsiStatus: %#04x = "), byScsiStatus);
 	switch (byScsiStatus) {
 	case SCSISTAT_GOOD:
-		OutputErrorString(_T("GOOD\n"));
+		OutputLog(standardError | fileMainError, _T("GOOD\n"));
 		break;
 	case SCSISTAT_CHECK_CONDITION:
-		OutputErrorString(_T("CHECK_CONDITION\n"));
+		OutputLog(standardError | fileMainError, _T("CHECK_CONDITION\n"));
 		break;
 	case SCSISTAT_CONDITION_MET:
-		OutputErrorString(_T("CONDITION_MET\n"));
+		OutputLog(standardError | fileMainError, _T("CONDITION_MET\n"));
 		break;
 	case SCSISTAT_BUSY:
-		OutputErrorString(_T("BUSY\n"));
+		OutputLog(standardError | fileMainError, _T("BUSY\n"));
 		break;
 	case SCSISTAT_INTERMEDIATE:
-		OutputErrorString(_T("INTERMEDIATE\n"));
+		OutputLog(standardError | fileMainError, _T("INTERMEDIATE\n"));
 		break;
 	case SCSISTAT_INTERMEDIATE_COND_MET:
-		OutputErrorString(_T("INTERMEDIATE_COND_MET\n"));
+		OutputLog(standardError | fileMainError, _T("INTERMEDIATE_COND_MET\n"));
 		break;
 	case SCSISTAT_RESERVATION_CONFLICT:
-		OutputErrorString(_T("RESERVATION_CONFLICT\n"));
+		OutputLog(standardError | fileMainError, _T("RESERVATION_CONFLICT\n"));
 		break;
 	case SCSISTAT_COMMAND_TERMINATED:
-		OutputErrorString(_T("COMMAND_TERMINATED\n"));
+		OutputLog(standardError | fileMainError, _T("COMMAND_TERMINATED\n"));
 		break;
 	case SCSISTAT_QUEUE_FULL:
-		OutputErrorString(_T("QUEUE_FULL\n"));
+		OutputLog(standardError | fileMainError, _T("QUEUE_FULL\n"));
 		break;
 	default:
-		OutputErrorString(_T("UNKNOWN\n"));
+		OutputLog(standardError | fileMainError, _T("UNKNOWN\n"));
 		break;
 	}
 }

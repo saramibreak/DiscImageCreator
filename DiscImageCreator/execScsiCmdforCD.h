@@ -10,6 +10,12 @@ BOOL ReadCDForSearchingOffset(
 	PDISC pDisc
 	);
 
+VOID ReadCDForCheckingByteOrder(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	CDFLAG::_READ_CD::_ERROR_FLAGS* c2
+	);
+
 BOOL ReadCDForCheckingReadInOut(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
@@ -58,8 +64,11 @@ BOOL ReadCDAll(
 	PDEVICE pDevice,
 	PDISC pDisc,
 	PDISC_PER_SECTOR pDiscPerSector,
+	PC2_ERROR_PER_SECTOR pC2ErrorPerSector,
+	CDFLAG::_READ_CD::_ERROR_FLAGS c2,
 	LPCTSTR pszPath,
-	FILE* fpCcd
+	FILE* fpCcd,
+	FILE* fpC2
 	);
 
 BOOL ReadCDPartial(
@@ -68,10 +77,13 @@ BOOL ReadCDPartial(
 	PDEVICE pDevice,
 	PDISC pDisc,
 	PDISC_PER_SECTOR pDiscPerSector,
+	PC2_ERROR_PER_SECTOR pC2ErrorPerSector,
+	CDFLAG::_READ_CD::_ERROR_FLAGS c2,
 	LPCTSTR pszPath,
 	INT nStart,
 	INT nEnd,
-	CDFLAG::_READ_CD::_EXPECTED_SECTOR_TYPE flg
+	CDFLAG::_READ_CD::_EXPECTED_SECTOR_TYPE flg,
+	FILE* fpC2
 	);
 
 BOOL ReadCDForGDTOC(

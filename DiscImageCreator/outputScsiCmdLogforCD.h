@@ -92,8 +92,7 @@ VOID OutputFsImageNtHeader(
 
 VOID OutputFsImageSectionHeader(
 	PDISC pDisc,
-	PIMAGE_SECTION_HEADER pIsh,
-	INT nIdx
+	PIMAGE_SECTION_HEADER pIsh
 	);
 
 VOID OutputTocForGD(

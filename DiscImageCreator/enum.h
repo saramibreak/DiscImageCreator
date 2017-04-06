@@ -20,15 +20,16 @@ typedef enum _EXEC_TYPE {
 
 typedef enum _LOG_TYPE {
 	standardOut = 1,
-	standardErr = 1 << 1,
+	standardError = 1 << 1,
 	fileDisc = 1 << 2,
 	fileVolDesc = 1 << 3,
 	fileDrive = 1 << 4,
 	fileMainInfo = 1 << 5,
 	fileMainError = 1 << 6,
 	fileSubInfo = 1 << 7,
-	fileSubError = 1 << 8,
-	fileC2Error = 1 << 9
+	fileSubIntention = 1 << 8,
+	fileSubError = 1 << 9,
+	fileC2Error = 1 << 10
 } LOG_TYPE, *PLOG_TYPE;
 
 typedef enum _MAIN_DATA_TYPE {
@@ -39,12 +40,16 @@ typedef enum _MAIN_DATA_TYPE {
 typedef enum _PROTECT_TYPE {
 	no,
 	cdidx,
+	cds300,
 	codelock,
 	laserlock,
 	proring,
 	protectCDVOB,
 	safeDiscLite,
 	safeDisc,
+	securomOld,
+	securomOldNew,
+	securomNew,
 	smartE
 } PROTECT_TYPE, *PPROTECT_TYPE;
 

@@ -31,3 +31,7 @@
           dir: \
         fname: toshinden V1
           ext: .1
+
+. semaphore time out occurs when use a IDE to USB adapter and exec "SetCDSpeed" function.
+
+. can't get a drive name when use a part of IDE to USB adapter.

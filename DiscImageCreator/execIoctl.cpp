@@ -125,7 +125,7 @@ BOOL ScsiPassThroughDirect(
 		&swb, dwLength, &swb, dwLength, &dwReturned, NULL)) {
 		OutputLastErrorNumAndString(pszFuncName, lLineNum);
 		bRet = FALSE;
-		if (!pExtArg->byReadContinue || !_tcscmp(_T("SetCDSpeed"), pszFuncName)) {
+		if (!pExtArg->byReadContinue || !_tcscmp(_T("SetDiscSpeed"), pszFuncName)) {
 			// When semaphore time out occurred, if doesn't execute sleep,
 			// UNIT_ATTENSION errors occurs next ScsiPassThroughDirect executing.
 			DWORD millisec = 30000;
@@ -144,15 +144,16 @@ BOOL ScsiPassThroughDirect(
 		if (swb.ScsiPassThroughDirect.ScsiStatus >= SCSISTAT_CHECK_CONDITION &&
 			!bNoSense) {
 			INT nLBA = 0;
-			if (swb.ScsiPassThroughDirect.Cdb[0] == 0xbe ||
+			if (swb.ScsiPassThroughDirect.Cdb[0] == 0xa8 ||
+				swb.ScsiPassThroughDirect.Cdb[0] == 0xbe ||
 				swb.ScsiPassThroughDirect.Cdb[0] == 0xd8) {
 				nLBA = (swb.ScsiPassThroughDirect.Cdb[2] << 24)
 					+ (swb.ScsiPassThroughDirect.Cdb[3] << 16)
 					+ (swb.ScsiPassThroughDirect.Cdb[4] << 8)
 					+ swb.ScsiPassThroughDirect.Cdb[5];
 			}
-			OutputLog(standardErr | fileMainError
-				, _T("\r"STR_LBA "[F:%s][L:%ld] OperationCode: %#04x\n")
+			OutputLog(standardError | fileMainError
+				, _T("\r"STR_LBA "[F:%s][L:%ld]\n\tOperationCode: %#02x\n")
 				, nLBA, nLBA, pszFuncName, lLineNum, swb.ScsiPassThroughDirect.Cdb[0]);
 			OutputScsiStatus(swb.ScsiPassThroughDirect.ScsiStatus);
 			OutputSenseData(&swb.SenseData);

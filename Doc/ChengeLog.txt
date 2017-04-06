@@ -340,3 +340,17 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - changed: changed CreateDirectory to MakeSureDirectoryPathExists
             => Creates all the directories in the specified path, beginning with the root.
 - fixed: "PathRenameExtension" fails to rename if space is included in extension.
+
+*2017-04-06
+- added: /g option, /q option
+- added: Log to mainError.txt
+- added: Detect a weird subchannel (all 0x33 of [3DO] MegaRace (Japan))
+- changed: Some command line message
+- improved: Subchannel ripping of SecuROM (added subIntention.txt)
+- improved: GD-ROM ripping (added rereading)
+- fixed: DVD ripping speed
+- fixed: /a option (combined offset is injustice)
+- fixed: Reading DirectoryRecord (some [SS] discs)
+- fixed: Audio disc reading mode (Not force /be)
+- fixed: Checking subchannel ([SS] Saturn Super Vol. 8 (Japan) and GD-ROM)
+- fixed: Subchannel offset (if ADR of 1st sector isn't 1, offset is injustice)

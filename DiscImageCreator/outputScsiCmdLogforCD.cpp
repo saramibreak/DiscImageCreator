@@ -125,6 +125,10 @@ VOID OutputFsDirectoryRecord(
 			pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)dwExtentPos;
 			pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(dwDataLen / DISC_RAW_READ_SIZE - 1);
 		}
+		else if (!strncmp(fname, "__CDS.exe", 9)) {
+			pDisc->PROTECT.byExist = cds300;
+			strncpy(pDisc->PROTECT.name, fname, 9);
+		}
 		else if (!strncmp(fname, "LASERLOK.IN", 11)) {
 			pDisc->PROTECT.byExist = laserlock;
 			strncpy(pDisc->PROTECT.name, fname, 11);
@@ -155,8 +159,17 @@ VOID OutputFsDirectoryRecord(
 			pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)dwExtentPos;
 			pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(dwDataLen / DISC_RAW_READ_SIZE - 1);
 		}
+		else if (!strncmp(fname, "CMS16.DLL", 9) && pDisc->PROTECT.byExist == no) {
+			pDisc->PROTECT.byExist = securomOld;
+			strncpy(pDisc->PROTECT.name, fname, 9);
+		}
+		else if ((!strncmp(fname, "cms32_95.dll", 12) || !strncmp(fname, "CMS32_NT.DLL", 12))
+			&& pDisc->PROTECT.byExist == no) {
+			pDisc->PROTECT.byExist = securomOld;
+			strncpy(pDisc->PROTECT.name, fname, 12);
+		}
 		else if (pDisc->PROTECT.byExist == no) {
-			// for CodeLock
+			// for CodeLock, ProtectCD-VOB, SecuRomNEW
 			LPCH p = strstr(fname, ".EXE");
 			if (!p) {
 				// Doesn't exist stristr in C/C++...
@@ -170,8 +183,7 @@ VOID OutputFsDirectoryRecord(
 			}
 			if (p) {
 				if (pDisc->PROTECT.nCntForExe == EXELBA_STORE_SIZE) {
-					OutputLogA(standardErr | fileMainError
-						, "Reached MAX .exe num\n");
+					OutputLogA(standardError | fileMainError, "Reached MAX .exe num\n");
 					return;
 				}
 				size_t len = (size_t)(p - fname + 4);
@@ -1029,8 +1041,7 @@ VOID OutputFsImageNtHeader(
 
 VOID OutputFsImageSectionHeader(
 	PDISC pDisc,
-	PIMAGE_SECTION_HEADER pIsh,
-	INT nIdx
+	PIMAGE_SECTION_HEADER pIsh
 	)
 {
 	OutputVolDescLogA(
@@ -1049,17 +1060,20 @@ VOID OutputFsImageSectionHeader(
 		, pIsh->PointerToRelocations, pIsh->PointerToLinenumbers, pIsh->NumberOfRelocations
 		, pIsh->NumberOfLinenumbers, pIsh->Characteristics
 	);
-	// for Codelock
 	if (!strncmp((LPCH)pIsh->Name, "icd1", 4)) {
 		pDisc->PROTECT.byExist = codelock;
-		strcpy(pDisc->PROTECT.name, pDisc->PROTECT.pNameForExe[nIdx]);
+		strcpy(pDisc->PROTECT.name, (LPCH)pIsh->Name);
 		pDisc->PROTECT.ERROR_SECTOR.nExtentPos = pDisc->PROTECT.nNextLBAOfLastVolDesc;
 		pDisc->PROTECT.ERROR_SECTOR.nSectorSize
 			= pDisc->PROTECT.nPrevLBAOfPathTablePos - pDisc->PROTECT.nNextLBAOfLastVolDesc;
 	}
-	// for ProtectCD-VOB
 	else if (!strncmp((LPCH)pIsh->Name, ".vob.pcd", 8)) {
 		pDisc->PROTECT.byExist = protectCDVOB;
+		strcpy(pDisc->PROTECT.name, (LPCH)pIsh->Name);
+	}
+	else if (!strncmp((LPCH)pIsh->Name, ".cms_t", 6) || !strncmp((LPCH)pIsh->Name, ".cms_d", 6)) {
+		pDisc->PROTECT.byExist = securomNew;
+		strcpy(pDisc->PROTECT.name, (LPCH)pIsh->Name);
 	}
 }
 
@@ -1076,8 +1090,10 @@ VOID OutputTocForGD(
 		if (pDisc->GDROM_TOC.TrackData[r].TrackNumber == 3) {
 			OutputDiscLogA(", LBA %6ld-%6ld, Length %6ld\n"
 				, pDisc->GDROM_TOC.TrackData[r].Address - 150
-				, pDisc->GDROM_TOC.TrackData[r + 1].Address - 1 - 300
-				, pDisc->GDROM_TOC.TrackData[r + 1].Address - pDisc->GDROM_TOC.TrackData[r].Address);
+//				, pDisc->GDROM_TOC.TrackData[r + 1].Address - 1 - 300
+				, pDisc->GDROM_TOC.Length
+//				, pDisc->GDROM_TOC.TrackData[r + 1].Address - pDisc->GDROM_TOC.TrackData[r].Address);
+				, pDisc->GDROM_TOC.Length - 150 - 45000);
 		}
 		else if (pDisc->GDROM_TOC.TrackData[r].TrackNumber == pDisc->GDROM_TOC.LastTrack) {
 			OutputDiscLogA(", LBA %6ld-%6ld, Length %6ld\n"
@@ -1142,6 +1158,7 @@ VOID OutputCDOffset(
 	}
 	if (pExtArg->byAdd && pDisc->SCSI.byAudioOnly) {
 		pDisc->MAIN.nCombinedOffset += pExtArg->nAudioCDOffsetNum * 4;
+		pExtArg->nAudioCDOffsetNum = 0; // If it is possible, I want to repair it by a better method...
 		OutputDiscLogA(
 			"\n"
 			"\t       Combined Offset(Byte) %6d, (Samples) %5d\n"
@@ -1174,11 +1191,9 @@ VOID OutputCDOffset(
 		pDisc->MAIN.nAdjustSectorNum =
 			pDisc->MAIN.nCombinedOffset / CD_RAW_SECTOR_SIZE - 1;
 	}
-	OutputDiscLogA(
-		"\tOverread sector: %d\n", pDisc->MAIN.nAdjustSectorNum);
+	OutputDiscLogA("\tOverread sector: %d\n", pDisc->MAIN.nAdjustSectorNum);
 	if (nSubchOffset != 0xff) {
-		OutputDiscLogA(
-			"\tSubch Offset: %d\n", nSubchOffset);
+		OutputDiscLogA("\tSubch Offset: %d\n", nSubchOffset);
 	}
 }
 

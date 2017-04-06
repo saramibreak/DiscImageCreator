@@ -34,6 +34,7 @@ typedef struct _LOG_FILE {
 	FILE* fpMainInfo;
 	FILE* fpMainError;
 	FILE* fpSubInfo;
+	FILE* fpSubIntention;
 	FILE* fpSubError;
 	FILE* fpC2Error;
 } LOG_FILE, *PLOG_FILE;
@@ -50,11 +51,13 @@ typedef struct _EXT_ARG {
 	BYTE byMCN;
 	BYTE byLibCrypt;
 	BYTE byPre;
+	BYTE byQuiet;
 	BYTE byRawDump;
 	BYTE byReverse;
 	BYTE byReadContinue;
 	BYTE byIntentionalSub;
-	BYTE padding;
+	BYTE bySkipSubRtoW;
+	BYTE padding[3];
 	INT nAudioCDOffsetNum;
 	DWORD dwMaxRereadNum;
 	DWORD dwMaxC2ErrorNum;
@@ -77,6 +80,7 @@ typedef struct _DEVICE {
 	WORD wMaxReadSpeed;
 	BYTE padding2[2];
 	DWORD dwTimeOutValue;
+	DRIVE_DATA_ORDER driveOrder;
 	struct _TRANSFER {
 		DWORD dwTransferLen;
 		DWORD dwBufLen;
@@ -188,7 +192,8 @@ typedef struct _DISC {
 	struct _PROTECT {
 		BYTE byExist;
 		BYTE byTmpForSafeDisc;
-		BYTE padding[2];
+		BYTE byIntentionalSubDesync;
+		BYTE padding[1];
 		CHAR name[MAX_FNAME_FOR_VOLUME];
 		// for skipping unreadable file
 		struct _ERROR_SECTOR {
@@ -201,8 +206,6 @@ typedef struct _DISC {
 		LPINT pExtentPosForExe; // for CodeLock
 		LPCH* pNameForExe; // for CodeLock
 		INT nCntForExe; // for CodeLock
-		BYTE bySecurom;
-		BYTE padding2[3];
 	} PROTECT;
 } DISC, *PDISC;
 

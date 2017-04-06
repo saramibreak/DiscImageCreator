@@ -132,7 +132,7 @@
     no signal sector => LaserLock, RingPROTECH, ProRing
      The result doesn't match at each drives.
     read error       => CodeLock
-     Compared to CloneCD or CD Manipulator, a plextor detects a double error.
+     Compared to CloneCD or CD Manipulator, a plextor detects double errors.
 
 * Unsupported Disc
  - Protected Disc
@@ -152,12 +152,23 @@
  Download and install Visual C++ Redistributable Packages.
   https://www.microsoft.com/en-us/download/details.aspx?id=53587
  EccEdc checking tool (for CD)
-  http://www.mediafire.com/?ls3xlze3op452a5/
+  https://github.com/saramibreak/EccEdc/releases
   Put it to directory of DiscImageCreator.exe.
   (If EccEdc doesn't exist, DiscImageCreator works.)
 
-* Ripping Guide for CD, DVD, Floppy Disk
- Run exe without args to get detail info.
+* Ripping Guide for CD
+ DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)]
+
+ For secure ripping, I recommend using /c2 option
+  DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)] /c2
+ 
+ About others option, run exe without args to get detail info.
+
+* Ripping Guide for DVD
+ DiscImageCreator.exe dvd [DriveLetter] foo.bin [DriveSpeed(0-16)]
+
+* Ripping Guide for Floppy Disk
+ DiscImageCreator.exe fd [DriveLetter] foo.bin
 
 * Ripping Guide for SafeDisc
 ** Method 1 (Other tools)
@@ -166,11 +177,14 @@
 ** Method 2
  DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)] /rc
 
-* Ripping Guide for SmartE, LaserLock, RingPROTECH, ProRing
+* Ripping Guide for Protected disc
  DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)] /rc
 
-* Ripping Guide for LibCrypt, SecuROM(v1 - v4.8x)
+* Ripping Guide for SecuROM(v1 - v5.xx)
  DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)] /se
+
+* Ripping Guide for LibCrypt
+ DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)] /l
 
 * Ripping Guide for GD-ROM (The high density area)
 ** Preparation
@@ -181,7 +195,10 @@
 ** Method 1 (Other tools)
  http://forum.redump.org/topic/2620/dreamcastnaomi-gdrom-dumping-instructions/
 
-** Method 2
+** Method 2 (Other tools)
+ http://forum.redump.org/topic/9436/new-dreamcast-dumping-program-test-please/
+
+** Method 3
 1. insert the audio trap disc to a supported drive.
 2. run below. (stop spinning disc)
    DiscImageCreator.exe stop [DriveLetter]
@@ -208,7 +225,7 @@
   scrambled image file of img file.
  .sub
   store the sub channel data. This file is used to a ccd file.
- _c2error.txt
+ _c2Error.txt
   store disc c2 error information getting read disc.
  _cmd.txt
   store the command-line argument.
@@ -226,6 +243,8 @@
   store the disc sub error information getting read disc.
  _subInfo.txt
   store the disc sub info information getting read disc.
+ _subIntention.txt
+  store subchannel for securom getting read disc.
  _volDesc.txt
   store the volume descriptor, path table, directory table of CD as text data.
 
@@ -266,6 +285,7 @@ PLEXTOR					PX-W4012TS				1.06			Yes		Yes			Yes			No						No
 PLEXTOR					PX-W4824TA				1.07			Yes		Yes			Yes			No						No
 PLEXTOR					PX-W5224A				1.04			Yes		Yes			Yes			No						No
 PLEXTOR					PREMIUM					1.07			Yes		Yes			Yes			No						No
+PLEXTOR					PREMIUM2				1.04			Yes		Yes			Yes			No						No
 PLEXTOR					PX-320A					1.06			Yes		Yes			Yes(*3)		No						No
 PLEXTOR					PX-504A					1.02			No		No			No			No						No
 PLEXTOR					PX-708A(PX-708UF)		1.12			Yes		Yes			Yes			No						No

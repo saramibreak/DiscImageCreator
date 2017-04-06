@@ -1147,6 +1147,7 @@ VOID SetTmpSubQDataFromBuffer(
 }
 
 VOID UpdateTmpSubQDataForMCN(
+	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
 	PSUB_Q pSubQ,
@@ -1164,7 +1165,7 @@ VOID UpdateTmpSubQDataForMCN(
 		}
 	}
 	// pattern 1: pregap sector.
-	else if (IsValidPregapSector(pDisc, pSubQ, nLBA)) {
+	else if (IsValidPregapSector(pExecType, pDisc, pSubQ, nLBA)) {
 		BOOL bValidPre = FALSE;
 		// pattern 1-1: prev sector is audio.
 		if ((pSubQ->prev.byCtl & AUDIO_DATA_TRACK) == 0) {

@@ -3,7 +3,8 @@
  */
 #pragma once
 
-#define DRIVE_MAX_SPEED	(72)
+#define CD_DRIVE_MAX_SPEED	(72)
+#define DVD_DRIVE_MAX_SPEED	(16)
 
 BOOL TestUnitReady(
 	PEXT_ARG pExtArg,
@@ -44,10 +45,11 @@ BOOL ReadDiscInformation(
 	PDEVICE pDevice
 	);
 
-BOOL SetCDSpeed(
+BOOL SetDiscSpeed(
+	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
-	DWORD dwCDSpeedNum
+	DWORD dwDiscSpeedNum
 	);
 
 BOOL Reset(
@@ -56,6 +58,7 @@ BOOL Reset(
 	);
 
 BOOL ReadDriveInformation(
+	PEXEC_TYPE pExexType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,

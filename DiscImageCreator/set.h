@@ -129,6 +129,7 @@ VOID SetTmpSubQDataFromBuffer(
 	);
 
 VOID UpdateTmpSubQDataForMCN(
+	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
 	PSUB_Q pSubQ,
