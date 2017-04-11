@@ -536,7 +536,7 @@ BOOL IsValidSubQTrack(
 									}
 									else {
 										OutputSubInfoWithLBALogA(
-											"This track num is maybe incorrect. Could you try /s 2 option [L:%d]\n", nLBA, byCurrentTrackNum, __LINE__);
+											"This track num is maybe incorrect. Could you try /s 2 option [L:%d]\n", nLBA, byCurrentTrackNum, (INT)__LINE__);
 									}
 								}
 								else {
@@ -554,7 +554,7 @@ BOOL IsValidSubQTrack(
 									}
 									else {
 										OutputSubInfoWithLBALogA(
-											"This track num is maybe incorrect. Could you try /s 2 option [L:%d]\n", nLBA, byCurrentTrackNum, __LINE__);
+											"This track num is maybe incorrect. Could you try /s 2 option [L:%d]\n", nLBA, byCurrentTrackNum, (INT)__LINE__);
 									}
 								}
 							}
@@ -1246,15 +1246,15 @@ VOID CheckAndFixSubQ(
 				, nLBA, byCurrentTrackNum, pSubQ->present.byTrackNum, s_lineNum);
 			if (*pExecType == gd && byCurrentTrackNum == pDisc->GDROM_TOC.LastTrack) {
 				pSubQ->present.byTrackNum = pDisc->GDROM_TOC.LastTrack;
-				OutputSubErrorLogA("[%02u], L:[%d]\n", pDisc->GDROM_TOC.LastTrack, __LINE__);
+				OutputSubErrorLogA("[%02u], L:[%d]\n", pDisc->GDROM_TOC.LastTrack, (INT)__LINE__);
 			}
 			else if (*pExecType != gd && byCurrentTrackNum == pDisc->SCSI.toc.LastTrack) {
 				pSubQ->present.byTrackNum = pDisc->SCSI.toc.LastTrack;
-				OutputSubErrorLogA("[%02u], L:[%d]\n", pDisc->SCSI.toc.LastTrack, __LINE__);
+				OutputSubErrorLogA("[%02u], L:[%d]\n", pDisc->SCSI.toc.LastTrack, (INT)__LINE__);
 			}
 			else if (*pExecType != gd && pDisc->SCSI.lpFirstLBAListOnToc[byCurrentTrackNum] < nLBA) {
 				pSubQ->present.byTrackNum = (BYTE)(pSubQ->prev.byTrackNum + 1);
-				OutputSubErrorLogA("[%02u], L:[%d]\n", pSubQ->prev.byTrackNum + 1, __LINE__);
+				OutputSubErrorLogA("[%02u], L:[%d]\n", pSubQ->prev.byTrackNum + 1, (INT)__LINE__);
 			}
 			else if (pSubQ->prev.byIndex != 0 && pSubQ->present.byIndex == 1 && pSubQ->present.nRelativeTime == 0) {
 				// Bikkuriman Daijikai (Japan)
@@ -1262,7 +1262,7 @@ VOID CheckAndFixSubQ(
 				// LBA[106403, 0x19FA3], Audio, 2ch, Copy NG, Pre-emphasis No, Track[79], Idx[01], RMSF[00:00:00], AMSF[21:40:53], RtoW[0, 0, 0, 0]
 				// LBA[106404, 0x19FA4], Audio, 2ch, Copy NG, Pre-emphasis No, Track[71], Idx[01], RMSF[00:00:01], AMSF[23:40:54], RtoW[0, 0, 0, 0]
 				pSubQ->present.byTrackNum = (BYTE)(pSubQ->prev.byTrackNum + 1);
-				OutputSubErrorLogA("[%02u], L:[%d]\n", pSubQ->prev.byTrackNum + 1, __LINE__);
+				OutputSubErrorLogA("[%02u], L:[%d]\n", pSubQ->prev.byTrackNum + 1, (INT)__LINE__);
 			}
 			else if (pSubQ->present.byIndex == 0 && IsValidPregapSector(pExecType, pDisc, pSubQ, nLBA)) {
 				// Network Q RAC Rally Championship (Netherlands)
@@ -1270,11 +1270,11 @@ VOID CheckAndFixSubQ(
 				// LBA[202408, 0x316a8], Audio, 2ch, Copy NG, Pre-emphasis No, Track[16], Idx[00], RMSF[00:01:74], AMSF[45:00:58], RtoW[0, 0, 0, 0]
 				// LBA[202409, 0x316a9], Audio, 2ch, Copy NG, Pre-emphasis No, Track[14], Idx[00], RMSF[00:01:73], AMSF[45:00:59], RtoW[0, 0, 0, 0]
 				pSubQ->present.byTrackNum = (BYTE)(pSubQ->prev.byTrackNum + 1);
-				OutputSubErrorLogA("[%02u], L:[%d]\n", pSubQ->prev.byTrackNum + 1, __LINE__);
+				OutputSubErrorLogA("[%02u], L:[%d]\n", pSubQ->prev.byTrackNum + 1, (INT)__LINE__);
 			}
 			else {
 				pSubQ->present.byTrackNum = pSubQ->prev.byTrackNum;
-				OutputSubErrorLogA("[%02u], L:[%d]\n", pSubQ->prev.byTrackNum, __LINE__);
+				OutputSubErrorLogA("[%02u], L:[%d]\n", pSubQ->prev.byTrackNum, (INT)__LINE__);
 			}
 			lpSubcode[13] = DecToBcd(pSubQ->present.byTrackNum);
 		}

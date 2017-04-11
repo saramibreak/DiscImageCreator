@@ -260,7 +260,7 @@ HITACHI-LG(HL-DT-ST)	GDR-H20N				0D08			No		No			No			No						Yes
 LITEON					DH-20A3S				9P58			No		No			Yes			No						No
 LITEON					LH-18A1P				GL0J			Yes		Yes			No			No						No
 LITEON					LH-20A1S				9L09			Yes		Yes			No			No						No
-LITEON					LTD-163					GDHG			No		No			No			Partial(about 99:59:74)	No
+LITEON					LTD-163					GDHG			No		No			No			Partial(99:59:74)		No
 LITEON(JLMS)			LTD-166S(XJ-HD166S)		DS1E			Yes		No			No			No						No
 LITEON					SOHW-812S(SOHW-832S)	CG5M			Yes		Yes			No			No						No
 MATSHITA				SW-9574S				ADX4			No		No			No			No						No
@@ -283,16 +283,16 @@ PLEXTOR					PX-W2410TA				1.04			Yes		Yes			Yes(*3)		No						No
 PLEXTOR					PX-W4012TA				1.07			Yes		Yes			Yes			No						No
 PLEXTOR					PX-W4012TS				1.06			Yes		Yes			Yes			No						No
 PLEXTOR					PX-W4824TA				1.07			Yes		Yes			Yes			No						No
-PLEXTOR					PX-W5224A				1.04			Yes		Yes			Yes			No						No
+PLEXTOR					PX-W5224A				1.04			Yes		Yes			Yes			Partial(79:59:74)(*4)	No
 PLEXTOR					PREMIUM					1.07			Yes		Yes			Yes			No						No
 PLEXTOR					PREMIUM2				1.04			Yes		Yes			Yes			No						No
 PLEXTOR					PX-320A					1.06			Yes		Yes			Yes(*3)		No						No
 PLEXTOR					PX-504A					1.02			No		No			No			No						No
 PLEXTOR					PX-708A(PX-708UF)		1.12			Yes		Yes			Yes			No						No
-PLEXTOR					PX-712SA(PX-712A)		1.09			Yes		Yes			Yes			Partial(about 79:59:74)	No
+PLEXTOR					PX-712SA(PX-712A)		1.09			Yes		Yes			Yes			Partial(79:59:74)(*4)	No
 PLEXTOR					PX-716A					1.11			Yes		Yes			Yes			No						No
 PLEXTOR					PX-750A					1.03			No		No			No			No						No
-PLEXTOR					PX-755SA(PX-755A)		1.08			Yes		Yes			Yes			Partial(about 79:59:74)	No
+PLEXTOR					PX-755SA(PX-755A)		1.08			Yes		Yes			Yes			Partial(79:59:74)(*4)	No
 PLEXTOR					PX-760A					1.07			Yes		Yes			Yes			No						No
 Slimtype				DS8A3S					HAT9			No		No			Yes			No						No
 SONY					CRX200E					1.0f			No		No			Yes			No						No
@@ -318,11 +318,14 @@ TSSTcorp				TS-H652C(TS-H652D)		TI06			No		No			No			No						No
   BA: ??, BC: ??, DE: DELL, HI: HITACHI, IB: IBM, LC: LaCie, NE: NEC, TI: ??
 
 *2
- If you rip a GD-ROM, you should rip to internal(and/or NTFS) HDD. 
+ If you dump a GD-ROM, you should rip to internal(and/or NTFS) HDD. 
  Otherwise, if you have a supported drive, you can't only rip about 99:59:74.
  The reason is unknown.
- TSSTcorp TS-H192C Reading often fails. (03-02-00, MEDIUM_ERROR - NO SEEK COMPLETE)
+ TSSTcorp TS-H192C, TS-H353A Reading often fails. (03-02-00, MEDIUM_ERROR - NO SEEK COMPLETE)
 
 *3
  Single data track disc fails. (05-64-00, ILLEGAL_REQUEST. ILLEGAL MODE FOR THIS TRACK)
  Not supported the C2 error report on READ D8 command
+
+*4
+ It can dump HD Area no swap but if swap, can't read the HD Area.

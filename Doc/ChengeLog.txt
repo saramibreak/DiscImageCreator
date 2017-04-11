@@ -354,3 +354,9 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - fixed: Audio disc reading mode (Not force /be)
 - fixed: Checking subchannel ([SS] Saturn Super Vol. 8 (Japan) and GD-ROM)
 - fixed: Subchannel offset (if ADR of 1st sector isn't 1, offset is injustice)
+
+*2017-04-11
+- added: exec EccEdc for GD-ROM dumping
+- changed: in gd command, /s 0 is default (because /s 1 is very slow for GD-ROM dumping)
+- changed: wait time for GD-ROM dumping (5000 millisec -> 30000 millisec)
+- fixed: some log

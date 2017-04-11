@@ -955,7 +955,8 @@ BOOL WriteParsingSubfile(
 }
 
 BOOL DescrambleMainChannelForGD(
-	LPCTSTR pszPath
+	LPCTSTR pszPath,
+	LPTSTR pszOutPath
 	)
 {
 	BOOL bRet = TRUE;
@@ -966,7 +967,7 @@ BOOL DescrambleMainChannelForGD(
 		return FALSE;
 	}
 	FILE* fpImg = CreateOrOpenFile(
-		pszPath, NULL, NULL, NULL, NULL, _T(".img2"), _T("wb"), 0, 0);
+		pszPath, NULL, pszOutPath, NULL, NULL, _T(".img2"), _T("wb"), 0, 0);
 	if (!fpImg) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		FcloseAndNull(fpScm);
@@ -1788,9 +1789,38 @@ VOID OutputProductType(
 	}
 }
 
-BOOL OutputWindowsVer(
+BOOL GetOSVersion(
+	LPOSVERSIONINFOEX lpOSver,
+	LPDWORD lpdwProductType
+)
+{
+	BOOL(CALLBACK* pfnGetProductInfo)
+		(DWORD dwOSMajorVersion, DWORD dwOSMinorVersion,
+			DWORD dwSpMajorVersion, DWORD dwSpMinorVersion, PDWORD pdwReturnedProductType);
+	HMODULE	hModule = ::LoadLibrary(_T("kernel32.dll"));
+	if (!hModule) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		return FALSE;
+	}
+	(*(FARPROC*)&pfnGetProductInfo) = ::GetProcAddress(hModule, "GetProductInfo");
+	if (!pfnGetProductInfo) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		return FALSE;
+	}
+	pfnGetProductInfo(lpOSver->dwMajorVersion, lpOSver->dwMinorVersion,
+		lpOSver->wServicePackMajor, lpOSver->wServicePackMinor, lpdwProductType);
+	if (!::FreeLibrary(hModule)) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+BOOL OutputWindowsVersion(
+	VOID
 	)
 {
+	DWORD dwProductType = PRODUCT_UNDEFINED;
 	OSVERSIONINFOEX OSver;
 	OSver.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
 	if (!GetVersionEx((LPOSVERSIONINFO)&OSver)) {
@@ -1872,27 +1902,9 @@ BOOL OutputWindowsVer(
 		}
 		break;
 	case 6:
-		BOOL(CALLBACK* pfnGetProductInfo)
-			(DWORD dwOSMajorVersion, DWORD dwOSMinorVersion, 
-			DWORD dwSpMajorVersion, DWORD dwSpMinorVersion, PDWORD pdwReturnedProductType);
-		HMODULE	hModule = ::LoadLibrary(_T("kernel32.dll"));
-		if (!hModule) {
-			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		if (!GetOSVersion(&OSver, &dwProductType)) {
 			return FALSE;
 		}
-		(*(FARPROC*)&pfnGetProductInfo) = ::GetProcAddress(hModule, "GetProductInfo");
-		if (!pfnGetProductInfo) {
-			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-			return FALSE;
-		}
-		DWORD dwProductType = PRODUCT_UNDEFINED;
-		pfnGetProductInfo(OSver.dwMajorVersion, OSver.dwMinorVersion, 
-			OSver.wServicePackMajor, OSver.wServicePackMinor, &dwProductType);
-		if (!::FreeLibrary(hModule)) {
-			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-			return FALSE;
-		}
-
 		switch (OSver.dwMinorVersion) {
 		case 0:
 			switch (OSver.wProductType) {
@@ -1948,6 +1960,25 @@ BOOL OutputWindowsVer(
 			break;
 		}
 		break;
+	case 10:
+		if (!GetOSVersion(&OSver, &dwProductType)) {
+			return FALSE;
+		}
+		switch (OSver.dwMinorVersion) {
+		case 0:
+			switch (OSver.wProductType) {
+			case VER_NT_WORKSTATION:
+				OutputString(_T("\tWindows 10 "));
+				OutputProductType(dwProductType);
+				break;
+			case VER_NT_DOMAIN_CONTROLLER:
+			case VER_NT_SERVER:
+				OutputString(_T("\tWindows Server 2016 "));
+				OutputProductType(dwProductType);
+				break;
+			}
+			break;
+		}
 	}
 	OutputString(_T(" %s "), OSver.szCSDVersion);
 	BOOL b64BitOS = TRUE;

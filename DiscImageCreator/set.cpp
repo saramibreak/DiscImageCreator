@@ -697,14 +697,16 @@ VOID SetAndOutputTocCDWText(
 }
 
 VOID SetCDOffset(
+	PEXEC_TYPE pExecType,
 	BYTE byBe,
+	BYTE byPlxtrDrive,
 	PDISC pDisc,
 	INT nStartLBA,
 	INT nEndLBA
 	)
 {
 	if (pDisc->MAIN.nCombinedOffset > 0) {
-		if (byBe && !pDisc->SCSI.byAudioOnly) {
+		if (*pExecType != gd && byBe && !pDisc->SCSI.byAudioOnly) {
 			pDisc->MAIN.uiMainDataSlideSize = 0;
 			pDisc->MAIN.nOffsetStart = 0;
 			pDisc->MAIN.nOffsetEnd = 0;
@@ -730,7 +732,7 @@ VOID SetCDOffset(
 		}
 	}
 	else if (pDisc->MAIN.nCombinedOffset < 0) {
-		if (byBe && !pDisc->SCSI.byAudioOnly) {
+		if (*pExecType != gd && byBe && !pDisc->SCSI.byAudioOnly) {
 			pDisc->MAIN.uiMainDataSlideSize = 0;
 			pDisc->MAIN.nOffsetStart = 0;
 			pDisc->MAIN.nOffsetEnd = 0;
@@ -761,6 +763,15 @@ VOID SetCDOffset(
 		pDisc->MAIN.nOffsetEnd = 0;
 		pDisc->MAIN.nFixStartLBA = 0;
 		pDisc->MAIN.nFixEndLBA = nEndLBA;
+	}
+	if (*pExecType == data &&
+		((byBe && byPlxtrDrive) || !byPlxtrDrive) &&
+		pDisc->SCSI.toc.FirstTrack == pDisc->SCSI.toc.LastTrack &&
+		pDisc->SCSI.toc.FirstTrack == pDisc->SCSI.byFirstDataTrackNum) {
+		pDisc->MAIN.uiMainDataSlideSize = 0;
+		pDisc->MAIN.nOffsetStart = 0;
+		pDisc->MAIN.nOffsetEnd = 0;
+		pDisc->MAIN.nFixStartLBA = 0;
 	}
 }
 
@@ -800,7 +811,7 @@ VOID SetTrackAttribution(
 				}
 				else {
 					OutputSubInfoWithLBALogA(
-						"This track doesn't exist the pregap [L:%d]\n", nLBA, pSubQ->present.byTrackNum, __LINE__);
+						"This track doesn't exist the pregap [L:%d]\n", nLBA, pSubQ->present.byTrackNum, (INT)__LINE__);
 					pDisc->SUB.lpFirstLBAListOnSub[tIdx][pSubQ->present.byIndex] = nLBA;
 					pDisc->SUB.lpFirstLBAListOnSubSync[tIdx][pSubQ->present.byIndex] = nLBA;
 				}
@@ -811,12 +822,12 @@ VOID SetTrackAttribution(
 					pDisc->SUB.lpLastLBAListOfDataTrackOnSub[pSubQ->prev.byTrackNum - 1] == -1 &&
 					(pSubQ->prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 					OutputSubInfoWithLBALogA(
-						"TrackNum is changed [L:%d]\n", nLBA, pSubQ->present.byTrackNum, __LINE__);
+						"TrackNum is changed [L:%d]\n", nLBA, pSubQ->present.byTrackNum, (INT)__LINE__);
 					pDisc->SUB.lpLastLBAListOfDataTrackOnSub[pSubQ->prev.byTrackNum - 1] = nLBA - 1;
 				}
 				else if ((pSubQ->prev.byCtl & AUDIO_DATA_TRACK) == 0) {
 					OutputSubInfoWithLBALogA(
-						"TrackNum is changed [L:%d]\n", nLBA, pSubQ->present.byTrackNum, __LINE__);
+						"TrackNum is changed [L:%d]\n", nLBA, pSubQ->present.byTrackNum, (INT)__LINE__);
 				}
 			}
 		}
@@ -829,7 +840,7 @@ VOID SetTrackAttribution(
 		if (pSubQ->prev.byIndex + 1 == pSubQ->present.byIndex && *lpCurrentTrackNum >= 0) {
 			if (pSubQ->present.byIndex != 1) {
 				OutputSubInfoWithLBALogA("Index is changed from [%02d] to [%02d] [L:%d]\n"
-					, nLBA, pSubQ->present.byTrackNum, pSubQ->prev.byIndex, pSubQ->present.byIndex, __LINE__);
+					, nLBA, pSubQ->present.byTrackNum, pSubQ->prev.byIndex, pSubQ->present.byIndex, (INT)__LINE__);
 				pDisc->SUB.lpFirstLBAListOnSub[tIdx][pSubQ->present.byIndex] = nLBA;
 				pDisc->SUB.lpFirstLBAListOnSubSync[tIdx][pSubQ->present.byIndex] = nLBA;
 			}
@@ -841,7 +852,7 @@ VOID SetTrackAttribution(
 						pDisc->SCSI.lpFirstLBAListOnToc[tIdx], pSubQ->prev.byIndex);
 				}
 				OutputSubInfoWithLBALogA("Index is changed from [%02d] to [%02d] [L:%d]\n"
-					, nLBA, pSubQ->present.byTrackNum, pSubQ->prev.byIndex, pSubQ->present.byIndex, __LINE__);
+					, nLBA, pSubQ->present.byTrackNum, pSubQ->prev.byIndex, pSubQ->present.byIndex, (INT)__LINE__);
 				pDisc->SUB.lpFirstLBAListOnSub[tIdx][1] = pDisc->SCSI.lpFirstLBAListOnToc[tIdx];
 				if (pDisc->SUB.lpFirstLBAListOnSub[tIdx][0] == pDisc->SUB.lpFirstLBAListOnSub[tIdx][1]) {
 					// Crow, The - Original Motion Picture Soundtrack (82519-2)
@@ -856,7 +867,7 @@ VOID SetTrackAttribution(
 		}
 		else if (pSubQ->prev.byIndex >= 1 && pSubQ->present.byIndex == 0) {
 			OutputSubInfoWithLBALogA("Index is changed from [%02d] to [%02d] [L:%d]\n"
-				, nLBA, pSubQ->present.byTrackNum, pSubQ->prev.byIndex, pSubQ->present.byIndex, __LINE__);
+				, nLBA, pSubQ->present.byTrackNum, pSubQ->prev.byIndex, pSubQ->present.byIndex, (INT)__LINE__);
 			pDisc->SUB.lpFirstLBAListOnSub[tIdx][pSubQ->present.byIndex] = nLBA;
 			pDisc->SUB.lpFirstLBAListOnSubSync[tIdx][pSubQ->present.byIndex] = nLBA;
 		}
@@ -889,7 +900,7 @@ VOID SetTrackAttribution(
 			if (pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[tIdx] == -1 &&
 				(pDisc->SCSI.toc.TrackData[tIdx].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 				OutputSubInfoWithLBALogA(
-					"1st LBA of this data track [L:%d]\n", nLBA, pSubQ->present.byTrackNum, __LINE__);
+					"1st LBA of this data track [L:%d]\n", nLBA, pSubQ->present.byTrackNum, (INT)__LINE__);
 				pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[tIdx] = nLBA;
 			}
 			else if (nLBA == pDisc->SCSI.nAllLength - 1) {
@@ -897,12 +908,12 @@ VOID SetTrackAttribution(
 					// preserve last LBA per data track
 					if ((pSubQ->present.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 						OutputSubInfoWithLBALogA(
-							"Last LBA of this data track [L:%d]\n", nLBA, pSubQ->present.byTrackNum, __LINE__);
+							"Last LBA of this data track [L:%d]\n", nLBA, pSubQ->present.byTrackNum, (INT)__LINE__);
 						pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tIdx] = pDisc->SCSI.nAllLength - 1;
 					}
 				}
 				OutputSubInfoWithLBALogA(
-					"Last LBA of this disc [L:%d]\n", nLBA, pSubQ->present.byTrackNum, __LINE__);
+					"Last LBA of this disc [L:%d]\n", nLBA, pSubQ->present.byTrackNum, (INT)__LINE__);
 			}
 		}
 	}

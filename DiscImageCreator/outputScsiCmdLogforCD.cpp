@@ -1088,12 +1088,18 @@ VOID OutputTocForGD(
 			, pDisc->GDROM_TOC.TrackData[r].Control
 			, pDisc->GDROM_TOC.TrackData[r].Adr);
 		if (pDisc->GDROM_TOC.TrackData[r].TrackNumber == 3) {
-			OutputDiscLogA(", LBA %6ld-%6ld, Length %6ld\n"
-				, pDisc->GDROM_TOC.TrackData[r].Address - 150
-//				, pDisc->GDROM_TOC.TrackData[r + 1].Address - 1 - 300
-				, pDisc->GDROM_TOC.Length
-//				, pDisc->GDROM_TOC.TrackData[r + 1].Address - pDisc->GDROM_TOC.TrackData[r].Address);
-				, pDisc->GDROM_TOC.Length - 150 - 45000);
+			if (pDisc->GDROM_TOC.TrackData[r].TrackNumber == pDisc->GDROM_TOC.LastTrack) {
+				OutputDiscLogA(", LBA %6ld-%6ld, Length %6ld\n"
+					, pDisc->GDROM_TOC.TrackData[r].Address - 150
+					, pDisc->GDROM_TOC.Length - 150
+					, pDisc->GDROM_TOC.Length - 150 - 45000);
+			}
+			else {
+				OutputDiscLogA(", LBA %6ld-%6ld, Length %6ld\n"
+					, pDisc->GDROM_TOC.TrackData[r].Address - 150
+					, pDisc->GDROM_TOC.TrackData[r + 1].Address - 1 - 300
+					, pDisc->GDROM_TOC.TrackData[r + 1].Address - pDisc->GDROM_TOC.TrackData[r].Address);
+			}
 		}
 		else if (pDisc->GDROM_TOC.TrackData[r].TrackNumber == pDisc->GDROM_TOC.LastTrack) {
 			OutputDiscLogA(", LBA %6ld-%6ld, Length %6ld\n"

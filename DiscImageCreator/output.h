@@ -13,6 +13,7 @@
 #define STR_DOUBLE_HYPHEN_E		" ==========\n"
 #define STR_LBA					"LBA[%06d, %#07x]: "
 #define STR_OPCODE				"Opcode[%#x]: "
+#define STR_C2FLAG				"C2flag[%#x]: "
 #define STR_SUBCH				"SubCh[%02x]: "
 #define STR_TRACK				"Track[%02u]: "
 #define STR_SUB					"Sub"
@@ -21,6 +22,7 @@
 #define OUTPUT_DHYPHEN_PLUS_STR(str)				STR_DOUBLE_HYPHEN_B #str STR_DOUBLE_HYPHEN_E
 #define OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(str)		STR_DOUBLE_HYPHEN_B STR_LBA #str STR_DOUBLE_HYPHEN_E
 #define OUTPUT_DHYPHEN_PLUS_STR_WITH_SUBCH_F(str)	STR_DOUBLE_HYPHEN_B STR_OPCODE STR_SUBCH #str STR_DOUBLE_HYPHEN_E
+#define OUTPUT_DHYPHEN_PLUS_STR_WITH_C2_SUBCH_F(str)	STR_DOUBLE_HYPHEN_B STR_OPCODE STR_C2FLAG STR_SUBCH #str STR_DOUBLE_HYPHEN_E
 #define OUTPUT_DHYPHEN_PLUS_STR_WITH_TRACK_F(str)	STR_DOUBLE_HYPHEN_B STR_OPCODE STR_SUBCH STR_TRACK #str STR_DOUBLE_HYPHEN_E
 #define OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA			STR_DOUBLE_HYPHEN_B STR_LBA "%s" STR_DOUBLE_HYPHEN_E
 #define OUTPUT_DHYPHEN_PLUS_STR_WITH_SUBCH			STR_DOUBLE_HYPHEN_B STR_SUBCH "%s" STR_DOUBLE_HYPHEN_E
@@ -146,10 +148,10 @@ extern _LOG_FILE g_LogFile;
 #define OutputMainInfoWithLBALogA(str, nLBA, track, ...) \
 	fprintf(g_LogFile.fpMainInfo, STR_LBA STR_TRACK str, nLBA, nLBA, track, __VA_ARGS__);
 
-#define OutputMainErrorLogW(str, ...)	fwprintf(g_LogFile.fpMainError, str, __VA_ARGS__);
-#define OutputMainErrorLogA(str, ...)	fprintf(g_LogFile.fpMainError, str, __VA_ARGS__);
+#define OutputMainErrorLogW(str, ...)	if (g_LogFile.fpMainError) fwprintf(g_LogFile.fpMainError, str, __VA_ARGS__);
+#define OutputMainErrorLogA(str, ...)	if (g_LogFile.fpMainError) fprintf(g_LogFile.fpMainError, str, __VA_ARGS__);
 #define OutputMainErrorWithLBALogA(str, nLBA, track, ...) \
-	fprintf(g_LogFile.fpMainError, STR_LBA STR_TRACK str, nLBA, nLBA, track, __VA_ARGS__);
+	if (g_LogFile.fpMainError) fprintf(g_LogFile.fpMainError, STR_LBA STR_TRACK str, nLBA, nLBA, track, __VA_ARGS__);
 
 #define OutputSubInfoLogW(str, ...)		fwprintf(g_LogFile.fpSubInfo, str, __VA_ARGS__);
 #define OutputSubInfoLogA(str, ...)		fprintf(g_LogFile.fpSubInfo, str, __VA_ARGS__);
@@ -428,7 +430,8 @@ BOOL WriteParsingSubfile(
 	);
 
 BOOL DescrambleMainChannelForGD(
-	LPCTSTR pszPath
+	LPCTSTR pszPath,
+	LPTSTR pszOutPath
 	);
 
 BOOL SplitFileForGD(
@@ -480,5 +483,6 @@ VOID OutputLastErrorNumAndString(
 	LONG lLineNum
 	);
 
-BOOL OutputWindowsVer(
+BOOL OutputWindowsVersion(
+	VOID
 	);
