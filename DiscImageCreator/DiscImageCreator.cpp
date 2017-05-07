@@ -127,190 +127,127 @@ int soundBeep(int nRet)
 	return TRUE;
 }
 
-BOOL GetCreatedFileList(
-	PHANDLE h,
-	PWIN32_FIND_DATA lp,
-	LPTSTR szPathWithoutFileName,
-	size_t stPathSize
-	)
+int outputHash(CComPtr<IXmlWriter> pWriter, _TCHAR* pszFullPath, LPCTSTR szExt, UCHAR uiTrack, UCHAR uiLastTrack)
 {
-	// "*" is wild card
-	_sntprintf(szPathWithoutFileName, stPathSize, _T("%s\\%s\\*"), s_szDrive, s_szDir);
-	szPathWithoutFileName[stPathSize - 1] = 0;
-
-	*h = FindFirstFile(szPathWithoutFileName, lp);
-	if (*h == INVALID_HANDLE_VALUE) {
+	_TCHAR pszFnameAndExt[_MAX_PATH] = { 0 };
+	FILE* fp = CreateOrOpenFile(
+		pszFullPath, NULL, NULL, pszFnameAndExt, NULL, szExt, _T("rb"), uiTrack, uiLastTrack);
+	if (!fp) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(_T("%s\n"), szPathWithoutFileName);
 		return FALSE;
 	}
-	else {
-		// delete '*'
-		szPathWithoutFileName[_tcslen(szPathWithoutFileName) - 1] = '\0';
+	UINT64 ui64FileSize = GetFileSize64(0, fp);
+	DWORD dwSectorSizeOne = CD_RAW_SECTOR_SIZE;
+	if (!_tcsncmp(szExt, _T(".iso"), 4)) {
+		dwSectorSizeOne = DISC_RAW_READ_SIZE;
+	}
+	UINT64 ui64SectorSizeAll = ui64FileSize / (UINT64)dwSectorSizeOne;
+
+	if (ui64FileSize > dwSectorSizeOne * 10) {
+		MD5_CTX context = { 0 };
+		SHA1Context sha = { 0 };
+		CalcInit(&context, &sha);
+
+		BYTE data[CD_RAW_SECTOR_SIZE] = { 0 };
+		DWORD crc32 = 0;
+		OutputString(_T("Calculating hash: %s\n"), pszFnameAndExt);
+		int nRet = TRUE;
+		// TODO: This code can more speed up! if reduce calling fread()
+		for (UINT64 i = 0; i < ui64SectorSizeAll; i++) {
+			fread(data, sizeof(BYTE), dwSectorSizeOne, fp);
+			nRet = CalcHash(&crc32, &context, &sha, data, dwSectorSizeOne);
+			if (!nRet) {
+				break;
+			}
+		}
+		FcloseAndNull(fp);
+		if (!nRet) {
+			return nRet;
+		}
+		BYTE digest[16] = { 0 };
+		BYTE Message_Digest[20] = { 0 };
+		if (CalcEnd(&context, &sha, digest, Message_Digest)) {
+			if (!_tcsncmp(szExt, _T(".img"), 4)) {
+#ifndef _DEBUG
+				OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(Hash(Whole image)));
+				OutputHashData(g_LogFile.fpDisc, pszFnameAndExt,
+					ui64FileSize, crc32, digest, Message_Digest);
+#endif
+			}
+			else {
+				HRESULT hr = S_OK;
+				if (FAILED(hr = pWriter->WriteStartElement(NULL, L"rom", NULL))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
+					return FALSE;
+				}
+				WCHAR wszFnameAndExt[_MAX_PATH] = { 0 };
+#ifndef UNICODE
+				if (!MultiByteToWideChar(CP_ACP, 0
+					, pszFnameAndExt, sizeof(pszFnameAndExt) / sizeof(pszFnameAndExt[0])
+					, wszFnameAndExt, sizeof(wszFnameAndExt) / sizeof(wszFnameAndExt[0]))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					return FALSE;
+				}
+#else
+				size_t size = sizeof(wszFnameAndExt) / sizeof(wszFnameAndExt[0]);
+				wcsncpy(wszFnameAndExt, pszFnameAndExt, size);
+				wszFnameAndExt[size - 1] = 0;
+#endif
+				if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"name", NULL, wszFnameAndExt))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
+					return FALSE;
+				}
+				WCHAR buf[128] = { 0 };
+				_snwprintf(buf, sizeof(buf) / sizeof(buf[0]), L"%llu", ui64FileSize);
+				buf[127] = 0;
+				if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"size", NULL, buf))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
+					return FALSE;
+				}
+				_snwprintf(buf, sizeof(buf) / sizeof(buf[0]), L"%08lx", crc32);
+				buf[127] = 0;
+				if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"crc", NULL, buf))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
+					return FALSE;
+				}
+				_snwprintf(buf, sizeof(buf) / sizeof(buf[0])
+					, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
+					, digest[0], digest[1], digest[2], digest[3], digest[4], digest[5], digest[6], digest[7]
+					, digest[8], digest[9], digest[10], digest[11], digest[12], digest[13], digest[14], digest[15]);
+				buf[127] = 0;
+				if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"md5", NULL, buf))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
+					return FALSE;
+				}
+				_snwprintf(buf, sizeof(buf) / sizeof(buf[0])
+					, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
+					, Message_Digest[0], Message_Digest[1], Message_Digest[2], Message_Digest[3], Message_Digest[4]
+					, Message_Digest[5], Message_Digest[6], Message_Digest[7], Message_Digest[8], Message_Digest[9]
+					, Message_Digest[10], Message_Digest[11], Message_Digest[12], Message_Digest[13], Message_Digest[14]
+					, Message_Digest[15], Message_Digest[16], Message_Digest[17], Message_Digest[18], Message_Digest[19]);
+				buf[127] = 0;
+				if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"sha1", NULL, buf))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
+					return FALSE;
+				}
+				if (FAILED(hr = pWriter->WriteEndElement())) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
+					return FALSE;
+				}
+			}
+		}
 	}
 	return TRUE;
 }
 
-int calculatingHash(CComPtr<IXmlWriter> pWriter)
-{
-	HANDLE h = NULL;
-	WIN32_FIND_DATA lp = { 0 };
-	_TCHAR szPathWithoutFileName[_MAX_PATH] = { 0 };
-	BOOL bRet = GetCreatedFileList(
-		&h, &lp, szPathWithoutFileName, sizeof(szPathWithoutFileName));
-	if (!bRet) {
-		return FALSE;
-	}
-	_TCHAR szPathForCalc[_MAX_PATH] = { 0 };
-	_TCHAR szExt[_MAX_EXT] = { 0 };
-	WCHAR wszFnameForDat[_MAX_PATH] = { 0 };
-	// http://msdn.microsoft.com/en-us/library/aa364428%28v=vs.85%29.aspx
-	//  The order in which the search returns the files, such as alphabetical order, is not guaranteed, and is dependent on the file system. 
-	//  If the data must be sorted, the application must do the ordering after obtaining all the results.
-	//  The order in which this function returns the file names is dependent on the file system type. 
-	//  With the NTFS file system and CDFS file systems, the names are usually returned in alphabetical order. 
-	//  With FAT file systems, the names are usually returned in the order the files were written to the disk, which may or may not be in alphabetical order.
-	//  However, as stated previously, these behaviors are not guaranteed.
-	do {
-		if ((lp.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != FILE_ATTRIBUTE_DIRECTORY) {
-			_tsplitpath(lp.cFileName, NULL, NULL, NULL, szExt);
-			if (!_tcsncmp(s_szFname, lp.cFileName, _tcslen(s_szFname)) &&
-				(!_tcsncmp(szExt, _T(".bin"), 4) || !_tcsncmp(szExt, _T(".iso"), 4) ||
-				!_tcsncmp(szExt, _T(".img"), 4))) {
-				_sntprintf(szPathForCalc, sizeof(szPathForCalc) / sizeof(szPathForCalc[0]),
-					_T("%s%s"), szPathWithoutFileName, lp.cFileName);
-				FILE* fp = CreateOrOpenFile(
-					szPathForCalc, NULL, NULL, NULL, NULL, szExt, _T("rb"), 0, 0);
-				if (!fp) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					break;
-				}
-				UINT64 ui64FileSize = GetFileSize64(0, fp);
-				DWORD dwSectorSizeOne = CD_RAW_SECTOR_SIZE;
-				if (!_tcsncmp(szExt, _T(".iso"), 4)) {
-					dwSectorSizeOne = DISC_RAW_READ_SIZE;
-				}
-				UINT64 ui64SectorSizeAll = ui64FileSize / (UINT64)dwSectorSizeOne;
-
-				if (ui64FileSize > dwSectorSizeOne * 10) {
-					MD5_CTX context = { 0 };
-					SHA1Context sha = { 0 };
-					CalcInit(&context, &sha);
-
-					BYTE data[CD_RAW_SECTOR_SIZE] = { 0 };
-					DWORD crc32 = 0;
-					OutputString(_T("Calculating hash: %s\n"), lp.cFileName);
-					// TODO: This code can more speed up! if reduce calling fread()
-					for (UINT64 i = 0; i < ui64SectorSizeAll; i++) {
-						fread(data, sizeof(BYTE), dwSectorSizeOne, fp);
-						bRet = CalcHash(&crc32, &context,
-							&sha, data, dwSectorSizeOne);
-						if (!bRet) {
-							break;
-						}
-					}
-					FcloseAndNull(fp);
-					if (!bRet) {
-						break;
-					}
-					BYTE digest[16] = { 0 };
-					BYTE Message_Digest[20] = { 0 };
-					bRet = CalcEnd(&context, &sha, digest, Message_Digest);
-					if (!bRet) {
-						break;
-					}
-					if (!_tcsncmp(szExt, _T(".img"), 4)) {
-#ifndef _DEBUG
-						OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(Hash(entire image)));
-						OutputHashData(g_LogFile.fpDisc, lp.cFileName,
-							ui64FileSize, crc32, digest, Message_Digest);
-#endif
-					}
-					else {
-						HRESULT hr = S_OK;
-						if (FAILED(hr = pWriter->WriteStartElement(NULL, L"rom", NULL))) {
-							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-							OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-							bRet = FALSE;
-							break;
-						}
-#ifndef UNICODE
-						if(!MultiByteToWideChar(CP_ACP, 0
-							, lp.cFileName, sizeof(lp.cFileName) / sizeof(lp.cFileName[0])
-							, wszFnameForDat, sizeof(wszFnameForDat) / sizeof(wszFnameForDat[0]))) {
-							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-							bRet = FALSE;
-							break;
-						}
-#else
-						size_t size = sizeof(wszFnameForDat) / sizeof(wszFnameForDat[0]);
-						wcsncpy(wszFnameForDat, lp.cFileName, size);
-						wszFnameForDat[size - 1] = 0;
-#endif
-						if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"name", NULL, wszFnameForDat))) {
-							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-							OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-							bRet = FALSE;
-							break;
-						}
-						WCHAR buf[128] = { 0 };
-						_snwprintf(buf, sizeof(buf) / sizeof(buf[0]), L"%llu", ui64FileSize);
-						buf[127] = 0;
-						if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"size", NULL, buf))) {
-							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-							OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-							bRet = FALSE;
-							break;
-						}
-						_snwprintf(buf, sizeof(buf) / sizeof(buf[0]), L"%08lx", crc32);
-						buf[127] = 0;
-						if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"crc", NULL, buf))) {
-							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-							OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-							bRet = FALSE;
-							break;
-						}
-						_snwprintf(buf, sizeof(buf) / sizeof(buf[0])
-							, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
-							, digest[0], digest[1], digest[2], digest[3], digest[4], digest[5], digest[6], digest[7]
-							, digest[8], digest[9], digest[10], digest[11], digest[12], digest[13], digest[14], digest[15]);
-						buf[127] = 0;
-						if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"md5", NULL, buf))) {
-							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-							OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-							bRet = FALSE;
-							break;
-						}
-						_snwprintf(buf, sizeof(buf) / sizeof(buf[0])
-							, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
-							, Message_Digest[0], Message_Digest[1], Message_Digest[2], Message_Digest[3], Message_Digest[4]
-							, Message_Digest[5], Message_Digest[6], Message_Digest[7], Message_Digest[8], Message_Digest[9]
-							, Message_Digest[10], Message_Digest[11], Message_Digest[12], Message_Digest[13], Message_Digest[14]
-							, Message_Digest[15], Message_Digest[16], Message_Digest[17], Message_Digest[18], Message_Digest[19]);
-						buf[127] = 0;
-						if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"sha1", NULL, buf))) {
-							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-							OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-							bRet = FALSE;
-							break;
-						}
-						if (FAILED(hr = pWriter->WriteEndElement())) {
-							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-							OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-							bRet = FALSE;
-							break;
-						}
-					}
-				}
-			}
-		}
-	} while (FindNextFile(h, &lp));
-	OutputString(_T("\n"));
-	FindClose(h);
-	return bRet;
-}
-
-int readWriteDat(void)
+int readWriteDat(PEXEC_TYPE pExecType, _TCHAR* pszFullPath, UCHAR uiLastTrack)
 {
 	WCHAR wszDir[_MAX_DIR] = { 0 };
 #ifndef UNICODE
@@ -512,9 +449,22 @@ int readWriteDat(void)
 				return FALSE;
 			}
 			if (!wcsncmp(pwszLocalName, L"game", 4)) {
-				if (!calculatingHash(pWriter)) {
-					return FALSE;
+				if (*pExecType == dvd) {
+					if (!outputHash(pWriter, pszFullPath, _T(".iso"), 1, 1)) {
+						return FALSE;
+					}
 				}
+				else {
+					if (!outputHash(pWriter, pszFullPath, _T(".img"), 1, 1)) {
+						return FALSE;
+					}
+					for (UCHAR uiTrack = 1; uiTrack <= uiLastTrack; uiTrack++) {
+						if (!outputHash(pWriter, pszFullPath, _T(".bin"), uiTrack, uiLastTrack)) {
+							return FALSE;
+						}
+					}
+				}
+
 			}
 			if (FAILED(hr = pWriter->WriteEndElement())) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -721,15 +671,17 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 							}
 						}
 						pDisc->SUB.nSubchOffset = 0xff;
-						if (!ReadCDForSearchingOffset(pExecType, pExtArg, &devData, pDisc)) {
-							throw FALSE;
+						if (*pExecType != data) {
+							if (!ReadCDForSearchingOffset(pExecType, pExtArg, &devData, pDisc)) {
+								throw FALSE;
+							}
 						}
 						if (pDisc->SUB.nSubchOffset && pExtArg->dwSubAddionalNum == 0) {
 							OutputString(
 								_T("[WARNING] Subch offset exists in this drive. Changed /s 0 to /s 1.\n"));
 							pExtArg->dwSubAddionalNum = 1;
 						}
-						if (*pExecType == data && (pExtArg->byD8 || devData.byPlxtrDrive) ||
+						if (/**pExecType == data && (pExtArg->byD8 || devData.byPlxtrDrive) ||*/
 							(*pExecType != data && *pExecType != gd)) {
 							if (!ReadCDForCheckingReadInOut(pExtArg, &devData, pDisc)) {
 								throw FALSE;
@@ -805,7 +757,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 						}
 					}
 					if (bRet && (*pExecType == cd || *pExecType == dvd || *pExecType == gd)) {
-						bRet = readWriteDat();
+						bRet = readWriteDat(pExecType, pszFullPath, discData.SCSI.toc.LastTrack);
 					}
 				}
 			}
@@ -1054,234 +1006,272 @@ int SetOptionA(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath)
 {
 	_TCHAR* endptr = NULL;
-	if (argc >= 5 && !_tcsncmp(argv[1], _T("cd"), 2)) {
-		s_dwSpeed = _tcstoul(argv[4], &endptr, 10);
-		if (*endptr) {
-			OutputErrorString(_T("Bad arg: [%s] Please integer\n"), endptr);
-			return FALSE;
-		}
-		pExtArg->dwSubAddionalNum = 1;
-		for (INT i = 6; i <= argc; i++) {
-			if (!_tcsncmp(argv[i - 1], _T("/a"), 2)) {
-				if (!SetOptionA(argc, argv, pExtArg, &i)) {
-					return FALSE;
-				}
-			}
-			else if (!_tcsncmp(argv[i - 1], _T("/be"), 3)) {
-				if (!SetOptionBe(argc, argv, pExtArg, &i)) {
-					return FALSE;
-				}
-			}
-			else if (!_tcsncmp(argv[i - 1], _T("/d8"), 3)) {
-				pExtArg->byBe = FALSE;
-				pExtArg->byD8 = TRUE;
-			}
-			else if (!_tcsncmp(argv[i - 1], _T("/c2"), 3)) {
-				if (!SetOptionC2(argc, argv, pExtArg, &i)) {
-					return FALSE;
-				}
-			}
-			else if (!_tcsncmp(argv[i - 1], _T("/f"), 2)) {
-				pExtArg->byFua = TRUE;
-			}
-			else if (!_tcsncmp(argv[i - 1], _T("/g"), 2)) {
-				pExtArg->bySkipSubRtoW = TRUE;
-			}
-			else if (!_tcsncmp(argv[i - 1], _T("/l"), 2)) {
-				pExtArg->byLibCrypt = TRUE;
-			}
-			else if (!_tcsncmp(argv[i - 1], _T("/m"), 2)) {
-				pExtArg->byMCN = TRUE;
-			}
-			else if (!_tcsncmp(argv[i - 1], _T("/p"), 2)) {
-				pExtArg->byPre = TRUE;
-			}
-			else if (!_tcsncmp(argv[i - 1], _T("/q"), 2)) {
-				pExtArg->byQuiet = TRUE;
-			}
-			else if (!_tcsncmp(argv[i - 1], _T("/rc"), 3)) {
-				if (!SetOptionRc(argc, argv, pExtArg, &i)) {
-					return FALSE;
-				}
-			}
-			else if (!_tcsncmp(argv[i - 1], _T("/raw"), 4)) {
-				pExtArg->byRawDump = TRUE;
-			}
-			else if (!_tcsncmp(argv[i - 1], _T("/r"), 2)) {
-				pExtArg->byReverse = TRUE;
-			}
-			else if (!_tcsncmp(argv[i - 1], _T("/se"), 3)) {
-				pExtArg->byIntentionalSub = TRUE;
-			}
-			else if (!_tcsncmp(argv[i - 1], _T("/s"), 2)) {
-				if (!SetOptionS(argc, argv, pExtArg, &i)) {
-					return FALSE;
-				}
-			}
-			else {
-				OutputErrorString(_T("Unknown option: [%s]\n"), argv[i - 1]);
-				return FALSE;
-			}
-		}
-		*pExecType = cd;
-		printAndSetPath(argv[3], pszFullPath);
-	}
-	else if (argc >= 5 && !_tcsncmp(argv[1], _T("gd"), 2)) {
-		s_dwSpeed = _tcstoul(argv[4], &endptr, 10);
-		if (*endptr) {
-			OutputErrorString(_T("Bad arg: [%s] Please integer\n"), endptr);
-			return FALSE;
-		}
-		pExtArg->dwSubAddionalNum = 0;
-		for (INT i = 6; i <= argc; i++) {
-			if (!_tcsncmp(argv[i - 1], _T("/be"), 3)) {
-				if (!SetOptionBe(argc, argv, pExtArg, &i)) {
-					return FALSE;
-				}
-			}
-			else if (!_tcsncmp(argv[i - 1], _T("/d8"), 3)) {
-				pExtArg->byBe = FALSE;
-				pExtArg->byD8 = TRUE;
-			}
-			else if (!_tcsncmp(argv[i - 1], _T("/c2"), 3)) {
-				if (!SetOptionC2(argc, argv, pExtArg, &i)) {
-					return FALSE;
-				}
-			}
-			else if (!_tcsncmp(argv[i - 1], _T("/g"), 2)) {
-				pExtArg->bySkipSubRtoW = TRUE;
-			}
-			else if (!_tcsncmp(argv[i - 1], _T("/q"), 2)) {
-				pExtArg->byQuiet = TRUE;
-			}
-			else if (!_tcsncmp(argv[i - 1], _T("/s"), 2)) {
-				if (!SetOptionS(argc, argv, pExtArg, &i)) {
-					return FALSE;
-				}
-			}
-			else {
-				OutputErrorString(_T("Unknown option: [%s]\n"), argv[i - 1]);
-				return FALSE;
-			}
-		}
-		*pExecType = gd;
-		printAndSetPath(argv[3], pszFullPath);
-	}
-	else if (argc >= 5 && !_tcsncmp(argv[1], _T("dvd"), 3)) {
-		s_dwSpeed = _tcstoul(argv[4], &endptr, 10);
-		if (*endptr) {
-			OutputErrorString(_T("Bad arg: [%s] Please integer\n"), endptr);
-			return FALSE;
-		}
-		for (INT i = 6; i <= argc; i++) {
-			if (!_tcsncmp(argv[i - 1], _T("/c"), 2)) {
-				pExtArg->byCmi = TRUE;
-			}
-			else if (!_tcsncmp(argv[i - 1], _T("/f"), 2)) {
-				pExtArg->byFua = TRUE;
-			}
-			else if (!_tcsncmp(argv[i - 1], _T("/q"), 2)) {
-				pExtArg->byQuiet = TRUE;
-			}
-			else {
-				OutputErrorString(_T("Unknown option: [%s]\n"), argv[i - 1]);
-				return FALSE;
-			}
-		}
-		*pExecType = dvd;
-		printAndSetPath(argv[3], pszFullPath);
-	}
-	else if (argc >= 7 && (!_tcsncmp(argv[1], _T("data"), 4) || !_tcsncmp(argv[1], _T("audio"), 5))) {
-		s_dwSpeed = _tcstoul(argv[4], &endptr, 10);
-		if (*endptr) {
-			OutputErrorString(_T("Bad arg: [%s] Please integer\n"), endptr);
-			return FALSE;
-		}
-		s_nStartLBA = _tcstol(argv[5], &endptr, 10);
-		if (*endptr) {
-			OutputErrorString(_T("Bad arg: [%s] Please integer\n"), endptr);
-			return FALSE;
-		}
-		s_nEndLBA = _tcstol(argv[6], &endptr, 10);
-		if (*endptr) {
-			OutputErrorString(_T("Bad arg: [%s] Please integer\n"), endptr);
-			return FALSE;
-		}
-		pExtArg->dwSubAddionalNum = 1;
-		for (INT i = 8; i <= argc; i++) {
-			if (!_tcsncmp(argv[i - 1], _T("/a"), 2)) {
-				if (!SetOptionA(argc, argv, pExtArg, &i)) {
-					return FALSE;
-				}
-			}
-			else if (!_tcsncmp(argv[i - 1], _T("/be"), 3)) {
-				if (!SetOptionBe(argc, argv, pExtArg, &i)) {
-					return FALSE;
-				}
-			}
-			else if (!_tcsncmp(argv[i - 1], _T("/d8"), 3)) {
-				pExtArg->byBe = FALSE;
-				pExtArg->byD8 = TRUE;
-			}
-			else if (!_tcsncmp(argv[i - 1], _T("/c2"), 3)) {
-				if (!SetOptionC2(argc, argv, pExtArg, &i)) {
-					return FALSE;
-				}
-			}
-			else if (!_tcsncmp(argv[i - 1], _T("/q"), 2)) {
-				pExtArg->byQuiet = TRUE;
-			}
-			else if (!_tcsncmp(argv[i - 1], _T("/rc"), 3)) {
-				if (!SetOptionRc(argc, argv, pExtArg, &i)) {
-					return FALSE;
-				}
-			}
-			else if (!_tcsncmp(argv[i - 1], _T("/s"), 2)) {
-				if (!SetOptionS(argc, argv, pExtArg, &i)) {
-					return FALSE;
-				}
-			}
-			else {
-				OutputErrorString(_T("Unknown option: [%s]\n"), argv[i - 1]);
-				return FALSE;
-			}
-		}
-		if (!_tcsncmp(argv[1], _T("data"), 4)) {
-			*pExecType = data;
-		}
-		else if (!_tcsncmp(argv[1], _T("audio"), 5)) {
-			*pExecType = audio;
-		}
-		printAndSetPath(argv[3], pszFullPath);
-	}
-	else if (argc == 4 && !_tcsncmp(argv[1], _T("fd"), 2)) {
-		*pExecType = fd;
-		printAndSetPath(argv[3], pszFullPath);
-	}
-	else if (argc == 3 && !_tcsncmp(argv[1], _T("stop"), 4)) {
-		*pExecType = stop;
-	}
-	else if (argc == 3 && !_tcsncmp(argv[1], _T("start"), 5)) {
-		*pExecType = start;
-	}
-	else if (argc == 3 && !_tcsncmp(argv[1], _T("eject"), 5)) {
-		*pExecType = eject;
-	}
-	else if (argc == 3 && !_tcsncmp(argv[1], _T("close"), 5)) {
-		*pExecType = closetray;
-	}
-	else if (argc == 3 && !_tcsncmp(argv[1], _T("reset"), 5)) {
-		*pExecType = reset;
-	}
-	else if (argc == 3 && !_tcsncmp(argv[1], _T("sub"), 3)) {
-		*pExecType = sub;
-		printAndSetPath(argv[2], pszFullPath);
+	size_t cmdLen = 0;
+	if (argc == 1) {
+		return FALSE;
 	}
 	else {
-		if (argc > 1) {
-			OutputErrorString(_T("Invalid argument\n"));
+		cmdLen = _tcslen(argv[1]);
+		if (argc >= 5 && cmdLen == 2 && !_tcsncmp(argv[1], _T("cd"), 2)) {
+			s_dwSpeed = _tcstoul(argv[4], &endptr, 10);
+			if (*endptr) {
+				OutputErrorString(_T("Bad arg: [%s] Please integer\n"), endptr);
+				return FALSE;
+			}
+			pExtArg->dwSubAddionalNum = 1;
+			for (INT i = 6; i <= argc; i++) {
+				cmdLen = _tcslen(argv[i - 1]);
+				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), 2)) {
+					pExtArg->byQuiet = TRUE;
+				}
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/a"), 2)) {
+					if (!SetOptionA(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/be"), 3)) {
+					if (!SetOptionBe(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/d8"), 3)) {
+					pExtArg->byBe = FALSE;
+					pExtArg->byD8 = TRUE;
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/c2"), 3)) {
+					if (!SetOptionC2(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
+				}
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/f"), 2)) {
+					pExtArg->byFua = TRUE;
+				}
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/m"), 2)) {
+					pExtArg->byMCN = TRUE;
+				}
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/p"), 2)) {
+					pExtArg->byPre = TRUE;
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/rc"), 3)) {
+					if (!SetOptionRc(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
+				}
+				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/raw"), 4)) {
+					pExtArg->byRawDump = TRUE;
+				}
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/r"), 2)) {
+					pExtArg->byReverse = TRUE;
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/np"), 3)) {
+					pExtArg->bySkipSubP = TRUE;
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/nq"), 3)) {
+					pExtArg->bySkipSubQ = TRUE;
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/nr"), 3)) {
+					pExtArg->bySkipSubRtoW = TRUE;
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/nl"), 3)) {
+					pExtArg->byLibCrypt = TRUE;
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/ns"), 3)) {
+					pExtArg->byIntentionalSub = TRUE;
+				}
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/s"), 2)) {
+					if (!SetOptionS(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
+				}
+				else {
+					OutputErrorString(_T("Unknown option: [%s]\n"), argv[i - 1]);
+					return FALSE;
+				}
+			}
+			*pExecType = cd;
+			printAndSetPath(argv[3], pszFullPath);
 		}
-		return FALSE;
+		else if (argc >= 5 && cmdLen == 2 && !_tcsncmp(argv[1], _T("gd"), 2)) {
+			s_dwSpeed = _tcstoul(argv[4], &endptr, 10);
+			if (*endptr) {
+				OutputErrorString(_T("Bad arg: [%s] Please integer\n"), endptr);
+				return FALSE;
+			}
+			pExtArg->dwSubAddionalNum = 0;
+			for (INT i = 6; i <= argc; i++) {
+				cmdLen = _tcslen(argv[i - 1]);
+				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), 2)) {
+					pExtArg->byQuiet = TRUE;
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/be"), 3)) {
+					if (!SetOptionBe(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/d8"), 3)) {
+					pExtArg->byBe = FALSE;
+					pExtArg->byD8 = TRUE;
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/c2"), 3)) {
+					if (!SetOptionC2(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/np"), 3)) {
+					pExtArg->bySkipSubP = TRUE;
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/nq"), 3)) {
+					pExtArg->bySkipSubQ = TRUE;
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/nr"), 3)) {
+					pExtArg->bySkipSubRtoW = TRUE;
+				}
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/s"), 2)) {
+					if (!SetOptionS(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
+				}
+				else {
+					OutputErrorString(_T("Unknown option: [%s]\n"), argv[i - 1]);
+					return FALSE;
+				}
+			}
+			*pExecType = gd;
+			printAndSetPath(argv[3], pszFullPath);
+		}
+		else if (argc >= 5 && cmdLen == 3 && !_tcsncmp(argv[1], _T("dvd"), 3)) {
+			s_dwSpeed = _tcstoul(argv[4], &endptr, 10);
+			if (*endptr) {
+				OutputErrorString(_T("Bad arg: [%s] Please integer\n"), endptr);
+				return FALSE;
+			}
+			for (INT i = 6; i <= argc; i++) {
+				cmdLen = _tcslen(argv[i - 1]);
+				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/c"), 2)) {
+					pExtArg->byCmi = TRUE;
+				}
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/f"), 2)) {
+					pExtArg->byFua = TRUE;
+				}
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), 2)) {
+					pExtArg->byQuiet = TRUE;
+				}
+				else {
+					OutputErrorString(_T("Unknown option: [%s]\n"), argv[i - 1]);
+					return FALSE;
+				}
+			}
+			*pExecType = dvd;
+			printAndSetPath(argv[3], pszFullPath);
+		}
+		else if (argc >= 7 && (cmdLen == 4 && !_tcsncmp(argv[1], _T("data"), 4) ||
+			cmdLen == 5 && !_tcsncmp(argv[1], _T("audio"), 5))) {
+			s_dwSpeed = _tcstoul(argv[4], &endptr, 10);
+			if (*endptr) {
+				OutputErrorString(_T("Bad arg: [%s] Please integer\n"), endptr);
+				return FALSE;
+			}
+			s_nStartLBA = _tcstol(argv[5], &endptr, 10);
+			if (*endptr) {
+				OutputErrorString(_T("Bad arg: [%s] Please integer\n"), endptr);
+				return FALSE;
+			}
+			s_nEndLBA = _tcstol(argv[6], &endptr, 10);
+			if (*endptr) {
+				OutputErrorString(_T("Bad arg: [%s] Please integer\n"), endptr);
+				return FALSE;
+			}
+			pExtArg->dwSubAddionalNum = 1;
+			for (INT i = 8; i <= argc; i++) {
+				cmdLen = _tcslen(argv[i - 1]);
+				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), 2)) {
+					pExtArg->byQuiet = TRUE;
+				}
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/a"), 2)) {
+					if (!SetOptionA(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/be"), 3)) {
+					if (!SetOptionBe(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/d8"), 3)) {
+					pExtArg->byBe = FALSE;
+					pExtArg->byD8 = TRUE;
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/c2"), 3)) {
+					if (!SetOptionC2(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/rc"), 3)) {
+					if (!SetOptionRc(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/np"), 3)) {
+					pExtArg->bySkipSubP = TRUE;
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/nq"), 3)) {
+					pExtArg->bySkipSubQ = TRUE;
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/nr"), 3)) {
+					pExtArg->bySkipSubRtoW = TRUE;
+				}
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/s"), 2)) {
+					if (!SetOptionS(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
+				}
+				else {
+					OutputErrorString(_T("Unknown option: [%s]\n"), argv[i - 1]);
+					return FALSE;
+				}
+			}
+			if (!_tcsncmp(argv[1], _T("data"), 4)) {
+				*pExecType = data;
+			}
+			else if (!_tcsncmp(argv[1], _T("audio"), 5)) {
+				*pExecType = audio;
+			}
+			printAndSetPath(argv[3], pszFullPath);
+		}
+		else if (argc == 4) {
+			if (_tcslen(argv[1]) == 2 && !_tcsncmp(argv[1], _T("fd"), 2)) {
+				*pExecType = fd;
+				printAndSetPath(argv[3], pszFullPath);
+			}
+		}
+		else if (argc == 3) {
+			cmdLen = _tcslen(argv[1]);
+			if (cmdLen == 4 && !_tcsncmp(argv[1], _T("stop"), 4)) {
+				*pExecType = stop;
+			}
+			else if (cmdLen == 5 && !_tcsncmp(argv[1], _T("start"), 5)) {
+				*pExecType = start;
+			}
+			else if (cmdLen == 5 && !_tcsncmp(argv[1], _T("eject"), 5)) {
+				*pExecType = eject;
+			}
+			else if (cmdLen == 5 && !_tcsncmp(argv[1], _T("close"), 5)) {
+				*pExecType = closetray;
+			}
+			else if (cmdLen == 5 && !_tcsncmp(argv[1], _T("reset"), 5)) {
+				*pExecType = reset;
+			}
+			else if (cmdLen == 3 && !_tcsncmp(argv[1], _T("sub"), 3)) {
+				*pExecType = sub;
+				printAndSetPath(argv[2], pszFullPath);
+			}
+		}
+		else {
+			if (argc > 1) {
+				OutputErrorString(_T("Invalid argument\n"));
+			}
+			return FALSE;
+		}
 	}
 	return TRUE;
 }
@@ -1312,23 +1302,23 @@ void printUsage(void)
 {
 	OutputString(
 		_T("Usage\n")
-		_T("\tcd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/a (val)]\n")
-		_T("\t   [/be (str) or /d8] [/c2 (val1) (val2) (val3)] [/f] [/g] [/l] [/m]\n")
-		_T("\t   [/p] [/q] [/r] [/raw] [/rc (val)] [/s (val)] [/se]\n")
+		_T("\tcd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/a (val)]\n")
+		_T("\t   [/be (str) or /d8] [/c2 (val1) (val2) (val3)] [/f] [/m] [/p] [/r]\n")
+		_T("\t   [/raw] [/rc (val)] [/np] [/nq] [/nr] [/ns] [/s (val)]\n")
 		_T("\t\tRipping a CD from a to z\n")
 		_T("\t\tFor PLEXTOR or drive that can scramble ripping\n")
 		_T("\tdata <DriveLetter> <Filename> <DriveSpeed(0-72)> <StartLBA> <EndLBA+1>\n")
-		_T("\t     [/be (str) or /d8] [/c2 (val1) (val2) (val3)] [/g] [/rc (val)]\n")
-		_T("\t     [/q] [/s (val)]\n")
+		_T("\t     [/q] [/be (str) or /d8] [/c2 (val1) (val2) (val3)] [/rc (val)]\n")
+		_T("\t     [/np] [/nq] [/nr] [/ns] [/s (val)]\n")
 		_T("\t\tRipping a CD from start to end (using 'all' flag)\n")
 		_T("\t\tFor no PLEXTOR or drive that can't scramble ripping\n")
 		_T("\taudio <DriveLetter> <Filename> <DriveSpeed(0-72)> <StartLBA> <EndLBA+1>\n")
-		_T("\t      [/a (val)] [/be (str) or /d8] [/c2 (val1) (val2) (val3)] [/g]\n")
-		_T("\t      [/q] [/rc (val)] [/s (val)]\n")
+		_T("\t      [/q] [/a (val)] [/be (str) or /d8] [/c2 (val1) (val2) (val3)]\n")
+		_T("\t      [/rc (val)] [/np] [/nq] [/nr] [/ns] [/s (val)]\n")
 		_T("\t\tRipping a CD from start to end (using 'cdda' flag)\n")
 		_T("\t\tFor dumping a lead-in, lead-out mainly\n")
-		_T("\tgd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/be (str) or /d8]\n")
-		_T("\t   [/g] [/q] [/s (val)] [/c2 (val1) (val2) (val3)]\n")
+		_T("\tgd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/be (str) or /d8]\n")
+		_T("\t   [/c2 (val1) (val2) (val3)] [/np] [/nq] [/nr] [/ns] [/s (val)]\n")
 		_T("\t\tRipping a HD area of GD from a to z\n")
 		_T("\tdvd <DriveLetter> <Filename> <DriveSpeed(0-16)> [/c] [/f] [/q]\n")
 	);
@@ -1349,27 +1339,23 @@ void printUsage(void)
 		_T("\t\tReset the drive (Only PLEXTOR)\n")
 		_T("\tsub <Subfile>\n")
 		_T("\t\tParse CloneCD sub file and output to readable format\n")
-		_T("Option Info\n")
+		_T("Option (generic)\n")
 		_T("\t/q\tDisable beep\n")
+		_T("Option (for CD read mode)\n")
 		_T("\t/a\tAdd CD offset manually (Only Audio CD)\n")
 		_T("\t\t\tval\tsamples value\n")
-		_T("\t/be\tUse 0xbe as ReadCD command forcibly (for data disc)\n")
+		_T("\t/be\tUse 0xbe as ReadCD command forcibly\n")
 		_T("\t\t\tstr\t raw: sub channel mode is raw (default)\n")
 		_T("\t\t\t   \tpack: sub channel mode is pack\n")
-		_T("\t/d8\tUse 0xd8 as ReadCD command forcibly (for data disc)\n")
-		_T("\t/c2\tContinue to read cd to recover C2 error existing sector\n")
+		_T("\t/d8\tUse 0xd8 as ReadCD command forcibly\n")
 	);
 	_tsystem(_T("pause"));
 	OutputString(
+		_T("\t/c2\tContinue to read cd to recover C2 error existing sector\n")
 		_T("\t\t\tval1\tvalue to reread (default: 1024)\n")
 		_T("\t\t\tval2\tvalue to fix a C2 error (default: 4096)\n")
 		_T("\t\t\tval3\tvalue to reread speed (default: 4)\n")
 		_T("\t/f\tUse 'Force Unit Access' flag to defeat the cache (very slow)\n")
-		_T("\t/g\tNot fix SubRtoW\n")
-		_T("\t\t\tFor CD+G etc.\n")
-		_T("\t/l\tNot fix SubQ (RMSF, AMSF, CRC) (LBA 14100 - 16199)\n")
-		_T("\t  \t                               (LBA 42000 - 44399)\n")
-		_T("\t\t\tFor PlayStation LibCrypt discs\n")
 		_T("\t/m\tIf MCN exists in the first pregap sector of the track, use this\n")
 		_T("\t\t\tFor some PC-Engine discs\n")
 		_T("\t/p\tRipping AMSF from 00:00:00 to 00:01:74\n")
@@ -1385,16 +1371,25 @@ void printUsage(void)
 		_T("\t\t\tFor Protected disc (CodeLock, LaserLock, RingPROTECH\n")
 		_T("\t\t\t     SafeDisc, SmartE, CD.IDX, ProtectCD-VOB, CDS300\n")
 		_T("\t\t\tval\ttimeout value (default: 60)\n")
+		_T("Option (for CD SubChannel)\n")
+		_T("\t/np\tNot fix SubP\n")
+		_T("\t/nq\tNot fix SubQ\n")
+		_T("\t/nr\tNot fix SubRtoW\n")
 	);
 	_tsystem(_T("pause"));
 	OutputString(
+		_T("\t/nl\tNot fix SubQ (RMSF, AMSF, CRC) (LBA 14100 - 16199)\n")
+		_T("\t   \t                               (LBA 42000 - 44399)\n")
+		_T("\t\t\tFor PlayStation LibCrypt discs\n")
+		_T("\t/ns\tNot fix SubQ (RMSF, AMSF, CRC) (LBA 0 - 7, 5000 - 18499)\n")
+		_T("\t   \t                            or (LBA 30800 - 34799)\n")
+		_T("\t   \t                            or (LBA 40000 - 45799)\n")
+		_T("\t\t\tFor SecuROM\n")
 		_T("\t/s\tIf it reads subchannel precisely, use this\n")
 		_T("\t\t\tval\t0: no read next sub (fast, but lack precision)\n")
 		_T("\t\t\t   \t1: read next sub (normal, this val is default)\n")
 		_T("\t\t\t   \t2: read next & next next sub (slow, precision)\n")
-		_T("\t/se\tNot fix SubQ (RMSF, AMSF, CRC) (LBA 8, 5000 - 18499)\n")
-		_T("\t   \t                            or (LBA 40100 - 44499)\n")
-		_T("\t\t\tFor SecuRom\n")
+		_T("Option (for DVD)\n")
 		_T("\t/c\tLog Copyright Management Information (Only DVD)\n")
 		);
 	_tsystem(_T("pause"));

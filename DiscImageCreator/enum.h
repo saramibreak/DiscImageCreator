@@ -47,9 +47,11 @@ typedef enum _PROTECT_TYPE {
 	protectCDVOB,
 	safeDiscLite,
 	safeDisc,
-	securomOld,
-	securomOldNew,
-	securomNew,
+	securomTmp,
+	securomV1, // a.k.a SecuROM OLD (8 shifted RMSF/AMSF + 1 error * 24 times = 216 sector error)
+	securomV2, // a.k.a SecuROM NEW (8 shifted RMSF/AMSF + 1 error * 10 times = 90 sector error)
+	securomV3, // a.k.a SecuROM NEW (8 shifted RMSF/AMSF + LBA -1 + 10 random error = 99 sector error) 
+	securomV4, // a.k.a SecuROM NEW (LBA -1 + 10 random error = 11 sector error)
 	smartE
 } PROTECT_TYPE, *PPROTECT_TYPE;
 

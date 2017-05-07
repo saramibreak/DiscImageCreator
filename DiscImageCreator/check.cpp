@@ -283,14 +283,22 @@ BOOL IsValidIntentionalSubSector(
 {
 	BOOL bRet = FALSE;
 	if (bIntentionalSub) {
-		if (pDisc->PROTECT.byExist == securomOldNew ||
-			pDisc->PROTECT.byExist == securomNew) {
-			if (8 == nLBA || (5000 <= nLBA && nLBA < 18500)) {
+		if (pDisc->PROTECT.byExist == securomV1) {
+			if (30800 <= nLBA && nLBA < 34800) {
+				bRet = TRUE;
+			}
+			else if (40000 <= nLBA && nLBA < 45800) {
 				bRet = TRUE;
 			}
 		}
-		else if (pDisc->PROTECT.byExist == securomOld) {
-			if (40100 <= nLBA && nLBA < 44500) {
+		else if (pDisc->PROTECT.byExist == securomV3) {
+			if (0 <= nLBA && nLBA < 8 || 5000 <= nLBA && nLBA < 18500) {
+				bRet = TRUE;
+			}
+		}
+		else if (pDisc->PROTECT.byExist == securomV2 ||
+			pDisc->PROTECT.byExist == securomV4) {
+			if (5000 <= nLBA && nLBA < 18500) {
 				bRet = TRUE;
 			}
 		}
@@ -1330,7 +1338,8 @@ VOID CheckAndFixSubQ(
 
 		if (!IsValidSubQRMSF(pExecType, pSubQ, lpSubcode, nLBA)) {
 			if (!(pSubQ->prev.byIndex == 0 && pSubQ->present.byIndex == 1) &&
-				!(pSubQ->prev.byIndex >= 1 && pSubQ->present.byIndex == 0)) {
+				!(pSubQ->prev.byIndex >= 1 && pSubQ->present.byIndex == 0) ||
+				nLBA == 0 && pDisc->PROTECT.byExist == securomV3) {
 				BYTE byFrame = 0;
 				BYTE bySecond = 0;
 				BYTE byMinute = 0;
@@ -1344,7 +1353,7 @@ VOID CheckAndFixSubQ(
 					tmpRel = pSubQ->prev.nRelativeTime - 1;
 				}
 				// Colin McRae Rally 2.0 (Europe) (En,Fr,De,Es,It) etc
-				if (bSecuRom && pDisc->PROTECT.byIntentionalSubDesync && nLBA == 8) {
+				if (bSecuRom && pDisc->PROTECT.byExist == securomV3 && nLBA == 7) {
 					tmpRel -= 1;
 				}
 				LBAtoMSF(tmpRel, &byMinute, &bySecond, &byFrame);
@@ -1354,20 +1363,31 @@ VOID CheckAndFixSubQ(
 				LBAtoMSF(pSubQ->prev.nRelativeTime, &byPrevMinute, &byPrevSecond, &byPrevFrame);
 				OutputSubErrorWithLBALogA(
 					"Q[15-17]:PrevRel[%d, %02u:%02u:%02u], Rel[%d, %02u:%02u:%02u] -> [%d, %02u:%02u:%02u], L:[%ld]"
-					, nLBA, byCurrentTrackNum, pSubQ->prev.nRelativeTime,
-					byPrevMinute, byPrevSecond, byPrevFrame, pSubQ->present.nRelativeTime,
-					BcdToDec(lpSubcode[15]), BcdToDec(lpSubcode[16]), BcdToDec(lpSubcode[17]),
-					tmpRel, byMinute, bySecond, byFrame, s_lineNum);
+					, nLBA, byCurrentTrackNum, pSubQ->prev.nRelativeTime, byPrevMinute, byPrevSecond, byPrevFrame
+					, pSubQ->present.nRelativeTime,	BcdToDec(lpSubcode[15]), BcdToDec(lpSubcode[16]), BcdToDec(lpSubcode[17])
+					, tmpRel, byMinute, bySecond, byFrame, s_lineNum);
 				if (bLibCrypt || bSecuRom) {
 					OutputSubErrorLogA(
-						" But this sector may be the intentional error of RMSF. see _subinfo.txt\n");
+						" But this sector may be the intentional error of RMSF. see _subinfo.txt");
+					INT nMax = 8;
+					if (nLBA < 8) {
+						nMax = 7;
+					}
+					if (0 < pDisc->PROTECT.byRestoreCounter && pDisc->PROTECT.byRestoreCounter < nMax &&
+						pSubQ->prev.nRelativeTime + 2 != pSubQ->present.nRelativeTime) {
+						LBAtoMSF(pSubQ->prev.nRelativeTime + 2, &byPrevMinute, &byPrevSecond, &byPrevFrame);
+						SubQcodeOrg[3] = DecToBcd(byPrevMinute);
+						SubQcodeOrg[4] = DecToBcd(byPrevSecond);
+						SubQcodeOrg[5] = DecToBcd(byPrevFrame);
+						OutputSubErrorLogA(" And this RMSF is a random error. Fixed [%d, %02u:%02u:%02u]\n"
+							, pSubQ->prev.nRelativeTime + 2, byPrevMinute, byPrevSecond, byPrevFrame);
+					}
+					else {
+						OutputSubErrorLogA("\n");
+					}
 				}
 				else {
 					OutputSubErrorLogA("\n");
-				}
-				// Colin McRae Rally 2.0 (Europe) (En,Fr,De,Es,It) etc
-				if (bSecuRom && pDisc->PROTECT.byIntentionalSubDesync && nLBA == 8) {
-					tmpRel += 1;
 				}
 				pSubQ->present.nRelativeTime = tmpRel;
 				lpSubcode[15] = DecToBcd(byMinute);
@@ -1382,16 +1402,11 @@ VOID CheckAndFixSubQ(
 			lpSubcode[18] = 0;
 		}
 
-		if (!IsValidSubQAMSF(pExecType,
-			pDisc->SUB.byIndex0InTrack1, pSubQ, lpSubcode, nLBA)) {
+		if (!IsValidSubQAMSF(pExecType, pDisc->SUB.byIndex0InTrack1, pSubQ, lpSubcode, nLBA)) {
 			BYTE byFrame = 0;
 			BYTE bySecond = 0;
 			BYTE byMinute = 0;
 			INT tmpAbs = nLBA + 150;
-			// Colin McRae Rally 2.0 (Europe) (En,Fr,De,Es,It) etc
-			if (bSecuRom && pDisc->PROTECT.byIntentionalSubDesync) {
-				tmpAbs -= 1;
-			}
 			LBAtoMSF(tmpAbs, &byMinute, &bySecond, &byFrame);
 			BYTE byPrevFrame = 0;
 			BYTE byPrevSecond = 0;
@@ -1399,13 +1414,28 @@ VOID CheckAndFixSubQ(
 			LBAtoMSF(pSubQ->prev.nAbsoluteTime, &byPrevMinute, &byPrevSecond, &byPrevFrame);
 			OutputSubErrorWithLBALogA(
 				"Q[19-21]:PrevAbs[%d, %02u:%02u:%02u], Abs[%d, %02u:%02u:%02u] -> [%d, %02u:%02u:%02u]"
-				, nLBA, byCurrentTrackNum, pSubQ->prev.nAbsoluteTime,
-				byPrevMinute, byPrevSecond, byPrevFrame, pSubQ->present.nAbsoluteTime,
-				BcdToDec(lpSubcode[19]), BcdToDec(lpSubcode[20]), BcdToDec(lpSubcode[21]),
-				tmpAbs, byMinute, bySecond, byFrame);
+				, nLBA, byCurrentTrackNum, pSubQ->prev.nAbsoluteTime, byPrevMinute, byPrevSecond, byPrevFrame
+				, pSubQ->present.nAbsoluteTime,	BcdToDec(lpSubcode[19]), BcdToDec(lpSubcode[20]), BcdToDec(lpSubcode[21])
+				, tmpAbs, byMinute, bySecond, byFrame);
 			if (bLibCrypt || bSecuRom) {
 				OutputSubErrorLogA(
-					" But this sector may be the intentional error of AMSF. see _subinfo.txt\n");
+					" But this sector may be the intentional error of AMSF. see _subinfo.txt");
+				INT nMax = 8;
+				if (nLBA < 8) {
+					nMax = 7;
+				}
+				if (0 < pDisc->PROTECT.byRestoreCounter && pDisc->PROTECT.byRestoreCounter < nMax &&
+					pSubQ->prev.nAbsoluteTime + 2 != pSubQ->present.nAbsoluteTime) {
+					LBAtoMSF(pSubQ->prev.nAbsoluteTime + 2, &byPrevMinute, &byPrevSecond, &byPrevFrame);
+					SubQcodeOrg[7] = DecToBcd(byPrevMinute);
+					SubQcodeOrg[8] = DecToBcd(byPrevSecond);
+					SubQcodeOrg[9] = DecToBcd(byPrevFrame);
+					OutputSubErrorLogA(" And this AMSF is a random error. Fixed [%d, %02u:%02u:%02u]\n"
+						, pSubQ->prev.nAbsoluteTime + 2, byPrevMinute, byPrevSecond, byPrevFrame);
+				}
+				else {
+					OutputSubErrorLogA("\n");
+				}
 			}
 			else {
 				OutputSubErrorLogA("\n");
@@ -1449,35 +1479,28 @@ VOID CheckAndFixSubQ(
 		if (SubQcodeOrg[10] == HIBYTE(xorCrc16) &&
 			SubQcodeOrg[11] == LOBYTE(xorCrc16)) {
 			OutputSubInfoWithLBALogA(
-				"Intentional error exists. CRC-16 is original:[%04x] and XORed with 0x8001:[%04x] "
+				"Detected intentional error. CRC-16 is original:[%04x] and XORed with 0x8001:[%04x]"
 				, nLBA, byCurrentTrackNum, crc16, xorCrc16);
 			bExist = TRUE;
-			if (pExtArg->byIntentionalSub && pDisc->PROTECT.byExist == no) {
-				pDisc->PROTECT.byExist = securomNew;
-			}
 		}
 		else {
 			// lpSubcode isn't fixed (= recalc crc)
 			WORD reCalcCrc16 = (WORD)GetCrc16CCITT(10, &SubQcodeOrg[0]);
 			WORD reCalcXorCrc16 = (WORD)(reCalcCrc16 ^ 0x0080);
 			if (SubQcodeOrg[10] == HIBYTE(reCalcXorCrc16) &&
-				SubQcodeOrg[11] == LOBYTE(reCalcXorCrc16)) {
+				SubQcodeOrg[11] == LOBYTE(reCalcXorCrc16) && 
+				pDisc->PROTECT.byRestoreCounter == 8) {
 				OutputSubInfoWithLBALogA(
-					"Intentional error exists. CRC-16 is recalculated:[%04x] and XORed with 0x0080:[%04x] "
+					"Detected intentional error. CRC-16 is recalculated:[%04x] and XORed with 0x0080:[%04x]"
 					, nLBA, byCurrentTrackNum, reCalcCrc16, reCalcXorCrc16);
 				bExist = TRUE;
-			}
-			else {
-				OutputSubInfoWithLBALogA("Intentional error doesn't exist."
-					, nLBA, byCurrentTrackNum);
 			}
 		}
 		if (bExist) {
 			OutputSubInfoLogA(
-				"SubQ[12-23]: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n"
-				, SubQcodeOrg[0], SubQcodeOrg[1], SubQcodeOrg[2], SubQcodeOrg[3]
-				, SubQcodeOrg[4], SubQcodeOrg[5], SubQcodeOrg[6], SubQcodeOrg[7]
-				, SubQcodeOrg[8], SubQcodeOrg[9], SubQcodeOrg[10], SubQcodeOrg[11]);
+				" Restore RMSF[%02x:%02x:%02x to %02x:%02x:%02x] AMSF[%02x:%02x:%02x to %02x:%02x:%02x]\n"
+				, lpSubcode[15], lpSubcode[16], lpSubcode[17], SubQcodeOrg[3], SubQcodeOrg[4], SubQcodeOrg[5]
+				, lpSubcode[19], lpSubcode[20], lpSubcode[21], SubQcodeOrg[7], SubQcodeOrg[8], SubQcodeOrg[9]);
 			// rmsf
 			lpSubcode[15] = SubQcodeOrg[3];
 			lpSubcode[16] = SubQcodeOrg[4];
@@ -1490,17 +1513,19 @@ VOID CheckAndFixSubQ(
 			lpSubcode[22] = SubQcodeOrg[10];
 			lpSubcode[23] = SubQcodeOrg[11];
 			OutputIntentionalSubchannel(nLBA, &lpSubcode[12]);
+			pDisc->PROTECT.byRestoreCounter = 0;
 		}
 		else {
-			if (pDisc->PROTECT.byExist == securomOld || pDisc->PROTECT.byExist == securomOldNew) {
+			if (pDisc->PROTECT.byExist == securomV1 || pDisc->PROTECT.byExist == securomV2 || pDisc->PROTECT.byExist == securomV3) {
 				INT nPrevRMSF = MSFtoLBA(BcdToDec(lpSubcode[15]), BcdToDec(lpSubcode[16]), BcdToDec(lpSubcode[17]));
 				INT nRMSF = MSFtoLBA(BcdToDec(SubQcodeOrg[3]), BcdToDec(SubQcodeOrg[4]), BcdToDec(SubQcodeOrg[5]));
 				INT nPrevAMSF = MSFtoLBA(BcdToDec(lpSubcode[19]), BcdToDec(lpSubcode[20]), BcdToDec(lpSubcode[21]));
 				INT nAMSF = MSFtoLBA(BcdToDec(SubQcodeOrg[7]), BcdToDec(SubQcodeOrg[8]), BcdToDec(SubQcodeOrg[9]));
-				if (nPrevRMSF + 1 == nRMSF && nPrevAMSF + 1 == nAMSF) {
-					OutputSubInfoLogA(
-						" Restore RMSF[%02x:%02x:%02x to %02x:%02x:%02x] AMSF[%02x:%02x:%02x to %02x:%02x:%02x]\n"
-						, lpSubcode[15], lpSubcode[16], lpSubcode[17], SubQcodeOrg[3], SubQcodeOrg[4], SubQcodeOrg[5]
+				if (nPrevRMSF + 1 == nRMSF && nPrevAMSF + 1 == nAMSF ||
+					nPrevRMSF == nRMSF && nPrevAMSF + 1 == nAMSF && pDisc->PROTECT.byExist == securomV3 && 0 <= nLBA && nLBA < 9) {
+					OutputSubInfoWithLBALogA(
+						"Detected shifted sub. Restore RMSF[%02x:%02x:%02x to %02x:%02x:%02x] AMSF[%02x:%02x:%02x to %02x:%02x:%02x]\n"
+						, nLBA, byCurrentTrackNum, lpSubcode[15], lpSubcode[16], lpSubcode[17], SubQcodeOrg[3], SubQcodeOrg[4], SubQcodeOrg[5]
 						, lpSubcode[19], lpSubcode[20], lpSubcode[21], SubQcodeOrg[7], SubQcodeOrg[8], SubQcodeOrg[9]);
 					// rmsf
 					lpSubcode[15] = SubQcodeOrg[3];
@@ -1511,13 +1536,14 @@ VOID CheckAndFixSubQ(
 					lpSubcode[20] = SubQcodeOrg[8];
 					lpSubcode[21] = SubQcodeOrg[9];
 					OutputIntentionalSubchannel(nLBA, &lpSubcode[12]);
+					pDisc->PROTECT.byRestoreCounter++;
 				}
 				else {
-					OutputSubInfoLogA("\n");
+					OutputSubInfoWithLBALogA("Intentional error doesn't exist.\n", nLBA, byCurrentTrackNum);
 				}
 			}
 			else {
-				OutputSubInfoLogA("\n");
+				OutputSubInfoWithLBALogA("Intentional error doesn't exist.\n", nLBA, byCurrentTrackNum);
 			}
 		}
 	}
@@ -1525,13 +1551,11 @@ VOID CheckAndFixSubQ(
 		tmp1 = HIBYTE(crc16);
 		tmp2 = LOBYTE(crc16);
 		if (lpSubcode[22] != tmp1) {
-			OutputSubErrorWithLBALogA("Q[22]:CrcHigh[%#04x] -> [%#04x]\n"
-				, nLBA, byCurrentTrackNum, lpSubcode[22], tmp1);
+			OutputSubErrorWithLBALogA("Q[22]:CrcHigh[%#04x] -> [%#04x]\n", nLBA, byCurrentTrackNum, lpSubcode[22], tmp1);
 			lpSubcode[22] = tmp1;
 		}
 		if (lpSubcode[23] != tmp2) {
-			OutputSubErrorWithLBALogA("Q[23]:CrcLow[%#04x] -> [%#04x]\n"
-				, nLBA, byCurrentTrackNum, lpSubcode[23], tmp2);
+			OutputSubErrorWithLBALogA("Q[23]:CrcLow[%#04x] -> [%#04x]\n", nLBA, byCurrentTrackNum, lpSubcode[23], tmp2);
 			lpSubcode[23] = tmp2;
 		}
 	}
@@ -1656,9 +1680,13 @@ VOID CheckAndFixSubChannel(
 			}
 		}
 	}
-	CheckAndFixSubP(pDiscPerSector->subcode.present, byCurrentTrackNum, nLBA);
-	CheckAndFixSubQ(pExecType, pExtArg, pDisc, pDiscPerSector->subcode.present, &pDiscPerSector->subQ,
-		byCurrentTrackNum, nLBA, bLibCrypt, bSecuRom);
+	if (!pExtArg->bySkipSubP) {
+		CheckAndFixSubP(pDiscPerSector->subcode.present, byCurrentTrackNum, nLBA);
+	}
+	if (!pExtArg->bySkipSubQ) {
+		CheckAndFixSubQ(pExecType, pExtArg, pDisc, pDiscPerSector->subcode.present, &pDiscPerSector->subQ,
+			byCurrentTrackNum, nLBA, bLibCrypt, bSecuRom);
+	}
 	if (!pExtArg->bySkipSubRtoW) {
 		CheckAndFixSubRtoW(pDevice, pDisc, pDiscPerSector->data.present, pDiscPerSector->subcode.present, byCurrentTrackNum, nLBA);
 	}
@@ -1843,7 +1871,7 @@ VOID CheckAndFixMainHeader(
 				(pDisc->PROTECT.ERROR_SECTOR.nExtentPos <= nLBA &&
 				nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize)) {
 				OutputMainErrorWithLBALogA(
-					"This sector is data, but the header doesn't exist, so the header is generated\n"
+					"This sector is data, but sync is invalid, so the header is generated\n"
 					, nLBA, byCurrentTrackNum);
 #ifdef _DEBUG
 				OutputCDMain(fileMainError, lpWorkBuf, nLBA, MAINHEADER_MODE1_SIZE);
@@ -1885,10 +1913,10 @@ VOID CheckAndFixMainHeader(
 			}
 			if ((ctl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 				OutputMainErrorWithLBALogA(
-					"This sector is data, but the header doesn't exist\n"
+					"This sector is data, but sync is invalid\n"
 					, nLBA + nAdd, byCurrentTrackNum);
 #if 1
-				OutputCDMain(fileMainError, lpWorkBuf, nLBA + nAdd, CD_RAW_SECTOR_SIZE);
+				OutputCDMain(fileMainError, lpWorkBuf, nLBA + nAdd, MAINHEADER_MODE1_SIZE);
 #endif
 			}
 		}

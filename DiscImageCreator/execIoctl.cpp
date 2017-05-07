@@ -153,7 +153,7 @@ BOOL ScsiPassThroughDirect(
 					+ swb.ScsiPassThroughDirect.Cdb[5];
 			}
 			OutputLog(standardError | fileMainError
-				, _T("\r"STR_LBA "[F:%s][L:%ld]\n\tOpcode: %#02x\n")
+				, _T("\rLBA[%06d, %#07x]: [F:%s][L:%ld]\n\tOpcode: %#02x\n")
 				, nLBA, nLBA, pszFuncName, lLineNum, swb.ScsiPassThroughDirect.Cdb[0]);
 			OutputScsiStatus(swb.ScsiPassThroughDirect.ScsiStatus);
 			OutputSenseData(&swb.SenseData);
@@ -168,6 +168,8 @@ BOOL ScsiPassThroughDirect(
 	return bRet;
 }
 
+// https://support.microsoft.com/ja-jp/help/126369
+// https://msdn.microsoft.com/en-us/library/windows/desktop/ff800832(v=vs.85).aspx
 BOOL StorageQueryProperty(
 	PDEVICE pDevice,
 	LPBOOL lpBusTypeUSB
@@ -195,7 +197,14 @@ BOOL StorageQueryProperty(
 		&query, sizeof(STORAGE_PROPERTY_QUERY), adapterDescriptor, header.Size, &dwReturned, FALSE);
 	if (bRet) {
 		OutputStorageAdaptorDescriptor(adapterDescriptor, lpBusTypeUSB);
-		pDevice->dwMaxTransferLength = adapterDescriptor->MaximumTransferLength;
+		if (adapterDescriptor->MaximumTransferLength > 65536) {
+			pDevice->dwMaxTransferLength = 65536;
+			OutputDriveLogA("dwMaxTransferLength changed [%lu] -> [%lu]\n"
+				, adapterDescriptor->MaximumTransferLength, pDevice->dwMaxTransferLength);
+		}
+		else {
+			pDevice->dwMaxTransferLength = adapterDescriptor->MaximumTransferLength;
+		}
 		pDevice->AlignmentMask = (UINT_PTR)(adapterDescriptor->AlignmentMask);
 	}
 	else {

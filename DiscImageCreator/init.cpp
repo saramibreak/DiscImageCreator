@@ -199,6 +199,7 @@ VOID InitMainDataHeader(
 		pMain->present[13] = (BYTE)(DecToBcd(s) ^ 0x80);
 	}
 	else {
+		pMain->present[12] = (BYTE)(DecToBcd(m));
 		pMain->present[13] = (BYTE)(DecToBcd(s));
 	}
 	pMain->present[14] = (BYTE)(DecToBcd(f) - 1);

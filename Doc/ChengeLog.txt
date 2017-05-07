@@ -360,3 +360,14 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - changed: in gd command, /s 0 is default (because /s 1 is very slow for GD-ROM dumping)
 - changed: wait time for GD-ROM dumping (5000 millisec -> 30000 millisec)
 - fixed: some log
+
+*2017-05-07
+- added: /np /nq option
+- changed: Option name /g -> /nr, /l -> /nl, /se -> /ns
+- changed: Some log message
+- changed: Disabled SSE2 of vcxproj (for old cpu)
+- changed: MaximumTransferLength is limited to 64KB (can't read 128KB)
+- improved: Checking argument (check command-length)
+- improved: Subchannel ripping of SecuROM
+- fixed: Reading DirectoryRecord
+- fixed: Output unnecessary hash

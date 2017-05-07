@@ -1185,6 +1185,16 @@ VOID DescrambleMainChannelAll(
 				// 嘘の データを読み込む場合があります。
 				fseek(fpImg, lSeekPtr * CD_RAW_SECTOR_SIZE, SEEK_SET);
 				fread(aSrcBuf, sizeof(BYTE), sizeof(aSrcBuf), fpImg);
+#if 1
+				if (nFirstLBA == nLastLBA) {
+//					OutputCDMain(fileMainInfo, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
+					// Bundesliga Manager Champions-Pack (Germany)
+					if (!(aSrcBuf[0xf] & 0x60)) {
+						OutputMainInfoWithLBALogA("This sector isn't scrambled. Skip descrambling\n", nFirstLBA, k + 1);
+						continue;
+					}
+				}
+#endif
 				fseek(fpImg, -CD_RAW_SECTOR_SIZE, SEEK_CUR);
 				if (IsValidMainDataHeader(aSrcBuf)) {
 					for (INT n = 0; n < CD_RAW_SECTOR_SIZE; n++) {
@@ -1207,6 +1217,10 @@ VOID DescrambleMainChannelAll(
 					}
 				}
 #endif
+				else {
+					OutputMainErrorWithLBALogA("Sync is invalid\n", nFirstLBA, 0);
+					OutputCDMain(fileMainError, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
+				}
 				OutputString(
 					_T("\rDescrambling data sector of img (LBA) %6d/%6d"), nFirstLBA, nLastLBA);
 			}

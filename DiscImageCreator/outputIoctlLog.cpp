@@ -3103,17 +3103,35 @@ VOID OutputStorageAdaptorDescriptor(
 		"\t                 Size: %lu\n"
 		"\tMaximumTransferLength: %lu (bytes)\n"
 		"\t MaximumPhysicalPages: %lu\n"
-		"\t        AlignmentMask: %lu\n"
+		"\t        AlignmentMask: %lu "
+		, pAdapterDescriptor->Version
+		, pAdapterDescriptor->Size
+		, pAdapterDescriptor->MaximumTransferLength
+		, pAdapterDescriptor->MaximumPhysicalPages
+		, pAdapterDescriptor->AlignmentMask);
+	switch (pAdapterDescriptor->AlignmentMask) {
+	case 0:
+		OutputDriveLogA("(Buffers must be aligned on BYTE boundaries)\n");
+		break;
+	case 1:
+		OutputDriveLogA("(Buffers must be aligned on WORD boundaries)\n");
+		break;
+	case 3:
+		OutputDriveLogA("(Buffers must be aligned on DWORD32 boundaries)\n");
+		break;
+	case 7:
+		OutputDriveLogA("(Buffers must be aligned on DWORD64 boundaries)\n");
+		break;
+	default:
+		OutputDriveLogA("\n");
+		break;
+	}
+	OutputDriveLogA(
 		"\t       AdapterUsesPio: %s\n"
 		"\t     AdapterScansDown: %s\n"
 		"\t      CommandQueueing: %s\n"
 		"\t  AcceleratedTransfer: %s\n"
 		"\t              BusType: "
-		, pAdapterDescriptor->Version
-		, pAdapterDescriptor->Size
-		, pAdapterDescriptor->MaximumTransferLength
-		, pAdapterDescriptor->MaximumPhysicalPages
-		, pAdapterDescriptor->AlignmentMask
 		, BOOLEAN_TO_STRING_TRUE_FALSE_A(pAdapterDescriptor->AdapterUsesPio)
 		, BOOLEAN_TO_STRING_TRUE_FALSE_A(pAdapterDescriptor->AdapterScansDown)
 		, BOOLEAN_TO_STRING_TRUE_FALSE_A(pAdapterDescriptor->CommandQueueing)
@@ -3175,7 +3193,7 @@ VOID OutputStorageAdaptorDescriptor(
 		OutputDriveLogA("BusTypeMaxReserved\n");
 		break;
 	default:
-		OutputDriveLogA("BusType???\n");
+		OutputDriveLogA("BusTypeUnknown\n");
 		break;
 	}
 	OutputDriveLogA(

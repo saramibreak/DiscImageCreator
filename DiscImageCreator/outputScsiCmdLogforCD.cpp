@@ -160,16 +160,16 @@ VOID OutputFsDirectoryRecord(
 			pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(dwDataLen / DISC_RAW_READ_SIZE - 1);
 		}
 		else if (!strncmp(fname, "CMS16.DLL", 9) && pDisc->PROTECT.byExist == no) {
-			pDisc->PROTECT.byExist = securomOld;
+			pDisc->PROTECT.byExist = securomV1;
 			strncpy(pDisc->PROTECT.name, fname, 9);
 		}
 		else if ((!strncmp(fname, "cms32_95.dll", 12) || !strncmp(fname, "CMS32_NT.DLL", 12))
 			&& pDisc->PROTECT.byExist == no) {
-			pDisc->PROTECT.byExist = securomOld;
+			pDisc->PROTECT.byExist = securomV1;
 			strncpy(pDisc->PROTECT.name, fname, 12);
 		}
 		else if (pDisc->PROTECT.byExist == no) {
-			// for CodeLock, ProtectCD-VOB, SecuRomNEW
+			// for CodeLock, ProtectCD-VOB, a part of SecuROM
 			LPCH p = strstr(fname, ".EXE");
 			if (!p) {
 				// Doesn't exist stristr in C/C++...
@@ -1072,7 +1072,8 @@ VOID OutputFsImageSectionHeader(
 		strcpy(pDisc->PROTECT.name, (LPCH)pIsh->Name);
 	}
 	else if (!strncmp((LPCH)pIsh->Name, ".cms_t", 6) || !strncmp((LPCH)pIsh->Name, ".cms_d", 6)) {
-		pDisc->PROTECT.byExist = securomNew;
+		// This string exists SecuROM OLD "Re-Volt (Europe)" and SecuROM NEW "Supreme Snowboarding (Europe) and "Beam Breakers (Europe) etc"
+		pDisc->PROTECT.byExist = securomTmp;
 		strcpy(pDisc->PROTECT.name, (LPCH)pIsh->Name);
 	}
 }

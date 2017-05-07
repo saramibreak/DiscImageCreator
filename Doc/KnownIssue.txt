@@ -1,7 +1,4 @@
 ======================== Known issue (fix if possible) ========================
-. dat file (Still not sorting correctly.)
-   => This doesn't reappear in my pc.
-
 . /p option doesn't work.
    => This doesn't reappear in my pc.
 

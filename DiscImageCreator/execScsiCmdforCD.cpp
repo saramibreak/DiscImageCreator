@@ -35,8 +35,8 @@ BOOL ExecReadCD(
 		, lpBuf, dwBufSize, &byScsiStatus, pszFuncName, lLineNum)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		OutputLogA(standardError | fileMainError,
-			_T("lpCmd: %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x\n")
-			_T("dwBufSize: %lu\n")
+			"lpCmd: %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x\n"
+			"dwBufSize: %lu\n"
 			, lpCmd[0], lpCmd[1], lpCmd[2], lpCmd[3], lpCmd[4], lpCmd[5]
 			, lpCmd[6], lpCmd[7], lpCmd[8], lpCmd[9], lpCmd[10], lpCmd[11]
 			, dwBufSize
@@ -130,9 +130,6 @@ BOOL ExecSearchingOffset(
 		if (bSubchOffset) {
 			pDisc->SUB.nSubchOffset = MSFtoLBA(BcdToDec(lpSubcode[19]),
 				BcdToDec(lpSubcode[20]), BcdToDec(lpSubcode[21])) - 150 - nLBA;
-			if (pExtArg->byIntentionalSub && pDisc->SUB.nSubchOffset > 0) {
-				pDisc->PROTECT.byIntentionalSubDesync = TRUE;
-			}
 		}
 	}
 	if (!pExtArg->byD8 && !pDevice->byPlxtrDrive && *pExecType != gd) {
@@ -305,9 +302,9 @@ BOOL ReadCDForSearchingOffset(
 	}
 	else {
 		CDFLAG::_READ_CD::_EXPECTED_SECTOR_TYPE flg = CDFLAG::_READ_CD::CDDA;
-		if (*pExecType == data) {
-			flg = CDFLAG::_READ_CD::All;
-		}
+//		if (*pExecType == data) {
+//			flg = CDFLAG::_READ_CD::All;
+//		}
 		CDB::_READ_CD cdb = { 0 };
 		SetReadCDCommand(NULL, pDevice, &cdb, flg
 			, 1, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::NoSub, FALSE);
@@ -928,32 +925,32 @@ BOOL ReadCDForDirectoryRecordDetail(
 	PDEVICE pDevice,
 	PDISC pDisc,
 	CDB::_READ12* pCdb,
+	INT nLBA,
 	LPBYTE lpBuf,
 	BYTE byTransferLen,
 	INT nDirPosNum,
 	PDIRECTORY_RECORD pDirRec,
-	INT nDirRecIdx,
 	LPINT pDirCnt
 	)
 {
-	if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)pCdb, (INT)pDirRec[nDirRecIdx].uiPosOfDir, lpBuf,
+	if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)pCdb, nLBA, lpBuf,
 		(DWORD)(DISC_RAW_READ_SIZE * byTransferLen), _T(__FUNCTION__), __LINE__)) {
-		return FALSE;
+		for (BYTE i = 0; i < byTransferLen; i++) {
+			OutputCDMain(fileMainInfo, lpBuf + DISC_RAW_READ_SIZE * i, nLBA + i, DISC_RAW_READ_SIZE);
+		}
+//		return FALSE;
+		return TRUE;
 	}
-#if 1
-	OutputLogA(fileMainInfo, "byTransferLen: %d\n", byTransferLen);
 	for (BYTE i = 0; i < byTransferLen; i++) {
-		OutputCDMain(fileMainInfo, lpBuf + DISC_RAW_READ_SIZE * i
-			, (INT)pDirRec[nDirRecIdx].uiPosOfDir + i, DISC_RAW_READ_SIZE);
+		OutputCDMain(fileMainInfo, lpBuf + DISC_RAW_READ_SIZE * i, nLBA + i, DISC_RAW_READ_SIZE);
 	}
-#endif
 	UINT nOfs = 0;
 	for (INT nSectorNum = 0; nSectorNum < byTransferLen;) {
 		if (*(lpBuf + nOfs) == 0) {
 			break;
 		}
-		OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Directory Record)
-			, pDirRec[nDirRecIdx].uiPosOfDir + nSectorNum, pDirRec[nDirRecIdx].uiPosOfDir + nSectorNum);
+		OutputVolDescLogA(
+			OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Directory Record), nLBA + nSectorNum, nLBA + nSectorNum);
 		for (;;) {
 			CHAR szCurDirName[MAX_FNAME_FOR_VOLUME] = { 0 };
 			LPBYTE lpDirRec = lpBuf + nOfs;
@@ -967,7 +964,7 @@ BOOL ReadCDForDirectoryRecordDetail(
 
 				if (lpDirRec[25] & 0x02) {
 					for (INT b = *pDirCnt; b < nDirPosNum; b++) {
-						if (dwExtentPos == pDirRec[*pDirCnt].uiPosOfDir &&
+						if (/*dwExtentPos == (DWORD)nLBA &&*/
 							!_strnicmp(szCurDirName, pDirRec[*pDirCnt].szDirName, MAX_FNAME_FOR_VOLUME)) {
 							pDirRec[*pDirCnt].uiDirSize = PadSizeForVolDesc(dwDataLen);
 							*pDirCnt = *pDirCnt + 1;
@@ -1029,6 +1026,7 @@ BOOL ReadCDForDirectoryRecord(
 	}
 	pDirRec[0].uiDirSize = dwRootDataLen;
 	for (INT nDirRecIdx = 0; nDirRecIdx < nDirPosNum; nDirRecIdx++) {
+		INT nLBA = (INT)pDirRec[nDirRecIdx].uiPosOfDir;
 		if (pDirRec[nDirRecIdx].uiDirSize > pDevice->dwMaxTransferLength) {
 			// [FMT] Psychic Detective Series Vol. 4 - Orgel (Japan) (v1.0)
 			// [FMT] Psychic Detective Series Vol. 5 - Nightmare (Japan)
@@ -1036,29 +1034,39 @@ BOOL ReadCDForDirectoryRecord(
 			// [IBM - PC compatible] PC Game Best Series Vol. 42 - J.B. Harold Series - Kiss of Murder - Satsui no Kuchizuke (Japan)
 			// [SS] Madou Monogatari (Japan)
 			// and more
-			dwAdditionalTransferLen =
-				pDirRec[nDirRecIdx].uiDirSize / pDevice->dwMaxTransferLength;
-			SetCommandForTransferLength(
-				pCdb, pDevice->dwMaxTransferLength, &byTransferLen);
+			dwAdditionalTransferLen = pDirRec[nDirRecIdx].uiDirSize / pDevice->dwMaxTransferLength;
+			SetCommandForTransferLength(pCdb, pDevice->dwMaxTransferLength, &byTransferLen);
+			OutputLogA(fileMainInfo, "uiDirSize: %lu, byTransferLen: %d [L:%d]\n"
+				, pDevice->dwMaxTransferLength, byTransferLen, (INT)__LINE__);
+
 			for (DWORD n = 0; n < dwAdditionalTransferLen; n++) {
-				if (!ReadCDForDirectoryRecordDetail(pExtArg, pDevice, pDisc, pCdb
-					, lpBuf, byTransferLen, nDirPosNum, pDirRec, nDirRecIdx, &nDirIdx)) {
-					return FALSE;
+				if (!ReadCDForDirectoryRecordDetail(pExtArg, pDevice, pDisc, pCdb, nLBA
+					, lpBuf, byTransferLen, nDirPosNum, pDirRec, &nDirIdx)) {
+					continue;
+//					return FALSE;
 				}
+				nLBA += byTransferLen;
 			}
 			dwLastTblSize =	pDirRec[nDirRecIdx].uiDirSize % pDevice->dwMaxTransferLength;
 			SetCommandForTransferLength(pCdb, dwLastTblSize, &byTransferLen);
-			if (!ReadCDForDirectoryRecordDetail(pExtArg, pDevice, pDisc, pCdb
-				, lpBuf, byTransferLen, nDirPosNum, pDirRec, nDirRecIdx, &nDirIdx)) {
-				return FALSE;
+			OutputLogA(fileMainInfo, "uiDirSize: %lu, byTransferLen: %d [L:%d]\n"
+				, dwLastTblSize, byTransferLen, (INT)__LINE__);
+
+			if (!ReadCDForDirectoryRecordDetail(pExtArg, pDevice, pDisc, pCdb, nLBA
+				, lpBuf, byTransferLen, nDirPosNum, pDirRec, &nDirIdx)) {
+				continue;
+//				return FALSE;
 			}
 		}
 		else {
-			SetCommandForTransferLength(
-				pCdb, pDirRec[nDirRecIdx].uiDirSize, &byTransferLen);
-			if (!ReadCDForDirectoryRecordDetail(pExtArg, pDevice, pDisc, pCdb
-				, lpBuf, byTransferLen, nDirPosNum, pDirRec, nDirRecIdx, &nDirIdx)) {
-				return FALSE;
+			SetCommandForTransferLength(pCdb, pDirRec[nDirRecIdx].uiDirSize, &byTransferLen);
+			OutputLogA(fileMainInfo, "uiDirSize: %u, byTransferLen: %d [L:%d]\n"
+				, pDirRec[nDirRecIdx].uiDirSize, byTransferLen, (INT)__LINE__);
+
+			if (!ReadCDForDirectoryRecordDetail(pExtArg, pDevice, pDisc, pCdb, nLBA
+				, lpBuf, byTransferLen, nDirPosNum, pDirRec, &nDirIdx)) {
+				continue;
+//				return FALSE;
 			}
 		}
 		OutputString(_T("\rReading DirectoryRecord %4d/%4d"), nDirRecIdx + 1, nDirPosNum);
@@ -1803,6 +1811,108 @@ VOID ProcessReturnedContinue(
 	pDiscPerSector->subQ.prev.nAbsoluteTime++;
 }
 
+BOOL ReadCDForCheckingSecuROM(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	PDISC pDisc,
+	PDISC_PER_SECTOR pDiscPerSector,
+	LPBYTE lpCmd
+)
+{
+#ifdef _DEBUG
+	WORD w = (WORD)GetCrc16CCITT(10, &pDiscPerSector->subcode.present[12]);
+	OutputSubInfoWithLBALogA(
+		"CRC-16 is original:[%02x%02x], recalc:[%04x] and XORed with 0x8001:[%02x%02x]\n"
+		, -1, 0, pDiscPerSector->subcode.present[22], pDiscPerSector->subcode.present[23]
+		, w, pDiscPerSector->subcode.present[22] ^ 0x80, pDiscPerSector->subcode.present[23] ^ 0x01);
+#endif
+	if (pExtArg->byIntentionalSub && pDisc->PROTECT.byExist != securomV1 &&
+		(pDiscPerSector->subcode.present[12] == 0x41 || pDiscPerSector->subcode.present[12] == 0x61)) {
+		WORD crc16 = (WORD)GetCrc16CCITT(10, &pDiscPerSector->subcode.present[12]);
+		WORD bufcrc = MAKEWORD(pDiscPerSector->subcode.present[23], pDiscPerSector->subcode.present[22]);
+		INT nRLBA = MSFtoLBA(BcdToDec(pDiscPerSector->subcode.present[15])
+			, BcdToDec(pDiscPerSector->subcode.present[16]), BcdToDec(pDiscPerSector->subcode.present[17]));
+		INT nALBA = MSFtoLBA(BcdToDec(pDiscPerSector->subcode.present[19])
+			, BcdToDec(pDiscPerSector->subcode.present[20]), BcdToDec(pDiscPerSector->subcode.present[21]));
+
+		if (crc16 != bufcrc) {
+			OutputSubInfoWithLBALogA(
+				"Detected intentional error. CRC-16 is original:[%02x%02x] and XORed with 0x8001:[%02x%02x] "
+				, -1, 0, pDiscPerSector->subcode.present[22] ^ 0x80, pDiscPerSector->subcode.present[23] ^ 0x01
+				, pDiscPerSector->subcode.present[22], pDiscPerSector->subcode.present[23]);
+			OutputSubInfoLogA(
+				"RMSF[%02x:%02x:%02x] AMSF[%02x:%02x:%02x]\n"
+				, pDiscPerSector->subcode.present[15], pDiscPerSector->subcode.present[16], pDiscPerSector->subcode.present[17]
+				, pDiscPerSector->subcode.present[19], pDiscPerSector->subcode.present[20], pDiscPerSector->subcode.present[21]);
+
+			OutputLogA(standardOut | fileDisc, "Detected intentional subchannel in LBA -1 => SecuROM Type4 (a.k.a. NEW)\n");
+			OutputIntentionalSubchannel(-1, &pDiscPerSector->subcode.present[12]);
+			pDisc->PROTECT.byExist = securomV4;
+			pDiscPerSector->subQ.prev.nRelativeTime = -1;
+			pDiscPerSector->subQ.prev.nAbsoluteTime = 149;
+		}
+		else if ((nRLBA == 167295 || nRLBA == 0) && nALBA == 150) {
+			OutputSubInfoWithLBALogA(
+				"Detected shifted sub. RMSF[%02x:%02x:%02x] AMSF[%02x:%02x:%02x]\n"
+				, -1, 0, pDiscPerSector->subcode.present[15], pDiscPerSector->subcode.present[16], pDiscPerSector->subcode.present[17]
+				, pDiscPerSector->subcode.present[19], pDiscPerSector->subcode.present[20], pDiscPerSector->subcode.present[21]);
+
+			OutputLogA(standardOut | fileDisc, "Detected intentional subchannel in LBA -1 => SecuROM Type3 (a.k.a. NEW)\n");
+			OutputIntentionalSubchannel(-1, &pDiscPerSector->subcode.present[12]);
+			pDisc->PROTECT.byExist = securomV3;
+			if (pDisc->SUB.nSubchOffset) {
+				pDisc->SUB.nSubchOffset -= 1;
+			}
+			pDiscPerSector->subQ.prev.nRelativeTime = -1;
+			pDiscPerSector->subQ.prev.nAbsoluteTime = 149;
+		}
+		else if (pDisc->SCSI.nAllLength > 5000) {
+			if (!ExecReadCD(pExtArg, pDevice, lpCmd, 5000, pDiscPerSector->data.present,
+				pDevice->TRANSFER.dwAllBufLen, _T(__FUNCTION__), __LINE__)) {
+				return FALSE;
+			}
+			AlignRowSubcode(pDiscPerSector->data.present + pDevice->TRANSFER.dwBufSubOffset, pDiscPerSector->subcode.present);
+			nRLBA = MSFtoLBA(BcdToDec(pDiscPerSector->subcode.present[15])
+				, BcdToDec(pDiscPerSector->subcode.present[16]), BcdToDec(pDiscPerSector->subcode.present[17]));
+			nALBA = MSFtoLBA(BcdToDec(pDiscPerSector->subcode.present[19])
+				, BcdToDec(pDiscPerSector->subcode.present[20]), BcdToDec(pDiscPerSector->subcode.present[21]));
+			if (nRLBA == 5001 && nALBA == 5151) {
+				OutputLogA(standardOut | fileDisc, "Detected intentional subchannel in LBA 5000 => SecuROM Type2 (a.k.a. NEW)\n");
+				pDisc->PROTECT.byExist = securomV2;
+			}
+			else if (pDisc->PROTECT.byExist == securomTmp) {
+				pDisc->PROTECT.byExist = securomV1;
+			}
+			else {
+				for (INT nTmpLBA = 40000; nTmpLBA < 45800; nTmpLBA++) {
+					if (pDisc->SCSI.nAllLength > nTmpLBA) {
+						if (!ExecReadCD(pExtArg, pDevice, lpCmd, nTmpLBA, pDiscPerSector->data.present,
+							pDevice->TRANSFER.dwAllBufLen, _T(__FUNCTION__), __LINE__)) {
+							return FALSE;
+						}
+						WORD reCalcCrc16 = (WORD)GetCrc16CCITT(10, &pDiscPerSector->subcode.present[12]);
+						WORD reCalcXorCrc16 = (WORD)(reCalcCrc16 ^ 0x0080);
+						if (pDiscPerSector->subcode.present[22] == HIBYTE(reCalcXorCrc16) &&
+							pDiscPerSector->subcode.present[23] == LOBYTE(reCalcXorCrc16)) {
+							OutputLogA(standardOut | fileDisc
+								, "Detected intentional subchannel in LBA %d => SecuROM Type1 (a.k.a. OLD)\n", nTmpLBA);
+							pDisc->PROTECT.byExist = securomV1;
+							break;
+						}
+					}
+				}
+				if (pDisc->PROTECT.byExist != securomV1) {
+					OutputLogA(standardOut | fileDisc, "SecuROM sector not found \n");
+				}
+			}
+		}
+		else {
+			OutputLogA(standardOut | fileDisc, "SecuROM sector not found \n");
+		}
+	}
+	return TRUE;
+}
+
 BOOL ReadCDAll(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
@@ -1956,51 +2066,8 @@ BOOL ReadCDAll(
 			pDiscPerSector->subQ.prev.byTrackNum = 1;
 			pDiscPerSector->subQ.prev.nAbsoluteTime = 149;
 		}
-#ifdef _DEBUG
-		WORD w = (WORD)GetCrc16CCITT(10, &pDiscPerSector->subcode.present[12]);
-		OutputSubInfoWithLBALogA(
-			"CRC-16 is original:[%02x%02x], recalc:[%04x] and XORed with 0x8001:[%02x%02x]\n"
-			, -1, 0, pDiscPerSector->subcode.present[22], pDiscPerSector->subcode.present[23]
-			, w, pDiscPerSector->subcode.present[22] ^ 0x80, pDiscPerSector->subcode.present[23] ^ 0x01);
-#endif
-		if (pExtArg->byIntentionalSub && pDiscPerSector->subcode.present[12] == 0x41) {
-			WORD crc16 = (WORD)GetCrc16CCITT(10, &pDiscPerSector->subcode.present[12]);
-			WORD bufcrc = MAKEWORD(pDiscPerSector->subcode.present[23], pDiscPerSector->subcode.present[22]);
-			// SecuROM NEW (V4.x or higher)
-			if (crc16 != bufcrc) {
-				OutputSubInfoWithLBALogA(
-					"Intentional error exists. CRC-16 is original:[%02x%02x] and XORed with 0x8001:[%02x%02x] "
-					, -1, 0, pDiscPerSector->subcode.present[22] ^ 0x80, pDiscPerSector->subcode.present[23] ^ 0x01
-					, pDiscPerSector->subcode.present[22], pDiscPerSector->subcode.present[23]);
-				OutputSubInfoLogA(
-					"SubQ[12-23]: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n"
-					, pDiscPerSector->subcode.present[12], pDiscPerSector->subcode.present[13]
-					, pDiscPerSector->subcode.present[14], pDiscPerSector->subcode.present[15]
-					, pDiscPerSector->subcode.present[16], pDiscPerSector->subcode.present[17]
-					, pDiscPerSector->subcode.present[18], pDiscPerSector->subcode.present[19]
-					, pDiscPerSector->subcode.present[20], pDiscPerSector->subcode.present[21]
-					, pDiscPerSector->subcode.present[22], pDiscPerSector->subcode.present[23]);
-				if (pDisc->PROTECT.byExist == no) {
-					OutputLogA(standardOut | fileDisc, "Detected intentional subchannel in LBA -1 => SecuRomNEW\n")
-					pDisc->PROTECT.byExist = securomNew;
-				}
-				OutputIntentionalSubchannel(-1, &pDiscPerSector->subcode.present[12]);
-				pDiscPerSector->subQ.prev.nRelativeTime = 0;
-				pDiscPerSector->subQ.prev.nAbsoluteTime = 149;
-			}
-			else {
-				if (!ExecReadCD(pExtArg, pDevice, lpCmd, 5000, pDiscPerSector->data.present,
-					pDevice->TRANSFER.dwAllBufLen, _T(__FUNCTION__), __LINE__)) {
-					throw FALSE;
-				}
-				AlignRowSubcode(pDiscPerSector->data.present + pDevice->TRANSFER.dwBufSubOffset, pDiscPerSector->subcode.present);
-				if (pDiscPerSector->subcode.present[19] == 0x01 &&
-					pDiscPerSector->subcode.present[20] == 0x08 &&
-					pDiscPerSector->subcode.present[21] == 0x51) {
-					OutputLogA(standardOut | fileDisc, "Detected intentional shifted subchannel in LBA 5000 => SecuRomOLD_NEW\n")
-						pDisc->PROTECT.byExist = securomOldNew;
-				}
-			}
+		if (!ReadCDForCheckingSecuROM(pExtArg, pDevice, pDisc, pDiscPerSector, lpCmd)) {
+			throw FALSE;
 		}
 		// special fix end
 
@@ -2189,13 +2256,11 @@ BOOL ReadCDAll(
 			}
 
 			if (pExtArg->byReverse) {
-				OutputString(_T("\rCreated img (LBA) %6d/%6d"),
-					nLBA, pDisc->SCSI.nFirstLBAofDataTrack);
+				OutputString(_T("\rCreated img (LBA) %6d/%6d"), nLBA, pDisc->SCSI.nFirstLBAofDataTrack);
 				nLBA--;
 			}
 			else {
-				OutputString(_T("\rCreated img (LBA) %6d/%6d"),
-					nLBA, pDisc->SCSI.nAllLength - 1);
+				OutputString(_T("\rCreated img (LBA) %6d/%6d"),	nLBA, pDisc->SCSI.nAllLength - 1);
 				if (nFirstLBA == -76) {
 					nLBA = nFirstLBA;
 					if (!bReadOK) {
