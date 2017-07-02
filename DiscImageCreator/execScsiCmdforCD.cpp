@@ -18,34 +18,6 @@
 // These global variable is set at prngcd.cpp
 extern unsigned char scrambled_table[2352];
 
-BOOL ExecReadCD(
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	LPBYTE lpCmd,
-	INT nLBA,
-	LPBYTE lpBuf,
-	DWORD dwBufSize,
-	LPCTSTR pszFuncName,
-	LONG lLineNum
-	)
-{
-	REVERSE_BYTES(&lpCmd[2], &nLBA);
-	BYTE byScsiStatus = 0;
-	if (!ScsiPassThroughDirect(pExtArg, pDevice, lpCmd, CDB12GENERIC_LENGTH
-		, lpBuf, dwBufSize, &byScsiStatus, pszFuncName, lLineNum)
-		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-		OutputLogA(standardError | fileMainError,
-			"lpCmd: %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x\n"
-			"dwBufSize: %lu\n"
-			, lpCmd[0], lpCmd[1], lpCmd[2], lpCmd[3], lpCmd[4], lpCmd[5]
-			, lpCmd[6], lpCmd[7], lpCmd[8], lpCmd[9], lpCmd[10], lpCmd[11]
-			, dwBufSize
-			);
-		return FALSE;
-	}
-	return TRUE;
-}
-
 BOOL ExecSearchingOffset(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
@@ -65,17 +37,17 @@ BOOL ExecSearchingOffset(
 		, lpBuf, dwBufSize, _T(__FUNCTION__), __LINE__)) {
 		if (*pExecType == gd) {
 			OutputErrorString(
-				_T("Couldn't read a data sector at scrambled mode [Opcode: %#02x, C2flag: %x, SubCh: %x]\n")
+				_T("Couldn't read a data sector at scrambled mode [OpCode: %#02x, C2flag: %x, SubCode: %x]\n")
 					, lpCmd[0], (lpCmd[9] & 0x6) >> 1, lpCmd[10]);
 		}
 		else {
 			if ((pExtArg->byD8 || pDevice->byPlxtrDrive) && !pExtArg->byBe) {
 				OutputLogA(standardError | fileDrive,
-					"This drive doesn't support [Opcode: %#02x, SubCh: %x]\n", lpCmd[0], lpCmd[10]);
+					"This drive doesn't support [OpCode: %#02x, SubCode: %x]\n", lpCmd[0], lpCmd[10]);
 			}
 			else {
 				OutputErrorString(
-					_T("This drive can't read a data sector at scrambled mode [Opcode: %#02x, C2flag: %x, SubCh: %x]\n")
+					_T("This drive can't read a data sector at scrambled mode [OpCode: %#02x, C2flag: %x, SubCode: %x]\n")
 					, lpCmd[0], (lpCmd[9] & 0x6) >> 1, lpCmd[10]);
 			}
 		}
@@ -84,12 +56,12 @@ BOOL ExecSearchingOffset(
 	else {
 		if ((pExtArg->byD8 || pDevice->byPlxtrDrive) && !pExtArg->byBe) {
 			OutputLogA(standardOut | fileDrive,
-				"This drive supports [Opcode: %#02x, SubCh: %x]\n", lpCmd[0], lpCmd[10]);
+				"This drive supports [OpCode: %#02x, SubCode: %x]\n", lpCmd[0], lpCmd[10]);
 		}
 		else {
 			if (*pExecType != data) {
 				OutputLogA(standardOut | fileDrive,
-					"This drive can read a data sector at scrambled mode [Opcode: %#02x, C2flag: %x, SubCh: %x]\n"
+					"This drive can read a data sector at scrambled mode [OpCode: %#02x, C2flag: %x, SubCode: %x]\n"
 					, lpCmd[0], (lpCmd[9] & 0x6) >> 1, lpCmd[10]);
 			}
 		}
@@ -846,7 +818,89 @@ BOOL ReadCDForCheckingSubRtoW(
 	FreeAndNull(pBuf);
 	return bRet;
 }
+#if 0
+LRESULT WINAPI CabinetCallback(
+	IN PVOID pMyInstallData,
+	IN UINT Notification,
+	IN UINT Param1,
+	IN UINT Param2
+) {
+	UNREFERENCED_PARAMETER(Param2);
+	LRESULT lRetVal = NO_ERROR;
+	TCHAR szTarget[_MAX_PATH];
+	FILE_IN_CABINET_INFO *pInfo = NULL;
+	FILEPATHS *pFilePaths = NULL;
 
+	memcpy(szTarget, pMyInstallData, _MAX_PATH);
+	switch (Notification) {
+	case SPFILENOTIFY_CABINETINFO:
+		break;
+	case SPFILENOTIFY_FILEINCABINET:
+		pInfo = (FILE_IN_CABINET_INFO *)Param1;
+		lstrcat(szTarget, pInfo->NameInCabinet);
+		lstrcpy(pInfo->FullTargetName, szTarget);
+		lRetVal = FILEOP_DOIT;  // Extract the file.
+		break;
+	case SPFILENOTIFY_NEEDNEWCABINET: // Unexpected.
+		break;
+	case SPFILENOTIFY_FILEEXTRACTED:
+		pFilePaths = (FILEPATHS *)Param1;
+		printf("Extracted %s\n", pFilePaths->Target);
+		break;
+	case SPFILENOTIFY_FILEOPDELAYED:
+		break;
+	}
+	return lRetVal;
+}
+
+BOOL IterateCabinet(
+	PTSTR pszCabFile
+) {
+	_TCHAR szExtractdir[_MAX_PATH];
+	if (!GetCurrentDirectory(sizeof(szExtractdir) / sizeof(szExtractdir[0]), szExtractdir)) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		return FALSE;
+	}
+	lstrcat(szExtractdir, "\\extract_cab\\");
+	_TCHAR szExtractdirFind[_MAX_PATH];
+	memcpy(szExtractdirFind, szExtractdir, _MAX_PATH);
+	lstrcat(szExtractdirFind, "*");
+
+	if (PathFileExists(szExtractdir)) {
+		WIN32_FIND_DATA fd;
+		HANDLE hFind = FindFirstFile(szExtractdirFind, &fd);
+		if (INVALID_HANDLE_VALUE == hFind) {
+			return FALSE;
+		}
+		do {
+			if (0 != _tcscmp(fd.cFileName, _T("."))
+				&& 0 != _tcscmp(fd.cFileName, _T(".."))) {
+				TCHAR szFoundFilePathName[_MAX_PATH];
+				_tcsncpy(szFoundFilePathName, szExtractdir, _MAX_PATH);
+				_tcsncat(szFoundFilePathName, fd.cFileName, _MAX_PATH);
+
+				if (!(FILE_ATTRIBUTE_DIRECTORY & fd.dwFileAttributes)) {
+					if (!DeleteFile(szFoundFilePathName)) {
+						FindClose(hFind);
+						return FALSE;
+					}
+				}
+			}
+		} while (FindNextFile(hFind, &fd));
+		FindClose(hFind);
+	}
+	if (!MakeSureDirectoryPathExists(szExtractdir)) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		return FALSE;
+	}
+	if (!SetupIterateCabinet(pszCabFile,
+		0, (PSP_FILE_CALLBACK)CabinetCallback, szExtractdir)) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		return FALSE;
+	}
+	return TRUE;
+}
+#endif
 BOOL ReadCDForCheckingExe(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
@@ -860,17 +914,31 @@ BOOL ReadCDForCheckingExe(
 	DWORD dwSize = DISC_RAW_READ_SIZE;
 	SetCommandForTransferLength(pCdb, dwSize, &byTransferLen);
 	for (INT n = 0; pDisc->PROTECT.pExtentPosForExe[n] != 0; n++) {
-		if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)pCdb, pDisc->PROTECT.pExtentPosForExe[n],
-			lpBuf, dwSize, _T(__FUNCTION__), __LINE__)) {
-//			return FALSE;
-			// FIFA 99 (Europe) on PX-5224A
-			// LBA[000000, 0000000], [F:ReadCDForCheckingExe][L:734]
-			//		OperationCode: 0xa8
-			//		ScsiStatus: 0x02 = CHECK_CONDITION
-			//		SenseData Key-Asc-Ascq: 03-02-83 = MEDIUM_ERROR - OTHER
-			//  =>  The reason is unknown...
-			continue;
+#if 0
+		if (strstr(pDisc->PROTECT.pNameForExe[n], ".CAB") || strstr(pDisc->PROTECT.pNameForExe[n], ".cab")) {
+			// Get the absPath of cab file from path table
+			IterateCabinet(pDisc->PROTECT.pNameForExe[n]);
+			IterateCabinet("C:\\test\\disk1\\1.cab");
+			// Search exe, dll from extracted file
+			// Open exe, dll
+			// Read
 		}
+		else {
+#endif
+			if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)pCdb, pDisc->PROTECT.pExtentPosForExe[n],
+				lpBuf, dwSize, _T(__FUNCTION__), __LINE__)) {
+//				return FALSE;
+				// FIFA 99 (Europe) on PX-5224A
+				// LBA[000000, 0000000], [F:ReadCDForCheckingExe][L:734]
+				//		OperationCode: 0xa8
+				//		ScsiStatus: 0x02 = CHECK_CONDITION
+				//		SenseData Key-Asc-Ascq: 03-02-83 = MEDIUM_ERROR - OTHER
+				//  =>  The reason is unknown...
+				continue;
+			}
+#if 0
+		}
+#endif
 		WORD wMagic = MAKEWORD(lpBuf[0], lpBuf[1]);
 		if (wMagic == IMAGE_DOS_SIGNATURE) {
 			PIMAGE_DOS_HEADER pIDh = (PIMAGE_DOS_HEADER)&lpBuf[0];
@@ -918,231 +986,6 @@ BOOL ReadCDForCheckingExe(
 	}
 	OutputString(_T("\n"));
 	return bRet;
-}
-
-BOOL ReadCDForDirectoryRecordDetail(
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc,
-	CDB::_READ12* pCdb,
-	INT nLBA,
-	LPBYTE lpBuf,
-	BYTE byTransferLen,
-	INT nDirPosNum,
-	PDIRECTORY_RECORD pDirRec,
-	LPINT pDirCnt
-	)
-{
-	if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)pCdb, nLBA, lpBuf,
-		(DWORD)(DISC_RAW_READ_SIZE * byTransferLen), _T(__FUNCTION__), __LINE__)) {
-		for (BYTE i = 0; i < byTransferLen; i++) {
-			OutputCDMain(fileMainInfo, lpBuf + DISC_RAW_READ_SIZE * i, nLBA + i, DISC_RAW_READ_SIZE);
-		}
-//		return FALSE;
-		return TRUE;
-	}
-	for (BYTE i = 0; i < byTransferLen; i++) {
-		OutputCDMain(fileMainInfo, lpBuf + DISC_RAW_READ_SIZE * i, nLBA + i, DISC_RAW_READ_SIZE);
-	}
-	UINT nOfs = 0;
-	for (INT nSectorNum = 0; nSectorNum < byTransferLen;) {
-		if (*(lpBuf + nOfs) == 0) {
-			break;
-		}
-		OutputVolDescLogA(
-			OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Directory Record), nLBA + nSectorNum, nLBA + nSectorNum);
-		for (;;) {
-			CHAR szCurDirName[MAX_FNAME_FOR_VOLUME] = { 0 };
-			LPBYTE lpDirRec = lpBuf + nOfs;
-			if (lpDirRec[0] >= 0x22) {
-				DWORD dwExtentPos = GetSizeOrDwordForVolDesc(lpDirRec + 2);
-				DWORD dwDataLen = GetSizeOrDwordForVolDesc(lpDirRec + 10);
-				OutputFsDirectoryRecord(
-					pExtArg, pDisc, lpDirRec, dwExtentPos, dwDataLen, szCurDirName);
-				OutputVolDescLogA("\n");
-				nOfs += lpDirRec[0];
-
-				if (lpDirRec[25] & 0x02) {
-					for (INT b = *pDirCnt; b < nDirPosNum; b++) {
-						if (/*dwExtentPos == (DWORD)nLBA &&*/
-							!_strnicmp(szCurDirName, pDirRec[*pDirCnt].szDirName, MAX_FNAME_FOR_VOLUME)) {
-							pDirRec[*pDirCnt].uiDirSize = PadSizeForVolDesc(dwDataLen);
-							*pDirCnt = *pDirCnt + 1;
-							break;
-						}
-					}
-				}
-				if (nOfs == (UINT)(DISC_RAW_READ_SIZE * (nSectorNum + 1))) {
-					nSectorNum++;
-					break;
-				}
-			}
-			else {
-				UINT zeroPaddingNum = DISC_RAW_READ_SIZE * (nSectorNum + 1) - nOfs;
-				if (nSectorNum < byTransferLen) {
-					UINT j = 0;
-					for (; j < zeroPaddingNum; j++) {
-						if (lpDirRec[j] != 0) {
-							break;
-						}
-					}
-					if (j == zeroPaddingNum) {
-						nOfs += zeroPaddingNum;
-						nSectorNum++;
-						break;
-					}
-				}
-				else {
-					break;
-				}
-			}
-		}
-	}
-	return TRUE;
-}
-
-BOOL ReadCDForDirectoryRecord(
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc,
-	CDB::_READ12* pCdb,
-	LPBYTE lpBuf,
-	DWORD dwRootDataLen,
-	BYTE byTransferLen,
-	PDIRECTORY_RECORD pDirRec,
-	INT nDirPosNum
-	)
-{
-	INT nDirIdx = 1;
-	DWORD dwAdditionalTransferLen = 0;
-	DWORD dwLastTblSize = 0;
-	// for CD-I
-	if (dwRootDataLen == 0) {
-		if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)pCdb, (INT)pDirRec[0].uiPosOfDir, lpBuf,
-			(DWORD)(DISC_RAW_READ_SIZE * byTransferLen), _T(__FUNCTION__), __LINE__)) {
-			return FALSE;
-		}
-		dwRootDataLen = PadSizeForVolDesc(GetSizeOrDwordForVolDesc(lpBuf + 10));
-	}
-	pDirRec[0].uiDirSize = dwRootDataLen;
-	for (INT nDirRecIdx = 0; nDirRecIdx < nDirPosNum; nDirRecIdx++) {
-		INT nLBA = (INT)pDirRec[nDirRecIdx].uiPosOfDir;
-		if (pDirRec[nDirRecIdx].uiDirSize > pDevice->dwMaxTransferLength) {
-			// [FMT] Psychic Detective Series Vol. 4 - Orgel (Japan) (v1.0)
-			// [FMT] Psychic Detective Series Vol. 5 - Nightmare (Japan)
-			// [IBM - PC compatible] Maria 2 - Jutai Kokuchi no Nazo (Japan) (Disc 1)
-			// [IBM - PC compatible] PC Game Best Series Vol. 42 - J.B. Harold Series - Kiss of Murder - Satsui no Kuchizuke (Japan)
-			// [SS] Madou Monogatari (Japan)
-			// and more
-			dwAdditionalTransferLen = pDirRec[nDirRecIdx].uiDirSize / pDevice->dwMaxTransferLength;
-			SetCommandForTransferLength(pCdb, pDevice->dwMaxTransferLength, &byTransferLen);
-			OutputLogA(fileMainInfo, "uiDirSize: %lu, byTransferLen: %d [L:%d]\n"
-				, pDevice->dwMaxTransferLength, byTransferLen, (INT)__LINE__);
-
-			for (DWORD n = 0; n < dwAdditionalTransferLen; n++) {
-				if (!ReadCDForDirectoryRecordDetail(pExtArg, pDevice, pDisc, pCdb, nLBA
-					, lpBuf, byTransferLen, nDirPosNum, pDirRec, &nDirIdx)) {
-					continue;
-//					return FALSE;
-				}
-				nLBA += byTransferLen;
-			}
-			dwLastTblSize =	pDirRec[nDirRecIdx].uiDirSize % pDevice->dwMaxTransferLength;
-			SetCommandForTransferLength(pCdb, dwLastTblSize, &byTransferLen);
-			OutputLogA(fileMainInfo, "uiDirSize: %lu, byTransferLen: %d [L:%d]\n"
-				, dwLastTblSize, byTransferLen, (INT)__LINE__);
-
-			if (!ReadCDForDirectoryRecordDetail(pExtArg, pDevice, pDisc, pCdb, nLBA
-				, lpBuf, byTransferLen, nDirPosNum, pDirRec, &nDirIdx)) {
-				continue;
-//				return FALSE;
-			}
-		}
-		else {
-			SetCommandForTransferLength(pCdb, pDirRec[nDirRecIdx].uiDirSize, &byTransferLen);
-			OutputLogA(fileMainInfo, "uiDirSize: %u, byTransferLen: %d [L:%d]\n"
-				, pDirRec[nDirRecIdx].uiDirSize, byTransferLen, (INT)__LINE__);
-
-			if (!ReadCDForDirectoryRecordDetail(pExtArg, pDevice, pDisc, pCdb, nLBA
-				, lpBuf, byTransferLen, nDirPosNum, pDirRec, &nDirIdx)) {
-				continue;
-//				return FALSE;
-			}
-		}
-		OutputString(_T("\rReading DirectoryRecord %4d/%4d"), nDirRecIdx + 1, nDirPosNum);
-	}
-	OutputString(_T("\n"));
-	return TRUE;
-}
-
-BOOL ReadCDForPathTableRecord(
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc,
-	CDB::_READ12* pCdb,
-	LPBYTE lpBuf,
-	DWORD dwPathTblSize,
-	DWORD dwPathTblPos,
-	LPBYTE byTransferLen,
-	PDIRECTORY_RECORD pDirRec,
-	LPINT nDirPosNum
-	)
-{
-	if (dwPathTblSize > DISC_RAW_READ_SIZE) {
-		SetCommandForTransferLength(pCdb, dwPathTblSize, byTransferLen);
-	}
-	if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)pCdb, (INT)dwPathTblPos, lpBuf,
-		(DWORD)(DISC_RAW_READ_SIZE * *byTransferLen), _T(__FUNCTION__), __LINE__)) {
-		return FALSE;
-	}
-	OutputFsPathTableRecord(pDisc, lpBuf, dwPathTblPos,	dwPathTblSize, pDirRec, nDirPosNum);
-	OutputVolDescLogA("Directory Num: %u\n", *nDirPosNum);
-	return TRUE;
-}
-
-BOOL ReadCDForVolumeDescriptor(
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc,
-	BYTE byIdx,
-	CDB::_READ12* pCdb,
-	LPBYTE lpBuf,
-	LPBOOL pPVD,
-	LPDWORD dwPathTblSize,
-	LPDWORD dwPathTblPos,
-	LPDWORD dwRootDataLen
-	)
-{
-	INT nPVD = pDisc->SCSI.lpFirstLBAListOnToc[byIdx] + 16;
-	INT nTmpLBA = nPVD;
-	for (;;) {
-		if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)pCdb, nTmpLBA, lpBuf,
-			DISC_RAW_READ_SIZE, _T(__FUNCTION__), __LINE__)) {
-			return FALSE;
-		}
-		if (!strncmp((LPCH)&lpBuf[1], "CD001", 5) ||
-			(pDisc->SCSI.byCdi && !strncmp((LPCH)&lpBuf[1], "CD-I ", 5))) {
-			if (nTmpLBA == nPVD) {
-				*dwPathTblSize = GetSizeOrDwordForVolDesc(lpBuf + 132);
-				*dwPathTblPos = MAKEDWORD(MAKEWORD(lpBuf[140], lpBuf[141]),
-					MAKEWORD(lpBuf[142], lpBuf[143]));
-				if (*dwPathTblPos == 0) {
-					*dwPathTblPos = MAKEDWORD(MAKEWORD(lpBuf[151], lpBuf[150]),
-						MAKEWORD(lpBuf[149], lpBuf[148]));
-				}
-				*dwRootDataLen = GetSizeOrDwordForVolDesc(lpBuf + 166);
-				if (*dwRootDataLen > 0) {
-					*dwRootDataLen = PadSizeForVolDesc(*dwRootDataLen);
-				}
-				*pPVD = TRUE;
-			}
-			OutputFsVolumeDescriptor(pExtArg, pDisc, lpBuf, nTmpLBA++);
-		}
-		else {
-			break;
-		}
-	}
-	return TRUE;
 }
 
 BOOL ReadCDFor3DODirectory(
@@ -1230,25 +1073,24 @@ BOOL ReadCDForFileSystem(
 			try {
 				// general data track disc
 				DWORD dwPathTblSize, dwPathTblPos, dwRootDataLen = 0;
-				if (!ReadCDForVolumeDescriptor(pExtArg, pDevice, pDisc, i, &cdb
+				if (!ReadVolumeDescriptor(pExtArg, pDevice, pDisc, i, &cdb
 					, lpBuf, &bPVD, &dwPathTblSize, &dwPathTblPos, &dwRootDataLen)) {
 					throw FALSE;
 				}
 				if (bPVD) {
 					// TODO: buf size
-					pDirRec = (PDIRECTORY_RECORD)calloc(4096, sizeof(DIRECTORY_RECORD));
+					pDirRec = (PDIRECTORY_RECORD)calloc(8192, sizeof(DIRECTORY_RECORD));
 					if (!pDirRec) {
 						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 						throw FALSE;
 					}
 					INT nDirPosNum = 0;
-					BYTE byTransferLen = 1;
-					if (!ReadCDForPathTableRecord(pExtArg, pDevice, pDisc, &cdb, lpBuf
-						, dwPathTblSize, dwPathTblPos, &byTransferLen, pDirRec, &nDirPosNum)) {
+					if (!ReadPathTableRecord(pExtArg, pDevice, pDisc, &cdb
+						, dwPathTblSize, dwPathTblPos, pDirRec, &nDirPosNum)) {
 						throw FALSE;
 					}
-					if (!ReadCDForDirectoryRecord(pExtArg, pDevice, pDisc, &cdb
-						, lpBuf, dwRootDataLen, byTransferLen, pDirRec, nDirPosNum)) {
+					if (!ReadDirectoryRecord(pExtArg, pDevice, pDisc, &cdb
+						, lpBuf, dwRootDataLen, pDirRec, nDirPosNum)) {
 						throw FALSE;
 					}
 					if (!ReadCDForCheckingExe(pExtArg, pDevice, pDisc, &cdb, lpBuf)) {
@@ -1378,7 +1220,7 @@ BOOL ExecCheckingByteOrder(
 	BOOL bRet = TRUE;
 	if (!ExecReadCD(pExtArg, pDevice, lpCmd, 0, lpBuf, dwBufLen, _T(__FUNCTION__), __LINE__)) {
 		OutputLogA(standardError | fileDrive,
-			"This drive doesn't support [Opcode: %#02x, C2flag: %x, SubCh: %x]\n"
+			"This drive doesn't support [OpCode: %#02x, C2flag: %x, SubCode: %x]\n"
 			, lpCmd[0], (lpCmd[9] & 0x6) >> 1, lpCmd[10]);
 		bRet = FALSE;
 	}
@@ -2031,7 +1873,7 @@ BOOL ReadCDAll(
 			memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
 		}
 		OutputLog(standardOut | fileDisc,
-			_T("Set opcode: %#x, subcode: %02x(%s)\n"), lpCmd[0], lpCmd[10], szSubCode);
+			_T("Set OpCode: %#02x, SubCode: %x(%s)\n"), lpCmd[0], lpCmd[10], szSubCode);
 
 		BYTE lpPrevSubcode[CD_RAW_READ_SUBCODE_SIZE] = { 0 };
 		// to get prevSubQ
@@ -2543,7 +2385,7 @@ BOOL ReadCDPartial(
 			memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
 		}
 		OutputLog(standardOut | fileDisc,
-			_T("Set opcode: %#x, subcode: %02x(%s)\n"), lpCmd[0], lpCmd[10], szSubCode);
+			_T("Set OpCode: %#02x, SubCode: %x(%s)\n"), lpCmd[0], lpCmd[10], szSubCode);
 
 		BYTE lpPrevSubcode[CD_RAW_READ_SUBCODE_SIZE] = { 0 };
 		if (pDisc->SUB.nSubchOffset) { // confirmed PXS88T, TS-H353A

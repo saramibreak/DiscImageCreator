@@ -371,3 +371,13 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - improved: Subchannel ripping of SecuROM
 - fixed: Reading DirectoryRecord
 - fixed: Output unnecessary hash
+
+*2017-07-02
+- added: Reading TOC ATIP for CD-R, CD-RW
+- added: Reading path table, directory record for DVD
+- changed: Directory record size from 4096 to 8192
+- changed: Some log message
+- changed: Sector Outputted to log to IsoBuster-like sector
+- fixed: Ripping range of SecuROM
+- fixed: Reading path table record
+- fixed: data sector is descrambled when sync and mode valid

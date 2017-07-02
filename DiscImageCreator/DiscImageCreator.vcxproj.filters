@@ -93,6 +93,9 @@
     <ClInclude Include="_external\prngcd.h">
       <Filter>_external</Filter>
     </ClInclude>
+    <ClInclude Include="xml.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DiscImageCreator.cpp">
@@ -160,6 +163,9 @@
     </ClCompile>
     <ClCompile Include="_external\prngcd.cpp">
       <Filter>_external</Filter>
+    </ClCompile>
+    <ClCompile Include="xml.cpp">
+      <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

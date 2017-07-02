@@ -1175,7 +1175,6 @@ VOID DescrambleMainChannelAll(
 			if (!pExtArg->byReverse) {
 				lSeekPtr = nFirstLBA;
 			}
-//			INT nMode = 0;
 			for (; nFirstLBA <= nLastLBA; nFirstLBA++, lSeekPtr++) {
 				// ファイルを読み書き両用モードで開いている時は 注意が必要です。
 				// 読み込みを行った後に書き込みを行う場合やその逆を行う場合は、 
@@ -1185,40 +1184,21 @@ VOID DescrambleMainChannelAll(
 				// 嘘の データを読み込む場合があります。
 				fseek(fpImg, lSeekPtr * CD_RAW_SECTOR_SIZE, SEEK_SET);
 				fread(aSrcBuf, sizeof(BYTE), sizeof(aSrcBuf), fpImg);
-#if 1
-				if (nFirstLBA == nLastLBA) {
-//					OutputCDMain(fileMainInfo, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
-					// Bundesliga Manager Champions-Pack (Germany)
-					if (!(aSrcBuf[0xf] & 0x60)) {
-						OutputMainInfoWithLBALogA("This sector isn't scrambled. Skip descrambling\n", nFirstLBA, k + 1);
-						continue;
-					}
-				}
-#endif
-				fseek(fpImg, -CD_RAW_SECTOR_SIZE, SEEK_CUR);
 				if (IsValidMainDataHeader(aSrcBuf)) {
-					for (INT n = 0; n < CD_RAW_SECTOR_SIZE; n++) {
-						aSrcBuf[n] ^= lpScrambledBuf[n];
+					if (aSrcBuf[0x0f] == 0x61 || aSrcBuf[0x0f] == 0x62) {
+						fseek(fpImg, -CD_RAW_SECTOR_SIZE, SEEK_CUR);
+						for (INT n = 0; n < CD_RAW_SECTOR_SIZE; n++) {
+							aSrcBuf[n] ^= lpScrambledBuf[n];
+						}
+						fwrite(aSrcBuf, sizeof(BYTE), sizeof(aSrcBuf), fpImg);
 					}
-					fwrite(aSrcBuf, sizeof(BYTE), sizeof(aSrcBuf), fpImg);
-//					nMode = aSrcBuf[15];
-				}
-#if 0 // for SafeDisc 3.15.XXX
-				else if (pExtArg->byReadContinue) {
-					BYTE m, s, f;
-					LBAtoMSF(nFirstLBA + 150, &m, &s, &f);
-					fwrite(g_aSyncHeader, sizeof(BYTE), sizeof(g_aSyncHeader), fpImg);
-					fputc(DecToBcd(m), fpImg);
-					fputc(DecToBcd(s), fpImg);
-					fputc(DecToBcd(f), fpImg);
-					fputc(nMode, fpImg);
-					for (INT i = 0; i < 2336; i++) {
-						fputc(0x55, fpImg);
+					else {
+						OutputMainInfoWithLBALogA("Invalid mode. Skip descrambling\n", nFirstLBA, k + 1);
+						OutputCDMain(fileMainInfo, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
 					}
 				}
-#endif
 				else {
-					OutputMainErrorWithLBALogA("Sync is invalid\n", nFirstLBA, 0);
+					OutputMainErrorWithLBALogA("Invalid sync. Skip descrambling\n", nFirstLBA, k + 1);
 					OutputCDMain(fileMainError, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
 				}
 				OutputString(
@@ -1248,12 +1228,22 @@ VOID DescrambleMainChannelPartial(
 		// 嘘の データを読み込む場合があります。
 		fseek(fpImg, lSeekPtr * CD_RAW_SECTOR_SIZE, SEEK_SET);
 		fread(aSrcBuf, sizeof(BYTE), sizeof(aSrcBuf), fpImg);
-		fseek(fpImg, -CD_RAW_SECTOR_SIZE, SEEK_CUR);
 		if (IsValidMainDataHeader(aSrcBuf)) {
-			for (INT n = 0; n < CD_RAW_SECTOR_SIZE; n++) {
-				aSrcBuf[n] ^= lpScrambledBuf[n];
+			if (aSrcBuf[0x0f] == 0x61 || aSrcBuf[0x0f] == 0x62) {
+				fseek(fpImg, -CD_RAW_SECTOR_SIZE, SEEK_CUR);
+				for (INT n = 0; n < CD_RAW_SECTOR_SIZE; n++) {
+					aSrcBuf[n] ^= lpScrambledBuf[n];
+				}
+				fwrite(aSrcBuf, sizeof(BYTE), sizeof(aSrcBuf), fpImg);
 			}
-			fwrite(aSrcBuf, sizeof(BYTE), sizeof(aSrcBuf), fpImg);
+			else {
+				OutputMainInfoWithLBALogA("Invalid mode. Skip descrambling\n", nStartLBA, 0);
+				OutputCDMain(fileMainInfo, aSrcBuf, nStartLBA, CD_RAW_SECTOR_SIZE);
+			}
+		}
+		else {
+			OutputMainErrorWithLBALogA("Invalid sync. Skip descrambling\n", nStartLBA, 0);
+			OutputCDMain(fileMainError, aSrcBuf, nStartLBA, CD_RAW_SECTOR_SIZE);
 		}
 		OutputString(
 			_T("\rDescrambling data sector of img (LBA) %6d/%6d"), nStartLBA, nEndLBA);

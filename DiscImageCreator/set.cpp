@@ -437,14 +437,10 @@ VOID SetAndOutputTocCDText(
 			if (byAlbumCnt != 0 && z < byAlbumCnt) {
 				strncpy(pDisc->SCSI.pszTitle[nTitleCnt], tmp, strlen(tmp));
 				if (nTitleCnt == 0) {
-					OutputDiscLogA(
-						"\tAlbum Name: %s\n", 
-						pDisc->SCSI.pszTitle[nTitleCnt]);
+					OutputDiscLogA("\tAlbum Name: %s\n", pDisc->SCSI.pszTitle[nTitleCnt]);
 				}
 				else {
-					OutputDiscLogA(
-						"\t Song Name: %s\n", 
-						pDisc->SCSI.pszTitle[nTitleCnt]);
+					OutputDiscLogA("\t Song Name: %s\n", pDisc->SCSI.pszTitle[nTitleCnt]);
 				}
 				nTitleCnt++;
 			}
@@ -452,14 +448,10 @@ VOID SetAndOutputTocCDText(
 				z < (size_t)(byAlbumCnt + byPerformerCnt)) {
 				strncpy(pDisc->SCSI.pszPerformer[nPerformerCnt], tmp, strlen(tmp));
 				if (nPerformerCnt == 0) {
-					OutputDiscLogA(
-						"\tAlbum Performer: %s\n", 
-						pDisc->SCSI.pszPerformer[nPerformerCnt]);
+					OutputDiscLogA("\tAlbum Performer: %s\n", pDisc->SCSI.pszPerformer[nPerformerCnt]);
 				}
 				else {
-					OutputDiscLogA(
-						"\t Song Performer: %s\n", 
-						pDisc->SCSI.pszPerformer[nPerformerCnt]);
+					OutputDiscLogA("\t Song Performer: %s\n", pDisc->SCSI.pszPerformer[nPerformerCnt]);
 				}
 				nPerformerCnt++;
 			}
@@ -467,14 +459,10 @@ VOID SetAndOutputTocCDText(
 				z < (size_t)(byAlbumCnt + byPerformerCnt + bySongwriterCnt)) {
 				strncpy(pDisc->SCSI.pszSongWriter[nSongwriterCnt], tmp, strlen(tmp));
 				if (nSongwriterCnt == 0) {
-					OutputDiscLogA(
-						"\tAlbum SongWriter: %s\n", 
-						pDisc->SCSI.pszSongWriter[nSongwriterCnt]);
+					OutputDiscLogA("\tAlbum SongWriter: %s\n", pDisc->SCSI.pszSongWriter[nSongwriterCnt]);
 				}
 				else {
-					OutputDiscLogA(
-						"\t      SongWriter: %s\n", 
-						pDisc->SCSI.pszSongWriter[nSongwriterCnt]);
+					OutputDiscLogA("\t      SongWriter: %s\n", pDisc->SCSI.pszSongWriter[nSongwriterCnt]);
 				}
 				nSongwriterCnt++;
 			}

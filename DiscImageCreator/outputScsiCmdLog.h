@@ -22,6 +22,10 @@ VOID OutputGetConfigurationFeatureNumber(
 	DWORD dwAllLen
 	);
 
+VOID OutputCDAtip(
+	PCDROM_TOC_ATIP_DATA_BLOCK pAtip
+	);
+
 VOID OutputCDTextOther(
 	PCDROM_TOC_CD_TEXT_DATA_BLOCK pDesc,
 	WORD wTocTextEntries,

@@ -114,35 +114,17 @@ VOID OutputFsVolumeStructureDescriptorFormat(
 }
 
 VOID OutputFsVolumeRecognitionSequence(
-	PEXT_ARG pExtArg,
-	PDISC pDisc,
 	LPBYTE lpBuf,
 	INT nLBA
 	)
 {
-	if (lpBuf[0] == 1 && !strncmp((LPCH)&lpBuf[1], "CD001", 5)) {
+	if (lpBuf[0] == 0 && !strncmp((LPCH)&lpBuf[1], "BOOT2", 5)) {
 		OutputFsVolumeStructureDescriptorFormat(lpBuf, nLBA);
-		OutputFsVolumeDescriptorForISO9660(pExtArg, pDisc, lpBuf);
-	}
-	else if (lpBuf[0] == 2 && !strncmp((LPCH)&lpBuf[1], "CD001", 5)) {
-		OutputFsVolumeStructureDescriptorFormat(lpBuf, nLBA);
-		OutputVolDescLogA("\t                                 Volume Flags: %u\n", lpBuf[7]);
-		OutputFsVolumeDescriptorForJoliet(pExtArg, pDisc, lpBuf);
-	}
-	else if (lpBuf[0] == 0xff && !strncmp((LPCH)&lpBuf[1], "CD001", 5)) {
-		OutputFsVolumeStructureDescriptorFormat(lpBuf, nLBA);
+		OutputFsBootDescriptor(lpBuf);
 	}
 	else if (lpBuf[0] == 0 && !strncmp((LPCH)&lpBuf[1], "BEA01", 5)) {
 		OutputFsVolumeStructureDescriptorFormat(lpBuf, nLBA);
 		OutputFsBeginningExtendedAreaDescriptor(lpBuf);
-	}
-	else if (lpBuf[0] == 0 && !strncmp((LPCH)&lpBuf[1], "TEA01", 5)) {
-		OutputFsVolumeStructureDescriptorFormat(lpBuf, nLBA);
-		OutputFsTerminatingExtendedAreaDescriptor(lpBuf);
-	}
-	else if (lpBuf[0] == 0 && !strncmp((LPCH)&lpBuf[1], "BOOT2", 5)) {
-		OutputFsVolumeStructureDescriptorFormat(lpBuf, nLBA);
-		OutputFsBootDescriptor(lpBuf);
 	}
 	else if (lpBuf[0] == 0 && !strncmp((LPCH)&lpBuf[1], "NSR02", 5)) {
 		OutputFsVolumeStructureDescriptorFormat(lpBuf, nLBA);
@@ -151,6 +133,10 @@ VOID OutputFsVolumeRecognitionSequence(
 	else if (lpBuf[0] == 0 && !strncmp((LPCH)&lpBuf[1], "NSR03", 5)) {
 		OutputFsVolumeStructureDescriptorFormat(lpBuf, nLBA);
 		OutputFsNSRDescriptor(lpBuf);
+	}
+	else if (lpBuf[0] == 0 && !strncmp((LPCH)&lpBuf[1], "TEA01", 5)) {
+		OutputFsVolumeStructureDescriptorFormat(lpBuf, nLBA);
+		OutputFsTerminatingExtendedAreaDescriptor(lpBuf);
 	}
 }
 

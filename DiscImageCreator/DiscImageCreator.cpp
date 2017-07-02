@@ -13,6 +13,7 @@
 #include "get.h"
 #include "init.h"
 #include "output.h"
+#include "xml.h"
 #include "_external\prngcd.h"
 
 #define DEFAULT_REREAD_VAL			(1024)
@@ -127,396 +128,6 @@ int soundBeep(int nRet)
 	return TRUE;
 }
 
-int outputHash(CComPtr<IXmlWriter> pWriter, _TCHAR* pszFullPath, LPCTSTR szExt, UCHAR uiTrack, UCHAR uiLastTrack)
-{
-	_TCHAR pszFnameAndExt[_MAX_PATH] = { 0 };
-	FILE* fp = CreateOrOpenFile(
-		pszFullPath, NULL, NULL, pszFnameAndExt, NULL, szExt, _T("rb"), uiTrack, uiLastTrack);
-	if (!fp) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return FALSE;
-	}
-	UINT64 ui64FileSize = GetFileSize64(0, fp);
-	DWORD dwSectorSizeOne = CD_RAW_SECTOR_SIZE;
-	if (!_tcsncmp(szExt, _T(".iso"), 4)) {
-		dwSectorSizeOne = DISC_RAW_READ_SIZE;
-	}
-	UINT64 ui64SectorSizeAll = ui64FileSize / (UINT64)dwSectorSizeOne;
-
-	if (ui64FileSize > dwSectorSizeOne * 10) {
-		MD5_CTX context = { 0 };
-		SHA1Context sha = { 0 };
-		CalcInit(&context, &sha);
-
-		BYTE data[CD_RAW_SECTOR_SIZE] = { 0 };
-		DWORD crc32 = 0;
-		OutputString(_T("Calculating hash: %s\n"), pszFnameAndExt);
-		int nRet = TRUE;
-		// TODO: This code can more speed up! if reduce calling fread()
-		for (UINT64 i = 0; i < ui64SectorSizeAll; i++) {
-			fread(data, sizeof(BYTE), dwSectorSizeOne, fp);
-			nRet = CalcHash(&crc32, &context, &sha, data, dwSectorSizeOne);
-			if (!nRet) {
-				break;
-			}
-		}
-		FcloseAndNull(fp);
-		if (!nRet) {
-			return nRet;
-		}
-		BYTE digest[16] = { 0 };
-		BYTE Message_Digest[20] = { 0 };
-		if (CalcEnd(&context, &sha, digest, Message_Digest)) {
-			if (!_tcsncmp(szExt, _T(".img"), 4)) {
-#ifndef _DEBUG
-				OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(Hash(Whole image)));
-				OutputHashData(g_LogFile.fpDisc, pszFnameAndExt,
-					ui64FileSize, crc32, digest, Message_Digest);
-#endif
-			}
-			else {
-				HRESULT hr = S_OK;
-				if (FAILED(hr = pWriter->WriteStartElement(NULL, L"rom", NULL))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-					return FALSE;
-				}
-				WCHAR wszFnameAndExt[_MAX_PATH] = { 0 };
-#ifndef UNICODE
-				if (!MultiByteToWideChar(CP_ACP, 0
-					, pszFnameAndExt, sizeof(pszFnameAndExt) / sizeof(pszFnameAndExt[0])
-					, wszFnameAndExt, sizeof(wszFnameAndExt) / sizeof(wszFnameAndExt[0]))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					return FALSE;
-				}
-#else
-				size_t size = sizeof(wszFnameAndExt) / sizeof(wszFnameAndExt[0]);
-				wcsncpy(wszFnameAndExt, pszFnameAndExt, size);
-				wszFnameAndExt[size - 1] = 0;
-#endif
-				if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"name", NULL, wszFnameAndExt))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-					return FALSE;
-				}
-				WCHAR buf[128] = { 0 };
-				_snwprintf(buf, sizeof(buf) / sizeof(buf[0]), L"%llu", ui64FileSize);
-				buf[127] = 0;
-				if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"size", NULL, buf))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-					return FALSE;
-				}
-				_snwprintf(buf, sizeof(buf) / sizeof(buf[0]), L"%08lx", crc32);
-				buf[127] = 0;
-				if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"crc", NULL, buf))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-					return FALSE;
-				}
-				_snwprintf(buf, sizeof(buf) / sizeof(buf[0])
-					, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
-					, digest[0], digest[1], digest[2], digest[3], digest[4], digest[5], digest[6], digest[7]
-					, digest[8], digest[9], digest[10], digest[11], digest[12], digest[13], digest[14], digest[15]);
-				buf[127] = 0;
-				if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"md5", NULL, buf))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-					return FALSE;
-				}
-				_snwprintf(buf, sizeof(buf) / sizeof(buf[0])
-					, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
-					, Message_Digest[0], Message_Digest[1], Message_Digest[2], Message_Digest[3], Message_Digest[4]
-					, Message_Digest[5], Message_Digest[6], Message_Digest[7], Message_Digest[8], Message_Digest[9]
-					, Message_Digest[10], Message_Digest[11], Message_Digest[12], Message_Digest[13], Message_Digest[14]
-					, Message_Digest[15], Message_Digest[16], Message_Digest[17], Message_Digest[18], Message_Digest[19]);
-				buf[127] = 0;
-				if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"sha1", NULL, buf))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-					return FALSE;
-				}
-				if (FAILED(hr = pWriter->WriteEndElement())) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-					return FALSE;
-				}
-			}
-		}
-	}
-	return TRUE;
-}
-
-int readWriteDat(PEXEC_TYPE pExecType, _TCHAR* pszFullPath, UCHAR uiLastTrack)
-{
-	WCHAR wszDir[_MAX_DIR] = { 0 };
-#ifndef UNICODE
-	if (!MultiByteToWideChar(CP_ACP, 0
-		, s_szDir, sizeof(s_szDir) / sizeof(s_szDir[0])
-		, wszDir, sizeof(wszDir) / sizeof(wszDir[0]))) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return FALSE;
-	}
-#else
-	size_t size = sizeof(wszDir) / sizeof(wszDir[0]);
-	wcsncpy(wszDir, s_szDir, size);
-	wszDir[size - 1] = 0;
-#endif
-	LPWCH p = wcsrchr(wszDir, L'\\');
-	*p = NULL;
-	p = wcsrchr(wszDir, L'\\');
-	LPWCH pCurrentDir = p + 1;
-
-	WCHAR wszDefaultDat[_MAX_PATH] = { 0 };
-	if (!GetModuleFileNameW(NULL, wszDefaultDat, sizeof(wszDefaultDat) / sizeof(wszDefaultDat[0]))) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return FALSE;
-	}
-	if (!PathRemoveFileSpecW(wszDefaultDat)) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return FALSE;
-	}
-	if (!PathAppendW(wszDefaultDat, L"default.dat")) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return FALSE;
-	}
-
-	HRESULT hr = S_OK;
-	CComPtr<IXmlReader> pReader;
-	CComPtr<IStream> pReadStream;
-	if (FAILED(hr = SHCreateStreamOnFileW(wszDefaultDat, STGM_READ, &pReadStream))) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-		return FALSE;
-	}
-	if (FAILED(hr = CreateXmlReader(__uuidof(IXmlReader), reinterpret_cast<void**>(&pReader), 0))) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-		return FALSE;
-	}
-	if (FAILED(hr = pReader->SetInput(pReadStream))) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-		return FALSE;
-	}
-	if (FAILED(hr = pReader->SetProperty(XmlReaderProperty_DtdProcessing, DtdProcessing_Parse))) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-		return FALSE;
-	}
-
-	WCHAR wszPathForDat[_MAX_PATH] = { 0 };
-	_TCHAR szPathWithoutExtension[_MAX_FNAME] = { 0 };
-	_sntprintf(szPathWithoutExtension, _MAX_FNAME, _T("%s\\%s\\%s"), s_szDrive, s_szDir, s_szFname);
-	szPathWithoutExtension[_MAX_FNAME - 1] = 0;
-#ifndef UNICODE
-	if(!MultiByteToWideChar(CP_ACP, 0
-		, szPathWithoutExtension, sizeof(szPathWithoutExtension) / sizeof(szPathWithoutExtension[0])
-		, wszPathForDat, sizeof(wszPathForDat) / sizeof(wszPathForDat[0]))) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return FALSE;
-	}
-#else
-	size = sizeof(wszPathForDat) / sizeof(wszPathForDat[0]);
-	wcsncpy(wszPathForDat, szPathWithoutExtension, size);
-	wszPathForDat[size - 1] = 0;
-#endif
-	if(!PathAddExtensionW(wszPathForDat, L".dat")) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return FALSE;
-	}
-
-	CComPtr<IXmlWriter> pWriter;
-	CComPtr<IStream> pWriteStream;
-	if (FAILED(hr = SHCreateStreamOnFileW(wszPathForDat, STGM_CREATE | STGM_WRITE, &pWriteStream))) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-		return FALSE;
-	}
-	if (FAILED(hr = CreateXmlWriter(__uuidof(IXmlWriter), reinterpret_cast<void**>(&pWriter), 0))) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-		return FALSE;
-	}
-	if (FAILED(hr = pWriter->SetOutput(pWriteStream))) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-		return FALSE;
-	}
-	if (FAILED(hr = pWriter->SetProperty(XmlWriterProperty_Indent, TRUE))) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-		return FALSE;
-	}
-
-	if (FAILED(hr = pWriter->WriteStartDocument(XmlStandalone_Omit))) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-		return FALSE;
-	}
-	if (FAILED(hr = pWriter->WriteDocType(L"datafile"
-		, L"-//Logiqx//DTD ROM Management Datafile//EN", L"http://www.logiqx.com/Dats/datafile.dtd", NULL))) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-		return FALSE;
-	}
-	
-	XmlNodeType nodeType;
-	LPCWSTR pwszLocalName = NULL;
-	LPCWSTR pwszValue = NULL;
-	while (S_OK == pReader->Read(&nodeType)) {
-		switch (nodeType) {
-		case XmlNodeType_Element:
-			if (FAILED(hr = pReader->GetLocalName(&pwszLocalName, NULL))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-				return FALSE;
-			}
-			else if (!pwszLocalName) {
-				OutputErrorString(_T("[L:%d] LocalName is NULL\n"), (INT)__LINE__);
-				return FALSE;
-			}
-			if (!wcsncmp(pwszLocalName, L"game", 4)) {
-				if (S_FALSE == pReader->MoveToFirstAttribute()) {
-					break;
-				}
-				do {
-					LPCWSTR pwszAttributeName = NULL;
-					if (FAILED(hr = pReader->GetLocalName(&pwszAttributeName, NULL))) {
-						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-						OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-						return FALSE;
-					}
-					else if (!pwszAttributeName) {
-						OutputErrorString(_T("[L:%d] AttributeName is NULL\n"), (INT)__LINE__);
-						return FALSE;
-					}
-					if (!wcsncmp(pwszAttributeName, L"name", 4)) {
-						if (FAILED(hr = pWriter->WriteStartElement(NULL, pwszLocalName, NULL))) {
-							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-							OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-							return FALSE;
-						}
-						if (FAILED(hr = pWriter->WriteAttributeString(NULL, pwszAttributeName, NULL, pCurrentDir))) {
-							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-							OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-							return FALSE;
-						}
-					}
-				} while (S_OK == pReader->MoveToNextAttribute());
-			}
-			else {
-				if (FAILED(hr = pWriter->WriteStartElement(NULL, pwszLocalName, NULL))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-					return FALSE;
-				}
-			}
-			break;
-		case XmlNodeType_Text:
-			if (FAILED(hr = pReader->GetValue(&pwszValue, NULL))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-				return FALSE;
-			}
-			else if (!pwszValue) {
-				OutputErrorString(_T("Error GetValue, NULL, L:%d\n"), (INT)__LINE__);
-				return FALSE;
-			}
-			if (!wcsncmp(pwszLocalName, L"description", 11) && !wcsncmp(pwszValue, L"foo", 3)) {
-				if (FAILED(hr = pWriter->WriteString(pCurrentDir))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-					return FALSE;
-				}
-			}
-			else {
-				if (FAILED(hr = pWriter->WriteString(pwszValue))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-					return FALSE;
-				}
-			}
-			break;
-		case XmlNodeType_EndElement:
-			if (FAILED(hr = pReader->GetLocalName(&pwszLocalName, NULL))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-				return FALSE;
-			}
-			else if (!pwszLocalName) {
-				OutputErrorString(_T("[L:%d] LocalName is NULL\n"), (INT)__LINE__);
-				return FALSE;
-			}
-			if (!wcsncmp(pwszLocalName, L"game", 4)) {
-				if (*pExecType == dvd) {
-					if (!outputHash(pWriter, pszFullPath, _T(".iso"), 1, 1)) {
-						return FALSE;
-					}
-				}
-				else {
-					if (!outputHash(pWriter, pszFullPath, _T(".img"), 1, 1)) {
-						return FALSE;
-					}
-					for (UCHAR uiTrack = 1; uiTrack <= uiLastTrack; uiTrack++) {
-						if (!outputHash(pWriter, pszFullPath, _T(".bin"), uiTrack, uiLastTrack)) {
-							return FALSE;
-						}
-					}
-				}
-
-			}
-			if (FAILED(hr = pWriter->WriteEndElement())) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-				return FALSE;
-			}
-			break;
-		case XmlNodeType_None:
-			break;
-		case XmlNodeType_Attribute:
-			break;
-		case XmlNodeType_CDATA:
-			break;
-		case XmlNodeType_ProcessingInstruction:
-			break;
-		case XmlNodeType_Comment:
-			break;
-		case XmlNodeType_DocumentType:
-			break;
-		case XmlNodeType_Whitespace:
-#if 0
-			if (FAILED(hr = pWriter->WriteWhitespace(L"\n"))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-				return FALSE;
-			}
-			if (FAILED(hr = pWriter->WriteWhitespace(L"\t"))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-				return FALSE;
-			}
-#endif
-			break;
-		case XmlNodeType_XmlDeclaration:
-			break;
-		default:
-			break;
-		}
-	}
-	if (FAILED(hr = pWriter->WriteEndDocument())) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-		return FALSE;
-	}
-	if (FAILED(hr = pWriter->Flush())) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
-		return FALSE;
-	}
-	return TRUE;
-}
-
 int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath)
 {
 	BOOL bRet = TRUE;
@@ -616,7 +227,6 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 				}
 				else {
 					ReadDriveInformation(pExecType, pExtArg, &devData, pDisc, s_dwSpeed);
-					ReadDiscInformation(pExtArg, &devData);
 					if (*pExecType != dvd) {
 						if (!ReadTOC(pExtArg, pExecType, &devData, pDisc)) {
 							throw FALSE;
@@ -637,6 +247,13 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 								OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 								throw FALSE;
 							}
+						}
+						if (discData.SCSI.wCurrentMedia == ProfileCdrom) {
+							ReadDiscInformation(pExtArg, &devData);
+						}
+						else if (discData.SCSI.wCurrentMedia == ProfileCdRecordable ||
+							discData.SCSI.wCurrentMedia == ProfileCdRewritable) {
+							ReadTOCAtip(pExtArg, &devData);
 						}
 						InitMainDataHeader(pExecType, pExtArg, &mainHeader, s_nStartLBA);
 						if (!InitSubData(pExecType, &pDisc)) {
@@ -702,11 +319,13 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 								if (!ReadCDForFileSystem(pExtArg, &devData, pDisc)) {
 									throw FALSE;
 								}
+#if 0
 								if (pExtArg->byReadContinue && pDisc->PROTECT.byExist == no) {
 									OutputString(
 										_T("[WARNING] Protection can't be detected. /rc is ignored.\n"));
 									pExtArg->byReadContinue = FALSE;
 								}
+#endif
 							}
 						}
 						if (*pExecType == cd) {
@@ -757,7 +376,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 						}
 					}
 					if (bRet && (*pExecType == cd || *pExecType == dvd || *pExecType == gd)) {
-						bRet = readWriteDat(pExecType, pszFullPath, discData.SCSI.toc.LastTrack);
+						bRet = ReadWriteDat(pExecType, pszFullPath, discData.SCSI.toc.LastTrack, s_szDrive, s_szDir, s_szFname);
 					}
 				}
 			}
@@ -869,7 +488,7 @@ int SetOptionS(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
 		pExtArg->dwSubAddionalNum = _tcstoul(argv[(*i)++], &endptr, 10);
 		if (*endptr) {
-			OutputErrorString(_T("Bad arg: [%s] Please integer\n"), endptr);
+			OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 			return FALSE;
 		}
 	}
@@ -887,7 +506,7 @@ int SetOptionRc(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
 		pExtArg->dwTimeoutNum = _tcstoul(argv[(*i)++], &endptr, 10);
 		if (*endptr) {
-			OutputErrorString(_T("Bad arg: [%s] Please integer\n"), endptr);
+			OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 			return FALSE;
 		}
 	}
@@ -906,13 +525,13 @@ int SetOptionC2(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
 		pExtArg->dwMaxRereadNum = _tcstoul(argv[(*i)++], &endptr, 10);
 		if (*endptr) {
-			OutputErrorString(_T("Bad arg: [%s] Please integer\n"), endptr);
+			OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 			return FALSE;
 		}
 		if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
 			pExtArg->dwMaxC2ErrorNum = _tcstoul(argv[(*i)++], &endptr, 10) * 2;
 			if (*endptr) {
-				OutputErrorString(_T("Bad arg: [%s] Please integer\n"), endptr);
+				OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 				return FALSE;
 			}
 			else if (pExtArg->dwMaxC2ErrorNum == 0) {
@@ -924,7 +543,7 @@ int SetOptionC2(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 			if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
 				pExtArg->dwRereadSpeedNum = _tcstoul(argv[(*i)++], &endptr, 10);
 				if (*endptr) {
-					OutputErrorString(_T("Bad arg: [%s] Please integer\n"), endptr);
+					OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 					return FALSE;
 				}
 			}
@@ -992,7 +611,7 @@ int SetOptionA(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
 		pExtArg->nAudioCDOffsetNum = _tcstol(argv[(*i)++], &endptr, 10);
 		if (*endptr) {
-			OutputErrorString(_T("Bad arg: [%s] Please integer\n"), endptr);
+			OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 			return FALSE;
 		}
 	}
@@ -1015,7 +634,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 		if (argc >= 5 && cmdLen == 2 && !_tcsncmp(argv[1], _T("cd"), 2)) {
 			s_dwSpeed = _tcstoul(argv[4], &endptr, 10);
 			if (*endptr) {
-				OutputErrorString(_T("Bad arg: [%s] Please integer\n"), endptr);
+				OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 				return FALSE;
 			}
 			pExtArg->dwSubAddionalNum = 1;
@@ -1094,7 +713,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 		else if (argc >= 5 && cmdLen == 2 && !_tcsncmp(argv[1], _T("gd"), 2)) {
 			s_dwSpeed = _tcstoul(argv[4], &endptr, 10);
 			if (*endptr) {
-				OutputErrorString(_T("Bad arg: [%s] Please integer\n"), endptr);
+				OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 				return FALSE;
 			}
 			pExtArg->dwSubAddionalNum = 0;
@@ -1142,7 +761,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 		else if (argc >= 5 && cmdLen == 3 && !_tcsncmp(argv[1], _T("dvd"), 3)) {
 			s_dwSpeed = _tcstoul(argv[4], &endptr, 10);
 			if (*endptr) {
-				OutputErrorString(_T("Bad arg: [%s] Please integer\n"), endptr);
+				OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 				return FALSE;
 			}
 			for (INT i = 6; i <= argc; i++) {
@@ -1168,17 +787,17 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			cmdLen == 5 && !_tcsncmp(argv[1], _T("audio"), 5))) {
 			s_dwSpeed = _tcstoul(argv[4], &endptr, 10);
 			if (*endptr) {
-				OutputErrorString(_T("Bad arg: [%s] Please integer\n"), endptr);
+				OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 				return FALSE;
 			}
 			s_nStartLBA = _tcstol(argv[5], &endptr, 10);
 			if (*endptr) {
-				OutputErrorString(_T("Bad arg: [%s] Please integer\n"), endptr);
+				OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 				return FALSE;
 			}
 			s_nEndLBA = _tcstol(argv[6], &endptr, 10);
 			if (*endptr) {
-				OutputErrorString(_T("Bad arg: [%s] Please integer\n"), endptr);
+				OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 				return FALSE;
 			}
 			pExtArg->dwSubAddionalNum = 1;
@@ -1381,7 +1000,7 @@ void printUsage(void)
 		_T("\t/nl\tNot fix SubQ (RMSF, AMSF, CRC) (LBA 14100 - 16199)\n")
 		_T("\t   \t                               (LBA 42000 - 44399)\n")
 		_T("\t\t\tFor PlayStation LibCrypt discs\n")
-		_T("\t/ns\tNot fix SubQ (RMSF, AMSF, CRC) (LBA 0 - 7, 5000 - 18499)\n")
+		_T("\t/ns\tNot fix SubQ (RMSF, AMSF, CRC) (LBA 0 - 7, 5000 - 18799)\n")
 		_T("\t   \t                            or (LBA 30800 - 34799)\n")
 		_T("\t   \t                            or (LBA 40000 - 45799)\n")
 		_T("\t\t\tFor SecuROM\n")

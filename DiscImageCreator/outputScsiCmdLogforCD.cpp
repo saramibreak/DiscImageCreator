@@ -178,6 +178,14 @@ VOID OutputFsDirectoryRecord(
 					p = strstr(fname, ".DLL");
 					if (!p) {
 						p = strstr(fname, ".dll");
+#if 0
+						if (!p) {
+							p = strstr(fname, ".CAB");
+							if (!p) {
+								p = strstr(fname, ".cab");
+							}
+						}
+#endif
 					}
 				}
 			}
@@ -588,6 +596,11 @@ VOID OutputFsPathTableRecord(
 				i++;
 			}
 			*nDirPosNum = *nDirPosNum + 1;
+		}
+		else {
+			OutputVolDescLogA(
+				"\t     Length of Directory Identifier: %u\n", pDirRec[*nDirPosNum].uiDirNameLen);
+			break;
 		}
 	}
 }
@@ -1213,16 +1226,13 @@ VOID OutputCDC2Error296(
 #ifdef _DEBUG
 	UNREFERENCED_PARAMETER(type);
 #endif
-	OutputLogA(type,
-		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(C2 error)
-		"\t               +0 +1 +2 +3 +4 +5 +6 +7\n"
-		, nLBA, nLBA);
+	OutputLogA(type, OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(C2 error)
+		"       +0 +1 +2 +3 +4 +5 +6 +7\n", nLBA, nLBA);
 
 	for (INT i = 0; i < CD_RAW_READ_C2_SIZE; i += 8) {
-		OutputLogA(type,
-			"\t%3x(%3d, %4d) %02x %02x %02x %02x %02x %02x %02x %02x\n",
-			i, i, i * 8, lpBuf[i], lpBuf[i + 1], lpBuf[i + 2], lpBuf[i + 3],
-			lpBuf[i + 4], lpBuf[i + 5], lpBuf[i + 6], lpBuf[i + 7]);
+		OutputLogA(type, "%04X : %02X %02X %02X %02X %02X %02X %02X %02X\n"
+			, i, lpBuf[i], lpBuf[i + 1], lpBuf[i + 2], lpBuf[i + 3]
+			, lpBuf[i + 4], lpBuf[i + 5], lpBuf[i + 6], lpBuf[i + 7]);
 	}
 }
 
@@ -1236,17 +1246,20 @@ VOID OutputCDMain(
 #ifdef _DEBUG
 	UNREFERENCED_PARAMETER(type);
 #endif
-	OutputLogA(type,
-		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Main Channel)
-		"\t          +0 +1 +2 +3 +4 +5 +6 +7 +8 +9 +A +B +C +D +E +F\n"
-		, nLBA, nLBA);
+	OutputLogA(type, OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Main Channel)
+		"       +0 +1 +2 +3 +4 +5 +6 +7  +8 +9 +A +B +C +D +E +F\n", nLBA, nLBA);
 
 	for (INT i = 0; i < nSize; i += 16) {
 		OutputLogA(type,
-			"\t%3x(%4d) %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
-			i, i, lpBuf[i], lpBuf[i + 1], lpBuf[i + 2], lpBuf[i + 3], lpBuf[i + 4], lpBuf[i + 5],
-			lpBuf[i + 6], lpBuf[i + 7], lpBuf[i + 8], lpBuf[i + 9], lpBuf[i + 10], lpBuf[i + 11],
-			lpBuf[i + 12], lpBuf[i + 13], lpBuf[i + 14], lpBuf[i + 15]);
+			"%04X : %02X %02X %02X %02X %02X %02X %02X %02X  %02X %02X %02X %02X %02X %02X %02X %02X   "
+			, i, lpBuf[i], lpBuf[i + 1], lpBuf[i + 2], lpBuf[i + 3], lpBuf[i + 4], lpBuf[i + 5]
+			, lpBuf[i + 6], lpBuf[i + 7], lpBuf[i + 8], lpBuf[i + 9], lpBuf[i + 10], lpBuf[i + 11]
+			, lpBuf[i + 12], lpBuf[i + 13], lpBuf[i + 14], lpBuf[i + 15]);
+		for (INT j = 0; j < 16; j++) {
+			INT ch = isprint(lpBuf[i + j]) ? lpBuf[i + j] : '.';
+			OutputLogA(type, "%c", ch);
+		}
+		OutputLogA(type, "\n");
 	}
 }
 
@@ -1256,14 +1269,13 @@ VOID OutputCDSub96Align(
 	)
 {
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Sub Channel)
-		"\t  +0 +1 +2 +3 +4 +5 +6 +7 +8 +9 +A +B\n"
-		, nLBA, nLBA);
+		"\t  +0 +1 +2 +3 +4 +5 +6 +7 +8 +9 +A +B\n", nLBA, nLBA);
 
 	for (INT i = 0, ch = 0x50; i < CD_RAW_READ_SUBCODE_SIZE; i += 12, ch++) {
 		OutputDiscLogA(
-			"\t%c %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
-			ch, lpBuf[i], lpBuf[i + 1], lpBuf[i + 2], lpBuf[i + 3], lpBuf[i + 4], lpBuf[i + 5],
-			lpBuf[i + 6], lpBuf[i + 7], lpBuf[i + 8], lpBuf[i + 9], lpBuf[i + 10], lpBuf[i + 11]);
+			"\t%c %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n"
+			, ch, lpBuf[i], lpBuf[i + 1], lpBuf[i + 2], lpBuf[i + 3], lpBuf[i + 4], lpBuf[i + 5]
+			, lpBuf[i + 6], lpBuf[i + 7], lpBuf[i + 8], lpBuf[i + 9], lpBuf[i + 10], lpBuf[i + 11]);
 	}
 }
 
@@ -1278,15 +1290,14 @@ VOID OutputCDSub96Raw(
 #endif
 	OutputLogA(type,
 		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Sub Channel(Raw))
-		"\t    +0 +1 +2 +3 +4 +5 +6 +7 +8 +9 +A +B +C +D +E +F\n"
-		, nLBA, nLBA);
+		"       +0 +1 +2 +3 +4 +5 +6 +7  +8 +9 +A +B +C +D +E +F\n", nLBA, nLBA);
 
 	for (INT i = 0; i < CD_RAW_READ_SUBCODE_SIZE; i += 16) {
 		OutputLogA(type,
-			"\t%3X %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
-			i, lpBuf[i], lpBuf[i + 1], lpBuf[i + 2], lpBuf[i + 3], lpBuf[i + 4], lpBuf[i + 5],
-			lpBuf[i + 6], lpBuf[i + 7], lpBuf[i + 8], lpBuf[i + 9], lpBuf[i + 10], lpBuf[i + 11],
-			lpBuf[i + 12], lpBuf[i + 13], lpBuf[i + 14], lpBuf[i + 15]);
+			"%04X : %02X %02X %02X %02X %02X %02X %02X %02X  %02X %02X %02X %02X %02X %02X %02X %02X\n"
+			, i, lpBuf[i], lpBuf[i + 1], lpBuf[i + 2], lpBuf[i + 3], lpBuf[i + 4], lpBuf[i + 5]
+			, lpBuf[i + 6], lpBuf[i + 7], lpBuf[i + 8], lpBuf[i + 9], lpBuf[i + 10], lpBuf[i + 11]
+			, lpBuf[i + 12], lpBuf[i + 13], lpBuf[i + 14], lpBuf[i + 15]);
 	}
 }
 

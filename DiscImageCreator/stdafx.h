@@ -30,7 +30,11 @@
 #include <io.h>
 #include <Shlobj.h>
 #endif
-
+#if 0
+// extract cab file
+#include <setupapi.h>
+#pragma comment (lib, "setupapi.lib")
+#endif
 // XML
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS
 #include <atlbase.h>
@@ -38,7 +42,7 @@
 #include <xmllite.h>
 #pragma comment(lib, "xmllite.lib")
 
-// SPTI(need Windows Driver Kit(wdk))
+// SPTI(needs Windows Driver Kit(wdk))
 #include <ntddcdrm.h> // inc\api
 #include <ntddcdvd.h> // inc\api
 #include <ntddmmc.h> // inc\api

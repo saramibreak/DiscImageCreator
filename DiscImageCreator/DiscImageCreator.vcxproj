@@ -314,6 +314,7 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="struct.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="xml.h" />
     <ClInclude Include="_external\crc16ccitt.h" />
     <ClInclude Include="_external\crc32.h" />
     <ClInclude Include="_external\md5.h" />
@@ -347,6 +348,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release_ANSI|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="xml.cpp" />
     <ClCompile Include="_external\crc16ccitt.cpp" />
     <ClCompile Include="_external\crc32.cpp" />
     <ClCompile Include="_external\md5c.cpp" />

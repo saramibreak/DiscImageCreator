@@ -1124,6 +1124,62 @@ VOID OutputGetConfigurationFeatureNumber(
 	}
 }
 
+VOID OutputCDAtip(
+	PCDROM_TOC_ATIP_DATA_BLOCK pAtip
+)
+{
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(TOC ATIP)
+		"\tCdrwReferenceSpeed: %u\n"
+		"\t        WritePower: %u\n"
+		"\t   UnrestrictedUse: %s\n"
+		, pAtip->CdrwReferenceSpeed
+		, pAtip->WritePower
+		, BOOLEAN_TO_STRING_YES_NO_A(pAtip->UnrestrictedUse)
+	);
+	switch (pAtip->IsCdrw)
+	{
+	case 0:	OutputDiscLogA("\t          DiscType: CD-R, DiscSubType: %u\n", pAtip->DiscSubType);
+		break;
+	case 1:	OutputDiscLogA("\t          DiscType: CD-RW, ");
+		switch (pAtip->DiscSubType)
+		{
+		case 0: OutputDiscLogA("DiscSubType: Standard Speed\n");
+			break;
+		case 1: OutputDiscLogA("DiscSubType: High Speed\n");
+			break;
+		default: OutputDiscLogA("DiscSubType: Unknown\n");
+			break;
+		}
+		break;
+	default: OutputDiscLogA("          DiscType: Unknown\n");
+		break;
+	}
+	OutputDiscLogA(
+		"\t         LeadInMsf: %02u:%02u:%02u\n"
+		"\t        LeadOutMsf: %02u:%02u:%02u\n"
+		, pAtip->LeadInMsf[0], pAtip->LeadInMsf[1], pAtip->LeadInMsf[2]
+		, pAtip->LeadOutMsf[0], pAtip->LeadOutMsf[1], pAtip->LeadOutMsf[2]
+	);
+	if (pAtip->A1Valid) {
+		OutputDiscLogA(
+			"\t A1Values: %02u:%02u:%02u\n"
+			, pAtip->A1Values[0], pAtip->A1Values[1], pAtip->A1Values[2]
+		);
+	}
+	if (pAtip->A2Valid) {
+		OutputDiscLogA(
+			"\t A2Values: %02u:%02u:%02u\n"
+			, pAtip->A2Values[0], pAtip->A2Values[1], pAtip->A2Values[2]
+		);
+	}
+	if (pAtip->A3Valid) {
+		OutputDiscLogA(
+			"\t A3Values: %02u:%02u:%02u\n"
+			, pAtip->A3Values[0], pAtip->A3Values[1], pAtip->A3Values[2]
+		);
+	}
+}
+
 VOID OutputCDTextOther(
 	PCDROM_TOC_CD_TEXT_DATA_BLOCK pDesc,
 	WORD wTocTextEntries,

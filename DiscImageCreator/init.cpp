@@ -353,6 +353,7 @@ BOOL InitLogFile(
 		strncpy(szDiscLogtxt, "_disc_dvd", size);
 		strncpy(szDriveLogtxt, "_drive_dvd", size);
 		strncpy(szVolDescLogtxt, "_volDesc_dvd", size);
+		strncpy(szMainInfoLogtxt, "_mainInfo_dvd", size);
 		strncpy(szMainErrorLogtxt, "_mainError_dvd", size);
 	}
 	else if (*pExecType == gd) {
@@ -394,17 +395,17 @@ BOOL InitLogFile(
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
+			if (NULL == (g_LogFile.fpMainInfo = CreateOrOpenFileA(
+				path, szMainInfoLogtxt, NULL, NULL, NULL, ".txt", "w", 0, 0))) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				throw FALSE;
+			}
 			if (NULL == (g_LogFile.fpMainError = CreateOrOpenFileA(
 				path, szMainErrorLogtxt, NULL, NULL, NULL, ".txt", "w", 0, 0))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
 			if (*pExecType != dvd) {
-				if (NULL == (g_LogFile.fpMainInfo = CreateOrOpenFileA(
-					path, szMainInfoLogtxt, NULL, NULL, NULL, ".txt", "w", 0, 0))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					throw FALSE;
-				}
 				if (NULL == (g_LogFile.fpSubInfo = CreateOrOpenFileA(
 					path, szSubInfoLogtxt, NULL, NULL, NULL, ".txt", "w", 0, 0))) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -553,9 +554,9 @@ VOID TerminateLogFile(
 	if (*pExecType != fd) {
 		FcloseAndNull(g_LogFile.fpDrive);
 		FcloseAndNull(g_LogFile.fpVolDesc);
+		FcloseAndNull(g_LogFile.fpMainInfo);
+		FcloseAndNull(g_LogFile.fpMainError);
 		if (*pExecType != dvd) {
-			FcloseAndNull(g_LogFile.fpMainInfo);
-			FcloseAndNull(g_LogFile.fpMainError);
 			FcloseAndNull(g_LogFile.fpSubInfo);
 			FcloseAndNull(g_LogFile.fpSubError);
 			if (pExtArg->byC2) {

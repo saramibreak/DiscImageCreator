@@ -9,8 +9,6 @@ VOID OutputFsVolumeDescriptorSequence(
 	);
 
 VOID OutputFsVolumeRecognitionSequence(
-	PEXT_ARG pExtArg,
-	PDISC pDisc,
 	LPBYTE lpBuf,
 	INT nLBA
 	);

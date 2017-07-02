@@ -292,13 +292,13 @@ BOOL IsValidIntentionalSubSector(
 			}
 		}
 		else if (pDisc->PROTECT.byExist == securomV3) {
-			if (0 <= nLBA && nLBA < 8 || 5000 <= nLBA && nLBA < 18500) {
+			if (0 <= nLBA && nLBA < 8 || 5000 <= nLBA && nLBA < 18800) {
 				bRet = TRUE;
 			}
 		}
 		else if (pDisc->PROTECT.byExist == securomV2 ||
 			pDisc->PROTECT.byExist == securomV4) {
-			if (5000 <= nLBA && nLBA < 18500) {
+			if (5000 <= nLBA && nLBA < 18800) {
 				bRet = TRUE;
 			}
 		}
