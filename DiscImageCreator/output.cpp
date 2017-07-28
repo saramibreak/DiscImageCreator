@@ -1185,17 +1185,32 @@ VOID DescrambleMainChannelAll(
 				fseek(fpImg, lSeekPtr * CD_RAW_SECTOR_SIZE, SEEK_SET);
 				fread(aSrcBuf, sizeof(BYTE), sizeof(aSrcBuf), fpImg);
 				if (IsValidMainDataHeader(aSrcBuf)) {
-					if (aSrcBuf[0x0f] == 0x61 || aSrcBuf[0x0f] == 0x62) {
-						fseek(fpImg, -CD_RAW_SECTOR_SIZE, SEEK_CUR);
-						for (INT n = 0; n < CD_RAW_SECTOR_SIZE; n++) {
-							aSrcBuf[n] ^= lpScrambledBuf[n];
-						}
-						fwrite(aSrcBuf, sizeof(BYTE), sizeof(aSrcBuf), fpImg);
-					}
-					else {
-						OutputMainInfoWithLBALogA("Invalid mode. Skip descrambling\n", nFirstLBA, k + 1);
+					if (aSrcBuf[0x0f] == 0x01 || aSrcBuf[0x0f] == 0x02) {
+						OutputMainInfoWithLBALogA("Reverted mode. (Not be scrambled)\n", nFirstLBA, k + 1);
 						OutputCDMain(fileMainInfo, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
 					}
+					else if (aSrcBuf[0x0f] != 0x61 && aSrcBuf[0x0f] != 0x62 &&
+						aSrcBuf[0x0f] != 0x01 && aSrcBuf[0x0f] != 0x02) {
+						OutputMainInfoWithLBALogA("Invalid mode. ", nFirstLBA, k + 1);
+						if (aSrcBuf[0x814] != 0x48 || aSrcBuf[0x815] != 0x64 || aSrcBuf[0x816] != 0x36 ||
+							aSrcBuf[0x817] != 0xab || aSrcBuf[0x818] != 0x56 || aSrcBuf[0x819] != 0xff ||
+							aSrcBuf[0x81a] != 0x7e || aSrcBuf[0x81b] != 0xc0) {
+							OutputMainInfoLogA("Invalid reserved byte. Skip descrambling\n");
+							OutputString(
+								_T("\rDescrambling data sector of img (LBA) %6d/%6d"), nFirstLBA, nLastLBA);
+							OutputCDMain(fileMainInfo, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
+							continue;
+						}
+						else {
+							OutputMainInfoLogA("\n");
+						}
+						OutputCDMain(fileMainInfo, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
+					}
+					fseek(fpImg, -CD_RAW_SECTOR_SIZE, SEEK_CUR);
+					for (INT n = 0; n < CD_RAW_SECTOR_SIZE; n++) {
+						aSrcBuf[n] ^= lpScrambledBuf[n];
+					}
+					fwrite(aSrcBuf, sizeof(BYTE), sizeof(aSrcBuf), fpImg);
 				}
 				else {
 					OutputMainErrorWithLBALogA("Invalid sync. Skip descrambling\n", nFirstLBA, k + 1);

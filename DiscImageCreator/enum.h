@@ -45,6 +45,7 @@ typedef enum _PROTECT_TYPE {
 	laserlock,
 	proring,
 	protectCDVOB,
+	ring,
 	safeDiscLite,
 	safeDisc,
 	securomTmp,

@@ -32,9 +32,10 @@ VOID OutputFsDirectoryRecord(
 	LPSTR fname
 	);
 
-VOID OutputFsPathTableRecord(
+BOOL OutputFsPathTableRecord(
 	PDISC pDisc,
 	LPBYTE lpBuf,
+	BYTE byLogicalBlkCoef,
 	DWORD dwPathTblPos,
 	DWORD dwPathTblSize,
 	PDIRECTORY_RECORD pDirRec,

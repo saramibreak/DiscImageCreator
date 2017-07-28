@@ -89,6 +89,7 @@ BOOL ReadVolumeDescriptor(
 	CDB::_READ12* pCdb,
 	LPBYTE lpBuf,
 	LPBOOL pPVD,
+	LPBYTE byLogicalBlkCoef,
 	LPDWORD dwPathTblSize,
 	LPDWORD dwPathTblPos,
 	LPDWORD dwRootDataLen
@@ -99,6 +100,7 @@ BOOL ReadPathTableRecord(
 	PDEVICE pDevice,
 	PDISC pDisc,
 	CDB::_READ12* pCdb,
+	BYTE byLogicalBlkCoef,
 	DWORD dwPathTblSize,
 	DWORD dwPathTblPos,
 	PDIRECTORY_RECORD pDirRec,
@@ -111,6 +113,7 @@ BOOL ReadDirectoryRecord(
 	PDISC pDisc,
 	CDB::_READ12* pCdb,
 	LPBYTE lpBuf,
+	BYTE byLogicalBlkCoef,
 	DWORD dwRootDataLen,
 	PDIRECTORY_RECORD pDirRec,
 	INT nDirPosNum

@@ -138,44 +138,38 @@ VOID SetAndOutputToc(
 	BOOL bFirstData = TRUE;
 	BYTE byAudioOnly = TRUE;
 	for (BYTE i = pDisc->SCSI.toc.FirstTrack; i <= pDisc->SCSI.toc.LastTrack; i++) {
+		INT tIdx = i - 1;
 		for (INT j = 0, k = 24; j < 4; j++, k -= 8) {
-			pDisc->SCSI.lpFirstLBAListOnToc[i - 1] |= 
-				pDisc->SCSI.toc.TrackData[i - 1].Address[j] << k;
-			pDisc->SCSI.lpLastLBAListOnToc[i - 1] |= 
-				pDisc->SCSI.toc.TrackData[i].Address[j] << k;
+			pDisc->SCSI.lpFirstLBAListOnToc[tIdx] |= pDisc->SCSI.toc.TrackData[tIdx].Address[j] << k;
+			pDisc->SCSI.lpLastLBAListOnToc[tIdx] |= pDisc->SCSI.toc.TrackData[i].Address[j] << k;
 		}
-		pDisc->SCSI.lpLastLBAListOnToc[i - 1] -= 1;
+		pDisc->SCSI.lpLastLBAListOnToc[tIdx] -= 1;
 		pDisc->SCSI.nAllLength += 
-			pDisc->SCSI.lpLastLBAListOnToc[i - 1] - pDisc->SCSI.lpFirstLBAListOnToc[i - 1] + 1;
+			pDisc->SCSI.lpLastLBAListOnToc[tIdx] - pDisc->SCSI.lpFirstLBAListOnToc[tIdx] + 1;
 
-		if ((pDisc->SCSI.toc.TrackData[i - 1].Control & AUDIO_DATA_TRACK) == 0) {
+		if ((pDisc->SCSI.toc.TrackData[tIdx].Control & AUDIO_DATA_TRACK) == 0) {
 			strncpy(strType, " Audio", typeSize);
 		}
-		else if ((pDisc->SCSI.toc.TrackData[i - 1].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+		else if ((pDisc->SCSI.toc.TrackData[tIdx].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 			strncpy(strType, "  Data", typeSize);
 			if (bFirstData) {
-				pDisc->SCSI.nFirstLBAofDataTrack = 
-					pDisc->SCSI.lpFirstLBAListOnToc[i - 1];
+				pDisc->SCSI.nFirstLBAofDataTrack = pDisc->SCSI.lpFirstLBAListOnToc[tIdx];
 				pDisc->SCSI.byFirstDataTrackNum = i;
 				bFirstData = FALSE;
 				byAudioOnly = FALSE;
 			}
-			pDisc->SCSI.nLastLBAofDataTrack = 
-				pDisc->SCSI.lpLastLBAListOnToc[i - 1];
+			pDisc->SCSI.nLastLBAofDataTrack = pDisc->SCSI.lpLastLBAListOnToc[tIdx];
 			pDisc->SCSI.byLastDataTrackNum = i;
 		}
-		if (i == pDisc->SCSI.toc.FirstTrack && 
-			pDisc->SCSI.lpFirstLBAListOnToc[i - 1] > 0) {
-			pDisc->SCSI.nAllLength += pDisc->SCSI.lpFirstLBAListOnToc[i - 1];
-			OutputDiscLogA(
-				"\tPregap Track   , LBA %8u-%8u, Length %8u\n",
-				0, pDisc->SCSI.lpFirstLBAListOnToc[i - 1] - 1, 
-				pDisc->SCSI.lpFirstLBAListOnToc[i - 1]);
+		if (i == pDisc->SCSI.toc.FirstTrack && pDisc->SCSI.lpFirstLBAListOnToc[tIdx] > 0) {
+			pDisc->SCSI.nAllLength += pDisc->SCSI.lpFirstLBAListOnToc[tIdx];
+			OutputDiscLogA("\tPregap Track   , LBA %8u-%8u, Length %8u\n",
+				0, pDisc->SCSI.lpFirstLBAListOnToc[tIdx] - 1, pDisc->SCSI.lpFirstLBAListOnToc[tIdx]);
 		}
 		OutputDiscLogA(
 			"\t%s Track %2u, LBA %8u-%8u, Length %8u\n", strType, i,
-			pDisc->SCSI.lpFirstLBAListOnToc[i - 1], pDisc->SCSI.lpLastLBAListOnToc[i - 1],
-			pDisc->SCSI.lpLastLBAListOnToc[i - 1] - pDisc->SCSI.lpFirstLBAListOnToc[i - 1] + 1);
+			pDisc->SCSI.lpFirstLBAListOnToc[tIdx], pDisc->SCSI.lpLastLBAListOnToc[tIdx],
+			pDisc->SCSI.lpLastLBAListOnToc[tIdx] - pDisc->SCSI.lpFirstLBAListOnToc[tIdx] + 1);
 	}
 	OutputDiscLogA(
 		"\t                                        Total  %8u\n", pDisc->SCSI.nAllLength);
@@ -238,7 +232,11 @@ VOID SetAndOutputTocFull(
 				"\tSession %u,      Leadout, MSF %02u:%02u:%02u (LBA[%06d, %#07x])\n", 
 				pTocData[a].SessionNumber, pTocData[a].Msf[0], pTocData[a].Msf[1],
 				pTocData[a].Msf[2], nTmpLBA, nTmpLBA);
-			pDisc->SCSI.lpLastLBAListOnToc[pDisc->SCSI.toc.LastTrack - 1] = nTmpLBA - 150 - 1;
+			if (fullToc->LastCompleteSession > 1) {
+				// Rayman (USA) [SS], Wolfchild (Europe) [MCD]
+				// Last LBA is corrupt, so this doesn't use in single session disc.
+				pDisc->SCSI.lpLastLBAListOnToc[pDisc->SCSI.toc.LastTrack - 1] = nTmpLBA - 150 - 1;
+			}
 			if (pTocData[a].SessionNumber == 1) {
 				pDisc->SCSI.nFirstLBAofLeadout = nTmpLBA - 150;
 			}
@@ -293,16 +291,20 @@ VOID SetAndOutputTocFull(
 				"\tSession %u,     Track %2u, MSF %02u:%02u:%02u (LBA[%06d, %#07x])\n", 
 				pTocData[a].SessionNumber, pTocData[a].Point, pTocData[a].Msf[0], 
 				pTocData[a].Msf[1], pTocData[a].Msf[2], nTmpLBA, nTmpLBA);
-			if (pTocData[a].Point == 1) {
-				pDisc->SCSI.lpFirstLBAListOnToc[pTocData[a].Point - 1] = nTmpLBA - 150;
-			}
-			else if (pTocData[a].Point >= 2 && pTocData[a].Point <= 100) {
-				pDisc->SCSI.lpLastLBAListOnToc[pTocData[a].Point - 2] = nTmpLBA - 150 - 1;
-				pDisc->SCSI.lpFirstLBAListOnToc[pTocData[a].Point - 1] = nTmpLBA - 150;
-			}
-			if (pTocData[a].SessionNumber == 2 && bFirst2ndSession) {
-				pDisc->SCSI.nFirstLBAof2ndSession = nTmpLBA - 150;
-				bFirst2ndSession = FALSE;
+			if (fullToc->LastCompleteSession > 1) {
+				// Rayman (USA) [SS], Wolfchild (Europe) [MCD]
+				// Last LBA is corrupt, so this doesn't use in single session disc.
+				if (pTocData[a].Point == 1) {
+					pDisc->SCSI.lpFirstLBAListOnToc[pTocData[a].Point - 1] = nTmpLBA - 150;
+				}
+				else if (pTocData[a].Point >= 2 && pTocData[a].Point <= 100) {
+					pDisc->SCSI.lpLastLBAListOnToc[pTocData[a].Point - 2] = nTmpLBA - 150 - 1;
+					pDisc->SCSI.lpFirstLBAListOnToc[pTocData[a].Point - 1] = nTmpLBA - 150;
+				}
+				if (pTocData[a].SessionNumber == 2 && bFirst2ndSession) {
+					pDisc->SCSI.nFirstLBAof2ndSession = nTmpLBA - 150;
+					bFirst2ndSession = FALSE;
+				}
 			}
 			pDisc->SCSI.lpSessionNumList[pTocData[a].Point - 1] = pTocData[a].SessionNumber;
 			break;
@@ -705,12 +707,9 @@ VOID SetCDOffset(
 			pDisc->MAIN.uiMainDataSlideSize =
 				(size_t)pDisc->MAIN.nCombinedOffset % CD_RAW_SECTOR_SIZE;
 			pDisc->MAIN.nOffsetStart = 0;
-			pDisc->MAIN.nOffsetEnd =
-				pDisc->MAIN.nAdjustSectorNum;
-			pDisc->MAIN.nFixStartLBA =
-				nStartLBA + pDisc->MAIN.nAdjustSectorNum - 1;
-			pDisc->MAIN.nFixEndLBA =
-				nEndLBA + pDisc->MAIN.nAdjustSectorNum;
+			pDisc->MAIN.nOffsetEnd = pDisc->MAIN.nAdjustSectorNum;
+			pDisc->MAIN.nFixStartLBA = nStartLBA + pDisc->MAIN.nAdjustSectorNum - 1;
+			pDisc->MAIN.nFixEndLBA = nEndLBA + pDisc->MAIN.nAdjustSectorNum;
 		}
 		if (pDisc->SCSI.nFirstLBAof2ndSession != -1) {
 			pDisc->MAIN.nFixFirstLBAofLeadout =
@@ -728,15 +727,17 @@ VOID SetCDOffset(
 			pDisc->MAIN.nFixEndLBA = nEndLBA;
 		}
 		else {
-			pDisc->MAIN.uiMainDataSlideSize =
-				(size_t)CD_RAW_SECTOR_SIZE + (pDisc->MAIN.nCombinedOffset % CD_RAW_SECTOR_SIZE);
-			pDisc->MAIN.nOffsetStart =
-				pDisc->MAIN.nAdjustSectorNum;
+			INT nTmp = pDisc->MAIN.nCombinedOffset % CD_RAW_SECTOR_SIZE;
+			if (nTmp == 0) {
+				pDisc->MAIN.uiMainDataSlideSize = 0;
+			}
+			else {
+				pDisc->MAIN.uiMainDataSlideSize = (size_t)CD_RAW_SECTOR_SIZE + nTmp;
+			}
+			pDisc->MAIN.nOffsetStart = pDisc->MAIN.nAdjustSectorNum;
 			pDisc->MAIN.nOffsetEnd = 0;
-			pDisc->MAIN.nFixStartLBA =
-				nStartLBA + pDisc->MAIN.nAdjustSectorNum;
-			pDisc->MAIN.nFixEndLBA =
-				nEndLBA + pDisc->MAIN.nAdjustSectorNum + 1;
+			pDisc->MAIN.nFixStartLBA = nStartLBA + pDisc->MAIN.nAdjustSectorNum;
+			pDisc->MAIN.nFixEndLBA = nEndLBA + pDisc->MAIN.nAdjustSectorNum + 1;
 		}
 		if (pDisc->SCSI.nFirstLBAof2ndSession != -1) {
 			pDisc->MAIN.nFixFirstLBAofLeadout = 

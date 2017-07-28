@@ -1835,9 +1835,11 @@ VOID CheckAndFixMainHeader(
 		}
 	}
 	else {
-		if (pExtArg->byReadContinue && pDisc->PROTECT.byExist) {
+		if (pExtArg->byScanProtectViaFile && pDisc->PROTECT.byExist) {
 			if (pDisc->PROTECT.ERROR_SECTOR.nExtentPos <= nLBA &&
 				nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize) {
+				OutputMainInfoWithLBALogA("Original Mode[0x%02x] -> Fixed Mode[0x%02x]\n"
+					, nLBA, byCurrentTrackNum, lpWorkBuf[15] ,pDiscPerSector->mainHeader.present[15]);
 				lpWorkBuf[15] = pDiscPerSector->mainHeader.present[15];
 			}
 			if ((pDisc->PROTECT.byExist == protectCDVOB &&
@@ -1849,6 +1851,11 @@ VOID CheckAndFixMainHeader(
 					pDisc->PROTECT.ERROR_SECTOR.nSectorSize = pDisc->SCSI.nAllLength - nLBA - 1;
 				}
 				// forced to set scrambled data to reserved byte
+				OutputMainInfoWithLBALogA(
+					"Original reserved byte[0x%02x%02x%02x%02x%02x%02x%02x%02x] "
+					"-> Fixed reserved byte[0x486436ab56ff7ec0]\n"
+					, nLBA, byCurrentTrackNum, lpWorkBuf[0x814], lpWorkBuf[0x815], lpWorkBuf[0x816], lpWorkBuf[0x817],
+					lpWorkBuf[0x818], lpWorkBuf[0x819], lpWorkBuf[0x81a], lpWorkBuf[0x81b]);
 				lpWorkBuf[0x814] = 0x48;
 				lpWorkBuf[0x815] = 0x64;
 				lpWorkBuf[0x816] = 0x36;
@@ -1864,7 +1871,7 @@ VOID CheckAndFixMainHeader(
 		lpWorkBuf, pDiscPerSector->subQ.present.byCtl, nMainDataType);
 
 	if (!bHeader) {
-		if (pExtArg->byReadContinue && pDisc->PROTECT.byExist) {
+		if (pExtArg->byScanProtectViaFile && pDisc->PROTECT.byExist) {
 			if ((pDisc->PROTECT.byExist == protectCDVOB &&
 				(pDisc->SCSI.toc.TrackData[idx].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK &&
 				pDiscPerSector->subQ.present.byCtl == AUDIO_DATA_TRACK) ||
@@ -1873,14 +1880,9 @@ VOID CheckAndFixMainHeader(
 				OutputMainErrorWithLBALogA(
 					"This sector is data, but sync is invalid, so the header is generated\n"
 					, nLBA, byCurrentTrackNum);
-#ifdef _DEBUG
 				OutputCDMain(fileMainError, lpWorkBuf, nLBA, MAINHEADER_MODE1_SIZE);
-#endif
-				memcpy(lpWorkBuf,
-					pDiscPerSector->mainHeader.present, MAINHEADER_MODE1_SIZE);
-#ifdef _DEBUG
+				memcpy(lpWorkBuf, pDiscPerSector->mainHeader.present, MAINHEADER_MODE1_SIZE);
 				OutputCDMain(fileMainError, lpWorkBuf, nLBA, MAINHEADER_MODE1_SIZE);
-#endif
 			}
 		}
 		else {

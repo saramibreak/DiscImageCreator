@@ -486,17 +486,25 @@ BOOL ReadCDForCheckingSubQAdr(
 	INT nTmpMCNLBAList[9] = { -1 };
 	INT nTmpISRCLBAList[9] = { -1 };
 	INT nTmpLBA = pDisc->SCSI.lpFirstLBAListOnToc[byIdxOfTrack];
+	INT nTmpNextLBA = 0;
+	if (byIdxOfTrack + 1 < pDisc->SCSI.byLastDataTrackNum) {
+		nTmpNextLBA = pDisc->SCSI.lpFirstLBAListOnToc[byIdxOfTrack + 1] - nTmpLBA;
+	}
+	else {
+		nTmpNextLBA = pDisc->SCSI.nAllLength - nTmpLBA;
+	}
 
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR_WITH_TRACK_F(Check MCN and/or ISRC), lpCmd[0], lpCmd[10], byIdxOfTrack + 1);
 	for (INT nLBA = nTmpLBA; nLBA < nTmpLBA + 400; nLBA++) {
-		if (nLBA > pDisc->SCSI.nAllLength) {
+		if (400 > nTmpNextLBA) {
 			bCheckMCN = FALSE;
 			bCheckISRC = FALSE;
 			break;
 		}
 		if (!ExecReadCD(pExtArg, pDevice, lpCmd, nLBA, lpBuf,
 			CD_RAW_SECTOR_WITH_SUBCODE_SIZE, _T(__FUNCTION__), __LINE__)) {
-			return FALSE;
+			// skip checking
+			return TRUE;
 		}
 		LPBYTE lpBuf2 = lpBuf;
 		if ((pExtArg->byD8 || pDevice->byPlxtrDrive) && !pExtArg->byBe) {
@@ -1072,25 +1080,25 @@ BOOL ReadCDForFileSystem(
 			PDIRECTORY_RECORD pDirRec = NULL;
 			try {
 				// general data track disc
+				BYTE byLogicalBlkCoef = 0;
 				DWORD dwPathTblSize, dwPathTblPos, dwRootDataLen = 0;
 				if (!ReadVolumeDescriptor(pExtArg, pDevice, pDisc, i, &cdb
-					, lpBuf, &bPVD, &dwPathTblSize, &dwPathTblPos, &dwRootDataLen)) {
+					, lpBuf, &bPVD, &byLogicalBlkCoef, &dwPathTblSize, &dwPathTblPos, &dwRootDataLen)) {
 					throw FALSE;
 				}
 				if (bPVD) {
-					// TODO: buf size
-					pDirRec = (PDIRECTORY_RECORD)calloc(8192, sizeof(DIRECTORY_RECORD));
+					pDirRec = (PDIRECTORY_RECORD)calloc(DIRECTORY_RECORD_SIZE, sizeof(DIRECTORY_RECORD));
 					if (!pDirRec) {
 						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 						throw FALSE;
 					}
 					INT nDirPosNum = 0;
 					if (!ReadPathTableRecord(pExtArg, pDevice, pDisc, &cdb
-						, dwPathTblSize, dwPathTblPos, pDirRec, &nDirPosNum)) {
+						, byLogicalBlkCoef, dwPathTblSize, dwPathTblPos, pDirRec, &nDirPosNum)) {
 						throw FALSE;
 					}
 					if (!ReadDirectoryRecord(pExtArg, pDevice, pDisc, &cdb
-						, lpBuf, dwRootDataLen, pDirRec, nDirPosNum)) {
+						, lpBuf, byLogicalBlkCoef, dwRootDataLen, pDirRec, nDirPosNum)) {
 						throw FALSE;
 					}
 					if (!ReadCDForCheckingExe(pExtArg, pDevice, pDisc, &cdb, lpBuf)) {
@@ -1188,6 +1196,54 @@ BOOL ReadCDForFileSystem(
 		}
 	}
 	return bRet;
+}
+
+BOOL ReadCDForScanningProtectViaSector(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	PDISC pDisc
+) {
+	BYTE lpCmd[CDB12GENERIC_LENGTH] = { 0 };
+	if ((pExtArg->byD8 || pDevice->byPlxtrDrive) && !pExtArg->byBe) {
+		CDB::_PLXTR_READ_CDDA cdb = { 0 };
+		if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
+			SetReadD8Command(pDevice, &cdb, 1, CDFLAG::_PLXTR_READ_CDDA::MainC2Raw);
+		}
+		else {
+			SetReadD8Command(pDevice, &cdb, 1, CDFLAG::_PLXTR_READ_CDDA::MainPack);
+		}
+		memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
+	}
+	else {
+		// non plextor && support scrambled ripping
+		CDB::_READ_CD cdb = { 0 };
+		SetReadCDCommand(pExtArg, pDevice, &cdb, CDFLAG::_READ_CD::CDDA
+			, 1, CDFLAG::_READ_CD::byte294, CDFLAG::_READ_CD::NoSub, TRUE);
+		memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
+	}
+	
+	BYTE aBuf[CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE] = { 0 };
+	BYTE byScsiStatus = 0;
+	for (INT nLBA = 0; nLBA < pDisc->SCSI.nAllLength; nLBA++) {
+		if (!ExecReadCD(pExtArg, pDevice, lpCmd, nLBA, aBuf,
+			CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE, _T(__FUNCTION__), __LINE__)
+			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+			return FALSE;
+		}
+		INT nOfs = pDisc->MAIN.nCombinedOffset % CD_RAW_SECTOR_SIZE;
+		if (aBuf[nOfs] == 0 && aBuf[nOfs + 1] == 0xff && aBuf[nOfs + 2] == 0 && aBuf[nOfs + 3] == 0xff &&
+			aBuf[nOfs + 4] == 0 && aBuf[nOfs + 5] == 0xff && aBuf[nOfs + 6] == 0 && aBuf[nOfs + 7] == 0xff &&
+			aBuf[nOfs + 8] == 0 && aBuf[nOfs + 9] == 0xff && aBuf[nOfs + 10] == 0 && aBuf[nOfs + 11] == 0xff) {
+			OutputLogA(standardOut | fileDisc, "\nDetected ProtectCD VOB");
+			pDisc->PROTECT.byExist = protectCDVOB;
+			pExtArg->byScanProtectViaFile = pExtArg->byScanProtectViaSector;
+			break;
+		}
+		OutputString(_T("\rScanning sector (LBA) %6d/%6d"), nLBA, pDisc->SCSI.nAllLength - 1);
+	}
+	OutputString(_T("\n"));
+
+	return TRUE;
 }
 
 BOOL ExecCheckingByteOrder(
@@ -1333,7 +1389,7 @@ BOOL ExecReadCDForC2(
 	BYTE byScsiStatus = 0;
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, lpCmd, CDB12GENERIC_LENGTH, lpBuf,
 		pDevice->TRANSFER.dwBufLen + pDevice->TRANSFER.dwAdditionalBufLen, &byScsiStatus, pszFuncName, lLineNum)) {
-		if (pExtArg->byReadContinue) {
+		if (pExtArg->byScanProtectViaFile) {
 			return RETURNED_CONTINUE;
 		}
 		else {
@@ -1431,7 +1487,7 @@ BOOL ProcessReadCD(
 	if (bRet == RETURNED_NO_C2_ERROR_1ST) {
 		AlignRowSubcode(pDiscPerSector->data.present + pDevice->TRANSFER.dwBufSubOffset, pDiscPerSector->subcode.present);
 		if (pC2ErrorPerSector && pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
-			if (pExtArg->byReadContinue && pDisc->PROTECT.byExist &&
+			if (pExtArg->byScanProtectViaFile && pDisc->PROTECT.byExist &&
 				(pDisc->PROTECT.ERROR_SECTOR.nExtentPos <= nLBA &&
 				nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize)) {
 				// skip check c2 error
@@ -1442,7 +1498,7 @@ BOOL ProcessReadCD(
 					pC2ErrorPerSector, pDevice, pDisc, pDiscPerSector->data.present, uiC2ErrorLBACnt);
 			}
 		}
-		if (!(pExtArg->byReadContinue && pDisc->PROTECT.byExist &&
+		if (!(pExtArg->byScanProtectViaFile && pDisc->PROTECT.byExist &&
 			(pDisc->PROTECT.ERROR_SECTOR.nExtentPos <= nLBA &&
 			nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize))) {
 			if (pDiscPerSector->data.next != NULL && 1 <= pExtArg->dwSubAddionalNum) {
@@ -1457,7 +1513,7 @@ BOOL ProcessReadCD(
 			}
 		}
 	}
-	if (pExtArg->byReadContinue && pDisc->PROTECT.byExist &&
+	if (pExtArg->byScanProtectViaFile && pDisc->PROTECT.byExist &&
 		(pDisc->PROTECT.ERROR_SECTOR.nExtentPos <= nLBA &&
 		nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize)) {
 		if (bRet == RETURNED_CONTINUE) {
@@ -1587,7 +1643,7 @@ BOOL ReadCDForRereadingSector(
 }
 
 VOID ExecEccEdc(
-	BYTE byReadContinue,
+	BYTE byScanProtectViaFile,
 	LPCTSTR pszImgPath,
 	_DISC::_PROTECT::_ERROR_SECTOR errorSector
 	)
@@ -1598,7 +1654,7 @@ VOID ExecEccEdc(
 	_TCHAR cmd[nCmdSize] = { _T("check") };
 	INT nStartLBA = errorSector.nExtentPos;
 	INT nEndLBA = errorSector.nExtentPos + errorSector.nSectorSize;
-	if (byReadContinue) {
+	if (byScanProtectViaFile) {
 		_tcsncpy(cmd, _T("fix"), sizeof(cmd) / sizeof(cmd[0]));
 	}
 	if (GetEccEdcCmd(str, nStrSize, cmd, pszImgPath, nStartLBA, nEndLBA)) {
@@ -2015,7 +2071,7 @@ BOOL ReadCDAll(
 			if (bProcessRet != RETURNED_CONTINUE &&
 				bProcessRet != RETURNED_SKIP_LBA) {
 				if (pDisc->SUB.nSubchOffset) {
-					if (!(pExtArg->byReadContinue && pDisc->PROTECT.byExist &&
+					if (!(pExtArg->byScanProtectViaFile && pDisc->PROTECT.byExist &&
 						(pDisc->PROTECT.ERROR_SECTOR.nExtentPos <= nLBA &&
 							nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize))) {
 						if (2 <= pExtArg->dwSubAddionalNum) {
@@ -2219,7 +2275,7 @@ BOOL ReadCDAll(
 				throw FALSE;
 			}
 			if (pExtArg->byBe) {
-				ExecEccEdc(pExtArg->byReadContinue, pszNewPath, pDisc->PROTECT.ERROR_SECTOR);
+				ExecEccEdc(pExtArg->byScanProtectViaFile, pszNewPath, pDisc->PROTECT.ERROR_SECTOR);
 			}
 		}
 		else {
@@ -2236,7 +2292,7 @@ BOOL ReadCDAll(
 			}
 			DescrambleMainChannelAll(pExtArg, pDisc, scrambled_table, fpImg);
 			FcloseAndNull(fpImg);
-			ExecEccEdc(pExtArg->byReadContinue, pszImgPath, pDisc->PROTECT.ERROR_SECTOR);
+			ExecEccEdc(pExtArg->byScanProtectViaFile, pszImgPath, pDisc->PROTECT.ERROR_SECTOR);
 		}
 
 		if (pExtArg->byReverse) {
@@ -2539,7 +2595,7 @@ BOOL ReadCDPartial(
 			if (bProcessRet != RETURNED_CONTINUE &&
 				bProcessRet != RETURNED_SKIP_LBA) {
 				if (pDisc->SUB.nSubchOffset) {
-					if (!(pExtArg->byReadContinue && pDisc->PROTECT.byExist &&
+					if (!(pExtArg->byScanProtectViaFile && pDisc->PROTECT.byExist &&
 						(pDisc->PROTECT.ERROR_SECTOR.nExtentPos <= nLBA &&
 							nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize))) {
 						if (2 <= pExtArg->dwSubAddionalNum) {
@@ -2615,14 +2671,14 @@ BOOL ReadCDPartial(
 				DescrambleMainChannelPartial(nStart, nEnd - 1, scrambled_table, fpBin);
 				FcloseAndNull(fpBin);
 			}
-			ExecEccEdc(pExtArg->byReadContinue, pszBinPath, pDisc->PROTECT.ERROR_SECTOR);
+			ExecEccEdc(pExtArg->byScanProtectViaFile, pszBinPath, pDisc->PROTECT.ERROR_SECTOR);
 		}
 		else if (*pExecType == gd) {
 			_TCHAR pszImgPath[_MAX_PATH] = { 0 };
 			if (!DescrambleMainChannelForGD(pszPath, pszImgPath)) {
 				throw FALSE;
 			}
-			ExecEccEdc(pExtArg->byReadContinue, pszImgPath, pDisc->PROTECT.ERROR_SECTOR);
+			ExecEccEdc(pExtArg->byScanProtectViaFile, pszImgPath, pDisc->PROTECT.ERROR_SECTOR);
 			if (!SplitFileForGD(pszPath)) {
 				throw FALSE;
 			}

@@ -381,3 +381,14 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - fixed: Ripping range of SecuROM
 - fixed: Reading path table record
 - fixed: data sector is descrambled when sync and mode valid
+
+*2017-07-28
+- added: /ss option (scan sector for protectCD-VOB)
+- changed: Option name is /rc -> /sf (scan file)
+- changed: Directory record size from 8192 to 16384
+- changed: Data sector is descrambled when sync is valid and mode is valid 
+           and there is the reverted sector, and unknown mode but reserved byte all zero
+- changed: The LBA of FULL TOC is used only the multi session disc.
+- fixed: Reading path/directory record (support the logical block size under 2048 byte)
+- fixed: The transfer length to read path/directory record for DVD
+- fixed: Short of the shifted sector if the combined offset is 2352*n (n is integer)

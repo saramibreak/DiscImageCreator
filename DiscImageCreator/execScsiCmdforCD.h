@@ -58,6 +58,12 @@ BOOL ReadCDForFileSystem(
 	PDISC pDisc
 	);
 
+BOOL ReadCDForScanningProtectViaSector(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	PDISC pDisc
+);
+
 BOOL ReadCDAll(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,

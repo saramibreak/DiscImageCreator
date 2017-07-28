@@ -106,7 +106,7 @@ VOID OutputFsDirectoryRecord(
 		fname[n] = (CHAR)lpBuf[33 + n];
 	}
 	OutputVolDescLogA("\n");
-	if (pExtArg->byReadContinue || pExtArg->byIntentionalSub) {
+	if (pExtArg->byScanProtectViaFile || pExtArg->byIntentionalSub) {
 		if ((nFileFlag & 0x02) == 0 && pDisc->PROTECT.byExist) {
 			if (pDisc->PROTECT.ERROR_SECTOR.nExtentPos < (INT)dwExtentPos) {
 				if (pDisc->PROTECT.byTmpForSafeDisc) {
@@ -138,6 +138,12 @@ VOID OutputFsDirectoryRecord(
 		else if (!strncmp(fname, "PROTECT.PRO", 11)) {
 			pDisc->PROTECT.byExist = proring;
 			strncpy(pDisc->PROTECT.name, fname, 11);
+			pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)dwExtentPos;
+			pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(dwDataLen / DISC_RAW_READ_SIZE - 1);
+		}
+		else if (!strncmp(fname, "SYSTEM.LSK", 10)) { // Siedler III, Die - Mission CD (Germany)
+			pDisc->PROTECT.byExist = ring;
+			strncpy(pDisc->PROTECT.name, fname, 10);
 			pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)dwExtentPos;
 			pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(dwDataLen / DISC_RAW_READ_SIZE - 1);
 		}
@@ -225,7 +231,7 @@ VOID OutputFsVolumeDescriptorSecond(
 		pDisc->MAIN.bPathType = mType;
 	}
 	// for Codelock
-	if (pExtArg->byReadContinue) {
+	if (pExtArg->byScanProtectViaFile) {
 		if (pDisc->PROTECT.nPrevLBAOfPathTablePos == 0) {
 			pDisc->PROTECT.nPrevLBAOfPathTablePos = (INT)lopt - 1;
 		}
@@ -543,15 +549,16 @@ VOID OutputFsVolumeDescriptor(
 		OutputFsVolumePartitionDescriptor(lpBuf);
 	}
 	else if (lpBuf[0] == 255) {
-		if (pExtArg->byReadContinue) {
+		if (pExtArg->byScanProtectViaFile) {
 			pDisc->PROTECT.nNextLBAOfLastVolDesc = nLBA + 1;
 		}
 	}
 }
 
-VOID OutputFsPathTableRecord(
+BOOL OutputFsPathTableRecord(
 	PDISC pDisc,
 	LPBYTE lpBuf,
+	BYTE byLogicalBlkCoef,
 	DWORD dwPathTblPos,
 	DWORD dwPathTblSize,
 	PDIRECTORY_RECORD pDirRec,
@@ -561,14 +568,18 @@ VOID OutputFsPathTableRecord(
 	OutputVolDescLogA(
 		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Path Table Record), (INT)dwPathTblPos, (INT)dwPathTblPos);
 	for (DWORD i = 0; i < dwPathTblSize;) {
+		if (*nDirPosNum > DIRECTORY_RECORD_SIZE) {
+			OutputErrorString(_T("Directory Record is over %d\n"), DIRECTORY_RECORD_SIZE);
+			return FALSE;
+		}
 		pDirRec[*nDirPosNum].uiDirNameLen = lpBuf[i];
 		if (pDisc->MAIN.bPathType == lType) {
 			pDirRec[*nDirPosNum].uiPosOfDir = MAKEDWORD(MAKEWORD(lpBuf[2 + i], lpBuf[3 + i]),
-				MAKEWORD(lpBuf[4 + i], lpBuf[5 + i]));
+				MAKEWORD(lpBuf[4 + i], lpBuf[5 + i])) / byLogicalBlkCoef;
 		}
 		else {
 			pDirRec[*nDirPosNum].uiPosOfDir = MAKEDWORD(MAKEWORD(lpBuf[5 + i], lpBuf[4 + i]),
-				MAKEWORD(lpBuf[3 + i], lpBuf[2 + i]));
+				MAKEWORD(lpBuf[3 + i], lpBuf[2 + i])) / byLogicalBlkCoef;
 		}
 		if (pDirRec[*nDirPosNum].uiDirNameLen > 0) {
 			if (pDisc->MAIN.bPathType == lType) {
@@ -603,6 +614,7 @@ VOID OutputFsPathTableRecord(
 			break;
 		}
 	}
+	return TRUE;
 }
 
 // http://www.dubeyko.com/development/FileSystems/HFS/hfs_ondisk_layout/Files-102.html
@@ -974,6 +986,9 @@ VOID OutputFsImageOS2Header(
 		);
 }
 
+// https://msdn.microsoft.com/en-us/library/windows/desktop/ms680336(v=vs.85).aspx
+// https://msdn.microsoft.com/en-us/library/windows/desktop/ms680313(v=vs.85).aspx
+// https://msdn.microsoft.com/en-us/library/windows/desktop/ms680339(v=vs.85).aspx
 VOID OutputFsImageNtHeader(
 	PIMAGE_NT_HEADERS32 pInh
 	)
@@ -1052,6 +1067,7 @@ VOID OutputFsImageNtHeader(
 	}
 }
 
+// https://msdn.microsoft.com/en-us/library/windows/desktop/ms680341(v=vs.85).aspx
 VOID OutputFsImageSectionHeader(
 	PDISC pDisc,
 	PIMAGE_SECTION_HEADER pIsh
@@ -1059,7 +1075,9 @@ VOID OutputFsImageSectionHeader(
 {
 	OutputVolDescLogA(
 		"\t========== Image Section Header (%u byte) ==========\n"
-		"\t                Name: %s\n"
+		"\t                Name: %.8s\n"
+		"\t     PhysicalAddress: %08lx\n"
+		"\t         VirtualSize: %08lx\n"
 		"\t      VirtualAddress: %08lx\n"
 		"\t       SizeOfRawData: %08lx\n"
 		"\t    PointerToRawData: %08lx\n"
@@ -1068,26 +1086,26 @@ VOID OutputFsImageSectionHeader(
 		"\t NumberOfRelocations: %04x\n"
 		"\t NumberOfLinenumbers: %04x\n"
 		"\t     Characteristics: %08lx\n"
-		, sizeof(IMAGE_SECTION_HEADER)
-		, pIsh->Name, pIsh->VirtualAddress, pIsh->SizeOfRawData, pIsh->PointerToRawData
+		, sizeof(IMAGE_SECTION_HEADER), pIsh->Name, pIsh->Misc.PhysicalAddress
+		, pIsh->Misc.VirtualSize, pIsh->VirtualAddress, pIsh->SizeOfRawData, pIsh->PointerToRawData
 		, pIsh->PointerToRelocations, pIsh->PointerToLinenumbers, pIsh->NumberOfRelocations
 		, pIsh->NumberOfLinenumbers, pIsh->Characteristics
 	);
 	if (!strncmp((LPCH)pIsh->Name, "icd1", 4)) {
 		pDisc->PROTECT.byExist = codelock;
-		strcpy(pDisc->PROTECT.name, (LPCH)pIsh->Name);
+		strncpy(pDisc->PROTECT.name, (LPCH)pIsh->Name, sizeof(pIsh->Name));
 		pDisc->PROTECT.ERROR_SECTOR.nExtentPos = pDisc->PROTECT.nNextLBAOfLastVolDesc;
-		pDisc->PROTECT.ERROR_SECTOR.nSectorSize
-			= pDisc->PROTECT.nPrevLBAOfPathTablePos - pDisc->PROTECT.nNextLBAOfLastVolDesc;
+		pDisc->PROTECT.ERROR_SECTOR.nSectorSize =
+			pDisc->PROTECT.nPrevLBAOfPathTablePos - pDisc->PROTECT.nNextLBAOfLastVolDesc;
 	}
 	else if (!strncmp((LPCH)pIsh->Name, ".vob.pcd", 8)) {
 		pDisc->PROTECT.byExist = protectCDVOB;
-		strcpy(pDisc->PROTECT.name, (LPCH)pIsh->Name);
+		strncpy(pDisc->PROTECT.name, (LPCH)pIsh->Name, sizeof(pIsh->Name));
 	}
 	else if (!strncmp((LPCH)pIsh->Name, ".cms_t", 6) || !strncmp((LPCH)pIsh->Name, ".cms_d", 6)) {
 		// This string exists SecuROM OLD "Re-Volt (Europe)" and SecuROM NEW "Supreme Snowboarding (Europe) and "Beam Breakers (Europe) etc"
 		pDisc->PROTECT.byExist = securomTmp;
-		strcpy(pDisc->PROTECT.name, (LPCH)pIsh->Name);
+		strncpy(pDisc->PROTECT.name, (LPCH)pIsh->Name, sizeof(pIsh->Name));
 	}
 }
 
@@ -1203,7 +1221,11 @@ VOID OutputCDOffset(
 			(pDisc->MAIN.nCombinedOffset - nDriveOffset) / 4);
 	}
 
-	if (0 < pDisc->MAIN.nCombinedOffset) {
+	if (pDisc->MAIN.nCombinedOffset % CD_RAW_SECTOR_SIZE == 0) {
+		pDisc->MAIN.nAdjustSectorNum =
+			pDisc->MAIN.nCombinedOffset / CD_RAW_SECTOR_SIZE;
+	}
+	else if (0 < pDisc->MAIN.nCombinedOffset) {
 		pDisc->MAIN.nAdjustSectorNum =
 			pDisc->MAIN.nCombinedOffset / CD_RAW_SECTOR_SIZE + 1;
 	}

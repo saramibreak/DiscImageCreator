@@ -181,7 +181,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 		printf("RequestType %u, CallerName %s\n", lock.Access.RequestType, lock.CallerName);
 #endif
 		// 1st: set TimeOutValue here (because use ScsiPassThroughDirect)
-		if (pExtArg->byReadContinue) {
+		if (pExtArg->byScanProtectViaFile) {
 			devData.dwTimeOutValue = pExtArg->dwTimeoutNum;
 		}
 		else {
@@ -319,11 +319,18 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 								if (!ReadCDForFileSystem(pExtArg, &devData, pDisc)) {
 									throw FALSE;
 								}
-#if 0
-								if (pExtArg->byReadContinue && pDisc->PROTECT.byExist == no) {
+								if (pExtArg->byScanProtectViaSector) {
+									if (!ReadCDForScanningProtectViaSector(pExtArg, &devData, pDisc)) {
+										throw FALSE;
+									}
+								}
+#if 1
+								if ((pExtArg->byScanProtectViaFile || pExtArg->byScanProtectViaSector) &&
+									pDisc->PROTECT.byExist == no) {
 									OutputString(
-										_T("[WARNING] Protection can't be detected. /rc is ignored.\n"));
-									pExtArg->byReadContinue = FALSE;
+										_T("[WARNING] Protection can't be detected. /sf or/and /ss is ignored.\n"));
+									pExtArg->byScanProtectViaFile = FALSE;
+									pExtArg->byScanProtectViaSector = FALSE;
 								}
 #endif
 							}
@@ -499,10 +506,10 @@ int SetOptionS(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	return TRUE;
 }
 
-int SetOptionRc(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
+int SetOptionSf(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 {
 	_TCHAR* endptr = NULL;
-	pExtArg->byReadContinue = TRUE;
+	pExtArg->byScanProtectViaFile = TRUE;
 	if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
 		pExtArg->dwTimeoutNum = _tcstoul(argv[(*i)++], &endptr, 10);
 		if (*endptr) {
@@ -513,7 +520,7 @@ int SetOptionRc(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	else {
 		pExtArg->dwTimeoutNum = DEFAULT_SPTD_TIMEOUT_VAL;
 		OutputString(
-			_T("/rc val is omitted. set [%d]\n"), DEFAULT_SPTD_TIMEOUT_VAL);
+			_T("/sf val is omitted. set [%d]\n"), DEFAULT_SPTD_TIMEOUT_VAL);
 	}
 	return TRUE;
 }
@@ -671,10 +678,13 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/p"), 2)) {
 					pExtArg->byPre = TRUE;
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/rc"), 3)) {
-					if (!SetOptionRc(argc, argv, pExtArg, &i)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/sf"), 3)) {
+					if (!SetOptionSf(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/ss"), 3)) {
+					pExtArg->byScanProtectViaSector = TRUE;
 				}
 				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/raw"), 4)) {
 					pExtArg->byRawDump = TRUE;
@@ -825,10 +835,13 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 						return FALSE;
 					}
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/rc"), 3)) {
-					if (!SetOptionRc(argc, argv, pExtArg, &i)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/sf"), 3)) {
+					if (!SetOptionSf(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/ss"), 3)) {
+					pExtArg->byScanProtectViaSector = TRUE;
 				}
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/np"), 3)) {
 					pExtArg->bySkipSubP = TRUE;
@@ -923,17 +936,17 @@ void printUsage(void)
 		_T("Usage\n")
 		_T("\tcd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/a (val)]\n")
 		_T("\t   [/be (str) or /d8] [/c2 (val1) (val2) (val3)] [/f] [/m] [/p] [/r]\n")
-		_T("\t   [/raw] [/rc (val)] [/np] [/nq] [/nr] [/ns] [/s (val)]\n")
+		_T("\t   [/raw] [/sf (val)] [/ss] [/np] [/nq] [/nr] [/ns] [/s (val)]\n")
 		_T("\t\tRipping a CD from a to z\n")
 		_T("\t\tFor PLEXTOR or drive that can scramble ripping\n")
 		_T("\tdata <DriveLetter> <Filename> <DriveSpeed(0-72)> <StartLBA> <EndLBA+1>\n")
-		_T("\t     [/q] [/be (str) or /d8] [/c2 (val1) (val2) (val3)] [/rc (val)]\n")
-		_T("\t     [/np] [/nq] [/nr] [/ns] [/s (val)]\n")
+		_T("\t     [/q] [/be (str) or /d8] [/c2 (val1) (val2) (val3)] [/sf (val)]\n")
+		_T("\t     [/ss] [/np] [/nq] [/nr] [/ns] [/s (val)]\n")
 		_T("\t\tRipping a CD from start to end (using 'all' flag)\n")
 		_T("\t\tFor no PLEXTOR or drive that can't scramble ripping\n")
 		_T("\taudio <DriveLetter> <Filename> <DriveSpeed(0-72)> <StartLBA> <EndLBA+1>\n")
 		_T("\t      [/q] [/a (val)] [/be (str) or /d8] [/c2 (val1) (val2) (val3)]\n")
-		_T("\t      [/rc (val)] [/np] [/nq] [/nr] [/ns] [/s (val)]\n")
+		_T("\t      [/sf (val)] [/np] [/nq] [/nr] [/ns] [/s (val)]\n")
 		_T("\t\tRipping a CD from start to end (using 'cdda' flag)\n")
 		_T("\t\tFor dumping a lead-in, lead-out mainly\n")
 		_T("\tgd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/be (str) or /d8]\n")
@@ -985,18 +998,21 @@ void printUsage(void)
 		_T("\t\t\tFor Alpha-Disc, very slow\n")
 		_T("\t/raw\tReading CD all (=including lead-in/out)\n")
 		_T("\t\t\tFor raw dumping\n")
-		_T("\t/rc\tDetect protect and if read error exists, continue reading\n")
-		_T("\t   \tand ignore c2 error on specific sector (Only CD)\n")
-		_T("\t\t\tFor Protected disc (CodeLock, LaserLock, RingPROTECH\n")
+		_T("\t/sf\tScan file to detect protect. If reading error exists,\n")
+		_T("\t   \tcontinue reading and ignore c2 error on specific sector\n")
+		_T("\t\t\tFor CodeLock, LaserLock, RingProtect, RingPROTECH\n")
 		_T("\t\t\t     SafeDisc, SmartE, CD.IDX, ProtectCD-VOB, CDS300\n")
 		_T("\t\t\tval\ttimeout value (default: 60)\n")
+		_T("\t/ss\tScan sector to detect protect. If reading error exists,\n")
+		_T("\t   \tcontinue reading and ignore c2 error on specific sector\n")
+		_T("\t\t\tFor ProtectCD-VOB\n")
 		_T("Option (for CD SubChannel)\n")
-		_T("\t/np\tNot fix SubP\n")
-		_T("\t/nq\tNot fix SubQ\n")
-		_T("\t/nr\tNot fix SubRtoW\n")
 	);
 	_tsystem(_T("pause"));
 	OutputString(
+		_T("\t/np\tNot fix SubP\n")
+		_T("\t/nq\tNot fix SubQ\n")
+		_T("\t/nr\tNot fix SubRtoW\n")
 		_T("\t/nl\tNot fix SubQ (RMSF, AMSF, CRC) (LBA 14100 - 16199)\n")
 		_T("\t   \t                               (LBA 42000 - 44399)\n")
 		_T("\t\t\tFor PlayStation LibCrypt discs\n")

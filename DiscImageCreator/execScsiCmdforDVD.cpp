@@ -25,27 +25,27 @@ BOOL ReadDVDForFileSystem(
 		return FALSE;
 	}
 	INT nLBA = 16;
+	BYTE byLogicalBlkCoef = 0;
 	DWORD dwPathTblSize, dwPathTblPos, dwRootDataLen = 0;
 	BOOL bPVD = FALSE;
 	if (!ReadVolumeDescriptor(pExtArg, pDevice, pDisc, 0, cdb
-		, lpBuf, &bPVD, &dwPathTblSize, &dwPathTblPos, &dwRootDataLen)) {
+		, lpBuf, &bPVD, &byLogicalBlkCoef, &dwPathTblSize, &dwPathTblPos, &dwRootDataLen)) {
 		return FALSE;
 	}
 	if (bPVD) {
-		// TODO: buf size
-		PDIRECTORY_RECORD pDirRec = (PDIRECTORY_RECORD)calloc(8192, sizeof(DIRECTORY_RECORD));
+		PDIRECTORY_RECORD pDirRec = (PDIRECTORY_RECORD)calloc(DIRECTORY_RECORD_SIZE, sizeof(DIRECTORY_RECORD));
 		if (!pDirRec) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
 		}
 		INT nDirPosNum = 0;
 		if (!ReadPathTableRecord(pExtArg, pDevice, pDisc, cdb
-			, dwPathTblSize, dwPathTblPos, pDirRec, &nDirPosNum)) {
+			, byLogicalBlkCoef, dwPathTblSize, dwPathTblPos, pDirRec, &nDirPosNum)) {
 			FreeAndNull(pDirRec);
 			return FALSE;
 		}
 		if (!ReadDirectoryRecord(pExtArg, pDevice, pDisc, cdb
-			, lpBuf, dwRootDataLen, pDirRec, nDirPosNum)) {
+			, lpBuf, byLogicalBlkCoef, dwRootDataLen, pDirRec, nDirPosNum)) {
 			FreeAndNull(pDirRec);
 			return FALSE;
 		}
@@ -114,7 +114,7 @@ BOOL ReadDVD(
 		}
 		LPBYTE lpBuf = (LPBYTE)ConvParagraphBoundary(pDevice, pBuf);
 
-		DWORD dwTransferLen = pDevice->dwMaxTransferLength / DISC_RAW_READ_SIZE;
+		DWORD dwTransferLen = 1;
 		CDB::_READ12 cdb = { 0 };
 		cdb.OperationCode = SCSIOP_READ12;
 		cdb.LogicalUnitNumber = pDevice->address.Lun;
@@ -126,6 +126,8 @@ BOOL ReadDVD(
 			throw FALSE;
 		}
 		BYTE byScsiStatus = 0;
+		dwTransferLen = pDevice->dwMaxTransferLength / DISC_RAW_READ_SIZE;
+		REVERSE_BYTES(&cdb.TransferLength, &dwTransferLen);
 
 		for (INT nLBA = 0; nLBA < pDisc->SCSI.nAllLength; nLBA += dwTransferLen) {
 			if (pDisc->SCSI.nAllLength - nLBA < (INT)dwTransferLen) {

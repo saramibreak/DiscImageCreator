@@ -125,10 +125,10 @@ BOOL ScsiPassThroughDirect(
 		&swb, dwLength, &swb, dwLength, &dwReturned, NULL)) {
 		OutputLastErrorNumAndString(pszFuncName, lLineNum);
 		bRet = FALSE;
-		if (!pExtArg->byReadContinue || !_tcscmp(_T("SetDiscSpeed"), pszFuncName)) {
+		if (!pExtArg->byScanProtectViaFile || !_tcscmp(_T("SetDiscSpeed"), pszFuncName)) {
 			// When semaphore time out occurred, if doesn't execute sleep,
 			// UNIT_ATTENSION errors occurs next ScsiPassThroughDirect executing.
-			DWORD milliseconds = 30000;
+			DWORD milliseconds = 40000;
 			OutputErrorString(
 				_T("Please wait for %lu milliseconds until the device is returned\n"), milliseconds);
 			Sleep(milliseconds);
@@ -157,6 +157,12 @@ BOOL ScsiPassThroughDirect(
 				, nLBA, nLBA, pszFuncName, lLineNum, swb.ScsiPassThroughDirect.Cdb[0]);
 			OutputScsiStatus(swb.ScsiPassThroughDirect.ScsiStatus);
 			OutputSenseData(&swb.SenseData);
+			if (swb.SenseData.SenseKey == SCSI_SENSE_UNIT_ATTENTION) {
+				DWORD milliseconds = 40000;
+				OutputErrorString(
+					_T("Please wait for %lu milliseconds until the device is returned\n"), milliseconds);
+				Sleep(milliseconds);
+			}
 		}
 	}
 	if (bNoSense) {

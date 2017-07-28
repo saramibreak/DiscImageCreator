@@ -53,13 +53,13 @@ typedef struct _EXT_ARG {
 	BYTE byPre;
 	BYTE byRawDump;
 	BYTE byReverse;
-	BYTE byReadContinue;
+	BYTE byScanProtectViaFile;
+	BYTE byScanProtectViaSector;
 	BYTE bySkipSubP;
 	BYTE bySkipSubQ;
 	BYTE bySkipSubRtoW;
 	BYTE byLibCrypt;
 	BYTE byIntentionalSub;
-	BYTE padding[1];
 	INT nAudioCDOffsetNum;
 	DWORD dwMaxRereadNum;
 	DWORD dwMaxC2ErrorNum;
