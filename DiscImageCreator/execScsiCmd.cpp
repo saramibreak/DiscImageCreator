@@ -838,6 +838,31 @@ BOOL ExecReadCD(
 	return TRUE;
 }
 
+VOID ManageEndOfDirectoryRecord(
+	LPINT nSectorNum,
+	BYTE byTransferLen,
+	UINT uiZeroPaddingNum,
+	LPBYTE lpDirRec,
+	LPUINT nOfs
+) {
+	if (*nSectorNum < byTransferLen) {
+		UINT j = 0;
+		for (; j < uiZeroPaddingNum; j++) {
+			if (lpDirRec[j] != 0) {
+				break;
+			}
+		}
+		if (j == uiZeroPaddingNum) {
+			*nOfs += uiZeroPaddingNum;
+			(*nSectorNum)++;
+			return;
+		}
+	}
+	else {
+		return;
+	}
+}
+
 BOOL ReadDirectoryRecordDetail(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
@@ -849,8 +874,7 @@ BOOL ReadDirectoryRecordDetail(
 	INT nDirPosNum,
 	BYTE byLogicalBlkCoef,
 	PDIRECTORY_RECORD pDirRec
-)
-{
+) {
 	if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)pCdb, nLBA, lpBuf,
 		(DWORD)(DISC_RAW_READ_SIZE * byTransferLen), _T(__FUNCTION__), __LINE__)) {
 		for (BYTE i = 0; i < byTransferLen; i++) {
@@ -861,25 +885,26 @@ BOOL ReadDirectoryRecordDetail(
 	for (BYTE i = 0; i < byTransferLen; i++) {
 		OutputCDMain(fileMainInfo, lpBuf + DISC_RAW_READ_SIZE * i, nLBA + i, DISC_RAW_READ_SIZE);
 	}
-	UINT nOfs = 0;
+	UINT uiOfs = 0;
 	for (INT nSectorNum = 0; nSectorNum < byTransferLen;) {
-		if (*(lpBuf + nOfs) == 0) {
+		if (*(lpBuf + uiOfs) == 0) {
 			break;
 		}
 		OutputVolDescLogA(
 			OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Directory Record), nLBA + nSectorNum, nLBA + nSectorNum);
 		for (;;) {
 			CHAR szCurDirName[MAX_FNAME_FOR_VOLUME] = { 0 };
-			LPBYTE lpDirRec = lpBuf + nOfs;
-			if (lpDirRec[0] >= 0x22) {
+			LPBYTE lpDirRec = lpBuf + uiOfs;
+			if (lpDirRec[0] >= MIN_LEN_DR) {
 				DWORD dwExtentPos = GetSizeOrDwordForVolDesc(lpDirRec + 2) / byLogicalBlkCoef;
 				DWORD dwDataLen = GetSizeOrDwordForVolDesc(lpDirRec + 10);
 				OutputFsDirectoryRecord(
 					pExtArg, pDisc, lpDirRec, dwExtentPos, dwDataLen, szCurDirName);
 				OutputVolDescLogA("\n");
-				nOfs += lpDirRec[0];
+				uiOfs += lpDirRec[0];
 
 				if (lpDirRec[25] & 0x02 && szCurDirName[0] != 0 && szCurDirName[0] != 1) {
+					// not upper and current directory 
 					for (INT i = 1; i < nDirPosNum; i++) {
 						if (dwExtentPos == pDirRec[i].uiPosOfDir &&
 							!_strnicmp(szCurDirName, pDirRec[i].szDirName, MAX_FNAME_FOR_VOLUME)) {
@@ -888,27 +913,37 @@ BOOL ReadDirectoryRecordDetail(
 						}
 					}
 				}
-				if (nOfs == (UINT)(DISC_RAW_READ_SIZE * (nSectorNum + 1))) {
+				if (uiOfs == (UINT)(DISC_RAW_READ_SIZE * (nSectorNum + 1))) {
 					nSectorNum++;
 					break;
 				}
 			}
 			else {
-				UINT zeroPaddingNum = DISC_RAW_READ_SIZE * (nSectorNum + 1) - nOfs;
-				if (nSectorNum < byTransferLen) {
-					UINT j = 0;
-					for (; j < zeroPaddingNum; j++) {
-						if (lpDirRec[j] != 0) {
-							break;
-						}
+				UINT uiZeroPaddingNum = DISC_RAW_READ_SIZE * (nSectorNum + 1) - uiOfs;
+				if (uiZeroPaddingNum > MIN_LEN_DR) {
+					BYTE byNextLenDR = lpDirRec[MIN_LEN_DR];
+					if (byNextLenDR >= MIN_LEN_DR) {
+						// Amiga Tools 4 : The second of Direcory Record (0x22 - 0x43) is corrupt...
+						// ========== LBA[040915, 0x09fd3]: Main Channel ==========
+						//        +0 +1 +2 +3 +4 +5 +6 +7  +8 +9 +A +B +C +D +E +F
+						// 0000 : 22 00 D3 9F 00 00 00 00  9F D3 00 08 00 00 00 00   "...............
+						// 0010 : 08 00 60 02 1D 17 18 2C  00 02 00 00 01 00 00 01   ..`....,........
+						// 0020 : 01 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00   ................
+						// 0030 : 00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00   ................
+						// 0040 : 00 00 01 01 2E 00 09 A0  00 00 00 00 A0 09 D8 01   ................
+						OutputMainErrorWithLBALogA(
+							"Direcory Record is corrupt. Skip reading from %d to %d byte\n"
+							, nLBA, 0, uiOfs, uiOfs + MIN_LEN_DR - 1);
+						uiOfs += MIN_LEN_DR;
+						break;
 					}
-					if (j == zeroPaddingNum) {
-						nOfs += zeroPaddingNum;
-						nSectorNum++;
+					else {
+						ManageEndOfDirectoryRecord(&nSectorNum, byTransferLen, uiZeroPaddingNum, lpDirRec, &uiOfs);
 						break;
 					}
 				}
 				else {
+					ManageEndOfDirectoryRecord(&nSectorNum, byTransferLen, uiZeroPaddingNum, lpDirRec, &uiOfs);
 					break;
 				}
 			}

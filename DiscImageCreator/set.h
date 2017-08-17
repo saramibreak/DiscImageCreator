@@ -143,6 +143,14 @@ VOID UpdateTmpSubQDataForISRC(
 	PSUB_Q pSubQ
 	);
 
+VOID UpdateTmpSubQDataForCDTV(
+	PEXEC_TYPE pExecType,
+	PDISC pDisc,
+	PSUB_Q pSubQ,
+	INT nLBA,
+	BYTE byCurrentTrackNum
+);
+
 VOID UpdateTmpSubQData(
 	PSUB_Q pSubQ,
 	BOOL bLibCrypt,

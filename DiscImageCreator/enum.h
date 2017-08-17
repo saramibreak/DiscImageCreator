@@ -37,6 +37,12 @@ typedef enum _MAIN_DATA_TYPE {
 	scrambled
 } MAIN_DATA_TYPE, *PMAIN_DATA_TYPE;
 
+typedef enum _TRACK_TYPE {
+	audioOnly,
+	dataExist,
+	pregapIn1stTrack,
+} TRACK_TYPE, *PTRACK_TYPE;
+
 typedef enum _PROTECT_TYPE {
 	no,
 	cdidx,

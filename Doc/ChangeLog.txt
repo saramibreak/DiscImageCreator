@@ -392,3 +392,11 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - fixed: Reading path/directory record (support the logical block size under 2048 byte)
 - fixed: The transfer length to read path/directory record for DVD
 - fixed: Short of the shifted sector if the combined offset is 2352*n (n is integer)
+
+*2017-08-18
+- added: adr 06 of the subchannel (some Amiga CDTV disc)
+- added: No data track but there is some data sector (some CD-i disc)
+- added: Corrupted directory record disc (Amiga tools 4)
+- changed: Some log message
+- changed: the max size to search the exe file when use /sf option (1024 -> 4096)
+- fixed: Disc that the session 2 starts from the track 2

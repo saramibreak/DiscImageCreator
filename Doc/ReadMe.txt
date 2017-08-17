@@ -175,16 +175,16 @@
  http://forum.redump.org/topic/2201/dumping-safedisc-cds/
 
 ** Method 2
- DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)] /rc
+ DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)] /sf
 
 * Ripping Guide for Protected disc
- DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)] /rc
+ DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)] /sf
 
 * Ripping Guide for SecuROM(v1 - v5.xx)
- DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)] /se
+ DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)] /ns
 
 * Ripping Guide for LibCrypt
- DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)] /l
+ DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)] /nl
 
 * Ripping Guide for GD-ROM (The high density area)
 ** Preparation

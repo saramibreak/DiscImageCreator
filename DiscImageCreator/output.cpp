@@ -1147,6 +1147,18 @@ BOOL SplitFileForGD(
 	return bRet;
 }
 
+BOOL IsValidReservedByte(
+	LPBYTE aSrcBuf
+) {
+	BOOL bRet = FALSE;
+	if (aSrcBuf[0x814] == 0x00 && aSrcBuf[0x815] == 0x00 && aSrcBuf[0x816] == 0x00 &&
+		aSrcBuf[0x817] == 0x00 && aSrcBuf[0x818] == 0x00 && aSrcBuf[0x819] == 0x00 &&
+		aSrcBuf[0x81a] == 0x00 && aSrcBuf[0x81b] == 0x00) {
+		bRet = TRUE;
+	}
+	return bRet;
+}
+
 VOID DescrambleMainChannelAll(
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
@@ -1185,26 +1197,47 @@ VOID DescrambleMainChannelAll(
 				fseek(fpImg, lSeekPtr * CD_RAW_SECTOR_SIZE, SEEK_SET);
 				fread(aSrcBuf, sizeof(BYTE), sizeof(aSrcBuf), fpImg);
 				if (IsValidMainDataHeader(aSrcBuf)) {
-					if (aSrcBuf[0x0f] == 0x01 || aSrcBuf[0x0f] == 0x02) {
-						OutputMainInfoWithLBALogA("Reverted mode. (Not be scrambled)\n", nFirstLBA, k + 1);
-						OutputCDMain(fileMainInfo, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
+					if (aSrcBuf[0x0f] == 0x61 || aSrcBuf[0x0f] == 0x62) {
+						if (IsValidReservedByte(aSrcBuf)) {
+							OutputMainErrorWithLBALogA("A part of reverted sector. (Not be scrambled)\n", nFirstLBA, k + 1);
+							OutputCDMain(fileMainError, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
+						}
+					}
+					else if (aSrcBuf[0x0f] == 0x01 || aSrcBuf[0x0f] == 0x02) {
+						OutputMainErrorWithLBALogA("Reverted sector. (Not be scrambled)\n", nFirstLBA, k + 1);
+						OutputCDMain(fileMainError, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
 					}
 					else if (aSrcBuf[0x0f] != 0x61 && aSrcBuf[0x0f] != 0x62 &&
 						aSrcBuf[0x0f] != 0x01 && aSrcBuf[0x0f] != 0x02) {
-						OutputMainInfoWithLBALogA("Invalid mode. ", nFirstLBA, k + 1);
-						if (aSrcBuf[0x814] != 0x48 || aSrcBuf[0x815] != 0x64 || aSrcBuf[0x816] != 0x36 ||
+						OutputMainErrorWithLBALogA("Invalid mode. ", nFirstLBA, k + 1);
+						BYTE m, s, f = 0;
+						LBAtoMSF(nFirstLBA + 150, &m, &s, &f);
+						if (aSrcBuf[0x0c] == m && aSrcBuf[0x0d] == s && aSrcBuf[0x0e] == f) {
+							OutputMainErrorLogA("Reverted sector. (Not be scrambled)\n");
+							if (!IsValidReservedByte(aSrcBuf)) {
+								OutputMainErrorLogA("Invalid reserved byte. Skip descrambling\n");
+								OutputString(
+									_T("\rDescrambling data sector of img (LBA) %6d/%6d"), nFirstLBA, nLastLBA);
+								OutputCDMain(fileMainError, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
+								continue;
+							}
+						}
+						else if (IsValidReservedByte(aSrcBuf)) {
+							OutputMainErrorLogA("A part of reverted sector. (Not be scrambled)\n");
+						}
+						else if (aSrcBuf[0x814] != 0x48 || aSrcBuf[0x815] != 0x64 || aSrcBuf[0x816] != 0x36 ||
 							aSrcBuf[0x817] != 0xab || aSrcBuf[0x818] != 0x56 || aSrcBuf[0x819] != 0xff ||
 							aSrcBuf[0x81a] != 0x7e || aSrcBuf[0x81b] != 0xc0) {
-							OutputMainInfoLogA("Invalid reserved byte. Skip descrambling\n");
+							OutputMainErrorLogA("Invalid reserved byte. Skip descrambling\n");
 							OutputString(
 								_T("\rDescrambling data sector of img (LBA) %6d/%6d"), nFirstLBA, nLastLBA);
-							OutputCDMain(fileMainInfo, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
+							OutputCDMain(fileMainError, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
 							continue;
 						}
 						else {
-							OutputMainInfoLogA("\n");
+							OutputMainErrorLogA("\n");
 						}
-						OutputCDMain(fileMainInfo, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
+						OutputCDMain(fileMainError, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
 					}
 					fseek(fpImg, -CD_RAW_SECTOR_SIZE, SEEK_CUR);
 					for (INT n = 0; n < CD_RAW_SECTOR_SIZE; n++) {
@@ -1277,18 +1310,16 @@ BOOL CreateBin(
 	)
 {
 	size_t stBufSize = 0;
-	INT nWriteSectorSize = CD_RAW_SECTOR_SIZE;
 
 	if (pDisc->SCSI.toc.LastTrack == pDisc->SCSI.toc.FirstTrack) {
-		stBufSize = (size_t)pDisc->SCSI.nAllLength * nWriteSectorSize;
+		stBufSize = (size_t)pDisc->SCSI.nAllLength * CD_RAW_SECTOR_SIZE;
 		nPrevLBA = 0;
 	}
 	else if (byTrackNum == pDisc->SCSI.toc.FirstTrack) {
-		stBufSize = (size_t)nLBA * nWriteSectorSize;
+		stBufSize = (size_t)nLBA * CD_RAW_SECTOR_SIZE;
 		if (!pExtArg->byRawDump &&
 			pDisc->SCSI.lpSessionNumList[byTrackNum - 1] != pDisc->SCSI.lpSessionNumList[byTrackNum]) {
-			stBufSize -= 
-				SESSION_TO_SESSION_SKIP_LBA * (UINT)(pDisc->SCSI.lpSessionNumList[byTrackNum] - 1);
+			stBufSize -= SESSION_TO_SESSION_SKIP_LBA * CD_RAW_SECTOR_SIZE;
 		}
 		nPrevLBA = 0;
 	}
@@ -1300,7 +1331,7 @@ BOOL CreateBin(
 			nPrevLBA -= nSessionSize;
 			nTmpLength -= nSessionSize;
 		}
-		stBufSize = (size_t)(nTmpLength - nPrevLBA) * nWriteSectorSize;
+		stBufSize = (size_t)(nTmpLength - nPrevLBA) * CD_RAW_SECTOR_SIZE;
 	}
 	else {
 		if (!pExtArg->byRawDump) {
@@ -1316,9 +1347,9 @@ BOOL CreateBin(
 				nLBA -= nSessionSize;
 			}
 		}
-		stBufSize = (size_t)(nLBA - nPrevLBA) * nWriteSectorSize;
+		stBufSize = (size_t)(nLBA - nPrevLBA) * CD_RAW_SECTOR_SIZE;
 	}
-	fseek(fpImg, nPrevLBA * nWriteSectorSize, SEEK_SET);
+	fseek(fpImg, nPrevLBA * CD_RAW_SECTOR_SIZE, SEEK_SET);
 	LPBYTE lpBuf = (LPBYTE)calloc(stBufSize, sizeof(BYTE));
 	if (!lpBuf) {
 		OutputString(_T("\n"));

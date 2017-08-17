@@ -1189,16 +1189,16 @@ VOID OutputCDOffset(
 	INT nSubchOffset
 	)
 {
-	OutputDiscLogA("======= Offset");
+	OutputDiscLogA(STR_DOUBLE_HYPHEN_B "Offset ");
 	if (bGetDriveOffset) {
-		OutputDiscLogA(
-			"(Drive offset data referes to http://www.accuraterip.com) =======");
+		OutputDiscLogA("(Drive offset referes to http://www.accuraterip.com)");
 	}
-	if (pExtArg->byAdd && pDisc->SCSI.byAudioOnly) {
+	OutputDiscLogA(STR_DOUBLE_HYPHEN_E);
+
+	if (pExtArg->byAdd && pDisc->SCSI.trackType == TRACK_TYPE::audioOnly) {
 		pDisc->MAIN.nCombinedOffset += pExtArg->nAudioCDOffsetNum * 4;
 		pExtArg->nAudioCDOffsetNum = 0; // If it is possible, I want to repair it by a better method...
 		OutputDiscLogA(
-			"\n"
 			"\t       Combined Offset(Byte) %6d, (Samples) %5d\n"
 			"\t-         Drive Offset(Byte) %6d, (Samples) %5d\n"
 			"\t----------------------------------------------------\n"
@@ -1210,7 +1210,6 @@ VOID OutputCDOffset(
 	}
 	else {
 		OutputDiscLogA(
-			"\n"
 			"\t Combined Offset(Byte) %6d, (Samples) %5d\n"
 			"\t-   Drive Offset(Byte) %6d, (Samples) %5d\n"
 			"\t----------------------------------------------\n"
@@ -1506,7 +1505,13 @@ VOID OutputCDSubToLog(
 				lpSubcode[19], lpSubcode[20], lpSubcode[21]);
 		}
 		break;
-	case 0x0c:
+	case ADR_ENCODES_CDTV_SPECIFIC:
+		_sntprintf(szSub2, BufSize,
+			_T("CDTV Specific   [%02x%02x%02x%02x%02x%02x%02x%02x], AMSF[     :%02x]"),
+			lpSubcode[13], lpSubcode[14], lpSubcode[15], lpSubcode[16], lpSubcode[17],
+			lpSubcode[18], lpSubcode[19], lpSubcode[20], lpSubcode[21]);
+		break;
+	case 0x0c: // I forgot what this is...
 		if (lpSubcode[13] == 0) {
 			if (lpSubcode[14] == 0xb1) {
 				_sntprintf(szSub2, BufSize,

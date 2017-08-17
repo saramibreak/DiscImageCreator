@@ -1155,8 +1155,7 @@ VOID CheckAndFixSubQ(
 	// LBA[208052, 0x32cb4], Audio, 2ch, Copy NG, Pre-emphasis No, Track[56], Idx[01], RMSF[03:15:35], AMSF[46:16:00], RtoW[0, 0, 0, 0]
 	// LBA[208053, 0x32cb5], Audio, 2ch, Copy NG, Pre-emphasis No, Track[56], Idx[01], RMSF[03:15:36], AMSF[46:16:03], RtoW[0, 0, 0, 0]
 	// LBA[208054, 0x32cb6], Audio, 2ch, Copy NG, Pre-emphasis No, Track[56], Idx[01], RMSF[03:15:37], AMSF[46:16:04], RtoW[0, 0, 0, 0]
-	BOOL bAMSF = IsValidSubQAMSF(pExecType,
-		pDisc->SUB.byIndex0InTrack1, pSubQ, lpSubcode, nLBA);
+	BOOL bAMSF = IsValidSubQAMSF(pExecType,	pDisc->SUB.byIndex0InTrack1, pSubQ, lpSubcode, nLBA);
 	BOOL bAFrame = IsValidSubQAFrame(lpSubcode, nLBA);
 
 	if (-76 < nLBA) {
@@ -1167,18 +1166,18 @@ VOID CheckAndFixSubQ(
 			else if (pSubQ->present.byAdr == ADR_ENCODES_ISRC) {
 				UpdateTmpSubQDataForISRC(pSubQ);
 			}
+			else if (pSubQ->present.byAdr == ADR_ENCODES_CDTV_SPECIFIC) {
+				UpdateTmpSubQDataForCDTV(pExecType, pDisc, pSubQ, nLBA, byCurrentTrackNum);
+			}
 			return;
 		}
 	}
 	else {
-		if (lpSubcode[22] == tmp1 && lpSubcode[23] == tmp2) {
-			return;
-		}
-		else {
+		if (lpSubcode[22] != tmp1 || lpSubcode[23] != tmp2) {
 			// TODO
 			OutputSubErrorWithLBALogA("Q <TODO>\n", nLBA, byCurrentTrackNum);
-			return;
 		}
+		return;
 	}
 
 	if (pSubQ->prevPrev.byTrackNum == 110 ||
@@ -1203,41 +1202,46 @@ VOID CheckAndFixSubQ(
 	BOOL bAdrCurrent = FALSE;
 	if (1 <= pExtArg->dwSubAddionalNum) {
 		// first check adr:2
-		if (!CheckAndFixSubQAdrMCN(pExecType, pExtArg, pDisc, lpSubcode, pSubQ,
-			byCurrentTrackNum, nLBA)) {
+		if (!CheckAndFixSubQAdrMCN(pExecType, pExtArg,
+			pDisc, lpSubcode, pSubQ, byCurrentTrackNum, nLBA)) {
 			// Next check adr:3
-			if (!CheckAndFixSubQAdrISRC(pExtArg, pDisc, lpSubcode,
-				pSubQ, byCurrentTrackNum, nLBA)) {
+			if (!CheckAndFixSubQAdrISRC(pExtArg, pDisc,
+				lpSubcode, pSubQ, byCurrentTrackNum, nLBA)) {
 				bAdrCurrent = TRUE;
 			}
 		}
 	}
 	else {
-		// If it doesn't read the next sector, adr premises that it isn't ADR_ENCODES_CURRENT_POSITION
+		// If it doesn't read the next sector,
+		// adr premises that it isn't ADR_ENCODES_CURRENT_POSITION
 		if (pSubQ->present.byAdr == ADR_ENCODES_ISRC) {
 			// first check adr:3
-			if (!CheckAndFixSubQAdrISRC(pExtArg, pDisc, lpSubcode,
-				pSubQ, byCurrentTrackNum, nLBA)) {
+			if (!CheckAndFixSubQAdrISRC(pExtArg, pDisc,
+				lpSubcode, pSubQ, byCurrentTrackNum, nLBA)) {
 				// Next check adr:2
-				if (!CheckAndFixSubQAdrMCN(pExecType, pExtArg, pDisc, lpSubcode, pSubQ,
-					byCurrentTrackNum, nLBA)) {
+				if (!CheckAndFixSubQAdrMCN(pExecType, pExtArg,
+					pDisc, lpSubcode, pSubQ, byCurrentTrackNum, nLBA)) {
 					bAdrCurrent = TRUE;
 				}
 			}
 		}
 		else if (pSubQ->present.byAdr != ADR_ENCODES_CURRENT_POSITION) {
 			// first check adr:2
-			if (!CheckAndFixSubQAdrMCN(pExecType, pExtArg, pDisc, lpSubcode, pSubQ,
-				byCurrentTrackNum, nLBA)) {
+			if (!CheckAndFixSubQAdrMCN(pExecType, pExtArg,
+				pDisc, lpSubcode, pSubQ, byCurrentTrackNum, nLBA)) {
 				// Next check adr:3
-				if (!CheckAndFixSubQAdrISRC(pExtArg, pDisc, lpSubcode,
-					pSubQ, byCurrentTrackNum, nLBA)) {
+				if (!CheckAndFixSubQAdrISRC(pExtArg, pDisc,
+					lpSubcode, pSubQ, byCurrentTrackNum, nLBA)) {
 					bAdrCurrent = TRUE;
 				}
 			}
 		}
 	}
 	if (bAdrCurrent && pSubQ->present.byAdr != ADR_ENCODES_CURRENT_POSITION) {
+		if (pSubQ->present.byAdr > ADR_ENCODES_ISRC) {
+			OutputSubErrorWithLBALogA("Q[12]:Adr[%d] -> [0x01]\n"
+				, nLBA, byCurrentTrackNum, pSubQ->present.byAdr);
+		}
 		pSubQ->present.byAdr = ADR_ENCODES_CURRENT_POSITION;
 		lpSubcode[12] = (BYTE)(pSubQ->present.byCtl << 4 | pSubQ->present.byAdr);
 	}
@@ -1287,15 +1291,13 @@ VOID CheckAndFixSubQ(
 			lpSubcode[13] = DecToBcd(pSubQ->present.byTrackNum);
 		}
 		else if (!bPrevTrackNum) {
-			if (pSubQ->prev.byTrackNum > 0) {
+			if (pSubQ->prev.byIndex < MAXIMUM_NUMBER_INDEXES && 
+				0 < pSubQ->prev.byTrackNum && pSubQ->prev.byTrackNum <= pDisc->SCSI.toc.LastTrack) {
 				OutputSubErrorWithLBALogA("Q[13]:PrevTrackNum[%02u] -> [%02u]\n"
 					, nLBA, byCurrentTrackNum, pSubQ->prev.byTrackNum, pSubQ->prevPrev.byTrackNum);
 				pDisc->SUB.lpFirstLBAListOnSub[pSubQ->prev.byTrackNum - 1][pSubQ->prev.byIndex] = -1;
 				pDisc->SUB.lpFirstLBAListOnSubSync[pSubQ->prev.byTrackNum - 1][pSubQ->prev.byIndex] = -1;
 				pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[pSubQ->prev.byTrackNum - 1] = -1;
-			}
-			else {
-				OutputSubErrorLogA("Internal error: PrevTrackNum is 0!\n");
 			}
 			pSubQ->prev.byTrackNum = pSubQ->prevPrev.byTrackNum;
 			pSubQ->prev.byIndex = pSubQ->prevPrev.byIndex;
@@ -1310,27 +1312,23 @@ VOID CheckAndFixSubQ(
 			lpSubcode[14] = DecToBcd(pSubQ->present.byIndex);
 		}
 		else if (!bPrevIndex) {
-			if (pSubQ->prev.byTrackNum > 0) {
+			if (pSubQ->prev.byIndex < MAXIMUM_NUMBER_INDEXES && 
+				0 < pSubQ->prev.byTrackNum && pSubQ->prev.byTrackNum <= pDisc->SCSI.toc.LastTrack) {
 				OutputSubErrorWithLBALogA("Q[14]:PrevIdx[%02u] -> [%02u]\n"
 					, nLBA - 1, byCurrentTrackNum, pSubQ->prev.byIndex, pSubQ->prevPrev.byIndex);
 				pDisc->SUB.lpFirstLBAListOnSub[pSubQ->prev.byTrackNum - 1][pSubQ->prev.byIndex] = -1;
 				pDisc->SUB.lpFirstLBAListOnSubSync[pSubQ->prev.byTrackNum - 1][pSubQ->prev.byIndex] = -1;
 			}
-			else {
-				OutputSubErrorLogA("Internal error: PrevTrackNum is 0!\n");
-			}
 			pSubQ->prev.byTrackNum = pSubQ->prevPrev.byTrackNum;
 			pSubQ->prev.byIndex = pSubQ->prevPrev.byIndex;
 		}
 		else if (!bPrevPrevIndex) {
-			if (pSubQ->prev.byTrackNum > 0) {
+			if (pSubQ->prevPrev.byIndex < MAXIMUM_NUMBER_INDEXES &&
+				0 < pSubQ->prev.byTrackNum && pSubQ->prev.byTrackNum <= pDisc->SCSI.toc.LastTrack) {
 				OutputSubErrorWithLBALogA("Q[14]:PrevPrevIdx[%02u] -> [%02u]\n"
 					, nLBA - 1, byCurrentTrackNum, pSubQ->prevPrev.byIndex, pSubQ->prev.byIndex);
 				pDisc->SUB.lpFirstLBAListOnSub[pSubQ->prevPrev.byTrackNum - 1][pSubQ->prevPrev.byIndex] = -1;
 				pDisc->SUB.lpFirstLBAListOnSubSync[pSubQ->prevPrev.byTrackNum - 1][pSubQ->prevPrev.byIndex] = -1;
-			}
-			else {
-				OutputSubErrorLogA("Internal error: PrevPrevTrackNum is 0!\n");
 			}
 			pSubQ->prevPrev.byTrackNum = pSubQ->prev.byTrackNum;
 			pSubQ->prevPrev.byIndex = pSubQ->prev.byIndex;

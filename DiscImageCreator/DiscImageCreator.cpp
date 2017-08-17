@@ -315,7 +315,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 							if (!ReadCDForCheckingSubRtoW(pExtArg, &devData, pDisc)) {
 								throw FALSE;
 							}
-							if (!pDisc->SCSI.byAudioOnly) {
+							if (pDisc->SCSI.trackType != TRACK_TYPE::audioOnly) {
 								if (!ReadCDForFileSystem(pExtArg, &devData, pDisc)) {
 									throw FALSE;
 								}
@@ -326,7 +326,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 								}
 #if 1
 								if ((pExtArg->byScanProtectViaFile || pExtArg->byScanProtectViaSector) &&
-									pDisc->PROTECT.byExist == no) {
+									pDisc->PROTECT.byExist == PROTECT_TYPE::no) {
 									OutputString(
 										_T("[WARNING] Protection can't be detected. /sf or/and /ss is ignored.\n"));
 									pExtArg->byScanProtectViaFile = FALSE;

@@ -23,6 +23,8 @@
 #define MAINHEADER_MODE1_SIZE	(SYNC_SIZE + HEADER_SIZE)
 #define SUBHEADER_SIZE			(8)
 
+#define ADR_ENCODES_CDTV_SPECIFIC	(0x06)
+
 #define DIRECTORY_RECORD_SIZE	(16384)
 #define THREEDO_DIR_HEADER_SIZE	(20)
 #define THREEDO_DIR_ENTRY_SIZE	(72)
@@ -31,7 +33,7 @@
 #define META_ISRC_SIZE			(12 + 1)
 #define META_CDTEXT_SIZE		(80 + 1)
 
-#define EXELBA_STORE_SIZE (1024) // TODO
+#define EXELBA_STORE_SIZE (4096) // TODO
 #define EXENAME_STORE_SIZE (64) // TODO
 // 情報交換の水準
 // 水準	1	2	3
@@ -42,6 +44,7 @@
 // Joliet Extensions
 // Unicodeで64文字までの長いファイル名を記録できる。
 #define MAX_FNAME_FOR_VOLUME (64)
+#define MIN_LEN_DR (34)
 
 // PLEXTOR specified command
 #if 0

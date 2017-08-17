@@ -84,7 +84,7 @@ BOOL ExecSearchingOffset(
 			OUTPUT_DHYPHEN_PLUS_STR_WITH_C2_SUBCH_F(Check Drive + CD offset), lpCmd[0], (lpCmd[9] & 0x6) >> 1, lpCmd[10]);
 	}
 
-	if (!pDisc->SCSI.byAudioOnly) {
+	if (pDisc->SCSI.trackType != TRACK_TYPE::audioOnly) {
 		if (pExtArg->byD8 || pDevice->byPlxtrDrive || *pExecType == gd) {
 			OutputCDMain(fileDisc, lpBuf, nLBA, CD_RAW_SECTOR_SIZE);
 		}
@@ -110,7 +110,7 @@ BOOL ExecSearchingOffset(
 		}
 	}
 	else {
-		if (!pDisc->SCSI.byAudioOnly) {
+		if (pDisc->SCSI.trackType != TRACK_TYPE::audioOnly) {
 			BYTE aBuf[CD_RAW_SECTOR_SIZE * 2] = { 0 };
 			memcpy(aBuf, lpBuf, CD_RAW_SECTOR_SIZE);
 
@@ -122,8 +122,12 @@ BOOL ExecSearchingOffset(
 
 			memcpy(aBuf + CD_RAW_SECTOR_SIZE, lpBuf, CD_RAW_SECTOR_SIZE);
 			if (!GetWriteOffset(pDisc, aBuf)) {
-				OutputErrorString(_T("Failed to get write-offset\n"));
-				return FALSE;
+				if (pDisc->SCSI.trackType == TRACK_TYPE::dataExist) {
+					OutputErrorString(_T("Failed to get write-offset\n"));
+					return FALSE;
+				}
+				// There isn't some data sector in pregap sector of track 1.
+				pDisc->SCSI.trackType = TRACK_TYPE::audioOnly;
 			}
 		}
 		OutputCDOffset(pExtArg, pDisc, bGetDriveOffset
@@ -219,7 +223,7 @@ BOOL ReadCDForSearchingOffset(
 	}
 
 	INT nDriveOffset = nDriveSampleOffset * 4; // byte size * 4 = sample size
-	if (pDisc->SCSI.byAudioOnly) {
+	if (pDisc->SCSI.trackType != TRACK_TYPE::dataExist) {
 		pDisc->MAIN.nCombinedOffset = nDriveOffset;
 	}
 	LPBYTE pBuf = NULL;
@@ -243,7 +247,7 @@ BOOL ReadCDForSearchingOffset(
 		ZeroMemory(lpBuf, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE);
 
 		lpCmd[10] = (BYTE)CDFLAG::_PLXTR_READ_CDDA::NoSub;
-		if (!pDisc->SCSI.byAudioOnly) {
+		if (pDisc->SCSI.trackType != TRACK_TYPE::audioOnly) {
 			if (!ExecSearchingOffset(pExecType, pExtArg, pDevice, pDisc, lpCmd, nLBA, lpBuf
 				, CD_RAW_SECTOR_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset, FALSE)) {
 				bRet = FALSE;
@@ -291,7 +295,7 @@ BOOL ReadCDForSearchingOffset(
 			SetReadCDCommand(pExtArg, pDevice, &cdb, flg
 				, 1, CDFLAG::_READ_CD::byte294, CDFLAG::_READ_CD::NoSub, FALSE);
 			memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
-			if (!pDisc->SCSI.byAudioOnly) {
+			if (pDisc->SCSI.trackType != TRACK_TYPE::audioOnly) {
 				if (!ExecSearchingOffset(pExecType, pExtArg, pDevice, pDisc, lpCmd, nLBA, lpBuf
 					, CD_RAW_SECTOR_WITH_C2_294_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset, FALSE)) {
 					// not return FALSE
@@ -317,7 +321,7 @@ BOOL ReadCDForSearchingOffset(
 				SetReadCDCommand(pExtArg, pDevice, &cdb, flg
 					, 1, CDFLAG::_READ_CD::byte296, CDFLAG::_READ_CD::NoSub, FALSE);
 				memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
-				if (!pDisc->SCSI.byAudioOnly) {
+				if (pDisc->SCSI.trackType != TRACK_TYPE::audioOnly) {
 					if (!ExecSearchingOffset(pExecType, pExtArg, pDevice, pDisc, lpCmd, nLBA, lpBuf
 						, CD_RAW_SECTOR_WITH_C2_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset, FALSE)) {
 						// not return FALSE
@@ -341,7 +345,7 @@ BOOL ReadCDForSearchingOffset(
 			}
 		}
 		else {
-			if (*pExecType != data && !pDisc->SCSI.byAudioOnly) {
+			if (*pExecType != data && pDisc->SCSI.trackType != TRACK_TYPE::audioOnly) {
 				lpCmd[10] = (BYTE)CDFLAG::_READ_CD::NoSub;
 				if (!ExecSearchingOffset(pExecType, pExtArg, pDevice, pDisc, lpCmd, nLBA, lpBuf
 					, CD_RAW_SECTOR_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset, FALSE)) {
@@ -2268,7 +2272,7 @@ BOOL ReadCDAll(
 			throw FALSE;
 		}
 		// audio only -> from .scm to .img. other descramble img.
-		if (pExtArg->byBe || pDisc->SCSI.byAudioOnly) {
+		if (pExtArg->byBe || pDisc->SCSI.trackType == TRACK_TYPE::audioOnly) {
 			OutputString(_T("Moving .scm to .img\n"));
 			if (!MoveFileEx(pszOutScmFile, pszNewPath, MOVEFILE_REPLACE_EXISTING)) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);

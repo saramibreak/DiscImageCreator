@@ -122,10 +122,11 @@ typedef struct _DISC {
 		LPINT lpLastLBAListOnToc;	// get at CDROM_READ_TOC_EX_FORMAT_TOC
 		INT nFirstLBAofDataTrack;	// get at CDROM_READ_TOC_EX_FORMAT_TOC
 		INT nLastLBAofDataTrack;	// get at CDROM_READ_TOC_EX_FORMAT_TOC
+		TRACK_TYPE trackType;		// get at CDROM_READ_TOC_EX_FORMAT_TOC
 		BYTE byFirstDataTrackNum;	// get at CDROM_READ_TOC_EX_FORMAT_TOC
 		BYTE byLastDataTrackNum;	// get at CDROM_READ_TOC_EX_FORMAT_TOC
-		BYTE byAudioOnly;			// get at CDROM_READ_TOC_EX_FORMAT_TOC
 		BYTE byCdi;					// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
+		BYTE padding1;
 		LPBYTE lpSessionNumList;	// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
 		INT nFirstLBAofLeadout;		// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
 		INT nFirstLBAof2ndSession;	// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
@@ -133,7 +134,7 @@ typedef struct _DISC {
 		LPSTR* pszPerformer;		// get at CDROM_READ_TOC_EX_FORMAT_CDTEXT
 		LPSTR* pszSongWriter;		// get at CDROM_READ_TOC_EX_FORMAT_CDTEXT
 		WORD wCurrentMedia;			// get at SCSIOP_GET_CONFIGURATION
-		BYTE reserved[2];
+		BYTE padding2[2];
 	} SCSI;
 	struct _MAIN {
 		INT nAdjustSectorNum;

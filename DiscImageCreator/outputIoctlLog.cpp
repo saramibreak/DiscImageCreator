@@ -6,6 +6,17 @@
 #include "output.h"
 #include "outputIoctlLog.h"
 
+VOID OutputAdditionalSenseCodeQualifierOther(
+	BYTE byCode
+) {
+	if (byCode >= SCSI_ADSENSE_VENDOR_UNIQUE) {
+		OutputLog(standardError | fileMainError, _T("VENDER UNIQUE ERROR"));
+	}
+	else {
+		OutputLog(standardError | fileMainError, _T("OTHER"));
+	}
+}
+
 VOID OutputAdditionalSenseCodeQualifier0x00(
 	BYTE byAscq
 	)
@@ -51,7 +62,7 @@ VOID OutputAdditionalSenseCodeQualifier0x00(
 		OutputLog(standardError | fileMainError, _T("EXTENDED COPY INFORMATION AVAILABLE"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -65,7 +76,7 @@ VOID OutputAdditionalSenseCodeQualifier0x01(
 		OutputLog(standardError | fileMainError, _T("NO INDEX/SECTOR SIGNAL"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -79,7 +90,7 @@ VOID OutputAdditionalSenseCodeQualifier0x02(
 		OutputLog(standardError | fileMainError, _T("NO SEEK COMPLETE"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -93,7 +104,7 @@ VOID OutputAdditionalSenseCodeQualifier0x03(
 		OutputLog(standardError | fileMainError, _T("PERIPHERAL DEVICE WRITE FAULT"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -182,7 +193,7 @@ VOID OutputAdditionalSenseCodeQualifier0x04(
 		OutputLog(standardError | fileMainError, _T("LUN_NOT_READY - POWER CYCLE REQUIRED"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -196,7 +207,7 @@ VOID OutputAdditionalSenseCodeQualifier0x05(
 		OutputLog(standardError | fileMainError, _T("LOGICAL UNIT DOES NOT RESPOND TO SELECTION"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -210,7 +221,7 @@ VOID OutputAdditionalSenseCodeQualifier0x06(
 		OutputLog(standardError | fileMainError, _T("NO REFERENCE POSITION FOUND"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -224,7 +235,7 @@ VOID OutputAdditionalSenseCodeQualifier0x07(
 		OutputLog(standardError | fileMainError, _T("MULTIPLE PERIPHERAL DEVICES SELECTED"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -250,7 +261,7 @@ VOID OutputAdditionalSenseCodeQualifier0x08(
 		OutputLog(standardError | fileMainError, _T("LUN_COMMUNICATION - UNREACHABLE_TARGET"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -276,7 +287,7 @@ VOID OutputAdditionalSenseCodeQualifier0x09(
 		OutputLog(standardError | fileMainError, _T("HEAD SELECT FAULT"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -290,7 +301,7 @@ VOID OutputAdditionalSenseCodeQualifier0x0a(
 		OutputLog(standardError | fileMainError, _T("ERROR LOG OVERFLOW"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -331,7 +342,7 @@ VOID OutputAdditionalSenseCodeQualifier0x0b(
 		OutputLog(standardError | fileMainError, _T("WARNING - DEVICE STATISTICS NOTIFICATION ACTIVE"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -384,7 +395,7 @@ VOID OutputAdditionalSenseCodeQualifier0x0c(
 		OutputLog(standardError | fileMainError, _T("WRITE ERROR - DEFECTS IN ERROR WINDOW"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -413,7 +424,7 @@ VOID OutputAdditionalSenseCodeQualifier0x0d(
 		OutputLog(standardError | fileMainError, _T("COPY TARGET DEVICE DATA OVERRUN"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -436,7 +447,7 @@ VOID OutputAdditionalSenseCodeQualifier0x0e(
 		OutputLog(standardError | fileMainError, _T("INVALID FIELD IN COMMAND INFORMATION UNIT"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -459,7 +470,7 @@ VOID OutputAdditionalSenseCodeQualifier0x10(
 		OutputLog(standardError | fileMainError, _T("LOGICAL BLOCK REFERENCE TAG CHECK FAILED"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -530,7 +541,7 @@ VOID OutputAdditionalSenseCodeQualifier0x11(
 		OutputLog(standardError | fileMainError, _T("WRITE AFTER SANITIZE REQUIRED"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -544,7 +555,7 @@ VOID OutputAdditionalSenseCodeQualifier0x12(
 		OutputLog(standardError | fileMainError, _T("ADDRESS MARK NOT FOUND FOR ID FIELD"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -558,7 +569,7 @@ VOID OutputAdditionalSenseCodeQualifier0x13(
 		OutputLog(standardError | fileMainError, _T("ADDRESS MARK NOT FOUND FOR DATA FIELD"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -581,7 +592,7 @@ VOID OutputAdditionalSenseCodeQualifier0x14(
 		OutputLog(standardError | fileMainError, _T("TRACK_ERROR - RECORD NOT FOUND - DATA AUTO-REALLOCATED"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -601,7 +612,7 @@ VOID OutputAdditionalSenseCodeQualifier0x15(
 		OutputLog(standardError | fileMainError, _T("SEEK_ERROR - POSITIONING ERROR DETECTED BY READ OF MEDIUM"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -627,7 +638,7 @@ VOID OutputAdditionalSenseCodeQualifier0x16(
 		OutputLog(standardError | fileMainError, _T("DATA SYNC ERROR - RECOMMEND REASSIGNMENT"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -668,7 +679,7 @@ VOID OutputAdditionalSenseCodeQualifier0x17(
 		OutputLog(standardError | fileMainError, _T("REC_DATA_NOECC - RECOVERED DATA WITHOUT ECC - DATA REWRITTEN"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -706,7 +717,7 @@ VOID OutputAdditionalSenseCodeQualifier0x18(
 		OutputLog(standardError | fileMainError, _T("REC_DATA_ECC - RECOVERED DATA WITH LINKING"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -729,7 +740,7 @@ VOID OutputAdditionalSenseCodeQualifier0x19(
 		OutputLog(standardError | fileMainError, _T("DEFECT LIST ERROR IN GROWN LIST"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -743,7 +754,7 @@ VOID OutputAdditionalSenseCodeQualifier0x1a(
 		OutputLog(standardError | fileMainError, _T("PARAMETER LIST LENGTH ERROR"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -757,7 +768,7 @@ VOID OutputAdditionalSenseCodeQualifier0x1b(
 		OutputLog(standardError | fileMainError, _T("SYNCHRONOUS DATA TRANSFER ERROR"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -777,7 +788,7 @@ VOID OutputAdditionalSenseCodeQualifier0x1c(
 		OutputLog(standardError | fileMainError, _T("GROWN DEFECT LIST NOT FOUND"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -794,7 +805,7 @@ VOID OutputAdditionalSenseCodeQualifier0x1d(
 		OutputLog(standardError | fileMainError, _T("MISCOMPARE VERIFY OF UNMAPPED LBA"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -808,7 +819,7 @@ VOID OutputAdditionalSenseCodeQualifier0x1e(
 		OutputLog(standardError | fileMainError, _T("RECOVERED ID WITH ECC CORRECTION"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -822,7 +833,7 @@ VOID OutputAdditionalSenseCodeQualifier0x1f(
 		OutputLog(standardError | fileMainError, _T("PARTIAL DEFECT LIST TRANSFER"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -857,7 +868,7 @@ VOID OutputAdditionalSenseCodeQualifier0x20(
 		OutputLog(standardError | fileMainError, _T("ILLEGAL_COMMAND - ACCESS DENIED - ACL LUN CONFLICT"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -880,7 +891,7 @@ VOID OutputAdditionalSenseCodeQualifier0x21(
 		OutputLog(standardError | fileMainError, _T("ILLEGAL_BLOCK - INVALID WRITE CROSSING LAYER JUMP"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -894,7 +905,7 @@ VOID OutputAdditionalSenseCodeQualifier0x22(
 		OutputLog(standardError | fileMainError, _T("ILLEGAL FUNCTION"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -938,7 +949,7 @@ VOID OutputAdditionalSenseCodeQualifier0x23(
 		OutputLog(standardError | fileMainError, _T("INVALID TOKEN OPERATION, INVALID TOKEN LENGTH"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -958,7 +969,7 @@ VOID OutputAdditionalSenseCodeQualifier0x24(
 		OutputLog(standardError | fileMainError, _T("INVALID XCDB"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -972,7 +983,7 @@ VOID OutputAdditionalSenseCodeQualifier0x25(
 		OutputLog(standardError | fileMainError, _T("LOGICAL UNIT NOT SUPPORTED"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1028,7 +1039,7 @@ VOID OutputAdditionalSenseCodeQualifier0x26(
 		OutputLog(standardError | fileMainError, _T("INVALID PARAMETER WHILE PORT IS ENABLED"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1063,7 +1074,7 @@ VOID OutputAdditionalSenseCodeQualifier0x27(
 		OutputLog(standardError | fileMainError, _T("SPACE ALLOCATION FAILED WRITE PROTECT"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1083,7 +1094,7 @@ VOID OutputAdditionalSenseCodeQualifier0x28(
 		OutputLog(standardError | fileMainError, _T("FORMAT-LAYER MAY HAVE CHANGED"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1118,7 +1129,7 @@ VOID OutputAdditionalSenseCodeQualifier0x29(
 		OutputLog(standardError | fileMainError, _T("I_T NEXUS LOSS OCCURRED"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1171,7 +1182,7 @@ VOID OutputAdditionalSenseCodeQualifier0x2a(
 		OutputLog(standardError | fileMainError, _T("SA CREATION CAPABILITIES DATA HAS CHANGED"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1185,7 +1196,7 @@ VOID OutputAdditionalSenseCodeQualifier0x2b(
 		OutputLog(standardError | fileMainError, _T("COPY CANNOT EXECUTE SINCE HOST CANNOT DISCONNECT"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1220,7 +1231,7 @@ VOID OutputAdditionalSenseCodeQualifier0x2c(
 		OutputLog(standardError | fileMainError, _T("ORWRITE GENERATION DOES NOT MATCH"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1243,7 +1254,7 @@ VOID OutputAdditionalSenseCodeQualifier0x2e(
 		OutputLog(standardError | fileMainError, _T("COMMAND TIMEOUT DURING PROCESSING DUE TO ERROR RECOVERY"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1266,7 +1277,7 @@ VOID OutputAdditionalSenseCodeQualifier0x2f(
 		OutputLog(standardError | fileMainError, _T("SOME COMMANDS CLEARED BY QUEUING LAYER EVENT"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1313,7 +1324,7 @@ VOID OutputAdditionalSenseCodeQualifier0x30(
 		OutputLog(standardError | fileMainError, _T("MEDIUM NOT FORMATTED"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1336,7 +1347,7 @@ VOID OutputAdditionalSenseCodeQualifier0x31(
 		OutputLog(standardError | fileMainError, _T("SANITIZE COMMAND FAILED"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1353,7 +1364,7 @@ VOID OutputAdditionalSenseCodeQualifier0x32(
 		OutputLog(standardError | fileMainError, _T("DEFECT LIST UPDATE FAILURE"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1367,7 +1378,7 @@ VOID OutputAdditionalSenseCodeQualifier0x34(
 		OutputLog(standardError | fileMainError, _T("ENCLOSURE FAILURE"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1396,7 +1407,7 @@ VOID OutputAdditionalSenseCodeQualifier0x35(
 		OutputLog(standardError | fileMainError, _T("ENCLOSURE SERVICES CHECKSUM ERROR"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1410,7 +1421,7 @@ VOID OutputAdditionalSenseCodeQualifier0x37(
 		OutputLog(standardError | fileMainError, _T("ROUNDED PARAMETER"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1424,7 +1435,7 @@ VOID OutputAdditionalSenseCodeQualifier0x38(
 		OutputLog(standardError | fileMainError, _T("THIN PROVISIONING SOFT THRESHOLD REACHED"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1438,7 +1449,7 @@ VOID OutputAdditionalSenseCodeQualifier0x39(
 		OutputLog(standardError | fileMainError, _T("SAVING PARAMETERS NOT SUPPORTED"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1464,7 +1475,7 @@ VOID OutputAdditionalSenseCodeQualifier0x3a(
 		OutputLog(standardError | fileMainError, _T("MEDIUM NOT PRESENT - MEDIUM AUXILIARY MEMORY ACCESSIBLE"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1502,7 +1513,7 @@ VOID OutputAdditionalSenseCodeQualifier0x3b(
 		OutputLog(standardError | fileMainError, _T("MECHANICAL POSITIONING OR CHANGER ERROR"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1516,7 +1527,7 @@ VOID OutputAdditionalSenseCodeQualifier0x3d(
 		OutputLog(standardError | fileMainError, _T("INVALID BITS IN IDENTIFY MESSAGE"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1542,7 +1553,7 @@ VOID OutputAdditionalSenseCodeQualifier0x3e(
 		OutputLog(standardError | fileMainError, _T("LOGICAL UNIT UNABLE TO UPDATE SELF-TEST LOG"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1619,7 +1630,7 @@ VOID OutputAdditionalSenseCodeQualifier0x3f(
 		OutputLog(standardError | fileMainError, _T("INSPECT REFERRALS SENSE DESCRIPTORS"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1633,7 +1644,7 @@ VOID OutputAdditionalSenseCodeQualifier0x40(
 		OutputLog(standardError | fileMainError, _T("RAM FAILURE"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1647,7 +1658,7 @@ VOID OutputAdditionalSenseCodeQualifier0x41(
 		OutputLog(standardError | fileMainError, _T("DATA PATH FAILURE"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1661,7 +1672,7 @@ VOID OutputAdditionalSenseCodeQualifier0x42(
 		OutputLog(standardError | fileMainError, _T("POWER-ON OR SELF-TEST FAILURE"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1675,7 +1686,7 @@ VOID OutputAdditionalSenseCodeQualifier0x43(
 		OutputLog(standardError | fileMainError, _T("MESSAGE ERROR"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1695,7 +1706,7 @@ VOID OutputAdditionalSenseCodeQualifier0x44(
 		OutputLog(standardError | fileMainError, _T("ATA DEVICE FAILED SET FEATURES"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1709,7 +1720,7 @@ VOID OutputAdditionalSenseCodeQualifier0x45(
 		OutputLog(standardError | fileMainError, _T("SELECT OR RESELECT FAILURE"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1723,7 +1734,7 @@ VOID OutputAdditionalSenseCodeQualifier0x46(
 		OutputLog(standardError | fileMainError, _T("UNSUCCESSFUL SOFT RESET"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1758,7 +1769,7 @@ VOID OutputAdditionalSenseCodeQualifier0x47(
 		OutputLog(standardError | fileMainError, _T("SOME COMMANDS CLEARED BY ISCSI PROTOCOL EVENT"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1772,7 +1783,7 @@ VOID OutputAdditionalSenseCodeQualifier0x48(
 		OutputLog(standardError | fileMainError, _T("INITIATOR DETECTED ERROR MESSAGE RECEIVED"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1786,7 +1797,7 @@ VOID OutputAdditionalSenseCodeQualifier0x49(
 		OutputLog(standardError | fileMainError, _T("INVALID MESSAGE ERROR"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1800,7 +1811,7 @@ VOID OutputAdditionalSenseCodeQualifier0x4a(
 		OutputLog(standardError | fileMainError, _T("COMMAND PHASE ERROR"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1877,7 +1888,7 @@ VOID OutputAdditionalSenseCodeQualifier0x4b(
 		OutputLog(standardError | fileMainError, _T("PCIE TLP PREFIX BLOCKED"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1891,7 +1902,7 @@ VOID OutputAdditionalSenseCodeQualifier0x4c(
 		OutputLog(standardError | fileMainError, _T("LOGICAL UNIT FAILED SELF-CONFIGURATION"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1905,7 +1916,7 @@ VOID OutputAdditionalSenseCodeQualifier0x4e(
 		OutputLog(standardError | fileMainError, _T("OVERLAPPED COMMANDS ATTEMPTED"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1922,7 +1933,7 @@ VOID OutputAdditionalSenseCodeQualifier0x51(
 		OutputLog(standardError | fileMainError, _T("ERASE FAILURE - INCOMPLETE ERASE OPERATION DETECTED"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1939,7 +1950,7 @@ VOID OutputAdditionalSenseCodeQualifier0x53(
 		OutputLog(standardError | fileMainError, _T("MEDIUM REMOVAL PREVENTED"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1977,7 +1988,7 @@ VOID OutputAdditionalSenseCodeQualifier0x55(
 		OutputLog(standardError | fileMainError, _T("INSUFFICIENT RESOURCES TO CREATE ROD TOKEN"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -1991,7 +2002,7 @@ VOID OutputAdditionalSenseCodeQualifier0x57(
 		OutputLog(standardError | fileMainError, _T("UNABLE TO RECOVER TABLE-OF-CONTENTS"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -2005,7 +2016,7 @@ VOID OutputAdditionalSenseCodeQualifier0x58(
 		OutputLog(standardError | fileMainError, _T("GENERATION DOES NOT EXIST"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -2019,7 +2030,7 @@ VOID OutputAdditionalSenseCodeQualifier0x59(
 		OutputLog(standardError | fileMainError, _T("UPDATED BLOCK READ"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -2042,7 +2053,7 @@ VOID OutputAdditionalSenseCodeQualifier0x5a(
 		OutputLog(standardError | fileMainError, _T("OPERATOR SELECTED WRITE PERMIT"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -2065,7 +2076,7 @@ VOID OutputAdditionalSenseCodeQualifier0x5b(
 		OutputLog(standardError | fileMainError, _T("LOG LIST CODES EXHAUSTED"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -2085,7 +2096,7 @@ VOID OutputAdditionalSenseCodeQualifier0x5c(
 		OutputLog(standardError | fileMainError, _T("SPINDLES NOT SYNCHRONIZED"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -2345,7 +2356,7 @@ VOID OutputAdditionalSenseCodeQualifier0x5d(
 		OutputLog(standardError | fileMainError, _T("FAILURE PREDICTION THRESHOLD EXCEEDED (FALSE)"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -2389,7 +2400,7 @@ VOID OutputAdditionalSenseCodeQualifier0x5e(
 		OutputLog(standardError | fileMainError, _T("STANDBY_Y CONDITION ACTIVATED BY COMMAND"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -2406,7 +2417,7 @@ VOID OutputAdditionalSenseCodeQualifier0x63(
 		OutputLog(standardError | fileMainError, _T("PACKET DOES NOT FIT IN AVAILABLE SPACE"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -2423,7 +2434,7 @@ VOID OutputAdditionalSenseCodeQualifier0x64(
 		OutputLog(standardError | fileMainError, _T("INVALID PACKET SIZE"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -2437,7 +2448,7 @@ VOID OutputAdditionalSenseCodeQualifier0x65(
 		OutputLog(standardError | fileMainError, _T("VOLTAGE FAULT"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -2451,7 +2462,7 @@ VOID OutputAdditionalSenseCodeQualifier0x67(
 		OutputLog(standardError | fileMainError, _T("SET TARGET PORT GROUPS COMMAND FAILED"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -2465,7 +2476,7 @@ VOID OutputAdditionalSenseCodeQualifier0x68(
 		OutputLog(standardError | fileMainError, _T("SUBSIDIARY LOGICAL UNIT NOT CONFIGURED"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -2500,7 +2511,7 @@ VOID OutputAdditionalSenseCodeQualifier0x6f(
 		OutputLog(standardError | fileMainError, _T("CONFLICT IN BINDING NONCE RECORDING"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -2535,7 +2546,7 @@ VOID OutputAdditionalSenseCodeQualifier0x72(
 		OutputLog(standardError | fileMainError, _T("NO MORE TEST ZONE EXTENSIONS ARE ALLOWED"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -2561,22 +2572,22 @@ VOID OutputAdditionalSenseCodeQualifier0x73(
 		OutputLog(standardError | fileMainError, _T("PROGRAM MEMORY AREA UPDATE FAILURE"));
 		break;
 	case SCSI_SENSEQ_PMA_RMA_IS_FULL:
-		OutputLog(standardError | fileMainError, _T("RMA/PMA IS ALMOST FULL"));
+		OutputLog(standardError | fileMainError, _T("RMA/PMA IS FULL"));
 		break;
 	case SCSI_SENSEQ_PMA_RMA_ALMOST_FULL:
-		OutputLog(standardError | fileMainError, _T("CURRENT POWER CALIBRATION AREA ALMOST FULL"));
+		OutputLog(standardError | fileMainError, _T("RMA/PMA IS ALMOST FULL"));
 		break;
 	case 0x10:
-		OutputLog(standardError | fileMainError, _T("CURRENT POWER CALIBRATION AREA IS FULL"));
+		OutputLog(standardError | fileMainError, _T("CURRENT POWER CALIBRATION AREA ALMOST FULL"));
 		break;
 	case 0x11:
-		OutputLog(standardError | fileMainError, _T("RDZ IS FULL"));
+		OutputLog(standardError | fileMainError, _T("CURRENT POWER CALIBRATION AREA IS FULL"));
 		break;
 	case 0x17:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputLog(standardError | fileMainError, _T("RDZ IS FULL"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -2614,7 +2625,7 @@ VOID OutputAdditionalSenseCodeQualifier0x74(
 		OutputLog(standardError | fileMainError, _T("SECURITY CONFLICT IN TRANSLATED DEVICE"));
 		break;
 	default:
-		OutputLog(standardError | fileMainError, _T("OTHER"));
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 }
@@ -2912,12 +2923,7 @@ VOID OutputAdditionalSenseCode(
 		OutputAdditionalSenseCodeQualifier0x74(byAscq);
 		break;
 	default:
-		if (byAsc >= SCSI_ADSENSE_VENDOR_UNIQUE || byAscq >= 0x80) {
-			OutputLog(standardError | fileMainError, _T("VENDER UNIQUE ERROR"));
-		}
-		else {
-			OutputLog(standardError | fileMainError, _T("OTHER"));
-		}
+		OutputAdditionalSenseCodeQualifierOther(byAscq);
 		break;
 	}
 	OutputLog(standardError | fileMainError, _T("\n"));
