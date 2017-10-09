@@ -127,6 +127,7 @@ typedef struct _DISC {
 		BYTE byLastDataTrackNum;	// get at CDROM_READ_TOC_EX_FORMAT_TOC
 		BYTE byCdi;					// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
 		BYTE padding1;
+		BOOL bMultiSession;			// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
 		LPBYTE lpSessionNumList;	// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
 		INT nFirstLBAofLeadout;		// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
 		INT nFirstLBAof2ndSession;	// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
@@ -151,16 +152,13 @@ typedef struct _DISC {
 		BOOL bPathType; // use path table record
 	} MAIN;
 	struct _SUB {
-		BYTE byDesync;
-		BYTE byIndex0InTrack1;
-		BYTE byCatalog;
-		BYTE padding1;
-		INT nSubchOffset;
+		INT nSubChannelOffset;
 		INT nFirstLBAForMCN[3][2];
 		INT nRangeLBAForMCN[3][2];
 		INT nPrevMCNSector;
+		BYTE byDesync;
+		BYTE byCatalog;
 		CHAR szCatalog[META_CATALOG_SIZE];
-		BYTE padding[2];
 		INT nFirstLBAForISRC[3][2];
 		INT nRangeLBAForISRC[3][2];
 		INT nPrevISRCSector;

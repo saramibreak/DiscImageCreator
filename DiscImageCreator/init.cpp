@@ -117,6 +117,8 @@ BOOL InitTocFullData(
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
+	(*pDisc)->SCSI.nFirstLBAofLeadout = -1;
+	(*pDisc)->SCSI.nFirstLBAof2ndSession = -1;
 	return TRUE;
 }
 
@@ -318,6 +320,7 @@ BOOL InitSubData(
 	catch (BOOL bErr) {
 		bRet = bErr;
 	}
+	(*pDisc)->SUB.nSubChannelOffset = 0xff;
 	return bRet;
 }
 

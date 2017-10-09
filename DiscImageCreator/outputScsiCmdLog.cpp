@@ -897,14 +897,9 @@ VOID OutputGetConfigurationFeatureFirmwareDate(
 	)
 {
 	OutputDriveLogA(
-		"\tFeatureFirmwareDate: %04ld-%02u-%02u %02u:%02u:%02u\n",
-		MAKELONG(MAKEWORD(pFirmwareDate->Year[3], pFirmwareDate->Year[2]),
-			MAKEWORD(pFirmwareDate->Year[1], pFirmwareDate->Year[0])),
-		MAKEWORD(pFirmwareDate->Month[1], pFirmwareDate->Month[0]),
-		MAKEWORD(pFirmwareDate->Day[1], pFirmwareDate->Day[0]),
-		MAKEWORD(pFirmwareDate->Hour[1], pFirmwareDate->Hour[0]),
-		MAKEWORD(pFirmwareDate->Minute[1], pFirmwareDate->Minute[0]),
-		MAKEWORD(pFirmwareDate->Seconds[1], pFirmwareDate->Seconds[0]));
+		"\tFeatureFirmwareDate: %.4s-%.2s-%.2s %.2s:%.2s:%.2s\n"
+		, pFirmwareDate->Year, pFirmwareDate->Month, pFirmwareDate->Day
+		, pFirmwareDate->Hour, pFirmwareDate->Minute, pFirmwareDate->Seconds);
 }
 
 VOID OutputGetConfigurationFeatureAACS(

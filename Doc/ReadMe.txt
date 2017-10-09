@@ -74,78 +74,102 @@
 
 * Bug report
  To: http://forum.redump.org/topic/10483/discimagecreator/
+  or
+ To: https://github.com/saramibreak/DiscImageCreator/issues
 
 * Gratitude
  Thank's redump.org users.
 
 ========================== Supported/Unsupported Disc =========================
-* Supported Disc (I tested these)
- - Apple Macintosh
- - Audio CD
- - Bandai Playdia
- - DVD-Video
- - Fujitsu FM Towns series
- - IBM PC compatible
- - NEC PC-98 series CD
- - NEC PC-Engine CD
- - NEC PC-FX
- - Panasonic 3DO Interactive Multiplayer
- - Philips CD-i
- - Sega Dreamcast
- - Sega Mega-CD
- - Sega Saturn
- - Sony PlayStation
- - Sony PlayStation 2
- - SNK Neo Geo CD
- - VCD
+* Supported Disc
+  CD
+  - Apple Macintosh
+  - Audio CD
+  - Bandai Playdia
+  - Bandai / Apple Pippin
+  - Commodore Amiga CD
+  - Commodore Amiga CD32
+  - Commodore Amiga CDTV
+  - Fujitsu FM Towns series
+  - IBM PC compatible
+  - Mattel HyperScan
+  - NEC PC-88 series CD
+  - NEC PC-98 series CD
+  - NEC PC-FX
+  - NEC PC Engine CD - TurboGrafx-CD
+  - Palm OS
+  - Panasonic 3DO Interactive Multiplayer
+  - Philips CD-i
+  - Photo CD
+  - Sega Mega-CD
+  - Sega Saturn
+  - Sharp X68000 CD
+  - SNK Neo Geo CD
+  - Sony PlayStation
+  - Tandy / Memorex Visual Information System
+  - Tao iKTV CD
+  - Tomy Kiss-Site CD
+  - Video CD
+  - VTech V.Flash
 
-* Support WIP (Because I haven't enough to test)
- - Protected Disc
-    bad(error) sector                   => SafeDisc, SmartE, Cactus Data Shield 300
-                                           ProtectCD-VOB
-    weak sector                         => SafeDisc v2 or higher
-    unique data on subchannel           => LibCrypt, SecuROM(v1 - v4.8x)
-    Intensional(deliberate) C1/C2 error => Cactus Data Shield 200
-    characteristic track                => CD Lock
-    Fake TOC                            => Cactus Data Shield 100
-    Pregap                              => Key2Audio
-    read errors?                        => PhenoProtect
+  GD
+  - Namco / Sega / Nintendo Triforce
+  - Sega Dreamcast
+  - Sega Chihiro
+  - Sega Naomi
+ 
+  DVD
+  - DVD-Video
+  - IBM PC compatible
+  - Sony PlayStation 2
+  - VM Labs NUON DVD
+  - Sega Lindbergh
 
-* Supported Disc? (I haven't tested these yet)
- - Acorn Archimedes
- - Bandai / Apple Pippin
- - Commodore Amiga CD
- - Commodore Amiga CD32
- - Commodore Amiga CDTV
- - Mattel HyperScan
- - Microsoft Xbox
- - Microsoft Xbox 360
- - NEC PC-88 series CD
- - Sharp X68000 CD
- - Tandy / Memorex Visual Information System
- - Tao iKTV CD
- - Tomy Kiss-Site CD
- - VM Labs NUON DVD
- - VTech V.Flash
+  Protected Disc
+  - SafeDisc, SmartE, Cactus Data Shield 300, ProtectCD-VOB [bad(error) sector]
+  - SafeDisc v2 or higher [weak sector]
+  - LibCrypt, SecuROM(v1 - v4.8x) [unique data on subchannel]
+  - Cactus Data Shield 200 [Intensional(deliberate) C1/C2 error]
+  - CD Lock [characteristic track]
+  - Cactus Data Shield 100 [Fake TOC]
+  - Key2Audio [Pregap]
+  - PhenoProtect [read errors?]
 
 * Probably Unsupported Disc
-    no signal sector => LaserLock, RingPROTECH, ProRing
-     The result doesn't match at each drives.
-    read error       => CodeLock
-     Compared to CloneCD or CD Manipulator, a plextor detects double errors.
+  DVD
+  - Microsoft Xbox
+  - Microsoft Xbox 360
+     => see this. http://forum.redump.org/topic/6073/xbox-1-360-dumping-instructions/
+
+  Protected Disc
+  - LaserLock, RingPROTECH, ProRing [no signal sector]
+     => The result doesn't match at each drives.
+  - CodeLock [read error]
+     => Compared to CloneCD or CD Manipulator, a plextor detects double errors.
 
 * Unsupported Disc
- - Protected Disc
-    different frequency                 => SecuROM(v5 or higher), StarForce, CD-Cops
-     These needs DPM(Data position measurement). cue, ccd doesn't support DPM.
-     To store DPM, you need to use the Alcohol 120/52% (http://www.alcohol-soft.com/)
-    duplicated(double, triple) sector   => Alpha-ROM, ROOT, TAGES
-     It can read in reverse, but specifications are not decided in redump.org
- - HD DVD & Blu-ray Disc
-    I don't have a drive, so I can't test.
- - Nintendo GameCube & Wii
-    I don't implement a code to decrypt. (if you have a supported drive,
-   you can rip a "encrypted" image.)
+  Protected Disc
+  - SecuROM(v5 or higher), StarForce, CD-Cops [different frequency]
+     => These needs DPM(Data position measurement). cue, ccd doesn't support DPM.
+        To store it, you need to use the Alcohol 120/52% (http://www.alcohol-soft.com/)
+  - Alpha-ROM, ROOT, TAGES [duplicated(double, triple) sector]
+     => It can read in reverse, but specifications are not decided in redump.org
+ 
+  Nintendo GameCube & Wii
+   => I don't implement a code to decrypt. To decrypt, you need to use RawDump or friidump.
+      (if you have a supported drive, you can rip a "encrypted" image with this app.)
+
+  HD DVD
+   => I don't have a drive, so I can't test.
+ 
+  Blu-ray Disc
+  - Microsoft Xbox One
+  - Sony PlayStation 3
+  - Sony PlayStation 4
+   => I don't have a drive, so I can't test.
+
+  Nintendo Wii U
+   => I don't know the details.
 
 ============================= Ripping information =============================
 * Preparation
@@ -214,7 +238,7 @@
  .c2
   store the c2 error. 1bit expresses 1byte.
  .ccd
-  store the CD information. Original format is CloneCD (http://www.slysoft.com/en/clonecd.html)
+  store the CD information. Original format is CloneCD (https://www.redfox.bz/ja/clonecd.html)
  .cue
   store the CD information. Original format is CDRWIN (https://web.archive.org/web/20111008191852/http://www.goldenhawk.com/cdrwin.htm)
  .dat
@@ -234,19 +258,19 @@
  _drive.txt
   store the drive information returned by SCSI command.
  _mainError.txt
-  store the disc main error information getting read disc.
+  store the error message.
  _mainInfo.txt
-  store the disc main info information getting read disc.
+  store the main sector as text data.
  _sub.txt
   store the parsed sub channel file as text data.
  _subError.txt
-  store the disc sub error information getting read disc.
+  store the subchannel error.
  _subInfo.txt
-  store the disc sub info information getting read disc.
+  store the subchannel when the track number changes.
  _subIntention.txt
-  store subchannel for securom getting read disc.
+  store the subchannel data for securom.
  _volDesc.txt
-  store the volume descriptor, path table, directory table of CD as text data.
+  store the volume descriptor, path table and directory table as text data.
 
 ========================= Drive information (I tested) ========================
 Vendor					Model					Firmware(*1)	Lead-in	Lead-out	Scrambled	GD-ROM(*2)				Wii-ROM

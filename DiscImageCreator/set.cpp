@@ -197,8 +197,6 @@ VOID SetAndOutputTocFull(
 		fullToc->FirstCompleteSession,
 		fullToc->LastCompleteSession);
 	BOOL bFirst2ndSession = TRUE;
-	pDisc->SCSI.nFirstLBAofLeadout = -1;
-	pDisc->SCSI.nFirstLBAof2ndSession = -1;
 	UCHAR ucTmpLastTrack = 0;
 
 	for (WORD a = 0; a < wTocEntries; a++) {

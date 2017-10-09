@@ -1155,7 +1155,7 @@ VOID CheckAndFixSubQ(
 	// LBA[208052, 0x32cb4], Audio, 2ch, Copy NG, Pre-emphasis No, Track[56], Idx[01], RMSF[03:15:35], AMSF[46:16:00], RtoW[0, 0, 0, 0]
 	// LBA[208053, 0x32cb5], Audio, 2ch, Copy NG, Pre-emphasis No, Track[56], Idx[01], RMSF[03:15:36], AMSF[46:16:03], RtoW[0, 0, 0, 0]
 	// LBA[208054, 0x32cb6], Audio, 2ch, Copy NG, Pre-emphasis No, Track[56], Idx[01], RMSF[03:15:37], AMSF[46:16:04], RtoW[0, 0, 0, 0]
-	BOOL bAMSF = IsValidSubQAMSF(pExecType,	pDisc->SUB.byIndex0InTrack1, pSubQ, lpSubcode, nLBA);
+	BOOL bAMSF = IsValidSubQAMSF(pExecType,	pExtArg->byPre, pSubQ, lpSubcode, nLBA);
 	BOOL bAFrame = IsValidSubQAFrame(lpSubcode, nLBA);
 
 	if (-76 < nLBA) {
@@ -1400,7 +1400,7 @@ VOID CheckAndFixSubQ(
 			lpSubcode[18] = 0;
 		}
 
-		if (!IsValidSubQAMSF(pExecType, pDisc->SUB.byIndex0InTrack1, pSubQ, lpSubcode, nLBA)) {
+		if (!IsValidSubQAMSF(pExecType, pExtArg->byPre, pSubQ, lpSubcode, nLBA)) {
 			BYTE byFrame = 0;
 			BYTE bySecond = 0;
 			BYTE byMinute = 0;
@@ -1664,7 +1664,7 @@ VOID CheckAndFixSubChannel(
 	BOOL bSecuRom
 	)
 {
-	if (pDisc->SUB.nSubchOffset) {
+	if (pDisc->SUB.nSubChannelOffset) {
 		SetTmpSubQDataFromBuffer(&pDiscPerSector->subQ.next, pDiscPerSector->subcode.next);
 		if (1 <= pExtArg->dwSubAddionalNum) {
 			SetTmpSubQDataFromBuffer(&pDiscPerSector->subQ.nextNext, pDiscPerSector->subcode.nextNext);
@@ -1742,36 +1742,30 @@ BOOL ContainsC2Error(
 	return bRet;
 }
 
-BOOL SupportIndex0InTrack1(
+VOID SupportIndex0InTrack1(
 	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc
+	PDEVICE pDevice
 	)
 {
-	BOOL bRet = TRUE;
-	if (pDevice->byPlxtrDrive == PLXTR_DRIVE_TYPE::PX760A ||
-		pDevice->byPlxtrDrive == PLXTR_DRIVE_TYPE::PX755A ||
-		pDevice->byPlxtrDrive == PLXTR_DRIVE_TYPE::PX716AL ||
-		pDevice->byPlxtrDrive == PLXTR_DRIVE_TYPE::PX716A ||
-		pDevice->byPlxtrDrive == PLXTR_DRIVE_TYPE::PX714A ||
-		pDevice->byPlxtrDrive == PLXTR_DRIVE_TYPE::PX712A ||
-		pDevice->byPlxtrDrive == PLXTR_DRIVE_TYPE::PX708A2 ||
-		pDevice->byPlxtrDrive == PLXTR_DRIVE_TYPE::PX708A ||
-		pDevice->byPlxtrDrive == PLXTR_DRIVE_TYPE::PX704A ||
-		pDevice->byPlxtrDrive == PLXTR_DRIVE_TYPE::PREMIUM2 ||
-		pDevice->byPlxtrDrive == PLXTR_DRIVE_TYPE::PREMIUM ||
-		pDevice->byPlxtrDrive == PLXTR_DRIVE_TYPE::PXW5224A) {
-		pDisc->SUB.byIndex0InTrack1 = TRUE;
-	}
-	else {
+	if (pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PX760A &&
+		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PX755A &&
+		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PX716AL &&
+		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PX716A &&
+		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PX714A &&
+		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PX712A &&
+		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PX708A2 &&
+		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PX708A &&
+		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PX704A &&
+		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PREMIUM2 &&
+		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PREMIUM &&
+		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PXW5224A) {
 		OutputString(
 			_T("This drive doesn't support to rip from 00:00:00 to 00:01:74 AMSF. /p option is ignored\n"));
 		pExtArg->byPre = FALSE;
 	}
-	return bRet;
 }
 
-BOOL ExecCheckingSubchannnel(
+BOOL IsCheckingSubChannel(
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
 	INT nLBA

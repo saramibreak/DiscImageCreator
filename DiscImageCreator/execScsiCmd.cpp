@@ -206,6 +206,7 @@ BOOL ReadTOCFull(
 			ReadTOCText(pExtArg, pDevice, pDisc, fpCcd);
 		}
 	}
+	pDisc->SCSI.bMultiSession = fullToc.LastCompleteSession > 1 ? TRUE : FALSE;
 
 	WORD wFullTocLenFix = wTocEntriesAll + sizeof(CDROM_TOC_FULL_TOC_DATA);
 	// 4 byte padding
@@ -794,7 +795,7 @@ BOOL ReadDriveInformation(
 	IsValidPlextorDrive(pDevice);
 	if ((PLXTR_DRIVE_TYPE)pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::No) {
 		if (pExtArg->byPre) {
-			SupportIndex0InTrack1(pExtArg, pDevice, pDisc);
+			SupportIndex0InTrack1(pExtArg, pDevice);
 		}
 		ReadEeprom(pExtArg, pDevice);
 		SetSpeedRead(pExtArg, pDevice, TRUE);
@@ -896,6 +897,13 @@ BOOL ReadDirectoryRecordDetail(
 			CHAR szCurDirName[MAX_FNAME_FOR_VOLUME] = { 0 };
 			LPBYTE lpDirRec = lpBuf + uiOfs;
 			if (lpDirRec[0] >= MIN_LEN_DR) {
+				if (lpDirRec[0] == MIN_LEN_DR && uiOfs > 0 && uiOfs % DISC_RAW_READ_SIZE == 0) {
+					// SimCity 3000 (USA)
+					OutputVolDescLogA(
+						"Direcory record size of the %d sector maybe incorrect. Skip the reading of this sector\n", nLBA);
+					nSectorNum++;
+					break;
+				}
 				DWORD dwExtentPos = GetSizeOrDwordForVolDesc(lpDirRec + 2) / byLogicalBlkCoef;
 				DWORD dwDataLen = GetSizeOrDwordForVolDesc(lpDirRec + 10);
 				OutputFsDirectoryRecord(

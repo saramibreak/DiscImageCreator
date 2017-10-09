@@ -9,10 +9,26 @@ VOID OutputFsRecordingDateAndTime(
 	LPBYTE lpBuf
 	)
 {
+	WORD sTime = MAKEWORD(lpBuf[0], lpBuf[1]);
+	CHAR cTimeZone = sTime >> 12 & 0x0f;
+	OutputVolDescLogA("\tRecording Date and Time: ");
+	if (cTimeZone == 0) {
+		OutputVolDescLogA("UTC ");
+	}
+	else if (cTimeZone == 1) {
+		OutputVolDescLogA("LocalTime ");
+	}
+	else if (cTimeZone == 2) {
+		OutputVolDescLogA("OriginalTime ");
+	}
+	else {
+		OutputVolDescLogA("Reserved ");
+	}
+	SHORT nTime = sTime & 0xfff;
 	OutputVolDescLogA(
-		"\tRecording Date and Time: 0x%x %u-%02u-%02u %02u:%02u:%02u.%u.%u.%u\n",
-		MAKEWORD(lpBuf[0], lpBuf[1]), MAKEWORD(lpBuf[2], lpBuf[3]), lpBuf[4],
-		lpBuf[5], lpBuf[6], lpBuf[7], lpBuf[8], lpBuf[9], lpBuf[10], lpBuf[11]);
+		"%+03d%02d %u-%02u-%02u %02u:%02u:%02u.%02u.%02u.%02u\n",
+		nTime / 60, nTime % 60, MAKEWORD(lpBuf[2], lpBuf[3]), lpBuf[4], lpBuf[5],
+		lpBuf[6], lpBuf[7], lpBuf[8], lpBuf[9], lpBuf[10], lpBuf[11]);
 }
 
 VOID OutputFsRegid(
@@ -47,12 +63,11 @@ VOID OutputFsBootDescriptor(
 	LPBYTE lpBuf
 	)
 {
-	OutputVolDescLogA(
-		"\t========== Architecture Type ==========\n");
+	OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR(Architecture Type));
 	OutputFsRegid(lpBuf + 8);
-	OutputVolDescLogA(
-		"\t========== Boot Identifier ==========\n");
+	OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR(Boot Identifier));
 	OutputFsRegid(lpBuf + 8);
+
 	OutputVolDescLogA(
 		"\tBoot Extent Location: %lu\n"
 		"\t  Boot Extent Length: %lu\n"
@@ -105,8 +120,7 @@ VOID OutputFsVolumeStructureDescriptorFormat(
 	INT nLBA
 	)
 {
-	OutputVolDescLogA(
-		"========== Volume Recognition Sequence, LBA[%06d, %#07x] ==========\n"
+	OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Volume Recognition Sequence)
 		"\t                               Structure Type: %u\n"
 		"\t                          Standard Identifier: %.5s\n"
 		"\t                            Structure Version: %u\n"
@@ -301,8 +315,7 @@ VOID OutputFsUnallocatedSpaceDescriptor(
 		, MAKELONG(MAKEWORD(lpBuf[16], lpBuf[17]), MAKEWORD(lpBuf[18], lpBuf[19])),
 		N_AD);
 	if (0 < N_AD) {
-		OutputVolDescLogA(
-			"\t========== Allocation Descriptors ==========\n");
+		OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR(Allocation Descriptors));
 		for (INT i = 0; i < N_AD * 8; i += 8) {
 			OutputFsExtentDescriptor(lpBuf + 24 + i);
 		}
@@ -436,7 +449,7 @@ VOID OutputFsVolumeDescriptorPointer(
 {
 	OutputVolDescLogA(
 		"\tVolume Descriptor Sequence Number: %lu\n"
-		"\t========== Next Volume Descriptor Sequence Extent ==========\n",
+		OUTPUT_DHYPHEN_PLUS_STR(Next Volume Descriptor Sequence Extent),
 		MAKELONG(MAKEWORD(lpBuf[16], lpBuf[17]), MAKEWORD(lpBuf[18], lpBuf[19])));
 	OutputFsExtentDescriptor(lpBuf + 20);
 }
@@ -445,9 +458,9 @@ VOID OutputFsAnchorVolumeDescriptorPointer(
 	LPBYTE lpBuf
 	)
 {
-	OutputVolDescLogA("\t========== Main Volume Descriptor Sequence Extent ==========\n");
+	OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR(Main Volume Descriptor Sequence Extent));
 	OutputFsExtentDescriptor(lpBuf + 16);
-	OutputVolDescLogA("\t========== Reserve Volume Descriptor Sequence Extent ==========\n");
+	OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR(Reserve Volume Descriptor Sequence Extent));
 	OutputFsExtentDescriptor(lpBuf + 24);
 }
 
@@ -540,114 +553,94 @@ VOID OutputFsVolumeDescriptorSequence(
 	}
 	switch (wTagId) {
 	case 1:
-		OutputVolDescLogA(
-			"========== Primary Volume Descriptor, LBA[%06d, %#07x] ==========\n", nLBA, nLBA);
+		OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Primary Volume Descriptor), nLBA, nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		OutputFsPrimaryVolumeDescriptorForUDF(lpBuf);
 		break;
 	case 2:
-		OutputVolDescLogA(
-			"========== Anchor Volume Descriptor Pointer, LBA[%06d, %#07x] ==========\n", nLBA, nLBA);
+		OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Anchor Volume Descriptor Pointer), nLBA, nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		OutputFsAnchorVolumeDescriptorPointer(lpBuf);
 		break;
 	case 3:
-		OutputVolDescLogA(
-			"========== Volume Descriptor Pointer, LBA[%06d, %#07x] ==========\n", nLBA, nLBA);
+		OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Volume Descriptor Pointer), nLBA, nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		OutputFsVolumeDescriptorPointer(lpBuf);
 		break;
 	case 4:
-		OutputVolDescLogA(
-			"========== Implementation Use Volume Descriptor, LBA[%06d, %#07x] ==========\n", nLBA, nLBA);
+		OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Implementation Use Volume Descriptor), nLBA, nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		OutputFsImplementationUseVolumeDescriptor(lpBuf);
 		break;
 	case 5:
-		OutputVolDescLogA(
-			"========== Partition Descriptor, LBA[%06d, %#07x] ==========\n", nLBA, nLBA);
+		OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Partition Descriptor), nLBA, nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		OutputFsPartitionDescriptor(lpBuf);
 		break;
 	case 6:
-		OutputVolDescLogA(
-			"========== Logical Volume Descriptor, LBA[%06d, %#07x] ==========\n", nLBA, nLBA);
+		OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Logical Volume Descriptor), nLBA, nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		OutputFsLogicalVolumeDescriptor(lpBuf);
 		break;
 	case 7:
-		OutputVolDescLogA(
-			"========== Unallocated Space Descriptor, LBA[%06d, %#07x] ==========\n", nLBA, nLBA);
+		OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Unallocated Space Descriptor), nLBA, nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		OutputFsUnallocatedSpaceDescriptor(lpBuf);
 		break;
 	case 8:
-		OutputVolDescLogA(
-			"========== Terminating Descriptor, LBA[%06d, %#07x] ==========\n", nLBA, nLBA);
+		OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Terminating Descriptor), nLBA, nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		OutputFsTerminatingDescriptor(lpBuf);
 		break;
 	case 9:
-		OutputVolDescLogA(
-			"========== Logical Volume Integrity Descriptor, LBA[%06d, %#07x] ==========\n", nLBA, nLBA);
+		OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Logical Volume Integrity Descriptor), nLBA, nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		OutputFsLogicalVolumeIntegrityDescriptor(lpBuf);
 		break;
 	case 256:
-		OutputVolDescLogA(
-			"========== File Set Descriptor, LBA[%06d, %#07x] ==========\n", nLBA, nLBA);
+		OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(File Set Descriptor), nLBA, nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		OutputFsFileSetDescriptor(lpBuf);
 		break;
 	case 257:
-		OutputVolDescLogA(
-			"========== File Identifier Descriptor, LBA[%06d, %#07x] ==========\n", nLBA, nLBA);
+		OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(File Identifier Descriptor), nLBA, nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		break;
 	case 258:
-		OutputVolDescLogA(
-			"========== Allocation Extent Descriptor, LBA[%06d, %#07x] ==========\n", nLBA, nLBA);
+		OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Allocation Extent Descriptor), nLBA, nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		break;
 	case 259:
-		OutputVolDescLogA(
-			"========== Indirect Entry, LBA[%06d, %#07x] ==========\n", nLBA, nLBA);
+		OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Indirect Entry), nLBA, nLBA);
 		break;
 	case 260:
-		OutputVolDescLogA(
-			"========== Terminal Entry, LBA[%06d, %#07x] ==========\n", nLBA, nLBA);
+		OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Terminal Entry), nLBA, nLBA);
 		break;
 	case 261:
-		OutputVolDescLogA(
-			"========== File Entry, LBA[%06d, %#07x] ==========\n", nLBA, nLBA);
+		OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(File Entry), nLBA, nLBA);
 		break;
 	case 262:
-		OutputVolDescLogA(
-			"========== Extended Attribute Header Descriptor, LBA[%06d, %#07x] ==========\n", nLBA, nLBA);
+		OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Extended Attribute Header Descriptor), nLBA, nLBA);
 		break;
 	case 263:
-		OutputVolDescLogA(
-			"========== Unallocated Space Entry, LBA[%06d, %#07x] ==========\n", nLBA, nLBA);
+		OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Unallocated Space Entry), nLBA, nLBA);
 		break;
 	case 264:
-		OutputVolDescLogA(
-			"========== Space Bitmap Descriptor, LBA[%06d, %#07x] ==========\n", nLBA, nLBA);
+		OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Space Bitmap Descriptor), nLBA, nLBA);
 		break;
 	case 265:
-		OutputVolDescLogA(
-			"========== Partition Integrity Entry, LBA[%06d, %#07x] ==========\n", nLBA, nLBA);
+		OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Partition Integrity Entry), nLBA, nLBA);
 		break;
 	case 266:
-		OutputVolDescLogA(
-			"========== Extended File Entry, LBA[%06d, %#07x] ==========\n", nLBA, nLBA);
+		OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Extended File Entry), nLBA, nLBA);
 		break;
 	}
 	return;
 }
-// end for DVD
 
 VOID OutputDVDLayerDescriptor(
 	PDVD_FULL_LAYER_DESCRIPTOR dvdLayer,
+	LPBYTE lpBcaFlag,
 	LPDWORD lpdwSectorLength
 	)
 {
@@ -693,22 +686,21 @@ VOID OutputDVDLayerDescriptor(
 	REVERSE_LONG(&dwEndDataSector);
 	REVERSE_LONG(&dwEndLayerZeroSector);
 
-	OutputVolDescLogA(
-		"\t========== PhysicalFormatInformation ==========\n"
-		"\t\t       BookVersion: %u\n"
-		"\t\t          BookType: %s\n"
-		"\t\t       MinimumRate: %s\n"
-		"\t\t          DiskSize: %s\n"
-		"\t\t         LayerType: %s\n"
-		"\t\t         TrackPath: %s\n"
-		"\t\t    NumberOfLayers: %s\n"
-		"\t\t      TrackDensity: %s\n"
-		"\t\t     LinearDensity: %s\n"
-		"\t\tStartingDataSector: %8lu (%#lx)\n"
-		"\t\t     EndDataSector: %8lu (%#lx)\n"
-		"\t\tEndLayerZeroSector: %8lu (%#lx)\n"
-		"\t\t           BCAFlag: %s\n"
-		"\t\t     MediaSpecific: ",
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(PhysicalFormatInformation)
+		"\t       BookVersion: %u\n"
+		"\t          BookType: %s\n"
+		"\t       MinimumRate: %s\n"
+		"\t          DiskSize: %s\n"
+		"\t         LayerType: %s\n"
+		"\t         TrackPath: %s\n"
+		"\t    NumberOfLayers: %s\n"
+		"\t      TrackDensity: %s\n"
+		"\t     LinearDensity: %s\n"
+		"\tStartingDataSector: %7lu (%#lx)\n"
+		"\t     EndDataSector: %7lu (%#lx)\n"
+		"\tEndLayerZeroSector: %7lu (%#lx)\n"
+		"\t           BCAFlag: %s\n"
+		"\t     MediaSpecific: \n",
 		dvdLayer->commonHeader.BookVersion,
 		lpBookType[dvdLayer->commonHeader.BookType],
 		lpMaximumRate[dvdLayer->commonHeader.MinimumRate],
@@ -722,64 +714,60 @@ VOID OutputDVDLayerDescriptor(
 		dwEndDataSector, dwEndDataSector,
 		dwEndLayerZeroSector, dwEndLayerZeroSector,
 		dvdLayer->commonHeader.BCAFlag == 0 ? "No" : "Exist");
+	*lpBcaFlag = dvdLayer->commonHeader.BCAFlag;
 
-	for (WORD k = 0; k < sizeof(dvdLayer->MediaSpecific); k++) {
-		OutputVolDescLogA("%02x", dvdLayer->MediaSpecific[k]);
-	}
-	OutputVolDescLogA("\n");
+	OutputCDMain(fileDisc, dvdLayer->MediaSpecific, 0, sizeof(dvdLayer->MediaSpecific));
 
 	if (dvdLayer->commonHeader.TrackPath) {
 		DWORD dwEndLayerZeroSectorLen = dwEndLayerZeroSector - dwStartingDataSector + 1;
 		DWORD dwEndLayerOneSectorLen = dwEndLayerZeroSector - (~dwEndDataSector & 0xffffff) + 1;
 		*lpdwSectorLength = dwEndLayerZeroSectorLen + dwEndLayerOneSectorLen;
-		OutputDiscLogA(
-			"========== SectorLength ==========\n"
-			"\t LayerZeroSector: %8lu (%#lx)\n"
-			"\t+ LayerOneSector: %8lu (%#lx)\n"
+		OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(SectorLength)
+			"\t LayerZeroSector: %7lu (%#lx)\n"
+			"\t+ LayerOneSector: %7lu (%#lx)\n"
 			"\t------------------------------------\n"
-			"\t  LayerAllSector: %8lu (%#lx)\n"
+			"\t  LayerAllSector: %7lu (%#lx)\n"
 			, dwEndLayerZeroSectorLen, dwEndLayerZeroSectorLen
 			, dwEndLayerOneSectorLen, dwEndLayerOneSectorLen
 			, *lpdwSectorLength, *lpdwSectorLength);
 	}
 	else {
 		*lpdwSectorLength = dwEndDataSector - dwStartingDataSector + 1;
-		OutputDiscLogA(
-			"========== SectorLength ==========\n"
-			"\tLayerZeroSector: %8lu (%#lx)\n", *lpdwSectorLength, *lpdwSectorLength);
+		OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(SectorLength)
+			"\tLayerZeroSector: %7lu (%#lx)\n", *lpdwSectorLength, *lpdwSectorLength);
 	}
 }
 
 VOID OutputDVDCopyrightDescriptor(
-	PDVD_COPYRIGHT_DESCRIPTOR dvdCopyright
+	PDVD_COPYRIGHT_DESCRIPTOR dvdCopyright,
+	LPBOOL lpbCPRM
 	)
 {
-	OutputVolDescLogA(
-		"\t========== CopyrightInformation ==========\n"
-		"\t\t    CopyrightProtectionType: ");
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(CopyrightInformation)
+		"\t    CopyrightProtectionType: ");
 	switch (dvdCopyright->CopyrightProtectionType) {
 	case 0:
-		OutputVolDescLogA("No\n");
+		OutputDiscLogA("No\n");
 		break;
 	case 1:
-		OutputVolDescLogA("CSS/CPPM\n");
+		OutputDiscLogA("CSS/CPPM\n");
 		break;
 	case 2:
-		OutputVolDescLogA("CPRM\n");
+		OutputDiscLogA("CPRM\n");
+		*lpbCPRM = TRUE;
 		break;
 	case 3:
-		OutputVolDescLogA("AACS with HD DVD content\n");
+		OutputDiscLogA("AACS with HD DVD content\n");
 		break;
 	case 10:
-		OutputVolDescLogA("AACS with BD content\n");
+		OutputDiscLogA("AACS with BD content\n");
 		break;
 	default:
-		OutputVolDescLogA("Unknown: %02x\n", dvdCopyright->CopyrightProtectionType);
+		OutputDiscLogA("Unknown: %02x\n", dvdCopyright->CopyrightProtectionType);
 		break;
 	}
-	OutputVolDescLogA(
-		"\t\tRegionManagementInformation: %02x\n"
-		, dvdCopyright->RegionManagementInformation);
+	OutputDiscLogA(
+		"\tRegionManagementInformation: %02x\n", dvdCopyright->RegionManagementInformation);
 }
 
 VOID OutputDVDCommonInfo(
@@ -788,9 +776,9 @@ VOID OutputDVDCommonInfo(
 	)
 {
 	for (WORD k = 0; k < wFormatLength; k++) {
-		OutputVolDescLogA("%02x", lpFormat[k]);
+		OutputDiscLogA("%02x", lpFormat[k]);
 	}
-	OutputVolDescLogA("\n");
+	OutputDiscLogA("\n");
 
 }
 
@@ -798,10 +786,8 @@ VOID OutputDVDDiskKeyDescriptor(
 	PDVD_DISK_KEY_DESCRIPTOR dvdDiskKey
 	)
 {
-	OutputVolDescLogA(
-		"\t========== DiskKeyData ==========\n\t\t");
-	OutputDVDCommonInfo(dvdDiskKey->DiskKeyData,
-		sizeof(dvdDiskKey->DiskKeyData));
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DiskKeyData));
+	OutputCDMain(fileDisc, dvdDiskKey->DiskKeyData, 0, sizeof(dvdDiskKey->DiskKeyData));
 }
 
 VOID OutputDVDBCADescriptor(
@@ -809,18 +795,16 @@ VOID OutputDVDBCADescriptor(
 	WORD wFormatLength
 	)
 {
-	OutputVolDescLogA(
-		"\t========== BCAInformation ==========\n\t");
-	OutputDVDCommonInfo(dvdBca->BCAInformation, wFormatLength);
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(BCAInformation));
+	OutputCDMain(fileDisc, dvdBca->BCAInformation, 0, wFormatLength);
 }
 
 VOID OutputDVDManufacturerDescriptor(
 	PDVD_MANUFACTURER_DESCRIPTOR dvdManufacturer
 	)
 {
-	OutputVolDescLogA(
-		"\t========== ManufacturingInformation ==========\n\t\t");
-	OutputDVDCommonInfo(dvdManufacturer->ManufacturingInformation,
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(ManufacturingInformation));
+	OutputCDMain(fileDisc, dvdManufacturer->ManufacturingInformation, 0,
 		sizeof(dvdManufacturer->ManufacturingInformation));
 }
 
@@ -829,7 +813,7 @@ VOID OutputDVDMediaId(
 	WORD wFormatLength
 	)
 {
-	OutputVolDescLogA("\tMedia ID: ");
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(Media ID));
 	OutputDVDCommonInfo(lpFormat, wFormatLength);
 }
 
@@ -838,14 +822,14 @@ VOID OutputDVDMediaKeyBlock(
 	WORD wFormatLength
 	)
 {
-	OutputVolDescLogA(
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(MediaKeyBlock)
 		"\tMedia Key Block Total Packs: %u"
 		"\tmedia key block: ",
 		lpFormat[3]);
 	for (WORD k = 0; k < wFormatLength; k++) {
-		OutputVolDescLogA("%02x", lpFormat[k]);
+		OutputDiscLogA("%02x", lpFormat[k]);
 	}
-	OutputVolDescLogA("\n");
+	OutputDiscLogA("\n");
 }
 
 VOID OutputDVDRamDds(
@@ -853,7 +837,7 @@ VOID OutputDVDRamDds(
 	WORD wFormatLength
 	)
 {
-	OutputVolDescLogA("\tDVD-RAM DDS: ");
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVD-RAM DDS)"\t");
 	OutputDVDCommonInfo(lpFormat, wFormatLength);
 }
 
@@ -861,15 +845,14 @@ VOID OutputDVDRamMediumStatus(
 	PDVD_RAM_MEDIUM_STATUS dvdRamMeium
 	)
 {
-	OutputVolDescLogA(
-		"\t========== DVDRamMediumStatus ==========\n"
-		"\t\t              PersistentWriteProtect: %s\n"
-		"\t\t               CartridgeWriteProtect: %s\n"
-		"\t\t           MediaSpecificWriteInhibit: %s\n"
-		"\t\t                  CartridgeNotSealed: %s\n"
-		"\t\t                    MediaInCartridge: %s\n"
-		"\t\t              DiscTypeIdentification: %x\n"
-		"\t\tMediaSpecificWriteInhibitInformation: %s\n",
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDRamMediumStatus)
+		"\t              PersistentWriteProtect: %s\n"
+		"\t               CartridgeWriteProtect: %s\n"
+		"\t           MediaSpecificWriteInhibit: %s\n"
+		"\t                  CartridgeNotSealed: %s\n"
+		"\t                    MediaInCartridge: %s\n"
+		"\t              DiscTypeIdentification: %x\n"
+		"\tMediaSpecificWriteInhibitInformation: %s\n",
 		BOOLEAN_TO_STRING_YES_NO_A(dvdRamMeium->PersistentWriteProtect),
 		BOOLEAN_TO_STRING_YES_NO_A(dvdRamMeium->CartridgeWriteProtect),
 		BOOLEAN_TO_STRING_YES_NO_A(dvdRamMeium->MediaSpecificWriteInhibit),
@@ -883,11 +866,10 @@ VOID OutputDVDRamSpareArea(
 	PDVD_RAM_SPARE_AREA_INFORMATION dvdRamSpare
 	)
 {
-	OutputVolDescLogA(
-		"\t========== DVDRamSpareAreaInformation ==========\n"
-		"\t\t          FreePrimarySpareSectors: %lu\n"
-		"\t\t     FreeSupplementalSpareSectors: %lu\n"
-		"\t\tAllocatedSupplementalSpareSectors: %lu\n",
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDRamSpareAreaInformation)
+		"\t          FreePrimarySpareSectors: %lu\n"
+		"\t     FreeSupplementalSpareSectors: %lu\n"
+		"\tAllocatedSupplementalSpareSectors: %lu\n",
 		MAKELONG(
 		MAKEWORD(dvdRamSpare->FreePrimarySpareSectors[3], dvdRamSpare->FreePrimarySpareSectors[2]),
 		MAKEWORD(dvdRamSpare->FreePrimarySpareSectors[1], dvdRamSpare->FreePrimarySpareSectors[0])),
@@ -903,9 +885,8 @@ VOID OutputDVDRamRecordingType(
 	PDVD_RAM_RECORDING_TYPE dvdRamRecording
 	)
 {
-	OutputVolDescLogA(
-		"\t========== DVDRamRecordingType ==========\n"
-		"\t\tRealTimeData: %s\n",
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDRamRecordingType)
+		"\tRealTimeData: %s\n",
 		BOOLEAN_TO_STRING_YES_NO_A(dvdRamRecording->RealTimeData));
 }
 
@@ -914,8 +895,11 @@ VOID OutputDVDRmdLastBorderOut(
 	WORD wFormatLength
 	)
 {
-	OutputVolDescLogA("\tRMD in last border-out: ");
-	OutputDVDCommonInfo(lpFormat, wFormatLength);
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(RMD in last border-out));
+	INT nRoop = wFormatLength / DISC_RAW_READ_SIZE;
+	for (BYTE i = 0; i < nRoop; i++) {
+		OutputCDMain(fileDisc, lpFormat + DISC_RAW_READ_SIZE * i, 0, DISC_RAW_READ_SIZE);
+	}
 }
 
 VOID OutputDVDRecordingManagementAreaData(
@@ -923,84 +907,77 @@ VOID OutputDVDRecordingManagementAreaData(
 	WORD wFormatLength
 	)
 {
-	OutputVolDescLogA(
-		"\t========== DVDRecordingManagementAreaData ==========\n"
-		"\t\tLastRecordedRMASectorNumber: %lu\n"
-		"\t\t                   RMDBytes: ",
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDRecordingManagementAreaData)
+		"\tLastRecordedRMASectorNumber: %lu\n"
+		"\t                   RMDBytes: \n",
 		MAKELONG(MAKEWORD(dvdRecordingMan->LastRecordedRMASectorNumber[3],
 		dvdRecordingMan->LastRecordedRMASectorNumber[2]),
 		MAKEWORD(dvdRecordingMan->LastRecordedRMASectorNumber[1],
 		dvdRecordingMan->LastRecordedRMASectorNumber[0])));
-	for (WORD k = 0; k < wFormatLength; k++) {
-		OutputVolDescLogA("%02x", dvdRecordingMan->RMDBytes[k]);
+	UINT nRoop = (wFormatLength - sizeof(DVD_RECORDING_MANAGEMENT_AREA_DATA)) / DISC_RAW_READ_SIZE;
+	for (BYTE i = 0; i < nRoop; i++) {
+		OutputCDMain(fileDisc, dvdRecordingMan->RMDBytes + DISC_RAW_READ_SIZE * i, 0, DISC_RAW_READ_SIZE);
 	}
-	OutputVolDescLogA("\n");
 }
 
 VOID OutputDVDPreRecordedInformation(
 	PDVD_PRERECORDED_INFORMATION dvdPreRecorded
 	)
 {
-	OutputVolDescLogA(
-		"\t========== DVDPreRecordedInformation ==========\n"
-		"\t\t                      FieldID_1: %u\n"
-		"\t\t            DiscApplicatiowCode: %u\n"
-		"\t\t               DiscPhysicalCode: %u\n"
-		"\t\tLastAddressOfDataRecordableArea: %lu\n"
-		"\t\t                  ExtensiowCode: %u\n"
-		"\t\t                    PartVers1on: %u\n"
-		"\t\t                      FieldID_2: %u\n"
-		"\t\t               OpcSuggestedCode: %u\n"
-		"\t\t                 WavelengthCode: %u\n"
-		"\t\t              WriteStrategyCode: %lu\n"
-		"\t\t                      FieldID_3: %u\n"
-		"\t\t               ManufacturerId_3: %c%c%c%c%c%c\n"
-		"\t\t                      FieldID_4: %u\n"
-		"\t\t               ManufacturerId_4: %c%c%c%c%c%c\n"
-		"\t\t                      FieldID_5: %u\n"
-		"\t\t               ManufacturerId_5: %c%c%c%c%c%c\n",
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDPreRecordedInformation)
+		"\t                      FieldID_1: %02x\n"
+		"\t            DiscApplicatiowCode: %02x\n"
+		"\t               DiscPhysicalCode: %02x\n"
+		"\tLastAddressOfDataRecordableArea: %lu\n"
+		"\t                  ExtensiowCode: %02x\n"
+		"\t                    PartVers1on: %02x\n"
+		"\t                      FieldID_2: %02x\n"
+		"\t               OpcSuggestedCode: %02x\n"
+		"\t                 WavelengthCode: %02x\n"
+		"\t              WriteStrategyCode: %02x%02x%02x%02x\n"
+		"\t                      FieldID_3: %02x\n"
+		"\t               ManufacturerId_3: %02x%02x%02x%02x%02x%02x\n"
+		"\t                      FieldID_4: %02x\n"
+		"\t               ManufacturerId_4: %02x%02x%02x%02x%02x%02x\n"
+		"\t                      FieldID_5: %02x\n"
+		"\t               ManufacturerId_5: %02x%02x%02x%02x%02x%02x\n",
 		dvdPreRecorded->FieldID_1,
 		dvdPreRecorded->DiscApplicationCode,
 		dvdPreRecorded->DiscPhysicalCode,
-		MAKELONG(MAKEWORD(0, dvdPreRecorded->LastAddressOfDataRecordableArea[2]),
-		MAKEWORD(dvdPreRecorded->LastAddressOfDataRecordableArea[1], dvdPreRecorded->LastAddressOfDataRecordableArea[0])),
+		MAKELONG(MAKEWORD(dvdPreRecorded->LastAddressOfDataRecordableArea[0]
+			, dvdPreRecorded->LastAddressOfDataRecordableArea[1]),
+		MAKEWORD(dvdPreRecorded->LastAddressOfDataRecordableArea[2], 0)),
 		dvdPreRecorded->ExtensionCode,
 		dvdPreRecorded->PartVers1on,
 		dvdPreRecorded->FieldID_2,
 		dvdPreRecorded->OpcSuggestedCode,
 		dvdPreRecorded->WavelengthCode,
-		MAKELONG(MAKEWORD(dvdPreRecorded->WriteStrategyCode[3], dvdPreRecorded->WriteStrategyCode[2]),
-		MAKEWORD(dvdPreRecorded->WriteStrategyCode[1], dvdPreRecorded->WriteStrategyCode[0])),
+		dvdPreRecorded->WriteStrategyCode[0], dvdPreRecorded->WriteStrategyCode[1],
+		dvdPreRecorded->WriteStrategyCode[2], dvdPreRecorded->WriteStrategyCode[3],
 		dvdPreRecorded->FieldID_3,
-		dvdPreRecorded->ManufacturerId_3[5], dvdPreRecorded->ManufacturerId_3[4],
-		dvdPreRecorded->ManufacturerId_3[3], dvdPreRecorded->ManufacturerId_3[2],
-		dvdPreRecorded->ManufacturerId_3[1], dvdPreRecorded->ManufacturerId_3[0],
+		dvdPreRecorded->ManufacturerId_3[0], dvdPreRecorded->ManufacturerId_3[1],
+		dvdPreRecorded->ManufacturerId_3[2], dvdPreRecorded->ManufacturerId_3[3],
+		dvdPreRecorded->ManufacturerId_3[4], dvdPreRecorded->ManufacturerId_3[5],
 		dvdPreRecorded->FieldID_4,
-		dvdPreRecorded->ManufacturerId_4[5], dvdPreRecorded->ManufacturerId_4[4],
-		dvdPreRecorded->ManufacturerId_4[3], dvdPreRecorded->ManufacturerId_4[2],
-		dvdPreRecorded->ManufacturerId_4[1], dvdPreRecorded->ManufacturerId_4[0],
+		dvdPreRecorded->ManufacturerId_4[0], dvdPreRecorded->ManufacturerId_4[1],
+		dvdPreRecorded->ManufacturerId_4[2], dvdPreRecorded->ManufacturerId_4[3],
+		dvdPreRecorded->ManufacturerId_4[4], dvdPreRecorded->ManufacturerId_4[5],
 		dvdPreRecorded->FieldID_5,
-		dvdPreRecorded->ManufacturerId_5[5], dvdPreRecorded->ManufacturerId_5[4],
-		dvdPreRecorded->ManufacturerId_5[3], dvdPreRecorded->ManufacturerId_5[2],
-		dvdPreRecorded->ManufacturerId_5[1], dvdPreRecorded->ManufacturerId_5[0]);
+		dvdPreRecorded->ManufacturerId_5[0], dvdPreRecorded->ManufacturerId_5[1],
+		dvdPreRecorded->ManufacturerId_5[2], dvdPreRecorded->ManufacturerId_5[3],
+		dvdPreRecorded->ManufacturerId_5[4], dvdPreRecorded->ManufacturerId_5[5]);
 }
 
 VOID OutputDVDUniqueDiscIdentifer(
 	PDVD_UNIQUE_DISC_IDENTIFIER dvdUnique
 	)
 {
-	OutputVolDescLogA(
-		"\t========== DVDUniqueDiscIdentifer ==========\n"
-		"\t\tRandomNumber: %u\n"
-		"\t\t     YMD HMS: %04ld-%02u-%02u %02u:%02u:%02u\n",
-		MAKEWORD(dvdUnique->RandomNumber[1], dvdUnique->RandomNumber[0]),
-		MAKELONG(MAKEWORD(dvdUnique->Year[3], dvdUnique->Year[2]),
-		MAKEWORD(dvdUnique->Year[1], dvdUnique->Year[0])),
-		MAKEWORD(dvdUnique->Month[1], dvdUnique->Month[0]),
-		MAKEWORD(dvdUnique->Day[1], dvdUnique->Day[0]),
-		MAKEWORD(dvdUnique->Hour[1], dvdUnique->Hour[0]),
-		MAKEWORD(dvdUnique->Minute[1], dvdUnique->Minute[0]),
-		MAKEWORD(dvdUnique->Second[1], dvdUnique->Second[0]));
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDUniqueDiscIdentifer)
+		"\t RandomNumber: %u\n"
+		"\tDate and Time: %.4s-%.2s-%.2s %.2s:%.2s:%.2s\n"
+		, MAKEWORD(dvdUnique->RandomNumber[1], dvdUnique->RandomNumber[0])
+		, dvdUnique->Year, dvdUnique->Month, dvdUnique->Day
+		, dvdUnique->Hour, dvdUnique->Minute, dvdUnique->Second);
 }
 
 VOID OutputDVDAdipInformation(
@@ -1008,7 +985,7 @@ VOID OutputDVDAdipInformation(
 	WORD wFormatLength
 	)
 {
-	OutputVolDescLogA("\tADIP information: ");
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(ADIP information)"\t");
 	OutputDVDCommonInfo(lpFormat, wFormatLength);
 }
 
@@ -1016,10 +993,9 @@ VOID OutputDVDDualLayerRecordingInformation(
 	PDVD_DUAL_LAYER_RECORDING_INFORMATION dvdDualLayer
 	)
 {
-	OutputVolDescLogA(
-		"\t========== DVDDualLayerRecordingInformation ==========\n"
-		"\t\tLayer0SectorsImmutable: %s\n"
-		"\t\t         Layer0Sectors: %lu\n",
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDDualLayerRecordingInformation)
+		"\tLayer0SectorsImmutable: %s\n"
+		"\t         Layer0Sectors: %lu\n",
 		BOOLEAN_TO_STRING_YES_NO_A(dvdDualLayer->Layer0SectorsImmutable),
 		MAKELONG(MAKEWORD(dvdDualLayer->Layer0Sectors[3], dvdDualLayer->Layer0Sectors[2]),
 		MAKEWORD(dvdDualLayer->Layer0Sectors[1], dvdDualLayer->Layer0Sectors[0])));
@@ -1028,10 +1004,9 @@ VOID OutputDVDDualLayerMiddleZone(
 	PDVD_DUAL_LAYER_MIDDLE_ZONE_START_ADDRESS dvdDualLayerMiddle
 	)
 {
-	OutputVolDescLogA(
-		"\t========== DVDDualLayerMiddleZoneStartAddress ==========\n"
-		"\t\t                   InitStatus: %s\n"
-		"\t\tShiftedMiddleAreaStartAddress: %lu\n",
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDDualLayerMiddleZoneStartAddress)
+		"\t                   InitStatus: %s\n"
+		"\tShiftedMiddleAreaStartAddress: %lu\n",
 		BOOLEAN_TO_STRING_YES_NO_A(dvdDualLayerMiddle->InitStatus),
 		MAKELONG(MAKEWORD(dvdDualLayerMiddle->ShiftedMiddleAreaStartAddress[3],
 		dvdDualLayerMiddle->ShiftedMiddleAreaStartAddress[2]),
@@ -1043,9 +1018,8 @@ VOID OutputDVDDualLayerJumpInterval(
 	PDVD_DUAL_LAYER_JUMP_INTERVAL_SIZE dvdDualLayerJump
 	)
 {
-	OutputVolDescLogA(
-		"\t========== DVDDualLayerJumpIntervalSize ==========\n"
-		"\t\tJumpIntervalSize: %lu\n",
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDDualLayerJumpIntervalSize)
+		"\tJumpIntervalSize: %lu\n",
 		MAKELONG(MAKEWORD(dvdDualLayerJump->JumpIntervalSize[3],
 		dvdDualLayerJump->JumpIntervalSize[2]),
 		MAKEWORD(dvdDualLayerJump->JumpIntervalSize[1],
@@ -1056,9 +1030,8 @@ VOID OutputDVDDualLayerManualLayerJump(
 	PDVD_DUAL_LAYER_MANUAL_LAYER_JUMP dvdDualLayerMan
 	)
 {
-	OutputVolDescLogA(
-		"\t========== DVDDualLayerManualLayerJump ==========\n"
-		"\t\tManualJumpLayerAddress: %lu\n",
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDDualLayerManualLayerJump)
+		"\tManualJumpLayerAddress: %lu\n",
 		MAKELONG(MAKEWORD(dvdDualLayerMan->ManualJumpLayerAddress[3],
 		dvdDualLayerMan->ManualJumpLayerAddress[2]),
 		MAKEWORD(dvdDualLayerMan->ManualJumpLayerAddress[1],
@@ -1069,9 +1042,8 @@ VOID OutputDVDDualLayerRemapping(
 	PDVD_DUAL_LAYER_REMAPPING_INFORMATION dvdDualLayerRemapping
 	)
 {
-	OutputVolDescLogA(
-		"\t========== DVDDualLayerRemappingInformation ==========\n"
-		"\t\tManualJumpLayerAddress: %lu\n",
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDDualLayerRemappingInformation)
+		"\tManualJumpLayerAddress: %lu\n",
 		MAKELONG(MAKEWORD(dvdDualLayerRemapping->RemappingAddress[3],
 		dvdDualLayerRemapping->RemappingAddress[2]),
 		MAKEWORD(dvdDualLayerRemapping->RemappingAddress[1],
@@ -1082,11 +1054,10 @@ VOID OutputDVDDiscControlBlockHeader(
 	PDVD_DISC_CONTROL_BLOCK_HEADER dvdDiscCtrlBlk
 	)
 {
-	OutputVolDescLogA(
-		"\t========== DVDDiscControlBlockHeader ==========\n"
-		"\t\tContentDescriptor: %lu\n"
-		"\t\t           AsByte: %lu\n"
-		"\t\t         VendorId: ",
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDDiscControlBlockHeader)
+		"\tContentDescriptor: %lu\n"
+		"\t           AsByte: %lu\n"
+		"\t         VendorId: ",
 		MAKELONG(MAKEWORD(dvdDiscCtrlBlk->ContentDescriptor[3],
 		dvdDiscCtrlBlk->ContentDescriptor[2]),
 		MAKEWORD(dvdDiscCtrlBlk->ContentDescriptor[1],
@@ -1096,20 +1067,19 @@ VOID OutputDVDDiscControlBlockHeader(
 		MAKEWORD(dvdDiscCtrlBlk->ProhibitedActions.AsByte[1],
 		dvdDiscCtrlBlk->ProhibitedActions.AsByte[0])));
 	for (WORD k = 0; k < sizeof(dvdDiscCtrlBlk->VendorId); k++) {
-		OutputVolDescLogA("%c", dvdDiscCtrlBlk->VendorId[k]);
+		OutputDiscLogA("%c", dvdDiscCtrlBlk->VendorId[k]);
 	}
-	OutputVolDescLogA("\n");
+	OutputDiscLogA("\n");
 }
 
 VOID OutputDVDDiscControlBlockWriteInhibit(
 	PDVD_DISC_CONTROL_BLOCK_WRITE_INHIBIT dvdDiscCtrlBlkWrite
 	)
 {
-	OutputVolDescLogA(
-		"\t========== DVDDiscControlBlockWriteInhibit ==========\n"
-		"\t\t      UpdateCount: %lu\n"
-		"\t\t           AsByte: %lu\n"
-		"\t\t   UpdatePassword: ",
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDDiscControlBlockWriteInhibit)
+		"\t      UpdateCount: %lu\n"
+		"\t           AsByte: %lu\n"
+		"\t   UpdatePassword: ",
 		MAKELONG(MAKEWORD(dvdDiscCtrlBlkWrite->UpdateCount[3], dvdDiscCtrlBlkWrite->UpdateCount[2]),
 		MAKEWORD(dvdDiscCtrlBlkWrite->UpdateCount[1], dvdDiscCtrlBlkWrite->UpdateCount[0])),
 		MAKELONG(MAKEWORD(dvdDiscCtrlBlkWrite->WriteProtectActions.AsByte[3],
@@ -1117,33 +1087,32 @@ VOID OutputDVDDiscControlBlockWriteInhibit(
 		MAKEWORD(dvdDiscCtrlBlkWrite->WriteProtectActions.AsByte[1],
 		dvdDiscCtrlBlkWrite->WriteProtectActions.AsByte[0])));
 	for (WORD k = 0; k < sizeof(dvdDiscCtrlBlkWrite->UpdatePassword); k++) {
-		OutputVolDescLogA("%c", dvdDiscCtrlBlkWrite->UpdatePassword[k]);
+		OutputDiscLogA("%c", dvdDiscCtrlBlkWrite->UpdatePassword[k]);
 	}
-	OutputVolDescLogA("\n");
+	OutputDiscLogA("\n");
 }
 
 VOID OutputDVDDiscControlBlockSession(
 	PDVD_DISC_CONTROL_BLOCK_SESSION dvdDiscCtrlBlkSession
 	)
 {
-	OutputVolDescLogA(
-		"\t========== DVDDiscControlBlockSession ==========\n"
-		"\t\tSessionNumber: %u\n"
-		"\t\t       DiscID: \n",
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDDiscControlBlockSession)
+		"\tSessionNumber: %u\n"
+		"\t       DiscID: \n",
 		MAKEWORD(dvdDiscCtrlBlkSession->SessionNumber[1], dvdDiscCtrlBlkSession->SessionNumber[0]));
 	for (WORD k = 0; k < sizeof(dvdDiscCtrlBlkSession->DiscID); k++) {
-		OutputVolDescLogA("%c", dvdDiscCtrlBlkSession->DiscID[k]);
+		OutputDiscLogA("%c", dvdDiscCtrlBlkSession->DiscID[k]);
 	}
-	OutputVolDescLogA("\n");
+	OutputDiscLogA("\n");
 
 	for (DWORD j = 0; j < sizeof(dvdDiscCtrlBlkSession->SessionItem); j++) {
-		OutputVolDescLogA(
-			"\t\t  SessionItem: %lu\n"
-			"\t\t\t     AsByte: ", j);
+		OutputDiscLogA(
+			"\t  SessionItem: %lu\n"
+			"\t\t     AsByte: ", j);
 		for (WORD k = 0; k < sizeof(dvdDiscCtrlBlkSession->SessionItem[j].AsByte); k++) {
-			OutputVolDescLogA("%c", dvdDiscCtrlBlkSession->SessionItem[j].AsByte[k]);
+			OutputDiscLogA("%c", dvdDiscCtrlBlkSession->SessionItem[j].AsByte[k]);
 		}
-		OutputVolDescLogA("\n");
+		OutputDiscLogA("\n");
 	}
 }
 
@@ -1152,20 +1121,19 @@ VOID OutputDVDDiscControlBlockList(
 	WORD wFormatLength
 	)
 {
-	OutputVolDescLogA(
-		"\t========== DVDDiscControlBlockListT ==========\n"
-		"\t\tReadabldDCBs: %s\n"
-		"\t\tWritableDCBs: %s\n",
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDDiscControlBlockListT)
+		"\tReadabldDCBs: %s\n"
+		"\tWritableDCBs: %s\n",
 		BOOLEAN_TO_STRING_YES_NO_A(dvdDiscCtrlBlkList->ReadabldDCBs),
 		BOOLEAN_TO_STRING_YES_NO_A(dvdDiscCtrlBlkList->WritableDCBs));
-	OutputVolDescLogA(
-		"\t\tDVD_DISC_CONTROL_BLOCK_LIST_DCB: ");
+	OutputDiscLogA(
+		"\tDVD_DISC_CONTROL_BLOCK_LIST_DCB: ");
 	for (WORD k = 0; k < wFormatLength - sizeof(DVD_DISC_CONTROL_BLOCK_LIST); k++) {
-		OutputVolDescLogA("%lu",
+		OutputDiscLogA("%lu",
 			MAKELONG(MAKEWORD(dvdDiscCtrlBlkList->Dcbs[k].DcbIdentifier[3], dvdDiscCtrlBlkList->Dcbs[k].DcbIdentifier[2]),
 			MAKEWORD(dvdDiscCtrlBlkList->Dcbs[k].DcbIdentifier[1], dvdDiscCtrlBlkList->Dcbs[k].DcbIdentifier[0])));
 	}
-	OutputVolDescLogA("\n");
+	OutputDiscLogA("\n");
 
 }
 
@@ -1174,7 +1142,7 @@ VOID OutputDVDMtaEccBlock(
 	WORD wFormatLength
 	)
 {
-	OutputVolDescLogA("\tMTA ECC Block: ");
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(MTA ECC Block)"\t");
 	OutputDVDCommonInfo(lpFormat, wFormatLength);
 }
 
@@ -1182,12 +1150,11 @@ VOID OutputDVDWriteProtectionStatus(
 	PDVD_WRITE_PROTECTION_STATUS dvdWrite
 	)
 {
-	OutputVolDescLogA(
-		"\t========== DVDWriteProtectionStatus ==========\n"
-		"\t\tSoftwareWriteProtectUntilPowerdown: %s\n"
-		"\t\t       MediaPersistentWriteProtect: %s\n"
-		"\t\t             CartridgeWriteProtect: %s\n"
-		"\t\t         MediaSpecificWriteProtect: %s\n",
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDWriteProtectionStatus)
+		"\tSoftwareWriteProtectUntilPowerdown: %s\n"
+		"\t       MediaPersistentWriteProtect: %s\n"
+		"\t             CartridgeWriteProtect: %s\n"
+		"\t         MediaSpecificWriteProtect: %s\n",
 		BOOLEAN_TO_STRING_YES_NO_A(dvdWrite->SoftwareWriteProtectUntilPowerdown),
 		BOOLEAN_TO_STRING_YES_NO_A(dvdWrite->MediaPersistentWriteProtect),
 		BOOLEAN_TO_STRING_YES_NO_A(dvdWrite->CartridgeWriteProtect),
@@ -1199,7 +1166,7 @@ VOID OutputDVDAACSVolumeIdentifier(
 	WORD wFormatLength
 	)
 {
-	OutputVolDescLogA("\tAACS Volume Identifiers: ");
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(AACS Volume Identifiers)"\t");
 	OutputDVDCommonInfo(lpFormat, wFormatLength);
 }
 
@@ -1208,7 +1175,7 @@ VOID OutputDVDPreRecordedAACSMediaSerialNumber(
 	WORD wFormatLength
 	)
 {
-	OutputVolDescLogA("\tPreRecorded AACS Media Serial Number: ");
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(PreRecorded AACS Media Serial Number)"\t");
 	OutputDVDCommonInfo(lpFormat, wFormatLength);
 }
 
@@ -1217,7 +1184,7 @@ VOID OutputDVDAACSMediaIdentifier(
 	WORD wFormatLength
 	)
 {
-	OutputVolDescLogA("\tAACS Media Identifier: ");
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(AACS Media Identifier)"\t");
 	OutputDVDCommonInfo(lpFormat, wFormatLength);
 }
 
@@ -1226,7 +1193,7 @@ VOID OutputDVDAACSMediaKeyBlock(
 	WORD wFormatLength
 	)
 {
-	OutputVolDescLogA("\tAACS Media Key Block: ");
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(AACS Media Key Block)"\t");
 	OutputDVDCommonInfo(lpFormat, wFormatLength);
 }
 
@@ -1234,7 +1201,7 @@ VOID OutputDVDListOfRecognizedFormatLayers(
 	PDVD_LIST_OF_RECOGNIZED_FORMAT_LAYERS_TYPE_CODE dvdListOf
 	)
 {
-	OutputVolDescLogA(
+	OutputDiscLogA(
 		"\t\tNumberOfRecognizedFormatLayers: %u\n"
 		"\t\t             OnlineFormatlayer: %u\n"
 		"\t\t            DefaultFormatLayer: %u\n",
@@ -1245,6 +1212,8 @@ VOID OutputDVDListOfRecognizedFormatLayers(
 
 VOID OutputDVDStructureFormat(
 	BYTE byFormatCode,
+	LPBYTE lpBcaFlag,
+	LPBOOL lpbCPRM,
 	WORD wFormatLength,
 	LPBYTE lpFormat,
 	LPDWORD lpdwSectorLength
@@ -1253,10 +1222,10 @@ VOID OutputDVDStructureFormat(
 	switch (byFormatCode) {
 	case DvdPhysicalDescriptor:
 	case 0x10:
-		OutputDVDLayerDescriptor((PDVD_FULL_LAYER_DESCRIPTOR)lpFormat, lpdwSectorLength);
+		OutputDVDLayerDescriptor((PDVD_FULL_LAYER_DESCRIPTOR)lpFormat, lpBcaFlag, lpdwSectorLength);
 		break;
 	case DvdCopyrightDescriptor:
-		OutputDVDCopyrightDescriptor((PDVD_COPYRIGHT_DESCRIPTOR)lpFormat);
+		OutputDVDCopyrightDescriptor((PDVD_COPYRIGHT_DESCRIPTOR)lpFormat, lpbCPRM);
 		break;
 	case DvdDiskKeyDescriptor:
 		OutputDVDDiskKeyDescriptor((PDVD_DISK_KEY_DESCRIPTOR)lpFormat);
@@ -1361,7 +1330,7 @@ VOID OutputDVDStructureFormat(
 		break;
 		// formats 0x91 through 0xFE are not yet defined
 	default:
-		OutputVolDescLogA("\tUnknown: %02x\n", byFormatCode);
+		OutputDiscLogA("\tUnknown: %02x\n", byFormatCode);
 		break;
 	}
 }
@@ -1371,42 +1340,41 @@ VOID OutputDVDCopyrightManagementInformation(
 	INT nLBA
 	)
 {
-	OutputVolDescLogA("\t\tLBA %7u, ", nLBA);
+	OutputDiscLogA(STR_LBA, nLBA, nLBA);
 	if ((dvdCopyright->CPR_MAI & 0x80) == 0x80) {
-		OutputVolDescLogA("CPM exists");
 		if ((dvdCopyright->CPR_MAI & 0x40) == 0x40) {
 			switch (dvdCopyright->CPR_MAI & 0x0f) {
 			case 0:
-				OutputVolDescLogA(", the sector is scrambled by CSS");
+				OutputDiscLogA("This sector is scrambled by CSS");
 				break;
 			case 0x01:
-				OutputVolDescLogA(", the sector is encrypted by CPPM");
+				OutputDiscLogA("This sector is encrypted by CPPM");
 				break;
 			default:
-				OutputVolDescLogA(", reserved");
+				OutputDiscLogA("reserved");
 			}
 		}
 		else {
-			OutputVolDescLogA(", CSS or CPPM doesn't exist in this sector");
+			OutputDiscLogA("CSS or CPPM doesn't exist in this sector");
 		}
 		switch (dvdCopyright->CPR_MAI & 0x30) {
 		case 0:
-			OutputVolDescLogA(", copying is permitted without restriction\n");
+			OutputDiscLogA(", copying is permitted without restriction\n");
 			break;
 		case 0x10:
-			OutputVolDescLogA(", reserved\n");
+			OutputDiscLogA(", reserved\n");
 			break;
 		case 0x20:
-			OutputVolDescLogA(", one generation of copies may be made\n");
+			OutputDiscLogA(", one generation of copies may be made\n");
 			break;
 		case 0x30:
-			OutputVolDescLogA(", no copying is permitted\n");
+			OutputDiscLogA(", no copying is permitted\n");
 			break;
 		default:
-			OutputVolDescLogA("\n");
+			OutputDiscLogA("\n");
 		}
 	}
 	else {
-		OutputVolDescLogA("CPM doesn't exist\n");
+		OutputDiscLogA("No protected sector\n");
 	}
 }

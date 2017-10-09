@@ -400,3 +400,14 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - changed: Some log message
 - changed: the max size to search the exe file when use /sf option (1024 -> 4096)
 - fixed: Disc that the session 2 starts from the track 2
+
+*2017-10-10
+- changed: /r option is used only by data command
+- changed: /raw option is used only by the multi-session disc
+- changed: Enable multiple execution
+- fixed: Getting the subchannel offsets (Resident Evil 2 Disc 2 (Eu))
+- fixed: Descrambling from 00:01:00 to 00:01:74 when used /p option
+- fixed: GMT of the CD log, UTC of the DVD log
+- improved: Checking argument (cd, dvd)
+- improved: Reading directory record (SimCity 3000 (USA))
+- improved: Reading DVD structure

@@ -15,6 +15,8 @@ VOID OutputFsVolumeRecognitionSequence(
 
 VOID OutputDVDStructureFormat(
 	BYTE byFormatCode,
+	LPBYTE lpBcaFlag,
+	LPBOOL lpbCPRM,
 	WORD wFormatLength,
 	LPBYTE lpFormat,
 	LPDWORD lpdwSectorLength

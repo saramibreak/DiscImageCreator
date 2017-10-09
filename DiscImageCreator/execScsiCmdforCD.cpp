@@ -18,6 +18,54 @@
 // These global variable is set at prngcd.cpp
 extern unsigned char scrambled_table[2352];
 
+BOOL GetLBAForSubChannelOffset(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	PDISC pDisc,
+	LPBYTE lpCmd,
+	INT nLBA,
+	LPBYTE lpBuf,
+	DWORD dwBufLen
+)
+{
+	BOOL bRet = TRUE;
+	LPBYTE pBuf = NULL;
+	LPBYTE lpBufTmp = NULL;
+	if (!GetAlignedCallocatedBuffer(pDevice, &pBuf,
+		dwBufLen, &lpBufTmp, _T(__FUNCTION__), __LINE__)) {
+		return FALSE;
+	}
+	memcpy(lpBufTmp, lpBuf, dwBufLen);
+	BYTE lpSubcode[CD_RAW_READ_SUBCODE_SIZE] = { 0 };
+	for (;;) {
+		if (dwBufLen == CD_RAW_READ_SUBCODE_SIZE) {
+			AlignRowSubcode(lpBufTmp, lpSubcode);
+		}
+		else if (dwBufLen == CD_RAW_SECTOR_WITH_SUBCODE_SIZE) {
+			AlignRowSubcode(lpBufTmp + CD_RAW_SECTOR_SIZE, lpSubcode);
+		}
+		else if (dwBufLen == CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE) {
+			AlignRowSubcode(lpBufTmp + CD_RAW_SECTOR_SIZE + CD_RAW_READ_C2_294_SIZE, lpSubcode);
+		}
+		OutputCDSub96Align(lpSubcode, nLBA);
+
+		if ((lpSubcode[12] & 0x0f) == ADR_ENCODES_CURRENT_POSITION) {
+			pDisc->SUB.nSubChannelOffset = MSFtoLBA(BcdToDec(lpSubcode[19]),
+				BcdToDec(lpSubcode[20]), BcdToDec(lpSubcode[21])) - 150 - nLBA;
+			break;
+		}
+		else {
+			if (!ExecReadCD(pExtArg, pDevice, lpCmd, ++nLBA
+				, lpBufTmp, dwBufLen, _T(__FUNCTION__), __LINE__)) {
+				bRet = FALSE;
+				break;
+			}
+		}
+	}
+	FreeAndNull(pBuf);
+	return bRet;
+}
+
 BOOL ExecSearchingOffset(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
@@ -29,8 +77,7 @@ BOOL ExecSearchingOffset(
 	DWORD dwBufSize,
 	BOOL bGetDriveOffset,
 	INT nDriveSampleOffset,
-	INT nDriveOffset,
-	BOOL bSubchOffset
+	INT nDriveOffset
 	)
 {
 	if (!ExecReadCD(pExtArg, pDevice, lpCmd, nLBA
@@ -91,22 +138,13 @@ BOOL ExecSearchingOffset(
 	}
 	if (dwBufSize == CD_RAW_SECTOR_WITH_SUBCODE_SIZE ||
 		dwBufSize == CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE) {
-		BYTE lpSubcode[CD_RAW_READ_SUBCODE_SIZE] = { 0 };
-		if (dwBufSize == CD_RAW_SECTOR_WITH_SUBCODE_SIZE) {
-			AlignRowSubcode(lpBuf + CD_RAW_SECTOR_SIZE, lpSubcode);
-		}
-		else if (dwBufSize == CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE) {
-			AlignRowSubcode(lpBuf + CD_RAW_SECTOR_SIZE + CD_RAW_READ_C2_294_SIZE, lpSubcode);
-		}
-		OutputCDSub96Align(lpSubcode, nLBA);
-		if (bSubchOffset) {
-			pDisc->SUB.nSubchOffset = MSFtoLBA(BcdToDec(lpSubcode[19]),
-				BcdToDec(lpSubcode[20]), BcdToDec(lpSubcode[21])) - 150 - nLBA;
+		if (!GetLBAForSubChannelOffset(pExtArg, pDevice, pDisc, lpCmd, nLBA, lpBuf, dwBufSize)) {
+			return FALSE;
 		}
 	}
 	if (!pExtArg->byD8 && !pDevice->byPlxtrDrive && *pExecType != gd) {
-		if (pDisc->SUB.nSubchOffset != 0xff) {
-			OutputDiscLogA("\tSubch Offset: %d\n", pDisc->SUB.nSubchOffset);
+		if (pDisc->SUB.nSubChannelOffset != 0xff) {
+			OutputDiscLogA("\tSubChannel Offset: %d\n", pDisc->SUB.nSubChannelOffset);
 		}
 	}
 	else {
@@ -131,45 +169,9 @@ BOOL ExecSearchingOffset(
 			}
 		}
 		OutputCDOffset(pExtArg, pDisc, bGetDriveOffset
-			, nDriveSampleOffset, nDriveOffset, pDisc->SUB.nSubchOffset);
+			, nDriveSampleOffset, nDriveOffset, pDisc->SUB.nSubChannelOffset);
 	}
 	return TRUE;
-}
-
-INT GetLBAForSubOffset(
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	LPBYTE lpCmd,
-	INT nLBA,
-	LPBYTE lpBuf,
-	DWORD dwBufLen
-	)
-{
-	for (;;) {
-		if (!ExecReadCD(pExtArg, pDevice, lpCmd, nLBA
-			, lpBuf, dwBufLen, _T(__FUNCTION__), __LINE__)) {
-			break;
-		}
-		// check for sub offset
-		BYTE lpSubcode[CD_RAW_READ_SUBCODE_SIZE] = { 0 };
-		if (dwBufLen == CD_RAW_READ_SUBCODE_SIZE) {
-			AlignRowSubcode(lpBuf, lpSubcode);
-		}
-		else if (dwBufLen == CD_RAW_SECTOR_WITH_SUBCODE_SIZE) {
-			AlignRowSubcode(lpBuf + CD_RAW_SECTOR_SIZE, lpSubcode);
-		}
-#if 0
-		OutputCDSub96Align(lpSubcode, nLBA);
-#endif
-		if ((lpSubcode[12] & 0x0f) == ADR_ENCODES_CURRENT_POSITION) {
-			break;
-		}
-		else {
-			nLBA++;
-			REVERSE_BYTES(&lpCmd[2], &nLBA);
-		}
-	}
-	return nLBA;
 }
 
 BOOL ReadCDForSearchingOffset(
@@ -229,7 +231,7 @@ BOOL ReadCDForSearchingOffset(
 	LPBYTE pBuf = NULL;
 	LPBYTE lpBuf = NULL;
 	if (!GetAlignedCallocatedBuffer(pDevice, &pBuf,
-		CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE, &lpBuf, _T(__FUNCTION__), __LINE__)) {
+		CD_RAW_SECTOR_WITH_C2_AND_SUBCODE_SIZE, &lpBuf, _T(__FUNCTION__), __LINE__)) {
 		return FALSE;
 	}
 	if (*pExecType == gd) {
@@ -241,36 +243,33 @@ BOOL ReadCDForSearchingOffset(
 		SetReadD8Command(pDevice, &cdb, 1, CDFLAG::_PLXTR_READ_CDDA::NoSub);
 		memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
 
-		lpCmd[10] = (BYTE)CDFLAG::_PLXTR_READ_CDDA::Raw;
 		INT nLBA = pDisc->SCSI.nFirstLBAofDataTrack;
-		nLBA += GetLBAForSubOffset(pExtArg, pDevice, lpCmd, 0, lpBuf, CD_RAW_READ_SUBCODE_SIZE);
 		ZeroMemory(lpBuf, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE);
 
-		lpCmd[10] = (BYTE)CDFLAG::_PLXTR_READ_CDDA::NoSub;
 		if (pDisc->SCSI.trackType != TRACK_TYPE::audioOnly) {
 			if (!ExecSearchingOffset(pExecType, pExtArg, pDevice, pDisc, lpCmd, nLBA, lpBuf
-				, CD_RAW_SECTOR_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset, FALSE)) {
+				, CD_RAW_SECTOR_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset)) {
 				bRet = FALSE;
 			}
 		}
 		lpCmd[10] = (BYTE)CDFLAG::_PLXTR_READ_CDDA::MainQ;
 		if (!ExecSearchingOffset(pExecType, pExtArg, pDevice, pDisc, lpCmd, nLBA, lpBuf
-			, CD_RAW_SECTOR_SIZE + 16, bGetDriveOffset, nDriveSampleOffset, nDriveOffset, FALSE)) {
+			, CD_RAW_SECTOR_SIZE + 16, bGetDriveOffset, nDriveSampleOffset, nDriveOffset)) {
 			// not return FALSE
 		}
 		lpCmd[10] = (BYTE)CDFLAG::_PLXTR_READ_CDDA::MainPack;
 		if (!ExecSearchingOffset(pExecType, pExtArg, pDevice, pDisc, lpCmd, nLBA, lpBuf
-			, CD_RAW_SECTOR_WITH_SUBCODE_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset, TRUE)) {
+			, CD_RAW_SECTOR_WITH_SUBCODE_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset)) {
 			bRet = FALSE;
 		}
 		lpCmd[10] = (BYTE)CDFLAG::_PLXTR_READ_CDDA::Raw;
 		if (!ExecSearchingOffset(pExecType, pExtArg, pDevice, pDisc, lpCmd, nLBA, lpBuf
-			, CD_RAW_READ_SUBCODE_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset, FALSE)) {
+			, CD_RAW_READ_SUBCODE_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset)) {
 			// not return FALSE
 		}
 		lpCmd[10] = (BYTE)CDFLAG::_PLXTR_READ_CDDA::MainC2Raw;
 		if (!ExecSearchingOffset(pExecType, pExtArg, pDevice, pDisc, lpCmd, nLBA, lpBuf
-			, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset, TRUE)) {
+			, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset)) {
 			pExtArg->byC2 = FALSE;
 			pDevice->FEATURE.byC2ErrorData = FALSE;
 			// not return FALSE
@@ -278,17 +277,15 @@ BOOL ReadCDForSearchingOffset(
 	}
 	else {
 		CDFLAG::_READ_CD::_EXPECTED_SECTOR_TYPE flg = CDFLAG::_READ_CD::CDDA;
-//		if (*pExecType == data) {
-//			flg = CDFLAG::_READ_CD::All;
-//		}
+		if (*pExecType == data) {
+			flg = CDFLAG::_READ_CD::All;
+		}
 		CDB::_READ_CD cdb = { 0 };
 		SetReadCDCommand(NULL, pDevice, &cdb, flg
-			, 1, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::NoSub, FALSE);
+			, 1, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::Raw, FALSE);
 		memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
 
-		lpCmd[10] = (BYTE)CDFLAG::_READ_CD::Raw;
 		INT nLBA = pDisc->SCSI.nFirstLBAofDataTrack;
-		nLBA += GetLBAForSubOffset(pExtArg, pDevice, lpCmd, 0, lpBuf, CD_RAW_SECTOR_WITH_SUBCODE_SIZE);
 		ZeroMemory(lpBuf, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE);
 
 		if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
@@ -297,23 +294,23 @@ BOOL ReadCDForSearchingOffset(
 			memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
 			if (pDisc->SCSI.trackType != TRACK_TYPE::audioOnly) {
 				if (!ExecSearchingOffset(pExecType, pExtArg, pDevice, pDisc, lpCmd, nLBA, lpBuf
-					, CD_RAW_SECTOR_WITH_C2_294_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset, FALSE)) {
+					, CD_RAW_SECTOR_WITH_C2_294_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset)) {
 					// not return FALSE
 				}
 			}
 			lpCmd[10] = (BYTE)CDFLAG::_READ_CD::Raw;
 			if (!ExecSearchingOffset(pExecType, pExtArg, pDevice, pDisc, lpCmd, nLBA, lpBuf
-				, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset, TRUE)) {
+				, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset)) {
 				bRet = FALSE;
 			}
 			lpCmd[10] = (BYTE)CDFLAG::_READ_CD::Q;
 			if (!ExecSearchingOffset(pExecType, pExtArg, pDevice, pDisc, lpCmd, nLBA, lpBuf
-				, CD_RAW_SECTOR_WITH_C2_294_SIZE + 16, bGetDriveOffset, nDriveSampleOffset, nDriveOffset, FALSE)) {
+				, CD_RAW_SECTOR_WITH_C2_294_SIZE + 16, bGetDriveOffset, nDriveSampleOffset, nDriveOffset)) {
 				// not return FALSE
 			}
 			lpCmd[10] = (BYTE)CDFLAG::_READ_CD::Pack;
 			if (!ExecSearchingOffset(pExecType, pExtArg, pDevice, pDisc, lpCmd, nLBA, lpBuf
-				, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset, TRUE)) {
+				, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset)) {
 				// not return FALSE
 			}
 			if (!bRet) {
@@ -323,23 +320,23 @@ BOOL ReadCDForSearchingOffset(
 				memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
 				if (pDisc->SCSI.trackType != TRACK_TYPE::audioOnly) {
 					if (!ExecSearchingOffset(pExecType, pExtArg, pDevice, pDisc, lpCmd, nLBA, lpBuf
-						, CD_RAW_SECTOR_WITH_C2_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset, FALSE)) {
+						, CD_RAW_SECTOR_WITH_C2_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset)) {
 						// not return FALSE
 					}
 				}
 				lpCmd[10] = (BYTE)CDFLAG::_READ_CD::Raw;
 				if (!ExecSearchingOffset(pExecType, pExtArg, pDevice, pDisc, lpCmd, nLBA, lpBuf
-					, CD_RAW_SECTOR_WITH_C2_AND_SUBCODE_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset, TRUE)) {
+					, CD_RAW_SECTOR_WITH_C2_AND_SUBCODE_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset)) {
 					bRet = FALSE;
 				}
 				lpCmd[10] = (BYTE)CDFLAG::_READ_CD::Q;
 				if (!ExecSearchingOffset(pExecType, pExtArg, pDevice, pDisc, lpCmd, nLBA, lpBuf
-					, CD_RAW_SECTOR_WITH_C2_SIZE + 16, bGetDriveOffset, nDriveSampleOffset, nDriveOffset, FALSE)) {
+					, CD_RAW_SECTOR_WITH_C2_SIZE + 16, bGetDriveOffset, nDriveSampleOffset, nDriveOffset)) {
 					// not return FALSE
 				}
 				lpCmd[10] = (BYTE)CDFLAG::_READ_CD::Pack;
 				if (!ExecSearchingOffset(pExecType, pExtArg, pDevice, pDisc, lpCmd, nLBA, lpBuf
-					, CD_RAW_SECTOR_WITH_C2_AND_SUBCODE_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset, TRUE)) {
+					, CD_RAW_SECTOR_WITH_C2_AND_SUBCODE_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset)) {
 					// not return FALSE
 				}
 			}
@@ -348,14 +345,14 @@ BOOL ReadCDForSearchingOffset(
 			if (*pExecType != data && pDisc->SCSI.trackType != TRACK_TYPE::audioOnly) {
 				lpCmd[10] = (BYTE)CDFLAG::_READ_CD::NoSub;
 				if (!ExecSearchingOffset(pExecType, pExtArg, pDevice, pDisc, lpCmd, nLBA, lpBuf
-					, CD_RAW_SECTOR_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset, FALSE)) {
+					, CD_RAW_SECTOR_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset)) {
 					// not return FALSE
 				}
 			}
 			lpCmd[10] = (BYTE)CDFLAG::_READ_CD::Raw;
 			for(INT n = 1; n <= 10; n++) {
 				if (!ExecSearchingOffset(pExecType, pExtArg, pDevice, pDisc, lpCmd, nLBA, lpBuf
-					, CD_RAW_SECTOR_WITH_SUBCODE_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset, TRUE)) {
+					, CD_RAW_SECTOR_WITH_SUBCODE_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset)) {
 					if (n == 10) {
 						bRet = FALSE;
 						break;
@@ -372,12 +369,12 @@ BOOL ReadCDForSearchingOffset(
 			}
 			lpCmd[10] = (BYTE)CDFLAG::_READ_CD::Q;
 			if (!ExecSearchingOffset(pExecType, pExtArg, pDevice, pDisc, lpCmd, nLBA, lpBuf
-				, CD_RAW_SECTOR_SIZE + 16, bGetDriveOffset, nDriveSampleOffset, nDriveOffset, FALSE)) {
+				, CD_RAW_SECTOR_SIZE + 16, bGetDriveOffset, nDriveSampleOffset, nDriveOffset)) {
 				// not return FALSE
 			}
 			lpCmd[10] = (BYTE)CDFLAG::_READ_CD::Pack;
 			if (!ExecSearchingOffset(pExecType, pExtArg, pDevice, pDisc, lpCmd, nLBA, lpBuf
-				, CD_RAW_SECTOR_WITH_SUBCODE_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset, TRUE)) {
+				, CD_RAW_SECTOR_WITH_SUBCODE_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset)) {
 				// not return FALSE
 			}
 		}
@@ -521,7 +518,7 @@ BOOL ReadCDForCheckingSubQAdr(
 		OutputCDSub96Align(lpSubcode, nLBA);
 #endif
 		if (nLBA == nTmpLBA) {
-			// this func is used to get a subch offset
+			// this func is used to get a SubChannel Offset
 			SetTmpSubQDataFromBuffer(&pDiscPerSector->subQ.present, lpSubcode);
 			BYTE byCtl = (BYTE)((lpSubcode[12] >> 4) & 0x0f);
 			*byMode = GetMode(lpBuf2, 0, byCtl, unscrambled);
@@ -1569,6 +1566,8 @@ BOOL ReadCDForRereadingSector(
 	}
 
 	while (uiC2ErrorLBACnt > 0) {
+		OutputC2ErrorLogA(
+			"Reread times: %4u, needs to reread sector num: %d\n", uiCnt + 1, uiC2ErrorLBACnt);
 		if (uiCnt == pExtArg->dwMaxRereadNum) {
 			OutputString(_T("\nReread reached max: %u"), uiCnt);
 			bProcessRet = RETURNED_FALSE;
@@ -1762,8 +1761,8 @@ BOOL ReadCDForCheckingSecuROM(
 			OutputLogA(standardOut | fileDisc, "Detected intentional subchannel in LBA -1 => SecuROM Type3 (a.k.a. NEW)\n");
 			OutputIntentionalSubchannel(-1, &pDiscPerSector->subcode.present[12]);
 			pDisc->PROTECT.byExist = securomV3;
-			if (pDisc->SUB.nSubchOffset) {
-				pDisc->SUB.nSubchOffset -= 1;
+			if (pDisc->SUB.nSubChannelOffset) {
+				pDisc->SUB.nSubChannelOffset -= 1;
 			}
 			pDiscPerSector->subQ.prev.nRelativeTime = -1;
 			pDiscPerSector->subQ.prev.nAbsoluteTime = 149;
@@ -1835,19 +1834,10 @@ BOOL ReadCDAll(
 	FILE* fpImg = NULL;
 	_TCHAR pszOutReverseScmFile[_MAX_PATH] = { 0 };
 	_TCHAR pszOutScmFile[_MAX_PATH] = { 0 };
-	if (pExtArg->byReverse) {
-		if (NULL == (fpImg = CreateOrOpenFile(pszPath, _T("_reverse"),
-			pszOutReverseScmFile, NULL, NULL, _T(".scm"), _T("wb"), 0, 0))) {
-			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-			return FALSE;
-		}
-	}
-	else {
-		if (NULL == (fpImg = CreateOrOpenFile(pszPath, NULL,
-			pszOutScmFile, NULL, NULL, _T(".scm"), _T("wb"), 0, 0))) {
-			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-			return FALSE;
-		}
+	if (NULL == (fpImg = CreateOrOpenFile(pszPath, NULL,
+		pszOutScmFile, NULL, NULL, _T(".scm"), _T("wb"), 0, 0))) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		return FALSE;
 	}
 	BOOL bRet = TRUE;
 	FILE* fpCue = NULL;
@@ -1937,7 +1927,7 @@ BOOL ReadCDAll(
 
 		BYTE lpPrevSubcode[CD_RAW_READ_SUBCODE_SIZE] = { 0 };
 		// to get prevSubQ
-		if (pDisc->SUB.nSubchOffset) {
+		if (pDisc->SUB.nSubChannelOffset) {
 			if (!ExecReadCD(pExtArg, pDevice, lpCmd, -2, pDiscPerSector->data.present,
 				pDevice->TRANSFER.dwAllBufLen, _T(__FUNCTION__), __LINE__)) {
 				throw FALSE;
@@ -1999,29 +1989,9 @@ BOOL ReadCDAll(
 			/*
 		}
 		*/
-		INT nLBA = nFirstLBA;	// This value switches by /r option.
+		INT nLBA = nFirstLBA;
 
-		if (pExtArg->byReverse) {
-			SetCDOffset(pExecType, pExtArg->byBe, pDevice->byPlxtrDrive, pDisc, nLastLBA, pDisc->SCSI.nFirstLBAofDataTrack);
-			byCurrentTrackNum = pDisc->SCSI.byLastDataTrackNum;
-			nFirstLBA = pDisc->SCSI.nFirstLBAofDataTrack;
-			nLastLBA = pDisc->SCSI.nLastLBAofDataTrack + 1;
-			nLBA = nLastLBA;
-			if (pDisc->MAIN.nCombinedOffset > 0) {
-				pDiscPerSector->subQ.prev.nAbsoluteTime = 149 + nLastLBA;
-			}
-			else if (pDisc->MAIN.nCombinedOffset < 0) {
-				pDiscPerSector->subQ.prev.nAbsoluteTime = 150 + nLastLBA + pDisc->MAIN.nAdjustSectorNum;
-			}
-			else {
-				pDiscPerSector->subQ.prev.nAbsoluteTime = 149 + nLastLBA;
-			}
-			pDiscPerSector->subQ.prev.byCtl = pDisc->SUB.lpEndCtlList[pDisc->SCSI.byLastDataTrackNum - 1];
-			pDiscPerSector->subQ.prev.byAdr = ADR_ENCODES_CURRENT_POSITION;
-			pDiscPerSector->subQ.prev.byTrackNum = pDisc->SCSI.byLastDataTrackNum;
-			pDiscPerSector->subQ.prev.byIndex = pDisc->MAIN.nOffsetStart < 0 ? (BYTE)0 : (BYTE)1;
-		}
-		else if (pDisc->SUB.byIndex0InTrack1) {
+		if (pExtArg->byPre) {
 			nFirstLBAForSub = PREGAP_START_LBA;
 			nFirstLBA = PREGAP_START_LBA;
 			nLBA = nFirstLBA;
@@ -2031,7 +2001,7 @@ BOOL ReadCDAll(
 		FlushLog();
 
 		UINT uiC2ErrorLBACnt = 0;
-		BOOL bReadOK = pDisc->SUB.byIndex0InTrack1 ? FALSE : TRUE;
+		BOOL bReadOK = pExtArg->byPre ? FALSE : TRUE;
 
 		while (nFirstLBA < nLastLBA) {
 			BOOL bProcessRet = ProcessReadCD(pExecType, pExtArg, pDevice, pDisc
@@ -2057,13 +2027,8 @@ BOOL ReadCDAll(
 #endif
 			}
 			else if (bProcessRet == RETURNED_SKIP_LBA) {
-				if (pExtArg->byReverse) {
-					nLBA = pDisc->SCSI.nFirstLBAof2ndSession - SESSION_TO_SESSION_SKIP_LBA;
-				}
-				else {
-					nLBA = pDisc->MAIN.nFixFirstLBAof2ndSession - 1;
-					nFirstLBA = nLBA;
-				}
+				nLBA = pDisc->MAIN.nFixFirstLBAof2ndSession - 1;
+				nFirstLBA = nLBA;
 			}
 			else if (bProcessRet == RETURNED_CONTINUE) {
 				ProcessReturnedContinue(pExecType, pExtArg, pDevice, pDisc, pDiscPerSector
@@ -2074,7 +2039,7 @@ BOOL ReadCDAll(
 			}
 			if (bProcessRet != RETURNED_CONTINUE &&
 				bProcessRet != RETURNED_SKIP_LBA) {
-				if (pDisc->SUB.nSubchOffset) {
+				if (pDisc->SUB.nSubChannelOffset) {
 					if (!(pExtArg->byScanProtectViaFile && pDisc->PROTECT.byExist &&
 						(pDisc->PROTECT.ERROR_SECTOR.nExtentPos <= nLBA &&
 							nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize))) {
@@ -2091,7 +2056,7 @@ BOOL ReadCDAll(
 				}
 				SetTmpSubQDataFromBuffer(&pDiscPerSector->subQ.present, pDiscPerSector->subcode.present);
 
-				if (pDisc->SUB.byIndex0InTrack1 && PREGAP_START_LBA <= nLBA && nLBA <= -76) {
+				if (pExtArg->byPre && PREGAP_START_LBA <= nLBA && nLBA <= -76) {
 					if (pDiscPerSector->subQ.present.byTrackNum == 1 &&
 						pDiscPerSector->subQ.present.nAbsoluteTime == 0) {
 						pDiscPerSector->subQ.prev.nRelativeTime = pDiscPerSector->subQ.present.nRelativeTime + 1;
@@ -2114,24 +2079,22 @@ BOOL ReadCDAll(
 				}
 				if (bReadOK) {
 					if (nFirstLBAForSub <= nLBA && nLBA < pDisc->SCSI.nAllLength) {
-						if (ExecCheckingSubchannnel(pExtArg, pDisc, nLBA)) {
+						if (IsCheckingSubChannel(pExtArg, pDisc, nLBA)) {
 							BOOL bLibCrypt = IsValidLibCryptSector(pExtArg->byLibCrypt, nLBA);
 							BOOL bSecuRom = IsValidIntentionalSubSector(pExtArg->byIntentionalSub, pDisc, nLBA);
-							if (!pExtArg->byReverse) {
-								CheckAndFixSubChannel(pExecType, pExtArg, pDevice, pDisc
-									, pDiscPerSector, byCurrentTrackNum, nLBA, bLibCrypt, bSecuRom);
-								BYTE lpSubcodeRaw[CD_RAW_READ_SUBCODE_SIZE] = { 0 };
-								// fix raw subchannel
-								AlignColumnSubcode(pDiscPerSector->subcode.present, lpSubcodeRaw);
+							CheckAndFixSubChannel(pExecType, pExtArg, pDevice, pDisc
+								, pDiscPerSector, byCurrentTrackNum, nLBA, bLibCrypt, bSecuRom);
+							BYTE lpSubcodeRaw[CD_RAW_READ_SUBCODE_SIZE] = { 0 };
+							// fix raw subchannel
+							AlignColumnSubcode(pDiscPerSector->subcode.present, lpSubcodeRaw);
 #if 0
-								OutputCDSub96Align(pDiscPerSector->subcode.present, nLBA);
+							OutputCDSub96Align(pDiscPerSector->subcode.present, nLBA);
 #endif
 #if 0
-								OutputCDSub96Raw(standardOut, lpSubcodeRaw, nLBA);
+							OutputCDSub96Raw(standardOut, lpSubcodeRaw, nLBA);
 #endif
-								WriteSubChannel(pDisc, lpSubcodeRaw,
-									pDiscPerSector->subcode.present, nLBA, byCurrentTrackNum, fpSub, fpParse);
-							}
+							WriteSubChannel(pDisc, lpSubcodeRaw,
+								pDiscPerSector->subcode.present, nLBA, byCurrentTrackNum, fpSub, fpParse);
 							CheckAndFixMainHeader(pExtArg, pDisc
 								, pDiscPerSector, nLBA, byCurrentTrackNum, nMainDataType);
 							SetTrackAttribution(pExtArg, pDisc, nLBA,
@@ -2145,32 +2108,26 @@ BOOL ReadCDAll(
 						WriteC2(pExtArg, pDisc, pDiscPerSector->data.present + pDevice->TRANSFER.dwBufC2Offset, nLBA, fpC2);
 					}
 				}
-				// for DEBUG begin
+#if 0
 				else {
 					BYTE lpSubcodeRaw[CD_RAW_READ_SUBCODE_SIZE] = { 0 };
 					AlignColumnSubcode(pDiscPerSector->subcode.present, lpSubcodeRaw);
 					OutputCDSubToLog(pDisc, pDiscPerSector->subcode.present, lpSubcodeRaw, nLBA, byCurrentTrackNum, fpParse);
 				}
-				// for DEBUG end
-				if (pDisc->SUB.nSubchOffset) {
+#endif
+				if (pDisc->SUB.nSubChannelOffset) {
 					memcpy(lpPrevSubcode, pDiscPerSector->subcode.next, CD_RAW_READ_SUBCODE_SIZE);
 				}
 			}
 
-			if (pExtArg->byReverse) {
-				OutputString(_T("\rCreated img (LBA) %6d/%6d"), nLBA, pDisc->SCSI.nFirstLBAofDataTrack);
-				nLBA--;
-			}
-			else {
-				OutputString(_T("\rCreated img (LBA) %6d/%6d"),	nLBA, pDisc->SCSI.nAllLength - 1);
-				if (nFirstLBA == -76) {
-					nLBA = nFirstLBA;
-					if (!bReadOK) {
-						bReadOK = TRUE;
-					}
+			OutputString(_T("\rCreated img (LBA) %6d/%6d"),	nLBA, pDisc->SCSI.nAllLength - 1);
+			if (nFirstLBA == -76) {
+				nLBA = nFirstLBA;
+				if (!bReadOK) {
+					bReadOK = TRUE;
 				}
-				nLBA++;
 			}
+			nLBA++;
 			nFirstLBA++;
 		}
 		OutputString(_T("\n"));
@@ -2181,39 +2138,37 @@ BOOL ReadCDAll(
 		FcloseAndNull(fpSub);
 		FlushLog();
 
-		if (!pExtArg->byReverse) {
-			if (pDisc->SCSI.toc.FirstTrack == pDisc->SCSI.toc.LastTrack) {
-				// [3DO] Jurassic Park Interactive (Japan)
-				if (pDisc->SUB.lpFirstLBAListOnSub[0][2] == -1) {
-					pDisc->SUB.lpFirstLBAListOnSub[0][1] = pDisc->SCSI.lpLastLBAListOnToc[0];
-				}
+		if (pDisc->SCSI.toc.FirstTrack == pDisc->SCSI.toc.LastTrack) {
+			// [3DO] Jurassic Park Interactive (Japan)
+			if (pDisc->SUB.lpFirstLBAListOnSub[0][2] == -1) {
+				pDisc->SUB.lpFirstLBAListOnSub[0][1] = pDisc->SCSI.lpLastLBAListOnToc[0];
 			}
-			for (INT i = 0; i < pDisc->SCSI.toc.LastTrack; i++) {
-				if (pDisc->PROTECT.byExist == cds300 && i == pDisc->SCSI.toc.LastTrack - 1) {
-					break;
-				}
-				BOOL bErr = FALSE;
-				LONG lLine = 0;
-				if (pDisc->SUB.lpFirstLBAListOnSub[i][1] == -1) {
+		}
+		for (INT i = 0; i < pDisc->SCSI.toc.LastTrack; i++) {
+			if (pDisc->PROTECT.byExist == cds300 && i == pDisc->SCSI.toc.LastTrack - 1) {
+				break;
+			}
+			BOOL bErr = FALSE;
+			LONG lLine = 0;
+			if (pDisc->SUB.lpFirstLBAListOnSub[i][1] == -1) {
+				bErr = TRUE;
+				lLine = __LINE__;
+			}
+			else if ((pDisc->SCSI.toc.TrackData[i].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+				if (pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[i] == -1) {
 					bErr = TRUE;
 					lLine = __LINE__;
 				}
-				else if ((pDisc->SCSI.toc.TrackData[i].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
-					if (pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[i] == -1) {
-						bErr = TRUE;
-						lLine = __LINE__;
-					}
-					else if (pDisc->SUB.lpLastLBAListOfDataTrackOnSub[i] == -1) {
-						bErr = TRUE;
-						lLine = __LINE__;
-					}
+				else if (pDisc->SUB.lpLastLBAListOfDataTrackOnSub[i] == -1) {
+					bErr = TRUE;
+					lLine = __LINE__;
 				}
-				if (bErr) {
-					OutputErrorString(
-						_T("[L:%ld] Internal error. Failed to analyze the subchannel. Track[%02u]/[%02u]\n"),
-						lLine, i + 1, pDisc->SCSI.toc.LastTrack);
-					throw FALSE;
-				}
+			}
+			if (bErr) {
+				OutputErrorString(
+					_T("[L:%ld] Internal error. Failed to analyze the subchannel. Track[%02u]/[%02u]\n"),
+					lLine, i + 1, pDisc->SCSI.toc.LastTrack);
+				throw FALSE;
 			}
 		}
 		if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
@@ -2223,42 +2178,7 @@ BOOL ReadCDAll(
 			}
 		}
 		FcloseAndNull(fpImg);
-
-		if (!pExtArg->byReverse) {
-			OutputTocWithPregap(pDisc);
-		}
-		else {
-			FILE* fpImg_r = NULL;
-			if (NULL == (fpImg_r = CreateOrOpenFile(
-				pszPath, _T("_reverse"), NULL, NULL, NULL, _T(".scm"), _T("rb"), 0, 0))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				throw FALSE;
-			}
-			if (NULL == (fpImg = CreateOrOpenFile(
-				pszPath, NULL, pszOutScmFile, NULL, NULL, _T(".scm"), _T("wb"), 0, 0))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				throw FALSE;
-			}
-			OutputString(_T("Reversing _reverse.scm to .scm\n"));
-			BYTE rBuf[CD_RAW_SECTOR_SIZE] = { 0 };
-			DWORD dwRoop = GetFileSize(0, fpImg_r) - CD_RAW_SECTOR_SIZE * 2;
-			LONG lSeek = CD_RAW_SECTOR_SIZE - (LONG)pDisc->MAIN.uiMainDataSlideSize;
-			fseek(fpImg_r, -lSeek, SEEK_END);
-			fread(rBuf, sizeof(BYTE), (size_t)lSeek, fpImg_r);
-			fwrite(rBuf, sizeof(BYTE), (size_t)lSeek, fpImg);
-			fseek(fpImg_r, -lSeek, SEEK_CUR);
-			for (DWORD i = 0; i < dwRoop; i += CD_RAW_SECTOR_SIZE) {
-				fseek(fpImg_r, -CD_RAW_SECTOR_SIZE, SEEK_CUR);
-				fread(rBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpImg_r);
-				fwrite(rBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpImg);
-				fseek(fpImg_r, -CD_RAW_SECTOR_SIZE, SEEK_CUR);
-			}
-			rewind(fpImg_r);
-			fread(rBuf, sizeof(BYTE), pDisc->MAIN.uiMainDataSlideSize, fpImg_r);
-			fwrite(rBuf, sizeof(BYTE), pDisc->MAIN.uiMainDataSlideSize, fpImg);
-			FcloseAndNull(fpImg);
-			FcloseAndNull(fpImg_r);
-		}
+		OutputTocWithPregap(pDisc);
 
 		_TCHAR pszNewPath[_MAX_PATH] = { 0 };
 		_tcsncpy(pszNewPath, pszOutScmFile, sizeof(pszNewPath) / sizeof(pszNewPath[0]));
@@ -2299,32 +2219,15 @@ BOOL ReadCDAll(
 			ExecEccEdc(pExtArg->byScanProtectViaFile, pszImgPath, pDisc->PROTECT.ERROR_SECTOR);
 		}
 
-		if (pExtArg->byReverse) {
-			_TCHAR pszNewPath2[_MAX_PATH] = { 0 };
-			FILE* fpBin = CreateOrOpenFile(pszPath, NULL, pszNewPath2, NULL, NULL, _T(".bin"),
-				_T("wb"), pDisc->SCSI.byFirstDataTrackNum, pDisc->SCSI.byFirstDataTrackNum);
-			if (!fpBin) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				throw FALSE;
-			}
-			OutputString(_T("Copying .img to %s\n"), pszNewPath2);
-			if (!CopyFile(pszNewPath, pszNewPath2, FALSE)) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				throw FALSE;
-			}
-			FcloseAndNull(fpBin);
+		_TCHAR pszImgName[_MAX_FNAME] = { 0 };
+		if (NULL == (fpImg = CreateOrOpenFile(
+			pszPath, NULL, NULL, pszImgName, NULL, _T(".img"), _T("rb"), 0, 0))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			throw FALSE;
 		}
-		else {
-			_TCHAR pszImgName[_MAX_FNAME] = { 0 };
-			if (NULL == (fpImg = CreateOrOpenFile(
-				pszPath, NULL, NULL, pszImgName, NULL, _T(".img"), _T("rb"), 0, 0))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				throw FALSE;
-			}
-			if (!CreateBinCueCcd(pExtArg, pDisc, pszPath, pszImgName,
-				pDevice->FEATURE.byCanCDText, fpImg, fpCue, fpCueForImg, fpCcd)) {
-				throw FALSE;
-			}
+		if (!CreateBinCueCcd(pExtArg, pDisc, pszPath, pszImgName,
+			pDevice->FEATURE.byCanCDText, fpImg, fpCue, fpCueForImg, fpCcd)) {
+			throw FALSE;
 		}
 	}
 	catch (BOOL ret) {
@@ -2376,8 +2279,13 @@ BOOL ReadCDPartial(
 		_tcsncpy(szExt, _T(".bin"), size);
 	}
 	_TCHAR pszBinPath[_MAX_PATH] = { 0 };
-	FILE* fpBin =
-		CreateOrOpenFile(pszPath, NULL, pszBinPath, NULL, NULL, szExt, _T("wb"), 0, 0);
+	FILE* fpBin = NULL;
+	if (pExtArg->byReverse) {
+		fpBin = CreateOrOpenFile(pszPath, _T("_reverse"), pszBinPath, NULL, NULL, szExt, _T("wb"), 0, 0);
+	}
+	else {
+		fpBin = CreateOrOpenFile(pszPath, NULL, pszBinPath, NULL, NULL, szExt, _T("wb"), 0, 0);
+	}
 	if (!fpBin) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
@@ -2395,17 +2303,18 @@ BOOL ReadCDPartial(
 
 	try {
 		// init start
-		if (NULL == (fpParse = CreateOrOpenFile(
-			pszPath, szPlusFnameTxt, NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
-			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-			throw FALSE;
+		if (!pExtArg->byReverse) {
+			if (NULL == (fpParse = CreateOrOpenFile(
+				pszPath, szPlusFnameTxt, NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				throw FALSE;
+			}
+			if (NULL == (fpSub = CreateOrOpenFile(
+				pszPath, szPlusFnameSub, NULL, NULL, NULL, _T(".sub"), _T("wb"), 0, 0))) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				throw FALSE;
+			}
 		}
-		if (NULL == (fpSub = CreateOrOpenFile(
-			pszPath, szPlusFnameSub, NULL, NULL, NULL, _T(".sub"), _T("wb"), 0, 0))) {
-			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-			throw FALSE;
-		}
-
 		// store main+(c2)+sub data
 		if (!GetAlignedCallocatedBuffer(pDevice, &pBuf,
 			pDevice->TRANSFER.dwAllBufLen, &pDiscPerSector->data.present, _T(__FUNCTION__), __LINE__)) {
@@ -2448,7 +2357,7 @@ BOOL ReadCDPartial(
 			_T("Set OpCode: %#02x, SubCode: %x(%s)\n"), lpCmd[0], lpCmd[10], szSubCode);
 
 		BYTE lpPrevSubcode[CD_RAW_READ_SUBCODE_SIZE] = { 0 };
-		if (pDisc->SUB.nSubchOffset) { // confirmed PXS88T, TS-H353A
+		if (pDisc->SUB.nSubChannelOffset) { // confirmed PXS88T, TS-H353A
 			if (!ExecReadCD(pExtArg, pDevice, lpCmd, nStart - 2, pDiscPerSector->data.present,
 				pDevice->TRANSFER.dwAllBufLen, _T(__FUNCTION__), __LINE__)) {
 				if (nStart == 0) {
@@ -2530,19 +2439,23 @@ BOOL ReadCDPartial(
 			, pDisc->MAIN.nOffsetStart, pDisc->MAIN.nOffsetEnd, pDisc->MAIN.nFixStartLBA, pDisc->MAIN.nFixEndLBA);
 #endif
 		INT nLastLBA = nEnd + pDisc->MAIN.nOffsetEnd;
-		INT nLBA = nStart + pDisc->MAIN.nOffsetStart;
+		INT nFirstLBA = nStart + pDisc->MAIN.nOffsetStart - 1;
+		INT nLBA = nFirstLBA;
+		if (pExtArg->byReverse) {
+			nLBA = nLastLBA;
+		}
 		// init end
 		FlushLog();
 
 		UINT uiC2ErrorLBACnt = 0;
 		INT nStoreLBA = 0;
 		INT nRetryCnt = 1;
-		while (nLBA < nLastLBA) {
+		while (nFirstLBA < nLastLBA) {
 			BOOL bProcessRet = ProcessReadCD(pExecType, pExtArg, pDevice, pDisc 
 				, pDiscPerSector, pC2ErrorPerSector, uiC2ErrorLBACnt, lpCmd, nLBA);
 			if (pC2ErrorPerSector && bProcessRet == RETURNED_EXIST_C2_ERROR) {
 				OutputErrorString(
-					_T("\rLBA[%06d, %#07x] Detected C2 error    \n"), nLBA, nLBA);
+					_T("\rLBA[%06d, %#07x] Detected C2 error         \n"), nLBA, nLBA);
 				SetC2ErrorData(pC2ErrorPerSector, nLBA, &uiC2ErrorLBACnt, TRUE);
 				if (uiC2ErrorLBACnt == pExtArg->dwMaxC2ErrorNum) {
 					OutputErrorString(_T("C2 error Max: %u\n"), uiC2ErrorLBACnt);
@@ -2550,7 +2463,12 @@ BOOL ReadCDPartial(
 				}
 			}
 			else if (bProcessRet == RETURNED_SKIP_LBA) {
-				nLBA = pDisc->MAIN.nFixFirstLBAof2ndSession - 1;
+				if (pExtArg->byReverse) {
+					nLBA = pDisc->SCSI.nFirstLBAof2ndSession - SESSION_TO_SESSION_SKIP_LBA;
+				}
+				else {
+					nLBA = pDisc->MAIN.nFixFirstLBAof2ndSession - 1;
+				}
 			}
 			else if (bProcessRet == RETURNED_CONTINUE) {
 				ProcessReturnedContinue(pExecType, pExtArg, pDevice, pDisc, pDiscPerSector
@@ -2598,7 +2516,7 @@ BOOL ReadCDPartial(
 			}
 			if (bProcessRet != RETURNED_CONTINUE &&
 				bProcessRet != RETURNED_SKIP_LBA) {
-				if (pDisc->SUB.nSubchOffset) {
+				if (pDisc->SUB.nSubChannelOffset) {
 					if (!(pExtArg->byScanProtectViaFile && pDisc->PROTECT.byExist &&
 						(pDisc->PROTECT.ERROR_SECTOR.nExtentPos <= nLBA &&
 							nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize))) {
@@ -2614,19 +2532,21 @@ BOOL ReadCDPartial(
 				SetTmpSubQDataFromBuffer(&pDiscPerSector->subQ.present, pDiscPerSector->subcode.present);
 
 				if (nStart <= nLBA && nLBA < nEnd) {
-					if (ExecCheckingSubchannnel(pExtArg, pDisc, nLBA)) {
-						CheckAndFixSubChannel(pExecType, pExtArg, pDevice, pDisc
-							, pDiscPerSector, byCurrentTrackNum, nLBA, FALSE, FALSE);
-						BYTE lpSubcodeRaw[CD_RAW_READ_SUBCODE_SIZE] = { 0 };
-						// fix raw subchannel
-						AlignColumnSubcode(pDiscPerSector->subcode.present, lpSubcodeRaw);
+					BYTE lpSubcodeRaw[CD_RAW_READ_SUBCODE_SIZE] = { 0 };
+					if (!pExtArg->byReverse) {
+						if (IsCheckingSubChannel(pExtArg, pDisc, nLBA)) {
+							CheckAndFixSubChannel(pExecType, pExtArg, pDevice, pDisc
+								, pDiscPerSector, byCurrentTrackNum, nLBA, FALSE, FALSE);
+							// fix raw subchannel
+							AlignColumnSubcode(pDiscPerSector->subcode.present, lpSubcodeRaw);
 #if 0
-						OutputCDSub96Align(pDiscPerSector->subcode.present, nLBA);
+							OutputCDSub96Align(pDiscPerSector->subcode.present, nLBA);
 #endif
-						WriteSubChannel(pDisc, lpSubcodeRaw,
-							pDiscPerSector->subcode.present, nLBA, byCurrentTrackNum, fpSub, fpParse);
-						CheckAndFixMainHeader(pExtArg, pDisc
-							, pDiscPerSector, nLBA, byCurrentTrackNum, nMainDataType);
+							WriteSubChannel(pDisc, lpSubcodeRaw,
+								pDiscPerSector->subcode.present, nLBA, byCurrentTrackNum, fpSub, fpParse);
+							CheckAndFixMainHeader(pExtArg, pDisc
+								, pDiscPerSector, nLBA, byCurrentTrackNum, nMainDataType);
+						}
 						if (*pExecType == gd) {
 							byCurrentTrackNum = pDiscPerSector->subQ.present.byTrackNum;
 						}
@@ -2642,13 +2562,21 @@ BOOL ReadCDPartial(
 				if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
 					WriteC2(pExtArg, pDisc, pDiscPerSector->data.present + pDevice->TRANSFER.dwBufC2Offset, nLBA, fpC2);
 				}
-				if (pDisc->SUB.nSubchOffset) {
+				if (pDisc->SUB.nSubChannelOffset) {
 					memcpy(lpPrevSubcode, pDiscPerSector->subcode.next, CD_RAW_READ_SUBCODE_SIZE);
 				}
 			}
-			OutputString(_T("\rCreating bin from %d to %d (LBA) %6d"), 
-				nStart + pDisc->MAIN.nOffsetStart, nEnd + pDisc->MAIN.nOffsetEnd, nLBA);
-			nLBA++;
+			if (pExtArg->byReverse) {
+				OutputString(_T("\rCreating bin from %d to %d (LBA) %6d")
+					, nEnd + pDisc->MAIN.nOffsetEnd, nStart + pDisc->MAIN.nOffsetStart - 1, nLBA);
+				nLBA--;
+			}
+			else {
+				OutputString(_T("\rCreating bin from %d to %d (LBA) %6d"),
+					nStart + pDisc->MAIN.nOffsetStart, nEnd + pDisc->MAIN.nOffsetEnd, nLBA);
+				nLBA++;
+			}
+			nFirstLBA++;
 		}
 		OutputString(_T("\n"));
 		if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
@@ -2665,6 +2593,41 @@ BOOL ReadCDPartial(
 			}
 		}
 		FcloseAndNull(fpBin);
+		if (pExtArg->byReverse) {
+			FILE* fpBin_r = NULL;
+			if (NULL == (fpBin_r = CreateOrOpenFile(
+				pszPath, _T("_reverse"), NULL, NULL, NULL, szExt, _T("rb"), 0, 0))) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				throw FALSE;
+			}
+			if (NULL == (fpBin = CreateOrOpenFile(
+				pszPath, NULL, NULL, NULL, NULL, szExt, _T("wb"), 0, 0))) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				throw FALSE;
+			}
+			OutputString(_T("Reversing _reverse%s to %s\n"), szExt, szExt);
+			BYTE rBuf[CD_RAW_SECTOR_SIZE] = { 0 };
+			DWORD dwRoop = GetFileSize(0, fpBin_r) - CD_RAW_SECTOR_SIZE * 3;
+			LONG lSeek = CD_RAW_SECTOR_SIZE - (LONG)pDisc->MAIN.uiMainDataSlideSize;
+			fseek(fpBin_r, -lSeek, SEEK_END);
+			fread(rBuf, sizeof(BYTE), (size_t)lSeek, fpBin_r);
+			fwrite(rBuf, sizeof(BYTE), (size_t)lSeek, fpBin);
+			fseek(fpBin_r, -CD_RAW_SECTOR_SIZE, SEEK_CUR);
+
+			for (DWORD i = 0; i < dwRoop; i += CD_RAW_SECTOR_SIZE) {
+				fseek(fpBin_r, -CD_RAW_SECTOR_SIZE, SEEK_CUR);
+				fread(rBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpBin_r);
+				fwrite(rBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpBin);
+				fseek(fpBin_r, -CD_RAW_SECTOR_SIZE, SEEK_CUR);
+			}
+			fseek(fpBin_r, -CD_RAW_SECTOR_SIZE, SEEK_CUR);
+			fread(rBuf, sizeof(BYTE), pDisc->MAIN.uiMainDataSlideSize, fpBin_r);
+			fwrite(rBuf, sizeof(BYTE), pDisc->MAIN.uiMainDataSlideSize, fpBin);
+
+			FcloseAndNull(fpBin);
+			FcloseAndNull(fpBin_r);
+		}
+
 		if (*pExecType == data) {
 			if ((pExtArg->byD8 || pDevice->byPlxtrDrive) && !pExtArg->byBe) {
 				if (NULL == (fpBin = CreateOrOpenFile(
@@ -2675,7 +2638,7 @@ BOOL ReadCDPartial(
 				DescrambleMainChannelPartial(nStart, nEnd - 1, scrambled_table, fpBin);
 				FcloseAndNull(fpBin);
 			}
-			ExecEccEdc(pExtArg->byScanProtectViaFile, pszBinPath, pDisc->PROTECT.ERROR_SECTOR);
+			ExecEccEdc(pExtArg->byScanProtectViaFile, pszPath, pDisc->PROTECT.ERROR_SECTOR);
 		}
 		else if (*pExecType == gd) {
 			_TCHAR pszImgPath[_MAX_PATH] = { 0 };

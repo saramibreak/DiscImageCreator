@@ -91,16 +91,16 @@ VOID OutputFsDirectoryRecord(
 		"\t\tExtended Attribute Record Length: %u\n"
 		"\t\t              Location of Extent: %lu\n"
 		"\t\t                     Data Length: %lu\n"
-		"\t\t         Recording Date and Time: %u-%02u-%02u %02u:%02u:%02u +%02u\n"
+		"\t\t         Recording Date and Time: %u-%02u-%02u %02u:%02u:%02u %+03d:%02u\n"
 		"\t\t                      File Flags: %u (%s)\n"
 		"\t\t                  File Unit Size: %u\n"
 		"\t\t             Interleave Gap Size: %u\n"
 		"\t\t          Volume Sequence Number: %u\n"
 		"\t\t       Length of File Identifier: %u\n"
 		"\t\t                 File Identifier: "
-		, lpBuf[0], lpBuf[1], dwExtentPos, dwDataLen, lpBuf[18] + 1900, lpBuf[19]
-		, lpBuf[20], lpBuf[21], lpBuf[22], lpBuf[23], lpBuf[24], lpBuf[25], str
-		, lpBuf[26], lpBuf[27], vsn, lpBuf[32]);
+		, lpBuf[0], lpBuf[1], dwExtentPos, dwDataLen, lpBuf[18] + 1900, lpBuf[19], lpBuf[20]
+		, lpBuf[21], lpBuf[22], lpBuf[23], (CHAR)lpBuf[24] / 4, (CHAR)lpBuf[24] % 4 * 15
+		, lpBuf[25], str, lpBuf[26], lpBuf[27], vsn, lpBuf[32]);
 	for (INT n = 0; n < lpBuf[32]; n++) {
 		OutputVolDescLogA("%c", lpBuf[33 + n]);
 		fname[n] = (CHAR)lpBuf[33 + n];
@@ -283,52 +283,21 @@ VOID OutputFsVolumeDescriptorForTime(
 	LPBYTE lpBuf
 	)
 {
-	CHAR year[4][4] = { "0" };
-	CHAR month[4][2] = { "0" };
-	CHAR day[4][2] = { "0" };
-	CHAR hour[4][2] = { "0" };
-	CHAR time[4][2] = { "0" };
-	CHAR second[4][2] = { "0" };
-	CHAR milisecond[4][2] = { "0" };
-	strncpy(year[0], (LPCH)&lpBuf[813], sizeof(year[0]));
-	strncpy(month[0], (LPCH)&lpBuf[817], sizeof(month[0]));
-	strncpy(day[0], (LPCH)&lpBuf[819], sizeof(day[0]));
-	strncpy(hour[0], (LPCH)&lpBuf[821], sizeof(hour[0]));
-	strncpy(time[0], (LPCH)&lpBuf[823], sizeof(time[0]));
-	strncpy(second[0], (LPCH)&lpBuf[825], sizeof(second[0]));
-	strncpy(milisecond[0], (LPCH)&lpBuf[827], sizeof(milisecond[0]));
-	strncpy(year[1], (LPCH)&lpBuf[830], sizeof(year[1]));
-	strncpy(month[1], (LPCH)&lpBuf[834], sizeof(month[1]));
-	strncpy(day[1], (LPCH)&lpBuf[836], sizeof(day[1]));
-	strncpy(hour[1], (LPCH)&lpBuf[838], sizeof(hour[1]));
-	strncpy(time[1], (LPCH)&lpBuf[840], sizeof(time[1]));
-	strncpy(second[1], (LPCH)&lpBuf[842], sizeof(second[1]));
-	strncpy(milisecond[1], (LPCH)&lpBuf[844], sizeof(milisecond[1]));
-	strncpy(year[2], (LPCH)&lpBuf[847], sizeof(year[2]));
-	strncpy(month[2], (LPCH)&lpBuf[851], sizeof(month[2]));
-	strncpy(day[2], (LPCH)&lpBuf[853], sizeof(day[2]));
-	strncpy(hour[2], (LPCH)&lpBuf[855], sizeof(hour[2]));
-	strncpy(time[2], (LPCH)&lpBuf[857], sizeof(time[2]));
-	strncpy(second[2], (LPCH)&lpBuf[859], sizeof(second[2]));
-	strncpy(milisecond[2], (LPCH)&lpBuf[861], sizeof(milisecond[2]));
-	strncpy(year[3], (LPCH)&lpBuf[864], sizeof(year[3]));
-	strncpy(month[3], (LPCH)&lpBuf[868], sizeof(month[3]));
-	strncpy(day[3], (LPCH)&lpBuf[870], sizeof(day[3]));
-	strncpy(hour[3], (LPCH)&lpBuf[872], sizeof(hour[3]));
-	strncpy(time[3], (LPCH)&lpBuf[874], sizeof(time[3]));
-	strncpy(second[3], (LPCH)&lpBuf[876], sizeof(second[3]));
-	strncpy(milisecond[3], (LPCH)&lpBuf[878], sizeof(milisecond[3]));
 	OutputVolDescLogA(
-		"\t                Volume Creation Date and Time: %.4s-%.2s-%.2s %.2s:%.2s:%.2s.%.2s +%u\n"
-		"\t            Volume Modification Date and Time: %.4s-%.2s-%.2s %.2s:%.2s:%.2s.%.2s +%u\n"
-		"\t              Volume Expiration Date and Time: %.4s-%.2s-%.2s %.2s:%.2s:%.2s.%.2s +%u\n"
-		"\t               Volume Effective Date and Time: %.4s-%.2s-%.2s %.2s:%.2s:%.2s.%.2s +%u\n"
+		"\t                Volume Creation Date and Time: %.4s-%.2s-%.2s %.2s:%.2s:%.2s.%.2s %+03d:%02u\n"
+		"\t            Volume Modification Date and Time: %.4s-%.2s-%.2s %.2s:%.2s:%.2s.%.2s %+03d:%02u\n"
+		"\t              Volume Expiration Date and Time: %.4s-%.2s-%.2s %.2s:%.2s:%.2s.%.2s %+03d:%02u\n"
+		"\t               Volume Effective Date and Time: %.4s-%.2s-%.2s %.2s:%.2s:%.2s.%.2s %+03d:%02u\n"
 		"\t                       File Structure Version: %u\n"
 		"\t                              Application Use: ",
-		year[0], month[0], day[0], hour[0], time[0], second[0], milisecond[0], lpBuf[829],
-		year[1], month[1], day[1], hour[1], time[1], second[1], milisecond[1], lpBuf[846],
-		year[2], month[2], day[2], hour[2], time[2], second[2], milisecond[2], lpBuf[863],
-		year[3], month[3], day[3], hour[3], time[3], second[3], milisecond[3], lpBuf[880],
+		&lpBuf[813], &lpBuf[817], &lpBuf[819], &lpBuf[821], &lpBuf[823]
+		, &lpBuf[825], &lpBuf[827], (CHAR)lpBuf[829] / 4, (CHAR)lpBuf[829] % 4 * 15,
+		&lpBuf[830], &lpBuf[834], &lpBuf[836], &lpBuf[838], &lpBuf[840]
+		, &lpBuf[842], &lpBuf[844], (CHAR)lpBuf[846] / 4, (CHAR)lpBuf[846] % 4 * 15,
+		&lpBuf[847], &lpBuf[851], &lpBuf[853], &lpBuf[855], &lpBuf[857]
+		, &lpBuf[859], &lpBuf[861], (CHAR)lpBuf[863] / 4, (CHAR)lpBuf[863] % 4 * 15,
+		&lpBuf[864], &lpBuf[868], &lpBuf[870], &lpBuf[872], &lpBuf[874]
+		, &lpBuf[876], &lpBuf[878], (CHAR)lpBuf[880] / 4, (CHAR)lpBuf[880] % 4 * 15,
 		lpBuf[881]);
 	for (INT i = 883; i <= 1394; i++) {
 		OutputVolDescLogA("%x", lpBuf[i]);
@@ -507,10 +476,8 @@ VOID OutputFsVolumePartitionDescriptor(
 		"\t                 System Use: ",
 		str[0],
 		str[1],
-		MAKELONG(MAKEWORD(lpBuf[76], lpBuf[77]),
-		MAKEWORD(lpBuf[78], lpBuf[79])),
-		MAKELONG(MAKEWORD(lpBuf[84], lpBuf[85]),
-		MAKEWORD(lpBuf[86], lpBuf[87])));
+		MAKELONG(MAKEWORD(lpBuf[76], lpBuf[77]), MAKEWORD(lpBuf[78], lpBuf[79])),
+		MAKELONG(MAKEWORD(lpBuf[84], lpBuf[85]), MAKEWORD(lpBuf[86], lpBuf[87])));
 	for (INT i = 88; i < 2048; i++) {
 		OutputVolDescLogA("%x", lpBuf[i]);
 	}
@@ -1186,7 +1153,7 @@ VOID OutputCDOffset(
 	BOOL bGetDriveOffset,
 	INT nDriveSampleOffset,
 	INT nDriveOffset,
-	INT nSubchOffset
+	INT nSubChannelOffset
 	)
 {
 	OutputDiscLogA(STR_DOUBLE_HYPHEN_B "Offset ");
@@ -1233,8 +1200,8 @@ VOID OutputCDOffset(
 			pDisc->MAIN.nCombinedOffset / CD_RAW_SECTOR_SIZE - 1;
 	}
 	OutputDiscLogA("\tOverread sector: %d\n", pDisc->MAIN.nAdjustSectorNum);
-	if (nSubchOffset != 0xff) {
-		OutputDiscLogA("\tSubch Offset: %d\n", nSubchOffset);
+	if (nSubChannelOffset != 0xff) {
+		OutputDiscLogA("\tSubChannel Offset: %d\n", nSubChannelOffset);
 	}
 }
 

@@ -661,19 +661,18 @@ VOID WriteMainChannel(
 	INT sLBA = pDisc->MAIN.nFixStartLBA;
 	INT eLBA = pDisc->MAIN.nFixEndLBA;
 	if (pExtArg->byReverse) {
-		sLBA = pDisc->MAIN.nFixEndLBA;
-		eLBA = pDisc->MAIN.nFixStartLBA;
+		fwrite(lpBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpImg);
 	}
-	if (sLBA <= nLBA && nLBA < eLBA) {
+	else if (sLBA <= nLBA && nLBA < eLBA) {
 		// first sector
 		if (nLBA == sLBA) {
-			fwrite(lpBuf + pDisc->MAIN.uiMainDataSlideSize, sizeof(BYTE), 
+			fwrite(lpBuf + pDisc->MAIN.uiMainDataSlideSize, sizeof(BYTE),
 				CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize, fpImg);
-			if (!pExtArg->byReverse && pDisc->SUB.lpFirstLBAListOnSub) {
+			if (pDisc->SUB.lpFirstLBAListOnSub) {
 				pDisc->SUB.lpFirstLBAListOnSub[0][0] = -150;
 				pDisc->SUB.lpFirstLBAListOnSub[0][1] = nLBA - sLBA;
 			}
-			if (!pExtArg->byReverse && pDisc->SUB.lpFirstLBAListOnSubSync) {
+			if (pDisc->SUB.lpFirstLBAListOnSubSync) {
 				pDisc->SUB.lpFirstLBAListOnSubSync[0][0] = -150;
 				pDisc->SUB.lpFirstLBAListOnSubSync[0][1] = nLBA - sLBA;
 			}
@@ -757,8 +756,10 @@ VOID WriteSubChannel(
 	FILE* fpParse
 	)
 {
-	fwrite(lpSubcode, sizeof(BYTE), CD_RAW_READ_SUBCODE_SIZE, fpSub);
-	OutputCDSubToLog(pDisc, lpSubcode, lpSubcodeRaw, nLBA, byCurrentTrackNum, fpParse);
+	if (fpSub && fpParse) {
+		fwrite(lpSubcode, sizeof(BYTE), CD_RAW_READ_SUBCODE_SIZE, fpSub);
+		OutputCDSubToLog(pDisc, lpSubcode, lpSubcodeRaw, nLBA, byCurrentTrackNum, fpParse);
+	}
 }
 
 VOID WriteErrorBuffer(
@@ -1180,8 +1181,8 @@ VOID DescrambleMainChannelAll(
 				nFirstLBA -= nSkipLBA;
 				nLastLBA -= nSkipLBA;
 			}
-			if (pDisc->SUB.byIndex0InTrack1) {
-				nFirstLBA += 150;
+			if (pExtArg->byPre) {
+				nFirstLBA += 75;
 				nLastLBA += 150;
 			}
 			if (!pExtArg->byReverse) {
@@ -1506,7 +1507,7 @@ BOOL CreateBinCueCcd(
 		INT nLBA = pDisc->SUB.lpFirstLBAListOnSub[i - 1][0] == -1 ?
 			pDisc->SUB.lpFirstLBAListOnSub[i - 1][1] : 
 			pDisc->SUB.lpFirstLBAListOnSub[i - 1][0];
-		if (pDisc->SUB.byIndex0InTrack1) {
+		if (pExtArg->byPre) {
 			if (i == pDisc->SCSI.toc.FirstTrack) {
 				nLBA += 150 - abs(pDisc->MAIN.nAdjustSectorNum);
 			}
@@ -1520,7 +1521,7 @@ BOOL CreateBinCueCcd(
 		INT nNextLBA = pDisc->SUB.lpFirstLBAListOnSub[i][0] == -1 ?
 			pDisc->SUB.lpFirstLBAListOnSub[i][1] : 
 			pDisc->SUB.lpFirstLBAListOnSub[i][0];
-		if (pDisc->SUB.byIndex0InTrack1) {
+		if (pExtArg->byPre) {
 			nNextLBA += 150;
 		}
 		bRet = CreateBin(pExtArg, pDisc, i, nNextLBA, nLBA, fpImg, fpBin);
@@ -1532,7 +1533,7 @@ BOOL CreateBinCueCcd(
 			nLBA = pDisc->SUB.lpFirstLBAListOnSubSync[i - 1][0] == -1 ?
 				pDisc->SUB.lpFirstLBAListOnSubSync[i - 1][1] : 
 				pDisc->SUB.lpFirstLBAListOnSubSync[i - 1][0];
-			if (pDisc->SUB.byIndex0InTrack1) {
+			if (pExtArg->byPre) {
 				if (i == pDisc->SCSI.toc.FirstTrack) {
 					nLBA += 150 - abs(pDisc->MAIN.nAdjustSectorNum);
 				}
@@ -1546,7 +1547,7 @@ BOOL CreateBinCueCcd(
 			nNextLBA = pDisc->SUB.lpFirstLBAListOnSubSync[i][0] == -1 ?
 				pDisc->SUB.lpFirstLBAListOnSubSync[i][1] :
 				pDisc->SUB.lpFirstLBAListOnSubSync[i][0];
-			if (pDisc->SUB.byIndex0InTrack1) {
+			if (pExtArg->byPre) {
 				nNextLBA += 150;
 			}
 			bRet = CreateBin(pExtArg, pDisc, i, nNextLBA, nLBA, fpImg, fpBinSync);

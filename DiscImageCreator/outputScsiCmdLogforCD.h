@@ -110,7 +110,7 @@ VOID OutputCDOffset(
 	BOOL bGetDriveOffset,
 	INT nDriveSampleOffset,
 	INT nDriveOffset,
-	INT nSubchOffset
+	INT nSubChannelOffset
 	);
 
 VOID OutputCDC2Error296(

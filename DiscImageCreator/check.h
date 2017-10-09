@@ -79,13 +79,12 @@ BOOL ContainsDiffByte(
 	UINT i
 	);
 
-BOOL SupportIndex0InTrack1(
+VOID SupportIndex0InTrack1(
 	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc
+	PDEVICE pDevice
 	);
 
-BOOL ExecCheckingSubchannnel(
+BOOL IsCheckingSubChannel(
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
 	INT nLBA
