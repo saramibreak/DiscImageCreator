@@ -19,8 +19,7 @@ VOID OutputAdditionalSenseCodeQualifierOther(
 
 VOID OutputAdditionalSenseCodeQualifier0x00(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("NO ADDITIONAL SENSE INFORMATION"));
@@ -69,8 +68,7 @@ VOID OutputAdditionalSenseCodeQualifier0x00(
 
 VOID OutputAdditionalSenseCodeQualifier0x01(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("NO INDEX/SECTOR SIGNAL"));
@@ -83,8 +81,7 @@ VOID OutputAdditionalSenseCodeQualifier0x01(
 
 VOID OutputAdditionalSenseCodeQualifier0x02(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("NO SEEK COMPLETE"));
@@ -97,8 +94,7 @@ VOID OutputAdditionalSenseCodeQualifier0x02(
 
 VOID OutputAdditionalSenseCodeQualifier0x03(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("PERIPHERAL DEVICE WRITE FAULT"));
@@ -111,8 +107,7 @@ VOID OutputAdditionalSenseCodeQualifier0x03(
 
 VOID OutputAdditionalSenseCodeQualifier0x04(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case SCSI_SENSEQ_CAUSE_NOT_REPORTABLE:
 		OutputLog(standardError | fileMainError, _T("LUN_NOT_READY - CAUSE_NOT_REPORTABLE"));
@@ -200,8 +195,7 @@ VOID OutputAdditionalSenseCodeQualifier0x04(
 
 VOID OutputAdditionalSenseCodeQualifier0x05(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("LOGICAL UNIT DOES NOT RESPOND TO SELECTION"));
@@ -214,8 +208,7 @@ VOID OutputAdditionalSenseCodeQualifier0x05(
 
 VOID OutputAdditionalSenseCodeQualifier0x06(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("NO REFERENCE POSITION FOUND"));
@@ -228,8 +221,7 @@ VOID OutputAdditionalSenseCodeQualifier0x06(
 
 VOID OutputAdditionalSenseCodeQualifier0x07(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("MULTIPLE PERIPHERAL DEVICES SELECTED"));
@@ -242,8 +234,7 @@ VOID OutputAdditionalSenseCodeQualifier0x07(
 
 VOID OutputAdditionalSenseCodeQualifier0x08(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case SCSI_SENSEQ_COMM_FAILURE:
 		OutputLog(standardError | fileMainError, _T("LUN_COMMUNICATION - COMM_FAILURE"));
@@ -268,8 +259,7 @@ VOID OutputAdditionalSenseCodeQualifier0x08(
 
 VOID OutputAdditionalSenseCodeQualifier0x09(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("TRACK FOLLOWING ERROR"));
@@ -294,8 +284,7 @@ VOID OutputAdditionalSenseCodeQualifier0x09(
 
 VOID OutputAdditionalSenseCodeQualifier0x0a(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("ERROR LOG OVERFLOW"));
@@ -308,8 +297,7 @@ VOID OutputAdditionalSenseCodeQualifier0x0a(
 
 VOID OutputAdditionalSenseCodeQualifier0x0b(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("WARNING"));
@@ -349,8 +337,7 @@ VOID OutputAdditionalSenseCodeQualifier0x0b(
 
 VOID OutputAdditionalSenseCodeQualifier0x0c(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("WRITE ERROR"));
@@ -402,8 +389,7 @@ VOID OutputAdditionalSenseCodeQualifier0x0c(
 
 VOID OutputAdditionalSenseCodeQualifier0x0d(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("ERROR DETECTED BY THIRD PARTY TEMPORARY INITIATOR"));
@@ -431,8 +417,7 @@ VOID OutputAdditionalSenseCodeQualifier0x0d(
 
 VOID OutputAdditionalSenseCodeQualifier0x0e(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("INVALID INFORMATION UNIT"));
@@ -454,8 +439,7 @@ VOID OutputAdditionalSenseCodeQualifier0x0e(
 
 VOID OutputAdditionalSenseCodeQualifier0x10(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("ID CRC OR ECC ERROR"));
@@ -477,8 +461,7 @@ VOID OutputAdditionalSenseCodeQualifier0x10(
 
 VOID OutputAdditionalSenseCodeQualifier0x11(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("UNRECOVERED READ ERROR"));
@@ -548,8 +531,7 @@ VOID OutputAdditionalSenseCodeQualifier0x11(
 
 VOID OutputAdditionalSenseCodeQualifier0x12(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("ADDRESS MARK NOT FOUND FOR ID FIELD"));
@@ -562,8 +544,7 @@ VOID OutputAdditionalSenseCodeQualifier0x12(
 
 VOID OutputAdditionalSenseCodeQualifier0x13(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("ADDRESS MARK NOT FOUND FOR DATA FIELD"));
@@ -576,8 +557,7 @@ VOID OutputAdditionalSenseCodeQualifier0x13(
 
 VOID OutputAdditionalSenseCodeQualifier0x14(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("TRACK_ERROR - RECORDED ENTITY NOT FOUND"));
@@ -599,8 +579,7 @@ VOID OutputAdditionalSenseCodeQualifier0x14(
 
 VOID OutputAdditionalSenseCodeQualifier0x15(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("SEEK_ERROR - RANDOM POSITIONING ERROR"));
@@ -619,8 +598,7 @@ VOID OutputAdditionalSenseCodeQualifier0x15(
 
 VOID OutputAdditionalSenseCodeQualifier0x16(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("DATA SYNCHRONIZATION MARK ERROR"));
@@ -645,8 +623,7 @@ VOID OutputAdditionalSenseCodeQualifier0x16(
 
 VOID OutputAdditionalSenseCodeQualifier0x17(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("REC_DATA_NOECC - RECOVERED DATA WITH NO ERROR CORRECTION APPLIED"));
@@ -686,8 +663,7 @@ VOID OutputAdditionalSenseCodeQualifier0x17(
 
 VOID OutputAdditionalSenseCodeQualifier0x18(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("REC_DATA_ECC - RECOVERED DATA WITH ERROR CORRECTION APPLIED"));
@@ -724,8 +700,7 @@ VOID OutputAdditionalSenseCodeQualifier0x18(
 
 VOID OutputAdditionalSenseCodeQualifier0x19(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("DEFECT LIST ERROR"));
@@ -747,8 +722,7 @@ VOID OutputAdditionalSenseCodeQualifier0x19(
 
 VOID OutputAdditionalSenseCodeQualifier0x1a(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("PARAMETER LIST LENGTH ERROR"));
@@ -761,8 +735,7 @@ VOID OutputAdditionalSenseCodeQualifier0x1a(
 
 VOID OutputAdditionalSenseCodeQualifier0x1b(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("SYNCHRONOUS DATA TRANSFER ERROR"));
@@ -775,8 +748,7 @@ VOID OutputAdditionalSenseCodeQualifier0x1b(
 
 VOID OutputAdditionalSenseCodeQualifier0x1c(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("DEFECT LIST NOT FOUND"));
@@ -795,8 +767,7 @@ VOID OutputAdditionalSenseCodeQualifier0x1c(
 
 VOID OutputAdditionalSenseCodeQualifier0x1d(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("MISCOMPARE DURING VERIFY OPERATION"));
@@ -812,8 +783,7 @@ VOID OutputAdditionalSenseCodeQualifier0x1d(
 
 VOID OutputAdditionalSenseCodeQualifier0x1e(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("RECOVERED ID WITH ECC CORRECTION"));
@@ -826,8 +796,7 @@ VOID OutputAdditionalSenseCodeQualifier0x1e(
 
 VOID OutputAdditionalSenseCodeQualifier0x1f(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("PARTIAL DEFECT LIST TRANSFER"));
@@ -840,8 +809,7 @@ VOID OutputAdditionalSenseCodeQualifier0x1f(
 
 VOID OutputAdditionalSenseCodeQualifier0x20(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("INVALID COMMAND OPERATION CODE"));
@@ -875,8 +843,7 @@ VOID OutputAdditionalSenseCodeQualifier0x20(
 
 VOID OutputAdditionalSenseCodeQualifier0x21(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("LOGICAL BLOCK ADDRESS OUT OF RANGE"));
@@ -898,8 +865,7 @@ VOID OutputAdditionalSenseCodeQualifier0x21(
 
 VOID OutputAdditionalSenseCodeQualifier0x22(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("ILLEGAL FUNCTION"));
@@ -912,8 +878,7 @@ VOID OutputAdditionalSenseCodeQualifier0x22(
 
 VOID OutputAdditionalSenseCodeQualifier0x23(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("INVALID TOKEN OPERATION, CAUSE NOT REPORTABLE"));
@@ -956,8 +921,7 @@ VOID OutputAdditionalSenseCodeQualifier0x23(
 
 VOID OutputAdditionalSenseCodeQualifier0x24(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("INVALID FIELD IN CDB"));
@@ -976,8 +940,7 @@ VOID OutputAdditionalSenseCodeQualifier0x24(
 
 VOID OutputAdditionalSenseCodeQualifier0x25(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("LOGICAL UNIT NOT SUPPORTED"));
@@ -990,8 +953,7 @@ VOID OutputAdditionalSenseCodeQualifier0x25(
 
 VOID OutputAdditionalSenseCodeQualifier0x26(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("INVALID FIELD IN PARAMETER LIST"));
@@ -1046,8 +1008,7 @@ VOID OutputAdditionalSenseCodeQualifier0x26(
 
 VOID OutputAdditionalSenseCodeQualifier0x27(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("WRITE PROTECTED"));
@@ -1081,8 +1042,7 @@ VOID OutputAdditionalSenseCodeQualifier0x27(
 
 VOID OutputAdditionalSenseCodeQualifier0x28(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("NOT READY TO READY CHANGE, MEDIUM MAY HAVE CHANGED"));
@@ -1101,8 +1061,7 @@ VOID OutputAdditionalSenseCodeQualifier0x28(
 
 VOID OutputAdditionalSenseCodeQualifier0x29(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("POWER ON, RESET, OR BUS DEVICE RESET OCCURRED"));
@@ -1136,8 +1095,7 @@ VOID OutputAdditionalSenseCodeQualifier0x29(
 
 VOID OutputAdditionalSenseCodeQualifier0x2a(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("PARAMETERS CHANGED"));
@@ -1189,8 +1147,7 @@ VOID OutputAdditionalSenseCodeQualifier0x2a(
 
 VOID OutputAdditionalSenseCodeQualifier0x2b(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("COPY CANNOT EXECUTE SINCE HOST CANNOT DISCONNECT"));
@@ -1203,8 +1160,7 @@ VOID OutputAdditionalSenseCodeQualifier0x2b(
 
 VOID OutputAdditionalSenseCodeQualifier0x2c(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("COMMAND SEQUENCE ERROR"));
@@ -1238,8 +1194,7 @@ VOID OutputAdditionalSenseCodeQualifier0x2c(
 
 VOID OutputAdditionalSenseCodeQualifier0x2e(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("INSUFFICIENT TIME FOR OPERATION"));
@@ -1261,8 +1216,7 @@ VOID OutputAdditionalSenseCodeQualifier0x2e(
 
 VOID OutputAdditionalSenseCodeQualifier0x2f(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("COMMANDS CLEARED BY ANOTHER INITIATOR"));
@@ -1284,8 +1238,7 @@ VOID OutputAdditionalSenseCodeQualifier0x2f(
 
 VOID OutputAdditionalSenseCodeQualifier0x30(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("INCOMPATIBLE MEDIUM INSTALLED"));
@@ -1331,8 +1284,7 @@ VOID OutputAdditionalSenseCodeQualifier0x30(
 
 VOID OutputAdditionalSenseCodeQualifier0x31(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("MEDIUM FORMAT CORRUPTED"));
@@ -1354,8 +1306,7 @@ VOID OutputAdditionalSenseCodeQualifier0x31(
 
 VOID OutputAdditionalSenseCodeQualifier0x32(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("NO DEFECT SPARE LOCATION AVAILABLE"));
@@ -1371,8 +1322,7 @@ VOID OutputAdditionalSenseCodeQualifier0x32(
 
 VOID OutputAdditionalSenseCodeQualifier0x34(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("ENCLOSURE FAILURE"));
@@ -1385,8 +1335,7 @@ VOID OutputAdditionalSenseCodeQualifier0x34(
 
 VOID OutputAdditionalSenseCodeQualifier0x35(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("ENCLOSURE SERVICES FAILURE"));
@@ -1414,8 +1363,7 @@ VOID OutputAdditionalSenseCodeQualifier0x35(
 
 VOID OutputAdditionalSenseCodeQualifier0x37(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("ROUNDED PARAMETER"));
@@ -1428,8 +1376,7 @@ VOID OutputAdditionalSenseCodeQualifier0x37(
 
 VOID OutputAdditionalSenseCodeQualifier0x38(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x07:
 		OutputLog(standardError | fileMainError, _T("THIN PROVISIONING SOFT THRESHOLD REACHED"));
@@ -1442,8 +1389,7 @@ VOID OutputAdditionalSenseCodeQualifier0x38(
 
 VOID OutputAdditionalSenseCodeQualifier0x39(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("SAVING PARAMETERS NOT SUPPORTED"));
@@ -1456,8 +1402,7 @@ VOID OutputAdditionalSenseCodeQualifier0x39(
 
 VOID OutputAdditionalSenseCodeQualifier0x3a(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("MEDIUM NOT PRESENT"));
@@ -1482,8 +1427,7 @@ VOID OutputAdditionalSenseCodeQualifier0x3a(
 
 VOID OutputAdditionalSenseCodeQualifier0x3b(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case SCSI_SENSEQ_DESTINATION_FULL:
 		OutputLog(standardError | fileMainError, _T("MEDIUM DESTINATION ELEMENT FULL"));
@@ -1520,8 +1464,7 @@ VOID OutputAdditionalSenseCodeQualifier0x3b(
 
 VOID OutputAdditionalSenseCodeQualifier0x3d(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("INVALID BITS IN IDENTIFY MESSAGE"));
@@ -1534,8 +1477,7 @@ VOID OutputAdditionalSenseCodeQualifier0x3d(
 
 VOID OutputAdditionalSenseCodeQualifier0x3e(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("LOGICAL UNIT HAS NOT SELF-CONFIGURED YET"));
@@ -1560,8 +1502,7 @@ VOID OutputAdditionalSenseCodeQualifier0x3e(
 
 VOID OutputAdditionalSenseCodeQualifier0x3f(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case SCSI_SENSEQ_TARGET_OPERATING_CONDITIONS_CHANGED:
 		OutputLog(standardError | fileMainError, _T("TARGET_OPERATING_CONDITIONS_CHANGED"));
@@ -1637,8 +1578,7 @@ VOID OutputAdditionalSenseCodeQualifier0x3f(
 
 VOID OutputAdditionalSenseCodeQualifier0x40(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("RAM FAILURE"));
@@ -1651,8 +1591,7 @@ VOID OutputAdditionalSenseCodeQualifier0x40(
 
 VOID OutputAdditionalSenseCodeQualifier0x41(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("DATA PATH FAILURE"));
@@ -1665,8 +1604,7 @@ VOID OutputAdditionalSenseCodeQualifier0x41(
 
 VOID OutputAdditionalSenseCodeQualifier0x42(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("POWER-ON OR SELF-TEST FAILURE"));
@@ -1679,8 +1617,7 @@ VOID OutputAdditionalSenseCodeQualifier0x42(
 
 VOID OutputAdditionalSenseCodeQualifier0x43(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("MESSAGE ERROR"));
@@ -1693,8 +1630,7 @@ VOID OutputAdditionalSenseCodeQualifier0x43(
 
 VOID OutputAdditionalSenseCodeQualifier0x44(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("INTERNAL TARGET FAILURE"));
@@ -1713,8 +1649,7 @@ VOID OutputAdditionalSenseCodeQualifier0x44(
 
 VOID OutputAdditionalSenseCodeQualifier0x45(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("SELECT OR RESELECT FAILURE"));
@@ -1727,8 +1662,7 @@ VOID OutputAdditionalSenseCodeQualifier0x45(
 
 VOID OutputAdditionalSenseCodeQualifier0x46(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("UNSUCCESSFUL SOFT RESET"));
@@ -1741,8 +1675,7 @@ VOID OutputAdditionalSenseCodeQualifier0x46(
 
 VOID OutputAdditionalSenseCodeQualifier0x47(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("SCSI PARITY ERROR"));
@@ -1776,8 +1709,7 @@ VOID OutputAdditionalSenseCodeQualifier0x47(
 
 VOID OutputAdditionalSenseCodeQualifier0x48(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("INITIATOR DETECTED ERROR MESSAGE RECEIVED"));
@@ -1790,8 +1722,7 @@ VOID OutputAdditionalSenseCodeQualifier0x48(
 
 VOID OutputAdditionalSenseCodeQualifier0x49(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("INVALID MESSAGE ERROR"));
@@ -1804,8 +1735,7 @@ VOID OutputAdditionalSenseCodeQualifier0x49(
 
 VOID OutputAdditionalSenseCodeQualifier0x4a(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("COMMAND PHASE ERROR"));
@@ -1818,8 +1748,7 @@ VOID OutputAdditionalSenseCodeQualifier0x4a(
 
 VOID OutputAdditionalSenseCodeQualifier0x4b(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("DATA PHASE ERROR"));
@@ -1895,8 +1824,7 @@ VOID OutputAdditionalSenseCodeQualifier0x4b(
 
 VOID OutputAdditionalSenseCodeQualifier0x4c(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("LOGICAL UNIT FAILED SELF-CONFIGURATION"));
@@ -1909,8 +1837,7 @@ VOID OutputAdditionalSenseCodeQualifier0x4c(
 
 VOID OutputAdditionalSenseCodeQualifier0x4e(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("OVERLAPPED COMMANDS ATTEMPTED"));
@@ -1923,8 +1850,7 @@ VOID OutputAdditionalSenseCodeQualifier0x4e(
 
 VOID OutputAdditionalSenseCodeQualifier0x51(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("ERASE FAILURE"));
@@ -1940,8 +1866,7 @@ VOID OutputAdditionalSenseCodeQualifier0x51(
 
 VOID OutputAdditionalSenseCodeQualifier0x53(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("MEDIA LOAD OR EJECT FAILED"));
@@ -1957,8 +1882,7 @@ VOID OutputAdditionalSenseCodeQualifier0x53(
 
 VOID OutputAdditionalSenseCodeQualifier0x55(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x01:
 		OutputLog(standardError | fileMainError, _T("SYSTEM BUFFER FULL"));
@@ -1995,8 +1919,7 @@ VOID OutputAdditionalSenseCodeQualifier0x55(
 
 VOID OutputAdditionalSenseCodeQualifier0x57(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("UNABLE TO RECOVER TABLE-OF-CONTENTS"));
@@ -2009,8 +1932,7 @@ VOID OutputAdditionalSenseCodeQualifier0x57(
 
 VOID OutputAdditionalSenseCodeQualifier0x58(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("GENERATION DOES NOT EXIST"));
@@ -2023,8 +1945,7 @@ VOID OutputAdditionalSenseCodeQualifier0x58(
 
 VOID OutputAdditionalSenseCodeQualifier0x59(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("UPDATED BLOCK READ"));
@@ -2037,8 +1958,7 @@ VOID OutputAdditionalSenseCodeQualifier0x59(
 
 VOID OutputAdditionalSenseCodeQualifier0x5a(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case SCSI_SENSEQ_STATE_CHANGE_INPUT:
 		OutputLog(standardError | fileMainError, _T("OPERATOR REQUEST OR STATE CHANGE INPUT"));
@@ -2060,8 +1980,7 @@ VOID OutputAdditionalSenseCodeQualifier0x5a(
 
 VOID OutputAdditionalSenseCodeQualifier0x5b(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("LOG EXCEPTION"));
@@ -2083,8 +2002,7 @@ VOID OutputAdditionalSenseCodeQualifier0x5b(
 
 VOID OutputAdditionalSenseCodeQualifier0x5c(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("RPL STATUS CHANGE"));
@@ -2103,8 +2021,7 @@ VOID OutputAdditionalSenseCodeQualifier0x5c(
 
 VOID OutputAdditionalSenseCodeQualifier0x5d(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("FAILURE PREDICTION THRESHOLD EXCEEDED"));
@@ -2363,8 +2280,7 @@ VOID OutputAdditionalSenseCodeQualifier0x5d(
 
 VOID OutputAdditionalSenseCodeQualifier0x5e(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("LOW POWER CONDITION ON"));
@@ -2407,8 +2323,7 @@ VOID OutputAdditionalSenseCodeQualifier0x5e(
 
 VOID OutputAdditionalSenseCodeQualifier0x63(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("END OF USER AREA ENCOUNTERED ON THIS TRACK"));
@@ -2424,8 +2339,7 @@ VOID OutputAdditionalSenseCodeQualifier0x63(
 
 VOID OutputAdditionalSenseCodeQualifier0x64(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("ILLEGAL MODE FOR THIS TRACK"));
@@ -2441,8 +2355,7 @@ VOID OutputAdditionalSenseCodeQualifier0x64(
 
 VOID OutputAdditionalSenseCodeQualifier0x65(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("VOLTAGE FAULT"));
@@ -2455,8 +2368,7 @@ VOID OutputAdditionalSenseCodeQualifier0x65(
 
 VOID OutputAdditionalSenseCodeQualifier0x67(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x0a:
 		OutputLog(standardError | fileMainError, _T("SET TARGET PORT GROUPS COMMAND FAILED"));
@@ -2469,8 +2381,7 @@ VOID OutputAdditionalSenseCodeQualifier0x67(
 
 VOID OutputAdditionalSenseCodeQualifier0x68(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x0a:
 		OutputLog(standardError | fileMainError, _T("SUBSIDIARY LOGICAL UNIT NOT CONFIGURED"));
@@ -2483,8 +2394,7 @@ VOID OutputAdditionalSenseCodeQualifier0x68(
 
 VOID OutputAdditionalSenseCodeQualifier0x6f(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case SCSI_SENSEQ_AUTHENTICATION_FAILURE:
 		OutputLog(standardError | fileMainError, _T("COPY PROTECTION KEY EXCHANGE FAILURE - AUTHENTICATION FAILURE"));
@@ -2518,8 +2428,7 @@ VOID OutputAdditionalSenseCodeQualifier0x6f(
 
 VOID OutputAdditionalSenseCodeQualifier0x72(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("SESSION FIXATION ERROR"));
@@ -2553,8 +2462,7 @@ VOID OutputAdditionalSenseCodeQualifier0x72(
 
 VOID OutputAdditionalSenseCodeQualifier0x73(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x00:
 		OutputLog(standardError | fileMainError, _T("CD CONTROL ERROR"));
@@ -2594,8 +2502,7 @@ VOID OutputAdditionalSenseCodeQualifier0x73(
 
 VOID OutputAdditionalSenseCodeQualifier0x74(
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAscq) {
 	case 0x08:
 		OutputLog(standardError | fileMainError, _T("DIGITAL SIGNATURE VALIDATION FAILURE"));
@@ -2640,8 +2547,7 @@ VOID OutputAdditionalSenseCodeQualifier0x74(
 VOID OutputAdditionalSenseCode(
 	BYTE byAsc,
 	BYTE byAscq
-	)
-{
+) {
 	switch (byAsc) {
 	case SCSI_ADSENSE_NO_SENSE:
 		OutputAdditionalSenseCodeQualifier0x00(byAscq);
@@ -2931,8 +2837,7 @@ VOID OutputAdditionalSenseCode(
 
 VOID OutputSenseKey(
 	BYTE byKey
-	)
-{
+) {
 	switch (byKey) {
 	case SCSI_SENSE_NO_SENSE:
 		OutputLog(standardError | fileMainError, _T("NO_SENSE"));
@@ -2991,9 +2896,8 @@ VOID OutputSenseKey(
 
 VOID OutputSenseData(
 	PSENSE_DATA pSenseData
-	)
-{
-	OutputLog(standardError | fileMainError, 
+) {
+	OutputLog(standardError | fileMainError,
 		_T("\tSenseData Key-Asc-Ascq: %02x-%02x-%02x = ")
 		, pSenseData->SenseKey, pSenseData->AdditionalSenseCode
 		, pSenseData->AdditionalSenseCodeQualifier);
@@ -3042,9 +2946,8 @@ VOID OutputSenseData(
 
 VOID OutputScsiStatus(
 	BYTE byScsiStatus
-	)
-{
-	OutputLog(standardError | fileMainError, 
+) {
+	OutputLog(standardError | fileMainError,
 		_T("\tScsiStatus: %#04x = "), byScsiStatus);
 	switch (byScsiStatus) {
 	case SCSISTAT_GOOD:
@@ -3082,8 +2985,7 @@ VOID OutputScsiStatus(
 
 VOID OutputScsiAddress(
 	PDEVICE pDevice
-	)
-{
+) {
 	OutputDriveLogA(
 		OUTPUT_DHYPHEN_PLUS_STR(IoctlScsiGetAddress)
 		"\t    Length: %lu\n"
@@ -3101,8 +3003,7 @@ VOID OutputScsiAddress(
 VOID OutputStorageAdaptorDescriptor(
 	PSTORAGE_ADAPTER_DESCRIPTOR pAdapterDescriptor,
 	LPBOOL lpBusTypeUSB
-	)
-{
+) {
 	OutputDriveLogA(
 		OUTPUT_DHYPHEN_PLUS_STR(StorageAdapterDescriptor)
 		"\t              Version: %lu\n"
@@ -3212,8 +3113,7 @@ VOID OutputStorageAdaptorDescriptor(
 VOID OutputFloppyInfo(
 	PDISK_GEOMETRY pGeom,
 	DWORD dwGeomNum
-	)
-{
+) {
 	if (dwGeomNum > 1) {
 		OutputDiscLogA("SupportedMediaType\n");
 	}

@@ -6,11 +6,11 @@
 BOOL DiskGetMediaTypes(
 	PDEVICE pDevice,
 	LPCTSTR pszPath
-	);
+);
 
 BOOL ScsiGetAddress(
 	PDEVICE pDevice
-	);
+);
 
 BOOL ScsiPassThroughDirect(
 	PEXT_ARG pExtArg,
@@ -22,9 +22,9 @@ BOOL ScsiPassThroughDirect(
 	LPBYTE byScsiStatus,
 	LPCTSTR pszFuncName,
 	LONG lLineNum
-	);
+);
 
 BOOL StorageQueryProperty(
 	PDEVICE pDevice,
 	LPBOOL lpBusTypeUSB
-	);
+);

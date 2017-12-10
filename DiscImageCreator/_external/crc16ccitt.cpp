@@ -14,7 +14,7 @@
 #define CRCPOLY1  0x1021U  /* x^{16}+x^{12}+x^5+1 */
 unsigned int crctable[UCHAR_MAX + 1];
 
-void MakeCrc16CCITTTable(void)
+void make_crc16_table(void)
 {
 	unsigned int i, j, r;
 
@@ -27,7 +27,7 @@ void MakeCrc16CCITTTable(void)
 	}
 }
 
-unsigned int GetCrc16CCITT(int n, byte c[])
+unsigned int update_crc16(int n, byte c[])
 {
 	unsigned int r;
 

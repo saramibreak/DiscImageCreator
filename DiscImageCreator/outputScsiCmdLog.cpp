@@ -10,8 +10,7 @@
 VOID OutputInquiry(
 	PDEVICE pDevice,
 	PINQUIRYDATA pInquiry
-	)
-{
+) {
 	OutputDriveLogA(
 		OUTPUT_DHYPHEN_PLUS_STR(InquiryData)
 		"\t          DeviceType: ");
@@ -97,8 +96,7 @@ VOID OutputInquiry(
 
 VOID OutputGetConfigurationHeader(
 	PGET_CONFIGURATION_HEADER pConfigHeader
-	)
-{
+) {
 	OutputDriveLogA(
 		OUTPUT_DHYPHEN_PLUS_STR(GetConfiguration)
 		"\t    DataLength: %ld\n"
@@ -112,8 +110,7 @@ VOID OutputGetConfigurationHeader(
 
 VOID OutputGetConfigurationFeatureProfileType(
 	WORD wFeatureProfileType
-	)
-{
+) {
 	switch (wFeatureProfileType) {
 	case ProfileInvalid:
 		OutputDriveLogA("Invalid");
@@ -225,8 +222,7 @@ VOID OutputGetConfigurationFeatureProfileType(
 
 VOID OutputGetConfigurationFeatureProfileList(
 	PFEATURE_DATA_PROFILE_LIST pList
-	)
-{
+) {
 	OutputDriveLogA("\tFeatureProfileList\n");
 	for (UINT i = 0; i < pList->Header.AdditionalLength / sizeof(FEATURE_DATA_PROFILE_LIST_EX); i++) {
 		OutputDriveLogA("\t\t");
@@ -238,8 +234,7 @@ VOID OutputGetConfigurationFeatureProfileList(
 
 VOID OutputGetConfigurationFeatureCore(
 	PFEATURE_DATA_CORE pCore
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureCore\n"
 		"\t\tPhysicalInterface: ");
@@ -290,8 +285,7 @@ VOID OutputGetConfigurationFeatureCore(
 
 VOID OutputGetConfigurationFeatureMorphing(
 	PFEATURE_DATA_MORPHING pMorphing
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureMorphing\n"
 		"\t\tAsynchronous: %s\n"
@@ -302,8 +296,7 @@ VOID OutputGetConfigurationFeatureMorphing(
 
 VOID OutputGetConfigurationFeatureRemovableMedium(
 	PFEATURE_DATA_REMOVABLE_MEDIUM pRemovableMedium
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureRemovableMedium\n"
 		"\t\t        Lockable: %s\n"
@@ -340,8 +333,7 @@ VOID OutputGetConfigurationFeatureRemovableMedium(
 
 VOID OutputGetConfigurationFeatureWriteProtect(
 	PFEATURE_DATA_WRITE_PROTECT pWriteProtect
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureWriteProtect\n"
 		"\t\t               SupportsSWPPBit: %s\n"
@@ -356,8 +348,7 @@ VOID OutputGetConfigurationFeatureWriteProtect(
 
 VOID OutputGetConfigurationFeatureRandomReadable(
 	PFEATURE_DATA_RANDOM_READABLE pRandomReadable
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureRandomReadable\n"
 		"\t\t        LogicalBlockSize: %lu\n"
@@ -371,8 +362,7 @@ VOID OutputGetConfigurationFeatureRandomReadable(
 
 VOID OutputGetConfigurationFeatureMultiRead(
 	PFEATURE_DATA_MULTI_READ pMultiRead
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureMultiRead\n"
 		"\t\t   Current: %u\n"
@@ -385,8 +375,7 @@ VOID OutputGetConfigurationFeatureMultiRead(
 
 VOID OutputGetConfigurationFeatureCdRead(
 	PFEATURE_DATA_CD_READ pCDRead
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureCdRead\n"
 		"\t\t          CDText: %s\n"
@@ -399,8 +388,7 @@ VOID OutputGetConfigurationFeatureCdRead(
 
 VOID OutputGetConfigurationFeatureDvdRead(
 	PFEATURE_DATA_DVD_READ pDVDRead
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureDvdRead\n"
 		"\t\t  Multi110: %s\n"
@@ -411,8 +399,7 @@ VOID OutputGetConfigurationFeatureDvdRead(
 
 VOID OutputGetConfigurationFeatureRandomWritable(
 	PFEATURE_DATA_RANDOM_WRITABLE pRandomWritable
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureRandomWritable\n"
 		"\t\t                 LastLBA: %lu\n"
@@ -429,8 +416,7 @@ VOID OutputGetConfigurationFeatureRandomWritable(
 
 VOID OutputGetConfigurationFeatureIncrementalStreamingWritable(
 	PFEATURE_DATA_INCREMENTAL_STREAMING_WRITABLE pIncremental
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureIncrementalStreamingWritable\n"
 		"\t\t        DataTypeSupported: %u\n"
@@ -451,8 +437,7 @@ VOID OutputGetConfigurationFeatureIncrementalStreamingWritable(
 
 VOID OutputGetConfigurationFeatureSectorErasable(
 	PFEATURE_DATA_SECTOR_ERASABLE pSectorErasable
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureSectorErasable\n"
 		"\t\t   Current: %u\n"
@@ -465,8 +450,7 @@ VOID OutputGetConfigurationFeatureSectorErasable(
 
 VOID OutputGetConfigurationFeatureFormattable(
 	PFEATURE_DATA_FORMATTABLE pFormattable
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureFormattable\n"
 		"\t\t FullCertification: %s\n"
@@ -483,8 +467,7 @@ VOID OutputGetConfigurationFeatureFormattable(
 
 VOID OutputGetConfigurationFeatureDefectManagement(
 	PFEATURE_DATA_DEFECT_MANAGEMENT pDefect
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureDefectManagement\n"
 		"\t\tSupplimentalSpareArea: %s\n",
@@ -493,8 +476,7 @@ VOID OutputGetConfigurationFeatureDefectManagement(
 
 VOID OutputGetConfigurationFeatureWriteOnce(
 	PFEATURE_DATA_WRITE_ONCE pWriteOnce
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureWriteOnce\n"
 		"\t\t        LogicalBlockSize: %lu\n"
@@ -508,8 +490,7 @@ VOID OutputGetConfigurationFeatureWriteOnce(
 
 VOID OutputGetConfigurationFeatureRestrictedOverwrite(
 	PFEATURE_DATA_RESTRICTED_OVERWRITE pRestricted
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureRestrictedOverwrite\n"
 		"\t\t   Current: %u\n"
@@ -522,8 +503,7 @@ VOID OutputGetConfigurationFeatureRestrictedOverwrite(
 
 VOID OutputGetConfigurationFeatureCdrwCAVWrite(
 	PFEATURE_DATA_CDRW_CAV_WRITE pCDRW
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureCdrwCAVWrite\n"
 		"\t\t   Current: %u\n"
@@ -536,8 +516,7 @@ VOID OutputGetConfigurationFeatureCdrwCAVWrite(
 
 VOID OutputGetConfigurationFeatureMrw(
 	PFEATURE_DATA_MRW pMrw
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureMrw\n"
 		"\t\t       Write: %s\n"
@@ -550,8 +529,7 @@ VOID OutputGetConfigurationFeatureMrw(
 
 VOID OutputGetConfigurationFeatureEnhancedDefectReporting(
 	PFEATURE_ENHANCED_DEFECT_REPORTING pEnhanced
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureEnhancedDefectReporting\n"
 		"\t\t       DRTDMSupported: %s\n"
@@ -564,8 +542,7 @@ VOID OutputGetConfigurationFeatureEnhancedDefectReporting(
 
 VOID OutputGetConfigurationFeatureDvdPlusRW(
 	PFEATURE_DATA_DVD_PLUS_RW pDVDPLUSRW
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureDvdPlusRW\n"
 		"\t\t     Write: %s\n"
@@ -578,8 +555,7 @@ VOID OutputGetConfigurationFeatureDvdPlusRW(
 
 VOID OutputGetConfigurationFeatureDvdPlusR(
 	PFEATURE_DATA_DVD_PLUS_R pDVDPLUSR
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureDvdPlusR\n"
 		"\t\tWrite: %s\n",
@@ -588,8 +564,7 @@ VOID OutputGetConfigurationFeatureDvdPlusR(
 
 VOID OutputGetConfigurationFeatureRigidRestrictedOverwrite(
 	PFEATURE_DATA_DVD_RW_RESTRICTED_OVERWRITE pDVDRWRestricted
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureRigidRestrictedOverwrite\n"
 		"\t\t                   Blank: %s\n"
@@ -604,8 +579,7 @@ VOID OutputGetConfigurationFeatureRigidRestrictedOverwrite(
 
 VOID OutputGetConfigurationFeatureCdTrackAtOnce(
 	PFEATURE_DATA_CD_TRACK_AT_ONCE pCDTrackAtOnce
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureCdTrackAtOnce\n"
 		"\t\tRWSubchannelsRecordable: %s\n"
@@ -626,8 +600,7 @@ VOID OutputGetConfigurationFeatureCdTrackAtOnce(
 
 VOID OutputGetConfigurationFeatureCdMastering(
 	PFEATURE_DATA_CD_MASTERING pCDMastering
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureCdMastering\n"
 		"\t\tRWSubchannelsRecordable: %s\n"
@@ -651,8 +624,7 @@ VOID OutputGetConfigurationFeatureCdMastering(
 
 VOID OutputGetConfigurationFeatureDvdRecordableWrite(
 	PFEATURE_DATA_DVD_RECORDABLE_WRITE pDVDRecordable
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureDvdRecordableWrite\n"
 		"\t\t            DVD_RW: %s\n"
@@ -667,8 +639,7 @@ VOID OutputGetConfigurationFeatureDvdRecordableWrite(
 
 VOID OutputGetConfigurationFeatureLayerJumpRecording(
 	PFEATURE_DATA_LAYER_JUMP_RECORDING pLayerJumpRec
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureLayerJumpRecording\n"
 		"\t\tNumberOfLinkSizes: %u\n",
@@ -681,8 +652,7 @@ VOID OutputGetConfigurationFeatureLayerJumpRecording(
 
 VOID OutputGetConfigurationFeatureCDRWMediaWriteSupport(
 	PFEATURE_CD_RW_MEDIA_WRITE_SUPPORT pCDRWMediaWrite
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureCDRWMediaWriteSupport\n"
 		"\t\tSubtype 0: %s\n"
@@ -705,8 +675,7 @@ VOID OutputGetConfigurationFeatureCDRWMediaWriteSupport(
 
 VOID OutputGetConfigurationFeatureDvdPlusRWDualLayer(
 	PFEATURE_DATA_DVD_PLUS_RW_DUAL_LAYER pDVDPlusRWDL
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureDvdPlusRWDualLayer\n"
 		"\t\t     Write: %s\n"
@@ -719,8 +688,7 @@ VOID OutputGetConfigurationFeatureDvdPlusRWDualLayer(
 
 VOID OutputGetConfigurationFeatureDvdPlusRDualLayer(
 	PFEATURE_DATA_DVD_PLUS_R_DUAL_LAYER pDVDPlusRDL
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureDvdPlusRDualLayer\n"
 		"\t\tWrite: %s\n",
@@ -729,8 +697,7 @@ VOID OutputGetConfigurationFeatureDvdPlusRDualLayer(
 
 VOID OutputGetConfigurationFeatureHybridDisc(
 	PFEATURE_HYBRID_DISC pHybridDisc
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureHybridDisc\n"
 		"\t\tResetImmunity: %s\n",
@@ -739,8 +706,7 @@ VOID OutputGetConfigurationFeatureHybridDisc(
 
 VOID OutputGetConfigurationFeaturePowerManagement(
 	PFEATURE_DATA_POWER_MANAGEMENT pPower
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeaturePowerManagement\n"
 		"\t\t   Current: %u\n"
@@ -753,8 +719,7 @@ VOID OutputGetConfigurationFeaturePowerManagement(
 
 VOID OutputGetConfigurationFeatureSMART(
 	PFEATURE_DATA_SMART pSmart
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureSMART\n"
 		"\t\tFaultFailureReportingPagePresent: %s\n",
@@ -763,8 +728,7 @@ VOID OutputGetConfigurationFeatureSMART(
 
 VOID OutputGetConfigurationFeatureEmbeddedChanger(
 	PFEATURE_DATA_EMBEDDED_CHANGER pEmbedded
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureEmbeddedChanger\n"
 		"\t\tSupportsDiscPresent: %s\n"
@@ -777,8 +741,7 @@ VOID OutputGetConfigurationFeatureEmbeddedChanger(
 
 VOID OutputGetConfigurationFeatureCDAudioAnalogPlay(
 	PFEATURE_DATA_CD_AUDIO_ANALOG_PLAY pCDAudio
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureCDAudioAnalogPlay\n"
 		"\t\t     SeperateVolume: %s\n"
@@ -793,8 +756,7 @@ VOID OutputGetConfigurationFeatureCDAudioAnalogPlay(
 
 VOID OutputGetConfigurationFeatureMicrocodeUpgrade(
 	PFEATURE_DATA_MICROCODE_UPDATE pMicrocode
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureMicrocodeUpgrade\n"
 		"\t\tM5: %s\n",
@@ -803,8 +765,7 @@ VOID OutputGetConfigurationFeatureMicrocodeUpgrade(
 
 VOID OutputGetConfigurationFeatureTimeout(
 	PFEATURE_DATA_TIMEOUT pTimeOut
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureTimeout\n"
 		"\t\t    Group3: %s\n"
@@ -815,8 +776,7 @@ VOID OutputGetConfigurationFeatureTimeout(
 
 VOID OutputGetConfigurationFeatureDvdCSS(
 	PFEATURE_DATA_DVD_CSS pDVDCss
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureDvdCSS\n"
 		"\t\tCssVersion: %u\n",
@@ -825,8 +785,7 @@ VOID OutputGetConfigurationFeatureDvdCSS(
 
 VOID OutputGetConfigurationFeatureRealTimeStreaming(
 	PFEATURE_DATA_REAL_TIME_STREAMING pRealTimeStreaming
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureRealTimeStreaming\n"
 		"\t\t        StreamRecording: %s\n"
@@ -843,8 +802,7 @@ VOID OutputGetConfigurationFeatureRealTimeStreaming(
 
 VOID OutputGetConfigurationFeatureLogicalUnitSerialNumber(
 	PFEATURE_DATA_LOGICAL_UNIT_SERIAL_NUMBER pLogical
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureLogicalUnitSerialNumber\n"
 		"\t\tSerialNumber: ");
@@ -856,8 +814,7 @@ VOID OutputGetConfigurationFeatureLogicalUnitSerialNumber(
 
 VOID OutputGetConfigurationFeatureMediaSerialNumber(
 	PFEATURE_MEDIA_SERIAL_NUMBER pMediaSerialNumber
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureMediaSerialNumber\n"
 		"\t\t   Current: %u\n"
@@ -870,8 +827,7 @@ VOID OutputGetConfigurationFeatureMediaSerialNumber(
 
 VOID OutputGetConfigurationFeatureDiscControlBlocks(
 	PFEATURE_DATA_DISC_CONTROL_BLOCKS pDiscCtrlBlk
-	)
-{
+) {
 	OutputDriveLogA("\tFeatureDiscControlBlocks\n");
 	for (INT i = 0; i < pDiscCtrlBlk->Header.AdditionalLength; i++) {
 		OutputDriveLogA(
@@ -884,8 +840,7 @@ VOID OutputGetConfigurationFeatureDiscControlBlocks(
 
 VOID OutputGetConfigurationFeatureDvdCPRM(
 	PFEATURE_DATA_DVD_CPRM pDVDCprm
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureDvdCPRM\n"
 		"\t\tCPRMVersion: %u\n",
@@ -894,8 +849,7 @@ VOID OutputGetConfigurationFeatureDvdCPRM(
 
 VOID OutputGetConfigurationFeatureFirmwareDate(
 	PFEATURE_DATA_FIRMWARE_DATE pFirmwareDate
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureFirmwareDate: %.4s-%.2s-%.2s %.2s:%.2s:%.2s\n"
 		, pFirmwareDate->Year, pFirmwareDate->Month, pFirmwareDate->Day
@@ -904,8 +858,7 @@ VOID OutputGetConfigurationFeatureFirmwareDate(
 
 VOID OutputGetConfigurationFeatureAACS(
 	PFEATURE_DATA_AACS pAACS
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureAACS\n"
 		"\t\tBindingNonceGeneration: %s\n"
@@ -920,8 +873,7 @@ VOID OutputGetConfigurationFeatureAACS(
 
 VOID OutputGetConfigurationFeatureVCPS(
 	PFEATURE_VCPS pVcps
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tFeatureVCPS\n"
 		"\t\t   Current: %u\n"
@@ -934,8 +886,7 @@ VOID OutputGetConfigurationFeatureVCPS(
 
 VOID OutputGetConfigurationFeatureReserved(
 	PFEATURE_DATA_RESERVED pReserved
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tReserved (FeatureCode[%#04x])\n"
 		"\t\tData: ", MAKEWORD(pReserved->Header.FeatureCode[1], pReserved->Header.FeatureCode[0]));
@@ -947,8 +898,7 @@ VOID OutputGetConfigurationFeatureReserved(
 
 VOID OutputGetConfigurationFeatureVendorSpecific(
 	PFEATURE_DATA_VENDOR_SPECIFIC pVendorSpecific
-	)
-{
+) {
 	OutputDriveLogA(
 		"\tVendorSpecific (FeatureCode[%#04x])\n"
 		"\t\tVendorSpecificData: ",
@@ -963,8 +913,7 @@ VOID OutputGetConfigurationFeatureNumber(
 	PDEVICE pDevice,
 	LPBYTE lpConf,
 	DWORD dwAllLen
-	)
-{
+) {
 	DWORD n = 0;
 	while (n < dwAllLen) {
 		WORD wCode = MAKEWORD(lpConf[n + 1], lpConf[n]);
@@ -1121,8 +1070,7 @@ VOID OutputGetConfigurationFeatureNumber(
 
 VOID OutputCDAtip(
 	PCDROM_TOC_ATIP_DATA_BLOCK pAtip
-)
-{
+) {
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(TOC ATIP)
 		"\tCdrwReferenceSpeed: %u\n"
 		"\t        WritePower: %u\n"
@@ -1180,8 +1128,7 @@ VOID OutputCDTextOther(
 	WORD wTocTextEntries,
 	BYTE bySizeInfoIdx,
 	BYTE bySizeInfoCnt
-	)
-{
+) {
 	INT nTocInfoCnt = 0;
 	INT nSizeInfoCnt = 0;
 	for (size_t z = 0; z <= bySizeInfoIdx; z++) {
@@ -1310,8 +1257,7 @@ VOID OutputCDTextOther(
 
 VOID OutputDiscInformation(
 	PDISC_INFORMATION pDiscInformation
-	)
-{
+) {
 	LPCSTR lpDiscStatus[] = {
 		"Empty", "Incomplete", "Complete", "Others"
 	};
@@ -1420,8 +1366,7 @@ VOID OutputDiscInformation(
 
 VOID OutputModeParmeterHeader(
 	PMODE_PARAMETER_HEADER pHeader
-	)
-{
+) {
 	OutputDriveLogA(
 		OUTPUT_DHYPHEN_PLUS_STR(ModeParmeterHeader)
 		"\t         ModeDataLength: %u\n"
@@ -1436,8 +1381,7 @@ VOID OutputModeParmeterHeader(
 
 VOID OutputModeParmeterHeader10(
 	PMODE_PARAMETER_HEADER10 pHeader
-	)
-{
+) {
 	OutputDriveLogA(
 		OUTPUT_DHYPHEN_PLUS_STR(ModeParmeterHeader10)
 		"\t         ModeDataLength: %u\n"
@@ -1455,8 +1399,7 @@ VOID OutputModeParmeterHeader10(
 VOID OutputCDVDCapabilitiesPage(
 	PDEVICE pDevice,
 	PCDVD_CAPABILITIES_PAGE cdvd
-	)
-{
+) {
 	OutputDriveLogA(
 		OUTPUT_DHYPHEN_PLUS_STR(CDVD Capabilities & Mechanism Status Page)
 		"\t              PageCode: %#04x\n"
@@ -1601,8 +1544,7 @@ VOID OutputCDVDCapabilitiesPage(
 
 VOID OutputReadBufferCapacity(
 	PREAD_BUFFER_CAPACITY_DATA pReadBufCapaData
-	)
-{
+) {
 	OutputDriveLogA(
 		OUTPUT_DHYPHEN_PLUS_STR(ReadBufferCapacity)
 		"\t    TotalBufferSize: %luKByte\n"
@@ -1619,8 +1561,7 @@ VOID OutputReadBufferCapacity(
 
 VOID OutputSetSpeed(
 	PCDROM_SET_SPEED pSetspeed
-	)
-{
+) {
 	OutputDriveLogA(
 		OUTPUT_DHYPHEN_PLUS_STR(SetSpeed)
 		"\t    RequestType: %s\n"
@@ -1639,8 +1580,7 @@ VOID OutputEepromUnknownByte(
 	LPBYTE pBuf,
 	DWORD startIdx,
 	DWORD endIdx
-	)
-{
+) {
 	if (startIdx <= endIdx) {
 		OutputDriveLogA("\t   Unknown[%03ld]: ", startIdx);
 		for (DWORD i = startIdx; i <= endIdx; i++) {
@@ -1652,8 +1592,7 @@ VOID OutputEepromUnknownByte(
 
 VOID OutputEepromOverPX712(
 	LPBYTE pBuf
-	)
-{
+) {
 	OutputDriveLogA("\t    Silent Mode: ");
 	if (pBuf[0] == 1) {
 		OutputDriveLogA(
@@ -1797,8 +1736,7 @@ VOID OutputEeprom(
 	LPBYTE pBuf,
 	INT nRoop,
 	BOOL byPlxtrDrive
-	)
-{
+) {
 	if (nRoop == 0) {
 		OutputDriveLogA(
 			"\t      Signature: %02x %02x\n"

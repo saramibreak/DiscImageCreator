@@ -14,8 +14,7 @@ BOOL GetAlignedCallocatedBuffer(
 	LPBYTE* ppOutBuf,
 	LPCTSTR pszFuncName,
 	LONG lLineNum
-	)
-{
+) {
 	*ppSrcBuf = (LPBYTE)calloc(dwSize + pDevice->AlignmentMask, sizeof(BYTE));
 	if (!*ppSrcBuf) {
 		OutputLastErrorNumAndString(pszFuncName, lLineNum);
@@ -28,8 +27,7 @@ BOOL GetAlignedCallocatedBuffer(
 BOOL GetDriveOffset(
 	LPCSTR szProductId,
 	LPINT lpDriveOffset
-	)
-{
+) {
 	BOOL bGetOffset = FALSE;
 	FILE* fpDrive = OpenProgrammabledFile(_T("driveOffset.txt"), _T("r"));
 	if (!fpDrive) {
@@ -96,8 +94,7 @@ BOOL GetDriveOffset(
 DWORD GetFileSize(
 	LONG lOffset,
 	FILE *fp
-	)
-{
+) {
 	DWORD dwFileSize = 0;
 	if (fp != NULL) {
 		fseek(fp, 0, SEEK_END);
@@ -110,8 +107,7 @@ DWORD GetFileSize(
 UINT64 GetFileSize64(
 	INT64 n64Offset,
 	FILE *fp
-	)
-{
+) {
 	UINT64 ui64FileSize = 0;
 	if (fp != NULL) {
 		_fseeki64(fp, 0, SEEK_END);
@@ -126,8 +122,7 @@ BYTE GetMode(
 	BYTE byPrevMode,
 	BYTE byCtl,
 	INT nType
-	)
-{
+) {
 	BYTE byMode = byPrevMode;
 	if ((byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 		if (IsValidMainDataHeader(lpBuf)) {
@@ -164,8 +159,7 @@ BYTE GetMode(
 BOOL GetWriteOffset(
 	PDISC pDisc,
 	LPBYTE lpBuf
-	)
-{
+) {
 	BOOL bRet = FALSE;
 	for (INT i = 0; i < CD_RAW_SECTOR_SIZE * 2; i++) {
 		if (IsValidMainDataHeader(lpBuf + i)) {
@@ -189,8 +183,7 @@ BOOL GetEccEdcCmd(
 	LPCTSTR pszImgPath,
 	INT nStartLBA,
 	INT nEndLBA
-	)
-{
+) {
 	_TCHAR szPathForEcc[_MAX_PATH] = { 0 };
 	if (!::GetModuleFileName(NULL, szPathForEcc, _MAX_PATH)) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -222,8 +215,7 @@ BOOL GetEccEdcCmd(
 
 WORD  GetSizeOrWordForVolDesc(
 	LPBYTE lpBuf
-	)
-{
+) {
 	WORD val = MAKEWORD(lpBuf[0], lpBuf[1]);
 	if (val == 0) {
 		val = MAKEWORD(lpBuf[3], lpBuf[2]);
@@ -233,8 +225,7 @@ WORD  GetSizeOrWordForVolDesc(
 
 DWORD  GetSizeOrDwordForVolDesc(
 	LPBYTE lpBuf
-	)
-{
+) {
 	DWORD val = MAKEDWORD(MAKEWORD(lpBuf[0], lpBuf[1]),
 		MAKEWORD(lpBuf[2], lpBuf[3]));
 	if (val == 0) {

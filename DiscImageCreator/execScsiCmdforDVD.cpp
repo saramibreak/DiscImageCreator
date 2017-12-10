@@ -12,6 +12,7 @@
 #include "outputScsiCmdLogforDVD.h"
 
 BOOL ReadDVDForFileSystem(
+	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
@@ -25,11 +26,9 @@ BOOL ReadDVDForFileSystem(
 		return FALSE;
 	}
 	INT nLBA = 16;
-	BYTE byLogicalBlkCoef = 0;
-	DWORD dwPathTblSize, dwPathTblPos, dwRootDataLen = 0;
 	BOOL bPVD = FALSE;
-	if (!ReadVolumeDescriptor(pExtArg, pDevice, pDisc, 0, cdb
-		, lpBuf, &bPVD, &byLogicalBlkCoef, &dwPathTblSize, &dwPathTblPos, &dwRootDataLen)) {
+	VOLUME_DESCRIPTOR volDesc;
+	if (!ReadVolumeDescriptor(pExecType, pExtArg, pDevice, pDisc, 0, (LPBYTE)cdb, lpBuf, 16, &bPVD, &volDesc)) {
 		return FALSE;
 	}
 	if (bPVD) {
@@ -39,13 +38,14 @@ BOOL ReadDVDForFileSystem(
 			return FALSE;
 		}
 		INT nDirPosNum = 0;
-		if (!ReadPathTableRecord(pExtArg, pDevice, pDisc, cdb
-			, byLogicalBlkCoef, dwPathTblSize, dwPathTblPos, pDirRec, &nDirPosNum)) {
+		if (!ReadPathTableRecord(pExecType, pExtArg, pDevice, pDisc, (LPBYTE)cdb
+			, volDesc.ISO_9660.dwLogicalBlkCoef, volDesc.ISO_9660.dwPathTblSize
+			, volDesc.ISO_9660.dwPathTblPos, pDirRec, &nDirPosNum)) {
 			FreeAndNull(pDirRec);
 			return FALSE;
 		}
-		if (!ReadDirectoryRecord(pExtArg, pDevice, pDisc, cdb
-			, lpBuf, byLogicalBlkCoef, dwRootDataLen, pDirRec, nDirPosNum)) {
+		if (!ReadDirectoryRecord(pExecType, pExtArg, pDevice, pDisc, (LPBYTE)cdb, lpBuf
+			, volDesc.ISO_9660.dwLogicalBlkCoef, volDesc.ISO_9660.dwRootDataLen, pDirRec, nDirPosNum)) {
 			FreeAndNull(pDirRec);
 			return FALSE;
 		}
@@ -91,12 +91,12 @@ BOOL ReadDVDForFileSystem(
 }
 
 BOOL ReadDVD(
+	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
 	LPCTSTR pszPath
-	)
-{
+) {
 	FILE* fp = CreateOrOpenFile(
 		pszPath, NULL, NULL, NULL, NULL, _T(".iso"), _T("wb"), 0, 0);
 	if (!fp) {
@@ -121,7 +121,7 @@ BOOL ReadDVD(
 		if (pExtArg->byFua) {
 			cdb.ForceUnitAccess = TRUE;
 		}
-		if (!ReadDVDForFileSystem(pExtArg, pDevice, pDisc, &cdb, lpBuf)) {
+		if (!ReadDVDForFileSystem(pExecType, pExtArg, pDevice, pDisc, &cdb, lpBuf)) {
 			throw FALSE;
 		}
 		FlushLog();
@@ -161,8 +161,7 @@ BOOL ReadDVDRaw(
 	PDISC pDisc,
 	LPCSTR szVendorId,
 	LPCTSTR pszPath
-	)
-{
+) {
 	FILE* fp = CreateOrOpenFile(
 		pszPath, NULL, NULL, NULL, NULL, _T(".raw"), _T("wb"), 0, 0);
 	if (!fp) {
@@ -275,9 +274,8 @@ BOOL ReadDVDForCMI(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc
-	)
-{
-	CONST WORD wSize = 
+) {
+	CONST WORD wSize =
 		sizeof(DVD_DESCRIPTOR_HEADER) + sizeof(DVD_COPYRIGHT_MANAGEMENT_DESCRIPTOR);
 	_declspec(align(4)) BYTE pBuf[wSize] = { 0 };
 
@@ -310,9 +308,8 @@ BOOL ReadDVDStructure(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc
-	)
-{
-	CONST WORD wMaxDVDStructureSize = 
+) {
+	CONST WORD wMaxDVDStructureSize =
 		sizeof(DVD_DESCRIPTOR_HEADER) + sizeof(DVD_STRUCTURE_LIST_ENTRY) * 0xff;
 	_declspec(align(4)) BYTE pBuf[wMaxDVDStructureSize] = { 0 };
 

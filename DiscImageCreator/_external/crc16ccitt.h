@@ -1,8 +1,8 @@
 #pragma once
 typedef unsigned char byte;
 
-void MakeCrc16CCITTTable(void);
-unsigned int GetCrc16CCITT(int n, byte c[]);
+void make_crc16_table(void);
+unsigned int update_crc16(int n, byte c[]);
 #if 0
 void MakeCrc6ITUTable(void);
 char ecc6_checkpq(

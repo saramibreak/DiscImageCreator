@@ -1,9 +1,4 @@
 ==================================== TODO =====================================
-. fix C2 error disc per byte.
-  A number of error bytes per sector according to the 294-bytes C2-error part
-  in each sector and to take the good bytes from each rereading, instead of
-  trying to reread the entire sector without errors.
-
 . support cue file for multisession disc
   SESSION directives
 

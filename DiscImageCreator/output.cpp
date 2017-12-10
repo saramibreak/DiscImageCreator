@@ -27,8 +27,7 @@ FILE* CreateOrOpenFile(
 	LPCTSTR pszMode,
 	BYTE byTrackNum,
 	BYTE byMaxTrackNum
-	)
-{
+) {
 	_TCHAR szDstPath[_MAX_PATH] = { 0 };
 	_TCHAR szTmpPath[_MAX_PATH + 1] = { 0 };
 	_TCHAR szDrive[_MAX_DRIVE] = { 0 };
@@ -94,8 +93,7 @@ FILE* CreateOrOpenFileW(
 	LPCWSTR pszMode,
 	BYTE byTrackNum,
 	BYTE byMaxTrackNum
-	)
-{
+) {
 	WCHAR szDstPath[_MAX_PATH] = { 0 };
 	WCHAR szTmpPath[_MAX_PATH + 1] = { 0 };
 	WCHAR szDrive[_MAX_DRIVE] = { 0 };
@@ -161,8 +159,7 @@ FILE* CreateOrOpenFileA(
 	LPCSTR pszMode,
 	BYTE byTrackNum,
 	BYTE byMaxTrackNum
-	)
-{
+) {
 	CHAR szDstPath[_MAX_PATH] = { 0 };
 	CHAR szTmpPath[_MAX_PATH + 1] = { 0 };
 	CHAR szDrive[_MAX_DRIVE] = { 0 };
@@ -217,8 +214,7 @@ FILE* CreateOrOpenFileA(
 FILE* OpenProgrammabledFile(
 	LPCTSTR pszFname,
 	LPCTSTR pszMode
-	)
-{
+) {
 	_TCHAR szFullPath[_MAX_PATH] = { 0 };
 	if (!::GetModuleFileName(NULL, szFullPath, sizeof(szFullPath) / sizeof(szFullPath[0]))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -240,8 +236,7 @@ FILE* OpenProgrammabledFile(
 FILE* OpenProgrammabledFileW(
 	LPCWSTR pszFname,
 	LPCWSTR pszMode
-	)
-{
+) {
 	WCHAR szFullPath[_MAX_PATH] = { 0 };
 	if (!::GetModuleFileNameW(NULL, szFullPath, sizeof(szFullPath) / sizeof(szFullPath[0]))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -264,8 +259,7 @@ VOID WriteCcdForDisc(
 	WORD wTocEntries,
 	BYTE LastCompleteSession,
 	FILE* fpCcd
-	)
-{
+) {
 	if (fpCcd) {
 		_ftprintf(fpCcd,
 			_T("[CloneCD]\n")
@@ -283,8 +277,7 @@ VOID WriteCcdForDisc(
 VOID WriteCcdForDiscCDTextLength(
 	WORD wCDTextLength,
 	FILE* fpCcd
-	)
-{
+) {
 	if (fpCcd) {
 		_ftprintf(fpCcd, _T("CDTextLength=%u\n"), wCDTextLength);
 	}
@@ -293,8 +286,7 @@ VOID WriteCcdForDiscCDTextLength(
 VOID WriteCcdForDiscCatalog(
 	PDISC pDisc,
 	FILE* fpCcd
-	)
-{
+) {
 	_TCHAR szCatalog[META_CATALOG_SIZE] = { 0 };
 #ifdef UNICODE
 	MultiByteToWideChar(CP_ACP, 0
@@ -311,8 +303,7 @@ VOID WriteCcdForDiscCatalog(
 VOID WriteCcdForCDText(
 	WORD wTocTextEntries,
 	FILE* fpCcd
-	)
-{
+) {
 	if (fpCcd) {
 		_ftprintf(fpCcd,
 			_T("[CDText]\n")
@@ -325,8 +316,7 @@ VOID WriteCcdForCDTextEntry(
 	PCDROM_TOC_CD_TEXT_DATA_BLOCK pDesc,
 	WORD wTocTextEntries,
 	FILE* fpCcd
-	)
-{
+) {
 	if (fpCcd) {
 		for (WORD t = 0; t < wTocTextEntries; t++) {
 			_ftprintf(fpCcd,
@@ -347,8 +337,7 @@ VOID WriteCcdForSession(
 	BYTE SessionNumber,
 	BYTE byMode,
 	FILE* fpCcd
-	)
-{
+) {
 	if (fpCcd) {
 		_ftprintf(fpCcd,
 			_T("[Session %u]\n")
@@ -364,8 +353,7 @@ VOID WriteCcdForEntry(
 	PCDROM_TOC_FULL_TOC_DATA_BLOCK toc,
 	UINT a,
 	FILE* fpCcd
-	)
-{
+) {
 	if (fpCcd) {
 		_ftprintf(fpCcd,
 			_T("[Entry %u]\n")
@@ -405,8 +393,7 @@ VOID WriteCcdForTrack(
 	PDISC pDisc,
 	BYTE byTrackNum,
 	FILE* fpCcd
-	)
-{
+) {
 	if (fpCcd) {
 		_ftprintf(fpCcd,
 			_T("[TRACK %u]\n")
@@ -454,8 +441,7 @@ VOID WriteCcdForTrackIndex(
 	BYTE byIndex,
 	INT nLBA,
 	FILE* fpCcd
-	)
-{
+) {
 	if (fpCcd) {
 		_ftprintf(fpCcd, _T("INDEX %u=%d\n"), byIndex, nLBA);
 	}
@@ -465,8 +451,7 @@ VOID WriteCueForSongWriter(
 	PDISC pDisc,
 	BYTE byIdx,
 	FILE* fpCue
-	)
-{
+) {
 	if (pDisc->SCSI.pszSongWriter[byIdx][0] != 0) {
 		_TCHAR szSongWriter[META_CDTEXT_SIZE] = { 0 };
 #ifdef UNICODE
@@ -489,8 +474,7 @@ VOID WriteCueForPerformer(
 	PDISC pDisc,
 	BYTE byIdx,
 	FILE* fpCue
-	)
-{
+) {
 	if (pDisc->SCSI.pszPerformer[byIdx][0] != 0) {
 		_TCHAR szPerformer[META_CDTEXT_SIZE] = { 0 };
 #ifdef UNICODE
@@ -513,8 +497,7 @@ VOID WriteCueForTitle(
 	PDISC pDisc,
 	BYTE byIdx,
 	FILE* fpCue
-	)
-{
+) {
 	if (pDisc->SCSI.pszTitle[byIdx][0] != 0) {
 		_TCHAR szTitle[META_CDTEXT_SIZE] = { 0 };
 #ifdef UNICODE
@@ -537,8 +520,7 @@ VOID WriteCueForFirst(
 	PDISC pDisc,
 	BOOL bCanCDText,
 	FILE* fpCue
-	)
-{
+) {
 	if (pDisc->SUB.byCatalog) {
 		_TCHAR szCatalog[META_CATALOG_SIZE] = { 0 };
 #ifdef UNICODE
@@ -560,8 +542,7 @@ VOID WriteCueForFirst(
 VOID WriteCueForFileDirective(
 	LPCTSTR pszPath,
 	FILE* fpCue
-	)
-{
+) {
 	_ftprintf(fpCue, _T("FILE \"%s\" BINARY\n"), pszPath);
 }
 
@@ -569,8 +550,7 @@ VOID WriteCueForISRC(
 	PDISC pDisc,
 	INT nIdx,
 	FILE* fpCue
-	)
-{
+) {
 	if (pDisc->SUB.lpISRCList[nIdx]) {
 		_TCHAR szISRC[META_ISRC_SIZE] = { 0 };
 #ifdef UNICODE
@@ -589,8 +569,7 @@ VOID WriteCueForUnderFileDirective(
 	BOOL bCanCDText,
 	BYTE byTrackNum,
 	FILE* fpCue
-	)
-{
+) {
 	if (pDisc->MAIN.lpModeList[byTrackNum - 1] == DATA_BLOCK_MODE0) {
 		_ftprintf(fpCue, _T("  TRACK %02u AUDIO\n"), byTrackNum);
 		WriteCueForISRC(pDisc, byTrackNum - 1, fpCue);
@@ -644,9 +623,8 @@ VOID WriteCueForIndexDirective(
 	BYTE bySecond,
 	BYTE byFrame,
 	FILE* fpCue
-	)
-{
-	_ftprintf(fpCue, _T("    INDEX %02u %02u:%02u:%02u\n"), 
+) {
+	_ftprintf(fpCue, _T("    INDEX %02u %02u:%02u:%02u\n"),
 		byIndex, byMinute, bySecond, byFrame);
 }
 
@@ -656,8 +634,7 @@ VOID WriteMainChannel(
 	LPBYTE lpBuf,
 	INT nLBA,
 	FILE* fpImg
-	)
-{
+) {
 	INT sLBA = pDisc->MAIN.nFixStartLBA;
 	INT eLBA = pDisc->MAIN.nFixEndLBA;
 	if (pExtArg->byReverse) {
@@ -709,8 +686,7 @@ VOID WriteC2(
 	LPBYTE lpBuf,
 	INT nLBA,
 	FILE* fpC2
-	)
-{
+) {
 	INT sLBA = pDisc->MAIN.nFixStartLBA;
 	INT eLBA = pDisc->MAIN.nFixEndLBA;
 	UINT nC2SlideSize = pDisc->MAIN.uiMainDataSlideSize / 8;
@@ -754,8 +730,7 @@ VOID WriteSubChannel(
 	BYTE byCurrentTrackNum,
 	FILE* fpSub,
 	FILE* fpParse
-	)
-{
+) {
 	if (fpSub && fpParse) {
 		fwrite(lpSubcode, sizeof(BYTE), CD_RAW_READ_SUBCODE_SIZE, fpSub);
 		OutputCDSubToLog(pDisc, lpSubcode, lpSubcodeRaw, nLBA, byCurrentTrackNum, fpParse);
@@ -775,8 +750,7 @@ VOID WriteErrorBuffer(
 	FILE* fpSub,
 	FILE* fpC2,
 	FILE* fpParse
-	)
-{
+) {
 	UINT uiSize = 0;
 	BYTE zeroByte[CD_RAW_SECTOR_SIZE] = { 0 };
 	if (*pExecType == data || pExtArg->byBe) {
@@ -854,8 +828,7 @@ VOID WriteErrorBuffer(
 
 BOOL WriteParsingSubfile(
 	LPCTSTR pszSubfile
-	)
-{
+) {
 	BOOL bRet = TRUE;
 	FILE* fpParse = CreateOrOpenFile(
 		pszSubfile, _T("_sub"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0);
@@ -958,17 +931,16 @@ BOOL WriteParsingSubfile(
 BOOL DescrambleMainChannelForGD(
 	LPCTSTR pszPath,
 	LPTSTR pszOutPath
-	)
-{
+) {
 	BOOL bRet = TRUE;
 	FILE* fpScm = CreateOrOpenFile(
-		pszPath, NULL, NULL, NULL, NULL, _T(".scm2"), _T("rb"), 0, 0);
+		pszPath, NULL, NULL, NULL, NULL, _T(".scm"), _T("rb"), 0, 0);
 	if (!fpScm) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
 	FILE* fpImg = CreateOrOpenFile(
-		pszPath, NULL, pszOutPath, NULL, NULL, _T(".img2"), _T("wb"), 0, 0);
+		pszPath, NULL, pszOutPath, NULL, NULL, _T(".img"), _T("wb"), 0, 0);
 	if (!fpImg) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		FcloseAndNull(fpScm);
@@ -1003,12 +975,11 @@ BOOL DescrambleMainChannelForGD(
 
 BOOL SplitFileForGD(
 	LPCTSTR pszPath
-	)
-{
+) {
 	BOOL bRet = TRUE;
 	_TCHAR pszFname[_MAX_PATH] = { 0 };
 	FILE* fpImg = CreateOrOpenFile(pszPath, NULL,
-		NULL, NULL, pszFname, _T(".img2"), _T("rb"), 0, 0);
+		NULL, NULL, pszFname, _T(".img"), _T("rb"), 0, 0);
 	if (!fpImg) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
@@ -1120,6 +1091,7 @@ BOOL SplitFileForGD(
 
 		rewind(fpImg);
 		for (BYTE i = 3; i <= byMaxTrackNum; i++) {
+			OutputString(_T("\rSplitting img (Track) %2u/%2u"), i, byMaxTrackNum);
 			if (NULL == (fpBin = CreateOrOpenFile(pszPath, NULL, NULL,
 				NULL, NULL, _T(".bin"), _T("wb"), i, byMaxTrackNum))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -1135,7 +1107,6 @@ BOOL SplitFileForGD(
 			fwrite(lpBuf, sizeof(BYTE), size, fpBin);
 			FcloseAndNull(fpBin);
 			FreeAndNull(lpBuf);
-			OutputString(_T("\rSplitting img (Track) %2u/%2u"), i, byMaxTrackNum);
 		}
 		OutputString(_T("\n"));
 	}
@@ -1165,8 +1136,7 @@ VOID DescrambleMainChannelAll(
 	PDISC pDisc,
 	LPBYTE lpScrambledBuf,
 	FILE* fpImg
-	)
-{
+) {
 	BYTE aSrcBuf[CD_RAW_SECTOR_SIZE] = { 0 };
 	LONG lSeekPtr = 0;
 
@@ -1182,7 +1152,7 @@ VOID DescrambleMainChannelAll(
 				nLastLBA -= nSkipLBA;
 			}
 			if (pExtArg->byPre) {
-				nFirstLBA += 75;
+//				nFirstLBA += 75;
 				nLastLBA += 150;
 			}
 			if (!pExtArg->byReverse) {
@@ -1263,8 +1233,7 @@ VOID DescrambleMainChannelPartial(
 	INT nEndLBA,
 	LPBYTE lpScrambledBuf,
 	FILE* fpImg
-)
-{
+) {
 	BYTE aSrcBuf[CD_RAW_SECTOR_SIZE] = { 0 };
 	LONG lSeekPtr = 0;
 
@@ -1308,8 +1277,7 @@ BOOL CreateBin(
 	INT nPrevLBA,
 	FILE* fpImg,
 	FILE* fpBin
-	)
-{
+) {
 	size_t stBufSize = 0;
 
 	if (pDisc->SCSI.toc.LastTrack == pDisc->SCSI.toc.FirstTrack) {
@@ -1374,8 +1342,7 @@ BOOL CreateBinCueCcd(
 	FILE* fpCue,
 	FILE* fpCueForImg,
 	FILE* fpCcd
-	)
-{
+) {
 	WriteCueForFirst(pDisc, bCanCDText, fpCueForImg);
 	WriteCueForFileDirective(pszImgName, fpCueForImg);
 	WriteCueForFirst(pDisc, bCanCDText, fpCue);
@@ -1404,6 +1371,8 @@ BOOL CreateBinCueCcd(
 	FILE* fpBin = NULL;
 	FILE* fpBinSync = NULL;
 	for (BYTE i = pDisc->SCSI.toc.FirstTrack; i <= pDisc->SCSI.toc.LastTrack; i++) {
+		OutputString(
+			_T("\rCreating bin, cue and ccd (Track) %2u/%2u"), i, pDisc->SCSI.toc.LastTrack);
 		if (NULL == (fpBin = CreateOrOpenFile(pszPath, NULL, NULL, pszFname,
 			NULL, _T(".bin"), _T("wb"), i, pDisc->SCSI.toc.LastTrack))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -1556,8 +1525,6 @@ BOOL CreateBinCueCcd(
 				break;
 			}
 		}
-		OutputString(
-			_T("\rCreating bin, cue and ccd (Track) %2u/%2u"), i, pDisc->SCSI.toc.LastTrack);
 	}
 	OutputString(_T("\n"));
 	FcloseAndNull(fpBinSync);
@@ -1570,8 +1537,7 @@ BOOL CreateBinCueCcd(
 VOID OutputIntentionalSubchannel(
 	INT nLBA,
 	LPBYTE lpSubcode
-)
-{
+) {
 	BYTE m, s, f;
 	LBAtoMSF(nLBA + 150, &m, &s, &f);
 	OutputSubIntentionalLogA(
@@ -1589,9 +1555,8 @@ VOID OutputHashData(
 	DWORD crc32,
 	LPBYTE digest,
 	LPBYTE Message_Digest
-	)
-{
-	_ftprintf(fpHash, 
+) {
+	_ftprintf(fpHash,
 		_T("\t\t<rom name=\"%s\" size=\"%llu\" crc=\"%08lx\" md5=\""),
 		filename, ui64FileSize, crc32);
 	for (INT i = 0; i < 16; i++) {
@@ -1607,8 +1572,7 @@ VOID OutputHashData(
 VOID OutputLastErrorNumAndString(
 	LPCTSTR pszFuncName,
 	LONG lLineNum
-	)
-{
+) {
 	LPVOID lpMsgBuf;
 	FormatMessage(
 		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM,
@@ -1621,8 +1585,7 @@ VOID OutputLastErrorNumAndString(
 
 VOID OutputProductType(
 	DWORD dwProductType
-	)
-{
+) {
 	switch (dwProductType) {
 	case PRODUCT_ULTIMATE:
 		OutputString(_T("Ultimate"));
@@ -1843,8 +1806,7 @@ VOID OutputProductType(
 BOOL GetOSVersion(
 	LPOSVERSIONINFOEX lpOSver,
 	LPDWORD lpdwProductType
-)
-{
+) {
 	BOOL(CALLBACK* pfnGetProductInfo)
 		(DWORD dwOSMajorVersion, DWORD dwOSMinorVersion,
 			DWORD dwSpMajorVersion, DWORD dwSpMinorVersion, PDWORD pdwReturnedProductType);
@@ -1869,8 +1831,7 @@ BOOL GetOSVersion(
 
 BOOL OutputWindowsVersion(
 	VOID
-	)
-{
+) {
 	DWORD dwProductType = PRODUCT_UNDEFINED;
 	OSVERSIONINFOEX OSver;
 	OSver.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);

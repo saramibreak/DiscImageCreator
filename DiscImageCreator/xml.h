@@ -5,11 +5,12 @@
 
 BOOL ReadWriteDat(
 	PEXEC_TYPE pExecType,
+	PDISC pDisc,
 	_TCHAR* pszFullPath,
-	UCHAR uiLastTrack,
 	_TCHAR* szDrive,
 	_TCHAR* szDir,
-	_TCHAR* szFname
+	_TCHAR* szFname,
+	BOOL bDesync
 );
 
 BOOL OutputHash(
@@ -17,5 +18,6 @@ BOOL OutputHash(
 	_TCHAR* pszFullPath,
 	LPCTSTR szExt,
 	UCHAR uiTrack,
-	UCHAR uiLastTrack
+	UCHAR uiLastTrack,
+	BOOL bDesync
 );

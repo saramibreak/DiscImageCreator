@@ -17,6 +17,8 @@
 #define SESSION_TO_SESSION_SKIP_LBA (11400)
 #define FIRST_LBA_FOR_GD			(45000)
 #define PREGAP_START_LBA			(-5000)
+#define FIRST_TRACK_PREGAP_SIZE		(150)
+#define LAST_TRACK_LEADOUT_SIZE		(100)	// Max for Plextor
 
 #define SYNC_SIZE				(12)
 #define HEADER_SIZE				(4)
@@ -43,7 +45,7 @@
 // 1バイト文字で128文字までの長いファイル名を記録できる。
 // Joliet Extensions
 // Unicodeで64文字までの長いファイル名を記録できる。
-#define MAX_FNAME_FOR_VOLUME (64)
+#define MAX_FNAME_FOR_VOLUME (128)
 #define MIN_LEN_DR (34)
 
 // PLEXTOR specified command
@@ -134,6 +136,4 @@ struct _MAIN_HEADER;
 typedef struct _MAIN_HEADER *PMAIN_HEADER;
 struct _SUB_Q;
 typedef struct _SUB_Q *PSUB_Q;
-struct _C2_ERROR_PER_SECTOR;
-typedef struct _C2_ERROR_PER_SECTOR *PC2_ERROR_PER_SECTOR;
 

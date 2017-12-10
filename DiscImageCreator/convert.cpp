@@ -37,8 +37,7 @@
 BOOL AlignRowSubcode(
 	LPBYTE lpColumnSubcode,
 	LPBYTE lpRowSubcode
-	)
-{
+) {
 	ZeroMemory(lpRowSubcode, CD_RAW_READ_SUBCODE_SIZE);
 	INT nRow = 0;
 	for (INT bitNum = 0; bitNum < CHAR_BIT; bitNum++) {
@@ -92,8 +91,7 @@ BOOL AlignRowSubcode(
 BOOL AlignColumnSubcode(
 	LPBYTE lpRowSubcode,
 	LPBYTE lpColumnSubcode
-	)
-{
+) {
 	INT nRow = 0;
 	UINT nMask = 0x80;
 	for (INT bitNum = 0; bitNum < CHAR_BIT; bitNum++) {
@@ -115,15 +113,13 @@ BOOL AlignColumnSubcode(
 
 BYTE BcdToDec(
 	BYTE bySrc
-	)
-{
+) {
 	return (BYTE)(((bySrc >> 4) & 0x0f) * 10 + (bySrc & 0x0f));
 }
 
 BYTE DecToBcd(
 	BYTE bySrc
-	)
-{
+) {
 	INT m = 0;
 	INT n = bySrc;
 	m += n / 10;
@@ -137,8 +133,7 @@ INT MSFtoLBA(
 	BYTE byMinute,
 	BYTE bySecond, 
 	BYTE byFrame
-	)
-{
+) {
 	return (byMinute * 60 + bySecond) * 75 + byFrame;
 }
 
@@ -149,8 +144,7 @@ VOID LBAtoMSF(
 	LPBYTE byMinute,
 	LPBYTE bySecond, 
 	LPBYTE byFrame
-	)
-{
+) {
 	*byFrame = (BYTE)(nLBA % 75);
 	nLBA /= 75;
 	*bySecond = (BYTE)(nLBA % 60);
@@ -162,8 +156,7 @@ VOID LittleToBig(
 	LPWCH pOut,
 	LPWCH pIn,
 	INT nCnt
-	)
-{
+) {
 	for (INT a = 0; a < nCnt; a++) {
 		REVERSE_BYTES_SHORT(&pOut[a], &pIn[a]);
 	}
@@ -174,15 +167,13 @@ VOID LittleToBig(
 LPVOID ConvParagraphBoundary(
 	PDEVICE pDevice,
 	LPBYTE pv
-	)
-{
+) {
 	return (LPVOID)(((UINT_PTR)pv + pDevice->AlignmentMask) & ~pDevice->AlignmentMask);
 }
 
 DWORD PadSizeForVolDesc(
 	DWORD dwSize
-	)
-{
+) {
 	INT nPadding = DISC_RAW_READ_SIZE - (INT)dwSize;
 	// dwSize isn't 2048 byte
 	if (nPadding != 0) {

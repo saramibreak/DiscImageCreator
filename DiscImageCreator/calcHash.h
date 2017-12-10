@@ -10,7 +10,18 @@
 VOID CalcInit(
 	MD5_CTX* context,
 	SHA1Context* sha
-	);
+);
+
+WORD GetCrc16CCITT(
+	INT len,
+	LPBYTE lpBuf
+);
+
+VOID GetCrc32(
+	LPDWORD crc,
+	LPBYTE lpBuf,
+	DWORD dwSize
+);
 
 BOOL CalcHash(
 	LPDWORD crc,
@@ -18,11 +29,11 @@ BOOL CalcHash(
 	SHA1Context* sha,
 	LPBYTE lpBuf,
 	DWORD dwSize
-	);
+);
 
 BOOL CalcEnd(
 	MD5_CTX* context,
 	SHA1Context* sha,
 	LPBYTE digest,
 	LPBYTE Message_Digest
-	);
+);

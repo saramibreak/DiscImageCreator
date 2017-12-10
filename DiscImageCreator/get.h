@@ -10,34 +10,34 @@ BOOL GetAlignedCallocatedBuffer(
 	LPBYTE* ppOutBuf,
 	LPCTSTR pszFuncName,
 	LONG lLineNum
-	);
+);
 
 BOOL GetDriveOffset(
 	LPCSTR szProductId,
 	LPINT lpDriveOffset
-	);
+);
 
 DWORD GetFileSize(
 	LONG lOffset,
 	FILE *fp
-	);
+);
 
 UINT64 GetFileSize64(
 	INT64 n64Offset,
 	FILE *fp
-	);
+);
 
 BYTE GetMode(
 	LPBYTE lpBuf,
 	BYTE byPrevMode,
 	BYTE byCtl,
 	INT nType
-	);
+);
 
 BOOL GetWriteOffset(
 	PDISC pDisc,
 	LPBYTE lpBuf
-	);
+);
 
 BOOL GetEccEdcCmd(
 	LPTSTR pszStr,
@@ -46,12 +46,12 @@ BOOL GetEccEdcCmd(
 	LPCTSTR pszImgPath,
 	INT nStartLBA,
 	INT nEndLBA
-	);
+);
 
 WORD GetSizeOrWordForVolDesc(
 	LPBYTE lpBuf
-	);
+);
 
 DWORD GetSizeOrDwordForVolDesc(
 	LPBYTE lpBuf
-	);
+);

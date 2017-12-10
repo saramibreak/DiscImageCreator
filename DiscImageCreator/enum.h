@@ -51,7 +51,6 @@ typedef enum _PROTECT_TYPE {
 	laserlock,
 	proring,
 	protectCDVOB,
-	ring,
 	safeDiscLite,
 	safeDisc,
 	securomTmp,
@@ -59,7 +58,9 @@ typedef enum _PROTECT_TYPE {
 	securomV2, // a.k.a SecuROM NEW (8 shifted RMSF/AMSF + 1 error * 10 times = 90 sector error)
 	securomV3, // a.k.a SecuROM NEW (8 shifted RMSF/AMSF + LBA -1 + 10 random error = 99 sector error) 
 	securomV4, // a.k.a SecuROM NEW (LBA -1 + 10 random error = 11 sector error)
-	smartE
+	smartE,
+	bluebyte,
+	microids
 } PROTECT_TYPE, *PPROTECT_TYPE;
 
 typedef enum _PATH_TYPE {

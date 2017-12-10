@@ -6,12 +6,26 @@
 VOID CalcInit(
 	MD5_CTX* context,
 	SHA1Context* sha
-	)
-{
+) {
 	// init md5
 	MD5Init(context);
 	// init sha1
 	SHA1Reset(sha);
+}
+
+WORD GetCrc16CCITT(
+	INT len,
+	LPBYTE lpBuf
+) {
+	return (WORD)update_crc16(len, lpBuf);
+}
+
+VOID GetCrc32(
+	LPDWORD crc,
+	LPBYTE lpBuf,
+	DWORD dwSize
+) {
+	*crc = update_crc(*crc, lpBuf, (INT)dwSize);
 }
 
 BOOL CalcHash(
@@ -20,8 +34,7 @@ BOOL CalcHash(
 	SHA1Context* sha,
 	LPBYTE lpBuf,
 	DWORD dwSize
-	)
-{
+) {
 	BOOL bRet = TRUE;
 	/* Return the CRC of the bytes buf[0..len-1]. */
 	*crc = update_crc(*crc, lpBuf, (INT)dwSize);
@@ -41,8 +54,7 @@ BOOL CalcEnd(
 	SHA1Context* sha,
 	LPBYTE digest,
 	LPBYTE Message_Digest
-	)
-{
+) {
 	BOOL bRet = TRUE;
 	// end md5
 	MD5Final(digest, context);

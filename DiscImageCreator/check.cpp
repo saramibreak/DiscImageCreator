@@ -9,7 +9,7 @@
 #include "output.h"
 #include "outputScsiCmdLogforCD.h"
 #include "set.h"
-#include "_external/crc16ccitt.h"
+#include "calcHash.h"
 
 // These global variable is declared at DiscImageCreator.cpp
 extern BYTE g_aSyncHeader[SYNC_SIZE];
@@ -18,8 +18,7 @@ static LONG s_lineNum;
 
 BOOL IsValidMainDataHeader(
 	LPBYTE lpBuf
-	)
-{
+) {
 	BOOL bRet = TRUE;
 	for (INT c = 0; c < sizeof(g_aSyncHeader); c++) {
 		if (lpBuf[c] != g_aSyncHeader[c]) {
@@ -32,8 +31,7 @@ BOOL IsValidMainDataHeader(
 
 BOOL IsValid3doDataHeader(
 	LPBYTE lpBuf
-	)
-{
+) {
 	// judge it from the 1st sector(=LBA 0).
 	BOOL bRet = TRUE;
 	CONST BYTE a3doHeader[] = {
@@ -70,8 +68,7 @@ BOOL IsValid3doDataHeader(
 // http://www.opensource.apple.com/source/xnu/xnu-2050.18.24/bsd/hfs/hfs_format.h	
 BOOL IsValidMacDataHeader(
 	LPBYTE lpBuf
-	)
-{
+) {
 	// judge it from the 2nd sector(=LBA 1).
 	BOOL bRet = TRUE;
 	if (lpBuf[0] != 0x42 || lpBuf[1] != 0x44) {
@@ -82,8 +79,7 @@ BOOL IsValidMacDataHeader(
 
 BOOL IsValidPceSector(
 	LPBYTE lpBuf
-	)
-{
+) {
 	BOOL bRet = TRUE;
 	CONST BYTE warningStr[] = {
 		0x82, 0xb1, 0x82, 0xcc, 0x83, 0x76, 0x83, 0x8d,
@@ -105,8 +101,7 @@ BOOL IsValidPceSector(
 
 BOOL IsValidPcfxSector(
 	LPBYTE lpBuf
-	)
-{
+) {
 	BOOL bRet = TRUE;
 	if (strncmp((LPCH)&lpBuf[0], "PC-FX:Hu_CD-ROM", 15)) {
 		bRet = FALSE;
@@ -116,8 +111,7 @@ BOOL IsValidPcfxSector(
 
 BOOL IsValidPlextorDrive(
 	PDEVICE pDevice
-	)
-{
+) {
 	if (!strncmp(pDevice->szVendorId, "PLEXTOR ", DRIVE_VENDER_ID_SIZE)) {
 		if (!strncmp(pDevice->szProductId, "DVDR   PX-760A  ", DRIVE_PRODUCT_ID_SIZE)) {
 			pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PX760A;
@@ -239,8 +233,7 @@ BOOL IsValidPregapSector(
 	PDISC pDisc,
 	PSUB_Q pSubQ,
 	INT nLBA
-	)
-{
+) {
 	BOOL bRet = FALSE;
 	if ((pSubQ->present.byCtl & AUDIO_DATA_TRACK) == 0 &&
 		(pSubQ->next.byCtl & AUDIO_DATA_TRACK) == 0 &&
@@ -264,8 +257,7 @@ BOOL IsValidPregapSector(
 BOOL IsValidLibCryptSector(
 	BOOL bLibCrypt,
 	INT nLBA
-	)
-{
+) {
 	BOOL bRet = FALSE;
 	if (bLibCrypt) {
 		if ((14100 <= nLBA && nLBA < 16200) || (42000 <= nLBA && nLBA < 44400)) {
@@ -279,8 +271,7 @@ BOOL IsValidIntentionalSubSector(
 	BOOL bIntentionalSub,
 	PDISC pDisc,
 	INT nLBA
-	)
-{
+) {
 	BOOL bRet = FALSE;
 	if (bIntentionalSub) {
 		if (pDisc->PROTECT.byExist == securomV1) {
@@ -309,8 +300,7 @@ BOOL IsValidIntentionalSubSector(
 BOOL IsValidSubQCtl(
 	PSUB_Q pSubQ,
 	BYTE byEndCtl
-	)
-{
+) {
 	BOOL bRet = TRUE;
 	switch (pSubQ->present.byCtl) {
 	case 0:
@@ -383,8 +373,7 @@ BOOL IsValidSubQIdx(
 	BYTE byCurrentTrackNum,
 	LPBOOL bPrevIndex,
 	LPBOOL bPrevPrevIndex
-	)
-{
+) {
 	if (nLBA < 1) {
 		return TRUE;
 	}
@@ -475,8 +464,7 @@ BOOL IsValidSubQTrack(
 	INT nLBA,
 	BYTE byCurrentTrackNum,
 	LPBOOL bPrevTrackNum
-	)
-{
+) {
 	if (*pExecType == gd) {
 		if (pDisc->GDROM_TOC.LastTrack < pSubQ->present.byTrackNum) {
 			s_lineNum = __LINE__;
@@ -626,8 +614,7 @@ BOOL IsValidSubQMSF(
 	BYTE m,
 	BYTE s,
 	BYTE f
-	)
-{
+) {
 	BOOL bRet = TRUE;
 	if (*pExecType == gd) {
 		if (lpSubcode[m] > 0xc2) {
@@ -653,8 +640,7 @@ BOOL IsValidSubQRMSF(
 	PSUB_Q pSubQ,
 	LPBYTE lpSubcode,
 	INT nLBA
-	)
-{
+) {
 	BOOL bRet = IsValidSubQMSF(pExecType, lpSubcode, 15, 16, 17);
 	if (!bRet) {
 		return bRet;
@@ -738,8 +724,7 @@ BOOL IsValidSubQRMSF(
 BOOL IsValidSubQAFrame(
 	LPBYTE lpSubcode,
 	INT nLBA
-	)
-{
+) {
 	BYTE byFrame = 0;
 	BYTE bySecond = 0;
 	BYTE byMinute = 0;
@@ -756,8 +741,7 @@ BOOL IsValidSubQAMSF(
 	PSUB_Q pSubQ,
 	LPBYTE lpSubcode,
 	INT nLBA
-	)
-{
+) {
 	BOOL bRet = IsValidSubQMSF(pExecType, lpSubcode, 19, 20, 21);
 	if (bRet) {
 		INT tmpLBA = MSFtoLBA(BcdToDec(lpSubcode[19]), 
@@ -773,8 +757,7 @@ BOOL IsValidSubQAMSF(
 
 BOOL IsValidSubQMCN(
 	LPBYTE lpSubcode
-	)
-{
+) {
 	BOOL bRet = TRUE;
 	for (INT i = 13; i <= 19; i++) {
 		if (isdigit(((lpSubcode[i] >> 4) & 0x0f) + 0x30) == 0) {
@@ -794,8 +777,7 @@ BOOL IsValidSubQMCN(
 // https://isrc.jmd.ne.jp/about/error.html
 BOOL IsValidSubQISRC(
 	LPBYTE lpSubcode
-	)
-{
+) {
 	INT ch = ((lpSubcode[13] >> 2) & 0x3f) + 0x30;
 	if (isupper(ch) == 0) {
 		return FALSE;
@@ -846,8 +828,7 @@ BOOL IsValidSubQAdrSector(
 	INT nFirstLBA,
 	INT nPrevAdrSector,
 	INT nLBA
-	)
-{
+) {
 	BOOL bRet = FALSE;
 	INT idx = (nLBA - nFirstLBA) / nRangeLBA;
 	INT nTmpLBA = nFirstLBA + nRangeLBA * idx;
@@ -905,8 +886,7 @@ VOID CheckAndFixSubP(
 	LPBYTE lpSubcode,
 	BYTE byCurrentTrackNum,
 	INT nLBA
-	)
-{
+) {
 	BOOL bFF = FALSE;
 	BOOL b00 = FALSE;
 	for (INT i = 0; i < 12; i++) {
@@ -947,8 +927,7 @@ BOOL CheckAndFixSubQAdrMCN(
 	PSUB_Q pSubQ,
 	BYTE byCurrentTrackNum,
 	INT nLBA
-	)
-{
+) {
 	if (!pDisc->SUB.byCatalog) {
 		return FALSE;
 	}
@@ -1035,8 +1014,7 @@ BOOL CheckAndFixSubQAdrISRC(
 	PSUB_Q pSubQ,
 	BYTE byCurrentTrackNum,
 	INT nLBA
-	)
-{
+) {
 	if (!pDisc->SUB.lpISRCList[byCurrentTrackNum - 1]) {
 		return FALSE;
 	}
@@ -1143,8 +1121,7 @@ VOID CheckAndFixSubQ(
 	INT nLBA,
 	BOOL bLibCrypt,
 	BOOL bSecuRom
-	)
-{
+) {
 	WORD crc16 = (WORD)GetCrc16CCITT(10, &lpSubcode[12]);
 	BYTE tmp1 = HIBYTE(crc16);
 	BYTE tmp2 = LOBYTE(crc16);
@@ -1306,9 +1283,15 @@ VOID CheckAndFixSubQ(
 		BOOL bPrevIndex = TRUE;
 		BOOL bPrevPrevIndex = TRUE;
 		if (!IsValidSubQIdx(pExecType, pDisc, pSubQ, nLBA, byCurrentTrackNum, &bPrevIndex, &bPrevPrevIndex)) {
+			BYTE tmpIdx = pSubQ->prev.byIndex;
+			if (IsValidPregapSector(pExecType, pDisc, pSubQ, nLBA)) {
+				if (pSubQ->next.byIndex == 0 && pSubQ->next.nRelativeTime + 1 == pSubQ->present.nRelativeTime) {
+					tmpIdx = 0;
+				}
+			}
 			OutputSubErrorWithLBALogA("Q[14]:Idx[%02u] -> [%02u], L:[%ld]\n"
-				, nLBA, byCurrentTrackNum, pSubQ->present.byIndex, pSubQ->prev.byIndex, s_lineNum);
-			pSubQ->present.byIndex = pSubQ->prev.byIndex;
+				, nLBA, byCurrentTrackNum, pSubQ->present.byIndex, tmpIdx, s_lineNum);
+			pSubQ->present.byIndex = tmpIdx;
 			lpSubcode[14] = DecToBcd(pSubQ->present.byIndex);
 		}
 		else if (!bPrevIndex) {
@@ -1567,8 +1550,7 @@ VOID CheckAndFixSubRtoW(
 	LPBYTE lpSubcode,
 	BYTE byCurrentTrackNum,
 	INT nLBA
-	)
-{
+) {
 #if 0
 	BYTE lpSubcodeOrg[CD_RAW_READ_SUBCODE_SIZE] = { 0 };
 	memcpy(lpSubcodeOrg, lpBuf + pDevice->TRANSFER.dwBufSubOffset, CD_RAW_READ_SUBCODE_SIZE);
@@ -1662,8 +1644,7 @@ VOID CheckAndFixSubChannel(
 	INT nLBA,
 	BOOL bLibCrypt,
 	BOOL bSecuRom
-	)
-{
+) {
 	if (pDisc->SUB.nSubChannelOffset) {
 		SetTmpSubQDataFromBuffer(&pDiscPerSector->subQ.next, pDiscPerSector->subcode.next);
 		if (1 <= pExtArg->dwSubAddionalNum) {
@@ -1682,39 +1663,20 @@ VOID CheckAndFixSubChannel(
 		CheckAndFixSubP(pDiscPerSector->subcode.present, byCurrentTrackNum, nLBA);
 	}
 	if (!pExtArg->bySkipSubQ) {
-		CheckAndFixSubQ(pExecType, pExtArg, pDisc, pDiscPerSector->subcode.present, &pDiscPerSector->subQ,
-			byCurrentTrackNum, nLBA, bLibCrypt, bSecuRom);
+		CheckAndFixSubQ(pExecType, pExtArg, pDisc, pDiscPerSector->subcode.present
+			, &pDiscPerSector->subQ, byCurrentTrackNum, nLBA, bLibCrypt, bSecuRom);
 	}
 	if (!pExtArg->bySkipSubRtoW) {
-		CheckAndFixSubRtoW(pDevice, pDisc, pDiscPerSector->data.present, pDiscPerSector->subcode.present, byCurrentTrackNum, nLBA);
+		CheckAndFixSubRtoW(pDevice, pDisc, pDiscPerSector->data.present
+			, pDiscPerSector->subcode.present, byCurrentTrackNum, nLBA);
 	}
 	return;
 }
 
-BOOL ContainsDiffByte(
-	PC2_ERROR_PER_SECTOR pC2ErrorPerSector,
-	LPBYTE lpBuf,
-	UINT i
-	)
-{
-	BOOL bByteError = FALSE;
-	for (INT j = 0; j < CD_RAW_SECTOR_SIZE; j++) {
-		if (pC2ErrorPerSector[i].lpBufNoC2SectorBackup[j] != lpBuf[j]) {
-			bByteError = TRUE;
-			break;
-		}
-	}
-	return bByteError;
-}
-
 BOOL ContainsC2Error(
-	PC2_ERROR_PER_SECTOR pC2ErrorPerSector,
 	PDEVICE pDevice,
-	PDISC pDisc,
-	LPBYTE lpBuf,
-	UINT uiC2ErrorLBACnt
-	)
-{
+	LPBYTE lpBuf
+) {
 	BOOL bRet = RETURNED_NO_C2_ERROR_1ST;
 	for (WORD wC2ErrorPos = 0; wC2ErrorPos < CD_RAW_READ_C2_294_SIZE; wC2ErrorPos++) {
 		// Ricoh based drives (+97 read offset, like the Aopen CD-RW CRW5232)
@@ -1728,15 +1690,14 @@ BOOL ContainsC2Error(
 			if (lpBuf[dwPos] & nBit) {
 				// wC2ErrorPos * CHAR_BIT => position of byte
 				// (position of byte) + n => position of bit
-				pC2ErrorPerSector[uiC2ErrorLBACnt].lpErrorBytePos[pC2ErrorPerSector[uiC2ErrorLBACnt].uiErrorBytePosCnt] =
-					(SHORT)(wC2ErrorPos * CHAR_BIT + n + pDisc->MAIN.nCombinedOffset);
-				pC2ErrorPerSector[uiC2ErrorLBACnt].uiErrorBytePosCnt++;
-				if (pC2ErrorPerSector[uiC2ErrorLBACnt].uiErrorBytePosCnt == 1) {
-					bRet = RETURNED_EXIST_C2_ERROR;
-				}
+				bRet = RETURNED_EXIST_C2_ERROR;
+				break;
 			}
 //			nBit <<= 1;
 			nBit >>= 1;
+		}
+		if (bRet == RETURNED_EXIST_C2_ERROR) {
+			break;
 		}
 	}
 	return bRet;
@@ -1745,8 +1706,7 @@ BOOL ContainsC2Error(
 VOID SupportIndex0InTrack1(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice
-	)
-{
+) {
 	if (pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PX760A &&
 		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PX755A &&
 		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PX716AL &&
@@ -1769,8 +1729,7 @@ BOOL IsCheckingSubChannel(
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
 	INT nLBA
-	)
-{
+) {
 	BOOL bCheckSub = TRUE;
 	if (!pExtArg->byRawDump &&
 		(pDisc->SCSI.nFirstLBAofLeadout <= nLBA &&
@@ -1787,15 +1746,16 @@ VOID CheckAndFixMainHeader(
 	INT nLBA,
 	BYTE byCurrentTrackNum,
 	INT nMainDataType
-	)
-{
+) {
 	LPBYTE lpWorkBuf = pDiscPerSector->data.present + pDisc->MAIN.uiMainDataSlideSize;
 	BOOL bHeader = IsValidMainDataHeader(lpWorkBuf);
 	INT idx = byCurrentTrackNum - 1;
 	if (bHeader) {
-		if (pDisc->PROTECT.byExist == smartE &&
+		if ((pDisc->PROTECT.byExist == smartE || pDisc->PROTECT.byExist == microids) &&
 			(pDisc->PROTECT.ERROR_SECTOR.nExtentPos <= nLBA &&
-				nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize)) {
+				nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize) ||
+			(pDisc->PROTECT.byExist == microids && pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd <= nLBA &&
+				nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd + pDisc->PROTECT.ERROR_SECTOR.nSectorSize2nd)) {
 			BYTE m, s, f;
 			if (!pExtArg->byBe) {
 				m = BcdToDec(BYTE(lpWorkBuf[12] ^ 0x01));
@@ -1808,29 +1768,39 @@ VOID CheckAndFixMainHeader(
 				f = BcdToDec(pDiscPerSector->data.present[14]);
 			}
 			INT tmpLBA = MSFtoLBA(m, s, f) - 150;
-			if (tmpLBA < nLBA) {
+//			if (tmpLBA < nLBA) {
+			if (tmpLBA != nLBA) {
 				BYTE rm, rs, rf, mb, sb;
 				LBAtoMSF(nLBA + 150, &rm, &rs, &rf);
 				mb = rm;
 				sb = rs;
+				rm = DecToBcd(rm);
+				rs = DecToBcd(rs);
 				if (!pExtArg->byBe) {
 					rm ^= 0x01;
 					rs ^= 0x80;
 				}
 				lpWorkBuf[12] = rm;
 				lpWorkBuf[13] = rs;
-				lpWorkBuf[14] = rf;
-				OutputMainInfoWithLBALogA(
+				lpWorkBuf[14] = DecToBcd(rf);
+				OutputMainErrorWithLBALogA(
 					"Original AMSF[%02u:%02u:%02u] -> Fixed AMSF[%02u:%02u:%02u]\n"
 					, nLBA, byCurrentTrackNum, m, s, f, mb, sb, rf);
+			}
+			if (lpWorkBuf[15] != 0x61 && lpWorkBuf[15] != 0x62 && lpWorkBuf[15] != 0x01 && lpWorkBuf[15] != 0x02) {
+				OutputMainErrorWithLBALogA("Original Mode[0x%02x] -> Fixed Mode[0x%02x]\n"
+					, nLBA, byCurrentTrackNum, lpWorkBuf[15], pDiscPerSector->mainHeader.present[15]);
+				lpWorkBuf[15] = pDiscPerSector->mainHeader.present[15];
 			}
 		}
 	}
 	else {
 		if (pExtArg->byScanProtectViaFile && pDisc->PROTECT.byExist) {
-			if (pDisc->PROTECT.ERROR_SECTOR.nExtentPos <= nLBA &&
-				nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize) {
-				OutputMainInfoWithLBALogA("Original Mode[0x%02x] -> Fixed Mode[0x%02x]\n"
+			if ((pDisc->PROTECT.ERROR_SECTOR.nExtentPos <= nLBA &&
+				nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize) ||
+				(pDisc->PROTECT.byExist == microids && pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd <= nLBA &&
+					nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd + pDisc->PROTECT.ERROR_SECTOR.nSectorSize2nd)) {
+				OutputMainErrorWithLBALogA("Original Mode[0x%02x] -> Fixed Mode[0x%02x]\n"
 					, nLBA, byCurrentTrackNum, lpWorkBuf[15] ,pDiscPerSector->mainHeader.present[15]);
 				lpWorkBuf[15] = pDiscPerSector->mainHeader.present[15];
 			}
@@ -1843,7 +1813,7 @@ VOID CheckAndFixMainHeader(
 					pDisc->PROTECT.ERROR_SECTOR.nSectorSize = pDisc->SCSI.nAllLength - nLBA - 1;
 				}
 				// forced to set scrambled data to reserved byte
-				OutputMainInfoWithLBALogA(
+				OutputMainErrorWithLBALogA(
 					"Original reserved byte[0x%02x%02x%02x%02x%02x%02x%02x%02x] "
 					"-> Fixed reserved byte[0x486436ab56ff7ec0]\n"
 					, nLBA, byCurrentTrackNum, lpWorkBuf[0x814], lpWorkBuf[0x815], lpWorkBuf[0x816], lpWorkBuf[0x817],
@@ -1868,7 +1838,10 @@ VOID CheckAndFixMainHeader(
 				(pDisc->SCSI.toc.TrackData[idx].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK &&
 				pDiscPerSector->subQ.present.byCtl == AUDIO_DATA_TRACK) ||
 				(pDisc->PROTECT.ERROR_SECTOR.nExtentPos <= nLBA &&
-				nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize)) {
+				nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize) ||
+				(pDisc->PROTECT.byExist == microids && pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd <= nLBA &&
+				nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd + pDisc->PROTECT.ERROR_SECTOR.nSectorSize2nd)) {
+
 				OutputMainErrorWithLBALogA(
 					"This sector is data, but sync is invalid, so the header is generated\n"
 					, nLBA, byCurrentTrackNum);

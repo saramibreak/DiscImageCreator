@@ -411,3 +411,14 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - improved: Checking argument (cd, dvd)
 - improved: Reading directory record (SimCity 3000 (USA))
 - improved: Reading DVD structure
+
+*2017-12-10
+- added: Reading path table & directory record of GDROM HD Area
+- added: Reading joliet file system (if iso9600 didn't read)
+- added: Writing the hash of the toc vs. subs desync disc and the scrambled main channel (.scm file)
+- added: Argument of /f option (to delete the drive cache per specific value)
+- changed: Rename _sub.txt to _subReadable.txt
+- fixed: Dumping of GDROM (didn't work from 2017-08-18)
+- fixed: 1st sector of the pregap sector has invalid index of the subchannel
+- rewrote: Recovering C2 error (only plextor. not support no-plextor drive now)
+            => I definitely understood the plextor drive has -1 sector offset about C2 error.

@@ -9,8 +9,7 @@
 BOOL DiskGetMediaTypes(
 	PDEVICE pDevice,
 	LPCTSTR pszPath
-	)
-{
+) {
 	FILE* fp = CreateOrOpenFile(
 		pszPath, NULL, NULL, NULL, NULL, _T(".bin"), _T("wb"), 0, 0);
 	if (!fp) {
@@ -73,8 +72,7 @@ BOOL DiskGetMediaTypes(
 
 BOOL ScsiGetAddress(
 	PDEVICE pDevice
-	)
-{
+) {
 	DWORD dwReturned = 0;
 	BOOL bRet = DeviceIoControl(pDevice->hDevice,
 		IOCTL_SCSI_GET_ADDRESS, &pDevice->address, sizeof(SCSI_ADDRESS),
@@ -99,8 +97,7 @@ BOOL ScsiPassThroughDirect(
 	LPBYTE byScsiStatus,
 	LPCTSTR pszFuncName,
 	LONG lLineNum
-	)
-{
+) {
 	SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER swb = { 0 };
 	swb.ScsiPassThroughDirect.Length = sizeof(SCSI_PASS_THROUGH_DIRECT);
 	swb.ScsiPassThroughDirect.PathId = pDevice->address.PathId;
@@ -179,8 +176,7 @@ BOOL ScsiPassThroughDirect(
 BOOL StorageQueryProperty(
 	PDEVICE pDevice,
 	LPBOOL lpBusTypeUSB
-	)
-{
+) {
 	STORAGE_PROPERTY_QUERY query;
 	query.QueryType = PropertyStandardQuery;
 	query.PropertyId = StorageAdapterProperty;

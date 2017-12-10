@@ -9,8 +9,7 @@
 
 VOID OutputFsBootRecord(
 	LPBYTE lpBuf
-	)
-{
+) {
 	CHAR str[2][32] = { "0" };
 	strncpy(str[0], (LPCH)&lpBuf[7], sizeof(str[0]));
 	strncpy(str[1], (LPCH)&lpBuf[39], sizeof(str[1]));
@@ -28,8 +27,7 @@ VOID OutputFsBootRecord(
 VOID OutputFsVolumeDescriptorFirst(
 	LPBYTE lpBuf,
 	CHAR str32[][32]
-	)
-{
+) {
 	DWORD vss = GetSizeOrDwordForVolDesc(lpBuf + 80);
 	OutputVolDescLogA(
 		"\t                            System Identifier: %.32s\n"
@@ -45,8 +43,7 @@ VOID OutputFsDirectoryRecord(
 	DWORD dwExtentPos,
 	DWORD dwDataLen,
 	LPSTR fname
-	)
-{
+) {
 	CHAR str[128] { 0 };
 	INT nFileFlag = lpBuf[25];
 	if (nFileFlag & 0x01) {
@@ -106,6 +103,19 @@ VOID OutputFsDirectoryRecord(
 		fname[n] = (CHAR)lpBuf[33 + n];
 	}
 	OutputVolDescLogA("\n");
+
+	CHAR fnameForProtect[MAX_FNAME_FOR_VOLUME] = { 0 };
+	if (lpBuf[32] != 1 && lpBuf[33] == 0) {
+		// for Joliet
+		for (INT n = 0; n < lpBuf[32] / 2; n++) {
+			fnameForProtect[n] = fname[n * 2 + 1];
+		}
+	}
+	else {
+		strncpy(fnameForProtect, fname, MAX_FNAME_FOR_VOLUME);
+	}
+	fnameForProtect[MAX_FNAME_FOR_VOLUME - 1] = 0;
+
 	if (pExtArg->byScanProtectViaFile || pExtArg->byIntentionalSub) {
 		if ((nFileFlag & 0x02) == 0 && pDisc->PROTECT.byExist) {
 			if (pDisc->PROTECT.ERROR_SECTOR.nExtentPos < (INT)dwExtentPos) {
@@ -114,81 +124,92 @@ VOID OutputFsDirectoryRecord(
 					pDisc->PROTECT.byTmpForSafeDisc = FALSE;
 				}
 				if ((INT)dwExtentPos <= pDisc->PROTECT.ERROR_SECTOR.nNextExtentPos) {
+					// because the size of 00000001.TMP is 2048
 					pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)dwExtentPos - pDisc->PROTECT.ERROR_SECTOR.nExtentPos - 1;
 					pDisc->PROTECT.ERROR_SECTOR.nNextExtentPos = (INT)dwExtentPos;
 				}
 			}
 		}
-		if (!strncmp(fname, "CD.IDX", 6)) {
+		if (!strncmp(fnameForProtect, "CD.IDX", 6)) {
 			pDisc->PROTECT.byExist = cdidx;
-			strncpy(pDisc->PROTECT.name, fname, 6);
+			strncpy(pDisc->PROTECT.name, fnameForProtect, 6);
 			pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)dwExtentPos;
 			pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(dwDataLen / DISC_RAW_READ_SIZE - 1);
 		}
-		else if (!strncmp(fname, "__CDS.exe", 9)) {
+		else if (!strncmp(fnameForProtect, "__CDS.exe", 9)) {
 			pDisc->PROTECT.byExist = cds300;
-			strncpy(pDisc->PROTECT.name, fname, 9);
+			strncpy(pDisc->PROTECT.name, fnameForProtect, 9);
 		}
-		else if (!strncmp(fname, "LASERLOK.IN", 11)) {
+		else if (!strncmp(fnameForProtect, "LASERLOK.IN", 11)) {
 			pDisc->PROTECT.byExist = laserlock;
-			strncpy(pDisc->PROTECT.name, fname, 11);
+			strncpy(pDisc->PROTECT.name, fnameForProtect, 11);
 			pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)dwExtentPos;
 			pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(dwDataLen / DISC_RAW_READ_SIZE - 1);
 		}
-		else if (!strncmp(fname, "PROTECT.PRO", 11)) {
+		else if (!strncmp(fnameForProtect, "PROTECT.PRO", 11)) {
 			pDisc->PROTECT.byExist = proring;
-			strncpy(pDisc->PROTECT.name, fname, 11);
+			strncpy(pDisc->PROTECT.name, fnameForProtect, 11);
 			pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)dwExtentPos;
 			pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(dwDataLen / DISC_RAW_READ_SIZE - 1);
 		}
-		else if (!strncmp(fname, "SYSTEM.LSK", 10)) { // Siedler III, Die - Mission CD (Germany)
-			pDisc->PROTECT.byExist = ring;
-			strncpy(pDisc->PROTECT.name, fname, 10);
-			pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)dwExtentPos;
-			pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(dwDataLen / DISC_RAW_READ_SIZE - 1);
-		}
-		else if (!strncmp(fname, "00000001.LT1", 12)) {
+		else if (!strncmp(fnameForProtect, "00000001.LT1", 12)) {
 			pDisc->PROTECT.byExist = safeDiscLite;
-			strncpy(pDisc->PROTECT.name, fname, 12);
+			strncpy(pDisc->PROTECT.name, fnameForProtect, 12);
 			pDisc->PROTECT.byTmpForSafeDisc = TRUE;
 			pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)(dwExtentPos + dwDataLen / DISC_RAW_READ_SIZE);
 		}
-		else if (!strncmp(fname, "00000001.TMP", 12)) {
+		else if (!strncmp(fnameForProtect, "00000001.TMP", 12)) {
 			pDisc->PROTECT.byExist = safeDisc;
-			strncpy(pDisc->PROTECT.name, fname, 12);
+			strncpy(pDisc->PROTECT.name, fnameForProtect, 12);
 			pDisc->PROTECT.byTmpForSafeDisc = TRUE;
 			pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)(dwExtentPos + dwDataLen / DISC_RAW_READ_SIZE);
 		}
-		else if (!strncmp(fname, "00002.tmp", 9)) {
+		else if (!strncmp(fnameForProtect, "00002.tmp", 9)) {
 			pDisc->PROTECT.byExist = smartE;
-			strncpy(pDisc->PROTECT.name, fname, 9);
+			strncpy(pDisc->PROTECT.name, fnameForProtect, 9);
 			pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)dwExtentPos;
 			pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(dwDataLen / DISC_RAW_READ_SIZE - 1);
 		}
-		else if (!strncmp(fname, "CMS16.DLL", 9) && pDisc->PROTECT.byExist == no) {
+		else if (!strncmp(fnameForProtect, "CMS16.DLL", 9) && pDisc->PROTECT.byExist == no) {
 			pDisc->PROTECT.byExist = securomV1;
-			strncpy(pDisc->PROTECT.name, fname, 9);
+			strncpy(pDisc->PROTECT.name, fnameForProtect, 9);
 		}
-		else if ((!strncmp(fname, "cms32_95.dll", 12) || !strncmp(fname, "CMS32_NT.DLL", 12))
+		else if ((!strncmp(fnameForProtect, "cms32_95.dll", 12) || !strncmp(fnameForProtect, "CMS32_NT.DLL", 12))
 			&& pDisc->PROTECT.byExist == no) {
 			pDisc->PROTECT.byExist = securomV1;
-			strncpy(pDisc->PROTECT.name, fname, 12);
+			strncpy(pDisc->PROTECT.name, fnameForProtect, 12);
+		}
+		else if (!strncmp(fnameForProtect, "SYSTEM.LSK", 10)) { // Siedler III, Die - Mission CD (Germany)
+			pDisc->PROTECT.byExist = bluebyte;
+			strncpy(pDisc->PROTECT.name, fnameForProtect, 10);
+			pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)dwExtentPos;
+			pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(dwDataLen / DISC_RAW_READ_SIZE - 1);
+		}
+		else if (!strncmp(fnameForProtect, "CORSAIRS.PRT", 12)) { // Der KorsaR (Germany)
+			pDisc->PROTECT.byExist = microids;
+			strncpy(pDisc->PROTECT.name, fnameForProtect, 12);
+			pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)dwExtentPos;
+			pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(dwDataLen / DISC_RAW_READ_SIZE - 1);
+		}
+		else if (pDisc->PROTECT.byExist == microids &&!strncmp(fnameForProtect, "_SETUP.DLL", 10)) { // Der KorsaR (Germany)
+			pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd = (INT)dwExtentPos;
+			pDisc->PROTECT.ERROR_SECTOR.nSectorSize2nd = (INT)(dwDataLen / DISC_RAW_READ_SIZE - 1);
 		}
 		else if (pDisc->PROTECT.byExist == no) {
 			// for CodeLock, ProtectCD-VOB, a part of SecuROM
-			LPCH p = strstr(fname, ".EXE");
+			LPCH p = strstr(fnameForProtect, ".EXE");
 			if (!p) {
 				// Doesn't exist stristr in C/C++...
-				p = strstr(fname, ".exe");
+				p = strstr(fnameForProtect, ".exe");
 				if (!p) {
-					p = strstr(fname, ".DLL");
+					p = strstr(fnameForProtect, ".DLL");
 					if (!p) {
-						p = strstr(fname, ".dll");
+						p = strstr(fnameForProtect, ".dll");
 #if 0
 						if (!p) {
-							p = strstr(fname, ".CAB");
+							p = strstr(fnameForProtect, ".CAB");
 							if (!p) {
-								p = strstr(fname, ".cab");
+								p = strstr(fnameForProtect, ".cab");
 							}
 						}
 #endif
@@ -200,9 +221,9 @@ VOID OutputFsDirectoryRecord(
 					OutputLogA(standardError | fileMainError, "Reached MAX .exe num\n");
 					return;
 				}
-				size_t len = (size_t)(p - fname + 4);
+				size_t len = (size_t)(p - fnameForProtect + 4);
 				pDisc->PROTECT.pExtentPosForExe[pDisc->PROTECT.nCntForExe] = (INT)dwExtentPos;
-				strncpy(pDisc->PROTECT.pNameForExe[pDisc->PROTECT.nCntForExe], fname, len);
+				strncpy(pDisc->PROTECT.pNameForExe[pDisc->PROTECT.nCntForExe], fnameForProtect, len);
 				pDisc->PROTECT.nCntForExe++;
 			}
 		}
@@ -216,8 +237,7 @@ VOID OutputFsVolumeDescriptorSecond(
 	CHAR str128[][128],
 	CHAR str37[][37],
 	BOOL bTCHAR
-	)
-{
+) {
 	WORD vss = GetSizeOrWordForVolDesc(lpBuf + 120);
 	WORD vsn = GetSizeOrWordForVolDesc(lpBuf + 124);
 	WORD lbs = GetSizeOrWordForVolDesc(lpBuf + 128);
@@ -281,8 +301,7 @@ VOID OutputFsVolumeDescriptorSecond(
 
 VOID OutputFsVolumeDescriptorForTime(
 	LPBYTE lpBuf
-	)
-{
+) {
 	OutputVolDescLogA(
 		"\t                Volume Creation Date and Time: %.4s-%.2s-%.2s %.2s:%.2s:%.2s.%.2s %+03d:%02u\n"
 		"\t            Volume Modification Date and Time: %.4s-%.2s-%.2s %.2s:%.2s:%.2s.%.2s %+03d:%02u\n"
@@ -309,8 +328,7 @@ VOID OutputFsVolumeDescriptorForISO9660(
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
 	LPBYTE lpBuf
-	)
-{
+) {
 	CHAR str32[3][32] = { 0 };
 	CHAR str128[4][128] = { 0 };
 	CHAR str37[3][37] = { 0 };
@@ -337,8 +355,7 @@ VOID OutputFsVolumeDescriptorForJoliet(
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
 	LPBYTE lpBuf
-	)
-{
+) {
 	CHAR str32[3][32] = { 0 };
 	CHAR str128[4][128] = { 0 };
 	CHAR str37[3][37] = { 0 };
@@ -463,8 +480,7 @@ VOID OutputFsVolumeDescriptorForJoliet(
 
 VOID OutputFsVolumePartitionDescriptor(
 	LPBYTE lpBuf
-	)
-{
+) {
 	CHAR str[2][32] = { 0 };
 	strncpy(str[0], (LPCH)&lpBuf[8], sizeof(str[0]));
 	strncpy(str[1], (LPCH)&lpBuf[40], sizeof(str[1]));
@@ -489,8 +505,7 @@ VOID OutputFsVolumeDescriptor(
 	PDISC pDisc,
 	LPBYTE lpBuf,
 	INT nLBA
-	)
-{
+) {
 	// 0 is Boot Record.
 	// 1 is Primary Volume Descriptor.
 	// 2 is Supplementary Volume Descriptor.
@@ -525,13 +540,12 @@ VOID OutputFsVolumeDescriptor(
 BOOL OutputFsPathTableRecord(
 	PDISC pDisc,
 	LPBYTE lpBuf,
-	BYTE byLogicalBlkCoef,
+	DWORD dwLogicalBlkCoef,
 	DWORD dwPathTblPos,
 	DWORD dwPathTblSize,
 	PDIRECTORY_RECORD pDirRec,
 	LPINT nDirPosNum
-	)
-{
+) {
 	OutputVolDescLogA(
 		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Path Table Record), (INT)dwPathTblPos, (INT)dwPathTblPos);
 	for (DWORD i = 0; i < dwPathTblSize;) {
@@ -542,11 +556,11 @@ BOOL OutputFsPathTableRecord(
 		pDirRec[*nDirPosNum].uiDirNameLen = lpBuf[i];
 		if (pDisc->MAIN.bPathType == lType) {
 			pDirRec[*nDirPosNum].uiPosOfDir = MAKEDWORD(MAKEWORD(lpBuf[2 + i], lpBuf[3 + i]),
-				MAKEWORD(lpBuf[4 + i], lpBuf[5 + i])) / byLogicalBlkCoef;
+				MAKEWORD(lpBuf[4 + i], lpBuf[5 + i])) / dwLogicalBlkCoef;
 		}
 		else {
 			pDirRec[*nDirPosNum].uiPosOfDir = MAKEDWORD(MAKEWORD(lpBuf[5 + i], lpBuf[4 + i]),
-				MAKEWORD(lpBuf[3 + i], lpBuf[2 + i])) / byLogicalBlkCoef;
+				MAKEWORD(lpBuf[3 + i], lpBuf[2 + i])) / dwLogicalBlkCoef;
 		}
 		if (pDirRec[*nDirPosNum].uiDirNameLen > 0) {
 			if (pDisc->MAIN.bPathType == lType) {
@@ -588,8 +602,7 @@ BOOL OutputFsPathTableRecord(
 VOID OutputFsMasterDirectoryBlocks(
 	LPBYTE lpBuf,
 	INT nLBA
-	)
-{
+) {
 	CHAR str[27] = { 0 };
 	strncpy(str, (LPCH)&lpBuf[36], sizeof(str));
 	OutputVolDescWithLBALogA(Master Directory Blocks,
@@ -676,8 +689,7 @@ VOID OutputFsMasterDirectoryBlocks(
 VOID OutputFs3doHeader(
 	LPBYTE lpBuf,
 	INT nLBA
-	)
-{
+) {
 	OutputVolDescWithLBALogA(3DO Header,
 		"\t                Record Type: %#04x\n"
 		"\t                 Sync Bytes: %#04x %#04x %#04x %#04x %#04x\n"
@@ -729,9 +741,8 @@ VOID OutputFs3doDirectoryRecord(
 	INT nLBA,
 	LPCH pPath,
 	LONG lDirSize
-	)
-{
-	OutputVolDescWithLBALogA(Directory Record, 
+) {
+	OutputVolDescWithLBALogA(Directory Record,
 		"\tcurrentDir: %s\n"
 		"\t========== Directory Header ==========\n"
 		"\t      nextBlock: %#08lx\n"
@@ -789,8 +800,7 @@ VOID OutputFs3doDirectoryRecord(
 VOID OutputFsPceStuff(
 	LPBYTE lpBuf,
 	INT nLBA
-	)
-{
+) {
 	OutputVolDescLogA(
 		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(PCE Warning msg & all stuff), nLBA, nLBA);
 	CHAR str[39] = { 0 };
@@ -812,8 +822,7 @@ VOID OutputFsPceStuff(
 VOID OutputFsPceBootSector(
 	LPBYTE lpBuf,
 	INT nLBA
-	)
-{
+) {
 	CHAR str[24] = { 0 };
 	strncpy(str, (LPCH)&lpBuf[32], sizeof(str));
 	CHAR str2[50] = { 0 };
@@ -856,16 +865,14 @@ VOID OutputFsPceBootSector(
 VOID OutputFsPcfxHeader(
 	LPBYTE lpBuf,
 	INT nLBA
-	)
-{
+) {
 	OutputVolDescWithLBALogA(PCFX Warning msg, "\t%s\n", nLBA, (LPCH)&lpBuf[16]);
 }
 
 VOID OutputFsPcfxSector(
 	LPBYTE lpBuf,
 	INT nLBA
-	)
-{
+) {
 	OutputVolDescWithLBALogA(PCFX Title Maker YMD,
 		"\t       Title: %s\n"
 		"\tMaker(short): %s\n"
@@ -877,8 +884,7 @@ VOID OutputFsPcfxSector(
 
 VOID OutputFsImageDosHeader(
 	PIMAGE_DOS_HEADER pIdh
-	)
-{
+) {
 	OutputVolDescLogA(
 		"\t========== Image Dos Header (%u byte) ==========\n"
 		"\t                     Magic number: %04x\n"
@@ -908,8 +914,7 @@ VOID OutputFsImageDosHeader(
 
 VOID OutputFsImageOS2Header(
 	PIMAGE_OS2_HEADER pIoh
-	)
-{
+) {
 	OutputVolDescLogA(
 		"\t========== Image OS/2 .EXE header (%u byte) ==========\n"
 		"\t                      Magic number: %04x\n"
@@ -958,8 +963,7 @@ VOID OutputFsImageOS2Header(
 // https://msdn.microsoft.com/en-us/library/windows/desktop/ms680339(v=vs.85).aspx
 VOID OutputFsImageNtHeader(
 	PIMAGE_NT_HEADERS32 pInh
-	)
-{
+) {
 	OutputVolDescLogA(
 		"\t========== Image NT Header (%u byte) ==========\n"
 		"\tSignature: %08lx\n"
@@ -1038,8 +1042,7 @@ VOID OutputFsImageNtHeader(
 VOID OutputFsImageSectionHeader(
 	PDISC pDisc,
 	PIMAGE_SECTION_HEADER pIsh
-	)
-{
+) {
 	OutputVolDescLogA(
 		"\t========== Image Section Header (%u byte) ==========\n"
 		"\t                Name: %.8s\n"
@@ -1078,8 +1081,7 @@ VOID OutputFsImageSectionHeader(
 
 VOID OutputTocForGD(
 	PDISC pDisc
-	)
-{
+) {
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(TOC For GD (HD Area)));
 	for (INT r = pDisc->GDROM_TOC.FirstTrack - 1; r < pDisc->GDROM_TOC.LastTrack; r++) {
 		OutputDiscLogA("\tTrack %2u, Ctl %u, Mode %u"
@@ -1127,8 +1129,7 @@ VOID OutputTocForGD(
 
 VOID OutputTocWithPregap(
 	PDISC pDisc
-	)
-{
+) {
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(TOC with pregap));
 	for (UINT r = 0; r < pDisc->SCSI.toc.LastTrack; r++) {
 		OutputDiscLogA(
@@ -1154,8 +1155,7 @@ VOID OutputCDOffset(
 	INT nDriveSampleOffset,
 	INT nDriveOffset,
 	INT nSubChannelOffset
-	)
-{
+) {
 	OutputDiscLogA(STR_DOUBLE_HYPHEN_B "Offset ");
 	if (bGetDriveOffset) {
 		OutputDiscLogA("(Drive offset referes to http://www.accuraterip.com)");
@@ -1209,8 +1209,7 @@ VOID OutputCDC2Error296(
 	LOG_TYPE type,
 	LPBYTE lpBuf,
 	INT nLBA
-	)
-{
+) {
 #ifdef _DEBUG
 	UNREFERENCED_PARAMETER(type);
 #endif
@@ -1229,8 +1228,7 @@ VOID OutputCDMain(
 	LPBYTE lpBuf,
 	INT nLBA,
 	INT nSize
-	)
-{
+) {
 #ifdef _DEBUG
 	UNREFERENCED_PARAMETER(type);
 #endif
@@ -1254,8 +1252,7 @@ VOID OutputCDMain(
 VOID OutputCDSub96Align(
 	LPBYTE lpBuf,
 	INT nLBA
-	)
-{
+) {
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Sub Channel)
 		"\t  +0 +1 +2 +3 +4 +5 +6 +7 +8 +9 +A +B\n", nLBA, nLBA);
 
@@ -1271,8 +1268,7 @@ VOID OutputCDSub96Raw(
 	LOG_TYPE type,
 	LPBYTE lpBuf,
 	INT nLBA
-	)
-{
+) {
 #ifdef _DEBUG
 	UNREFERENCED_PARAMETER(type);
 #endif
@@ -1296,8 +1292,7 @@ VOID OutputCDSubToLog(
 	INT nLBA,
 	INT byTrackNum,
 	FILE* fpParse
-	)
-{
+) {
 	CONST INT BufSize = 256;
 	_TCHAR szSub0[BufSize] = { 0 };
 	_sntprintf(szSub0, BufSize,
@@ -1359,7 +1354,7 @@ VOID OutputCDSubToLog(
 	_TCHAR szSub2[BufSize] = { 0 };
 	switch (lpSubcode[12] & 0x0f) {
 	case ADR_ENCODES_CURRENT_POSITION:
-		if (/*nLBA < -150 && */lpSubcode[13] == 0) {
+		if (lpSubcode[13] == 0) {
 			// lead-in area
 			if (lpSubcode[14] == 0xa0) {
 				_sntprintf(szSub2, BufSize,

@@ -62,8 +62,10 @@ typedef struct _EXT_ARG {
 	BYTE byIntentionalSub;
 	INT nAudioCDOffsetNum;
 	DWORD dwMaxRereadNum;
-	DWORD dwMaxC2ErrorNum;
-	DWORD dwRereadSpeedNum;
+	INT nC2RereadingType;
+	INT nStartLBAForC2;
+	INT nEndLBAForC2;
+	DWORD dwCacheDelNum;
 	DWORD dwTimeoutNum;
 	DWORD dwSubAddionalNum;
 } EXT_ARG, *PEXT_ARG;
@@ -84,10 +86,7 @@ typedef struct _DEVICE {
 	DWORD dwTimeOutValue;
 	DRIVE_DATA_ORDER driveOrder;
 	struct _TRANSFER {
-		DWORD dwTransferLen;
 		DWORD dwBufLen;
-		DWORD dwAllBufLen;
-		DWORD dwAdditionalBufLen; // for PX-4824
 		DWORD dwBufC2Offset;
 		DWORD dwBufSubOffset;
 	} TRANSFER, *PTRANSFER;
@@ -150,6 +149,9 @@ typedef struct _DISC {
 		// 0 origin, max is last track num.
 		LPBYTE lpModeList;
 		BOOL bPathType; // use path table record
+		LPDWORD lpAllSectorCrc32;
+		LPINT lpAllLBAOfC2Error;
+		INT nC2ErrorCnt;
 	} MAIN;
 	struct _SUB {
 		INT nSubChannelOffset;
@@ -199,8 +201,10 @@ typedef struct _DISC {
 		// for skipping unreadable file
 		struct _ERROR_SECTOR {
 			INT nExtentPos;
-			INT nNextExtentPos;
+			INT nNextExtentPos; // for safedisc
 			INT nSectorSize;
+			INT nExtentPos2nd; // for Der KorsaR
+			INT nSectorSize2nd; // for Der KorsaR
 		} ERROR_SECTOR;
 		INT nPrevLBAOfPathTablePos; // for CodeLock
 		INT nNextLBAOfLastVolDesc; // for CodeLock
@@ -209,6 +213,21 @@ typedef struct _DISC {
 		INT nCntForExe; // for CodeLock
 	} PROTECT;
 } DISC, *PDISC;
+
+typedef struct _VOLUME_DESCRIPTOR {
+	struct _ISO_9660 {
+		DWORD dwLogicalBlkCoef;
+		DWORD dwPathTblSize;
+		DWORD dwPathTblPos;
+		DWORD dwRootDataLen;
+	} ISO_9660;
+	struct _JOLIET {
+		DWORD dwLogicalBlkCoef;
+		DWORD dwPathTblSize;
+		DWORD dwPathTblPos;
+		DWORD dwRootDataLen;
+	} JOLIET;
+} VOLUME_DESCRIPTOR, *PVOLUME_DESCRIPTOR;
 
 typedef struct _DIRECTORY_RECORD {
 	UINT uiDirNameLen;
@@ -274,24 +293,6 @@ typedef struct _SUB_R_TO_W {
 	CHAR data[16];
 	CHAR parityP[4];
 } SUB_R_TO_W, *PSUB_R_TO_W;
-
-typedef struct _C2_ERROR_PER_SECTOR {
-	BYTE reserved[2];
-	BYTE byErrorFlag;
-	BYTE byErrorFlagBackup;
-	INT nErrorLBANum;
-	INT nErrorLBANumBackup;
-	UINT uiErrorBytePosCnt;
-	UINT uiErrorBytePosCntBackup;
-	PSHORT lpErrorBytePos;
-	PSHORT lpErrorBytePosBackup;
-	LPBYTE lpBufNoC2Sector;
-	LPBYTE lpBufNoC2SectorBackup;
-} C2_ERROR_PER_SECTOR, *PC2_ERROR_PER_SECTOR;
-
-typedef struct _C2_ERROR_ALLOCATION_CONTEXT {
-	BOOL bIsPackedAlloc;
-} C2_ERROR_ALLOCATION_CONTEXT, *PC2_ERROR_ALLOCATION_CONTEXT;
 
 #pragma pack(push, cdbsp, 1)
 typedef union _CDBSP {

@@ -309,7 +309,7 @@ FILE* CreateOrOpenFile(
 	LPCTSTR pszMode,
 	BYTE byTrackNum,
 	BYTE byMaxTrackNum
-	);
+);
 
 FILE* CreateOrOpenFileW(
 	LPCWSTR pszPath,
@@ -321,7 +321,7 @@ FILE* CreateOrOpenFileW(
 	LPCWSTR pszMode,
 	BYTE byTrackNum,
 	BYTE byMaxTrackNum
-	);
+);
 
 FILE* CreateOrOpenFileA(
 	LPCSTR pszPath,
@@ -333,56 +333,56 @@ FILE* CreateOrOpenFileA(
 	LPCSTR pszMode,
 	BYTE byTrackNum,
 	BYTE byMaxTrackNum
-	);
+);
 
 FILE* OpenProgrammabledFile(
 	LPCTSTR pszFname,
 	LPCTSTR pszMode
-	);
+);
 
 FILE* OpenProgrammabledFileW(
 	LPCWSTR pszFname,
 	LPCWSTR pszMode
-	);
+);
 
 VOID WriteCcdForDisc(
 	WORD wTocEntries,
 	BYTE LastCompleteSession,
 	FILE* fpCcd
-	);
+);
 
 VOID WriteCcdForDiscCDTextLength(
 	WORD wCDTextLength,
 	FILE* fpCcd
-	);
+);
 
 VOID WriteCcdForDiscCatalog(
 	PDISC pDisc,
 	FILE* fpCcd
-	);
+);
 
 VOID WriteCcdForCDText(
 	WORD dwTocTextEntries,
 	FILE* fpCcd
-	);
+);
 
 VOID WriteCcdForCDTextEntry(
 	PCDROM_TOC_CD_TEXT_DATA_BLOCK pDesc,
 	WORD dwTocTextEntries,
 	FILE* fpCcd
-	);
+);
 
 VOID WriteCcdForSession(
 	BYTE SessionNumber,
 	BYTE byMode,
 	FILE* fpCcd
-	);
+);
 
 VOID WriteCcdForEntry(
 	PCDROM_TOC_FULL_TOC_DATA_BLOCK toc,
 	UINT a,
 	FILE* fpCcd
-	);
+);
 
 VOID WriteMainChannel(
 	PEXT_ARG pExtArg,
@@ -390,7 +390,7 @@ VOID WriteMainChannel(
 	LPBYTE lpBuf,
 	INT nLBA,
 	FILE* fpImg
-	);
+);
 
 VOID WriteC2(
 	PEXT_ARG pExtArg,
@@ -398,7 +398,7 @@ VOID WriteC2(
 	LPBYTE lpBuf,
 	INT nLBA,
 	FILE* fpC2
-	);
+);
 
 VOID WriteSubChannel(
 	PDISC pDisc,
@@ -408,7 +408,7 @@ VOID WriteSubChannel(
 	BYTE byCurrentTrackNum,
 	FILE* fpSub,
 	FILE* fpParse
-	);
+);
 
 VOID WriteErrorBuffer(
 	PEXEC_TYPE pExecType,
@@ -423,27 +423,27 @@ VOID WriteErrorBuffer(
 	FILE* fpSub,
 	FILE* fpC2,
 	FILE* fpParse
-	);
+);
 
 BOOL WriteParsingSubfile(
 	LPCTSTR pszSubfile
-	);
+);
 
 BOOL DescrambleMainChannelForGD(
 	LPCTSTR pszPath,
 	LPTSTR pszOutPath
-	);
+);
 
 BOOL SplitFileForGD(
 	LPCTSTR pszPath
-	);
+);
 
 VOID DescrambleMainChannelAll(
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
 	LPBYTE lpScrambledBuf,
 	FILE* fpImg
-	);
+);
 
 VOID DescrambleMainChannelPartial(
 	INT nStartLBA,
@@ -462,7 +462,7 @@ BOOL CreateBinCueCcd(
 	FILE* fpCue,
 	FILE* fpCueForImg,
 	FILE* fpCcd
-	);
+);
 
 VOID OutputIntentionalSubchannel(
 	INT nLBA,
@@ -476,13 +476,13 @@ VOID OutputHashData(
 	DWORD crc32,
 	LPBYTE digest,
 	LPBYTE Message_Digest
-	);
+);
 
 VOID OutputLastErrorNumAndString(
 	LPCTSTR pszFuncName,
 	LONG lLineNum
-	);
+);
 
 BOOL OutputWindowsVersion(
 	VOID
-	);
+);

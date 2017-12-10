@@ -18,7 +18,6 @@
      - UH12NS30 (Combined Offset minus disc only)
  GD: TSSTcorp(TS-H353A, TS-H352C, TS-H192C)
      http://forum.redump.org/post/14552/#p14552 <- This drive might be supported too.
-   
  DVD: All supported drive
  Floppy: All supported drive
 
@@ -106,6 +105,7 @@
   - Sharp X68000 CD
   - SNK Neo Geo CD
   - Sony PlayStation
+  - Sony PlayStation 2
   - Tandy / Memorex Visual Information System
   - Tao iKTV CD
   - Tomy Kiss-Site CD
@@ -148,6 +148,10 @@
      => Compared to CloneCD or CD Manipulator, a plextor detects double errors.
 
 * Unsupported Disc
+  CD
+  - Atari Jaguar CD
+     => Can't get the CD offsets
+
   Protected Disc
   - SecuROM(v5 or higher), StarForce, CD-Cops [different frequency]
      => These needs DPM(Data position measurement). cue, ccd doesn't support DPM.
@@ -261,14 +265,14 @@
   store the error message.
  _mainInfo.txt
   store the main sector as text data.
- _sub.txt
-  store the parsed sub channel file as text data.
  _subError.txt
   store the subchannel error.
  _subInfo.txt
   store the subchannel when the track number changes.
  _subIntention.txt
   store the subchannel data for securom.
+ _subReadable.txt
+  store the parsed sub channel file as text data.
  _volDesc.txt
   store the volume descriptor, path table and directory table as text data.
 
