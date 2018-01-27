@@ -1290,7 +1290,7 @@ VOID OutputCDSubToLog(
 	LPBYTE lpSubcode,
 	LPBYTE lpSubcodeRaw,
 	INT nLBA,
-	INT byTrackNum,
+	BYTE byTrackNum,
 	FILE* fpParse
 ) {
 	CONST INT BufSize = 256;
@@ -1406,8 +1406,8 @@ VOID OutputCDSubToLog(
 		break;
 	}
 	case ADR_ENCODES_ISRC: {
-		if (byTrackNum == 0) {
-			OutputSubErrorWithLBALogA("Internal Error. TrackNum is 0\n", nLBA, byTrackNum);
+		if (byTrackNum == 0 || pDisc->SCSI.toc.LastTrack < byTrackNum) {
+			OutputSubErrorWithLBALogA(" Invalid Adr\n", nLBA, byTrackNum);
 		}
 		else {
 			_TCHAR szISRC[META_ISRC_SIZE] = { 0 };

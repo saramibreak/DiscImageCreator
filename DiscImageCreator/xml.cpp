@@ -234,10 +234,12 @@ BOOL ReadWriteDat(
 				else {
 					if (!pDisc->SUB.byDesync || !bDesync) {
 						OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(Hash(Whole image)));
-						if (!OutputHash(pWriter, pszFullPath, _T(".scm"), 1, 1, FALSE)) {
-							return FALSE;
+						if (pDisc->SCSI.trackType != TRACK_TYPE::audioOnly) {
+							if (!OutputHash(pWriter, pszFullPath, _T(".scm"), 1, 1, FALSE)) {
+								return FALSE;
+							}
 						}
-						else if (!OutputHash(pWriter, pszFullPath, _T(".img"), 1, 1, FALSE)) {
+						if (!OutputHash(pWriter, pszFullPath, _T(".img"), 1, 1, FALSE)) {
 							return FALSE;
 						}
 					}

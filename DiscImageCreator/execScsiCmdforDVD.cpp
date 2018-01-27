@@ -412,6 +412,23 @@ BOOL ReadDVDStructure(
 				wFormatLen - sizeof(DVD_DESCRIPTOR_HEADER), 
 				lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), &dwSectorLen);
 			if (pEntry->FormatCode == DvdPhysicalDescriptor) {
+				PDVD_FULL_LAYER_DESCRIPTOR dvdpd = (PDVD_FULL_LAYER_DESCRIPTOR)(lpFormat + sizeof(DVD_DESCRIPTOR_HEADER));
+				if (dvdpd->commonHeader.TrackPath == 0 && dvdpd->commonHeader.NumberOfLayers == 1) {
+					cdb.LayerNumber = 1;
+					if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH,
+						lpFormat, wFormatLen, &byScsiStatus, _T(__FUNCTION__), __LINE__) ||
+						byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+						OutputLogA(standardError | fileDisc, "FormatCode: %02x failed\n", pEntry->FormatCode);
+					}
+					else {
+						DWORD dwSectorLen2 = 0;
+						OutputDVDStructureFormat(pEntry->FormatCode, &ucBCAFlag, &bCPRM,
+							wFormatLen - sizeof(DVD_DESCRIPTOR_HEADER),
+							lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), &dwSectorLen2);
+						OutputDiscLogA("\tLayerAllSector : % 7lu (%#lx)\n", dwSectorLen + dwSectorLen2, dwSectorLen + dwSectorLen2);
+						dwSectorLen += dwSectorLen2;
+					}
+				}
 				pDisc->SCSI.nAllLength = (INT)dwSectorLen;
 			}
 		}

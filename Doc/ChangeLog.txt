@@ -422,3 +422,11 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - fixed: 1st sector of the pregap sector has invalid index of the subchannel
 - rewrote: Recovering C2 error (only plextor. not support no-plextor drive now)
             => I definitely understood the plextor drive has -1 sector offset about C2 error.
+
+*2018-01-27
+- added: Dumping of DVD which is the parallel track path and dual layer
+- changed: Visual Studio 2015 to 2017
+- fixed: Dumping of audio disc (didn't work from 2017-12-10)
+- fixed: Rewrite .c2 file if c2 errors exist. 
+          =>  if unfixed errors exist with EdcEcc.exe or edccchk or cdmage though .c2 file rewritten is all zero byte,
+              maybe the drive misses to report the c2 error.

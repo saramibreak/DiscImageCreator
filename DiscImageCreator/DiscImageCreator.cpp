@@ -308,6 +308,16 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 								if (!ReadGDForFileSystem(pExecType, pExtArg, &device, pDisc)) {
 									throw FALSE;
 								}
+#if 0
+								CHAR tmpFname[_MAX_FNAME];
+								CHAR tmpPath[_MAX_PATH];
+								_tcsncpy(tmpFname, s_szFname, _MAX_FNAME);
+								_tcsncat(tmpFname, "_pre", 4);
+								_tmakepath(tmpPath, s_szDrive, s_szDir, tmpFname, s_szExt);
+
+								bRet = ReadCDPartial(pExecType, pExtArg, &device, pDisc, &discPerSector
+									, c2, tmpPath, 0, 38700, CDFLAG::_READ_CD::CDDA, fpC2);
+#endif
 								bRet = ReadCDPartial(pExecType, pExtArg, &device, pDisc, &discPerSector
 									, c2, pszFullPath, FIRST_LBA_FOR_GD, 549149 + 1, CDFLAG::_READ_CD::CDDA, fpC2);
 							}

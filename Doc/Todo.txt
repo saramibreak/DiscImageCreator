@@ -1,4 +1,8 @@
 ==================================== TODO =====================================
+. support Blu-ray Disc
+
+. support Atari Jaguar CD
+
 . support cue file for multisession disc
   SESSION directives
 
@@ -94,3 +98,28 @@
    information.
   [/quote]
    => Does use Read Buffer command(0x3c) or Hitachi specific command(0xE7) to dump the raw data?
+
+. search the offsets precisely
+  [quote]
+  1.search sync. (IsValidMainDataHeader) "i" is 0x6c(108)
+  2.get msf. (BcdToDec) "sm" is 0, "ss" is 01, "sf" is 70
+  3.convert msf to lba. (00:01:70 -> 145) "tmpLBA" is -5
+  4.calc offset. (2352 * -(-5 - 0) + 108 = 11868(bytes), 2967(samples)
+
+  Well, you should additionally read the 0-(-5) sector applying the +108 offset correction and if 
+  you don't get the LBA 0 header there - you need to check the nearby bytes until you find it (and modify the offset value afterwards).
+
+  As for the problem in general (this and my Saturn examples), you may improve the offset detection the following way:
+
+  1. Extract -5000 to 0 area into track01_pregap.bin
+  2. Search for the first occurence of the LBA -150 sync (AMSF 00:00:00)
+  3. Search for the following occurence of the LBA 0 sync (AMSF 00:02:00)
+  4. Cut all the data before -150 and all the data starting from 0.
+  5. Count the resulting size of track01_pregap.bin in bytes, then substract 150*2352. 
+  If the result isn't 0 - redo all the steps, if the result is the same - report, then substract 
+  the difference from the previously detected offset value. Note, that it would be the offset value to report for the disc,
+   but for the dumping process itself, you should use the previously detected one. 
+  As a bonus, you will have the properly dumped Track01 pregap (of course, 
+  that algorythm is only correct for the discs with the first track and its pregap data, not audio.
+   PCE/PC-FX/Jag discs need a different approach, as well as Audio CD ones).
+  [/quote]

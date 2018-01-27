@@ -1679,25 +1679,27 @@ BOOL ContainsC2Error(
 ) {
 	BOOL bRet = RETURNED_NO_C2_ERROR_1ST;
 	for (WORD wC2ErrorPos = 0; wC2ErrorPos < CD_RAW_READ_C2_294_SIZE; wC2ErrorPos++) {
-		// Ricoh based drives (+97 read offset, like the Aopen CD-RW CRW5232)
-		// use lsb points to 1st byte of main. 
-		// But almost drive is msb points to 1st byte of main.
-//		INT nBit = 0x01;
-		INT nBit = 0x80;
 		DWORD dwPos = pDevice->TRANSFER.dwBufC2Offset + wC2ErrorPos;
-		for (INT n = 0; n < CHAR_BIT; n++) {
-			// exist C2 error
-			if (lpBuf[dwPos] & nBit) {
-				// wC2ErrorPos * CHAR_BIT => position of byte
-				// (position of byte) + n => position of bit
-				bRet = RETURNED_EXIST_C2_ERROR;
+		if (lpBuf[dwPos] != 0) {
+			// Ricoh based drives (+97 read offset, like the Aopen CD-RW CRW5232)
+			// use lsb points to 1st byte of main. 
+			// But almost drive is msb points to 1st byte of main.
+//			INT nBit = 0x01;
+			INT nBit = 0x80;
+			for (INT n = 0; n < CHAR_BIT; n++) {
+				// exist C2 error
+				if (lpBuf[dwPos] & nBit) {
+					// wC2ErrorPos * CHAR_BIT => position of byte
+					// (position of byte) + n => position of bit
+					bRet = RETURNED_EXIST_C2_ERROR;
+					break;
+				}
+//				nBit <<= 1;
+				nBit >>= 1;
+			}
+			if (bRet == RETURNED_EXIST_C2_ERROR) {
 				break;
 			}
-//			nBit <<= 1;
-			nBit >>= 1;
-		}
-		if (bRet == RETURNED_EXIST_C2_ERROR) {
-			break;
 		}
 	}
 	return bRet;

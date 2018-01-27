@@ -142,6 +142,6 @@ VOID OutputCDSubToLog(
 	LPBYTE lpSubcode,
 	LPBYTE lpSubcodeRaw,
 	INT nLBA,
-	INT byTrackNum,
+	BYTE byTrackNum,
 	FILE* fpParse
 );

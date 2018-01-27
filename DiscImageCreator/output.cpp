@@ -29,7 +29,6 @@ FILE* CreateOrOpenFile(
 	BYTE byMaxTrackNum
 ) {
 	_TCHAR szDstPath[_MAX_PATH] = { 0 };
-	_TCHAR szTmpPath[_MAX_PATH + 1] = { 0 };
 	_TCHAR szDrive[_MAX_DRIVE] = { 0 };
 	_TCHAR szDir[_MAX_DIR] = { 0 };
 	_TCHAR szFname[_MAX_FNAME] = { 0 };
@@ -95,7 +94,6 @@ FILE* CreateOrOpenFileW(
 	BYTE byMaxTrackNum
 ) {
 	WCHAR szDstPath[_MAX_PATH] = { 0 };
-	WCHAR szTmpPath[_MAX_PATH + 1] = { 0 };
 	WCHAR szDrive[_MAX_DRIVE] = { 0 };
 	WCHAR szDir[_MAX_DIR] = { 0 };
 	WCHAR szFname[_MAX_FNAME] = { 0 };
@@ -161,7 +159,6 @@ FILE* CreateOrOpenFileA(
 	BYTE byMaxTrackNum
 ) {
 	CHAR szDstPath[_MAX_PATH] = { 0 };
-	CHAR szTmpPath[_MAX_PATH + 1] = { 0 };
 	CHAR szDrive[_MAX_DRIVE] = { 0 };
 	CHAR szDir[_MAX_DIR] = { 0 };
 	CHAR szFname[_MAX_FNAME] = { 0 };
