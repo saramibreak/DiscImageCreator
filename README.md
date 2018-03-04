@@ -1,6 +1,6 @@
 # DiscImageCreator
 ## Summary
-  This command-line program dumps CD, DVD, GD, Floppy. CD and GD, it can
+  This command-line program dumps a CD, DVD, BD, GD, Floppy. CD and GD, it can
  dump considering a drive + CD (=combined) offset.
   It works on Windows PC (WinXP or higher).
 
@@ -17,6 +17,8 @@
           Useful tool for PLEXTOR.
    - HL-DT-ST
      - UH12NS30 (Combined offset minus disc only)
+   - ASUS
+     - BC-12D2HT (Combined offset minus disc only)
 - GD: TSSTcorp(TS-H353A, TS-H352C, TS-H192C)
      http://forum.redump.org/post/14552/#p14552 <- This drive might be supported too.
 - DVD: All supported drive
@@ -87,7 +89,7 @@
   Protected Disc
   - SafeDisc, SmartE, Cactus Data Shield 300, ProtectCD-VOB [bad(error) sector]
   - SafeDisc v2 or higher [weak sector]
-  - LibCrypt, SecuROM(v1 - v4.8x) [unique data on subchannel]
+  - LibCrypt, SecuROM(v1 - v3) [unique data on subchannel]
   - Cactus Data Shield 200 [Intensional(deliberate) C1/C2 error]
   - CD Lock [characteristic track]
   - Cactus Data Shield 100 [Fake TOC]
