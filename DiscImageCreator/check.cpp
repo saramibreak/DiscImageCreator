@@ -102,9 +102,13 @@ BOOL IsValidPceSector(
 BOOL IsValidPcfxSector(
 	LPBYTE lpBuf
 ) {
-	BOOL bRet = TRUE;
-	if (strncmp((LPCH)&lpBuf[0], "PC-FX:Hu_CD-ROM", 15)) {
-		bRet = FALSE;
+	BOOL bRet = FALSE;
+	if (!strncmp((LPCH)&lpBuf[0], "PC-FX:Hu_CD-ROM ", 16)) {
+		bRet = TRUE;
+	}
+	// Super PCEngine Fan Deluxe - Special CD-ROM Vol. 1 (Japan)
+	else if (!strncmp((LPCH)&lpBuf[1], "UDSON CD-EMUL2 ", 15)) {
+		bRet = TRUE;
 	}
 	return bRet;
 }
@@ -1675,9 +1679,11 @@ VOID CheckAndFixSubChannel(
 
 BOOL ContainsC2Error(
 	PDEVICE pDevice,
-	LPBYTE lpBuf
+	LPBYTE lpBuf,
+	LPDWORD lpdwC2errorNum
 ) {
 	BOOL bRet = RETURNED_NO_C2_ERROR_1ST;
+	*lpdwC2errorNum = 0;
 	for (WORD wC2ErrorPos = 0; wC2ErrorPos < CD_RAW_READ_C2_294_SIZE; wC2ErrorPos++) {
 		DWORD dwPos = pDevice->TRANSFER.dwBufC2Offset + wC2ErrorPos;
 		if (lpBuf[dwPos] != 0) {
@@ -1692,13 +1698,10 @@ BOOL ContainsC2Error(
 					// wC2ErrorPos * CHAR_BIT => position of byte
 					// (position of byte) + n => position of bit
 					bRet = RETURNED_EXIST_C2_ERROR;
-					break;
+					(*lpdwC2errorNum)++;
 				}
 //				nBit <<= 1;
 				nBit >>= 1;
-			}
-			if (bRet == RETURNED_EXIST_C2_ERROR) {
-				break;
 			}
 		}
 	}
@@ -1890,4 +1893,20 @@ VOID CheckAndFixMainHeader(
 			}
 		}
 	}
+}
+
+BOOL IsProtectedSectorArea(
+	PEXT_ARG pExtArg,
+	PDISC pDisc,
+	INT nLBA
+) {
+	BOOL bRet = TRUE;
+	if (!(pExtArg->byScanProtectViaFile && pDisc->PROTECT.byExist &&
+		(pDisc->PROTECT.ERROR_SECTOR.nExtentPos <= nLBA &&
+			nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize) ||
+			(pDisc->PROTECT.byExist == microids && pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd <= nLBA &&
+				nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd + pDisc->PROTECT.ERROR_SECTOR.nSectorSize2nd))) {
+		bRet = FALSE;
+	}
+	return bRet;
 }

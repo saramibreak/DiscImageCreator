@@ -429,6 +429,10 @@ BOOL WriteParsingSubfile(
 	LPCTSTR pszSubfile
 );
 
+BOOL WriteParsingMdsfile(
+	LPCTSTR pszMdsfile
+);
+
 BOOL DescrambleMainChannelForGD(
 	LPCTSTR pszPath,
 	LPTSTR pszOutPath

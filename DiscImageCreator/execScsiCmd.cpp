@@ -598,6 +598,7 @@ BOOL SetDiscSpeed(
 			wSpeed = (WORD)(CD_RAW_SECTOR_SIZE * 75 * dwDiscSpeedNum / 1000);
 			setspeed.ReadSpeed = wSpeed;
 		}
+#if 1
 		else if (*pExecType == dvd &&
 			0 < dwDiscSpeedNum && dwDiscSpeedNum <= DVD_DRIVE_MAX_SPEED) {
 			// Read and write speeds for the first DVD drives and players were of
@@ -606,6 +607,7 @@ BOOL SetDiscSpeed(
 			wSpeed = (WORD)(DISC_RAW_READ_SIZE * 676 * dwDiscSpeedNum / 1000);
 			setspeed.ReadSpeed = wSpeed;
 		}
+#endif
 		else {
 			wSpeed = 0xffff;
 			setspeed.ReadSpeed = pDevice->wMaxReadSpeed;
@@ -761,7 +763,7 @@ BOOL ReadEeprom(
 }
 
 BOOL ReadDriveInformation(
-	PEXEC_TYPE pExexType,
+	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
@@ -793,10 +795,18 @@ BOOL ReadDriveInformation(
 	if (!GetConfiguration(pExtArg, pDevice, pDisc)) {
 		return FALSE;
 	}
+#if 0
+	if (*pExecType == dvd) {
+		SetStreaming(pDevice, dwCDSpeed);
+	}
+	else {
+#endif
+		SetDiscSpeed(pExecType, pExtArg, pDevice, dwCDSpeed);
+#if 0
+	}
+#endif
 	ModeSense10(pExtArg, pDevice);
 	ReadBufferCapacity(pExtArg, pDevice);
-	SetDiscSpeed(pExexType, pExtArg, pDevice, dwCDSpeed);
-
 	return TRUE;
 }
 
@@ -907,6 +917,12 @@ BOOL ReadDirectoryRecordDetail(
 				}
 				DWORD dwExtentPos = GetSizeOrDwordForVolDesc(lpDirRec + 2) / dwLogicalBlkCoef;
 				DWORD dwDataLen = GetSizeOrDwordForVolDesc(lpDirRec + 10);
+				if (dwDataLen >= DWORD(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE)) {
+					OutputVolDescLogA(
+						"Data length is incorrect. Skip the reading of this sector\n");
+					nSectorNum++;
+					break;
+				}
 				OutputFsDirectoryRecord(
 					pExtArg, pDisc, lpDirRec, dwExtentPos, dwDataLen, szCurDirName);
 				OutputVolDescLogA("\n");
@@ -942,7 +958,7 @@ BOOL ReadDirectoryRecordDetail(
 						// 0030 : 00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00   ................
 						// 0040 : 00 00 01 01 2E 00 09 A0  00 00 00 00 A0 09 D8 01   ................
 						OutputMainErrorWithLBALogA(
-							"Direcory Record is corrupt. Skip reading from %d to %d byte\n"
+							"Direcory Record is corrupt. Skip reading from %d to %d byte. See _mainInfo.txt\n"
 							, nLBA, 0, uiOfs, uiOfs + MIN_LEN_DR - 1);
 						uiOfs += MIN_LEN_DR;
 						break;

@@ -4,6 +4,7 @@
 #pragma once
 #include "enum.h"
 
+#define DVD_DRIVE_MAX_SPEED	(16)
 #define DRIVE_VENDER_ID_SIZE	(8)
 #define DRIVE_PRODUCT_ID_SIZE	(16)
 
@@ -47,6 +48,8 @@
 // Unicodeで64文字までの長いファイル名を記録できる。
 #define MAX_FNAME_FOR_VOLUME (128)
 #define MIN_LEN_DR (34)
+
+#define SAFEDISC_C2ERROR_NUM	(312)
 
 // PLEXTOR specified command
 #if 0

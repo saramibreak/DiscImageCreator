@@ -319,7 +319,7 @@ BOOL InitLogFile(
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
-			if (*pExecType != dvd) {
+			if (*pExecType != dvd && *pExecType != bd) {
 				if (NULL == (g_LogFile.fpSubInfo = CreateOrOpenFileA(
 					path, szSubInfoLogtxt, NULL, NULL, NULL, ".txt", "w", 0, 0))) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);

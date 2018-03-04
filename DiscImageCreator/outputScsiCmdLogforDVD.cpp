@@ -716,29 +716,34 @@ VOID OutputDVDLayerDescriptor(
 
 VOID OutputDVDCopyrightDescriptor(
 	PDVD_COPYRIGHT_DESCRIPTOR dvdCopyright,
-	LPBOOL lpbCPRM
+	PPROTECT_TYPE_DVD pProtect
 ) {
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(CopyrightInformation)
 		"\t    CopyrightProtectionType: ");
 	switch (dvdCopyright->CopyrightProtectionType) {
 	case 0:
 		OutputDiscLogA("No\n");
+		*pProtect = noProtect;
 		break;
 	case 1:
 		OutputDiscLogA("CSS/CPPM\n");
+		*pProtect = css;
 		break;
 	case 2:
 		OutputDiscLogA("CPRM\n");
-		*lpbCPRM = TRUE;
+		*pProtect = cprm;
 		break;
 	case 3:
 		OutputDiscLogA("AACS with HD DVD content\n");
+		*pProtect = aacs;
 		break;
 	case 10:
 		OutputDiscLogA("AACS with BD content\n");
+		*pProtect = aacs;
 		break;
 	default:
 		OutputDiscLogA("Unknown: %02x\n", dvdCopyright->CopyrightProtectionType);
+		*pProtect = noProtect;
 		break;
 	}
 	OutputDiscLogA(
@@ -763,7 +768,7 @@ VOID OutputDVDDiskKeyDescriptor(
 	OutputCDMain(fileDisc, dvdDiskKey->DiskKeyData, 0, sizeof(dvdDiskKey->DiskKeyData));
 }
 
-VOID OutputDVDBCADescriptor(
+VOID OutputDiscBCADescriptor(
 	PDVD_BCA_DESCRIPTOR dvdBca,
 	WORD wFormatLength
 ) {
@@ -801,18 +806,18 @@ VOID OutputDVDMediaKeyBlock(
 	OutputDiscLogA("\n");
 }
 
-VOID OutputDVDRamDds(
+VOID OutputDiscDefinitionStructure(
 	LPBYTE lpFormat,
 	WORD wFormatLength
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVD-RAM DDS)"\t");
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DiscDefinitionStructure)"\t");
 	OutputDVDCommonInfo(lpFormat, wFormatLength);
 }
 
-VOID OutputDVDRamMediumStatus(
+VOID OutputDiscMediumStatus(
 	PDVD_RAM_MEDIUM_STATUS dvdRamMeium
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDRamMediumStatus)
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DiscMediumStatus)
 		"\t              PersistentWriteProtect: %s\n"
 		"\t               CartridgeWriteProtect: %s\n"
 		"\t           MediaSpecificWriteInhibit: %s\n"
@@ -829,7 +834,7 @@ VOID OutputDVDRamMediumStatus(
 		BOOLEAN_TO_STRING_YES_NO_A(dvdRamMeium->MediaSpecificWriteInhibitInformation));
 }
 
-VOID OutputDVDRamSpareArea(
+VOID OutputDiscSpareAreaInformation(
 	PDVD_RAM_SPARE_AREA_INFORMATION dvdRamSpare
 ) {
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDRamSpareAreaInformation)
@@ -1096,10 +1101,10 @@ VOID OutputDVDMtaEccBlock(
 	OutputDVDCommonInfo(lpFormat, wFormatLength);
 }
 
-VOID OutputDVDWriteProtectionStatus(
+VOID OutputDiscWriteProtectionStatus(
 	PDVD_WRITE_PROTECTION_STATUS dvdWrite
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDWriteProtectionStatus)
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DiscWriteProtectionStatus)
 		"\tSoftwareWriteProtectUntilPowerdown: %s\n"
 		"\t       MediaPersistentWriteProtect: %s\n"
 		"\t             CartridgeWriteProtect: %s\n"
@@ -1110,7 +1115,7 @@ VOID OutputDVDWriteProtectionStatus(
 		BOOLEAN_TO_STRING_YES_NO_A(dvdWrite->MediaSpecificWriteProtect));
 }
 
-VOID OutputDVDAACSVolumeIdentifier(
+VOID OutputDiscAACSVolumeIdentifier(
 	LPBYTE lpFormat,
 	WORD wFormatLength
 ) {
@@ -1118,7 +1123,7 @@ VOID OutputDVDAACSVolumeIdentifier(
 	OutputDVDCommonInfo(lpFormat, wFormatLength);
 }
 
-VOID OutputDVDPreRecordedAACSMediaSerialNumber(
+VOID OutputDiscPreRecordedAACSMediaSerialNumber(
 	LPBYTE lpFormat,
 	WORD wFormatLength
 ) {
@@ -1126,7 +1131,7 @@ VOID OutputDVDPreRecordedAACSMediaSerialNumber(
 	OutputDVDCommonInfo(lpFormat, wFormatLength);
 }
 
-VOID OutputDVDAACSMediaIdentifier(
+VOID OutputDiscAACSMediaIdentifier(
 	LPBYTE lpFormat,
 	WORD wFormatLength
 ) {
@@ -1134,7 +1139,7 @@ VOID OutputDVDAACSMediaIdentifier(
 	OutputDVDCommonInfo(lpFormat, wFormatLength);
 }
 
-VOID OutputDVDAACSMediaKeyBlock(
+VOID OutputDiscAACSMediaKeyBlock(
 	LPBYTE lpFormat,
 	WORD wFormatLength
 ) {
@@ -1142,7 +1147,7 @@ VOID OutputDVDAACSMediaKeyBlock(
 	OutputDVDCommonInfo(lpFormat, wFormatLength);
 }
 
-VOID OutputDVDListOfRecognizedFormatLayers(
+VOID OutputDiscListOfRecognizedFormatLayers(
 	PDVD_LIST_OF_RECOGNIZED_FORMAT_LAYERS_TYPE_CODE dvdListOf
 ) {
 	OutputDiscLogA(
@@ -1156,25 +1161,24 @@ VOID OutputDVDListOfRecognizedFormatLayers(
 
 VOID OutputDVDStructureFormat(
 	BYTE byFormatCode,
-	LPBYTE lpBcaFlag,
-	LPBOOL lpbCPRM,
 	WORD wFormatLength,
 	LPBYTE lpFormat,
-	LPDWORD lpdwSectorLength
+	LPDWORD lpdwSectorLength,
+	PDISC_CONTENTS pDiscContents
 ) {
 	switch (byFormatCode) {
 	case DvdPhysicalDescriptor:
 	case 0x10:
-		OutputDVDLayerDescriptor((PDVD_FULL_LAYER_DESCRIPTOR)lpFormat, lpBcaFlag, lpdwSectorLength);
+		OutputDVDLayerDescriptor((PDVD_FULL_LAYER_DESCRIPTOR)lpFormat, &(pDiscContents->ucBca), lpdwSectorLength);
 		break;
 	case DvdCopyrightDescriptor:
-		OutputDVDCopyrightDescriptor((PDVD_COPYRIGHT_DESCRIPTOR)lpFormat, lpbCPRM);
+		OutputDVDCopyrightDescriptor((PDVD_COPYRIGHT_DESCRIPTOR)lpFormat, &(pDiscContents->protect));
 		break;
 	case DvdDiskKeyDescriptor:
 		OutputDVDDiskKeyDescriptor((PDVD_DISK_KEY_DESCRIPTOR)lpFormat);
 		break;
 	case DvdBCADescriptor:
-		OutputDVDBCADescriptor((PDVD_BCA_DESCRIPTOR)lpFormat, wFormatLength);
+		OutputDiscBCADescriptor((PDVD_BCA_DESCRIPTOR)lpFormat, wFormatLength);
 		break;
 	case DvdManufacturerDescriptor:
 		OutputDVDManufacturerDescriptor((PDVD_MANUFACTURER_DESCRIPTOR)lpFormat);
@@ -1186,13 +1190,13 @@ VOID OutputDVDStructureFormat(
 		OutputDVDMediaKeyBlock(lpFormat, wFormatLength);
 		break;
 	case 0x08:
-		OutputDVDRamDds(lpFormat, wFormatLength);
+		OutputDiscDefinitionStructure(lpFormat, wFormatLength);
 		break;
 	case 0x09:
-		OutputDVDRamMediumStatus((PDVD_RAM_MEDIUM_STATUS)lpFormat);
+		OutputDiscMediumStatus((PDVD_RAM_MEDIUM_STATUS)lpFormat);
 		break;
 	case 0x0a:
-		OutputDVDRamSpareArea((PDVD_RAM_SPARE_AREA_INFORMATION)lpFormat);
+		OutputDiscSpareAreaInformation((PDVD_RAM_SPARE_AREA_INFORMATION)lpFormat);
 		break;
 	case 0x0b:
 		OutputDVDRamRecordingType((PDVD_RAM_RECORDING_TYPE)lpFormat);
@@ -1252,24 +1256,24 @@ VOID OutputDVDStructureFormat(
 		break;
 		// formats 0x32 through 0xBF are not yet defined
 	case 0xc0:
-		OutputDVDWriteProtectionStatus((PDVD_WRITE_PROTECTION_STATUS)lpFormat);
+		OutputDiscWriteProtectionStatus((PDVD_WRITE_PROTECTION_STATUS)lpFormat);
 		break;
 		// formats 0xC1 through 0x7F are not yet defined
 	case 0x80:
-		OutputDVDAACSVolumeIdentifier(lpFormat, wFormatLength);
+		OutputDiscAACSVolumeIdentifier(lpFormat, wFormatLength);
 		break;
 	case 0x81:
-		OutputDVDPreRecordedAACSMediaSerialNumber(lpFormat, wFormatLength);
+		OutputDiscPreRecordedAACSMediaSerialNumber(lpFormat, wFormatLength);
 		break;
 	case 0x82:
-		OutputDVDAACSMediaIdentifier(lpFormat, wFormatLength);
+		OutputDiscAACSMediaIdentifier(lpFormat, wFormatLength);
 		break;
 	case 0x83:
-		OutputDVDAACSMediaKeyBlock(lpFormat, wFormatLength);
+		OutputDiscAACSMediaKeyBlock(lpFormat, wFormatLength);
 		break;
 		// formats 0x84 through 0x8F are not yet defined
 	case 0x90:
-		OutputDVDListOfRecognizedFormatLayers((PDVD_LIST_OF_RECOGNIZED_FORMAT_LAYERS_TYPE_CODE)lpFormat);
+		OutputDiscListOfRecognizedFormatLayers((PDVD_LIST_OF_RECOGNIZED_FORMAT_LAYERS_TYPE_CODE)lpFormat);
 		break;
 		// formats 0x91 through 0xFE are not yet defined
 	default:
@@ -1318,5 +1322,165 @@ VOID OutputDVDCopyrightManagementInformation(
 	}
 	else {
 		OutputDiscLogA("No protected sector\n");
+	}
+}
+
+VOID OutputBDDiscInformation(
+	LPBYTE lpFormat,
+	WORD wFormatLength
+) {
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DiscInformationFromPIC)
+		"\t            DiscInformationIdentifier: %.2s\n"
+		"\t                DiscInformationFormat: %02x\n"
+		"\t         NumberOfDIUnitsInEachDIBlock: %02x\n"
+		"\t                     DiscTypeSpecific: %02x\n"
+		"\tDIUnitSequenceNumber/ContinuationFlag: %02x\n"
+		"\t       NumberOfBytesInUseInThisDIUnit: %02x\n"
+		"\t                   DiscTypeIdentifier: %.3s\n"
+		"\t               DiscSize/Class/Version: %02x\n"
+		"\t        DIUnitFormatDependentContents: "
+		, &lpFormat[0], lpFormat[2], lpFormat[3], lpFormat[4], lpFormat[5]
+		, lpFormat[6], &lpFormat[8], lpFormat[11]);
+	for (WORD k = 0; k < 52; k++) {
+		OutputDiscLogA("%02x", lpFormat[12 + k]);
+	}
+	OutputDiscLogA("\n\t                               Others: ");
+	for (WORD k = 0; k < wFormatLength - 52; k++) {
+		OutputDiscLogA("%02x", lpFormat[64 + k]);
+	}
+	OutputDiscLogA("\n");
+}
+
+VOID OutputBDRawDefectList(
+	LPBYTE lpFormat,
+	WORD wFormatLength
+) {
+	UNREFERENCED_PARAMETER(wFormatLength);
+	LONG lEntries = MAKELONG(MAKEWORD(lpFormat[15], lpFormat[14]), MAKEWORD(lpFormat[13], lpFormat[12]));
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(RawDefectList)
+		"\t       DefectListIdentifier: %.2s\n"
+		"\t           DefectListFormat: %02x\n"
+		"\t      DefectListUpdateCount: %02lx\n"
+		"\t  NumberOfDefectListEntries: %02lx\n"
+		"\tDiscTypeSpecificInformation: "
+		, &lpFormat[0], lpFormat[2], MAKELONG(MAKEWORD(lpFormat[7], lpFormat[6])
+			, MAKEWORD(lpFormat[5], lpFormat[4])), lEntries);
+	for (WORD k = 0; k < 48; k++) {
+		OutputDiscLogA("%02x ", lpFormat[16 + k]);
+	}
+	OutputDiscLogA("\nDefectEntries: ");
+	for (WORD k = 0; k < lEntries; k += 8) {
+		OutputDiscLogA("%02x%02x%02x%02x%02x%02x%02x%02x "
+			, lpFormat[64 + k], lpFormat[65 + k], lpFormat[66 + k], lpFormat[67 + k]
+			, lpFormat[68 + k], lpFormat[69 + k], lpFormat[70 + k], lpFormat[71 + k]);
+	}
+	OutputDiscLogA("\n");
+}
+
+VOID OutputBDPhysicalAddressControl(
+	LPBYTE lpFormat,
+	WORD wFormatLength
+) {
+	DWORD dwPac = MAKEDWORD(MAKEWORD(lpFormat[4], lpFormat[3])
+		, MAKEWORD(lpFormat[2], 0));
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(PhysicalAddressControl)
+		"\tPhysicalAddressControlIdentifier: %02lx\n"
+		"\t                    FormatNumber: %02x\n"
+		, dwPac, lpFormat[5]);
+	if (dwPac == 0) {
+		INT nLen = MAKEWORD(lpFormat[7], lpFormat[6]) - 2;
+		for (WORD i = 0; i < nLen /  384; i++) {
+			OutputDiscLogA("PhysicalAddressControlHeader: ");
+			for (WORD k = 0; k < 384; k++) {
+				OutputDiscLogA("%02x ", lpFormat[10 + k + 384 * i]);
+			}
+			OutputDiscLogA("\n");
+		}
+	}
+	else if (1 <= dwPac && dwPac <= 0xfffffe) {
+		OutputDiscLogA("PhysicalAddressControlHeader: ");
+		for (WORD k = 0; k < 384; k++) {
+			OutputDiscLogA("%02x ", lpFormat[10 + k]);
+		}
+		OutputDiscLogA("\nPhysicalAddressControlSpecificInformation: ");
+		for (WORD k = 0; k < wFormatLength; k++) {
+			OutputDiscLogA("%02x ", lpFormat[384 + k]);
+		}
+		OutputDiscLogA("\n");
+	}
+	else if (dwPac == 0xffffff) {
+		INT nLen = MAKEWORD(lpFormat[7], lpFormat[6]) - 2;
+		for (WORD i = 0; i < nLen / 4; i++) {
+			OutputDiscLogA("PhysicalAddressControlIdentifierAndFormat: ");
+			for (WORD k = 0; k < 4; k++) {
+				OutputDiscLogA("%02x ", lpFormat[10 + k + 4 * i]);
+			}
+			OutputDiscLogA("\n");
+		}
+	}
+}
+
+VOID OutputBDStructureFormat(
+	BYTE byFormatCode,
+	WORD wFormatLength,
+	LPBYTE lpFormat
+) {
+	switch (byFormatCode) {
+	case 0:
+		OutputBDDiscInformation(lpFormat, wFormatLength);
+		break;
+		// format 0x01, 0x02 is reserved
+	case DvdBCADescriptor:
+		OutputDiscBCADescriptor((PDVD_BCA_DESCRIPTOR)lpFormat, wFormatLength);
+		break;
+		// format 0x04 - 0x07 is reserved
+	case 0x08:
+		OutputDiscDefinitionStructure(lpFormat, wFormatLength);
+		break;
+	case 0x09:
+		OutputDiscMediumStatus((PDVD_RAM_MEDIUM_STATUS)lpFormat);
+		break;
+	case 0x0a:
+		OutputDiscSpareAreaInformation((PDVD_RAM_SPARE_AREA_INFORMATION)lpFormat);
+		break;
+		// format 0x0b - 0x11 is reserved
+	case 0x12:
+		OutputBDRawDefectList(lpFormat, wFormatLength);
+		break;
+		// format 0x13 - 0x2f is reserved
+	case 0x30:
+		OutputBDPhysicalAddressControl(lpFormat, wFormatLength);
+		break;
+		// formats 0x31 through 0x7F are not yet defined
+	case 0x80:
+		OutputDiscAACSVolumeIdentifier(lpFormat, wFormatLength);
+		break;
+	case 0x81:
+		OutputDiscPreRecordedAACSMediaSerialNumber(lpFormat, wFormatLength);
+		break;
+	case 0x82:
+		OutputDiscAACSMediaIdentifier(lpFormat, wFormatLength);
+		break;
+	case 0x83:
+		OutputDiscAACSMediaKeyBlock(lpFormat, wFormatLength);
+		break;
+	case 0x84:
+		break;
+	case 0x85:
+		break;
+	case 0x86:
+		break;
+		// formats 0x87 through 0x8F are not yet defined
+	case 0x90:
+		OutputDiscListOfRecognizedFormatLayers((PDVD_LIST_OF_RECOGNIZED_FORMAT_LAYERS_TYPE_CODE)lpFormat);
+		break;
+		// formats 0x91 through 0xbf are not yet defined
+	case 0xc0:
+		OutputDiscWriteProtectionStatus((PDVD_WRITE_PROTECTION_STATUS)lpFormat);
+		break;
+		// formats 0xc1 through 0xfe are not yet defined
+	default:
+		OutputDiscLogA("\tUnknown: %02x\n", byFormatCode);
+		break;
 	}
 }

@@ -8,6 +8,8 @@ typedef enum _EXEC_TYPE {
 	data,
 	audio,
 	dvd,
+	bd,
+	raw,
 	gd,
 	fd,
 	stop,
@@ -15,7 +17,8 @@ typedef enum _EXEC_TYPE {
 	eject,
 	closetray,
 	reset,
-	sub
+	sub,
+	mds
 } EXEC_TYPE, *PEXEC_TYPE;
 
 typedef enum _LOG_TYPE {
@@ -43,7 +46,7 @@ typedef enum _TRACK_TYPE {
 	pregapIn1stTrack,
 } TRACK_TYPE, *PTRACK_TYPE;
 
-typedef enum _PROTECT_TYPE {
+typedef enum _PROTECT_TYPE_CD {
 	no,
 	cdidx,
 	cds300,
@@ -61,7 +64,14 @@ typedef enum _PROTECT_TYPE {
 	smartE,
 	bluebyte,
 	microids
-} PROTECT_TYPE, *PPROTECT_TYPE;
+} PROTECT_TYPE_CD, *PPROTECT_TYPE_CD;
+
+typedef enum _PROTECT_TYPE_DVD {
+	noProtect,
+	css,
+	cprm,
+	aacs
+} PROTECT_TYPE_DVD, *PPROTECT_TYPE_DVD;
 
 typedef enum _PATH_TYPE {
 	lType,

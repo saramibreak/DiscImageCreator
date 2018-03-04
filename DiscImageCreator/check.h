@@ -67,7 +67,8 @@ VOID CheckAndFixSubChannel(
 
 BOOL ContainsC2Error(
 	PDEVICE pDevice,
-	LPBYTE lpBuf
+	LPBYTE lpBuf,
+	LPDWORD lpdwC2errorNum
 );
 
 VOID SupportIndex0InTrack1(
@@ -88,4 +89,10 @@ VOID CheckAndFixMainHeader(
 	INT nLBA,
 	BYTE byCurrentTrackNum,
 	INT nMainDataType
+);
+
+BOOL IsProtectedSectorArea(
+	PEXT_ARG pExtArg,
+	PDISC pDisc,
+	INT nLBA
 );

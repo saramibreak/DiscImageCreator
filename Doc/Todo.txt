@@ -1,16 +1,14 @@
 ==================================== TODO =====================================
-. support Blu-ray Disc
-
 . support Atari Jaguar CD
 
 . support cue file for multisession disc
   SESSION directives
 
-. support mdf/mds (for SecuROM v5 or higher, StarForce, CD-Cops)
+. support mdf/mds (for SecuROM v4.x or higher, StarForce, CD-Cops)
 
 . support twin sector disc (for ALPHA-ROM, ROOT, TAGES)
 
-. support 0xd8 ripping of SONY, PIONEER
+. support 0xd8 dumping of SONY, PIONEER
   ftp://ftp.t10.org/t10/document.95/95-104r0.pdf
   http://www.pioneerelectronics.com/pio/pe/images/portal/cit_3424/31636562SCSI-2RefManV31.pdf
    => I don't have these old drive yet.
@@ -92,12 +90,15 @@
 
 . read DVD as 2064 byte
   http://forum.redump.org/topic/3808/raw-dvd-dumping-discussion/
-  http://www.13thmonkey.org/documentation/SCSI/mmc6r02g.pdf p59
+  http://www.13thmonkey.org/documentation/SCSI/mmc4r05a.pdf p68
   [quote]
    A DVD data sector contains 2 064 bytes, containing 2 048 bytes of main data and 16 bytes of additional
    information.
   [/quote]
    => Does use Read Buffer command(0x3c) or Hitachi specific command(0xE7) to dump the raw data?
+
+. decrypt Gamecube/WII Optical disc
+  https://web.archive.org/web/20081221213353/http://www.ingenieria-inversa.cl/?lp_lang_pref=en
 
 . search the offsets precisely
   [quote]

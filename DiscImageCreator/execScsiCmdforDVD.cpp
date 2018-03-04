@@ -158,8 +158,6 @@ BOOL ReadDVD(
 BOOL ReadDVDRaw(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
-	PDISC pDisc,
-	LPCSTR szVendorId,
 	LPCTSTR pszPath
 ) {
 	FILE* fp = CreateOrOpenFile(
@@ -180,7 +178,7 @@ BOOL ReadDVDRaw(
 		LPBYTE lpBuf = (LPBYTE)ConvParagraphBoundary(pDevice, pBuf);
 		BYTE cdblen = CDB12GENERIC_LENGTH;
 		BYTE lpCmd[CDB12GENERIC_LENGTH] = { 0 };
-		if (szVendorId && !strncmp(szVendorId, "PLXTRTER", 7)) {
+		if (pDevice->szVendorId && !strncmp(pDevice->szVendorId, "PLEXTOR", 7)) {
 			lpCmd[0] = SCSIOP_READ_DATA_BUFF;
 			lpCmd[1] = 0x02;
 			lpCmd[2] = 0x00;
@@ -189,8 +187,8 @@ BOOL ReadDVDRaw(
 			lpCmd[8] = LOBYTE(LOWORD(DVD_RAW_READ * dwTransferLen));
 			cdblen = CDB10GENERIC_LENGTH;
 		}
-		else if (szVendorId && !strncmp(szVendorId, "HL-DT-ST", 8)) {
-			lpCmd[0] = 0xE7; // vendor specific command (discovered by DaveX)
+		else if (pDevice->szVendorId && !strncmp(pDevice->szVendorId, "HL-DT-ST", 8)) {
+			lpCmd[0] = 0xE7; // vendor specific command
 			lpCmd[1] = 0x48; // H
 			lpCmd[2] = 0x49; // I
 			lpCmd[3] = 0x54; // T
@@ -198,26 +196,28 @@ BOOL ReadDVDRaw(
 			lpCmd[10] = HIBYTE(LOWORD(DVD_RAW_READ * dwTransferLen));
 			lpCmd[11] = LOBYTE(LOWORD(DVD_RAW_READ * dwTransferLen));
 		}
-
-		for (INT nLBA = 0; nLBA < pDisc->SCSI.nAllLength; nLBA += dwTransferLen) {
-			if (pDisc->SCSI.nAllLength - nLBA < (INT)dwTransferLen) {
-				dwTransferLen = (UINT)(pDisc->SCSI.nAllLength - nLBA);
-				if (szVendorId && !strncmp(szVendorId, "PLEXTOR", 7)) {
+		// 2048 * 2294912 = 4699979776
+		// 2064 * 2294912 = 4736698368
+		UINT64 nMaxSize = 4736698368;
+		for (UINT64 nLBA = 0; nLBA < nMaxSize; nLBA += DVD_RAW_READ * dwTransferLen) {
+			if (nMaxSize - nLBA < (INT)dwTransferLen) {
+				dwTransferLen = (UINT)(nMaxSize - nLBA);
+				if (pDevice->szVendorId && !strncmp(pDevice->szVendorId, "PLEXTOR", 7)) {
 					lpCmd[6] = LOBYTE(HIWORD(DVD_RAW_READ * dwTransferLen));
 					lpCmd[7] = HIBYTE(LOWORD(DVD_RAW_READ * dwTransferLen));
 					lpCmd[8] = LOBYTE(LOWORD(DVD_RAW_READ * dwTransferLen));
 				}
-				else if (szVendorId && !strncmp(szVendorId, "HL-DT-ST", 8)) {
+				else if (pDevice->szVendorId && !strncmp(pDevice->szVendorId, "HL-DT-ST", 8)) {
 					lpCmd[10] = HIBYTE(LOWORD(DVD_RAW_READ * dwTransferLen));
 					lpCmd[11] = LOBYTE(LOWORD(DVD_RAW_READ * dwTransferLen));
 				}
 			}
-			if (szVendorId && !strncmp(szVendorId, "PLEXTOR", 7)) {
+			if (pDevice->szVendorId && !strncmp(pDevice->szVendorId, "PLEXTOR", 7)) {
 				lpCmd[3] = LOBYTE(HIWORD(nLBA));
 				lpCmd[4] = HIBYTE(LOWORD(nLBA));
 				lpCmd[5] = LOBYTE(LOWORD(nLBA));
 			}
-			else if (szVendorId && !strncmp(szVendorId, "HL-DT-ST", 8)) {
+			else if (pDevice->szVendorId && !strncmp(pDevice->szVendorId, "HL-DT-ST", 8)) {
 				lpCmd[6] = HIBYTE(HIWORD(nLBA));
 				lpCmd[7] = LOBYTE(HIWORD(nLBA));
 				lpCmd[8] = HIBYTE(LOWORD(nLBA));
@@ -230,9 +230,9 @@ BOOL ReadDVDRaw(
 				throw FALSE;
 			}
 
-			fwrite(lpBuf, sizeof(BYTE), (size_t)DVD_RAW_READ * dwTransferLen, fp);
-			OutputString(_T("\rCreating raw(LBA) %8lu/%8u"), 
-				nLBA + dwTransferLen - 1, pDisc->SCSI.nAllLength - 1);
+			fwrite(lpBuf, (size_t)DVD_RAW_READ * dwTransferLen, sizeof(BYTE), fp);
+			OutputString(_T("\rCreating raw(LBA) %10llu/%10llu"), 
+				nLBA + DVD_RAW_READ * dwTransferLen - 1, nMaxSize - 1);
 		}
 		OutputString(_T("\n"));
 	}
@@ -304,7 +304,69 @@ BOOL ReadDVDForCMI(
 	return bRet;
 }
 
-BOOL ReadDVDStructure(
+BOOL ExecReadingKey(
+	PDEVICE pDevice
+) {
+	BOOL bRet = TRUE;
+	PDVD_COPY_PROTECT_KEY dvdKey = (PDVD_COPY_PROTECT_KEY)calloc(DVD_DISK_KEY_LENGTH, sizeof(BYTE));
+	try {
+		if (!DvdStartSession(pDevice, dvdKey)) {
+			throw FALSE;
+		}
+		dvdKey->KeyLength = DVD_CHALLENGE_KEY_LENGTH;
+		dvdKey->KeyType = DvdChallengeKey;
+#if 0
+		for (int j = 13; 3 < j; j--) {
+			dvdKey->KeyData[j] = (UCHAR)(j - 4);
+		}
+#endif
+		if (!SendKey(pDevice, dvdKey)) {
+			throw FALSE;
+		}
+		dvdKey->KeyLength = DVD_BUS_KEY_LENGTH;
+		dvdKey->KeyType = DvdBusKey1;
+		if (!ReadKey(pDevice, dvdKey)) {
+			throw FALSE;
+		}
+		dvdKey->KeyLength = DVD_CHALLENGE_KEY_LENGTH;
+		dvdKey->KeyType = DvdChallengeKey;
+		if (!ReadKey(pDevice, dvdKey)) {
+			throw FALSE;
+		}
+#if 0
+		// need to exec DeCSS
+		// ref: https://github.com/mpc-hc/mpc-hc/tree/develop/src/DeCSS
+		dvdKey->KeyLength = DVD_BUS_KEY_LENGTH;
+		dvdKey->KeyType = DvdBusKey2;
+		if (!SendKey(pDevice, dvdKey)) {
+			throw FALSE;
+		}
+		dvdKey->KeyLength = DVD_TITLE_KEY_LENGTH;
+		dvdKey->KeyType = DvdTitleKey;
+		if (!ReadKey(pDevice, dvdKey)) {
+			throw FALSE;
+		}
+		dvdKey->KeyLength = DVD_DISK_KEY_LENGTH;
+		dvdKey->KeyType = DvdDiskKey;
+		if (!ReadKey(pDevice, dvdKey)) {
+			throw FALSE;
+		}
+		dvdKey->KeyLength = DVD_ASF_LENGTH;
+		dvdKey->KeyType = DvdAsf;
+		if (!ReadKey(pDevice, dvdKey)) {
+			throw FALSE;
+		}
+#endif
+	}
+	catch (BOOL bErr) {
+		bRet = bErr;
+	}
+	FreeAndNull(dvdKey);
+	return bRet;
+}
+
+BOOL ReadDiscStructure(
+	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc
@@ -315,6 +377,9 @@ BOOL ReadDVDStructure(
 
 	CDB::_READ_DVD_STRUCTURE cdb = { 0 };
 	cdb.OperationCode = SCSIOP_READ_DVD_STRUCTURE;
+	if (*pExecType == bd) {
+		cdb.Reserved1 = 1;
+	}
 	cdb.Format = 0xff;
 	REVERSE_BYTES_SHORT(&cdb.AllocationLength, &wMaxDVDStructureSize);
 
@@ -329,69 +394,90 @@ BOOL ReadDVDStructure(
 	REVERSE_SHORT(&pDescHeader->Length);
 	WORD wDataSize = pDescHeader->Length - sizeof(pDescHeader->Length);
 	WORD wEntrySize = wDataSize / sizeof(DVD_STRUCTURE_LIST_ENTRY);
-	UCHAR ucBCAFlag = FALSE;
-	BOOL bCPRM = FALSE;
+	DISC_CONTENTS discContents = { 0 };
 
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDStructure));
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DiscStructure));
 	for (WORD i = 0; i < wEntrySize; i++) {
 		PDVD_STRUCTURE_LIST_ENTRY pEntry = 
 			((PDVD_STRUCTURE_LIST_ENTRY)pDescHeader->Data + i);
 		WORD wFormatLen = MAKEWORD(pEntry->FormatLength[1], pEntry->FormatLength[0]);
 		OutputDiscLogA(
 			"FormatCode: %02x, Sendable: %3s, Readable: %3s, FormatLength: %u\n", 
-			pEntry->FormatCode,
-			BOOLEAN_TO_STRING_YES_NO_A(pEntry->Sendable),
-			BOOLEAN_TO_STRING_YES_NO_A(pEntry->Readable),
-			wFormatLen);
-
-		if (pEntry->FormatCode == 0xff) {
-			OutputDiscLogA("Skiped\n\n");
-			break;
-		}
-		else if (pEntry->FormatCode == 0x02 && pDisc->SCSI.wCurrentMedia != ProfileDvdRom) {
-			OutputDiscLogA("Skiped because of DVD-ROM only\n\n");
+			pEntry->FormatCode,	BOOLEAN_TO_STRING_YES_NO_A(pEntry->Sendable),
+			BOOLEAN_TO_STRING_YES_NO_A(pEntry->Readable), wFormatLen);
+		if (wFormatLen == 0) {
+			OutputDiscLogA("Skiped because length is 0\n\n");
 			continue;
 		}
-		else if (pEntry->FormatCode == 0x03 && !ucBCAFlag) {
-			OutputDiscLogA("Skiped because of no BCA data\n\n");
-			continue;
+		if (*pExecType == dvd) {
+			if (pEntry->FormatCode == 0xff) {
+				OutputDiscLogA("Skiped\n\n");
+				break;
+			}
+			else if (pEntry->FormatCode == 0x02) {
+				if (discContents.protect == css) {
+					ExecReadingKey(pDevice);
+				}
+				else {
+					OutputDiscLogA("Skiped because of DVD with CSS only\n\n");
+					continue;
+				}
+			}
+			else if (pEntry->FormatCode == 0x03 && !discContents.ucBca) {
+				OutputDiscLogA("Skiped because of no BCA data\n\n");
+				continue;
+			}
+			else if (pEntry->FormatCode == 0x05) {
+				OutputDiscLogA("Skiped. If you see the detailed, use /c option\n\n");
+				continue;
+			}
+			else if (pEntry->FormatCode == 0x06 || pEntry->FormatCode == 0x07) {
+				if (discContents.protect == cprm) {
+					ExecReadingKey(pDevice);
+				}
+				else {
+					OutputDiscLogA("Skiped because of DVD with CPRM only\n\n");
+					continue;
+				}
+			}
+			else if ((0x08 <= pEntry->FormatCode && pEntry->FormatCode <= 0x0b) &&
+				pDisc->SCSI.wCurrentMedia != ProfileDvdRam) {
+				OutputDiscLogA("Skiped because of DVD-RAM only\n\n");
+				continue;
+			}
+			else if ((0x0c <= pEntry->FormatCode && pEntry->FormatCode <= 0x10) &&
+				(pDisc->SCSI.wCurrentMedia != ProfileDvdRecordable) &&
+				(pDisc->SCSI.wCurrentMedia != ProfileDvdRWSequential)) {
+				OutputDiscLogA("Skiped because of DVD-R, RW only\n\n");
+				continue;
+			}
+			else if ((pEntry->FormatCode == 0x11 || pEntry->FormatCode == 0x30) &&
+				(pDisc->SCSI.wCurrentMedia != ProfileDvdPlusRW) &&
+				(pDisc->SCSI.wCurrentMedia != ProfileDvdPlusR)) {
+				OutputDiscLogA("Skiped because of DVD+R, RW only\n\n");
+				continue;
+			}
+			else if ((0x20 <= pEntry->FormatCode && pEntry->FormatCode <= 0x24) &&
+				pDisc->SCSI.wCurrentMedia != ProfileDvdDashRDualLayer) {
+				OutputDiscLogA("Skiped because of DVD-R DL only\n\n");
+				continue;
+			}
+			else if ((pEntry->FormatCode == 0xc0) &&
+				pDisc->SCSI.wCurrentMedia != ProfileDvdRewritable) {
+				OutputDiscLogA("Skiped because of DVD-R Rewritable only\n\n");
+				continue;
+			}
 		}
-		else if (pEntry->FormatCode == 0x05) {
-			OutputDiscLogA("Skiped. If you see the detailed, use /c option\n\n");
-			continue;
+		else if (*pExecType == bd) {
+			if ((pEntry->FormatCode == 0x08 || pEntry->FormatCode == 0x0a ||
+				pEntry->FormatCode == 0x12 || pEntry->FormatCode == 0x30) &&
+				pDisc->SCSI.wCurrentMedia != ProfileBDRSequentialWritable &&
+				pDisc->SCSI.wCurrentMedia != ProfileBDRRandomWritable &&
+				pDisc->SCSI.wCurrentMedia != ProfileBDRewritable) {
+				OutputDiscLogA("Skiped because of BD-R, RW only\n\n");
+				continue;
+			}
 		}
-		else if ((pEntry->FormatCode == 0x06 || pEntry->FormatCode == 0x07) && !bCPRM) {
-			OutputDiscLogA("Skiped because of DVD with CPRM only\n\n");
-			continue;
-		}
-		else if ((0x08 <= pEntry->FormatCode && pEntry->FormatCode <= 0x0b) &&
-			pDisc->SCSI.wCurrentMedia != ProfileDvdRam) {
-			OutputDiscLogA("Skiped because of DVD-RAM only\n\n");
-			continue;
-		}
-		else if ((0x0c <= pEntry->FormatCode && pEntry->FormatCode <= 0x10) &&
-			(pDisc->SCSI.wCurrentMedia != ProfileDvdRecordable) &&
-			(pDisc->SCSI.wCurrentMedia != ProfileDvdRWSequential)) {
-			OutputDiscLogA("Skiped because of DVD-R, RW only\n\n");
-			continue;
-		}
-		else if ((pEntry->FormatCode == 0x11 || pEntry->FormatCode == 0x30) &&
-			(pDisc->SCSI.wCurrentMedia != ProfileDvdPlusRW) &&
-			(pDisc->SCSI.wCurrentMedia != ProfileDvdPlusR)) {
-			OutputDiscLogA("Skiped because of DVD+R, RW only\n\n");
-			continue;
-		}
-		else if ((0x20 <= pEntry->FormatCode && pEntry->FormatCode <= 0x24) &&
-			pDisc->SCSI.wCurrentMedia != ProfileDvdDashRDualLayer) {
-			OutputDiscLogA("Skiped because of DVD-R DL only\n\n");
-			continue;
-		}
-		else if ((pEntry->FormatCode == 0xc0) &&
-			pDisc->SCSI.wCurrentMedia != ProfileDvdRewritable) {
-			OutputDiscLogA("Skiped because of DVD-R Rewritable only\n\n");
-			continue;
-		}
-
 		LPBYTE lpFormat = (LPBYTE)calloc(wFormatLen, sizeof(BYTE));
 		if (!lpFormat) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -407,29 +493,33 @@ BOOL ReadDVDStructure(
 			OutputLogA(standardError | fileDisc, "FormatCode: %02x failed\n", pEntry->FormatCode);
 		}
 		else {
-			DWORD dwSectorLen = 0;
-			OutputDVDStructureFormat(pEntry->FormatCode, &ucBCAFlag, &bCPRM,
-				wFormatLen - sizeof(DVD_DESCRIPTOR_HEADER), 
-				lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), &dwSectorLen);
-			if (pEntry->FormatCode == DvdPhysicalDescriptor) {
-				PDVD_FULL_LAYER_DESCRIPTOR dvdpd = (PDVD_FULL_LAYER_DESCRIPTOR)(lpFormat + sizeof(DVD_DESCRIPTOR_HEADER));
-				if (dvdpd->commonHeader.TrackPath == 0 && dvdpd->commonHeader.NumberOfLayers == 1) {
-					cdb.LayerNumber = 1;
-					if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH,
-						lpFormat, wFormatLen, &byScsiStatus, _T(__FUNCTION__), __LINE__) ||
-						byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-						OutputLogA(standardError | fileDisc, "FormatCode: %02x failed\n", pEntry->FormatCode);
+			if (*pExecType == dvd) {
+				DWORD dwSectorLen = 0;
+				OutputDVDStructureFormat(pEntry->FormatCode, wFormatLen - sizeof(DVD_DESCRIPTOR_HEADER)
+					, lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), &dwSectorLen, &discContents);
+				if (pEntry->FormatCode == DvdPhysicalDescriptor) {
+					PDVD_FULL_LAYER_DESCRIPTOR dvdpd = (PDVD_FULL_LAYER_DESCRIPTOR)(lpFormat + sizeof(DVD_DESCRIPTOR_HEADER));
+					if (dvdpd->commonHeader.TrackPath == 0 && dvdpd->commonHeader.NumberOfLayers == 1) {
+						cdb.LayerNumber = 1;
+						if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH,
+							lpFormat, wFormatLen, &byScsiStatus, _T(__FUNCTION__), __LINE__) ||
+							byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+							OutputLogA(standardError | fileDisc, "FormatCode: %02x failed\n", pEntry->FormatCode);
+						}
+						else {
+							DWORD dwSectorLen2 = 0;
+							OutputDVDStructureFormat(pEntry->FormatCode, wFormatLen - sizeof(DVD_DESCRIPTOR_HEADER)
+								, lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), &dwSectorLen2, &discContents);
+							OutputDiscLogA("\tLayerAllSector : % 7lu (%#lx)\n", dwSectorLen + dwSectorLen2, dwSectorLen + dwSectorLen2);
+							dwSectorLen += dwSectorLen2;
+						}
 					}
-					else {
-						DWORD dwSectorLen2 = 0;
-						OutputDVDStructureFormat(pEntry->FormatCode, &ucBCAFlag, &bCPRM,
-							wFormatLen - sizeof(DVD_DESCRIPTOR_HEADER),
-							lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), &dwSectorLen2);
-						OutputDiscLogA("\tLayerAllSector : % 7lu (%#lx)\n", dwSectorLen + dwSectorLen2, dwSectorLen + dwSectorLen2);
-						dwSectorLen += dwSectorLen2;
-					}
+					pDisc->SCSI.nAllLength = (INT)dwSectorLen;
 				}
-				pDisc->SCSI.nAllLength = (INT)dwSectorLen;
+			}
+			else if (*pExecType == bd) {
+				OutputBDStructureFormat(pEntry->FormatCode,
+					wFormatLen - sizeof(DVD_DESCRIPTOR_HEADER),	lpFormat + sizeof(DVD_DESCRIPTOR_HEADER));
 			}
 		}
 		OutputDiscLogA("\n");

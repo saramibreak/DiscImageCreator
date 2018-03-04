@@ -15,14 +15,19 @@ VOID OutputFsVolumeRecognitionSequence(
 
 VOID OutputDVDStructureFormat(
 	BYTE byFormatCode,
-	LPBYTE lpBcaFlag,
-	LPBOOL lpbCPRM,
 	WORD wFormatLength,
 	LPBYTE lpFormat,
-	LPDWORD lpdwSectorLength
+	LPDWORD lpdwSectorLength,
+	PDISC_CONTENTS pDiscContents
 );
 
 VOID OutputDVDCopyrightManagementInformation(
 	PDVD_COPYRIGHT_MANAGEMENT_DESCRIPTOR dvdCopyright,
 	INT nLBA
+);
+
+VOID OutputBDStructureFormat(
+	BYTE byFormatCode,
+	WORD wFormatLength,
+	LPBYTE lpFormat
 );

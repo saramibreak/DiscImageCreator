@@ -866,7 +866,7 @@ VOID OutputFsPcfxHeader(
 	LPBYTE lpBuf,
 	INT nLBA
 ) {
-	OutputVolDescWithLBALogA(PCFX Warning msg, "\t%s\n", nLBA, (LPCH)&lpBuf[16]);
+	OutputVolDescWithLBALogA(PCFX Warning msg, "\t%s\n", nLBA, (LPCH)&lpBuf[0]);
 }
 
 VOID OutputFsPcfxSector(

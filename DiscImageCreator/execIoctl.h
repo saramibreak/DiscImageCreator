@@ -28,3 +28,23 @@ BOOL StorageQueryProperty(
 	PDEVICE pDevice,
 	LPBOOL lpBusTypeUSB
 );
+
+BOOL SetStreaming(
+	PDEVICE pDevice,
+	DWORD dwDiscSpeedNum
+);
+
+BOOL DvdStartSession(
+	PDEVICE pDevice,
+	PDVD_COPY_PROTECT_KEY dvdKey
+);
+
+BOOL ReadKey(
+	PDEVICE pDevice,
+	PDVD_COPY_PROTECT_KEY dvdKey
+);
+
+BOOL SendKey(
+	PDEVICE pDevice,
+	PDVD_COPY_PROTECT_KEY dvdKey
+);

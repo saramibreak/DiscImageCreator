@@ -55,11 +55,13 @@ typedef struct _EXT_ARG {
 	BYTE byReverse;
 	BYTE byScanProtectViaFile;
 	BYTE byScanProtectViaSector;
+	BYTE byScanAntiModStr;
 	BYTE bySkipSubP;
 	BYTE bySkipSubQ;
 	BYTE bySkipSubRtoW;
 	BYTE byLibCrypt;
 	BYTE byIntentionalSub;
+	BYTE pad[3];
 	INT nAudioCDOffsetNum;
 	DWORD dwMaxRereadNum;
 	INT nC2RereadingType;
@@ -214,6 +216,12 @@ typedef struct _DISC {
 	} PROTECT;
 } DISC, *PDISC;
 
+typedef struct _DISC_CONTENTS {
+	UCHAR ucBca;
+	UCHAR pad[3];
+	PROTECT_TYPE_DVD protect;
+} DISC_CONTENTS, *PDISC_CONTENTS;
+
 typedef struct _VOLUME_DESCRIPTOR {
 	struct _ISO_9660 {
 		DWORD dwLogicalBlkCoef;
@@ -283,6 +291,7 @@ typedef struct _DISC_PER_SECTOR {
 	MAIN_HEADER mainHeader;
 	SUBCODE subcode;
 	SUB_Q subQ;
+	DWORD dwC2errorNum;
 } DISC_PER_SECTOR, *PDISC_PER_SECTOR;
 
 // This buffer stores the R to W channel (only use to check)
@@ -293,6 +302,94 @@ typedef struct _SUB_R_TO_W {
 	CHAR data[16];
 	CHAR parityP[4];
 } SUB_R_TO_W, *PSUB_R_TO_W;
+
+#pragma pack(push, mds, 1)
+typedef struct _MDS_HEADER {
+	UCHAR fileId[16];
+	WORD unknown1;
+	WORD mediaType;
+	WORD sessionNum;
+	DWORD unknown2;
+	WORD lenOfBca;
+	UCHAR zero1[8];
+	DWORD ofsToBca;
+	UCHAR zero2[24];
+	DWORD ofsToDS;
+	UCHAR zero3[12];
+	DWORD ofsTo1stSessionBlk;
+	DWORD ofsToDpm;
+	UCHAR zero4[8];
+} MDS_HEADER, *PMDS_HEADER;
+
+typedef struct _MDS_FOR_DVD_BLK {
+	UCHAR bca[2048];
+	DWORD zero;
+	DVD_FULL_LAYER_DESCRIPTOR layer;
+} MDS_FOR_DVD_BLK, *PMDS_FOR_DVD_BLK;
+
+typedef struct _MDS_SESSION_BLK {
+	DWORD startSector;
+	DWORD endSector;
+	WORD sessionNum;
+	UCHAR totalDataBlkNum;
+	UCHAR DataBlkNum;
+	WORD firstTrackNum;
+	WORD lastTrackNum;
+	DWORD zero;
+	DWORD ofsTo1stDataBlk;
+} MDS_SESSION_BLK, *PMDS_SESSION_BLK;
+
+typedef struct _MDS_DATA_BLK {
+	UCHAR trackMode;
+	UCHAR numOfSubch;
+	UCHAR adrCtl;
+	UCHAR trackNum;
+	UCHAR point;
+	DWORD zero;
+	UCHAR m;
+	UCHAR s;
+	UCHAR f;
+	DWORD ofsToIndexBlk;
+	WORD sectorSize;
+	UCHAR unknown;
+	UCHAR zero2[17];
+	DWORD trackStartSector;
+	DWORD ofsFromHeadToIdx1;
+	DWORD unknown2;
+	DWORD NumOfFname;
+	DWORD OfsToFname;
+	UCHAR zero3[24];
+} MDS_DATA_BLK, *PMDS_DATA_BLK;
+
+typedef struct _MDS_IDX_BLK {
+	DWORD NumOfIdx0;
+	DWORD NumOfIdx1;
+} MDS_IDX_BLK, *PMDS_IDX_BLK;
+
+typedef struct _MDS_FNAME_BLK {
+	DWORD ofsToFname;
+	UCHAR fnameFmt;
+	UCHAR zero4[11];
+	__wchar_t fnameString[6];
+} MDS_FNAME_BLK, *PMDS_FNAME_BLK;
+
+typedef struct _MDS_DPM_HEADER {
+	DWORD dpmBlkTotalNum;
+#if !defined(__midl)
+	DWORD ofsToDpmBlk[0];
+#endif
+} MDS_DPM_HEADER, *PMDS_DPM_HEADER;
+
+typedef struct _MDS_DPM_BLK {
+	DWORD dpmBlkNum;
+	DWORD unknown1;
+	DWORD resolution;
+	DWORD entry;
+#if !defined(__midl)
+	DWORD readTime[0];
+#endif
+} MDS_DPM_BLK, *PMDS_DPM_BLK;
+#pragma pack(pop, mds)
 
 #pragma pack(push, cdbsp, 1)
 typedef union _CDBSP {

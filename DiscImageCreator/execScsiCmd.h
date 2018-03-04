@@ -4,7 +4,6 @@
 #pragma once
 
 #define CD_DRIVE_MAX_SPEED	(72)
-#define DVD_DRIVE_MAX_SPEED	(16)
 
 BOOL TestUnitReady(
 	PEXT_ARG pExtArg,
@@ -63,7 +62,7 @@ BOOL Reset(
 );
 
 BOOL ReadDriveInformation(
-	PEXEC_TYPE pExexType,
+	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
@@ -82,7 +81,7 @@ BOOL ExecReadCD(
 );
 
 BOOL ReadVolumeDescriptor(
-	PEXEC_TYPE pExexType,
+	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,

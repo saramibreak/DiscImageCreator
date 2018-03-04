@@ -20,12 +20,13 @@ BOOL ReadDVDForCMI(
 );
 
 BOOL ReadDVDRaw(
+	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
-	LPCSTR szVendorId,
 	LPCTSTR pszPath
 );
 
-BOOL ReadDVDStructure(
+BOOL ReadDiscStructure(
+	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc

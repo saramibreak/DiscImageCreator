@@ -1,0 +1,84 @@
+========================= Drive information (I tested) ========================
+Vendor					Model					Firmware(*1)	Lead-in				Lead-out	Scrambled	GD-ROM(*2)				Wii-ROM
+ASUS					BC-12D2HT				3.01			Partial(from -145)	No			Yes			No						No
+LG(HL-DT-ST)			GCC-4320B				1.00			No					No			Yes			No						No
+HITACHI(HL-DT-ST)		GDR-8161B				0045			No					No			No			No						Yes
+HP(HL-DT-ST)			GDR-8163B				0B26			No					No			No			No						Yes
+HITACHI-LG(HL-DT-ST)	GDR-8163B				0S24			No					No			No			No						Yes
+HITACHI-LG(HL-DT-ST)	GWA-8164B(GDR8164B)		0M08			No					No			No			No						Yes
+HITACHI-LG(HL-DT-ST)	GDR-H20N				0D04			No					No			No			No						Yes
+HITACHI-LG(HL-DT-ST)	GDR-H20N				0D08			No					No			No			No						Yes
+HITACHI-LG(HL-DT-ST)	GDR-H30N				1.00			No					No			No			No						No
+LITEON					DH-20A3S				9P58			No					No			Yes			No						No
+LITEON					LH-18A1P				GL0J			Yes					Yes			No			No						No
+LITEON					LH-20A1S				9L09			Yes					Yes			No			No						No
+LITEON					LTD-163					GDHG			No					No			No			Partial(99:59:74)		No
+LITEON(JLMS)			LTD-166S(XJ-HD166S)		DS1E			Yes					No			No			No						No
+LITEON					SOHW-812S(SOHW-832S)	CG5M			Yes					Yes			No			No						No
+MATSHITA				SW-9574S				ADX4			No					No			No			No						No
+MATSHITA				SW-9585S								No					No			No			No						No
+NEC						CDR-1700A(286)			3.06			No					No			No			No						No
+NEC						CDR-3001A(28F)			3.32			No					No			No			No						No
+Optiarc					AD-7203S				1-B0			No					No			No			No						No
+PLEXTOR					PX-12TS					1.01			Yes					Yes			Yes			No						No
+PLEXTOR					PX-20TS					1.00			Yes					Yes			Yes			No						No
+PLEXTOR					PX-40TS					1.14			Yes					Yes			Yes			No						No
+PLEXTOR					PX-R412C				1.07			Yes					Yes			Yes(*3)		No						No
+PLEXTOR					PX-R820Ti				1.08			Yes					Yes			Yes(*3)		No						No
+PLEXTOR					PX-W8220Ti				1.05			Yes					Yes			Yes(*3)		No						No
+PLEXTOR					PX-W8432Ti				1.09			Yes					Yes			Yes(*3)		No						No
+PLEXTOR					PX-W124TS				1.07			Yes					Yes			Yes(*3)		No						No
+PLEXTOR					PX-W1210TA				1.10			Yes					Yes			Yes(*3)		No						No
+PLEXTOR					PX-W1210TS				1.06			Yes					Yes			Yes			No						No
+PLEXTOR					PX-W1610TA				1.05			Yes					Yes			Yes(*3)		No						No
+PLEXTOR					PX-S88T					1.06			Yes					Yes			Yes(*3)		No						No
+PLEXTOR					PX-W2410TA				1.04			Yes					Yes			Yes(*3)		No						No
+PLEXTOR					PX-W4012TA				1.07			Yes					Yes			Yes			No						No
+PLEXTOR					PX-W4012TS				1.06			Yes					Yes			Yes			No						No
+PLEXTOR					PX-W4824TA				1.07			Yes					Yes			Yes			No						No
+PLEXTOR					PX-W5224A				1.04			Yes					Yes			Yes			Partial(79:59:74)(*4)	No
+PLEXTOR					PREMIUM					1.07			Yes					Yes			Yes			No						No
+PLEXTOR					PREMIUM2				1.04			Yes					Yes			Yes			No						No
+PLEXTOR					PX-320A					1.06			Yes					Yes			Yes(*3)		No						No
+PLEXTOR					PX-504A					1.02			No					No			No			No						No
+PLEXTOR					PX-708A(PX-708UF)		1.12			Yes					Yes			Yes			No						No
+PLEXTOR					PX-712SA(PX-712A)		1.09			Yes					Yes			Yes			Partial(79:59:74)(*4)	No
+PLEXTOR					PX-716A					1.11			Yes					Yes			Yes			No						No
+PLEXTOR					PX-750A					1.03			No					No			No			No						No
+PLEXTOR					PX-755SA(PX-755A)		1.08			Yes					Yes			Yes			Partial(79:59:74)(*4)	No
+PLEXTOR					PX-760A					1.07			Yes					Yes			Yes			No						No
+Slimtype				DS8A3S					HAT9			No					No			Yes			No						No
+SONY					CRX200E					1.0f			No					No			Yes			No						No
+TSSTcorp				SH-W162L				LC03			No					No			Yes			No						No
+TSSTcorp				TS-L162C				DE00			No					No			No			No						No
+TSSTcorp				TS-H192C				DE01			No					No			No			Yes						No
+TSSTcorp				TS-H192C				HI05			No					No			No			Yes						No
+TSSTcorp				TS-H192C				IB01(IB00)		No					No			No			No						No
+TSSTcorp				TS-H192CN				NE06(NE07)		No					No			No			Yes						No
+TSSTcorp				TS-H292B				DE03			No					No			No			No						No
+TSSTcorp				TS-H352C				DE06			No					No			No			Yes						No
+TSSTcorp				TS-H352C				NE02			No					No			No			Yes						No
+HP(TSSTcorp)			TS-H353A				BA08			No					No			No			Yes						No
+HP(TSSTcorp)			TS-H353B				bc03(BC05)		No					No			Yes			No						No
+TSSTcorp				TS-H492C				IB01			No					No			No			No						No
+TSSTcorp				TS-H652C(TS-H652D)		TI06			No					No			No			No						No
+
+*1
+ HITACHI-LG: 0xyy (x is OEM code, yy is number)
+  D: DELL, M: ??, S: ??
+ PLEXTOR: 1.xx (xx is number)
+ TSSTcorp: xxyy (xx is OEM code, yy is number)
+  BA: ??, BC: ??, DE: DELL, HI: HITACHI, IB: IBM, LC: LaCie, NE: NEC, TI: ??
+
+*2
+ If you dump a GD-ROM, you should rip to internal(and/or NTFS) HDD. 
+ Otherwise, if you have a supported drive, you can't only rip about 99:59:74.
+ The reason is unknown.
+ TSSTcorp TS-H192C, TS-H353A Reading often fails. (03-02-00, MEDIUM_ERROR - NO SEEK COMPLETE)
+
+*3
+ Single data track disc fails. (05-64-00, ILLEGAL_REQUEST. ILLEGAL MODE FOR THIS TRACK)
+ Not supported the C2 error report on READ D8 command
+
+*4
+ It can dump HD Area no swap but if swap, can't read the HD Area.
