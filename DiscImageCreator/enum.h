@@ -1,5 +1,17 @@
-/*
- * This code is released under the Microsoft Public License (MS-PL). See License.txt, below.
+/**
+ * Copyright 2011-2018 sarami
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 #pragma once
 
@@ -9,7 +21,6 @@ typedef enum _EXEC_TYPE {
 	audio,
 	dvd,
 	bd,
-	raw,
 	gd,
 	fd,
 	stop,
@@ -57,9 +68,9 @@ typedef enum _PROTECT_TYPE_CD {
 	safeDiscLite,
 	safeDisc,
 	securomTmp,
-	securomV1, // a.k.a SecuROM OLD (8 shifted RMSF/AMSF + 1 error * 24 times = 216 sector error)
-	securomV2, // a.k.a SecuROM NEW (8 shifted RMSF/AMSF + 1 error * 10 times = 90 sector error)
-	securomV3, // a.k.a SecuROM NEW (8 shifted RMSF/AMSF + LBA -1 + 10 random error = 99 sector error) 
+	securomV1, // a.k.a SecuROM OLD ((8 shifted RMSF/AMSF + 1 error) * 24 times = 216 sector error)
+	securomV2, // a.k.a SecuROM NEW ((8 shifted RMSF/AMSF + 1 error) * 10 times = 90 sector error)
+	securomV3, // a.k.a SecuROM NEW ((8 shifted RMSF/AMSF + 1 error) * 11 times = 99 sector error) 
 	securomV4, // a.k.a SecuROM NEW (LBA -1 + 10 random error = 11 sector error)
 	smartE,
 	bluebyte,
@@ -72,6 +83,12 @@ typedef enum _PROTECT_TYPE_DVD {
 	cprm,
 	aacs
 } PROTECT_TYPE_DVD, *PPROTECT_TYPE_DVD;
+
+typedef enum _DISC_TYPE {
+	formal,	// DVD, BD
+	gamecube,
+	wii
+} DISC_TYPE, *PDISC_TYPE;
 
 typedef enum _PATH_TYPE {
 	lType,

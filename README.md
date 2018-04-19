@@ -82,19 +82,22 @@
   DVD
   - DVD-Video
   - IBM PC compatible
+  - Sega Lindbergh
   - Sony PlayStation 2
   - VM Labs NUON DVD
-  - Sega Lindbergh
 
   Protected Disc
-  - SafeDisc, SmartE, Cactus Data Shield 300, ProtectCD-VOB [bad(error) sector]
-  - SafeDisc v2 or higher [weak sector]
-  - LibCrypt, SecuROM(v1 - v3) [unique data on subchannel]
-  - Cactus Data Shield 200 [Intensional(deliberate) C1/C2 error]
+  - Cactus Data Shield 100 [fake TOC]
+  - Cactus Data Shield 200 [intentional C2 error]
+  - Cactus Data Shield 300 
   - CD Lock [characteristic track]
-  - Cactus Data Shield 100 [Fake TOC]
-  - Key2Audio [Pregap]
+  - LibCrypt [unique data on subchannel]
+  - Key2Audio [pregap]
   - PhenoProtect [read errors?]
+  - ProtectCD-VOB [invalid sync]
+  - SafeDisc [bad(error) sector, intentional C2 error]
+  - SmartE [duplicated msf]
+  - SecuROM(v1 - v3) [unique data on subchannel]
 
 ## Probably Unsupported Disc
   DVD
@@ -103,9 +106,10 @@
      => see this. http://forum.redump.org/topic/6073/xbox-1-360-dumping-instructions/
 
   Protected Disc
-  - LaserLock, RingPROTECH, ProRing [no signal sector]
+  - RingPROTECH, ProRing [no signal sector]
+  - LaserLock [no signal sector, intentional C2 error]
      => The result doesn't match at each drives.
-  - CodeLock [read error]
+  - CodeLock [intentional C2 error, invalid sync]
      => Compared to CloneCD or CD Manipulator, a plextor detects double errors.
 
 ## Unsupported Disc
@@ -119,14 +123,7 @@
         You need to use the [Alcohol 120/52%](http://www.alcohol-soft.com/) to store it, 
   - Alpha-ROM, ROOT, TAGES [duplicated(double, triple) sector]
      => It can read in reverse, but specifications are not decided in redump.org
- 
-  Nintendo GameCube & Wii
-   => I don't implement a code to decrypt. You need to use RawDump or [friidump](http://forum.redump.org/topic/8108/friidump-053-source-code-update-linux-build/) to decrypt it.
-      (if you have a supported drive, you can dump a "encrypted" image using my app.)
 
-  HD DVD
-   => I don't have a drive, so I can't test.
- 
   Nintendo Wii U
    => I don't know the details.
 
@@ -259,6 +256,8 @@
  To: http://forum.redump.org/topic/10483/discimagecreator/
   or
  To: https://github.com/saramibreak/DiscImageCreator/issues
+
+ if you report, please upload all .txt file app created.
 
 ## Gratitude
  Thank's redump.org users.

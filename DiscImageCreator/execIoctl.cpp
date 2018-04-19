@@ -1,5 +1,17 @@
-/*
- * This code is released under the Microsoft Public License (MS-PL). See License.txt, below.
+/**
+ * Copyright 2011-2018 sarami
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 #include "struct.h"
 #include "execIoctl.h"
@@ -125,7 +137,7 @@ BOOL ScsiPassThroughDirect(
 		if (!pExtArg->byScanProtectViaFile || !_tcscmp(_T("SetDiscSpeed"), pszFuncName)) {
 			// When semaphore time out occurred, if doesn't execute sleep,
 			// UNIT_ATTENSION errors occurs next ScsiPassThroughDirect executing.
-			DWORD milliseconds = 40000;
+			DWORD milliseconds = 25000;
 			OutputErrorString(
 				_T("Please wait for %lu milliseconds until the device is returned\n"), milliseconds);
 			Sleep(milliseconds);
@@ -142,6 +154,7 @@ BOOL ScsiPassThroughDirect(
 			!bNoSense) {
 			INT nLBA = 0;
 			if (swb.ScsiPassThroughDirect.Cdb[0] == 0xa8 ||
+				swb.ScsiPassThroughDirect.Cdb[0] == 0xad ||
 				swb.ScsiPassThroughDirect.Cdb[0] == 0xbe ||
 				swb.ScsiPassThroughDirect.Cdb[0] == 0xd8) {
 				nLBA = (swb.ScsiPassThroughDirect.Cdb[2] << 24)

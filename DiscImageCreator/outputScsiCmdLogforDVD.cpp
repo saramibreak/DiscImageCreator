@@ -1,5 +1,17 @@
-/*
- * This code is released under the Microsoft Public License (MS-PL). See License.txt, below.
+/**
+ * Copyright 2011-2018 sarami
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 #include "struct.h"
 #include "output.h"
@@ -777,11 +789,22 @@ VOID OutputDiscBCADescriptor(
 }
 
 VOID OutputDVDManufacturerDescriptor(
-	PDVD_MANUFACTURER_DESCRIPTOR dvdManufacturer
+	PDVD_MANUFACTURER_DESCRIPTOR dvdManufacturer,
+	PDISC_TYPE pDiscType
 ) {
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(ManufacturingInformation));
 	OutputCDMain(fileDisc, dvdManufacturer->ManufacturingInformation, 0,
 		sizeof(dvdManufacturer->ManufacturingInformation));
+	if (!strncmp((LPCH)&dvdManufacturer->ManufacturingInformation[16], "Nintendo Game Disk", 18)) {
+		*pDiscType = DISC_TYPE::gamecube;
+	}
+	else if (!strncmp((LPCH)&dvdManufacturer->ManufacturingInformation[16], "Nintendo NNGC Disk", 18)) {
+		*pDiscType = DISC_TYPE::wii;
+	}
+	else {
+		*pDiscType = DISC_TYPE::formal;
+	}
+
 }
 
 VOID OutputDVDMediaId(
@@ -1181,7 +1204,7 @@ VOID OutputDVDStructureFormat(
 		OutputDiscBCADescriptor((PDVD_BCA_DESCRIPTOR)lpFormat, wFormatLength);
 		break;
 	case DvdManufacturerDescriptor:
-		OutputDVDManufacturerDescriptor((PDVD_MANUFACTURER_DESCRIPTOR)lpFormat);
+		OutputDVDManufacturerDescriptor((PDVD_MANUFACTURER_DESCRIPTOR)lpFormat, &(pDiscContents->disc));
 		break;
 	case 0x06:
 		OutputDVDMediaId(lpFormat, wFormatLength);
@@ -1286,42 +1309,41 @@ VOID OutputDVDCopyrightManagementInformation(
 	PDVD_COPYRIGHT_MANAGEMENT_DESCRIPTOR dvdCopyright,
 	INT nLBA
 ) {
-	OutputDiscLogA(STR_LBA, nLBA, nLBA);
 	if ((dvdCopyright->CPR_MAI & 0x80) == 0x80) {
 		if ((dvdCopyright->CPR_MAI & 0x40) == 0x40) {
 			switch (dvdCopyright->CPR_MAI & 0x0f) {
 			case 0:
-				OutputDiscLogA("This sector is scrambled by CSS");
+				OutputDiscWithLBALogA("This sector is scrambled by CSS", nLBA);
 				break;
 			case 0x01:
-				OutputDiscLogA("This sector is encrypted by CPPM");
+				OutputDiscWithLBALogA("This sector is encrypted by CPPM", nLBA);
 				break;
 			default:
-				OutputDiscLogA("reserved");
+				OutputDiscWithLBALogA("reserved", nLBA);
 			}
 		}
 		else {
-			OutputDiscLogA("CSS or CPPM doesn't exist in this sector");
+			OutputDiscWithLBALogA("CSS or CPPM doesn't exist in this sector", nLBA);
 		}
 		switch (dvdCopyright->CPR_MAI & 0x30) {
 		case 0:
-			OutputDiscLogA(", copying is permitted without restriction\n");
+			OutputDiscWithLBALogA(", copying is permitted without restriction\n", nLBA);
 			break;
 		case 0x10:
-			OutputDiscLogA(", reserved\n");
+			OutputDiscWithLBALogA(", reserved\n", nLBA);
 			break;
 		case 0x20:
-			OutputDiscLogA(", one generation of copies may be made\n");
+			OutputDiscWithLBALogA(", one generation of copies may be made\n", nLBA);
 			break;
 		case 0x30:
-			OutputDiscLogA(", no copying is permitted\n");
+			OutputDiscWithLBALogA(", no copying is permitted\n", nLBA);
 			break;
 		default:
-			OutputDiscLogA("\n");
+			OutputDiscWithLBALogA("\n", nLBA);
 		}
 	}
 	else {
-		OutputDiscLogA("No protected sector\n");
+		OutputDiscWithLBALogA("No protected sector\n", nLBA);
 	}
 }
 
@@ -1381,8 +1403,7 @@ VOID OutputBDPhysicalAddressControl(
 	LPBYTE lpFormat,
 	WORD wFormatLength
 ) {
-	DWORD dwPac = MAKEDWORD(MAKEWORD(lpFormat[4], lpFormat[3])
-		, MAKEWORD(lpFormat[2], 0));
+	DWORD dwPac = MAKEDWORD(MAKEWORD(lpFormat[4], lpFormat[3]), MAKEWORD(lpFormat[2], 0));
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(PhysicalAddressControl)
 		"\tPhysicalAddressControlIdentifier: %02lx\n"
 		"\t                    FormatNumber: %02x\n"

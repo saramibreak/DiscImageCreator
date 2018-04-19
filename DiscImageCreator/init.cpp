@@ -1,5 +1,17 @@
-/*
- * This code is released under the Microsoft Public License (MS-PL). See License.txt, below.
+/**
+ * Copyright 2011-2018 sarami
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 #include "struct.h"
 #include "convert.h"
@@ -12,13 +24,12 @@ extern BYTE g_aSyncHeader[SYNC_SIZE];
 BOOL InitC2(
 	PDISC* pDisc
 ) {
-	if (NULL == ((*pDisc)->MAIN.lpAllSectorCrc32 =
-		(LPDWORD)calloc((size_t)((*pDisc)->SCSI.nAllLength + FIRST_TRACK_PREGAP_SIZE + LAST_TRACK_LEADOUT_SIZE), sizeof(DWORD)))) {
+	size_t dwAllocSize = (size_t)((*pDisc)->SCSI.nAllLength + FIRST_TRACK_PREGAP_SIZE + LAST_TRACK_LEADOUT_SIZE);
+	if (NULL == ((*pDisc)->MAIN.lpAllSectorCrc32 = (LPDWORD)calloc(dwAllocSize, sizeof(DWORD)))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
-	if (NULL == ((*pDisc)->MAIN.lpAllLBAOfC2Error =
-		(LPINT)calloc((size_t)((*pDisc)->SCSI.nAllLength + FIRST_TRACK_PREGAP_SIZE + LAST_TRACK_LEADOUT_SIZE), sizeof(INT)))) {
+	if (NULL == ((*pDisc)->MAIN.lpAllLBAOfC2Error = (LPINT)calloc(dwAllocSize, sizeof(INT)))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
@@ -30,7 +41,7 @@ BOOL InitLBAPerTrack(
 	PDISC* pDisc
 ) {
 	size_t dwTrackAllocSize =
-		*pExecType == gd ? 100 : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
+		*pExecType == gd ? MAXIMUM_NUMBER_TRACKS : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
 	if (NULL == ((*pDisc)->SCSI.lpFirstLBAListOnToc = 
 		(LPINT)calloc(dwTrackAllocSize, sizeof(UINT_PTR)))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -49,7 +60,7 @@ BOOL InitTocFullData(
 	PDISC* pDisc
 ) {
 	size_t dwTrackAllocSize =
-		*pExecType == gd ? 100 : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
+		*pExecType == gd ? MAXIMUM_NUMBER_TRACKS : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
 	if (NULL == ((*pDisc)->SCSI.lpSessionNumList =
 		(LPBYTE)calloc(dwTrackAllocSize, sizeof(UINT_PTR)))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -67,7 +78,7 @@ BOOL InitTocTextData(
 ) {
 	BOOL bRet = TRUE;
 	size_t dwTrackAllocSize =
-		*pExecType == gd ? 100 : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
+		*pExecType == gd ? MAXIMUM_NUMBER_TRACKS : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
 	try {
 		if (pDevice->FEATURE.byCanCDText || *pExecType == gd) {
 			if (NULL == ((*pDisc)->SUB.pszISRC = 
@@ -178,7 +189,7 @@ BOOL InitSubData(
 ) {
 	BOOL bRet = TRUE;
 	size_t dwTrackAllocSize =
-		*pExecType == gd ? 100 : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
+		*pExecType == gd ? MAXIMUM_NUMBER_TRACKS : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
 	try {
 		if (NULL == ((*pDisc)->SUB.lpRtoWList =
 			(LPBYTE)calloc(dwTrackAllocSize, sizeof(BYTE)))) {
@@ -380,7 +391,7 @@ VOID TerminateTocTextData(
 	PDISC* pDisc
 ) {
 	size_t dwTrackAllocSize =
-		*pExecType == gd ? 100 : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
+		*pExecType == gd ? MAXIMUM_NUMBER_TRACKS : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
 	if (pDevice->FEATURE.byCanCDText) {
 		for (size_t i = 0; i < dwTrackAllocSize; i++) {
 			FreeAndNull((*pDisc)->SUB.pszISRC[i]);
@@ -412,7 +423,7 @@ VOID TerminateSubData(
 	PDISC* pDisc
 ) {
 	size_t dwTrackAllocSize =
-		*pExecType == gd ? 100 : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
+		*pExecType == gd ? MAXIMUM_NUMBER_TRACKS : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
 	for (size_t h = 0; h < dwTrackAllocSize; h++) {
 		if ((*pDisc)->SUB.lpFirstLBAListOnSub) {
 			FreeAndNull((*pDisc)->SUB.lpFirstLBAListOnSub[h]);
@@ -443,7 +454,7 @@ VOID TerminateLogFile(
 		FcloseAndNull(g_LogFile.fpVolDesc);
 		FcloseAndNull(g_LogFile.fpMainInfo);
 		FcloseAndNull(g_LogFile.fpMainError);
-		if (*pExecType != dvd) {
+		if (*pExecType != dvd && *pExecType != bd) {
 			FcloseAndNull(g_LogFile.fpSubInfo);
 			FcloseAndNull(g_LogFile.fpSubError);
 			if (pExtArg->byC2) {

@@ -1,5 +1,17 @@
-/*
- * This code is released under the Microsoft Public License (MS-PL). See License.txt, below.
+/**
+ * Copyright 2011-2018 sarami
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 #pragma once
 #include "forwardDeclaration.h"
@@ -51,7 +63,9 @@ typedef struct _EXT_ARG {
 	BYTE byFua;
 	BYTE byMCN;
 	BYTE byPre;
+	BYTE byMultiSession;
 	BYTE byRawDump;
+	BYTE byResume;
 	BYTE byReverse;
 	BYTE byScanProtectViaFile;
 	BYTE byScanProtectViaSector;
@@ -61,7 +75,7 @@ typedef struct _EXT_ARG {
 	BYTE bySkipSubRtoW;
 	BYTE byLibCrypt;
 	BYTE byIntentionalSub;
-	BYTE pad[3];
+	BYTE pad[1];
 	INT nAudioCDOffsetNum;
 	DWORD dwMaxRereadNum;
 	INT nC2RereadingType;
@@ -77,7 +91,7 @@ typedef struct _DEVICE {
 	SCSI_ADDRESS address;
 	UINT_PTR AlignmentMask;
 	DWORD dwMaxTransferLength;
-	CHAR szVendorId[DRIVE_VENDER_ID_SIZE];
+	CHAR szVendorId[DRIVE_VENDOR_ID_SIZE];
 	CHAR szProductId[DRIVE_PRODUCT_ID_SIZE];
 	BYTE byPlxtrDrive;
 	BYTE bySuccessReadToc;
@@ -186,6 +200,8 @@ typedef struct _DISC {
 		LPBOOL lpISRCList;
 		// 0 origin, max is last track num.
 		LPBYTE lpRtoWList;
+		INT nCorruptRMSF;
+		INT nCorruptAMSF;
 	} SUB;
 	struct _GDROM_TOC {
 		UCHAR reserved[2];
@@ -219,6 +235,7 @@ typedef struct _DISC {
 typedef struct _DISC_CONTENTS {
 	UCHAR ucBca;
 	UCHAR pad[3];
+	DISC_TYPE disc;
 	PROTECT_TYPE_DVD protect;
 } DISC_CONTENTS, *PDISC_CONTENTS;
 
@@ -281,7 +298,7 @@ typedef struct _SUB_Q_PER_SECTOR {
 typedef struct _SUB_Q {
 	SUB_Q_PER_SECTOR prevPrev;
 	SUB_Q_PER_SECTOR prev;
-	SUB_Q_PER_SECTOR present;
+	SUB_Q_PER_SECTOR current;
 	SUB_Q_PER_SECTOR next;
 	SUB_Q_PER_SECTOR nextNext;
 } SUB_Q, *PSUB_Q;

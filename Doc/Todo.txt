@@ -1,18 +1,19 @@
 ==================================== TODO =====================================
-. support Atari Jaguar CD
+[cue]
+. support cue file for multisession disc (SESSION directives)
 
-. support cue file for multisession disc
-  SESSION directives
+. support cue file of sub-pchannel version
+
+[image]
+. support Atari Jaguar CD and PSX cheat disc (irregular data track)
 
 . support mdf/mds (for SecuROM v4.x or higher, StarForce, CD-Cops)
 
 . support twin sector disc (for ALPHA-ROM, ROOT, TAGES)
 
-. support 0xd8 dumping of SONY, PIONEER
-  ftp://ftp.t10.org/t10/document.95/95-104r0.pdf
-  http://www.pioneerelectronics.com/pio/pe/images/portal/cit_3424/31636562SCSI-2RefManV31.pdf
-   => I don't have these old drive yet.
+. support Xbox / Xbox 360 disc
 
+[sub]
 . check parity P, Q for CD+G
   https://webstore.iec.ch/publication/3885 p24
   [quote]
@@ -78,6 +79,12 @@
        EDC, ECC is coded by "ecm - Encoder/decoder for Error Code Modeler format" of Neill Corlett.
       So, I can use these documents and source codes as reference, but I don't understand these yet.
 
+[other]
+. support 0xd8 dumping of SONY, PIONEER
+  ftp://ftp.t10.org/t10/document.95/95-104r0.pdf
+  http://www.pioneerelectronics.com/pio/pe/images/portal/cit_3424/31636562SCSI-2RefManV31.pdf
+   => I don't have these old drive yet.
+
 . read lead-in precisely
   http://senbee.seesaa.net/article/20732055.html
   http://www.13thmonkey.org/documentation/SCSI/mmc6r02g.pdf p43
@@ -86,19 +93,9 @@
    The last frame in the Lead-in is 99:59:74 and decreases as the spiral is followed toward the center of the disc.
    The Lead-in is typically 3 to 4 minutes in length.
   [/quote]
-   => I don't know the precise length of the Lead-in. I want the specification about the Lead-in/out.
-
-. read DVD as 2064 byte
-  http://forum.redump.org/topic/3808/raw-dvd-dumping-discussion/
-  http://www.13thmonkey.org/documentation/SCSI/mmc4r05a.pdf p68
-  [quote]
-   A DVD data sector contains 2 064 bytes, containing 2 048 bytes of main data and 16 bytes of additional
-   information.
-  [/quote]
-   => Does use Read Buffer command(0x3c) or Hitachi specific command(0xE7) to dump the raw data?
-
-. decrypt Gamecube/WII Optical disc
-  https://web.archive.org/web/20081221213353/http://www.ingenieria-inversa.cl/?lp_lang_pref=en
+   => I don't know the precise length of the Lead-in/out. I want the specification about the Lead-in/out.
+   => I know PLEXTOR drive reads lead-in partially (about 2000 sectors) and lead-out (100 sectors - 00:01:25)
+   => I know Lite-on drive reads lead-out (about 6750 sectors - 01:30:00)
 
 . search the offsets precisely
   [quote]

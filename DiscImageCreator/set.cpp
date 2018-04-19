@@ -1,5 +1,17 @@
-/*
- * This code is released under the Microsoft Public License (MS-PL). See License.txt, below.
+/**
+ * Copyright 2011-2018 sarami
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 #include "struct.h"
 #include "check.h"
@@ -158,9 +170,11 @@ VOID SetAndOutputToc(
 			pDisc->SCSI.nAllLength += pDisc->SCSI.lpFirstLBAListOnToc[tIdx];
 			OutputDiscLogA("\tPregap Track   , LBA %8u -%8u, Length %8u\n",
 				0, pDisc->SCSI.lpFirstLBAListOnToc[tIdx] - 1, pDisc->SCSI.lpFirstLBAListOnToc[tIdx]);
-			// This flag exists for The Apprentice (CD-i), Dimo's Quest (CD-i)
+			// This flag exists for The Apprentice (CD-i), Dimo's Quest (CD-i), that is, CD-I ready disc.
 			// These discs have only audio track on TOC, but there are
 			// actually some data sector in pregap of first sector.
+			pDisc->SCSI.byFirstDataTrackNum = i;
+			pDisc->SCSI.byLastDataTrackNum = i;
 			trkType = TRACK_TYPE::pregapIn1stTrack;
 		}
 		OutputDiscLogA(
@@ -170,7 +184,10 @@ VOID SetAndOutputToc(
 	}
 	OutputDiscLogA(
 		"\t                                         Total  %8u\n", pDisc->SCSI.nAllLength);
-	if (*pExecType != gd) {
+	if (*pExecType == gd) {
+		pDisc->SCSI.trackType = TRACK_TYPE::dataExist;
+	}
+	else {
 		pDisc->SCSI.trackType = trkType;
 	}
 }
@@ -758,6 +775,7 @@ VOID SetCDOffset(
 }
 
 VOID SetTrackAttribution(
+	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
 	INT nLBA,
@@ -766,20 +784,22 @@ VOID SetTrackAttribution(
 	PSUB_Q pSubQ
 ) {
 	if (0 <= nLBA && nLBA < pDisc->SCSI.nAllLength &&
-		0 < pSubQ->present.byTrackNum && pSubQ->present.byTrackNum <= *lpCurrentTrackNum + 1) {
+		0 < pSubQ->current.byTrackNum && pSubQ->current.byTrackNum <= *lpCurrentTrackNum + 1) {
 		INT tIdx = *lpCurrentTrackNum - 1;
 		// preserve the 1st LBA of the changed trackNum
-		if (pSubQ->prev.byTrackNum + 1 == pSubQ->present.byTrackNum) {
-			*lpCurrentTrackNum = pSubQ->present.byTrackNum;
+		if (pSubQ->prev.byTrackNum + 1 == pSubQ->current.byTrackNum) {
+			*lpCurrentTrackNum = pSubQ->current.byTrackNum;
 			tIdx = *lpCurrentTrackNum - 1;
-			if (pSubQ->present.byIndex > 0) {
+
+			if (pSubQ->current.byIndex > 0) {
 				if (pDisc->SCSI.nFirstLBAof2ndSession == -1 &&
-					pSubQ->present.byIndex == 1 &&
+					pSubQ->current.byIndex == 1 &&
 					nLBA != pDisc->SCSI.lpFirstLBAListOnToc[tIdx]) {
 					OutputSubInfoWithLBALogA(
 						"Subchannel & TOC doesn't sync. LBA on TOC[%d, %#x], index[%02u]\n",
-						nLBA, pSubQ->present.byTrackNum, pDisc->SCSI.lpFirstLBAListOnToc[tIdx],
-						pDisc->SCSI.lpFirstLBAListOnToc[tIdx], pSubQ->present.byIndex);
+						nLBA, pSubQ->current.byTrackNum, pDisc->SCSI.lpFirstLBAListOnToc[tIdx],
+						pDisc->SCSI.lpFirstLBAListOnToc[tIdx], pSubQ->current.byIndex);
+
 					pDisc->SUB.lpFirstLBAListOnSub[tIdx][1] = pDisc->SCSI.lpFirstLBAListOnToc[tIdx];
 					if (pDisc->SUB.lpFirstLBAListOnSub[tIdx][0] == pDisc->SUB.lpFirstLBAListOnSub[tIdx][1]) {
 						pDisc->SUB.lpFirstLBAListOnSub[tIdx][0] = -1;
@@ -792,9 +812,9 @@ VOID SetTrackAttribution(
 				}
 				else {
 					OutputSubInfoWithLBALogA(
-						"This track doesn't exist the pregap [L:%d]\n", nLBA, pSubQ->present.byTrackNum, (INT)__LINE__);
-					pDisc->SUB.lpFirstLBAListOnSub[tIdx][pSubQ->present.byIndex] = nLBA;
-					pDisc->SUB.lpFirstLBAListOnSubSync[tIdx][pSubQ->present.byIndex] = nLBA;
+						"This track doesn't exist the pregap [L:%d]\n", nLBA, pSubQ->current.byTrackNum, (INT)__LINE__);
+					pDisc->SUB.lpFirstLBAListOnSub[tIdx][pSubQ->current.byIndex] = nLBA;
+					pDisc->SUB.lpFirstLBAListOnSubSync[tIdx][pSubQ->current.byIndex] = nLBA;
 				}
 			}
 			// preserve last LBA per data track
@@ -804,8 +824,8 @@ VOID SetTrackAttribution(
 					(pSubQ->prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 
 					INT nTmpLastLBA = nLBA - 1;
-					if (!pExtArg->byRawDump &&
-						pDisc->SCSI.lpSessionNumList[pSubQ->present.byTrackNum - 1] > pDisc->SCSI.lpSessionNumList[pSubQ->prev.byTrackNum - 1]) {
+					if (!pExtArg->byMultiSession &&
+						pDisc->SCSI.lpSessionNumList[pSubQ->current.byTrackNum - 1] > pDisc->SCSI.lpSessionNumList[pSubQ->prev.byTrackNum - 1]) {
 						nTmpLastLBA -= SESSION_TO_SESSION_SKIP_LBA;
 					}
 					OutputSubInfoWithLBALogA(
@@ -813,101 +833,106 @@ VOID SetTrackAttribution(
 					pDisc->SUB.lpLastLBAListOfDataTrackOnSub[pSubQ->prev.byTrackNum - 1] = nTmpLastLBA;
 
 					OutputSubInfoWithLBALogA(
-						"TrackNum is changed [L:%d]\n", nLBA, pSubQ->present.byTrackNum, (INT)__LINE__);
+						"TrackNum is changed [L:%d]\n", nLBA, pSubQ->current.byTrackNum, (INT)__LINE__);
 				}
 				else if ((pSubQ->prev.byCtl & AUDIO_DATA_TRACK) == 0) {
 					OutputSubInfoWithLBALogA(
-						"TrackNum is changed [L:%d]\n", nLBA, pSubQ->present.byTrackNum, (INT)__LINE__);
+						"TrackNum is changed [L:%d]\n", nLBA, pSubQ->current.byTrackNum, (INT)__LINE__);
 				}
 			}
 		}
 		// preserve mode, ctl
 		if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[tIdx]) {
-			pDisc->SUB.lpCtlList[tIdx] = pSubQ->present.byCtl;
-			pDisc->MAIN.lpModeList[tIdx] = GetMode((LPBYTE)pMain->present, pMain->prev[15], pSubQ->present.byCtl, unscrambled);
+			pDisc->SUB.lpCtlList[tIdx] = pSubQ->current.byCtl;
+			pDisc->MAIN.lpModeList[tIdx] = GetMode((LPBYTE)pMain->present, pMain->prev[15], pSubQ->current.byCtl, unscrambled);
 		}
 		// preserve the 1st LBA of the changed index 
-		if (pSubQ->prev.byIndex + 1 == pSubQ->present.byIndex && *lpCurrentTrackNum >= 0) {
-			if (pSubQ->present.byIndex != 1) {
+		if (pSubQ->prev.byIndex + 1 == pSubQ->current.byIndex && *lpCurrentTrackNum >= 0) {
+			if (pSubQ->current.byIndex != 1) {
 				OutputSubInfoWithLBALogA("Index is changed from [%02d] to [%02d] [L:%d]\n"
-					, nLBA, pSubQ->present.byTrackNum, pSubQ->prev.byIndex, pSubQ->present.byIndex, (INT)__LINE__);
-				pDisc->SUB.lpFirstLBAListOnSub[tIdx][pSubQ->present.byIndex] = nLBA;
-				pDisc->SUB.lpFirstLBAListOnSubSync[tIdx][pSubQ->present.byIndex] = nLBA;
+					, nLBA, pSubQ->current.byTrackNum, pSubQ->prev.byIndex, pSubQ->current.byIndex, (INT)__LINE__);
+				pDisc->SUB.lpFirstLBAListOnSub[tIdx][pSubQ->current.byIndex] = nLBA;
+				pDisc->SUB.lpFirstLBAListOnSubSync[tIdx][pSubQ->current.byIndex] = nLBA;
 			}
 			else {
 				if (nLBA != pDisc->SCSI.lpFirstLBAListOnToc[tIdx]) {
 					OutputSubInfoWithLBALogA(
 						"Subchannel & TOC doesn't sync. LBA on TOC[%d, %#x], prevIndex[%02u]\n",
-						nLBA, pSubQ->present.byTrackNum, pDisc->SCSI.lpFirstLBAListOnToc[tIdx],
+						nLBA, pSubQ->current.byTrackNum, pDisc->SCSI.lpFirstLBAListOnToc[tIdx],
 						pDisc->SCSI.lpFirstLBAListOnToc[tIdx], pSubQ->prev.byIndex);
 				}
 				OutputSubInfoWithLBALogA("Index is changed from [%02d] to [%02d] [L:%d]\n"
-					, nLBA, pSubQ->present.byTrackNum, pSubQ->prev.byIndex, pSubQ->present.byIndex, (INT)__LINE__);
+					, nLBA, pSubQ->current.byTrackNum, pSubQ->prev.byIndex, pSubQ->current.byIndex, (INT)__LINE__);
 				pDisc->SUB.lpFirstLBAListOnSub[tIdx][1] = pDisc->SCSI.lpFirstLBAListOnToc[tIdx];
+
+				if (pDisc->SCSI.trackType == TRACK_TYPE::pregapIn1stTrack) {
+					pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[tIdx] = 0;
+					pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tIdx] = pDisc->SCSI.lpFirstLBAListOnToc[tIdx] - 1;
+				}
 				if (pDisc->SUB.lpFirstLBAListOnSub[tIdx][0] == pDisc->SUB.lpFirstLBAListOnSub[tIdx][1]) {
 					// Crow, The - Original Motion Picture Soundtrack (82519-2)
 					// LBA 108975, Track[06], Subchannel & TOC isn't sync. LBA on TOC: 108972, prevIndex[00]
 					pDisc->SUB.lpFirstLBAListOnSub[tIdx][0] = -1;
 				}
-				pDisc->SUB.lpFirstLBAListOnSubSync[tIdx][pSubQ->present.byIndex] = nLBA;
+				pDisc->SUB.lpFirstLBAListOnSubSync[tIdx][pSubQ->current.byIndex] = nLBA;
 				if (pDisc->SUB.lpFirstLBAListOnSubSync[tIdx][0] == pDisc->SUB.lpFirstLBAListOnSubSync[tIdx][1]) {
 					pDisc->SUB.lpFirstLBAListOnSubSync[tIdx][0] = -1;
 				}
 			}
 		}
-		else if (pSubQ->prev.byIndex >= 1 && pSubQ->present.byIndex == 0) {
+		else if (pSubQ->prev.byIndex >= 1 && pSubQ->current.byIndex == 0) {
 			OutputSubInfoWithLBALogA("Index is changed from [%02d] to [%02d] [L:%d]\n"
-				, nLBA, pSubQ->present.byTrackNum, pSubQ->prev.byIndex, pSubQ->present.byIndex, (INT)__LINE__);
-			pDisc->SUB.lpFirstLBAListOnSub[tIdx][pSubQ->present.byIndex] = nLBA;
-			pDisc->SUB.lpFirstLBAListOnSubSync[tIdx][pSubQ->present.byIndex] = nLBA;
+				, nLBA, pSubQ->current.byTrackNum, pSubQ->prev.byIndex, pSubQ->current.byIndex, (INT)__LINE__);
+			pDisc->SUB.lpFirstLBAListOnSub[tIdx][pSubQ->current.byIndex] = nLBA;
+			pDisc->SUB.lpFirstLBAListOnSubSync[tIdx][pSubQ->current.byIndex] = nLBA;
 		}
 
-		if ((pDisc->SCSI.toc.TrackData[tIdx].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK &&
-			(pSubQ->present.byCtl & AUDIO_DATA_TRACK) == 0) {
+		if ((GetControl(pExecType, pDisc, tIdx) & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK &&
+			(pSubQ->current.byCtl & AUDIO_DATA_TRACK) == 0) {
 			OutputMainInfoWithLBALogA(
-				"Data track, but this sector is audio\n", nLBA, pSubQ->present.byTrackNum);
+				"Data track, but this sector is audio\n", nLBA, pSubQ->current.byTrackNum);
 		}
-		else if ((pDisc->SCSI.toc.TrackData[tIdx].Control & AUDIO_DATA_TRACK) == 0 &&
-			(pSubQ->present.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+		else if ((GetControl(pExecType, pDisc, tIdx) & AUDIO_DATA_TRACK) == 0 &&
+			(pSubQ->current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 			OutputMainInfoWithLBALogA(
-				"Audio track, but this sector is data\n", nLBA, pSubQ->present.byTrackNum);
+				"Audio track, but this sector is data\n", nLBA, pSubQ->current.byTrackNum);
 		}
 
 		if (pExtArg->byReverse) {
 			// preserve last LBA per data track
 			if (nLBA == pDisc->SCSI.nLastLBAofDataTrack) {
 				if (pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tIdx] == -1 &&
-					(pSubQ->present.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+					(pSubQ->current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 					pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tIdx] = pDisc->SCSI.nLastLBAofDataTrack;
 				}
 			}
-			else if ((pDisc->SCSI.toc.TrackData[tIdx].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+			else if ((GetControl(pExecType, pDisc, tIdx) & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 				pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[tIdx] = nLBA;
 			}
 		}
 		else {
 			// preserve first LBA per data track
 			if (pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[tIdx] == -1 &&
-				(pDisc->SCSI.toc.TrackData[tIdx].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+				(GetControl(pExecType, pDisc, tIdx) & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 				OutputSubInfoWithLBALogA(
-					"1st LBA of this data track [L:%d]\n", nLBA, pSubQ->present.byTrackNum, (INT)__LINE__);
+					"1st LBA of this data track [L:%d]\n", nLBA, pSubQ->current.byTrackNum, (INT)__LINE__);
 				pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[tIdx] = nLBA;
 			}
 			else if (nLBA == pDisc->SCSI.nAllLength - 1) {
 				if (pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tIdx] == -1) {
 					// preserve last LBA per data track
-					if ((pSubQ->present.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+					if ((pSubQ->current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 						OutputSubInfoWithLBALogA(
-							"Last LBA of this data track [L:%d]\n", nLBA, pSubQ->present.byTrackNum, (INT)__LINE__);
+							"Last LBA of this data track [L:%d]\n", nLBA, pSubQ->current.byTrackNum, (INT)__LINE__);
 						pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tIdx] = pDisc->SCSI.nAllLength - 1;
 					}
 				}
 				OutputSubInfoWithLBALogA(
-					"Last LBA of this disc [L:%d]\n", nLBA, pSubQ->present.byTrackNum, (INT)__LINE__);
+					"Last LBA of this disc [L:%d]\n", nLBA, pSubQ->current.byTrackNum, (INT)__LINE__);
 			}
 		}
 	}
-	else if (pSubQ->present.byTrackNum == 110) {
+	else if (pSubQ->current.byTrackNum == 110) {
 		pDisc->SUB.lpLastLBAListOfDataTrackOnSub[*lpCurrentTrackNum - 1] = nLBA;
 	}
 }
@@ -1152,10 +1177,10 @@ VOID UpdateTmpSubQDataForMCN(
 	// Subchannel pattern on MCN Sector
 	// Tomb Raider III - Adventures of Lara Croft (Europe)(Mac)
 	if (pDisc->SCSI.toc.LastTrack == 1) {
-		pSubQ->present.byTrackNum = 1;
-		pSubQ->present.byIndex = 1;
+		pSubQ->current.byTrackNum = 1;
+		pSubQ->current.byIndex = 1;
 		if (nLBA > 0) {
-			pSubQ->present.nRelativeTime += 1;
+			pSubQ->current.nRelativeTime += 1;
 		}
 	}
 	// pattern 1: pregap sector.
@@ -1164,7 +1189,7 @@ VOID UpdateTmpSubQDataForMCN(
 		// pattern 1-1: prev sector is audio.
 		if ((pSubQ->prev.byCtl & AUDIO_DATA_TRACK) == 0) {
 			// pattern 1-1-1: present sector is audio.
-			if ((pSubQ->present.byCtl & AUDIO_DATA_TRACK) == 0) {
+			if ((pSubQ->current.byCtl & AUDIO_DATA_TRACK) == 0) {
 				if (pSubQ->prev.byTrackNum > 0) {
 					if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pSubQ->prev.byTrackNum] - 225) {
 						// Atlas, The - Renaissance Voyager (Japan)
@@ -1175,74 +1200,74 @@ VOID UpdateTmpSubQDataForMCN(
 						// LBA[261585, 0x3fDD1], Audio, 2ch, Copy NG, Pre-emphasis No, Track[95], Idx[01], RMSF[00:13:69], AMSF[58:09:60], RtoW[0, 0, 0, 0]
 						// LBA[261586, 0x3fDD2], Audio, 2ch, Copy NG, Pre-emphasis No, MediaCatalogNumber [0000000000000], AMSF[     :61], RtoW[0, 0, 0, 0]
 						// LBA[261587, 0x3fDD3], Audio, 2ch, Copy NG, Pre-emphasis No, Track[96], Idx[00], RMSF[00:02:73], AMSF[58:09:62], RtoW[0, 0, 0, 0]
-						pSubQ->present.nRelativeTime = 224;
+						pSubQ->current.nRelativeTime = 224;
 						bValidPre = TRUE;
 					}
 					else if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pSubQ->prev.byTrackNum] - 150) {
-						pSubQ->present.nRelativeTime = 149;
+						pSubQ->current.nRelativeTime = 149;
 						bValidPre = TRUE;
 					}
 					else if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pSubQ->prev.byTrackNum] - 149) {
-						pSubQ->present.nRelativeTime = 148;
+						pSubQ->current.nRelativeTime = 148;
 						bValidPre = TRUE;
 					}
 				}
 				if (bValidPre && pExtArg->byMCN) {
 					// pattern 1-1-1-1: change track.
-					pSubQ->present.byTrackNum = (BYTE)(pSubQ->prev.byTrackNum + 1);
+					pSubQ->current.byTrackNum = (BYTE)(pSubQ->prev.byTrackNum + 1);
 					// pattern 1-1-1-1-1: change index. (pregap sector is 0)
-					pSubQ->present.byIndex = 0;
+					pSubQ->current.byIndex = 0;
 					OutputMainInfoWithLBALogA(
 						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d)\n",
-						nLBA, byCurrentTrackNum + 1, pSubQ->present.byTrackNum, pSubQ->prev.byTrackNum);
+						nLBA, byCurrentTrackNum + 1, pSubQ->current.byTrackNum, pSubQ->prev.byTrackNum);
 				}
 				else {
 					// pattern 1-1-1-2: not change track.
-					pSubQ->present.byTrackNum = pSubQ->prev.byTrackNum;
+					pSubQ->current.byTrackNum = pSubQ->prev.byTrackNum;
 					// pattern 1-1-1-2-2: not change index.
-					pSubQ->present.byIndex = pSubQ->prev.byIndex;
+					pSubQ->current.byIndex = pSubQ->prev.byIndex;
 				}
 			}
 			// pattern 1-1-2: present sector is data.
-			else if ((pSubQ->present.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+			else if ((pSubQ->current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 				if (pSubQ->prev.byTrackNum > 0) {
 					if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pSubQ->prev.byTrackNum] - 225) {
-						pSubQ->present.nRelativeTime = 224;
+						pSubQ->current.nRelativeTime = 224;
 						bValidPre = TRUE;
 					}
 					else if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pSubQ->prev.byTrackNum] - 150) {
-						pSubQ->present.nRelativeTime = 149;
+						pSubQ->current.nRelativeTime = 149;
 						bValidPre = TRUE;
 					}
 					else if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pSubQ->prev.byTrackNum] - 149) {
-						pSubQ->present.nRelativeTime = 148;
+						pSubQ->current.nRelativeTime = 148;
 						bValidPre = TRUE;
 					}
 				}
 				if (bValidPre && pExtArg->byMCN) {
 					// pattern 1-1-2-1: change track.
-					pSubQ->present.byTrackNum = (BYTE)(pSubQ->prev.byTrackNum + 1);
+					pSubQ->current.byTrackNum = (BYTE)(pSubQ->prev.byTrackNum + 1);
 					// pattern 1-1-2-1-1: change index. (pregap sector is 0)
-					pSubQ->present.byIndex = 0;
+					pSubQ->current.byIndex = 0;
 					OutputMainInfoWithLBALogA(
 						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d)\n",
-						nLBA, byCurrentTrackNum + 1, pSubQ->present.byTrackNum, pSubQ->prev.byTrackNum);
+						nLBA, byCurrentTrackNum + 1, pSubQ->current.byTrackNum, pSubQ->prev.byTrackNum);
 				}
 				else {
 					// pattern 1-1-2-2: not change track.
-					pSubQ->present.byTrackNum = pSubQ->prev.byTrackNum;
+					pSubQ->current.byTrackNum = pSubQ->prev.byTrackNum;
 					// pattern 1-1-2-2-2: not change index.
-					pSubQ->present.byIndex = pSubQ->prev.byIndex;
+					pSubQ->current.byIndex = pSubQ->prev.byIndex;
 				}
 			}
 		}
 		// pattern 1-2: prev sector is data.
 		else if ((pSubQ->prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 			// pattern 1-2-1: present sector is audio.
-			if ((pSubQ->present.byCtl & AUDIO_DATA_TRACK) == 0) {
+			if ((pSubQ->current.byCtl & AUDIO_DATA_TRACK) == 0) {
 				if (pSubQ->prev.byTrackNum > 0) {
 					if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pSubQ->prev.byTrackNum] - 225) {
-						pSubQ->present.nRelativeTime = 224;
+						pSubQ->current.nRelativeTime = 224;
 						bValidPre = TRUE;
 					}
 					else if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pSubQ->prev.byTrackNum] - 150) {
@@ -1254,60 +1279,60 @@ VOID UpdateTmpSubQDataForMCN(
 						// LBA[202749, 0x317FD],  Data,      Copy NG,                  Track[80], Idx[01], RMSF[00:06:63], AMSF[45:05:24], RtoW[0, 0, 0, 0]
 						// LBA[202750, 0x317FE], Audio, 2ch, Copy NG, Pre-emphasis No, MediaCatalogNumber [0000000000000], AMSF[     :25], RtoW[0, 0, 0, 0]
 						// LBA[202751, 0x317FF], Audio, 2ch, Copy NG, Pre-emphasis No, Track[81], Idx[00], RMSF[00:01:73], AMSF[45:05:26], RtoW[0, 0, 0, 0]
-						pSubQ->present.nRelativeTime = 149;
+						pSubQ->current.nRelativeTime = 149;
 						bValidPre = TRUE;
 					}
 					else if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pSubQ->prev.byTrackNum] - 149) {
-						pSubQ->present.nRelativeTime = 148;
+						pSubQ->current.nRelativeTime = 148;
 						bValidPre = TRUE;
 					}
 				}
 				if (bValidPre && pExtArg->byMCN) {
 					// pattern 1-2-1-1: change track.
-					pSubQ->present.byTrackNum = (BYTE)(pSubQ->prev.byTrackNum + 1);
+					pSubQ->current.byTrackNum = (BYTE)(pSubQ->prev.byTrackNum + 1);
 					// pattern 1-2-1-1-1: change index. (pregap sector is 0)
-					pSubQ->present.byIndex = 0;
+					pSubQ->current.byIndex = 0;
 					OutputMainInfoWithLBALogA(
 						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d)\n",
-						nLBA, byCurrentTrackNum + 1, pSubQ->present.byTrackNum, pSubQ->prev.byTrackNum);
+						nLBA, byCurrentTrackNum + 1, pSubQ->current.byTrackNum, pSubQ->prev.byTrackNum);
 				}
 				else {
 					// pattern 1-2-1-2: not change track.
-					pSubQ->present.byTrackNum = pSubQ->prev.byTrackNum;
+					pSubQ->current.byTrackNum = pSubQ->prev.byTrackNum;
 					// pattern 1-2-1-2-2: not change index.
-					pSubQ->present.byIndex = pSubQ->prev.byIndex;
+					pSubQ->current.byIndex = pSubQ->prev.byIndex;
 				}
 			}
 			// pattern 1-2-2: present sector is data.
-			else if ((pSubQ->present.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+			else if ((pSubQ->current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 				if (pSubQ->prev.byTrackNum > 0) {
 					if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pSubQ->prev.byTrackNum] - 225) {
-						pSubQ->present.nRelativeTime = 224;
+						pSubQ->current.nRelativeTime = 224;
 						bValidPre = TRUE;
 					}
 					else if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pSubQ->prev.byTrackNum] - 150) {
-						pSubQ->present.nRelativeTime = 149;
+						pSubQ->current.nRelativeTime = 149;
 						bValidPre = TRUE;
 					}
 					else if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pSubQ->prev.byTrackNum] - 149) {
-						pSubQ->present.nRelativeTime = 148;
+						pSubQ->current.nRelativeTime = 148;
 						bValidPre = TRUE;
 					}
 				}
 				if (bValidPre && pExtArg->byMCN) {
 					// pattern 1-2-2-1: change track.
-					pSubQ->present.byTrackNum = (BYTE)(pSubQ->prev.byTrackNum + 1);
+					pSubQ->current.byTrackNum = (BYTE)(pSubQ->prev.byTrackNum + 1);
 					// pattern 1-2-2-1-1: change index. (pregap sector is 0)
-					pSubQ->present.byIndex = 0;
+					pSubQ->current.byIndex = 0;
 					OutputMainInfoWithLBALogA(
 						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d)\n",
-						nLBA, byCurrentTrackNum + 1, pSubQ->present.byTrackNum, pSubQ->prev.byTrackNum);
+						nLBA, byCurrentTrackNum + 1, pSubQ->current.byTrackNum, pSubQ->prev.byTrackNum);
 				}
 				else {
 					// pattern 1-2-2-2: not change track.
-					pSubQ->present.byTrackNum = pSubQ->prev.byTrackNum;
+					pSubQ->current.byTrackNum = pSubQ->prev.byTrackNum;
 					// pattern 1-2-2-2-2: not change index.
-					pSubQ->present.byIndex = pSubQ->prev.byIndex;
+					pSubQ->current.byIndex = pSubQ->prev.byIndex;
 				}
 			}
 		}
@@ -1317,7 +1342,7 @@ VOID UpdateTmpSubQDataForMCN(
 		// pattern 2-1: prev sector is audio.
 		if ((pSubQ->prev.byCtl & AUDIO_DATA_TRACK) == 0) {
 			// pattern 2-1-1: present sector is audio.
-			if ((pSubQ->present.byCtl & AUDIO_DATA_TRACK) == 0) {
+			if ((pSubQ->current.byCtl & AUDIO_DATA_TRACK) == 0) {
 				// 1st sector of tracks
 				if (pSubQ->prev.byTrackNum > 0 &&
 					nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pSubQ->prev.byTrackNum]) {
@@ -1325,14 +1350,14 @@ VOID UpdateTmpSubQDataForMCN(
 					// LBA[183031, 0x2CAF7], Audio, 2ch, Copy NG, Pre-emphasis No, Track[21], Idx[01], RMSF[00:31:70], AMSF[40:42:31], RtoW[0, 0, 0, 0]
 					// LBA[183032, 0x2CAF8], Audio, 2ch, Copy NG, Pre-emphasis No, MediaCatalogNumber [0000000000000], AMSF[     :32], RtoW[0, 0, 0, 0]
 					// LBA[183033, 0x2CAF9], Audio, 2ch, Copy NG, Pre-emphasis No, Track[22], Idx[01], RMSF[00:00:01], AMSF[40:42:33], RtoW[0, 0, 0, 0]
-					pSubQ->present.nRelativeTime = 0;
+					pSubQ->current.nRelativeTime = 0;
 					// pattern 2-1-1-1: change track.
-					pSubQ->present.byTrackNum = (BYTE)(pSubQ->prev.byTrackNum + 1);
+					pSubQ->current.byTrackNum = (BYTE)(pSubQ->prev.byTrackNum + 1);
 					// pattern 2-1-1-1-2: not change index.
-					pSubQ->present.byIndex = pSubQ->prev.byIndex;
+					pSubQ->current.byIndex = pSubQ->prev.byIndex;
 					OutputMainInfoWithLBALogA(
 						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d)\n",
-						nLBA, byCurrentTrackNum + 1, pSubQ->present.byTrackNum, pSubQ->prev.byTrackNum);
+						nLBA, byCurrentTrackNum + 1, pSubQ->current.byTrackNum, pSubQ->prev.byTrackNum);
 				}
 				// 1st next index of same tracks
 				else if (pSubQ->prev.byIndex == 0 && pSubQ->prev.nRelativeTime == 0) {
@@ -1340,11 +1365,11 @@ VOID UpdateTmpSubQDataForMCN(
 					// LBA[080999, 0x13C67], Audio, 2ch, Copy NG, Pre-emphasis No, Track[02], Idx[00], RMSF[00:00:00], AMSF[18:01:74], RtoW[0, 0, 0, 0]
 					// LBA[081000, 0x13C68], Audio, 2ch, Copy NG, Pre-emphasis No, MediaCatalogNumber [3010911111863], AMSF[     :00], RtoW[0, 0, 0, 0]
 					// LBA[081001, 0x13C69], Audio, 2ch, Copy NG, Pre-emphasis No, Track[02], Idx[01], RMSF[00:00:01], AMSF[18:02:01], RtoW[0, 0, 0, 0]
-					pSubQ->present.nRelativeTime = 0;
+					pSubQ->current.nRelativeTime = 0;
 					// pattern 2-1-1-2: not change track.
-					pSubQ->present.byTrackNum = pSubQ->prev.byTrackNum;
+					pSubQ->current.byTrackNum = pSubQ->prev.byTrackNum;
 					// pattern 2-1-1-2-1: change index.
-					pSubQ->present.byIndex = (BYTE)(pSubQ->prev.byIndex + 1);
+					pSubQ->current.byIndex = (BYTE)(pSubQ->prev.byIndex + 1);
 				}
 				// 1st index of same tracks
 				else if (pSubQ->prev.byIndex > 1 && pSubQ->prev.byIndex != pSubQ->next.byIndex) {
@@ -1357,11 +1382,11 @@ VOID UpdateTmpSubQDataForMCN(
 						// LBA[086838, 0x15336], Audio, 2ch, Copy NG, Pre-emphasis No, Track[06], Idx[82], RMSF[02:31:05], AMSF[19:19:63], RtoW[0, 0, 0, 0]
 						// LBA[086839, 0x15337], Audio, 2ch, Copy NG, Pre-emphasis No, MediaCatalogNumber [0000000000000], AMSF[     :64], RtoW[0, 0, 0, 0]
 						// LBA[086840, 0x15338], Audio, 2ch, Copy NG, Pre-emphasis No, Track[06], Idx[83], RMSF[02:31:07], AMSF[19:19:65], RtoW[0, 0, 0, 0]
-						pSubQ->present.nRelativeTime = pSubQ->prev.nRelativeTime + 1;
+						pSubQ->current.nRelativeTime = pSubQ->prev.nRelativeTime + 1;
 						// pattern 2-1-1-2: not change track.
-						pSubQ->present.byTrackNum = pSubQ->prev.byTrackNum;
+						pSubQ->current.byTrackNum = pSubQ->prev.byTrackNum;
 						// pattern 2-1-1-2-1: change index.
-						pSubQ->present.byIndex = (BYTE)(pSubQ->prev.byIndex + 1);
+						pSubQ->current.byIndex = (BYTE)(pSubQ->prev.byIndex + 1);
 					}
 				}
 				// same index of same tracks
@@ -1371,113 +1396,113 @@ VOID UpdateTmpSubQDataForMCN(
 						// LBA[003413, 0x00D55], Audio, 2ch, Copy NG, Pre-emphasis No, Track[02], Idx[00], RMSF[00:02:26], AMSF[00:47:38], RtoW[0, 0, 0, 0]
 						// LBA[003414, 0x00D56], Audio, 2ch, Copy NG, Pre-emphasis No, MediaCatalogNumber [0000000000000], AMSF[     :39], RtoW[0, 0, 0, 0]
 						// LBA[003415, 0x00D57], Audio, 2ch, Copy NG, Pre-emphasis No, Track[02], Idx[00], RMSF[00:02:24], AMSF[00:47:40], RtoW[0, 0, 0, 0]
-						pSubQ->present.nRelativeTime = pSubQ->prev.nRelativeTime - 1;
+						pSubQ->current.nRelativeTime = pSubQ->prev.nRelativeTime - 1;
 					}
 					else if (pSubQ->prev.byIndex > 0) {
 						// Cosmic Fantasy 3 - Bouken Shounen Rei (Japan)
 						// LBA[081541, 0x13E85], Audio, 2ch, Copy NG, Pre-emphasis No, Track[18], Idx[01], RMSF[00:12:57], AMSF[18:09:16], RtoW[0, 0, 0, 0]
 						// LBA[081542, 0x13E86], Audio, 2ch, Copy NG, Pre-emphasis No, MediaCatalogNumber [0000000000000], AMSF[     :17], RtoW[0, 0, 0, 0]
 						// LBA[081543, 0x13E87], Audio, 2ch, Copy NG, Pre-emphasis No, Track[18], Idx[01], RMSF[00:12:59], AMSF[18:09:18], RtoW[0, 0, 0, 0]
-						pSubQ->present.nRelativeTime = pSubQ->prev.nRelativeTime + 1;
+						pSubQ->current.nRelativeTime = pSubQ->prev.nRelativeTime + 1;
 					}
 					// pattern 2-1-1-2: not change track.
-					pSubQ->present.byTrackNum = pSubQ->prev.byTrackNum;
+					pSubQ->current.byTrackNum = pSubQ->prev.byTrackNum;
 					// pattern 2-1-1-2-2: not change index.
-					pSubQ->present.byIndex = pSubQ->prev.byIndex;
+					pSubQ->current.byIndex = pSubQ->prev.byIndex;
 				}
 			}
 			// pattern 2-1-2: present sector is data.
-			else if ((pSubQ->present.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+			else if ((pSubQ->current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 				// 1st sector of tracks
 				if (pSubQ->prev.byTrackNum > 0 &&
 					nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pSubQ->prev.byTrackNum]) {
-					pSubQ->present.nRelativeTime = 0;
+					pSubQ->current.nRelativeTime = 0;
 					// pattern 2-1-2-1: change track.
-					pSubQ->present.byTrackNum = (BYTE)(pSubQ->prev.byTrackNum + 1);
+					pSubQ->current.byTrackNum = (BYTE)(pSubQ->prev.byTrackNum + 1);
 					// pattern 2-1-2-1-2: not change index.
-					pSubQ->present.byIndex = pSubQ->prev.byIndex;
+					pSubQ->current.byIndex = pSubQ->prev.byIndex;
 					OutputMainInfoWithLBALogA(
 						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d)\n",
-						nLBA, byCurrentTrackNum + 1, pSubQ->present.byTrackNum, pSubQ->prev.byTrackNum);
+						nLBA, byCurrentTrackNum + 1, pSubQ->current.byTrackNum, pSubQ->prev.byTrackNum);
 				}
 				// 1st next index of same tracks
 				else if (pSubQ->prev.byIndex == 0 && pSubQ->prev.nRelativeTime == 0) {
-					pSubQ->present.nRelativeTime = 0;
+					pSubQ->current.nRelativeTime = 0;
 					// pattern 2-1-2-2: not change track.
-					pSubQ->present.byTrackNum = pSubQ->prev.byTrackNum;
+					pSubQ->current.byTrackNum = pSubQ->prev.byTrackNum;
 					// pattern 2-1-2-2-1: change index.
-					pSubQ->present.byIndex = (BYTE)(pSubQ->prev.byIndex + 1);
+					pSubQ->current.byIndex = (BYTE)(pSubQ->prev.byIndex + 1);
 				}
 				// same index of same tracks
 				else {
 					if (pSubQ->prev.byIndex == 0) {
-						pSubQ->present.nRelativeTime = pSubQ->prev.nRelativeTime - 1;
+						pSubQ->current.nRelativeTime = pSubQ->prev.nRelativeTime - 1;
 					}
 					else if (pSubQ->prev.byIndex > 0) {
-						pSubQ->present.nRelativeTime = pSubQ->prev.nRelativeTime + 1;
+						pSubQ->current.nRelativeTime = pSubQ->prev.nRelativeTime + 1;
 					}
 					// pattern 2-1-2-2: not change track.
-					pSubQ->present.byTrackNum = pSubQ->prev.byTrackNum;
+					pSubQ->current.byTrackNum = pSubQ->prev.byTrackNum;
 					// pattern 2-1-2-2-2: not change index.
-					pSubQ->present.byIndex = pSubQ->prev.byIndex;
+					pSubQ->current.byIndex = pSubQ->prev.byIndex;
 				}
 			}
 		}
 		// pattern 2-2: prev sector is data.
 		else if ((pSubQ->prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 			// pattern 2-2-1: present sector is audio.
-			if ((pSubQ->present.byCtl & AUDIO_DATA_TRACK) == 0) {
+			if ((pSubQ->current.byCtl & AUDIO_DATA_TRACK) == 0) {
 				// 1st sector of tracks
 				if (pSubQ->prev.byTrackNum > 0 &&
 					nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pSubQ->prev.byTrackNum]) {
-					pSubQ->present.nRelativeTime = 0;
+					pSubQ->current.nRelativeTime = 0;
 					// pattern 2-2-1-1: change track.
-					pSubQ->present.byTrackNum = (BYTE)(pSubQ->prev.byTrackNum + 1);
+					pSubQ->current.byTrackNum = (BYTE)(pSubQ->prev.byTrackNum + 1);
 					// pattern 2-2-1-1-2: not change index.
-					pSubQ->present.byIndex = pSubQ->prev.byIndex;
+					pSubQ->current.byIndex = pSubQ->prev.byIndex;
 					OutputMainInfoWithLBALogA(
 						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d)\n",
-						nLBA, byCurrentTrackNum + 1, pSubQ->present.byTrackNum, pSubQ->prev.byTrackNum);
+						nLBA, byCurrentTrackNum + 1, pSubQ->current.byTrackNum, pSubQ->prev.byTrackNum);
 				}
 				// 1st next index of same tracks
 				else if (pSubQ->prev.byIndex == 0 && pSubQ->prev.nRelativeTime == 0) {
-					pSubQ->present.nRelativeTime = 0;
+					pSubQ->current.nRelativeTime = 0;
 					// pattern 2-2-1-2: not change track.
-					pSubQ->present.byTrackNum = pSubQ->prev.byTrackNum;
+					pSubQ->current.byTrackNum = pSubQ->prev.byTrackNum;
 					// pattern 2-2-1-2-1: change index.
-					pSubQ->present.byIndex = (BYTE)(pSubQ->prev.byIndex + 1);
+					pSubQ->current.byIndex = (BYTE)(pSubQ->prev.byIndex + 1);
 				}
 				// same index of same tracks
 				else {
 					if (pSubQ->prev.byIndex == 0) {
-						pSubQ->present.nRelativeTime = pSubQ->prev.nRelativeTime - 1;
+						pSubQ->current.nRelativeTime = pSubQ->prev.nRelativeTime - 1;
 					}
 					else if (pSubQ->prev.byIndex > 0) {
 						// EVE - burst error (Disc 3) (Terror Disc)
 						// LBA[188021, 0x2DE75],  Data,      Copy NG,                  Track[01], Idx[01], RMSF[41:46:71], AMSF[41:48:71], RtoW[0, 0, 0, 0]
 						// LBA[188022, 0x2DE76], Audio, 2ch, Copy NG, Pre-emphasis No, MediaCatalogNumber [0000000000000], AMSF[     :72], RtoW[0, 0, 0, 0]
 						// LBA[188023, 0x2DE77],  Data,      Copy NG,                  Track[01], Idx[01], RMSF[41:46:73], AMSF[41:48:73], RtoW[0, 0, 0, 0]
-						pSubQ->present.nRelativeTime = pSubQ->prev.nRelativeTime + 1;
+						pSubQ->current.nRelativeTime = pSubQ->prev.nRelativeTime + 1;
 					}
 					// pattern 2-2-1-2: not change track.
-					pSubQ->present.byTrackNum = pSubQ->prev.byTrackNum;
+					pSubQ->current.byTrackNum = pSubQ->prev.byTrackNum;
 					// pattern 2-2-1-2-2: not change index.
-					pSubQ->present.byIndex = pSubQ->prev.byIndex;
+					pSubQ->current.byIndex = pSubQ->prev.byIndex;
 				}
 			}
 			// pattern 2-2-2: present sector is data.
-			else if ((pSubQ->present.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+			else if ((pSubQ->current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 				// 1st sector of tracks
 				if (pSubQ->prev.byTrackNum > 0 &&
 					nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pSubQ->prev.byTrackNum]) {
-					pSubQ->present.nRelativeTime = 0;
+					pSubQ->current.nRelativeTime = 0;
 					// pattern 2-2-2-1: change track.
-					pSubQ->present.byTrackNum = (BYTE)(pSubQ->prev.byTrackNum + 1);
+					pSubQ->current.byTrackNum = (BYTE)(pSubQ->prev.byTrackNum + 1);
 					// pattern 2-2-2-1-2: not change index.
-					pSubQ->present.byIndex = pSubQ->prev.byIndex;
+					pSubQ->current.byIndex = pSubQ->prev.byIndex;
 					OutputMainInfoWithLBALogA(
 						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d)\n",
-						nLBA, byCurrentTrackNum + 1, pSubQ->present.byTrackNum, pSubQ->prev.byTrackNum);
+						nLBA, byCurrentTrackNum + 1, pSubQ->current.byTrackNum, pSubQ->prev.byTrackNum);
 				}
 				// 1st next index of same tracks
 				else if (pSubQ->prev.byIndex == 0 && pSubQ->prev.nRelativeTime == 0) {
@@ -1485,28 +1510,28 @@ VOID UpdateTmpSubQDataForMCN(
 					// LBA[142873, 0x22E19], Data, Copy NG, Track[37], Idx[00], RMSF[00:00:00], AMSF[31:46:73], RtoW[0, 0, 0, 0]
 					// LBA[142874, 0x22E1A], Data, Copy NG, MediaCatalogNumber [0000000000000], AMSF[     :74], RtoW[0, 0, 0, 0]
 					// LBA[142875, 0x22E1B], Data, Copy NG, Track[37], Idx[01], RMSF[00:00:01], AMSF[31:47:00], RtoW[0, 0, 0, 0]
-					pSubQ->present.nRelativeTime = 0;
+					pSubQ->current.nRelativeTime = 0;
 					// pattern 2-2-2-2: not change track.
-					pSubQ->present.byTrackNum = pSubQ->prev.byTrackNum;
+					pSubQ->current.byTrackNum = pSubQ->prev.byTrackNum;
 					// pattern 2-2-2-2-1: change index.
-					pSubQ->present.byIndex = (BYTE)(pSubQ->prev.byIndex + 1);
+					pSubQ->current.byIndex = (BYTE)(pSubQ->prev.byIndex + 1);
 				}
 				// same index of same tracks
 				else {
 					if (pSubQ->prev.byIndex == 0) {
-						pSubQ->present.nRelativeTime = pSubQ->prev.nRelativeTime - 1;
+						pSubQ->current.nRelativeTime = pSubQ->prev.nRelativeTime - 1;
 					}
 					else if (pSubQ->prev.byIndex > 0) {
 						// Cosmic Fantasy 3 - Bouken Shounen Rei (Japan)
 						// LBA[174261, 0x2A8B5], Data, Copy NG, Track[60], Idx[01], RMSF[00:06:19], AMSF[38:45:36], RtoW[0, 0, 0, 0]
 						// LBA[174262, 0x2A8B6], Data, Copy NG, MediaCatalogNumber [0000000000000], AMSF[     :37], RtoW[0, 0, 0, 0]
 						// LBA[174263, 0x2A8B7], Data, Copy NG, Track[60], Idx[01], RMSF[00:06:21], AMSF[38:45:38], RtoW[0, 0, 0, 0]
-						pSubQ->present.nRelativeTime = pSubQ->prev.nRelativeTime + 1;
+						pSubQ->current.nRelativeTime = pSubQ->prev.nRelativeTime + 1;
 					}
 					// pattern 2-2-2-2: not change track.
-					pSubQ->present.byTrackNum = pSubQ->prev.byTrackNum;
+					pSubQ->current.byTrackNum = pSubQ->prev.byTrackNum;
 					// pattern 2-2-2-2-2: not change index.
-					pSubQ->present.byIndex = pSubQ->prev.byIndex;
+					pSubQ->current.byIndex = pSubQ->prev.byIndex;
 				}
 			}
 		}
@@ -1516,13 +1541,13 @@ VOID UpdateTmpSubQDataForMCN(
 VOID UpdateTmpSubQDataForISRC(
 	PSUB_Q pSubQ
 ) {
-	pSubQ->present.byTrackNum = pSubQ->prev.byTrackNum;
-	pSubQ->present.byIndex = pSubQ->prev.byIndex;
-	if (pSubQ->present.byIndex == 0) {
-		pSubQ->present.nRelativeTime = pSubQ->prev.nRelativeTime - 1;
+	pSubQ->current.byTrackNum = pSubQ->prev.byTrackNum;
+	pSubQ->current.byIndex = pSubQ->prev.byIndex;
+	if (pSubQ->current.byIndex == 0) {
+		pSubQ->current.nRelativeTime = pSubQ->prev.nRelativeTime - 1;
 	}
-	else if (pSubQ->present.byIndex > 0) {
-		pSubQ->present.nRelativeTime = pSubQ->prev.nRelativeTime + 1;
+	else if (pSubQ->current.byIndex > 0) {
+		pSubQ->current.nRelativeTime = pSubQ->prev.nRelativeTime + 1;
 	}
 }
 
@@ -1534,22 +1559,22 @@ VOID UpdateTmpSubQDataForCDTV(
 	BYTE byCurrentTrackNum
 ) {
 	if (IsValidPregapSector(pExecType, pDisc, pSubQ, nLBA)) {
-		pSubQ->present.byTrackNum = (BYTE)(pSubQ->prev.byTrackNum + 1);
-		pSubQ->present.byIndex = 0;
+		pSubQ->current.byTrackNum = (BYTE)(pSubQ->prev.byTrackNum + 1);
+		pSubQ->current.byIndex = 0;
 		if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pSubQ->prev.byTrackNum] - 225) {
-			pSubQ->present.nRelativeTime = 224;
+			pSubQ->current.nRelativeTime = 224;
 		}
 		else if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pSubQ->prev.byTrackNum] - 150) {
-			pSubQ->present.nRelativeTime = 149;
+			pSubQ->current.nRelativeTime = 149;
 		}
 		else if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pSubQ->prev.byTrackNum] - 149) {
-			pSubQ->present.nRelativeTime = 148;
+			pSubQ->current.nRelativeTime = 148;
 		}
 	}
 	else if (pDisc->SCSI.lpFirstLBAListOnToc[byCurrentTrackNum] == nLBA) {
-		pSubQ->present.byTrackNum = (BYTE)(pSubQ->prev.byTrackNum + 1);
-		pSubQ->present.byIndex = 1;
-		pSubQ->present.nRelativeTime = pSubQ->prev.nRelativeTime;
+		pSubQ->current.byTrackNum = (BYTE)(pSubQ->prev.byTrackNum + 1);
+		pSubQ->current.byIndex = 1;
+		pSubQ->current.nRelativeTime = pSubQ->prev.nRelativeTime;
 	}
 }
 
@@ -1572,15 +1597,15 @@ VOID UpdateTmpSubQData(
 	pSubQ->prevPrev.byIndex = pSubQ->prev.byIndex;
 	pSubQ->prevPrev.nAbsoluteTime = pSubQ->prev.nAbsoluteTime;
 
-	pSubQ->prev.byCtl = pSubQ->present.byCtl;
-	pSubQ->prev.byAdr = pSubQ->present.byAdr;
-	pSubQ->prev.byTrackNum = pSubQ->present.byTrackNum;
-	pSubQ->prev.byIndex = pSubQ->present.byIndex;
+	pSubQ->prev.byCtl = pSubQ->current.byCtl;
+	pSubQ->prev.byAdr = pSubQ->current.byAdr;
+	pSubQ->prev.byTrackNum = pSubQ->current.byTrackNum;
+	pSubQ->prev.byIndex = pSubQ->current.byIndex;
 	if (bLibCrypt || bSecuRom) {
 		pSubQ->prev.nRelativeTime++;
 	}
 	else {
-		pSubQ->prev.nRelativeTime = pSubQ->present.nRelativeTime;
+		pSubQ->prev.nRelativeTime = pSubQ->current.nRelativeTime;
 	}
 	pSubQ->prev.nAbsoluteTime++;
 }

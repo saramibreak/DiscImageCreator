@@ -1,7 +1,19 @@
 // DiscImageCreator.cpp : コンソール アプリケーションのエントリ ポイントを定義します。
 //
-/*
- * This code is released under the Microsoft Public License (MS-PL). See License.txt, below.
+/**
+ * Copyright 2011-2018 sarami
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 #include "struct.h"
 #include "calcHash.h"
@@ -273,10 +285,10 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 							if (!ReadTOCFull(pExtArg, &device, &discData, &discPerSector, fpCcd)) {
 								throw FALSE;
 							}
-							if (!pDisc->SCSI.bMultiSession && pExtArg->byRawDump) {
+							if (!pDisc->SCSI.bMultiSession && pExtArg->byMultiSession) {
 								OutputString(
-									_T("[WARNING] This disc isn't Multi-Session. /raw is ignored.\n"));
-								pExtArg->byRawDump = FALSE;
+									_T("[WARNING] This disc isn't Multi-Session. /ms is ignored.\n"));
+								pExtArg->byMultiSession = FALSE;
 							}
 							if (!pExtArg->byReverse) {
 								// Typically, CD+G data is included in audio only disc
@@ -348,14 +360,26 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 							discData.SCSI.wCurrentMedia == ProfileDvdDashRDualLayer ||
 							discData.SCSI.wCurrentMedia == ProfileDvdDashRLayerJump ||
 							discData.SCSI.wCurrentMedia == ProfileDvdPlusRW ||
-							discData.SCSI.wCurrentMedia == ProfileDvdPlusR) {
+							discData.SCSI.wCurrentMedia == ProfileDvdPlusR ||
+							discData.SCSI.wCurrentMedia == ProfileHDDVDRom ||
+							discData.SCSI.wCurrentMedia == ProfileHDDVDRecordable ||
+							discData.SCSI.wCurrentMedia == ProfileHDDVDRam ||
+							discData.SCSI.wCurrentMedia == ProfileHDDVDRewritable ||
+							discData.SCSI.wCurrentMedia == ProfileHDDVDRDualLayer ||
+							discData.SCSI.wCurrentMedia == ProfileHDDVDRWDualLayer
+							) {
 							bRet = ReadDiscStructure(pExecType, pExtArg, &device, &discData);
 
 							if (pExtArg->byCmi) {
 								bRet = ReadDVDForCMI(pExtArg, &device, &discData);
 							}
 							if (bRet) {
-								bRet = ReadDVD(pExecType, pExtArg, &device, &discData, pszFullPath);
+								if (pExtArg->byRawDump) {
+									bRet = ReadDVDRaw(pExtArg, &device, &discData, pszFullPath);
+								}
+								else {
+									bRet = ReadDVD(pExecType, pExtArg, &device, &discData, pszFullPath);
+								}
 							}
 						}
 						else {
@@ -365,7 +389,9 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 					else if (*pExecType == bd) {
 						if (discData.SCSI.wCurrentMedia == ProfileBDRom ||
 							discData.SCSI.wCurrentMedia == ProfileBDRSequentialWritable ||
-							discData.SCSI.wCurrentMedia == ProfileBDRRandomWritable) {
+							discData.SCSI.wCurrentMedia == ProfileBDRRandomWritable ||
+							discData.SCSI.wCurrentMedia == ProfileBDRewritable
+							) {
 							if (!ReadTOC(pExtArg, pExecType, &device, &discData)) {
 								throw FALSE;
 							}
@@ -375,11 +401,8 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 							}
 						}
 					}
-					else if (*pExecType == raw) {
-						bRet = ReadDVDRaw(pExtArg, &device, pszFullPath);
-					}
 				}
-				if (bRet && (*pExecType == cd || *pExecType == dvd || *pExecType == gd)) {
+				if (bRet && (*pExecType == cd || *pExecType == gd || *pExecType == dvd || *pExecType == bd)) {
 					bRet = ReadWriteDat(pExecType, pDisc, pszFullPath, s_szDrive, s_szDir, s_szFname, FALSE);
 					if (pDisc->SUB.byDesync) {
 						bRet = ReadWriteDat(pExecType, pDisc, pszFullPath, s_szDrive, s_szDir, s_szFname, TRUE);
@@ -452,7 +475,7 @@ int printAndSetPath(_TCHAR* szPathFromArg, _TCHAR* pszFullPath)
 	}
 	else {
 		_tcsncpy(pszFullPath, szPathFromArg, _MAX_PATH);
-		if (!PathFileExists(s_szDir)) {
+		if (!PathFileExists(pszFullPath)) {
 			OutputErrorString(_T("%s doesn't exist, so create.\n"), pszFullPath);
 #ifdef UNICODE
 			if (SHCreateDirectory(NULL, s_szDir)) {
@@ -699,8 +722,8 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/am"), 3)) {
 					pExtArg->byScanAntiModStr = TRUE;
 				}
-				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/raw"), 4)) {
-					pExtArg->byRawDump = TRUE;
+				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/ms"), 4)) {
+					pExtArg->byMultiSession = TRUE;
 				}
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/np"), 3)) {
 					pExtArg->bySkipSubP = TRUE;
@@ -799,6 +822,12 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 						return FALSE;
 					}
 				}
+				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/raw"), 4)) {
+					pExtArg->byRawDump = TRUE;
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/re"), 3)) {
+					pExtArg->byResume = TRUE;
+				}
 				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), 2)) {
 					pExtArg->byQuiet = TRUE;
 				}
@@ -827,10 +856,6 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				}
 			}
 			*pExecType = bd;
-			printAndSetPath(argv[3], pszFullPath);
-		}
-		else if (argc >= 5 && cmdLen == 3 && !_tcsncmp(argv[1], _T("raw"), 3)) {
-			*pExecType = raw;
 			printAndSetPath(argv[3], pszFullPath);
 		}
 		else if (argc >= 7 && (cmdLen == 4 && !_tcsncmp(argv[1], _T("data"), 4) ||
@@ -975,12 +1000,12 @@ int createCmdFile(int argc, _TCHAR* argv[], _TCHAR* pszFullPath)
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
 		}
-		fwrite(_T(__DATE__), _tcslen(_T(__DATE__)), sizeof(_TCHAR), fpCmd);
+		fwrite(_T(__DATE__), sizeof(_TCHAR), _tcslen(_T(__DATE__)), fpCmd);
 		_fputts(_T(" "), fpCmd);
-		fwrite(_T(__TIME__), _tcslen(_T(__TIME__)), sizeof(_TCHAR), fpCmd);
+		fwrite(_T(__TIME__), sizeof(_TCHAR), _tcslen(_T(__TIME__)), fpCmd);
 		_fputts(_T("\n"), fpCmd);
 		for (int i = 0; i < argc; i++) {
-			fwrite(argv[i], _tcslen(argv[i]), sizeof(_TCHAR), fpCmd);
+			fwrite(argv[i], sizeof(_TCHAR), _tcslen(argv[i]), fpCmd);
 			_fputts(_T(" "), fpCmd);
 		}
 		FcloseAndNull(fpCmd);
@@ -994,7 +1019,7 @@ void printUsage(void)
 		_T("Usage\n")
 		_T("\tcd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/a (val)]\n")
 		_T("\t   [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4)] [/f (val)] [/m]\n")
-		_T("\t   [/p] [/raw] [/sf (val)] [/ss] [/np] [/nq] [/nr] [/ns] [/s (val)]\n")
+		_T("\t   [/p] [/ms] [/sf (val)] [/ss] [/np] [/nq] [/nr] [/ns] [/s (val)]\n")
 		_T("\t\tDumping a CD from A to Z\n")
 		_T("\t\tFor PLEXTOR or drive that can scramble Dumping\n")
 		_T("\tdata <DriveLetter> <Filename> <DriveSpeed(0-72)> <StartLBA> <EndLBA+1>\n")
@@ -1010,7 +1035,7 @@ void printUsage(void)
 		_T("\tgd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/be (str) or /d8]\n")
 		_T("\t   [/c2 (val1) (val2) (val3) (val4)] [/np] [/nq] [/nr] [/ns] [/s (val)]\n")
 		_T("\t\tDumping a HD area of GD from A to Z\n")
-		_T("\tdvd <DriveLetter> <Filename> <DriveSpeed(0-16)> [/c] [/f (val)] [/q]\n")
+		_T("\tdvd <DriveLetter> <Filename> <DriveSpeed(0-16)> [/c] [/f (val)] [/raw] [/q]\n")
 	);
 	_tsystem(_T("pause"));
 	OutputString(
@@ -1062,7 +1087,7 @@ void printUsage(void)
 		_T("\t\t\t               PX-704, 708, 712, 714, 716, 755, 760\n")
 		_T("\t/r\tRead CD from the reverse\n")
 		_T("\t\t\tFor Alpha-Disc, Tages (very slow)\n")
-		_T("\t/raw\tRead the lead-out of 1st session and the lead-in of 2nd session\n")
+		_T("\t/ms\tRead the lead-out of 1st session and the lead-in of 2nd session\n")
 		_T("\t\t\tFor Multi-session\n")
 		_T("\t/sf\tScan file to detect protect. If reading error exists,\n")
 	);
@@ -1070,7 +1095,7 @@ void printUsage(void)
 	OutputString(
 		_T("\t   \tcontinue reading and ignore c2 error on specific sector\n")
 		_T("\t\t\tFor CodeLock, LaserLock, RingProtect, RingPROTECH\n")
-		_T("\t\t\t     SafeDisc, SmartE, CD.IDX, ProtectCD-VOB, CDS300\n")
+		_T("\t\t\t    SafeDisc, SmartE, CD.IDX, ProtectCD-VOB, CDS300\n")
 		_T("\t\t\tval\ttimeout value (default: 60)\n")
 		_T("\t/ss\tScan sector to detect protect. If reading error exists,\n")
 		_T("\t   \tcontinue reading and ignore c2 error on specific sector\n")
@@ -1081,12 +1106,11 @@ void printUsage(void)
 		_T("\t/np\tNot fix SubP\n")
 		_T("\t/nq\tNot fix SubQ\n")
 		_T("\t/nr\tNot fix SubRtoW\n")
-		_T("\t/nl\tNot fix SubQ (RMSF, AMSF, CRC) (LBA 14100 - 16199)\n")
-		_T("\t   \t                               (LBA 42000 - 44399)\n")
+		_T("\t/nl\tNot fix SubQ (RMSF, AMSF, CRC) (LBA 10000 - 19999)\n")
+		_T("\t   \t                               (LBA 40000 - 49999)\n")
 		_T("\t\t\tFor PlayStation LibCrypt\n")
-		_T("\t/ns\tNot fix SubQ (RMSF, AMSF, CRC) (LBA 0 - 7, 5000 - 18799)\n")
-		_T("\t   \t                            or (LBA 30800 - 34799)\n")
-		_T("\t   \t                            or (LBA 40000 - 45799)\n")
+		_T("\t/ns\tNot fix SubQ (RMSF, AMSF, CRC) (LBA 0 - 7, 5000 - 24999)\n")
+		_T("\t   \t                            or (LBA 30000 - 49999)\n")
 		_T("\t\t\tFor SecuROM\n")
 		_T("\t/s\tUse if it reads subchannel precisely\n")
 		_T("\t\t\tval\t0: no read next sub (fast, but lack precision)\n")
@@ -1094,7 +1118,10 @@ void printUsage(void)
 		_T("\t\t\t   \t2: read next & next next sub (slow, precision)\n")
 		_T("Option (for DVD)\n")
 		_T("\t/c\tLog Copyright Management Information\n")
-		);
+		_T("\t/raw\tDumping DVD by raw (2064 byte/sector)\n")
+		_T("\t\t\tLG GDR (8082N, 8161B to 8164B) -> These drives support GC/Wii disc\n")
+		_T("\t\t\tMediatec MT chip (Lite-on etc.), PLEXTOR\n")
+	);
 	_tsystem(_T("pause"));
 }
 

@@ -89,6 +89,7 @@ BOOL ReadVolumeDescriptor(
 	LPBYTE pCdb,
 	LPBYTE lpBuf,
 	INT nPVD,
+	INT nOffset,
 	LPBOOL lpReadVD,
 	PVOLUME_DESCRIPTOR pVolDesc
 );
@@ -102,6 +103,7 @@ BOOL ReadPathTableRecord(
 	DWORD dwLogicalBlkCoef,
 	DWORD dwPathTblSize,
 	DWORD dwPathTblPos,
+	INT nOffset,
 	PDIRECTORY_RECORD pDirRec,
 	LPINT nDirPosNum
 );
@@ -115,6 +117,7 @@ BOOL ReadDirectoryRecord(
 	LPBYTE lpBuf,
 	DWORD dwLogicalBlkCoef,
 	DWORD dwRootDataLen,
+	INT nOffset,
 	PDIRECTORY_RECORD pDirRec,
 	INT nDirPosNum
 );

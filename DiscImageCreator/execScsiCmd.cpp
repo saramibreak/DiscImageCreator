@@ -1,5 +1,17 @@
-/*
- * This code is released under the Microsoft Public License (MS-PL). See License.txt, below.
+/**
+ * Copyright 2011-2018 sarami
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 #include "struct.h"
 #include "check.h"
@@ -420,6 +432,7 @@ BOOL ReadTOCText(
 }
 
 BOOL GetConfiguration(
+	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc
@@ -449,10 +462,17 @@ BOOL GetConfiguration(
 			MAKEWORD(configHeader.CurrentProfile[1], configHeader.CurrentProfile[0]);
 		if (pDisc->SCSI.wCurrentMedia == ProfileInvalid) {
 			OutputDriveLogA(
-				"SCSIOP_GET_CONFIGURATION didn't fail. But it couldn't get CurrentMedia on this drive\n"
-				"\tSet CurrentMedia to CD-ROM\n");
-			configHeader.CurrentProfile[1] = ProfileCdrom;
-			pDisc->SCSI.wCurrentMedia = ProfileCdrom;
+				"SCSIOP_GET_CONFIGURATION didn't fail. But it couldn't get CurrentMedia on this drive\n");
+			if (*pExecType == dvd) {
+				OutputDriveLogA("\tSet CurrentMedia to DVD-ROM\n");
+				configHeader.CurrentProfile[1] = ProfileDvdRom;
+				pDisc->SCSI.wCurrentMedia = ProfileDvdRom;
+			}
+			else {
+				OutputDriveLogA("\tSet CurrentMedia to CD-ROM\n");
+				configHeader.CurrentProfile[1] = ProfileCdrom;
+				pDisc->SCSI.wCurrentMedia = ProfileCdrom;
+			}
 		}
 		OutputGetConfigurationHeader(&configHeader);
 
@@ -778,7 +798,7 @@ BOOL ReadDriveInformation(
 			return FALSE;
 		}
 	}
-	// 3rd: get drive vender, product id here (because use IsValidPlextorDrive)
+	// 3rd: get drive vendor, product id here (because use IsValidPlextorDrive)
 	if (!Inquiry(pExtArg, pDevice)) {
 		return FALSE;
 	}
@@ -792,7 +812,7 @@ BOOL ReadDriveInformation(
 		SetSpeedRead(pExtArg, pDevice, TRUE);
 	}
 	// 5th: get currentMedia, if use CD-Text, C2 error, modesense, readbuffercapacity, SetDiscSpeed or not here.
-	if (!GetConfiguration(pExtArg, pDevice, pDisc)) {
+	if (!GetConfiguration(pExecType, pExtArg, pDevice, pDisc)) {
 		return FALSE;
 	}
 #if 0
@@ -874,10 +894,11 @@ BOOL ReadDirectoryRecordDetail(
 	BYTE byTransferLen,
 	INT nDirPosNum,
 	DWORD dwLogicalBlkCoef,
+	INT nOffset,
 	PDIRECTORY_RECORD pDirRec
 ) {
 	if (*pExecType == gd) {
-		if (!ExecReadGD(pExtArg, pDevice, pDisc, pCdb, nLBA, byTransferLen, lpBuf, bufDec)) {
+		if (!ExecReadGD(pExtArg, pDevice, pDisc, pCdb, nLBA + nOffset, byTransferLen, lpBuf, bufDec)) {
 			return FALSE;
 		}
 		for (BYTE i = 0; i < byTransferLen; i++) {
@@ -915,9 +936,13 @@ BOOL ReadDirectoryRecordDetail(
 					nSectorNum++;
 					break;
 				}
-				DWORD dwExtentPos = GetSizeOrDwordForVolDesc(lpDirRec + 2) / dwLogicalBlkCoef;
-				DWORD dwDataLen = GetSizeOrDwordForVolDesc(lpDirRec + 10);
-				if (dwDataLen >= DWORD(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE)) {
+				DWORD dwMaxByte = DWORD(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE);
+				if (pDisc->SCSI.nAllLength >= 0x200000) {
+					dwMaxByte = 0xffffffff;
+				}
+				DWORD dwExtentPos = GetSizeOrDwordForVolDesc(lpDirRec + 2, dwMaxByte) / dwLogicalBlkCoef;
+				DWORD dwDataLen = GetSizeOrDwordForVolDesc(lpDirRec + 10, dwMaxByte);
+				if (dwDataLen >= dwMaxByte) {
 					OutputVolDescLogA(
 						"Data length is incorrect. Skip the reading of this sector\n");
 					nSectorNum++;
@@ -928,7 +953,8 @@ BOOL ReadDirectoryRecordDetail(
 				OutputVolDescLogA("\n");
 				uiOfs += lpDirRec[0];
 
-				if (lpDirRec[25] & 0x02 && !(lpDirRec[32] == 1 && szCurDirName[0] == 0)
+				if ((lpDirRec[25] & 0x02 || (pDisc->SCSI.byCdi && lpDirRec[25] == 0))
+					&& !(lpDirRec[32] == 1 && szCurDirName[0] == 0)
 					&& !(lpDirRec[32] == 1 && szCurDirName[0] == 1)) {
 					// not upper and current directory 
 					for (INT i = 1; i < nDirPosNum; i++) {
@@ -987,6 +1013,7 @@ BOOL ReadDirectoryRecord(
 	LPBYTE lpBuf,
 	DWORD dwLogicalBlkCoef,
 	DWORD dwRootDataLen,
+	INT nOffset,
 	PDIRECTORY_RECORD pDirRec,
 	INT nDirPosNum
 ) {
@@ -1004,7 +1031,7 @@ BOOL ReadDirectoryRecord(
 	// for CD-I
 	if (dwRootDataLen == 0) {
 		if (*pExecType == gd) {
-			if (!ExecReadGD(pExtArg, pDevice, pDisc, pCdb, (INT)pDirRec[0].uiPosOfDir, byTransferLen, lpBuf, bufDec)) {
+			if (!ExecReadGD(pExtArg, pDevice, pDisc, pCdb, (INT)pDirRec[0].uiPosOfDir + nOffset, byTransferLen, lpBuf, bufDec)) {
 				return FALSE;
 			}
 			memcpy(lpBuf, bufDec + 16, DISC_RAW_READ_SIZE);
@@ -1015,7 +1042,7 @@ BOOL ReadDirectoryRecord(
 				return FALSE;
 			}
 		}
-		dwRootDataLen = PadSizeForVolDesc(GetSizeOrDwordForVolDesc(lpBuf + 10));
+		dwRootDataLen = PadSizeForVolDesc(GetSizeOrDwordForVolDesc(lpBuf + 10, (DWORD)(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE)));
 	}
 	pDirRec[0].uiDirSize = dwRootDataLen;
 	for (INT nDirRecIdx = 0; nDirRecIdx < nDirPosNum; nDirRecIdx++) {
@@ -1034,7 +1061,7 @@ BOOL ReadDirectoryRecord(
 
 			for (DWORD n = 0; n < dwAdditionalTransferLen; n++) {
 				if (!ReadDirectoryRecordDetail(pExecType, pExtArg, pDevice, pDisc, pCdb, nLBA
-					, lpBuf, bufDec, byTransferLen, nDirPosNum, dwLogicalBlkCoef, pDirRec)) {
+					, lpBuf, bufDec, byTransferLen, nDirPosNum, dwLogicalBlkCoef, nOffset, pDirRec)) {
 					continue;
 				}
 				nLBA += byTransferLen;
@@ -1045,7 +1072,7 @@ BOOL ReadDirectoryRecord(
 				, nLBA, dwLastTblSize, byTransferLen, (INT)__LINE__);
 
 			if (!ReadDirectoryRecordDetail(pExecType, pExtArg, pDevice, pDisc, pCdb, nLBA
-				, lpBuf, bufDec, byTransferLen, nDirPosNum, dwLogicalBlkCoef, pDirRec)) {
+				, lpBuf, bufDec, byTransferLen, nDirPosNum, dwLogicalBlkCoef, nOffset, pDirRec)) {
 				continue;
 			}
 		}
@@ -1059,7 +1086,7 @@ BOOL ReadDirectoryRecord(
 				, nLBA, pDirRec[nDirRecIdx].uiDirSize, byTransferLen, (INT)__LINE__);
 
 			if (!ReadDirectoryRecordDetail(pExecType, pExtArg, pDevice, pDisc, pCdb, nLBA
-				, lpBuf, bufDec, byTransferLen, nDirPosNum, dwLogicalBlkCoef, pDirRec)) {
+				, lpBuf, bufDec, byTransferLen, nDirPosNum, dwLogicalBlkCoef, nOffset, pDirRec)) {
 				continue;
 			}
 		}
@@ -1078,6 +1105,7 @@ BOOL ReadPathTableRecord(
 	DWORD dwLogicalBlkCoef,
 	DWORD dwPathTblSize,
 	DWORD dwPathTblPos,
+	INT nOffset,
 	PDIRECTORY_RECORD pDirRec,
 	LPINT nDirPosNum
 ) {
@@ -1103,7 +1131,7 @@ BOOL ReadPathTableRecord(
 			for (DWORD n = 0; n < dwAdditionalTransferLen; n++) {
 				if (*pExecType == gd) {
 					BYTE bufDec[CD_RAW_SECTOR_SIZE] = { 0 };
-					if (!ExecReadGD(pExtArg, pDevice, pDisc, pCdb, (INT)dwPathTblPos, byTransferLen, lpBuf, bufDec)) {
+					if (!ExecReadGD(pExtArg, pDevice, pDisc, pCdb, (INT)dwPathTblPos + nOffset, byTransferLen, lpBuf, bufDec)) {
 						throw FALSE;
 					}
 					memcpy(lpBuf, bufDec + 16, DISC_RAW_READ_SIZE);
@@ -1126,7 +1154,7 @@ BOOL ReadPathTableRecord(
 			DWORD dwOffset = pDevice->dwMaxTransferLength * dwAdditionalTransferLen;
 			if (*pExecType == gd) {
 				BYTE bufDec[CD_RAW_SECTOR_SIZE] = { 0 };
-				if (!ExecReadGD(pExtArg, pDevice, pDisc, pCdb, (INT)dwPathTblPos, byTransferLen, lpBuf, bufDec)) {
+				if (!ExecReadGD(pExtArg, pDevice, pDisc, pCdb, (INT)dwPathTblPos + nOffset, byTransferLen, lpBuf, bufDec)) {
 					throw FALSE;
 				}
 				memcpy(lpBuf, bufDec + 16, DISC_RAW_READ_SIZE);
@@ -1148,7 +1176,7 @@ BOOL ReadPathTableRecord(
 			SetCommandForTransferLength(pExecType, pDevice, pCdb, dwPathTblSize, &byTransferLen);
 			if (*pExecType == gd) {
 				BYTE bufDec[CD_RAW_SECTOR_SIZE] = { 0 };
-				if (!ExecReadGD(pExtArg, pDevice, pDisc, pCdb, (INT)dwPathTblPos, byTransferLen, lpBuf, bufDec)) {
+				if (!ExecReadGD(pExtArg, pDevice, pDisc, pCdb, (INT)dwPathTblPos + nOffset, byTransferLen, lpBuf, bufDec)) {
 					throw FALSE;
 				}
 				memcpy(lpBuf, bufDec + 16, DISC_RAW_READ_SIZE);
@@ -1185,6 +1213,7 @@ BOOL ReadVolumeDescriptor(
 	LPBYTE pCdb,
 	LPBYTE lpBuf,
 	INT nPVD,
+	INT nOffset,
 	LPBOOL lpReadVD,
 	PVOLUME_DESCRIPTOR pVolDesc
 ) {
@@ -1195,7 +1224,7 @@ BOOL ReadVolumeDescriptor(
 	for (;;) {
 		if (*pExecType == gd) {
 			BYTE bufDec[CD_RAW_SECTOR_SIZE] = { 0 };
-			if (!ExecReadGD(pExtArg, pDevice, pDisc, pCdb, nTmpLBA, 1, lpBuf, bufDec)) {
+			if (!ExecReadGD(pExtArg, pDevice, pDisc, pCdb, nTmpLBA + nOffset, 1, lpBuf, bufDec)) {
 				return FALSE;
 			}
 			memcpy(lpBuf, bufDec + 16, DISC_RAW_READ_SIZE);
@@ -1211,14 +1240,14 @@ BOOL ReadVolumeDescriptor(
 			if (nTmpLBA == nPVD) {
 				DWORD dwLogicalBlkSize = GetSizeOrWordForVolDesc(lpBuf + 128);
 				pVolDesc->ISO_9660.dwLogicalBlkCoef = (BYTE)(DISC_RAW_READ_SIZE / dwLogicalBlkSize);
-				pVolDesc->ISO_9660.dwPathTblSize = GetSizeOrDwordForVolDesc(lpBuf + 132);
+				pVolDesc->ISO_9660.dwPathTblSize = GetSizeOrDwordForVolDesc(lpBuf + 132, (DWORD)(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
 				pVolDesc->ISO_9660.dwPathTblPos = MAKEDWORD(MAKEWORD(lpBuf[140], lpBuf[141]),
 					MAKEWORD(lpBuf[142], lpBuf[143])) / pVolDesc->ISO_9660.dwLogicalBlkCoef;
 				if (pVolDesc->ISO_9660.dwPathTblPos == 0) {
 					pVolDesc->ISO_9660.dwPathTblPos = MAKEDWORD(MAKEWORD(lpBuf[151], lpBuf[150]),
 						MAKEWORD(lpBuf[149], lpBuf[148]));
 				}
-				pVolDesc->ISO_9660.dwRootDataLen = GetSizeOrDwordForVolDesc(lpBuf + 166);
+				pVolDesc->ISO_9660.dwRootDataLen = GetSizeOrDwordForVolDesc(lpBuf + 166, (DWORD)(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
 				if (pVolDesc->ISO_9660.dwRootDataLen > 0) {
 					pVolDesc->ISO_9660.dwRootDataLen = PadSizeForVolDesc(pVolDesc->ISO_9660.dwRootDataLen);
 				}
@@ -1227,14 +1256,14 @@ BOOL ReadVolumeDescriptor(
 			else if (lpBuf[0] == 2) {
 				DWORD dwLogicalBlkSize = GetSizeOrWordForVolDesc(lpBuf + 128);
 				pVolDesc->JOLIET.dwLogicalBlkCoef = (BYTE)(DISC_RAW_READ_SIZE / dwLogicalBlkSize);
-				pVolDesc->JOLIET.dwPathTblSize = GetSizeOrDwordForVolDesc(lpBuf + 132);
+				pVolDesc->JOLIET.dwPathTblSize = GetSizeOrDwordForVolDesc(lpBuf + 132, (DWORD)(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
 				pVolDesc->JOLIET.dwPathTblPos = MAKEDWORD(MAKEWORD(lpBuf[140], lpBuf[141]),
 					MAKEWORD(lpBuf[142], lpBuf[143])) / pVolDesc->JOLIET.dwLogicalBlkCoef;
 				if (pVolDesc->JOLIET.dwPathTblPos == 0) {
 					pVolDesc->JOLIET.dwPathTblPos = MAKEDWORD(MAKEWORD(lpBuf[151], lpBuf[150]),
 						MAKEWORD(lpBuf[149], lpBuf[148]));
 				}
-				pVolDesc->JOLIET.dwRootDataLen = GetSizeOrDwordForVolDesc(lpBuf + 166);
+				pVolDesc->JOLIET.dwRootDataLen = GetSizeOrDwordForVolDesc(lpBuf + 166, (DWORD)(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
 				if (pVolDesc->JOLIET.dwRootDataLen > 0) {
 					pVolDesc->JOLIET.dwRootDataLen = PadSizeForVolDesc(pVolDesc->JOLIET.dwRootDataLen);
 				}

@@ -1,5 +1,17 @@
-/*
- * This code is released under the Microsoft Public License (MS-PL). See License.txt, below.
+/**
+ * Copyright 2011-2018 sarami
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 #include "struct.h"
 #include "check.h"
@@ -77,7 +89,7 @@ BOOL GetDriveOffset(
 			}
 			for (INT nRoop = 0; nRoop < 10 && pTrimBuf[nRoop] != NULL; nRoop++) {
 				if (strstr(pTrimBuf[nRoop], pId) != NULL) {
-					*lpDriveOffset = atoi(pTrimBuf[nRoop+1]);
+					*lpDriveOffset = atoi(pTrimBuf[nRoop + 1]);
 					bGetOffset = TRUE;
 					break;
 				}
@@ -156,6 +168,21 @@ BYTE GetMode(
 	return byMode;
 }
 
+BYTE GetControl(
+	PEXEC_TYPE pExecType,
+	PDISC pDisc,
+	INT nIdx
+) {
+	BYTE byCtl = 0;
+	if (*pExecType == gd) {
+		byCtl = pDisc->GDROM_TOC.TrackData[nIdx].Control;
+	}
+	else {
+		byCtl = pDisc->SCSI.toc.TrackData[nIdx].Control;
+	}
+	return byCtl;
+}
+
 BOOL GetWriteOffset(
 	PDISC pDisc,
 	LPBYTE lpBuf
@@ -176,6 +203,22 @@ BOOL GetWriteOffset(
 	return bRet;
 }
 
+BOOL GetCmd(
+	_TCHAR* szPath,
+	_TCHAR* szFname,
+	_TCHAR* szExt
+) {
+	if (!::GetModuleFileName(NULL, szPath, _MAX_PATH)) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		return FALSE;
+	}
+	_TCHAR szDrive[_MAX_DRIVE] = { 0 };
+	_TCHAR szDir[_MAX_DIR] = { 0 };
+	_tsplitpath(szPath, szDrive, szDir, NULL, NULL);
+	_tmakepath(szPath, szDrive, szDir, szFname, szExt);
+	return TRUE;
+}
+
 BOOL GetEccEdcCmd(
 	LPTSTR pszStr,
 	size_t cmdSize,
@@ -185,16 +228,8 @@ BOOL GetEccEdcCmd(
 	INT nEndLBA
 ) {
 	_TCHAR szPathForEcc[_MAX_PATH] = { 0 };
-	if (!::GetModuleFileName(NULL, szPathForEcc, _MAX_PATH)) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return FALSE;
-	}
-	BOOL bRet = FALSE;
-	_TCHAR szDrive[_MAX_DRIVE] = { 0 };
-	_TCHAR szDir[_MAX_DIR] = { 0 };
-	_tsplitpath(szPathForEcc, szDrive, szDir, NULL, NULL);
-	_tmakepath(szPathForEcc, szDrive, szDir, _T("EccEdc"), _T("exe"));
-	if (PathFileExists(szPathForEcc)) {
+	BOOL bRet = GetCmd(szPathForEcc, _T("EccEdc"), _T("exe"));
+	if (bRet && PathFileExists(szPathForEcc)) {
 		if (!_tcscmp(pszCmd, _T("check"))) {
 			_sntprintf(pszStr, cmdSize,
 				_T("\"\"%s\" %s \"%s\"\""), szPathForEcc, pszCmd, pszImgPath);
@@ -204,11 +239,35 @@ BOOL GetEccEdcCmd(
 				_T("\"\"%s\" %s \"%s\"\" %d %d"),
 				szPathForEcc, pszCmd, pszImgPath, nStartLBA, nEndLBA);
 		}
-		bRet = TRUE;
 	}
 	else {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		OutputErrorString(_T(" => %s\n"), szPathForEcc);
+	}
+	return bRet;
+}
+
+BOOL GetUnscCmd(
+	LPTSTR pszStr,
+	LPCTSTR pszPath
+) {
+	_TCHAR szDrive[_MAX_DRIVE] = { 0 };
+	_TCHAR szDir[_MAX_DIR] = { 0 };
+	_TCHAR szFname[_MAX_FNAME] = { 0 };
+	_TCHAR szPathForIso[_MAX_PATH] = { 0 };
+	_tsplitpath(pszPath, szDrive, szDir, szFname, NULL);
+	_tmakepath(szPathForIso, szDrive, szDir, szFname, _T("iso"));
+
+	_TCHAR szPathForUnsc[_MAX_PATH] = { 0 };
+	BOOL bRet = GetCmd(szPathForUnsc, _T("unscrambler"), _T("exe"));
+	if (bRet && PathFileExists(szPathForUnsc)) {
+		size_t size = _tcslen(szPathForUnsc) + _tcslen(pszPath) + _tcslen(szPathForIso) + 9;
+		_sntprintf(pszStr, size,
+			_T("\"\"%s\" \"%s\" \"%s\"\""), szPathForUnsc, pszPath, szPathForIso);
+	}
+	else {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		OutputErrorString(_T(" => %s\n"), szPathForUnsc);
 	}
 	return bRet;
 }
@@ -224,11 +283,12 @@ WORD  GetSizeOrWordForVolDesc(
 }
 
 DWORD  GetSizeOrDwordForVolDesc(
-	LPBYTE lpBuf
+	LPBYTE lpBuf,
+	DWORD dwMax
 ) {
 	DWORD val = MAKEDWORD(MAKEWORD(lpBuf[0], lpBuf[1]),
 		MAKEWORD(lpBuf[2], lpBuf[3]));
-	if (val == 0) {
+	if (val == 0 || val >= dwMax) {
 		val = MAKEDWORD(MAKEWORD(lpBuf[7], lpBuf[6]),
 			MAKEWORD(lpBuf[5], lpBuf[4]));
 	}

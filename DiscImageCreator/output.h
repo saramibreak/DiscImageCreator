@@ -1,5 +1,17 @@
-/*
- * This code is released under the Microsoft Public License (MS-PL). See License.txt, below.
+/**
+ * Copyright 2011-2018 sarami
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 #pragma once
 #include "forwardDeclaration.h"
@@ -66,8 +78,8 @@ extern CHAR logBufferA[DISC_RAW_READ_SIZE];
 #define OutputErrorStringA(str, ...)	OutputDebugStringExA(str, __VA_ARGS__)
 #define OutputDiscLogW(str, ...)		OutputDebugStringExW(str, __VA_ARGS__)
 #define OutputDiscLogA(str, ...)		OutputDebugStringExA(str, __VA_ARGS__)
-#define OutputDiscWithLBALogA(str1, str2, nLBA, ...) \
-	OutputDebugStringWithLBAExA(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(str1) str2, nLBA, __VA_ARGS__);
+#define OutputDiscWithLBALogA(str, nLBA, ...) \
+	OutputDebugStringWithLBAEx2A(STR_LBA str, nLBA, __VA_ARGS__);
 
 #define OutputVolDescLogW(str, ...)		OutputDebugStringExW(str, __VA_ARGS__)
 #define OutputVolDescLogA(str, ...)		OutputDebugStringExA(str, __VA_ARGS__)
@@ -130,8 +142,8 @@ extern _LOG_FILE g_LogFile;
 
 #define OutputDiscLogW(str, ...)		fwprintf(g_LogFile.fpDisc, str, __VA_ARGS__);
 #define OutputDiscLogA(str, ...)		fprintf(g_LogFile.fpDisc, str, __VA_ARGS__);
-#define OutputDiscWithLBALogA(str1, str2, nLBA, ...) \
-	fprintf(g_LogFile.fpDisc, OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(str1) str2, nLBA, nLBA, __VA_ARGS__);
+#define OutputDiscWithLBALogA(str, nLBA, ...) \
+	fprintf(g_LogFile.fpDisc, STR_LBA str, nLBA, nLBA, __VA_ARGS__);
 
 #define OutputVolDescLogW(str, ...)		fwprintf(g_LogFile.fpVolDesc, str, __VA_ARGS__);
 #define OutputVolDescLogA(str, ...)		fprintf(g_LogFile.fpVolDesc, str, __VA_ARGS__);
@@ -438,7 +450,8 @@ BOOL DescrambleMainChannelForGD(
 	LPTSTR pszOutPath
 );
 
-BOOL SplitFileForGD(
+BOOL CreateBinCueForGD(
+	PDISC pDisc,
 	LPCTSTR pszPath
 );
 

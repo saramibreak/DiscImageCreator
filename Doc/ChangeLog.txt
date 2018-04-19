@@ -441,3 +441,17 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
              => The problem is that dic skips rereading if unintentional error is also 312.
 - improved: Dumping of PC-FX disc (Super PCEngine Fan Deluxe - Special CD-ROM Vol. 1)
 - improved: Reading directory record (Formula GP SLES-03994)
+
+*2018-04-19
+- added: support HD-DVD and raw dump and GC/Wii disc
+          => HD-DVD: use 'dvd' command. raw dump and GC/Wii disc: use 'dvd' command and /raw option.
+             (GC/Wii disc is only supported by GDR-8082, 8161, 8162, 8163, 8164)
+             If you want to unscramble GC/Wii raw image, put unscramler.exe in dic directory.
+             https://github.com/saramibreak/unscrambler/releases
+- added: cue file of GD-ROM image
+- changed: LICENSE (MS-PL -> Apache License Version 2.0)
+- fixed: SecuROM range
+- fixed: Reading directory record (GD-ROM and minus offset disc, DVD, CD-i sub directory)
+- fixed: /ss option (support ProtectCD VOB minus offset disc)
+- fixed: /c option (skip returning error)
+- improved: Reading sub-channel (if random error occurs to rmsf or amsf, exec /f forcibly)

@@ -1,5 +1,17 @@
-/*
- * This code is released under the Microsoft Public License (MS-PL). See License.txt, below.
+/**
+ * Copyright 2011-2018 sarami
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 #include "struct.h"
 #include "convert.h"
@@ -25,10 +37,11 @@ VOID OutputFsBootRecord(
 }
 
 VOID OutputFsVolumeDescriptorFirst(
+	PDISC pDisc,
 	LPBYTE lpBuf,
 	CHAR str32[][32]
 ) {
-	DWORD vss = GetSizeOrDwordForVolDesc(lpBuf + 80);
+	DWORD vss = GetSizeOrDwordForVolDesc(lpBuf + 80, DWORD(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
 	OutputVolDescLogA(
 		"\t                            System Identifier: %.32s\n"
 		"\t                            Volume Identifier: %.32s\n"
@@ -241,7 +254,7 @@ VOID OutputFsVolumeDescriptorSecond(
 	WORD vss = GetSizeOrWordForVolDesc(lpBuf + 120);
 	WORD vsn = GetSizeOrWordForVolDesc(lpBuf + 124);
 	WORD lbs = GetSizeOrWordForVolDesc(lpBuf + 128);
-	DWORD pts = GetSizeOrDwordForVolDesc(lpBuf + 132);
+	DWORD pts = GetSizeOrDwordForVolDesc(lpBuf + 132, DWORD(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
 	DWORD lopt = MAKEDWORD(MAKEWORD(lpBuf[140], lpBuf[141]),
 		MAKEWORD(lpBuf[142], lpBuf[143]));
 	pDisc->MAIN.bPathType = lType;
@@ -271,8 +284,8 @@ VOID OutputFsVolumeDescriptorSecond(
 		"\tLocation of Optional Occurrence of Path Table: %lu\n"
 		, vss, vsn, lbs, pts, lopt, loopt);
 
-	DWORD dwExtentPos = GetSizeOrDwordForVolDesc(lpBuf + 158);
-	DWORD dwDataLen = GetSizeOrDwordForVolDesc(lpBuf + 166);
+	DWORD dwExtentPos = GetSizeOrDwordForVolDesc(lpBuf + 158, DWORD(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
+	DWORD dwDataLen = GetSizeOrDwordForVolDesc(lpBuf + 166, DWORD(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
 	CHAR fname[64] = { 0 };
 	OutputFsDirectoryRecord(pExtArg, pDisc, lpBuf + 156, dwExtentPos, dwDataLen, fname);
 	if (bTCHAR) {
@@ -303,20 +316,20 @@ VOID OutputFsVolumeDescriptorForTime(
 	LPBYTE lpBuf
 ) {
 	OutputVolDescLogA(
-		"\t                Volume Creation Date and Time: %.4s-%.2s-%.2s %.2s:%.2s:%.2s.%.2s %+03d:%02u\n"
-		"\t            Volume Modification Date and Time: %.4s-%.2s-%.2s %.2s:%.2s:%.2s.%.2s %+03d:%02u\n"
-		"\t              Volume Expiration Date and Time: %.4s-%.2s-%.2s %.2s:%.2s:%.2s.%.2s %+03d:%02u\n"
-		"\t               Volume Effective Date and Time: %.4s-%.2s-%.2s %.2s:%.2s:%.2s.%.2s %+03d:%02u\n"
+		"\t                Volume Creation Date and Time: %.4s-%.2s-%.2s %.2s:%.2s:%.2s.%.2s %+03d:%02d\n"
+		"\t            Volume Modification Date and Time: %.4s-%.2s-%.2s %.2s:%.2s:%.2s.%.2s %+03d:%02d\n"
+		"\t              Volume Expiration Date and Time: %.4s-%.2s-%.2s %.2s:%.2s:%.2s.%.2s %+03d:%02d\n"
+		"\t               Volume Effective Date and Time: %.4s-%.2s-%.2s %.2s:%.2s:%.2s.%.2s %+03d:%02d\n"
 		"\t                       File Structure Version: %u\n"
 		"\t                              Application Use: ",
 		&lpBuf[813], &lpBuf[817], &lpBuf[819], &lpBuf[821], &lpBuf[823]
-		, &lpBuf[825], &lpBuf[827], (CHAR)lpBuf[829] / 4, (CHAR)lpBuf[829] % 4 * 15,
+		, &lpBuf[825], &lpBuf[827], (CHAR)lpBuf[829] / 4, abs((CHAR)lpBuf[829] % 4 * 15),
 		&lpBuf[830], &lpBuf[834], &lpBuf[836], &lpBuf[838], &lpBuf[840]
-		, &lpBuf[842], &lpBuf[844], (CHAR)lpBuf[846] / 4, (CHAR)lpBuf[846] % 4 * 15,
+		, &lpBuf[842], &lpBuf[844], (CHAR)lpBuf[846] / 4, abs((CHAR)lpBuf[846] % 4 * 15),
 		&lpBuf[847], &lpBuf[851], &lpBuf[853], &lpBuf[855], &lpBuf[857]
-		, &lpBuf[859], &lpBuf[861], (CHAR)lpBuf[863] / 4, (CHAR)lpBuf[863] % 4 * 15,
+		, &lpBuf[859], &lpBuf[861], (CHAR)lpBuf[863] / 4, abs((CHAR)lpBuf[863] % 4 * 15),
 		&lpBuf[864], &lpBuf[868], &lpBuf[870], &lpBuf[872], &lpBuf[874]
-		, &lpBuf[876], &lpBuf[878], (CHAR)lpBuf[880] / 4, (CHAR)lpBuf[880] % 4 * 15,
+		, &lpBuf[876], &lpBuf[878], (CHAR)lpBuf[880] / 4, abs((CHAR)lpBuf[880] % 4 * 15),
 		lpBuf[881]);
 	for (INT i = 883; i <= 1394; i++) {
 		OutputVolDescLogA("%x", lpBuf[i]);
@@ -341,7 +354,7 @@ VOID OutputFsVolumeDescriptorForISO9660(
 	strncpy(str37[0], (LPCH)&lpBuf[702], sizeof(str37[0]));
 	strncpy(str37[1], (LPCH)&lpBuf[739], sizeof(str37[1]));
 	strncpy(str37[2], (LPCH)&lpBuf[776], sizeof(str37[2]));
-	OutputFsVolumeDescriptorFirst(lpBuf, str32);
+	OutputFsVolumeDescriptorFirst(pDisc, lpBuf, str32);
 	if (lpBuf[0] == 2) {
 		strncpy(str32[2], (LPCH)&lpBuf[88], sizeof(str32[2]));
 		OutputVolDescLogA(
@@ -469,7 +482,7 @@ VOID OutputFsVolumeDescriptorForJoliet(
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 	}
 
-	OutputFsVolumeDescriptorFirst(lpBuf, str32);
+	OutputFsVolumeDescriptorFirst(pDisc, lpBuf, str32);
 
 	strncpy(str32[2], (LPCH)&lpBuf[88], sizeof(str32[2]));
 	OutputVolDescLogA(
@@ -1093,7 +1106,7 @@ VOID OutputTocForGD(
 				OutputDiscLogA(", LBA %6ld-%6ld, Length %6ld\n"
 					, pDisc->GDROM_TOC.TrackData[r].Address - 150
 					, pDisc->GDROM_TOC.Length - 150
-					, pDisc->GDROM_TOC.Length - 150 - 45000);
+					, pDisc->GDROM_TOC.Length - 150 - FIRST_LBA_FOR_GD);
 			}
 			else {
 				OutputDiscLogA(", LBA %6ld-%6ld, Length %6ld\n"
@@ -1120,11 +1133,11 @@ VOID OutputTocForGD(
 				, pDisc->GDROM_TOC.TrackData[r + 1].Address - 1 - 300
 				, pDisc->GDROM_TOC.TrackData[r + 1].Address - pDisc->GDROM_TOC.TrackData[r].Address);
 		}
-		pDisc->SCSI.lpFirstLBAListOnToc[r] = pDisc->GDROM_TOC.TrackData[r].Address;
+		// overwrite the toc of audio trap disc to the toc of gd-rom
+		pDisc->SCSI.lpFirstLBAListOnToc[r] = pDisc->GDROM_TOC.TrackData[r].Address - 150;
 	}
-	OutputDiscLogA(
-		"                                                 Total %6ld\n"
-		, pDisc->GDROM_TOC.Length - 150 - 45000);
+	OutputDiscLogA("                                                 Total %6ld\n"
+		, pDisc->GDROM_TOC.Length - 150 - FIRST_LBA_FOR_GD);
 }
 
 VOID OutputTocWithPregap(
@@ -1132,13 +1145,12 @@ VOID OutputTocWithPregap(
 ) {
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(TOC with pregap));
 	for (UINT r = 0; r < pDisc->SCSI.toc.LastTrack; r++) {
-		OutputDiscLogA(
-			"\tTrack %2u, Ctl %u, Mode %u", r + 1,
+		OutputDiscLogA("\tTrack %2u, Ctl %u, Mode %u", r + 1,
 			pDisc->SUB.lpCtlList[r], pDisc->MAIN.lpModeList[r]);
+
 		for (UINT k = 0; k < MAXIMUM_NUMBER_INDEXES; k++) {
 			if (pDisc->SUB.lpFirstLBAListOnSub[r][k] != -1) {
-				OutputDiscLogA(", Index%u %6d", k,
-					pDisc->SUB.lpFirstLBAListOnSub[r][k]);
+				OutputDiscLogA(", Index%u %6d", k, pDisc->SUB.lpFirstLBAListOnSub[r][k]);
 			}
 			else if (k == 0) {
 				OutputDiscLogA(",              ");
