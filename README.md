@@ -1,7 +1,7 @@
 # DiscImageCreator
 ## Summary
-  This command-line program dumps a CD, DVD, BD, GD, Floppy. CD and GD, it can
- dump considering a drive + CD (=combined) offset.
+  This command-line program dumps a CD, GD, DVD, HD-DVD, BD, GC/Wii disc and Floppy.  
+  CD and GD, it can dump considering a drive + CD (=combined) offset.  
   It works on Windows PC (WinXP or higher).
 
 ## Recommend drive
@@ -15,14 +15,28 @@
           Useful tool for PLEXTOR.
        - [PX-Info Utility](https://web.archive.org/web/*/http://www.plextor-digital.com/index.php/component/option,com_jdownloads/Itemid,0/catid,86/cid,468/task,view.download/)
           Useful tool for PLEXTOR.
-   - HL-DT-ST
+   - Hitachi-LG
      - UH12NS30 (Combined offset minus disc only)
    - ASUS
      - BC-12D2HT (Combined offset minus disc only)
-- GD: TSSTcorp(TS-H353A, TS-H352C, TS-H192C)
-     http://forum.redump.org/post/14552/#p14552 <- This drive might be supported too.
+- CD: (Swappable drive) (This is the comfirmed drive list. Actually, many drive perhaps supports to swap)
+   - Sony Optiarc
+     - AD-7200 (Combined offset plus disc only) 
+   - TSSTcorp
+     - TS-H353A (Combined offset plus disc only), TS-H352C (ditto)
+- GD:
+   - TSSTcorp
+     - TS-H353A, TS-H352C, TS-H192C
+     - http://forum.redump.org/post/14552/#p14552 <- This drive might be supported too.
 - DVD: All supported drive
-- BD: All supported drive
+- HD-DVD: All supported drive
+- BD: All supported drive (PS3 is only supported by [some mediatek drive](https://rpcs3.net/quickstart)
+- GC/Wii
+   - Hitachi-LG
+     - GDR-8082N, GDR-8161B, GDR-8162B, GDR-8163B, GDR-8164B  
+       GCC-4160N, GCC-4240N, GCC-4243N, GCC-4247N  
+       (4241N, 4244N, 4246N hasn't tested yet, but probably supports to dump.)  
+       (4242N supports to dump but many errors occurred in my drive.) 
 - Floppy: All supported drive
 
 ## Not recommend
@@ -99,33 +113,43 @@
   - SmartE [duplicated msf]
   - SecuROM(v1 - v3) [unique data on subchannel]
 
-## Probably Unsupported Disc
-  DVD
-  - Microsoft Xbox
-  - Microsoft Xbox 360
-     => see this. http://forum.redump.org/topic/6073/xbox-1-360-dumping-instructions/
+  BD
+  - Microsoft Xbox One
+  - Sony PlayStation 3
+  - Sony PlayStation 4
 
+  Nintendo Optical Disc
+  - GameCube
+  - Wii
+
+## Probably Unsupported Disc
   Protected Disc
-  - RingPROTECH, ProRing [no signal sector]
-  - LaserLock [no signal sector, intentional C2 error]
+  - RingPROTECH, ProRing [no signal sector]  
      => The result doesn't match at each drives.
-  - CodeLock [intentional C2 error, invalid sync]
-     => Compared to CloneCD or CD Manipulator, a plextor detects double errors.
+  - LaserLock [no signal sector, intentional C2 error]  
+     => The result doesn't match at each drives.
+  - CodeLock [intentional C2 error, invalid sync]  
+     => Compared with CloneCD or CD Manipulator, plextor detects double errors.
 
 ## Unsupported Disc
   CD
   - Atari Jaguar CD
      => Can't get the CD offsets
 
+  DVD
+  - Microsoft Xbox
+  - Microsoft Xbox 360  
+     => see this. http://forum.redump.org/topic/6073/xbox-1-360-dumping-instructions/
+
   Protected Disc
-  - SecuROM(v4.x or higher), StarForce, CD-Cops [recording density]
+  - SecuROM(v4.x or higher), StarForce, CD-Cops [recording density]  
      => These needs DPM(Data position measurement). cue, ccd doesn't support DPM.
         You need to use the [Alcohol 120/52%](http://www.alcohol-soft.com/) to store it, 
-  - Alpha-ROM, ROOT, TAGES [duplicated(double, triple) sector]
+  - Alpha-ROM, ROOT, TAGES [duplicated(double, triple) sector]  
      => It can read in reverse, but specifications are not decided in redump.org
 
   Nintendo Wii U
-   => I don't know the details.
+   => This is a BD based disc, but I don't know the details.
 
 ## How to use
 ### Preparation
@@ -138,13 +162,26 @@
  For secure dumping, I recommend using /c2 option  
   DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)] /c2
  
- About others option, run exe without args to get detail info.
+ About other options, run exe without args to get detail info.
 
-### Dumping Guide for DVD
- DiscImageCreator.exe dvd [DriveLetter] foo.bin [DriveSpeed(0-16)]
+### Dumping Guide for CD with swap
+#### Preparation
+ create the audio trap disc in advance.  
+ (a disc with a hacked TOC of 99 mins audio, burn it with CloneCD or Alcohol 52/120%).  
+ http://www.mediafire.com/?2nygv2oyzzz
 
-### Dumping Guide for Floppy Disk
- DiscImageCreator.exe fd [DriveLetter] foo.bin
+1. Insert the audio trap disc to a supported drive.
+2. Run below. (stop spinning disc)  
+   DiscImageCreator.exe stop [DriveLetter]
+3. Use a pin to press the escape eject button, so the tray will eject (or remove the drive cover).
+4. Insert the disc and run below.  
+   DiscImageCreator.exe close [DriveLetter]  
+   (or gently push the tray back or put the drive cover back on).
+5. Run below. (start dumping scrambled img)  
+   DiscImageCreator.exe swap [DriveLetter] foo.bin [DriveSpeed(0-72)]
+6. When dumping finished, the drive tray open automatically.
+7. The drive tray close automatically after 3000 msec.
+8. Read TOC and img is descrambled automatically.
 
 ### Dumping Guide for SafeDisc
 #### Method 1 (Other tools)
@@ -153,20 +190,20 @@
 #### Method 2
  DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)] /sf
 
-### Dumping Guide for Protected disc
- DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)] /sf
-
 ### Dumping Guide for SecuROM(v1 - v5.xx)
  DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)] /ns
 
 ### Dumping Guide for LibCrypt
  DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)] /nl
 
+### Dumping Guide for other protected disc
+ DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)] /sf
+
 ### Dumping Guide for GD-ROM (The high density area)
 #### Preparation
- create the audio trap disc in advance.
- (a disc with a hacked TOC of 99 mins audio, burn it with CloneCD or Alcohol 52/120%).
-   http://www.mediafire.com/?2nygv2oyzzz
+ create the audio trap disc in advance.  
+ (a disc with a hacked TOC of 99 mins audio, burn it with CloneCD or Alcohol 52/120%).  
+ http://www.mediafire.com/?2nygv2oyzzz
 
 #### Method 1 (Other tools)
  http://forum.redump.org/topic/2620/dreamcastnaomi-gdrom-dumping-instructions/
@@ -175,18 +212,143 @@
  http://forum.redump.org/topic/9436/new-dreamcast-dumping-program-test-please/
 
 #### Method 3
-1. insert the audio trap disc to a supported drive.
-2. run below. (stop spinning disc)
+1. Insert the audio trap disc to a supported drive.
+2. Run below. (stop spinning disc)  
    DiscImageCreator.exe stop [DriveLetter]
-3. use a pin to press the escape eject button, so the tray will eject (or remove
+3. Use a pin to press the escape eject button, so the tray will eject (or remove
    the drive cover).
-4. insert the gdrom and gently push the tray back (or put the drive cover back on).
-5. run below. (start rippping gdrom)
+4. Insert the gdrom and run below. (close the drive tray)  
+   DiscImageCreator.exe close [DriveLetter]  
+   (or gently push the tray back or put the drive cover back on).
+5. Run below. (start dumping the GD-ROM)  
    DiscImageCreator.exe gd [DriveLetter] foo.bin [DriveSpeed(0-72)]
 
+### Dumping Guide for DVD
+ DiscImageCreator.exe dvd [DriveLetter] foo.iso [DriveSpeed(0-16)]
+
+### Dumping Guide for BD
+ DiscImageCreator.exe bd [DriveLetter] foo.iso
+
+### Dumping Guide for GC/Wii
+#### Attention
+Compared with Friidump and Rawdump, dumping speed is very slow.
+
+1. To unscramble GC/Wii raw image, put unscramler.exe in DiscImageCreator directory.
+   https://github.com/saramibreak/unscrambler/releases
+2. run below.  
+   DiscImageCreator.exe dvd [DriveLetter] foo.raw [DriveSpeed(0-16)] /raw
+
+### Dumping Guide for Floppy Disk
+ DiscImageCreator.exe fd [DriveLetter] foo.bin
+
+## All commands and options
+        cd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/a (val)]
+           [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4)] [/f (val)] [/m]
+           [/p] [/ms] [/sf (val)] [/ss] [/np] [/nq] [/nr] [/ns] [/s (val)]
+                Dump a CD from A to Z
+                For PLEXTOR or drive that can scramble Dumping
+        swap <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/a (val)]
+           [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4)] [/f (val)] [/m]
+           [/p] [/ms] [/sf (val)] [/ss] [/np] [/nq] [/nr] [/ns] [/s (val)]
+                Dump a CD from A to Z using swap trick
+                For no PLEXTOR or drive that can't scramble Dumping
+        data <DriveLetter> <Filename> <DriveSpeed(0-72)> <StartLBA> <EndLBA+1>
+             [/q] [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4)]
+             [/sf (val)] [/ss] [/r] [/np] [/nq] [/nr] [/ns] [/s (val)]
+                Dump a CD from start to end (using 'all' flag)
+                For no PLEXTOR or drive that can't scramble dumping
+        audio <DriveLetter> <Filename> <DriveSpeed(0-72)> <StartLBA> <EndLBA+1>
+              [/q] [/a (val)] [/c2 (val1) (val2) (val3) (val4)]
+              [/be (str) or /d8] [/sf (val)] [/np] [/nq] [/nr] [/ns] [/s (val)]
+                Dump a CD from start to end (using 'cdda' flag)
+                For dumping a lead-in, lead-out mainly
+        gd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/be (str) or /d8]
+           [/c2 (val1) (val2) (val3) (val4)] [/np] [/nq] [/nr] [/ns] [/s (val)]
+                Dump a HD area of GD from A to Z
+        dvd <DriveLetter> <Filename> <DriveSpeed(0-16)> [/c] [/f (val)] [/raw] [/q]
+                Dump a DVD from A to Z
+        bd <DriveLetter> <Filename> [/f (val)] [/q]
+                Dump a BD from A to Z
+        fd <DriveLetter> <Filename>
+                Dump a floppy disk
+        stop <DriveLetter>
+                Spin off the disc
+        start <DriveLetter>
+                Spin up the disc
+        eject <DriveLetter>
+                Eject the tray
+        close <DriveLetter>
+                Close the tray
+        reset <DriveLetter>
+                Reset the drive (Only PLEXTOR)
+        ls <DriveLetter>
+                Show maximum speed of the drive
+        sub <Subfile>
+                Parse CloneCD sub file and output to readable format
+        mds <Mdsfile>
+                Parse Alchohol 120/52 mds file and output to readable format
+    Option (generic)
+        /f      Use 'Force Unit Access' flag to delete the drive cache
+                        val     delete per specified value (default: 1)
+        /q      Disable beep
+    Option (for CD read mode)
+        /a      Add CD offset manually (Only Audio CD)
+                        val     samples value
+        /be     Use 0xbe as the opcode for Reading CD forcibly
+                        str      raw: sub channel mode is raw (default)
+                                pack: sub channel mode is pack
+        /d8     Use 0xd8 as the opcode for Reading CD forcibly
+        /c2     Continue reading CD to recover C2 error existing sector
+                        val1    value to reread (default: 4000)
+                        val2    0: reread sector c2 error is reported (default)
+                                1: reread all (or from first to last) sector
+                        val3    first LBA to reread (default: 0)
+                        val4    last LBA to reread (default: end-of-sector)
+                                val3, 4 is used when val2 is 1
+        /m      Use if MCN exists in the first pregap sector of the track
+                        For some PC-Engine
+        /p      Dumping the AMSF from 00:00:00 to 00:01:74
+                        For SagaFrontier Original Sound Track (Disc 3) etc.
+                        Support drive: PLEXTOR PX-W5224, PREMIUM, PREMIUM2
+                                       PX-704, 708, 712, 714, 716, 755, 760
+        /r      Read CD from the reverse
+                        For Alpha-Disc, Tages (very slow)
+        /ms     Read the lead-out of 1st session and the lead-in of 2nd session
+                        For Multi-session
+        /sf     Scan file to detect protect. If reading error exists,
+                continue reading and ignore c2 error on specific sector
+                        For CodeLock, LaserLock, RingProtect, RingPROTECH
+                            SafeDisc, SmartE, CD.IDX, ProtectCD-VOB, CDS300
+                        val     timeout value (default: 60)
+        /ss     Scan sector to detect protect. If reading error exists,
+                continue reading and ignore c2 error on specific sector
+                        For ProtectCD-VOB
+        /am     Scan anti-mod string
+                        For PlayStation
+    Option (for CD SubChannel)
+        /np     Not fix SubP
+        /nq     Not fix SubQ
+        /nr     Not fix SubRtoW
+        /nl     Not fix SubQ (RMSF, AMSF, CRC) (LBA 10000 - 19999)
+                                               (LBA 40000 - 49999)
+                        For PlayStation LibCrypt
+        /ns     Not fix SubQ (RMSF, AMSF, CRC) (LBA 0 - 7, 5000 - 24999)
+                                            or (LBA 30000 - 49999)
+                        For SecuROM
+        /s      Use if it reads subchannel precisely
+                        val     0: no read next sub (fast, but lack precision)
+                                1: read next sub (normal, this val is default)
+                                2: read next & next next sub (slow, precision)
+    Option (for DVD)
+        /c      Log Copyright Management Information
+        /raw    Dumping DVD by raw (2064 byte/sector)
+                        Comfirmed drive: Mediatec MT chip (Lite-on etc.), PLEXTOR
+                                       Hitachi-LG GDR, GCC
+                         -> GDR (8082N, 8161B to 8164B) and GCC (4160N, 4240N to 4247N)
+                            supports GC/Wii dumping
 ## Created files information
 - .bin  
-  2352byte/sector binary image of CD. This file is used to a cue file.
+  2352 byte/sector binary image of CD. This file is used to a cue file.
 - .c2  
   c2 error binary image of CD. 1bit expresses 1byte.
 - .ccd  
@@ -196,11 +358,13 @@
 - .dat  
   crc32/md5/sha1 of bin file. Original is [Clrmamepro](http://mamedev.emulab.it/clrmamepro/)
 - .img  
-  2352byte/sector binary image of CD. This file is used to a ccd file.
+  2352 byte/sector binary image of CD. This file is used to a ccd file.
 - .iso  
-  2048byte/sector binary image of DVD/BD.
+  2048 byte/sector binary image of DVD/BD/GC/Wii.
 - .scm  
   scrambled image file of img file.
+- .raw  
+  scrambled image file of iso file.
 - .sub  
   subchannel data of CD. This file is used to a ccd file.
 - _c2Error.txt  
@@ -223,6 +387,8 @@
   text data of subchannel for securom.
 - _subReadable.txt  
   text data of the parsed sub channel file.
+- _mdsReadable.txt  
+  text data of the parsed mds file.
 - _volDesc.txt  
   text data of the volume descriptor, path table and directory table.
 
@@ -237,24 +403,29 @@
  About driveOffset.txt.  
   http://www.accuraterip.com/driveoffsets.htm  
   Copyright (c) 2018 Illustrate. All Rights Reserved.  
+
  About _external folder  
-  scramble data to CD: Copyright (c) 2015 Jonathan Gevaryahu  
-  crc16: http://oku.edu.mie-u.ac.jp/~okumura/algo/  
-         src\crc16.c in algo.lzh  
-  crc32: http://www.ietf.org/rfc.html  
-         using rfc1952 sample code.  
-  md5: http://www.ietf.org/rfc.html  
-       using rfc1321 sample code.  
-  sha1: http://www.ietf.org/rfc.html  
-        using rfc3174 sample code.  
+  prngcd.cpp: Copyright (c) 2015 Jonathan Gevaryahu. All rights reserved.  
+
+  crc16: http://oku.edu.mie-u.ac.jp/~okumura/algo/  src\crc16t.c in algo.lzh  
+         Copyright (c) 1991 Haruhiko Okumura  
+
+  crc32: https://www.rfc-editor.org/info/rfc1952  
+         Copyright (c) 1996 L. Peter Deutsch  
+
+  md5: https://www.rfc-editor.org/info/rfc1321  
+       Copyright (C) 1991-2, RSA Data Security, Inc. Created 1991. All rights reserved.  
+
+  sha1: https://www.rfc-editor.org/info/rfc3174  
+        Copyright (C) The Internet Society (2001).  All Rights Reserved.
 
 ## Disclaimer
  Use this tool at own your risk.
  Trouble in regard to the use of this tool, I can not guarantee any.
 
 ## Bug report
- To: http://forum.redump.org/topic/10483/discimagecreator/
-  or
+ To: http://forum.redump.org/topic/10483/discimagecreator/  
+  or  
  To: https://github.com/saramibreak/DiscImageCreator/issues
 
  if you report, please upload all .txt file app created.
