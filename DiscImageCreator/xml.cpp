@@ -28,6 +28,7 @@
 
 BOOL ReadWriteDat(
 	PEXEC_TYPE pExecType,
+	PEXT_ARG pExtArg,
 	PDISC pDisc,
 	_TCHAR* pszFullPath,
 	_TCHAR* szDrive,
@@ -35,22 +36,6 @@ BOOL ReadWriteDat(
 	_TCHAR* szFname,
 	BOOL bDesync
 ) {
-	WCHAR wszDir[_MAX_DIR] = { 0 };
-#ifndef UNICODE
-	if (!MultiByteToWideChar(CP_ACP, 0, szDir, _MAX_DIR, wszDir, sizeof(wszDir) / sizeof(wszDir[0]))) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return FALSE;
-	}
-#else
-	size_t size = sizeof(wszDir) / sizeof(wszDir[0]);
-	wcsncpy(wszDir, szDir, size);
-	wszDir[size - 1] = 0;
-#endif
-	LPWCH p = wcsrchr(wszDir, L'\\');
-	*p = NULL;
-	p = wcsrchr(wszDir, L'\\');
-	LPWCH pCurrentDir = p + 1;
-
 	WCHAR wszDefaultDat[_MAX_PATH] = { 0 };
 	if (!GetModuleFileNameW(NULL, wszDefaultDat, sizeof(wszDefaultDat) / sizeof(wszDefaultDat[0]))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -90,30 +75,26 @@ BOOL ReadWriteDat(
 	}
 
 	WCHAR wszPathForDat[_MAX_PATH] = { 0 };
-	_TCHAR szPathWithoutExtension[_MAX_FNAME] = { 0 };
+	_TCHAR szPath[_MAX_FNAME] = { 0 };
 	if (bDesync) {
-		_sntprintf(szPathWithoutExtension, _MAX_FNAME, _T("%s\\%s\\%s (Subs indexes)"), szDrive, szDir, szFname);
+		_sntprintf(szPath, _MAX_PATH, _T("%s\\%s\\%s (Subs indexes).dat"), szDrive, szDir, szFname);
 	}
 	else {
-		_sntprintf(szPathWithoutExtension, _MAX_FNAME, _T("%s\\%s\\%s"), szDrive, szDir, szFname);
+		_sntprintf(szPath, _MAX_PATH, _T("%s\\%s\\%s.dat"), szDrive, szDir, szFname);
 	}
-	szPathWithoutExtension[_MAX_FNAME - 1] = 0;
+	szPath[_MAX_FNAME - 1] = 0;
 #ifndef UNICODE
 	if (!MultiByteToWideChar(CP_ACP, 0
-		, szPathWithoutExtension, sizeof(szPathWithoutExtension) / sizeof(szPathWithoutExtension[0])
+		, szPath, sizeof(szPath) / sizeof(szPath[0])
 		, wszPathForDat, sizeof(wszPathForDat) / sizeof(wszPathForDat[0]))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
 #else
 	size = sizeof(wszPathForDat) / sizeof(wszPathForDat[0]);
-	wcsncpy(wszPathForDat, szPathWithoutExtension, size);
+	wcsncpy(wszPathForDat, szPath, size);
 	wszPathForDat[size - 1] = 0;
 #endif
-	if (!PathAddExtensionW(wszPathForDat, L".dat")) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return FALSE;
-	}
 
 	CComPtr<IXmlWriter> pWriter;
 	CComPtr<IStream> pWriteStream;
@@ -149,6 +130,22 @@ BOOL ReadWriteDat(
 		OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
 		return FALSE;
 	}
+
+	WCHAR wszDir[_MAX_DIR] = { 0 };
+#ifndef UNICODE
+	if (!MultiByteToWideChar(CP_ACP, 0, szDir, _MAX_DIR, wszDir, sizeof(wszDir) / sizeof(wszDir[0]))) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		return FALSE;
+	}
+#else
+	size_t size = sizeof(wszDir) / sizeof(wszDir[0]);
+	wcsncpy(wszDir, szDir, size);
+	wszDir[size - 1] = 0;
+#endif
+	LPWCH p = wcsrchr(wszDir, L'\\');
+	*p = NULL;
+	p = wcsrchr(wszDir, L'\\');
+	LPWCH pCurrentDir = p + 1;
 
 	XmlNodeType nodeType;
 	LPCWSTR pwszLocalName = NULL;
@@ -238,15 +235,20 @@ BOOL ReadWriteDat(
 				return FALSE;
 			}
 			if (!wcsncmp(pwszLocalName, L"game", 4)) {
-				if (*pExecType == dvd) {
+				if (*pExecType == dvd || *pExecType == bd) {
 					if (!OutputHash(pWriter, pszFullPath, _T(".iso"), 1, 1, FALSE)) {
 						return FALSE;
+					}
+					if (pExtArg->byRawDump) {
+						if (!OutputHash(pWriter, pszFullPath, _T(".raw"), 1, 1, FALSE)) {
+							return FALSE;
+						}
 					}
 				}
 				else {
 					if (!pDisc->SUB.byDesync || !bDesync) {
 						OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(Hash(Whole image)));
-						if (pDisc->SCSI.trackType != TRACK_TYPE::audioOnly) {
+						if (pDisc->SCSI.trackType == TRACK_TYPE::dataExist) {
 							if (!OutputHash(pWriter, pszFullPath, _T(".scm"), 1, 1, FALSE)) {
 								return FALSE;
 							}
@@ -255,14 +257,8 @@ BOOL ReadWriteDat(
 							return FALSE;
 						}
 					}
-					UCHAR uiTrack = pDisc->SCSI.toc.FirstTrack;
-					UCHAR uiLastTrack = pDisc->SCSI.toc.LastTrack;
-					if (*pExecType == gd) {
-						uiTrack = pDisc->GDROM_TOC.FirstTrack;
-						uiLastTrack = pDisc->GDROM_TOC.LastTrack;
-					}
-					for (; uiTrack <= uiLastTrack; uiTrack++) {
-						if (!OutputHash(pWriter, pszFullPath, _T(".bin"), uiTrack, uiLastTrack, bDesync)) {
+					for (UCHAR i = pDisc->SCSI.toc.FirstTrack; i <= pDisc->SCSI.toc.LastTrack; i++) {
+						if (!OutputHash(pWriter, pszFullPath, _T(".bin"), i, pDisc->SCSI.toc.LastTrack, bDesync)) {
 							return FALSE;
 						}
 					}
@@ -329,17 +325,19 @@ BOOL OutputHash(
 	BOOL bDesync
 ) {
 	_TCHAR pszFnameAndExt[_MAX_PATH] = { 0 };
+	_TCHAR pszOutPath[_MAX_PATH] = { 0 };
 	FILE* fp = NULL;
 	if (bDesync) {
-		fp = CreateOrOpenFile(pszFullPath, _T(" (Subs indexes)"), NULL
+		fp = CreateOrOpenFile(pszFullPath, _T(" (Subs indexes)"), pszOutPath
 			, pszFnameAndExt, NULL, szExt, _T("rb"), uiTrack, uiLastTrack);
 	}
 	else {
-		fp = CreateOrOpenFile(pszFullPath, NULL, NULL
+		fp = CreateOrOpenFile(pszFullPath, NULL, pszOutPath
 			, pszFnameAndExt, NULL, szExt, _T("rb"), uiTrack, uiLastTrack);
 	}
 	if (!fp) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		OutputErrorString(_T(" => %s\n"), pszOutPath);
 		return FALSE;
 	}
 	UINT64 ui64FileSize = GetFileSize64(0, fp);

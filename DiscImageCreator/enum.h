@@ -17,6 +17,7 @@
 
 typedef enum _EXEC_TYPE {
 	cd,
+	swap,
 	data,
 	audio,
 	dvd,
@@ -25,9 +26,10 @@ typedef enum _EXEC_TYPE {
 	fd,
 	stop,
 	start,
-	eject,
+	ejecttray,
 	closetray,
 	reset,
+	drivespeed,
 	sub,
 	mds
 } EXEC_TYPE, *PEXEC_TYPE;
@@ -54,7 +56,7 @@ typedef enum _MAIN_DATA_TYPE {
 typedef enum _TRACK_TYPE {
 	audioOnly,
 	dataExist,
-	pregapIn1stTrack,
+	pregapIn1stTrack
 } TRACK_TYPE, *PTRACK_TYPE;
 
 typedef enum _PROTECT_TYPE_CD {
@@ -62,6 +64,7 @@ typedef enum _PROTECT_TYPE_CD {
 	cdidx,
 	cds300,
 	codelock,
+	datel,
 	laserlock,
 	proring,
 	protectCDVOB,

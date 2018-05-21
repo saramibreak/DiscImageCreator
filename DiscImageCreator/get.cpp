@@ -36,7 +36,35 @@ BOOL GetAlignedCallocatedBuffer(
 	return TRUE;
 }
 
-BOOL GetDriveOffset(
+BOOL GetHandle(
+	PDEVICE pDevice,
+	_TCHAR* szBuf,
+	size_t bufSize
+) {
+	_sntprintf(szBuf, bufSize, _T("\\\\.\\%c:"), pDevice->byDriveLetter);
+	szBuf[7] = 0;
+	pDevice->hDevice = CreateFile(szBuf, GENERIC_READ | GENERIC_WRITE,
+		FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+	if (pDevice->hDevice == INVALID_HANDLE_VALUE) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+VOID GetDriveOffsetManually(
+	LPINT lpDriveOffset
+) {
+	_TCHAR aBuf[6] = { 0 };
+	OutputString(
+		_T("This drive doesn't define in driveOffset.txt\n")
+		_T("Please input drive offset(Samples): "));
+	INT b = _tscanf(_T("%6[^\n]%*[^\n]"), aBuf);
+	b = _gettchar();
+	*lpDriveOffset = _ttoi(aBuf);
+}
+
+BOOL GetDriveOffsetAuto(
 	LPCSTR szProductId,
 	LPINT lpDriveOffset
 ) {
@@ -166,21 +194,6 @@ BYTE GetMode(
 		}
 	}
 	return byMode;
-}
-
-BYTE GetControl(
-	PEXEC_TYPE pExecType,
-	PDISC pDisc,
-	INT nIdx
-) {
-	BYTE byCtl = 0;
-	if (*pExecType == gd) {
-		byCtl = pDisc->GDROM_TOC.TrackData[nIdx].Control;
-	}
-	else {
-		byCtl = pDisc->SCSI.toc.TrackData[nIdx].Control;
-	}
-	return byCtl;
 }
 
 BOOL GetWriteOffset(

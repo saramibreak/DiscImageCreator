@@ -16,6 +16,7 @@
 #pragma once
 #include "_external/crc16ccitt.h"
 #include "_external/crc32.h"
+#include "_external/crc32ecma267.h"
 #include "_external/md5.h"
 #include "_external/sha1.h"
 
@@ -30,6 +31,12 @@ WORD GetCrc16CCITT(
 );
 
 VOID GetCrc32(
+	LPDWORD crc,
+	LPBYTE lpBuf,
+	DWORD dwSize
+);
+
+VOID GetCrc32Ecma267(
 	LPDWORD crc,
 	LPBYTE lpBuf,
 	DWORD dwSize

@@ -108,10 +108,6 @@ VOID OutputFsImageSectionHeader(
 	PIMAGE_SECTION_HEADER pIsh
 );
 
-VOID OutputTocForGD(
-	PDISC pDisc
-);
-
 VOID OutputTocWithPregap(
 	PDISC pDisc
 );

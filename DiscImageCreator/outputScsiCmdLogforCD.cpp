@@ -153,6 +153,12 @@ VOID OutputFsDirectoryRecord(
 			pDisc->PROTECT.byExist = cds300;
 			strncpy(pDisc->PROTECT.name, fnameForProtect, 9);
 		}
+		else if (!strncmp(fnameForProtect, "BIG.DAT", 7)) {
+			pDisc->PROTECT.byExist = datel;
+			strncpy(pDisc->PROTECT.name, fnameForProtect, 7);
+			pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)dwExtentPos;
+			pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(dwDataLen / DISC_RAW_READ_SIZE - 1);
+		}
 		else if (!strncmp(fnameForProtect, "LASERLOK.IN", 11)) {
 			pDisc->PROTECT.byExist = laserlock;
 			strncpy(pDisc->PROTECT.name, fnameForProtect, 11);
@@ -564,6 +570,7 @@ BOOL OutputFsPathTableRecord(
 	for (DWORD i = 0; i < dwPathTblSize;) {
 		if (*nDirPosNum > DIRECTORY_RECORD_SIZE) {
 			OutputErrorString(_T("Directory Record is over %d\n"), DIRECTORY_RECORD_SIZE);
+			FlushLog();
 			return FALSE;
 		}
 		pDirRec[*nDirPosNum].uiDirNameLen = lpBuf[i];
@@ -1092,67 +1099,19 @@ VOID OutputFsImageSectionHeader(
 	}
 }
 
-VOID OutputTocForGD(
-	PDISC pDisc
-) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(TOC For GD (HD Area)));
-	for (INT r = pDisc->GDROM_TOC.FirstTrack - 1; r < pDisc->GDROM_TOC.LastTrack; r++) {
-		OutputDiscLogA("\tTrack %2u, Ctl %u, Mode %u"
-			, pDisc->GDROM_TOC.TrackData[r].TrackNumber
-			, pDisc->GDROM_TOC.TrackData[r].Control
-			, pDisc->GDROM_TOC.TrackData[r].Adr);
-		if (pDisc->GDROM_TOC.TrackData[r].TrackNumber == 3) {
-			if (pDisc->GDROM_TOC.TrackData[r].TrackNumber == pDisc->GDROM_TOC.LastTrack) {
-				OutputDiscLogA(", LBA %6ld-%6ld, Length %6ld\n"
-					, pDisc->GDROM_TOC.TrackData[r].Address - 150
-					, pDisc->GDROM_TOC.Length - 150
-					, pDisc->GDROM_TOC.Length - 150 - FIRST_LBA_FOR_GD);
-			}
-			else {
-				OutputDiscLogA(", LBA %6ld-%6ld, Length %6ld\n"
-					, pDisc->GDROM_TOC.TrackData[r].Address - 150
-					, pDisc->GDROM_TOC.TrackData[r + 1].Address - 1 - 300
-					, pDisc->GDROM_TOC.TrackData[r + 1].Address - pDisc->GDROM_TOC.TrackData[r].Address);
-			}
-		}
-		else if (pDisc->GDROM_TOC.TrackData[r].TrackNumber == pDisc->GDROM_TOC.LastTrack) {
-			OutputDiscLogA(", LBA %6ld-%6ld, Length %6ld\n"
-				, pDisc->GDROM_TOC.TrackData[r].Address - 375
-				, pDisc->GDROM_TOC.Length - 1 - 150
-				, pDisc->GDROM_TOC.Length - pDisc->GDROM_TOC.TrackData[r].Address + 225);
-		}
-		else if (pDisc->GDROM_TOC.TrackData[r].TrackNumber == pDisc->GDROM_TOC.LastTrack - 1) {
-			OutputDiscLogA(", LBA %6ld-%6ld, Length %6ld\n"
-				, pDisc->GDROM_TOC.TrackData[r].Address - 300
-				, pDisc->GDROM_TOC.TrackData[r + 1].Address - 1 - 375
-				, pDisc->GDROM_TOC.TrackData[r + 1].Address - 75 - pDisc->GDROM_TOC.TrackData[r].Address);
-		}
-		else {
-			OutputDiscLogA(", LBA %6ld-%6ld, Length %6ld\n"
-				, pDisc->GDROM_TOC.TrackData[r].Address - 300
-				, pDisc->GDROM_TOC.TrackData[r + 1].Address - 1 - 300
-				, pDisc->GDROM_TOC.TrackData[r + 1].Address - pDisc->GDROM_TOC.TrackData[r].Address);
-		}
-		// overwrite the toc of audio trap disc to the toc of gd-rom
-		pDisc->SCSI.lpFirstLBAListOnToc[r] = pDisc->GDROM_TOC.TrackData[r].Address - 150;
-	}
-	OutputDiscLogA("                                                 Total %6ld\n"
-		, pDisc->GDROM_TOC.Length - 150 - FIRST_LBA_FOR_GD);
-}
-
 VOID OutputTocWithPregap(
 	PDISC pDisc
 ) {
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(TOC with pregap));
-	for (UINT r = 0; r < pDisc->SCSI.toc.LastTrack; r++) {
-		OutputDiscLogA("\tTrack %2u, Ctl %u, Mode %u", r + 1,
-			pDisc->SUB.lpCtlList[r], pDisc->MAIN.lpModeList[r]);
+	for (INT i = pDisc->SCSI.toc.FirstTrack - 1; i < pDisc->SCSI.toc.LastTrack; i++) {
+		OutputDiscLogA("\tTrack %2u, Ctl %u, Mode %u", i + 1,
+			pDisc->SUB.lpCtlList[i], pDisc->MAIN.lpModeList[i]);
 
-		for (UINT k = 0; k < MAXIMUM_NUMBER_INDEXES; k++) {
-			if (pDisc->SUB.lpFirstLBAListOnSub[r][k] != -1) {
-				OutputDiscLogA(", Index%u %6d", k, pDisc->SUB.lpFirstLBAListOnSub[r][k]);
+		for (UINT j = 0; j < MAXIMUM_NUMBER_INDEXES; j++) {
+			if (pDisc->SUB.lpFirstLBAListOnSub[i][j] != -1) {
+				OutputDiscLogA(", Index%u %6d", j, pDisc->SUB.lpFirstLBAListOnSub[i][j]);
 			}
-			else if (k == 0) {
+			else if (j == 0) {
 				OutputDiscLogA(",              ");
 			}
 		}

@@ -65,6 +65,7 @@ typedef struct _EXT_ARG {
 	BYTE byPre;
 	BYTE byMultiSession;
 	BYTE byRawDump;
+	BYTE byFix;
 	BYTE byResume;
 	BYTE byReverse;
 	BYTE byScanProtectViaFile;
@@ -75,7 +76,6 @@ typedef struct _EXT_ARG {
 	BYTE bySkipSubRtoW;
 	BYTE byLibCrypt;
 	BYTE byIntentionalSub;
-	BYTE pad[1];
 	INT nAudioCDOffsetNum;
 	DWORD dwMaxRereadNum;
 	INT nC2RereadingType;
@@ -96,7 +96,7 @@ typedef struct _DEVICE {
 	BYTE byPlxtrDrive;
 	BYTE bySuccessReadToc;
 	BYTE bySuccessReadTocFull;
-	BYTE padding;
+	BYTE byDriveLetter;
 	WORD wMaxReadSpeed;
 	BYTE padding2[2];
 	DWORD dwTimeOutValue;
@@ -115,15 +115,6 @@ typedef struct _DEVICE {
 		BYTE reserved[3];
 	} FEATURE, *PFEATURE;
 } DEVICE, *PDEVICE;
-
-typedef struct _GDROM_TRACK_DATA {
-	UCHAR Reserved;
-	UCHAR Control : 4;
-	UCHAR Adr : 4;
-	UCHAR TrackNumber;
-	UCHAR Reserved1;
-	LONG Address;
-} GDROM_TRACK_DATA, *PGDROM_TRACK_DATA;
 
 // Don't define value of BYTE(1byte) or SHOUT(2byte) before CDROM_TOC structure
 // Because Paragraph Boundary (under 4bit of start address of buffer must 0)
@@ -200,16 +191,9 @@ typedef struct _DISC {
 		LPBOOL lpISRCList;
 		// 0 origin, max is last track num.
 		LPBYTE lpRtoWList;
-		INT nCorruptRMSF;
-		INT nCorruptAMSF;
+		INT nCorruptCrcH;
+		INT nCorruptCrcL;
 	} SUB;
-	struct _GDROM_TOC {
-		UCHAR reserved[2];
-		UCHAR FirstTrack;
-		UCHAR LastTrack;
-		GDROM_TRACK_DATA TrackData[MAXIMUM_NUMBER_TRACKS];
-		LONG Length;
-	} GDROM_TOC;
 	struct _PROTECT {
 		BYTE byExist;
 		BYTE byTmpForSafeDisc;
@@ -230,6 +214,7 @@ typedef struct _DISC {
 		LPCH* pNameForExe; // for CodeLock
 		INT nCntForExe; // for CodeLock
 	} PROTECT;
+	DWORD dwFixNum;
 } DISC, *PDISC;
 
 typedef struct _DISC_CONTENTS {
@@ -265,7 +250,7 @@ typedef struct _DIRECTORY_RECORD {
 // This buffer stores all CD data (main + c2 + sub) obtained from SCSI read command
 // Depending on the situation, this may store main, main + sub.
 typedef struct _DATA_IN_CD {
-	LPBYTE present;
+	LPBYTE current;
 	LPBYTE next;
 	LPBYTE nextNext;
 } DATA_IN_CD, *PDATA_IN_CD;
@@ -274,12 +259,12 @@ typedef struct _DATA_IN_CD {
 // If it doesn't exist in DATA_IN_CD, set manually
 typedef struct _MAIN_HEADER {
 	BYTE prev[MAINHEADER_MODE1_SIZE];
-	BYTE present[MAINHEADER_MODE1_SIZE];
+	BYTE current[MAINHEADER_MODE1_SIZE];
 } MAIN_HEADER, *PMAIN_HEADER;
 
 // This buffer stores the aligned subcode obtained from DATA_IN_CD structure
 typedef struct _SUBCODE {
-	BYTE present[CD_RAW_READ_SUBCODE_SIZE];
+	BYTE current[CD_RAW_READ_SUBCODE_SIZE];
 	BYTE next[CD_RAW_READ_SUBCODE_SIZE];
 	BYTE nextNext[CD_RAW_READ_SUBCODE_SIZE];
 } SUBCODE, *PSUBCODE;

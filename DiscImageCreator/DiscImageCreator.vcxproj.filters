@@ -96,6 +96,9 @@
     <ClInclude Include="xml.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="_external\global.h">
+      <Filter>_external</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DiscImageCreator.cpp">

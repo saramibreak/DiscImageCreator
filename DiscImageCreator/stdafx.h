@@ -9,7 +9,7 @@
 
 // TODO: プログラムに必要な追加ヘッダーをここで参照してください。
 
-#pragma warning(disable:4200 4710 4711)
+#pragma warning(disable:4200 4710 4711 5045)
 #pragma warning(push)
 #pragma warning(disable:4091 4191 4365 4514 4668 4768 4820 4917 5039)
 #pragma comment(lib, "Advapi32.lib")

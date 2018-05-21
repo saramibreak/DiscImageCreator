@@ -17,14 +17,12 @@
 #include "enum.h"
 
 VOID SetReadCDCommand(
-	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	CDB::_READ_CD* cdb,
 	CDFLAG::_READ_CD::_EXPECTED_SECTOR_TYPE type,
 	DWORD dwTransferLen,
 	CDFLAG::_READ_CD::_ERROR_FLAGS c2,
-	CDFLAG::_READ_CD::_SUB_CHANNEL_SELECTION Sub,
-	BOOL bCheckReading
+	CDFLAG::_READ_CD::_SUB_CHANNEL_SELECTION Sub
 );
 
 VOID SetReadD8Command(
@@ -58,8 +56,12 @@ VOID SetFeatureRealTimeStreaming(
 );
 
 VOID SetAndOutputToc(
-	PEXEC_TYPE pExecType,
 	PDISC pDisc
+);
+
+VOID SetAndOutputTocForGD(
+	PDISC pDisc,
+	LPBYTE bufDec
 );
 
 VOID SetAndOutputTocFull(
@@ -132,7 +134,7 @@ VOID SetLBAForFirstAdr(
 VOID SetBufferFromTmpSubQData(
 	SUB_Q_PER_SECTOR pSubQ,
 	LPBYTE lpSubcode,
-	BYTE byPresent
+	BYTE bycurrent
 );
 
 VOID SetBufferFromMCN(
@@ -146,7 +148,6 @@ VOID SetTmpSubQDataFromBuffer(
 );
 
 VOID UpdateTmpSubQDataForMCN(
-	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
 	PSUB_Q pSubQ,
@@ -159,7 +160,6 @@ VOID UpdateTmpSubQDataForISRC(
 );
 
 VOID UpdateTmpSubQDataForCDTV(
-	PEXEC_TYPE pExecType,
 	PDISC pDisc,
 	PSUB_Q pSubQ,
 	INT nLBA,

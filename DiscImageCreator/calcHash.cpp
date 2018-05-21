@@ -40,6 +40,17 @@ VOID GetCrc32(
 	*crc = update_crc(*crc, lpBuf, (INT)dwSize);
 }
 
+VOID GetCrc32Ecma267(
+	LPDWORD crc,
+	LPBYTE lpBuf,
+	DWORD dwSize
+) {
+	UNREFERENCED_PARAMETER(crc);
+	UNREFERENCED_PARAMETER(lpBuf);
+	UNREFERENCED_PARAMETER(dwSize);
+//	*crc = update_crc32ecma267(*crc, lpBuf, (INT)dwSize);
+}
+
 BOOL CalcHash(
 	LPDWORD crc,
 	MD5_CTX* context,

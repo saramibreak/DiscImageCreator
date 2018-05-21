@@ -1,5 +1,17 @@
-/*
- * This code is released under the Microsoft Public License (MS-PL). See License.txt, below.
+/**
+ * Copyright 2011-2018 sarami
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 #pragma once
 
@@ -23,6 +35,7 @@ BOOL FlushDriveCache(
 );
 
 BOOL ReadCDForCheckingReadInOut(
+	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc
@@ -35,7 +48,9 @@ BOOL ReadCDForCheckingSubQAdrFirst(
 	LPBYTE* ppBuf,
 	LPBYTE* lpBuf,
 	LPBYTE lpCmd,
-	LPINT nOfs
+	LPDWORD dwBufLen,
+	LPINT nOfs,
+	CDFLAG::_READ_CD::_EXPECTED_SECTOR_TYPE flg
 );
 
 BOOL ReadCDForCheckingSubQAdr(
@@ -45,6 +60,7 @@ BOOL ReadCDForCheckingSubQAdr(
 	PDISC_PER_SECTOR pDiscPerSector,
 	LPBYTE lpCmd,
 	LPBYTE lpBuf,
+	DWORD dwBufLen,
 	INT nOfs,
 	BYTE byIdxOfTrack,
 	LPBYTE byMode,
@@ -52,10 +68,19 @@ BOOL ReadCDForCheckingSubQAdr(
 	FILE* fpCcd
 );
 
+BOOL ReadCDCheck(
+	PEXEC_TYPE pExecType,
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	PDISC pDisc,
+	CDFLAG::_READ_CD::_EXPECTED_SECTOR_TYPE flg
+);
+
 BOOL ReadCDForCheckingSubRtoW(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
-	PDISC pDisc
+	PDISC pDisc,
+	CDFLAG::_READ_CD::_EXPECTED_SECTOR_TYPE flg
 );
 
 BOOL ReadCDForFileSystem(
@@ -63,6 +88,16 @@ BOOL ReadCDForFileSystem(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc
+);
+
+BOOL ReadCDForSegaDisc(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice
+);
+
+BOOL ReadCDForCheckingPsxRegion(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice
 );
 
 VOID ReadCDForScanningPsxAntiMod(
@@ -89,6 +124,20 @@ BOOL ReadCDAll(
 	FILE* fpC2
 );
 
+BOOL ReadCDForSwap(
+	PEXEC_TYPE pExecType,
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	PDISC pDisc,
+	PDISC_PER_SECTOR pDiscPerSector,
+	CDFLAG::_READ_CD::_ERROR_FLAGS c2,
+	LPCTSTR pszPath,
+	INT nStart,
+	INT nEnd,
+	CDFLAG::_READ_CD::_EXPECTED_SECTOR_TYPE flg,
+	FILE* fpCcd,
+	FILE* fpC2
+);
 BOOL ReadCDPartial(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
@@ -103,9 +152,23 @@ BOOL ReadCDPartial(
 	FILE* fpC2
 );
 
+
+BOOL ReadGDForTOC(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	PDISC pDisc
+);
+
 BOOL ReadGDForFileSystem(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc
+);
+
+BOOL ReadGDForCheckingSubQAdr(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	PDISC pDisc,
+	PDISC_PER_SECTOR pDiscPerSector
 );

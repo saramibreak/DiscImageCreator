@@ -16,7 +16,6 @@
 #pragma once
 
 VOID OutputInquiry(
-	PDEVICE pDevice,
 	PINQUIRYDATA pInquiry
 );
 
@@ -58,8 +57,8 @@ VOID OutputModeParmeterHeader10(
 );
 
 VOID OutputCDVDCapabilitiesPage(
-	PDEVICE pDevice,
-	PCDVD_CAPABILITIES_PAGE cdvd
+	PCDVD_CAPABILITIES_PAGE cdvd,
+	INT perKb
 );
 
 VOID OutputReadBufferCapacity(

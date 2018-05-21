@@ -1,9 +1,5 @@
-/*
- * This code is using "RFC 1321 MD5 Message-Digest Algorithm"
- */
-
 /* MD5C.C - RSA Data Security, Inc., MD5 message-digest algorithm
-*/
+ */
 
 /* Copyright (C) 1991-2, RSA Data Security, Inc. Created 1991. All
 rights reserved.
@@ -18,20 +14,20 @@ that such works are identified as "derived from the RSA Data
 Security, Inc. MD5 Message-Digest Algorithm" in all material
 mentioning or referencing the derived work.
 
-RSA Data Security, Inc. makes no representations concerning either
+RSA Data Security, Inc. makes no recurrentations concerning either
 the merchantability of this software or the suitability of this
 software for any particular purpose. It is provided "as is"
 without express or implied warranty of any kind.
 
 These notices must be retained in any copies of any part of this
 documentation and/or software.
-*/
+ */
 
-//#include "global.h"
+#include "global.h"
 #include "md5.h"
 
 /* Constants for MD5Transform routine.
-*/
+ */
 #define S11 7
 #define S12 12
 #define S13 17

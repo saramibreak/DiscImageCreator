@@ -41,7 +41,7 @@ BOOL InitLBAPerTrack(
 	PDISC* pDisc
 ) {
 	size_t dwTrackAllocSize =
-		*pExecType == gd ? MAXIMUM_NUMBER_TRACKS : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
+		(*pExecType == gd || *pExecType == swap) ? MAXIMUM_NUMBER_TRACKS : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
 	if (NULL == ((*pDisc)->SCSI.lpFirstLBAListOnToc = 
 		(LPINT)calloc(dwTrackAllocSize, sizeof(UINT_PTR)))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -60,7 +60,7 @@ BOOL InitTocFullData(
 	PDISC* pDisc
 ) {
 	size_t dwTrackAllocSize =
-		*pExecType == gd ? MAXIMUM_NUMBER_TRACKS : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
+		(*pExecType == gd || *pExecType == swap) ? MAXIMUM_NUMBER_TRACKS : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
 	if (NULL == ((*pDisc)->SCSI.lpSessionNumList =
 		(LPBYTE)calloc(dwTrackAllocSize, sizeof(UINT_PTR)))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -78,9 +78,9 @@ BOOL InitTocTextData(
 ) {
 	BOOL bRet = TRUE;
 	size_t dwTrackAllocSize =
-		*pExecType == gd ? MAXIMUM_NUMBER_TRACKS : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
+		(*pExecType == gd || *pExecType == swap) ? MAXIMUM_NUMBER_TRACKS : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
 	try {
-		if (pDevice->FEATURE.byCanCDText || *pExecType == gd) {
+		if (pDevice->FEATURE.byCanCDText || *pExecType == gd || *pExecType == swap) {
 			if (NULL == ((*pDisc)->SUB.pszISRC = 
 				(LPSTR*)calloc(dwTrackAllocSize, sizeof(UINT_PTR)))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -140,18 +140,18 @@ VOID InitMainDataHeader(
 	PMAIN_HEADER pMain,
 	INT nLBA
 ) {
-	memcpy(pMain->present, g_aSyncHeader, sizeof(g_aSyncHeader));
+	memcpy(pMain->current, g_aSyncHeader, sizeof(g_aSyncHeader));
 	BYTE m, s, f;
 	LBAtoMSF(nLBA + 150, &m, &s, &f);
 	if (!pExtArg->byBe && *pExecType != data) {
-		pMain->present[12] = (BYTE)(DecToBcd(m) ^ 0x01);
-		pMain->present[13] = (BYTE)(DecToBcd(s) ^ 0x80);
+		pMain->current[12] = (BYTE)(DecToBcd(m) ^ 0x01);
+		pMain->current[13] = (BYTE)(DecToBcd(s) ^ 0x80);
 	}
 	else {
-		pMain->present[12] = (BYTE)(DecToBcd(m));
-		pMain->present[13] = (BYTE)(DecToBcd(s));
+		pMain->current[12] = (BYTE)(DecToBcd(m));
+		pMain->current[13] = (BYTE)(DecToBcd(s));
 	}
-	pMain->present[14] = (BYTE)(DecToBcd(f) - 1);
+	pMain->current[14] = (BYTE)(DecToBcd(f) - 1);
 }
 
 BOOL InitProtectData(
@@ -189,7 +189,7 @@ BOOL InitSubData(
 ) {
 	BOOL bRet = TRUE;
 	size_t dwTrackAllocSize =
-		*pExecType == gd ? MAXIMUM_NUMBER_TRACKS : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
+		(*pExecType == gd || *pExecType == swap) ? MAXIMUM_NUMBER_TRACKS : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
 	try {
 		if (NULL == ((*pDisc)->SUB.lpRtoWList =
 			(LPBYTE)calloc(dwTrackAllocSize, sizeof(BYTE)))) {
@@ -391,7 +391,7 @@ VOID TerminateTocTextData(
 	PDISC* pDisc
 ) {
 	size_t dwTrackAllocSize =
-		*pExecType == gd ? MAXIMUM_NUMBER_TRACKS : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
+		(*pExecType == gd || *pExecType == swap) ? MAXIMUM_NUMBER_TRACKS : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
 	if (pDevice->FEATURE.byCanCDText) {
 		for (size_t i = 0; i < dwTrackAllocSize; i++) {
 			FreeAndNull((*pDisc)->SUB.pszISRC[i]);
@@ -423,7 +423,7 @@ VOID TerminateSubData(
 	PDISC* pDisc
 ) {
 	size_t dwTrackAllocSize =
-		*pExecType == gd ? MAXIMUM_NUMBER_TRACKS : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
+		(*pExecType == gd || *pExecType == swap) ? MAXIMUM_NUMBER_TRACKS : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
 	for (size_t h = 0; h < dwTrackAllocSize; h++) {
 		if ((*pDisc)->SUB.lpFirstLBAListOnSub) {
 			FreeAndNull((*pDisc)->SUB.lpFirstLBAListOnSub[h]);

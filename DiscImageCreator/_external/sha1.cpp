@@ -1,5 +1,29 @@
 /*
- * This is using "RFC 3174 US Secure Hash Algorithm 1 (SHA1)"
+   Copyright (C) The Internet Society (2001).  All Rights Reserved.
+
+   This document and translations of it may be copied and furnished to
+   others, and derivative works that comment on or otherwise explain it
+   or assist in its implementation may be prepared, copied, published
+   and distributed, in whole or in part, without restriction of any
+   kind, provided that the above copyright notice and this paragraph are
+   included on all such copies and derivative works.  However, this
+   document itself may not be modified in any way, such as by removing
+   the copyright notice or references to the Internet Society or other
+   Internet organizations, except as needed for the purpose of
+   developing Internet standards in which case the procedures for
+   copyrights defined in the Internet Standards process must be
+   followed, or as required to translate it into languages other than
+   English.
+
+   The limited permissions granted above are perpetual and will not be
+   revoked by the Internet Society or its successors or assigns.
+
+   This document and the information contained herein is provided on an
+   "AS IS" basis and THE INTERNET SOCIETY AND THE INTERNET ENGINEERING
+   TASK FORCE DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING
+   BUT NOT LIMITED TO ANY WARRANTY THAT THE USE OF THE INFORMATION
+   HEREIN WILL NOT INFRINGE ANY RIGHTS OR ANY IMPLIED WARRANTIES OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
  */
 
 /*
@@ -150,7 +174,7 @@ int SHA1Result( SHA1Context *context,
  *      context: [in/out]
  *          The SHA context to update
  *      message_array: [in]
- *          An array of characters representing the next portion of
+ *          An array of characters recurrenting the next portion of
  *          the message.
  *      length: [in]
  *          The length of the message in message_array
@@ -323,7 +347,7 @@ void SHA1ProcessMessageBlock(SHA1Context *context)
  *  Description:
  *      According to the standard, the message must be padded to an even
  *      512 bits.  The first padding bit must be a '1'.  The last 64
- *      bits represent the length of the original message.  All bits in
+ *      bits recurrent the length of the original message.  All bits in
  *      between should be 0.  This function will pad the message
  *      according to those rules by filling the Message_Block array
  *      accordingly.  It will also call the ProcessMessageBlock function

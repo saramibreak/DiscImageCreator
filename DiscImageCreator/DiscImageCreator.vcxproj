@@ -323,6 +323,7 @@
     <ClInclude Include="xml.h" />
     <ClInclude Include="_external\crc16ccitt.h" />
     <ClInclude Include="_external\crc32.h" />
+    <ClInclude Include="_external\global.h" />
     <ClInclude Include="_external\md5.h" />
     <ClInclude Include="_external\prngcd.h" />
     <ClInclude Include="_external\sha1.h" />

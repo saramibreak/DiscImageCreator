@@ -20,7 +20,6 @@
 #include "set.h"
 
 VOID OutputInquiry(
-	PDEVICE pDevice,
 	PINQUIRYDATA pInquiry
 ) {
 	OutputDriveLogA(
@@ -91,10 +90,6 @@ VOID OutputInquiry(
 		BOOLEAN_TO_STRING_YES_NO_A(pInquiry->LinkedCommands),
 		BOOLEAN_TO_STRING_YES_NO_A(pInquiry->RelativeAddressing));
 
-	strncpy(pDevice->szVendorId,
-		(LPCH)pInquiry->VendorId, sizeof(pDevice->szVendorId));
-	strncpy(pDevice->szProductId,
-		(LPCH)pInquiry->ProductId, sizeof(pDevice->szProductId));
 	OutputDriveLogA(
 		"\t            VendorId: %.8s\n"
 		"\t           ProductId: %.16s\n"
@@ -1409,8 +1404,8 @@ VOID OutputModeParmeterHeader10(
 }
 
 VOID OutputCDVDCapabilitiesPage(
-	PDEVICE pDevice,
-	PCDVD_CAPABILITIES_PAGE cdvd
+	PCDVD_CAPABILITIES_PAGE cdvd,
+	INT perKb
 ) {
 	OutputDriveLogA(
 		OUTPUT_DHYPHEN_PLUS_STR(CDVD Capabilities & Mechanism Status Page)
@@ -1504,16 +1499,11 @@ VOID OutputCDVDCapabilitiesPage(
 		OutputDriveLogA("unknown\n")
 		break;
 	}
-	WORD rsm = MAKEWORD(cdvd->ReadSpeedMaximum[1],
-		cdvd->ReadSpeedMaximum[0]);
-	WORD rsc = MAKEWORD(cdvd->ReadSpeedCurrent[1],
-		cdvd->ReadSpeedCurrent[0]);
-	WORD wsm = MAKEWORD(cdvd->WriteSpeedMaximum[1],
-		cdvd->WriteSpeedMaximum[0]);
-	WORD wsc = MAKEWORD(cdvd->WriteSpeedCurrent[1],
-		cdvd->WriteSpeedCurrent[0]);
-	WORD bs = MAKEWORD(cdvd->BufferSize[1],
-		cdvd->BufferSize[0]);
+	WORD rsm = MAKEWORD(cdvd->ReadSpeedMaximum[1], cdvd->ReadSpeedMaximum[0]);
+	WORD rsc = MAKEWORD(cdvd->ReadSpeedCurrent[1], cdvd->ReadSpeedCurrent[0]);
+	WORD wsm = MAKEWORD(cdvd->WriteSpeedMaximum[1], cdvd->WriteSpeedMaximum[0]);
+	WORD wsc = MAKEWORD(cdvd->WriteSpeedCurrent[1], cdvd->WriteSpeedCurrent[0]);
+	WORD bs = MAKEWORD(cdvd->BufferSize[1], cdvd->BufferSize[0]);
 	OutputDriveLogA(
 		"\t        SeparateVolume: %s\n"
 		"\t   SeperateChannelMute: %s\n"
@@ -1538,20 +1528,18 @@ VOID OutputCDVDCapabilitiesPage(
 		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->SWSlotSelection)
 		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->SideChangeCapable)
 		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->RWInLeadInReadable)
-		, rsm, rsm / 174
+		, rsm, rsm / perKb
 		, MAKEWORD(cdvd->NumberVolumeLevels[1],
 			cdvd->NumberVolumeLevels[0])
 		, bs
-		, rsc, rsc / 174
+		, rsc, rsc / perKb
 		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->BCK)
 		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->RCK)
 		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->LSBF)
 		, cdvd->Length
-		, wsm, wsm / 174
-		, wsc, wsc / 174
-		, MAKEWORD(cdvd->CopyManagementRevision[1],
-			cdvd->CopyManagementRevision[0]));
-	pDevice->wMaxReadSpeed = rsm;
+		, wsm, wsm / perKb
+		, wsc, wsc / perKb
+		, MAKEWORD(cdvd->CopyManagementRevision[1], cdvd->CopyManagementRevision[0]));
 }
 
 VOID OutputReadBufferCapacity(

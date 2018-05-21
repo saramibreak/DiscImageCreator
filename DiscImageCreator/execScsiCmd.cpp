@@ -44,6 +44,7 @@ BOOL TestUnitReady(
 }
 
 BOOL Inquiry(
+	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice
 ) {
@@ -58,13 +59,21 @@ BOOL Inquiry(
 		byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		return FALSE;
 	}
-	OutputInquiry(pDevice, &inquiryData);
+	strncpy(pDevice->szVendorId,
+		(LPCH)&inquiryData.VendorId, sizeof(pDevice->szVendorId));
+	strncpy(pDevice->szProductId,
+		(LPCH)&inquiryData.ProductId, sizeof(pDevice->szProductId));
+	if (*pExecType != drivespeed) {
+		OutputInquiry(&inquiryData);
+	}
 	return TRUE;
 }
 
 BOOL ModeSense(
+	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
-	PDEVICE pDevice
+	PDEVICE pDevice,
+	PDISC pDisc
 ) {
 	if (pDevice->FEATURE.byModePage2a) {
 		CDB::_MODE_SENSE cdb = { 0 };
@@ -73,7 +82,7 @@ BOOL ModeSense(
 		cdb.LogicalUnitNumber = pDevice->address.Lun;
 #endif
 		cdb.PageCode = MODE_PAGE_CAPABILITIES;
-		cdb.Pc = MODE_SENSE_CURRENT_VALUES;
+		cdb.Pc = 2;// MODE_SENSE_CURRENT_VALUES;
 		cdb.AllocationLength = sizeof(CDVD_CAPABILITIES_PAGE_WITH_HEADER);
 
 		_declspec(align(4)) CDVD_CAPABILITIES_PAGE_WITH_HEADER modesense = { 0 };
@@ -85,8 +94,23 @@ BOOL ModeSense(
 		}
 		else {
 			if (modesense.cdvd.PageCode == MODE_PAGE_CAPABILITIES) {
-				OutputModeParmeterHeader(&modesense.header);
-				OutputCDVDCapabilitiesPage(pDevice, &modesense.cdvd);
+				WORD rsm = MAKEWORD(modesense.cdvd.ReadSpeedMaximum[1],
+					modesense.cdvd.ReadSpeedMaximum[0]);
+				INT perKb = 176;
+				if (pDisc->SCSI.wCurrentMedia == ProfileDvdRom) {
+					perKb = 1385;
+				}
+				else if (pDisc->SCSI.wCurrentMedia == ProfileBDRom) {
+					perKb = 4496;
+				}
+				if (*pExecType == drivespeed) {
+					OutputString("ReadSpeedMaximum: %uKB/sec (%ux)\n", rsm, rsm / perKb);
+				}
+				else {
+					pDevice->wMaxReadSpeed = rsm;
+					OutputModeParmeterHeader(&modesense.header);
+					OutputCDVDCapabilitiesPage(&modesense.cdvd, perKb);
+				}
 			}
 			else {
 				OutputDriveLogA(
@@ -153,7 +177,11 @@ BOOL ReadTOC(
 	}
 	if (byScsiStatus == SCSISTAT_GOOD) {
 		pDevice->bySuccessReadToc = TRUE;
-		SetAndOutputToc(pExecType, pDisc);
+		SetAndOutputToc(pDisc);
+		if (*pExecType == gd) {
+			pDisc->SCSI.trackType = TRACK_TYPE::dataExist;
+			OutputDiscLogA("This is the TOC of audio trap disc\n");
+		}
 	}
 	return TRUE;
 }
@@ -187,13 +215,14 @@ BOOL ReadTOCFull(
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB10GENERIC_LENGTH
 		, &fullToc,	wSize, &byScsiStatus, _T(__FUNCTION__), __LINE__)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-		if (!ReadCDForCheckingSubQAdrFirst(
-			pExtArg, pDevice, pDisc, &pBuf, &lpBuf, lpCmd, &nOfs)) {
+		DWORD dwBufLen = CD_RAW_SECTOR_SIZE + CD_RAW_READ_SUBCODE_SIZE;
+		if (!ReadCDForCheckingSubQAdrFirst(pExtArg, pDevice
+			, pDisc, &pBuf, &lpBuf, lpCmd, &dwBufLen, &nOfs, CDFLAG::_READ_CD::All)) {
 			return FALSE;
 		}
 		for (BYTE i = 0; i < pDisc->SCSI.toc.LastTrack; i++) {
 			if (!ReadCDForCheckingSubQAdr(pExtArg, pDevice, pDisc
-				, pDiscPerSector, lpCmd, lpBuf, nOfs, i, &byMode, 1, fpCcd)) {
+				, pDiscPerSector, lpCmd, lpBuf, dwBufLen, nOfs, i, &byMode, 1, fpCcd)) {
 				return FALSE;
 			}
 			if (bySessionNum < 1) {
@@ -234,8 +263,6 @@ BOOL ReadTOCFull(
 	OutputDiscLogA(
 		"FullTocLen: %u, TocEntriesAll: %u, TocEntries: %u, FullTocLenFix: %u\n",
 		wFullTocLen, wTocEntriesAll, wTocEntries, wFullTocLenFix);
-	OutputString(_T("pPFullToc address: %p\n"), &pPFullToc);
-	OutputString(_T("pFullToc address: %p\n"), &pFullToc);
 #endif
 	REVERSE_BYTES_SHORT(&cdb.AllocationLength, &wFullTocLenFix);
 	BOOL bRet = TRUE;
@@ -247,8 +274,9 @@ BOOL ReadTOCFull(
 		}
 		PCDROM_TOC_FULL_TOC_DATA_BLOCK pTocData =
 			((PCDROM_TOC_FULL_TOC_DATA)pFullToc)->Descriptors;
+		DWORD dwBufLen = CD_RAW_SECTOR_SIZE + CD_RAW_READ_SUBCODE_SIZE;
 		if (!ReadCDForCheckingSubQAdrFirst(pExtArg
-			, pDevice, pDisc, &pBuf, &lpBuf, lpCmd, &nOfs)) {
+			, pDevice, pDisc, &pBuf, &lpBuf, lpCmd, &dwBufLen, &nOfs, CDFLAG::_READ_CD::All)) {
 			throw FALSE;
 		}
 		for (WORD i = 0; i < wTocEntries; i++) {
@@ -266,7 +294,7 @@ BOOL ReadTOCFull(
 			}
 			if (pTocData[i].Point < 100) {
 				if (!ReadCDForCheckingSubQAdr(pExtArg, pDevice, pDisc, pDiscPerSector, lpCmd, lpBuf
-					, nOfs, (BYTE)(pTocData[i].Point - 1), &byMode, pTocData[i].SessionNumber, fpCcd)) {
+					, dwBufLen, nOfs, (BYTE)(pTocData[i].Point - 1), &byMode, pTocData[i].SessionNumber, fpCcd)) {
 					throw FALSE;
 				}
 				if (bySessionNum < pTocData[i].SessionNumber) {
@@ -305,6 +333,8 @@ BOOL ReadTOCAtip(
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB10GENERIC_LENGTH
 		, &atip, wSize, &byScsiStatus, _T(__FUNCTION__), __LINE__)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+		OutputDriveNoSupportLogA(READ_TOC_ATIP);
+		return TRUE;
 	}
 	WORD wTocAtipLen = MAKEWORD(atip.Length[1], atip.Length[0]);
 	WORD wTocAtipAll = wTocAtipLen - sizeof(atip.Length);
@@ -313,12 +343,15 @@ BOOL ReadTOCAtip(
 	LPBYTE pTocAtip = NULL;
 	if (!GetAlignedCallocatedBuffer(pDevice, &pPTocAtip,
 		wTocAtipAll, &pTocAtip, _T(__FUNCTION__), __LINE__)) {
-		return FALSE;
+		OutputDriveNoSupportLogA(READ_TOC_ATIP);
+		return TRUE;
 	}
 	REVERSE_BYTES_SHORT(&cdb.AllocationLength, &wTocAtipAll);
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB10GENERIC_LENGTH
 		, pTocAtip, wTocAtipAll, &byScsiStatus, _T(__FUNCTION__), __LINE__)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+		OutputDriveNoSupportLogA(READ_TOC_ATIP);
+		return TRUE;
 	}
 	PCDROM_TOC_ATIP_DATA_BLOCK pDesc =
 		((PCDROM_TOC_ATIP_DATA)pTocAtip)->Descriptors;
@@ -359,7 +392,7 @@ BOOL ReadTOCText(
 	WriteCcdForDiscCDTextLength(wTocTextEntriesAll, fpCcd);
 	if (!wTocTextEntriesAll) {
 		OutputDiscLogA("\tNothing\n");
-		// many CD is nothing text
+		// many CD is no text
 		return TRUE;
 	}
 
@@ -460,50 +493,52 @@ BOOL GetConfiguration(
 	else {
 		pDisc->SCSI.wCurrentMedia =
 			MAKEWORD(configHeader.CurrentProfile[1], configHeader.CurrentProfile[0]);
-		if (pDisc->SCSI.wCurrentMedia == ProfileInvalid) {
-			OutputDriveLogA(
-				"SCSIOP_GET_CONFIGURATION didn't fail. But it couldn't get CurrentMedia on this drive\n");
-			if (*pExecType == dvd) {
-				OutputDriveLogA("\tSet CurrentMedia to DVD-ROM\n");
-				configHeader.CurrentProfile[1] = ProfileDvdRom;
-				pDisc->SCSI.wCurrentMedia = ProfileDvdRom;
+		if (*pExecType != drivespeed) {
+			if (pDisc->SCSI.wCurrentMedia == ProfileInvalid) {
+				OutputDriveLogA(
+					"SCSIOP_GET_CONFIGURATION didn't fail. But it couldn't get CurrentMedia on this drive\n");
+				if (*pExecType == dvd) {
+					OutputDriveLogA("\tSet CurrentMedia to DVD-ROM\n");
+					configHeader.CurrentProfile[1] = ProfileDvdRom;
+					pDisc->SCSI.wCurrentMedia = ProfileDvdRom;
+				}
+				else {
+					OutputDriveLogA("\tSet CurrentMedia to CD-ROM\n");
+					configHeader.CurrentProfile[1] = ProfileCdrom;
+					pDisc->SCSI.wCurrentMedia = ProfileCdrom;
+				}
+			}
+			OutputGetConfigurationHeader(&configHeader);
+
+			DWORD dwAllLen =
+				MAKELONG(MAKEWORD(configHeader.DataLength[3], configHeader.DataLength[2]),
+					MAKEWORD(configHeader.DataLength[1], configHeader.DataLength[0])) -
+				sizeof(configHeader.DataLength) + sizeof(GET_CONFIGURATION_HEADER);
+			LPBYTE pPConf = NULL;
+			LPBYTE lpConf = NULL;
+			if (!GetAlignedCallocatedBuffer(pDevice, &pPConf,
+				dwAllLen, &lpConf, _T(__FUNCTION__), __LINE__)) {
+				return FALSE;
+			}
+			REVERSE_BYTES_SHORT(&cdb.AllocationLength, &dwAllLen);
+
+			if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB10GENERIC_LENGTH
+				, lpConf, dwAllLen, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+				// not false. because undefined mmc1..
+				OutputDriveNoSupportLogA(GET_CONFIGURATION);
 			}
 			else {
-				OutputDriveLogA("\tSet CurrentMedia to CD-ROM\n");
-				configHeader.CurrentProfile[1] = ProfileCdrom;
-				pDisc->SCSI.wCurrentMedia = ProfileCdrom;
+				OutputGetConfigurationFeatureNumber(pDevice,
+					lpConf + sizeof(GET_CONFIGURATION_HEADER), dwAllLen - sizeof(GET_CONFIGURATION_HEADER));
+				if (pDevice->byPlxtrDrive == (BYTE)PLXTR_DRIVE_TYPE::PXW1210A ||
+					pDevice->byPlxtrDrive == (BYTE)PLXTR_DRIVE_TYPE::PXW1210S) {
+					// Somehow SetDiscSpeed fails in PX-W1210...
+					pDevice->FEATURE.bySetCDSpeed = FALSE;
+				}
 			}
+			FreeAndNull(pPConf);
 		}
-		OutputGetConfigurationHeader(&configHeader);
-
-		DWORD dwAllLen =
-			MAKELONG(MAKEWORD(configHeader.DataLength[3], configHeader.DataLength[2]),
-			MAKEWORD(configHeader.DataLength[1], configHeader.DataLength[0])) -
-			sizeof(configHeader.DataLength) + sizeof(GET_CONFIGURATION_HEADER);
-		LPBYTE pPConf = NULL;
-		LPBYTE lpConf = NULL;
-		if (!GetAlignedCallocatedBuffer(pDevice, &pPConf,
-			dwAllLen, &lpConf, _T(__FUNCTION__), __LINE__)) {
-			return FALSE;
-		}
-		REVERSE_BYTES_SHORT(&cdb.AllocationLength, &dwAllLen);
-
-		if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB10GENERIC_LENGTH
-			, lpConf, dwAllLen, &byScsiStatus, _T(__FUNCTION__), __LINE__)
-			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-			// not false. because undefined mmc1..
-			OutputDriveNoSupportLogA(GET_CONFIGURATION);
-		}
-		else {
-			OutputGetConfigurationFeatureNumber(pDevice,
-				lpConf + sizeof(GET_CONFIGURATION_HEADER), dwAllLen - sizeof(GET_CONFIGURATION_HEADER));
-			if (pDevice->byPlxtrDrive == (BYTE)PLXTR_DRIVE_TYPE::PXW1210A ||
-				pDevice->byPlxtrDrive == (BYTE)PLXTR_DRIVE_TYPE::PXW1210S) {
-				// Somehow SetDiscSpeed fails in PX-W1210...
-				pDevice->FEATURE.bySetCDSpeed = FALSE;
-			}
-		}
-		FreeAndNull(pPConf);
 	}
 	return TRUE;
 }
@@ -533,17 +568,19 @@ BOOL ReadDiscInformation(
 }
 
 BOOL ModeSense10(
+	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
-	PDEVICE pDevice
+	PDEVICE pDevice,
+	PDISC pDisc
 ) {
-	if (pDevice->FEATURE.byModePage2a) {
+//	if (pDevice->FEATURE.byModePage2a) {
 		CDB::_MODE_SENSE10 cdb = { 0 };
 		cdb.OperationCode = SCSIOP_MODE_SENSE10;
 #if (NTDDI_VERSION <= NTDDI_WIN7)
 		cdb.LogicalUnitNumber = pDevice->address.Lun;
 #endif
 		cdb.PageCode = MODE_PAGE_CAPABILITIES;
-		cdb.Pc = MODE_SENSE_CURRENT_VALUES;
+		cdb.Pc = 2;// MODE_SENSE_CURRENT_VALUES;
 		WORD wSize = sizeof(CDVD_CAPABILITIES_PAGE_WITH_HEADER10);
 		REVERSE_BYTES_SHORT(&cdb.AllocationLength, &wSize);
 
@@ -554,23 +591,38 @@ BOOL ModeSense10(
 			byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 			// not false.
 			OutputDriveNoSupportLogA(MODE_SENSE10);
-			ModeSense(pExtArg, pDevice);
+			ModeSense(pExecType, pExtArg, pDevice, pDisc);
 		}
 		else {
 			if (modesense.cdvd.PageCode == MODE_PAGE_CAPABILITIES) {
-				OutputModeParmeterHeader10(&modesense.header);
-				OutputCDVDCapabilitiesPage(pDevice, &modesense.cdvd);
+				WORD rsm = MAKEWORD(modesense.cdvd.ReadSpeedMaximum[1],
+					modesense.cdvd.ReadSpeedMaximum[0]);
+				INT perKb = 176;
+				if (pDisc->SCSI.wCurrentMedia == ProfileDvdRom) {
+					perKb = 1385;
+				}
+				else if (pDisc->SCSI.wCurrentMedia == ProfileBDRom) {
+					perKb = 4496;
+				}
+				if (*pExecType == drivespeed) {
+					OutputString("ReadSpeedMaximum: %uKB/sec (%ux)\n", rsm, rsm / perKb);
+				}
+				else {
+					pDevice->wMaxReadSpeed = rsm;
+					OutputModeParmeterHeader10(&modesense.header);
+					OutputCDVDCapabilitiesPage(&modesense.cdvd, perKb);
+				}
 			}
 			else {
 				OutputDriveLogA(
 					"SCSIOP_MODE_SENSE10 didn't fail. But it couldn't get PageCode on this drive\n");
-				ModeSense(pExtArg, pDevice);
+				ModeSense(pExecType, pExtArg, pDevice, pDisc);
 			}
 		}
-	}
-	else {
-		OutputDriveNoSupportLogA(MODE_SENSE10);
-	}
+//	}
+//	else {
+//		OutputDriveNoSupportLogA(MODE_SENSE10);
+//	}
 	return TRUE;
 }
 
@@ -610,9 +662,10 @@ BOOL SetDiscSpeed(
 		WORD wSpeed = 0;
 		// https://msdn.microsoft.com/en-us/library/windows/hardware/ff551368(v=vs.85).aspx
 		// https://msdn.microsoft.com/ja-jp/library/ff551396(v=vs.85).aspx
-		_declspec(align(4)) CDROM_SET_SPEED setspeed;
+		_declspec(align(4)) CDROM_SET_SPEED setspeed = { CdromSetSpeed, 0, 0, CdromDefaultRotation };
 		if ((*pExecType == cd || *pExecType == gd || *pExecType == audio || *pExecType == data) &&
 			0 < dwDiscSpeedNum && dwDiscSpeedNum <= CD_DRIVE_MAX_SPEED) {
+			// http://senbee.seesaa.net/article/26247159.html
 			// 2048 x 75 = 153600 B -> 150 KiB
 			// 2352 x 75 = 176400 B -> 172,265625 KiB
 			wSpeed = (WORD)(CD_RAW_SECTOR_SIZE * 75 * dwDiscSpeedNum / 1000);
@@ -692,7 +745,7 @@ BOOL SetSpeedRead(
 		for (INT i = 0; i < size; i++) {
 			OutputString(_T("%02x "), buf[i]);
 		}
-		OutputString(_T("\n");
+		OutputString(_T("\n"));
 #endif
 	}
 	return TRUE;
@@ -789,44 +842,55 @@ BOOL ReadDriveInformation(
 	PDISC pDisc,
 	DWORD dwCDSpeed
 ) {
-	BOOL bBusTypeUSB = FALSE;
-	if (!StorageQueryProperty(pDevice, &bBusTypeUSB)) {
-		return FALSE;
-	}
-	if (!bBusTypeUSB) {
-		if (!ScsiGetAddress(pDevice)) {
+	if (*pExecType != drivespeed) {
+		BOOL bBusTypeUSB = FALSE;
+		if (!StorageQueryProperty(pDevice, &bBusTypeUSB)) {
 			return FALSE;
+		}
+		if (!bBusTypeUSB) {
+			if (!ScsiGetAddress(pDevice)) {
+				return FALSE;
+			}
 		}
 	}
 	// 3rd: get drive vendor, product id here (because use IsValidPlextorDrive)
-	if (!Inquiry(pExtArg, pDevice)) {
+	if (!Inquiry(pExecType, pExtArg, pDevice)) {
 		return FALSE;
 	}
 	// 4th: check PLEXTOR or not here (because use modesense and from there)
 	IsValidPlextorDrive(pDevice);
 	if ((PLXTR_DRIVE_TYPE)pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::No) {
-		if (pExtArg->byPre) {
-			SupportIndex0InTrack1(pExtArg, pDevice);
+		if (*pExecType != drivespeed) {
+			if (pExtArg->byPre) {
+				SupportIndex0InTrack1(pExtArg, pDevice);
+			}
+			ReadEeprom(pExtArg, pDevice);
 		}
-		ReadEeprom(pExtArg, pDevice);
 		SetSpeedRead(pExtArg, pDevice, TRUE);
 	}
 	// 5th: get currentMedia, if use CD-Text, C2 error, modesense, readbuffercapacity, SetDiscSpeed or not here.
 	if (!GetConfiguration(pExecType, pExtArg, pDevice, pDisc)) {
 		return FALSE;
 	}
-#if 0
-	if (*pExecType == dvd) {
-		SetStreaming(pDevice, dwCDSpeed);
+	if (*pExecType == drivespeed) {
+		pDevice->FEATURE.byModePage2a = TRUE;
 	}
-	else {
-#endif
-		SetDiscSpeed(pExecType, pExtArg, pDevice, dwCDSpeed);
+	ModeSense10(pExecType, pExtArg, pDevice, pDisc);
+	if (*pExecType != drivespeed) {
 #if 0
-	}
+		if (*pExecType == dvd) {
+			SetStreaming(pDevice, dwCDSpeed);
+		}
+		else {
 #endif
-	ModeSense10(pExtArg, pDevice);
-	ReadBufferCapacity(pExtArg, pDevice);
+			if (dwCDSpeed != 0) {
+				SetDiscSpeed(pExecType, pExtArg, pDevice, dwCDSpeed);
+			}
+#if 0
+		}
+#endif
+		ReadBufferCapacity(pExtArg, pDevice);
+	}
 	return TRUE;
 }
 
@@ -882,6 +946,34 @@ VOID ManageEndOfDirectoryRecord(
 	}
 }
 
+BOOL ExecReadDisc(
+	PEXEC_TYPE pExecType,
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	PDISC pDisc,
+	LPBYTE pCdb,
+	INT nLBA,
+	LPBYTE lpBuf,
+	LPBYTE bufDec,
+	BYTE byTransferLen
+) {
+	if (*pExecType == gd) {
+		if (!ExecReadGD(pExtArg, pDevice, pDisc, pCdb, nLBA, byTransferLen, lpBuf, bufDec)) {
+			return FALSE;
+		}
+		for (BYTE i = 0; i < byTransferLen; i++) {
+			memcpy(lpBuf + DISC_RAW_READ_SIZE * i, bufDec + CD_RAW_SECTOR_SIZE * i + 16, DISC_RAW_READ_SIZE);
+		}
+	}
+	else {
+		if (!ExecReadCD(pExtArg, pDevice, pCdb, nLBA, lpBuf,
+			(DWORD)(DISC_RAW_READ_SIZE * byTransferLen), _T(__FUNCTION__), __LINE__)) {
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
 BOOL ReadDirectoryRecordDetail(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
@@ -897,22 +989,9 @@ BOOL ReadDirectoryRecordDetail(
 	INT nOffset,
 	PDIRECTORY_RECORD pDirRec
 ) {
-	if (*pExecType == gd) {
-		if (!ExecReadGD(pExtArg, pDevice, pDisc, pCdb, nLBA + nOffset, byTransferLen, lpBuf, bufDec)) {
-			return FALSE;
-		}
-		for (BYTE i = 0; i < byTransferLen; i++) {
-			memcpy(lpBuf + DISC_RAW_READ_SIZE * i, bufDec + CD_RAW_SECTOR_SIZE * i + 16, DISC_RAW_READ_SIZE);
-		}
-	}
-	else {
-		if (!ExecReadCD(pExtArg, pDevice, pCdb, nLBA, lpBuf,
-			(DWORD)(DISC_RAW_READ_SIZE * byTransferLen), _T(__FUNCTION__), __LINE__)) {
-			for (BYTE i = 0; i < byTransferLen; i++) {
-				OutputCDMain(fileMainInfo, lpBuf + DISC_RAW_READ_SIZE * i, nLBA + i, DISC_RAW_READ_SIZE);
-			}
-			return TRUE;
-		}
+	if (!ExecReadDisc(pExecType, pExtArg, pDevice, pDisc
+		, pCdb, nLBA + nOffset, lpBuf, bufDec, byTransferLen)) {
+		return FALSE;
 	}
 	for (BYTE i = 0; i < byTransferLen; i++) {
 		OutputCDMain(fileMainInfo, lpBuf + DISC_RAW_READ_SIZE * i, nLBA + i, DISC_RAW_READ_SIZE);
@@ -1013,13 +1092,10 @@ BOOL ReadDirectoryRecord(
 	LPBYTE lpBuf,
 	DWORD dwLogicalBlkCoef,
 	DWORD dwRootDataLen,
-	INT nOffset,
+	INT nSectorOfs,
 	PDIRECTORY_RECORD pDirRec,
 	INT nDirPosNum
 ) {
-	BYTE byTransferLen = 1;
-	DWORD dwAdditionalTransferLen = 0;
-	DWORD dwLastTblSize = 0;
 	LPBYTE bufDec = NULL;
 	if (*pExecType == gd) {
 		bufDec = (LPBYTE)calloc(pDevice->dwMaxTransferLength, sizeof(BYTE));
@@ -1028,23 +1104,18 @@ BOOL ReadDirectoryRecord(
 			return FALSE;
 		}
 	}
+	BYTE byTransferLen = 1;
 	// for CD-I
 	if (dwRootDataLen == 0) {
-		if (*pExecType == gd) {
-			if (!ExecReadGD(pExtArg, pDevice, pDisc, pCdb, (INT)pDirRec[0].uiPosOfDir + nOffset, byTransferLen, lpBuf, bufDec)) {
-				return FALSE;
-			}
-			memcpy(lpBuf, bufDec + 16, DISC_RAW_READ_SIZE);
+		if (!ExecReadDisc(pExecType, pExtArg, pDevice, pDisc, pCdb
+			, (INT)pDirRec[0].uiPosOfDir + nSectorOfs, lpBuf, bufDec, byTransferLen)) {
+			return FALSE;
 		}
-		else {
-			if (!ExecReadCD(pExtArg, pDevice, pCdb, (INT)pDirRec[0].uiPosOfDir, lpBuf,
-				(DWORD)(DISC_RAW_READ_SIZE * byTransferLen), _T(__FUNCTION__), __LINE__)) {
-				return FALSE;
-			}
-		}
-		dwRootDataLen = PadSizeForVolDesc(GetSizeOrDwordForVolDesc(lpBuf + 10, (DWORD)(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE)));
+		dwRootDataLen =
+			PadSizeForVolDesc(GetSizeOrDwordForVolDesc(lpBuf + 10, (DWORD)(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE)));
 	}
 	pDirRec[0].uiDirSize = dwRootDataLen;
+
 	for (INT nDirRecIdx = 0; nDirRecIdx < nDirPosNum; nDirRecIdx++) {
 		INT nLBA = (INT)pDirRec[nDirRecIdx].uiPosOfDir;
 		if (pDirRec[nDirRecIdx].uiDirSize > pDevice->dwMaxTransferLength) {
@@ -1054,25 +1125,25 @@ BOOL ReadDirectoryRecord(
 			// [IBM - PC compatible] PC Game Best Series Vol. 42 - J.B. Harold Series - Kiss of Murder - Satsui no Kuchizuke (Japan)
 			// [SS] Madou Monogatari (Japan)
 			// and more
-			dwAdditionalTransferLen = pDirRec[nDirRecIdx].uiDirSize / pDevice->dwMaxTransferLength;
+			DWORD dwAdditionalTransferLen = pDirRec[nDirRecIdx].uiDirSize / pDevice->dwMaxTransferLength;
 			SetCommandForTransferLength(pExecType, pDevice, pCdb, pDevice->dwMaxTransferLength, &byTransferLen);
 			OutputMainInfoLogA("nLBA %d, uiDirSize: %lu, byTransferLen: %d [L:%d]\n"
 				, nLBA, pDevice->dwMaxTransferLength, byTransferLen, (INT)__LINE__);
 
 			for (DWORD n = 0; n < dwAdditionalTransferLen; n++) {
 				if (!ReadDirectoryRecordDetail(pExecType, pExtArg, pDevice, pDisc, pCdb, nLBA
-					, lpBuf, bufDec, byTransferLen, nDirPosNum, dwLogicalBlkCoef, nOffset, pDirRec)) {
+					, lpBuf, bufDec, byTransferLen, nDirPosNum, dwLogicalBlkCoef, nSectorOfs, pDirRec)) {
 					continue;
 				}
 				nLBA += byTransferLen;
 			}
-			dwLastTblSize = pDirRec[nDirRecIdx].uiDirSize % pDevice->dwMaxTransferLength;
+			DWORD dwLastTblSize = pDirRec[nDirRecIdx].uiDirSize % pDevice->dwMaxTransferLength;
 			SetCommandForTransferLength(pExecType, pDevice, pCdb, dwLastTblSize, &byTransferLen);
 			OutputMainInfoLogA("nLBA %d, uiDirSize: %lu, byTransferLen: %d [L:%d]\n"
 				, nLBA, dwLastTblSize, byTransferLen, (INT)__LINE__);
 
 			if (!ReadDirectoryRecordDetail(pExecType, pExtArg, pDevice, pDisc, pCdb, nLBA
-				, lpBuf, bufDec, byTransferLen, nDirPosNum, dwLogicalBlkCoef, nOffset, pDirRec)) {
+				, lpBuf, bufDec, byTransferLen, nDirPosNum, dwLogicalBlkCoef, nSectorOfs, pDirRec)) {
 				continue;
 			}
 		}
@@ -1086,7 +1157,7 @@ BOOL ReadDirectoryRecord(
 				, nLBA, pDirRec[nDirRecIdx].uiDirSize, byTransferLen, (INT)__LINE__);
 
 			if (!ReadDirectoryRecordDetail(pExecType, pExtArg, pDevice, pDisc, pCdb, nLBA
-				, lpBuf, bufDec, byTransferLen, nDirPosNum, dwLogicalBlkCoef, nOffset, pDirRec)) {
+				, lpBuf, bufDec, byTransferLen, nDirPosNum, dwLogicalBlkCoef, nSectorOfs, pDirRec)) {
 				continue;
 			}
 		}
@@ -1105,42 +1176,45 @@ BOOL ReadPathTableRecord(
 	DWORD dwLogicalBlkCoef,
 	DWORD dwPathTblSize,
 	DWORD dwPathTblPos,
-	INT nOffset,
+	INT nSectorOfs,
 	PDIRECTORY_RECORD pDirRec,
 	LPINT nDirPosNum
 ) {
-	DWORD dwBufSize = DISC_RAW_READ_SIZE - (dwPathTblSize % DISC_RAW_READ_SIZE) + dwPathTblSize;
+	BYTE byTransferLen = 1;
+	SetCommandForTransferLength(pExecType, pDevice, pCdb, dwPathTblSize, &byTransferLen);
+
+	DWORD dwBufSize = 0;
 	if (*pExecType == gd) {
-		dwBufSize = CD_RAW_SECTOR_SIZE - (dwPathTblSize % CD_RAW_SECTOR_SIZE) + dwPathTblSize;
+		dwBufSize = (CD_RAW_SECTOR_SIZE - (dwPathTblSize % CD_RAW_SECTOR_SIZE) + dwPathTblSize) * byTransferLen * 2;
+	}
+	else {
+		dwBufSize = DISC_RAW_READ_SIZE - (dwPathTblSize % DISC_RAW_READ_SIZE) + dwPathTblSize;
 	}
 	LPBYTE lpBuf = (LPBYTE)calloc(dwBufSize, sizeof(BYTE));
 	if (!lpBuf) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
-	BYTE byTransferLen = 1;
-	DWORD dwAdditionalTransferLen = 0;
+	
 	BOOL bRet = TRUE;
 	try {
+		LPBYTE bufDec = NULL;
+		if (*pExecType == gd) {
+			if (NULL == (bufDec = (LPBYTE)calloc(size_t(CD_RAW_SECTOR_SIZE * byTransferLen), sizeof(BYTE)))) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				return FALSE;
+			}
+		}
 		if (dwPathTblSize > pDevice->dwMaxTransferLength) {
-			dwAdditionalTransferLen = dwPathTblSize / pDevice->dwMaxTransferLength;
+			DWORD dwAdditionalTransferLen = dwPathTblSize / pDevice->dwMaxTransferLength;
 			SetCommandForTransferLength(pExecType, pDevice, pCdb, pDevice->dwMaxTransferLength, &byTransferLen);
 			OutputMainInfoLogA("dwPathTblSize: %lu, byTransferLen: %d [L:%d]\n"
 				, pDevice->dwMaxTransferLength, byTransferLen, (INT)__LINE__);
 
 			for (DWORD n = 0; n < dwAdditionalTransferLen; n++) {
-				if (*pExecType == gd) {
-					BYTE bufDec[CD_RAW_SECTOR_SIZE] = { 0 };
-					if (!ExecReadGD(pExtArg, pDevice, pDisc, pCdb, (INT)dwPathTblPos + nOffset, byTransferLen, lpBuf, bufDec)) {
-						throw FALSE;
-					}
-					memcpy(lpBuf, bufDec + 16, DISC_RAW_READ_SIZE);
-				}
-				else {
-					if (!ExecReadCD(pExtArg, pDevice, pCdb, (INT)dwPathTblPos
-						, lpBuf + pDevice->dwMaxTransferLength * n, pDevice->dwMaxTransferLength, _T(__FUNCTION__), __LINE__)) {
-						throw FALSE;
-					}
+				if (!ExecReadDisc(pExecType, pExtArg, pDevice, pDisc, pCdb
+					, (INT)dwPathTblPos + nSectorOfs, lpBuf + pDevice->dwMaxTransferLength * n, bufDec, byTransferLen)) {
+					throw FALSE;
 				}
 				for (BYTE i = 0; i < byTransferLen; i++) {
 					OutputCDMain(fileMainInfo, lpBuf + DISC_RAW_READ_SIZE * i, (INT)dwPathTblPos + i, DISC_RAW_READ_SIZE);
@@ -1149,45 +1223,28 @@ BOOL ReadPathTableRecord(
 			}
 			DWORD dwLastPathTblSize = dwPathTblSize % pDevice->dwMaxTransferLength;
 			SetCommandForTransferLength(pExecType, pDevice, pCdb, dwLastPathTblSize, &byTransferLen);
-			OutputMainInfoLogA("dwPathTblSize: %lu, byTransferLen: %d [L:%d]\n", dwLastPathTblSize, byTransferLen, (INT)__LINE__);
+			OutputMainInfoLogA(
+				"dwPathTblSize: %lu, byTransferLen: %d [L:%d]\n", dwLastPathTblSize, byTransferLen, (INT)__LINE__);
 
-			DWORD dwOffset = pDevice->dwMaxTransferLength * dwAdditionalTransferLen;
-			if (*pExecType == gd) {
-				BYTE bufDec[CD_RAW_SECTOR_SIZE] = { 0 };
-				if (!ExecReadGD(pExtArg, pDevice, pDisc, pCdb, (INT)dwPathTblPos + nOffset, byTransferLen, lpBuf, bufDec)) {
-					throw FALSE;
-				}
-				memcpy(lpBuf, bufDec + 16, DISC_RAW_READ_SIZE);
-			}
-			else {
-				if (!ExecReadCD(pExtArg, pDevice, pCdb, (INT)dwPathTblPos
-					, lpBuf + dwOffset, (DWORD)(DISC_RAW_READ_SIZE * byTransferLen), _T(__FUNCTION__), __LINE__)) {
-					throw FALSE;
-				}
+			DWORD dwBufOfs = pDevice->dwMaxTransferLength * dwAdditionalTransferLen;
+			if (!ExecReadDisc(pExecType, pExtArg, pDevice, pDisc, pCdb
+				, (INT)dwPathTblPos + nSectorOfs, lpBuf + dwBufOfs, bufDec, byTransferLen)) {
+				throw FALSE;
 			}
 			for (BYTE i = 0; i < byTransferLen; i++) {
-				OutputCDMain(fileMainInfo, lpBuf + dwOffset + DISC_RAW_READ_SIZE * i, (INT)dwPathTblPos + i, DISC_RAW_READ_SIZE);
+				OutputCDMain(fileMainInfo, lpBuf + dwBufOfs + DISC_RAW_READ_SIZE * i, (INT)dwPathTblPos + i, DISC_RAW_READ_SIZE);
 			}
 			if (!OutputFsPathTableRecord(pDisc, lpBuf, dwLogicalBlkCoef, dwPathTblPos, dwPathTblSize, pDirRec, nDirPosNum)) {
 				throw FALSE;
 			}
 		}
 		else {
-			SetCommandForTransferLength(pExecType, pDevice, pCdb, dwPathTblSize, &byTransferLen);
-			if (*pExecType == gd) {
-				BYTE bufDec[CD_RAW_SECTOR_SIZE] = { 0 };
-				if (!ExecReadGD(pExtArg, pDevice, pDisc, pCdb, (INT)dwPathTblPos + nOffset, byTransferLen, lpBuf, bufDec)) {
-					throw FALSE;
-				}
-				memcpy(lpBuf, bufDec + 16, DISC_RAW_READ_SIZE);
+			if (!ExecReadDisc(pExecType, pExtArg, pDevice, pDisc, pCdb
+				, (INT)dwPathTblPos + nSectorOfs, lpBuf, bufDec, byTransferLen)) {
+				throw FALSE;
 			}
-			else {
-				if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)pCdb, (INT)dwPathTblPos, lpBuf,
-					(DWORD)(DISC_RAW_READ_SIZE * byTransferLen), _T(__FUNCTION__), __LINE__)) {
-					throw FALSE;
-				}
-			}
-			OutputMainInfoLogA("dwPathTblSize: %lu, byTransferLen: %d [L:%d]\n", dwPathTblSize, byTransferLen, (INT)__LINE__);
+			OutputMainInfoLogA(
+				"dwPathTblSize: %lu, byTransferLen: %d [L:%d]\n", dwPathTblSize, byTransferLen, (INT)__LINE__);
 			for (BYTE i = 0; i < byTransferLen; i++) {
 				OutputCDMain(fileMainInfo, lpBuf + DISC_RAW_READ_SIZE * i, (INT)dwPathTblPos + i, DISC_RAW_READ_SIZE);
 			}
@@ -1213,7 +1270,7 @@ BOOL ReadVolumeDescriptor(
 	LPBYTE pCdb,
 	LPBYTE lpBuf,
 	INT nPVD,
-	INT nOffset,
+	INT nSectorOfs,
 	LPBOOL lpReadVD,
 	PVOLUME_DESCRIPTOR pVolDesc
 ) {
@@ -1221,33 +1278,26 @@ BOOL ReadVolumeDescriptor(
 		nPVD += pDisc->SCSI.lpFirstLBAListOnToc[byIdx];
 	}
 	INT nTmpLBA = nPVD;
+	BYTE bufDec[CD_RAW_SECTOR_SIZE] = { 0 };
 	for (;;) {
-		if (*pExecType == gd) {
-			BYTE bufDec[CD_RAW_SECTOR_SIZE] = { 0 };
-			if (!ExecReadGD(pExtArg, pDevice, pDisc, pCdb, nTmpLBA + nOffset, 1, lpBuf, bufDec)) {
-				return FALSE;
-			}
-			memcpy(lpBuf, bufDec + 16, DISC_RAW_READ_SIZE);
-		}
-		else {
-			if (!ExecReadCD(pExtArg, pDevice, pCdb, nTmpLBA, lpBuf,
-				DISC_RAW_READ_SIZE, _T(__FUNCTION__), __LINE__)) {
-				break;
-			}
+		if (!ExecReadDisc(pExecType, pExtArg, pDevice, pDisc, pCdb, nTmpLBA + nSectorOfs, lpBuf, bufDec, 1)) {
+			break;
 		}
 		if (!strncmp((LPCH)&lpBuf[1], "CD001", 5) ||
 			(pDisc->SCSI.byCdi && !strncmp((LPCH)&lpBuf[1], "CD-I ", 5))) {
 			if (nTmpLBA == nPVD) {
 				DWORD dwLogicalBlkSize = GetSizeOrWordForVolDesc(lpBuf + 128);
 				pVolDesc->ISO_9660.dwLogicalBlkCoef = (BYTE)(DISC_RAW_READ_SIZE / dwLogicalBlkSize);
-				pVolDesc->ISO_9660.dwPathTblSize = GetSizeOrDwordForVolDesc(lpBuf + 132, (DWORD)(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
+				pVolDesc->ISO_9660.dwPathTblSize =
+					GetSizeOrDwordForVolDesc(lpBuf + 132, (DWORD)(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
 				pVolDesc->ISO_9660.dwPathTblPos = MAKEDWORD(MAKEWORD(lpBuf[140], lpBuf[141]),
 					MAKEWORD(lpBuf[142], lpBuf[143])) / pVolDesc->ISO_9660.dwLogicalBlkCoef;
 				if (pVolDesc->ISO_9660.dwPathTblPos == 0) {
 					pVolDesc->ISO_9660.dwPathTblPos = MAKEDWORD(MAKEWORD(lpBuf[151], lpBuf[150]),
 						MAKEWORD(lpBuf[149], lpBuf[148]));
 				}
-				pVolDesc->ISO_9660.dwRootDataLen = GetSizeOrDwordForVolDesc(lpBuf + 166, (DWORD)(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
+				pVolDesc->ISO_9660.dwRootDataLen =
+					GetSizeOrDwordForVolDesc(lpBuf + 166, (DWORD)(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
 				if (pVolDesc->ISO_9660.dwRootDataLen > 0) {
 					pVolDesc->ISO_9660.dwRootDataLen = PadSizeForVolDesc(pVolDesc->ISO_9660.dwRootDataLen);
 				}
@@ -1256,14 +1306,16 @@ BOOL ReadVolumeDescriptor(
 			else if (lpBuf[0] == 2) {
 				DWORD dwLogicalBlkSize = GetSizeOrWordForVolDesc(lpBuf + 128);
 				pVolDesc->JOLIET.dwLogicalBlkCoef = (BYTE)(DISC_RAW_READ_SIZE / dwLogicalBlkSize);
-				pVolDesc->JOLIET.dwPathTblSize = GetSizeOrDwordForVolDesc(lpBuf + 132, (DWORD)(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
+				pVolDesc->JOLIET.dwPathTblSize =
+					GetSizeOrDwordForVolDesc(lpBuf + 132, (DWORD)(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
 				pVolDesc->JOLIET.dwPathTblPos = MAKEDWORD(MAKEWORD(lpBuf[140], lpBuf[141]),
 					MAKEWORD(lpBuf[142], lpBuf[143])) / pVolDesc->JOLIET.dwLogicalBlkCoef;
 				if (pVolDesc->JOLIET.dwPathTblPos == 0) {
 					pVolDesc->JOLIET.dwPathTblPos = MAKEDWORD(MAKEWORD(lpBuf[151], lpBuf[150]),
 						MAKEWORD(lpBuf[149], lpBuf[148]));
 				}
-				pVolDesc->JOLIET.dwRootDataLen = GetSizeOrDwordForVolDesc(lpBuf + 166, (DWORD)(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
+				pVolDesc->JOLIET.dwRootDataLen =
+					GetSizeOrDwordForVolDesc(lpBuf + 166, (DWORD)(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
 				if (pVolDesc->JOLIET.dwRootDataLen > 0) {
 					pVolDesc->JOLIET.dwRootDataLen = PadSizeForVolDesc(pVolDesc->JOLIET.dwRootDataLen);
 				}
@@ -1293,6 +1345,7 @@ BOOL ExecReadGD(
 	LPBYTE lpOutBuf
 ) {
 	for (INT n = 1; n <= 10; n++) {
+		BOOL bRet = TRUE;
 		if (!ExecReadCD(pExtArg, pDevice, pCdb, nLBA, lpInBuf,
 			CD_RAW_SECTOR_SIZE * (DWORD)byTransferLen, _T(__FUNCTION__), __LINE__)) {
 			if (n == 10) {
@@ -1302,22 +1355,26 @@ BOOL ExecReadGD(
 			DWORD milliseconds = 10000;
 			OutputErrorString(_T("Retry %d/10 after %ld milliseconds\n"), n, milliseconds);
 			Sleep(milliseconds);
+			bRet = FALSE;
+		}
+		if (!bRet) {
 			continue;
 		}
 		else {
 			break;
 		}
 	}
-	INT idx = pDisc->MAIN.nCombinedOffset;
+	INT nOfs = pDisc->MAIN.nCombinedOffset;
 	if (pDisc->MAIN.nCombinedOffset < 0) {
-		idx = CD_RAW_SECTOR_SIZE + pDisc->MAIN.nCombinedOffset;
+		nOfs = CD_RAW_SECTOR_SIZE + pDisc->MAIN.nCombinedOffset;
 	}
 #if 0
 	OutputCDMain(fileMainInfo, lpInBuf + idx, nLBA, CD_RAW_SECTOR_SIZE);
 #endif
 	for (BYTE i = 0; i < byTransferLen; i++) {
 		for (INT j = 0; j < CD_RAW_SECTOR_SIZE; j++) {
-			lpOutBuf[j + CD_RAW_SECTOR_SIZE * i] = (BYTE)(lpInBuf[(idx + j) + CD_RAW_SECTOR_SIZE * i] ^ scrambled_table[j]);
+			lpOutBuf[j + CD_RAW_SECTOR_SIZE * i] =
+				(BYTE)(lpInBuf[(nOfs + j) + CD_RAW_SECTOR_SIZE * i] ^ scrambled_table[j]);
 		}
 	}
 #if 0

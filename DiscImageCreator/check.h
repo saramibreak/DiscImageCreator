@@ -40,7 +40,6 @@ BOOL IsValidPlextorDrive(
 );
 
 BOOL IsValidPregapSector(
-	PEXEC_TYPE pExecType,
 	PDISC pDisc,
 	PSUB_Q pSubQ,
 	INT nLBA
@@ -60,6 +59,11 @@ BOOL IsValidSecuRomSector(
 BOOL IsValidProtectedSector(
 	PDISC pDisc,
 	INT nLBA
+);
+
+BOOL IsValidIntentionalC2error(
+	PDISC pDisc,
+	PDISC_PER_SECTOR pDiscPerSector
 );
 
 BOOL IsValidSubQMCN(

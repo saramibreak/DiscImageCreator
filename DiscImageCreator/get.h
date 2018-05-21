@@ -24,7 +24,17 @@ BOOL GetAlignedCallocatedBuffer(
 	LONG lLineNum
 );
 
-BOOL GetDriveOffset(
+BOOL GetHandle(
+	PDEVICE pDevice,
+	_TCHAR* szBuf,
+	size_t bufSize
+);
+
+VOID GetDriveOffsetManually(
+	LPINT lpDriveOffset
+);
+
+BOOL GetDriveOffsetAuto(
 	LPCSTR szProductId,
 	LPINT lpDriveOffset
 );
@@ -44,12 +54,6 @@ BYTE GetMode(
 	BYTE byPrevMode,
 	BYTE byCtl,
 	INT nType
-);
-
-BYTE GetControl(
-	PEXEC_TYPE pExecType,
-	PDISC pDisc,
-	INT nIdx
 );
 
 BOOL GetWriteOffset(
