@@ -15,101 +15,44 @@
  */
 #pragma once
 
-BOOL ReadCDForSearchingOffset(
+BOOL ExecReadDisc(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
-	PDISC pDisc
+	PDISC pDisc,
+	LPBYTE pCdb,
+	INT nLBA,
+	LPBYTE lpBuf,
+	LPBYTE bufDec,
+	BYTE byTransferLen
 );
 
-VOID ReadCDForCheckingByteOrder(
+BOOL ExecReadCD(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
-	CDFLAG::_READ_CD::_ERROR_FLAGS* c2
+	LPBYTE lpCmd,
+	INT nLBA,
+	LPBYTE lpBuf,
+	DWORD dwBufSize,
+	LPCTSTR pszFuncName,
+	LONG lLineNum
+);
+
+BOOL ExecReadGD(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	PDISC pDisc,
+	LPBYTE pCdb,
+	INT nLBA,
+	BYTE byTransferLen,
+	LPBYTE lpInBuf,
+	LPBYTE lpOutBuf
 );
 
 BOOL FlushDriveCache(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	INT nLBA
-);
-
-BOOL ReadCDForCheckingReadInOut(
-	PEXEC_TYPE pExecType,
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc
-);
-
-BOOL ReadCDForCheckingSubQAdrFirst(
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc,
-	LPBYTE* ppBuf,
-	LPBYTE* lpBuf,
-	LPBYTE lpCmd,
-	LPDWORD dwBufLen,
-	LPINT nOfs,
-	CDFLAG::_READ_CD::_EXPECTED_SECTOR_TYPE flg
-);
-
-BOOL ReadCDForCheckingSubQAdr(
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc,
-	PDISC_PER_SECTOR pDiscPerSector,
-	LPBYTE lpCmd,
-	LPBYTE lpBuf,
-	DWORD dwBufLen,
-	INT nOfs,
-	BYTE byIdxOfTrack,
-	LPBYTE byMode,
-	BYTE bySessionNum,
-	FILE* fpCcd
-);
-
-BOOL ReadCDCheck(
-	PEXEC_TYPE pExecType,
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc,
-	CDFLAG::_READ_CD::_EXPECTED_SECTOR_TYPE flg
-);
-
-BOOL ReadCDForCheckingSubRtoW(
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc,
-	CDFLAG::_READ_CD::_EXPECTED_SECTOR_TYPE flg
-);
-
-BOOL ReadCDForFileSystem(
-	PEXEC_TYPE pExecType,
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc
-);
-
-BOOL ReadCDForSegaDisc(
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice
-);
-
-BOOL ReadCDForCheckingPsxRegion(
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice
-);
-
-VOID ReadCDForScanningPsxAntiMod(
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc
-);
-
-BOOL ReadCDForScanningProtectViaSector(
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc
 );
 
 BOOL ReadCDAll(
@@ -150,25 +93,4 @@ BOOL ReadCDPartial(
 	INT nEnd,
 	CDFLAG::_READ_CD::_EXPECTED_SECTOR_TYPE flg,
 	FILE* fpC2
-);
-
-
-BOOL ReadGDForTOC(
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc
-);
-
-BOOL ReadGDForFileSystem(
-	PEXEC_TYPE pExecType,
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc
-);
-
-BOOL ReadGDForCheckingSubQAdr(
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc,
-	PDISC_PER_SECTOR pDiscPerSector
 );

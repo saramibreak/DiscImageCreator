@@ -99,6 +99,12 @@
     <ClInclude Include="_external\global.h">
       <Filter>_external</Filter>
     </ClInclude>
+    <ClInclude Include="execScsiCmdforCDCheck.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="execScsiCmdforFileSystem.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DiscImageCreator.cpp">
@@ -168,6 +174,12 @@
       <Filter>_external</Filter>
     </ClCompile>
     <ClCompile Include="xml.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="execScsiCmdforCDCheck.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="execScsiCmdforFileSystem.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>

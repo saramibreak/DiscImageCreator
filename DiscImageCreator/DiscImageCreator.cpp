@@ -21,6 +21,7 @@
 #include "execIoctl.h"
 #include "execScsiCmd.h"
 #include "execScsiCmdforCD.h"
+#include "execScsiCmdforCDCheck.h"
 #include "execScsiCmdforDVD.h"
 #include "get.h"
 #include "init.h"

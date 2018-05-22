@@ -99,66 +99,8 @@ BOOL ReadDriveInformation(
 	DWORD dwCDSpeed
 );
 
-BOOL ExecReadCD(
+BOOL ReadGDForTOC(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
-	LPBYTE lpCmd,
-	INT nLBA,
-	LPBYTE lpBuf,
-	DWORD dwBufSize,
-	LPCTSTR pszFuncName,
-	LONG lLineNum
-);
-
-BOOL ReadVolumeDescriptor(
-	PEXEC_TYPE pExecType,
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc,
-	BYTE byIdx,
-	LPBYTE pCdb,
-	LPBYTE lpBuf,
-	INT nPVD,
-	INT nOffset,
-	LPBOOL lpReadVD,
-	PVOLUME_DESCRIPTOR pVolDesc
-);
-
-BOOL ReadPathTableRecord(
-	PEXEC_TYPE pExecType,
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc,
-	LPBYTE pCdb,
-	DWORD dwLogicalBlkCoef,
-	DWORD dwPathTblSize,
-	DWORD dwPathTblPos,
-	INT nOffset,
-	PDIRECTORY_RECORD pDirRec,
-	LPINT nDirPosNum
-);
-
-BOOL ReadDirectoryRecord(
-	PEXEC_TYPE pExecType,
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc,
-	LPBYTE pCdb,
-	LPBYTE lpBuf,
-	DWORD dwLogicalBlkCoef,
-	DWORD dwRootDataLen,
-	INT nOffset,
-	PDIRECTORY_RECORD pDirRec,
-	INT nDirPosNum
-);
-
-BOOL ExecReadGD(
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc,
-	LPBYTE pCdb,
-	INT nLBA,
-	BYTE byTransferLen,
-	LPBYTE lpInBuf,
-	LPBYTE lpOutBuf
+	PDISC pDisc
 );
