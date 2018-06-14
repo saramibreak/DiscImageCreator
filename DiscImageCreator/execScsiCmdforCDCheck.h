@@ -15,14 +15,6 @@
  */
 #pragma once
 
-BOOL ReadCDCheck(
-	PEXEC_TYPE pExecType,
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc,
-	CDFLAG::_READ_CD::_EXPECTED_SECTOR_TYPE flg
-);
-
 BOOL ReadCDForSearchingOffset(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
@@ -70,35 +62,6 @@ BOOL ReadCDForCheckingSubQAdr(
 	FILE* fpCcd
 );
 
-BOOL ReadCDForCheckingSubRtoW(
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc,
-	CDFLAG::_READ_CD::_EXPECTED_SECTOR_TYPE flg
-);
-
-BOOL ReadCDForSegaDisc(
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice
-);
-
-BOOL ReadCDForCheckingPsxRegion(
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice
-);
-
-VOID ReadCDForScanningPsxAntiMod(
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc
-);
-
-BOOL ReadCDForScanningProtectViaSector(
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc
-);
-
 BOOL ReadCDForCheckingSecuROM(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
@@ -114,6 +77,14 @@ BOOL ReadCDForCheckingExe(
 	PDISC pDisc,
 	LPBYTE pCdb,
 	LPBYTE lpBuf
+);
+
+BOOL ReadCDCheck(
+	PEXEC_TYPE pExecType,
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	PDISC pDisc,
+	CDFLAG::_READ_CD::_EXPECTED_SECTOR_TYPE flg
 );
 
 BOOL ReadGDForCheckingSubQAdr(

@@ -17,15 +17,6 @@
 #include "convert.h"
 
 /*
-	<src>
-		lpColumnSubcode[2352-2447] & 0x80 -> P channel
-		lpColumnSubcode[2352-2447] & 0x40 -> Q channel
-		lpColumnSubcode[2352-2447] & 0x20 -> R channel
-		lpColumnSubcode[2352-2447] & 0x10 -> S channel
-		lpColumnSubcode[2352-2447] & 0x08 -> T channel
-		lpColumnSubcode[2352-2447] & 0x04 -> U channel
-		lpColumnSubcode[2352-2447] & 0x02 -> V channel
-		lpColumnSubcode[2352-2447] & 0x01 -> W channel
 	<dst>
 		lpRowSubcode[ 0-11] -> P channel
 		lpRowSubcode[12-23] -> Q channel
@@ -35,6 +26,15 @@
 		lpRowSubcode[60-71] -> U channel
 		lpRowSubcode[72-83] -> V channel
 		lpRowSubcode[84-95] -> W channel
+	<src>
+		lpColumnSubcode[2352-2447] & 0x80 -> P channel
+		lpColumnSubcode[2352-2447] & 0x40 -> Q channel
+		lpColumnSubcode[2352-2447] & 0x20 -> R channel
+		lpColumnSubcode[2352-2447] & 0x10 -> S channel
+		lpColumnSubcode[2352-2447] & 0x08 -> T channel
+		lpColumnSubcode[2352-2447] & 0x04 -> U channel
+		lpColumnSubcode[2352-2447] & 0x02 -> V channel
+		lpColumnSubcode[2352-2447] & 0x01 -> W channel
 */
 /*
 	//p(0x80)	//0x80  0	//0x40 L1	//0x20 L2	//0x10 L3	//0x08 L4	//0x04 L5	//0x02 L6	//0x01 L7
@@ -47,8 +47,8 @@
 	//w(0x01)	//0x80 R7	//0x40 R6	//0x20 R5	//0x10 R4	//0x08 R3	//0x04 R2	//0x02 R1	//0x01 0
 */
 BOOL AlignRowSubcode(
-	LPBYTE lpColumnSubcode,
-	LPBYTE lpRowSubcode
+	LPBYTE lpRowSubcode,
+	LPBYTE lpColumnSubcode
 ) {
 	ZeroMemory(lpRowSubcode, CD_RAW_READ_SUBCODE_SIZE);
 	INT nRow = 0;
@@ -71,15 +71,6 @@ BOOL AlignRowSubcode(
 }
 
 /*
-	<src>
-		lpRowSubcode[ 0-11] -> P channel
-		lpRowSubcode[12-23] -> Q channel
-		lpRowSubcode[24-35] -> R channel
-		lpRowSubcode[36-47] -> S channel
-		lpRowSubcode[48-59] -> T channel
-		lpRowSubcode[60-71] -> U channel
-		lpRowSubcode[72-83] -> V channel
-		lpRowSubcode[84-95] -> W channel
 	<dst>
 		lpColumnSubcode[0-96] & 0x80 -> P channel
 		lpColumnSubcode[0-96] & 0x40 -> Q channel
@@ -89,6 +80,15 @@ BOOL AlignRowSubcode(
 		lpColumnSubcode[0-96] & 0x04 -> U channel
 		lpColumnSubcode[0-96] & 0x02 -> V channel
 		lpColumnSubcode[0-96] & 0x01 -> W channel
+	<src>
+		lpRowSubcode[ 0-11] -> P channel
+		lpRowSubcode[12-23] -> Q channel
+		lpRowSubcode[24-35] -> R channel
+		lpRowSubcode[36-47] -> S channel
+		lpRowSubcode[48-59] -> T channel
+		lpRowSubcode[60-71] -> U channel
+		lpRowSubcode[72-83] -> V channel
+		lpRowSubcode[84-95] -> W channel
 */
 /*
 	//p(0x80)	//0x80  0	//0x40 L1	//0x20 L2	//0x10 L3	//0x08 L4	//0x04 L5	//0x02 L6	//0x01 L7
@@ -101,8 +101,8 @@ BOOL AlignRowSubcode(
 	//w(0x01)	//0x80 R7	//0x40 R6	//0x20 R5	//0x10 R4	//0x08 R3	//0x04 R2	//0x02 R1	//0x01 0
 */
 BOOL AlignColumnSubcode(
-	LPBYTE lpRowSubcode,
-	LPBYTE lpColumnSubcode
+	LPBYTE lpColumnSubcode,
+	LPBYTE lpRowSubcode
 ) {
 	INT nRow = 0;
 	UINT nMask = 0x80;

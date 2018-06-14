@@ -15,6 +15,19 @@
  */
 #pragma once
 
+BOOL IsCDRDrive(
+	PDISC pDisc
+);
+
+BOOL IsValidPlextorDrive(
+	PDEVICE pDevice
+);
+
+VOID SupportIndex0InTrack1(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice
+);
+
 BOOL IsValidMainDataHeader(
 	LPBYTE lpBuf
 );
@@ -33,10 +46,6 @@ BOOL IsValidPceSector(
 
 BOOL IsValidPcfxSector(
 	LPBYTE lpBuf
-);
-
-BOOL IsValidPlextorDrive(
-	PDEVICE pDevice
 );
 
 BOOL IsValidPregapSector(
@@ -66,48 +75,78 @@ BOOL IsValidIntentionalC2error(
 	PDISC_PER_SECTOR pDiscPerSector
 );
 
-BOOL IsValidSubQMCN(
-	LPBYTE lpSubcode
-);
-
-BOOL IsValidSubQISRC(
-	LPBYTE lpSubcode
-);
-
-VOID CheckAndFixSubChannel(
-	PEXEC_TYPE pExecType,
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc,
-	PDISC_PER_SECTOR pDiscPerSector,
-	BYTE byCurrentTrackNum,
-	INT nLBA,
-	BOOL bLibCrypt,
-	BOOL bSecuRom
-);
-
-BOOL ContainsC2Error(
-	PDEVICE pDevice,
-	LPBYTE lpBuf,
-	LPDWORD lpdwC2errorNum
-);
-
-VOID SupportIndex0InTrack1(
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice
-);
-
 BOOL IsCheckingSubChannel(
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
 	INT nLBA
 );
 
-VOID CheckAndFixMainHeader(
-	PEXT_ARG pExtArg,
+BOOL IsValidSubQAdrMCN(
+	LPBYTE lpSubcode
+);
+
+BOOL IsValidSubQAdrISRC(
+	LPBYTE lpSubcode
+);
+
+BOOL IsValidSubQAdrSector(
+	DWORD dwSubAdditionalNum,
+	PSUB_Q pSubQ,
+	INT nRangeLBA,
+	INT nFirstLBA,
+	INT nPrevAdrSector,
+	INT nLBA
+);
+
+BOOL IsValidSubQCtl(
+	PSUB_Q pSubQ,
+	BYTE byEndCtl
+);
+
+BOOL IsValidSubQIdx(
 	PDISC pDisc,
 	PDISC_PER_SECTOR pDiscPerSector,
 	INT nLBA,
-	BYTE byCurrentTrackNum,
-	INT nMainDataType
+	LPBOOL bPrevIndex,
+	LPBOOL bPrevPrevIndex
+);
+
+BOOL IsValidSubQTrack(
+	PEXEC_TYPE pExecType,
+	PDISC pDisc,
+	PDISC_PER_SECTOR pDiscPerSector,
+	INT nLBA,
+	LPBOOL bPrevTrackNum
+);
+
+BOOL IsValidSubQMSF(
+	PEXEC_TYPE pExecType,
+	LPBYTE lpSubcode,
+	BYTE m,
+	BYTE s,
+	BYTE f
+);
+
+BOOL IsValidSubQRMSF(
+	PEXEC_TYPE pExecType,
+	PDISC_PER_SECTOR pDiscPerSector,
+	INT nLBA
+);
+
+BOOL IsValidSubQAFrame(
+	LPBYTE lpSubcode,
+	INT nLBA
+);
+
+BOOL IsValidSubQAMSF(
+	PEXEC_TYPE pExecType,
+	BOOL bRipPregap,
+	PDISC_PER_SECTOR pDiscPerSector,
+	INT nLBA
+);
+
+BOOL ContainsC2Error(
+	PDEVICE pDevice,
+	LPBYTE lpBuf,
+	LPDWORD lpdwC2errorNum
 );

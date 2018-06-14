@@ -17,8 +17,9 @@
 #include "enum.h"
 
 #define DVD_DRIVE_MAX_SPEED	(16)
-#define DRIVE_VENDOR_ID_SIZE	(8)
-#define DRIVE_PRODUCT_ID_SIZE	(16)
+#define DRIVE_VENDOR_ID_SIZE (8)
+#define DRIVE_PRODUCT_ID_SIZE (16)
+#define DRIVE_VERSION_ID_SIZE (4)
 
 #define DISC_RAW_READ_SIZE		(2048)
 #define CD_RAW_SECTOR_SIZE		(2352)
@@ -29,9 +30,13 @@
 #define MAXIMUM_NUMBER_INDEXES		(100)
 #define SESSION_TO_SESSION_SKIP_LBA (11400)
 #define FIRST_LBA_FOR_GD			(45000)
+#define MAX_LBA_OF_CD				(449850) // MSF 100:00:00
 #define PREGAP_START_LBA			(-5000)
 #define FIRST_TRACK_PREGAP_SIZE		(150)
 #define LAST_TRACK_LEADOUT_SIZE		(100)	// Max for Plextor
+
+#define FIRST_ERROR_OF_LEADOUT		(296000) // Ring data of Sega Saturn
+#define SECOND_ERROR_OF_LEADOUT		(328000) // Ring data of Sega Saturn
 
 #define SYNC_SIZE				(12)
 #define HEADER_SIZE				(4)
@@ -70,6 +75,7 @@
 #endif
 #define SCSIOP_PLXTR_READ_CDDA		(0xD8)
 #if 0
+#define SCSIOP_PLXTR_READ_CDDA_MSF	(0xD9)
 #define SCSIOP_PLXTR_PLEXERASER		(0xE3)
 #define SCSIOP_PLXTR_AS_RD			(0xE4)
 #define SCSIOP_PLXTR_AS_WR			(0xE5)

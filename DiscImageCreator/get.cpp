@@ -158,39 +158,37 @@ UINT64 GetFileSize64(
 }
 
 BYTE GetMode(
-	LPBYTE lpBuf,
-	BYTE byPrevMode,
-	BYTE byCtl,
+	PDISC_PER_SECTOR pDiscPerSector,
 	INT nType
 ) {
-	BYTE byMode = byPrevMode;
-	if ((byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
-		if (IsValidMainDataHeader(lpBuf)) {
-			if ((lpBuf[15] & 0x60) == 0x60 && nType == unscrambled) {
-				byMode = BcdToDec((BYTE)(lpBuf[15] ^ 0x60));
+	BYTE byMode = pDiscPerSector->mainHeader.prev[15];
+	if ((pDiscPerSector->subQ.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+		if (IsValidMainDataHeader(pDiscPerSector->mainHeader.current)) {
+			if ((pDiscPerSector->mainHeader.current[15] & 0x60) == 0x60 && nType == unscrambled) {
+				byMode = BcdToDec((BYTE)(pDiscPerSector->mainHeader.current[15] ^ 0x60));
 			}
 			else {
-				byMode = lpBuf[15];
+				byMode = pDiscPerSector->mainHeader.current[15];
 			}
 		}
 		else {
-			if ((byPrevMode & 0x60) == 0x60 && nType == unscrambled) {
-				byMode = BcdToDec(byPrevMode);
+			if ((pDiscPerSector->mainHeader.prev[15] & 0x60) == 0x60 && nType == unscrambled) {
+				byMode = BcdToDec(pDiscPerSector->mainHeader.prev[15]);
 			}
 			else {
-				byMode = byPrevMode;
+				byMode = pDiscPerSector->mainHeader.prev[15];
 			}
 		}
 	}
-	else if ((byCtl & AUDIO_DATA_TRACK) == 0) {
+	else if ((pDiscPerSector->subQ.current.byCtl & AUDIO_DATA_TRACK) == 0) {
 		byMode = DATA_BLOCK_MODE0;
 	}
 	else {
-		if ((byPrevMode & 0x60) == 0x60 && nType == unscrambled) {
-			byMode = BcdToDec(byPrevMode);
+		if ((pDiscPerSector->mainHeader.prev[15] & 0x60) == 0x60 && nType == unscrambled) {
+			byMode = BcdToDec(pDiscPerSector->mainHeader.prev[15]);
 		}
 		else {
-			byMode = byPrevMode;
+			byMode = pDiscPerSector->mainHeader.prev[15];
 		}
 	}
 	return byMode;
@@ -206,6 +204,9 @@ BOOL GetWriteOffset(
 			BYTE sm = BcdToDec((BYTE)(lpBuf[i + 12] ^ 0x01));
 			BYTE ss = BcdToDec((BYTE)(lpBuf[i + 13] ^ 0x80));
 			BYTE sf = BcdToDec((BYTE)(lpBuf[i + 14]));
+			if ((sm & 0x01) == 1 && (ss & 0x50) == 80) {
+				break;
+			}
 			INT tmpLBA = MSFtoLBA(sm, ss, sf) - 150;
 			pDisc->MAIN.nCombinedOffset = 
 				CD_RAW_SECTOR_SIZE * -(tmpLBA - pDisc->SCSI.nFirstLBAofDataTrack) + i;

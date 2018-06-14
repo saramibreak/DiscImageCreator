@@ -147,9 +147,8 @@ VOID OutputCDSub96Raw(
 
 VOID OutputCDSubToLog(
 	PDISC pDisc,
-	LPBYTE lpSubcode,
+	PDISC_PER_SECTOR pDiscPerSector,
 	LPBYTE lpSubcodeRaw,
 	INT nLBA,
-	BYTE byTrackNum,
 	FILE* fpParse
 );

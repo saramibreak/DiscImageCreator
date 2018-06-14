@@ -42,15 +42,19 @@ BOOL InitLBAPerTrack(
 ) {
 	size_t dwTrackAllocSize =
 		(*pExecType == gd || *pExecType == swap) ? MAXIMUM_NUMBER_TRACKS : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
-	if (NULL == ((*pDisc)->SCSI.lpFirstLBAListOnToc = 
-		(LPINT)calloc(dwTrackAllocSize, sizeof(UINT_PTR)))) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return FALSE;
+	if (NULL == (*pDisc)->SCSI.lpFirstLBAListOnToc) {
+		if (NULL == ((*pDisc)->SCSI.lpFirstLBAListOnToc =
+			(LPINT)calloc(dwTrackAllocSize, sizeof(UINT_PTR)))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			return FALSE;
+		}
 	}
-	if (NULL == ((*pDisc)->SCSI.lpLastLBAListOnToc = 
-		(LPINT)calloc(dwTrackAllocSize, sizeof(UINT_PTR)))) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return FALSE;
+	if (NULL == (*pDisc)->SCSI.lpLastLBAListOnToc) {
+		if (NULL == ((*pDisc)->SCSI.lpLastLBAListOnToc =
+			(LPINT)calloc(dwTrackAllocSize, sizeof(UINT_PTR)))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			return FALSE;
+		}
 	}
 	return TRUE;
 }
@@ -330,7 +334,7 @@ BOOL InitLogFile(
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
-			if (*pExecType != dvd && *pExecType != bd) {
+			if (*pExecType != dvd && *pExecType != bd && *pExecType != xbox) {
 				if (NULL == (g_LogFile.fpSubInfo = CreateOrOpenFileA(
 					path, szSubInfoLogtxt, NULL, NULL, NULL, ".txt", "w", 0, 0))) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -454,7 +458,7 @@ VOID TerminateLogFile(
 		FcloseAndNull(g_LogFile.fpVolDesc);
 		FcloseAndNull(g_LogFile.fpMainInfo);
 		FcloseAndNull(g_LogFile.fpMainError);
-		if (*pExecType != dvd && *pExecType != bd) {
+		if (*pExecType != dvd && *pExecType != bd && *pExecType != xbox) {
 			FcloseAndNull(g_LogFile.fpSubInfo);
 			FcloseAndNull(g_LogFile.fpSubError);
 			if (pExtArg->byC2) {

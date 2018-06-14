@@ -579,6 +579,16 @@ VOID WriteCueForUnderFileDirective(
 	BYTE byTrackNum,
 	FILE* fpCue
 ) {
+	if (pDisc->SCSI.bMultiSession) {
+		if (byTrackNum == pDisc->SCSI.toc.LastTrack) {
+			BYTE m, s, f;
+			LBAtoMSF(pDisc->SCSI.nFirstLBAof2ndSession - SESSION_TO_SESSION_SKIP_LBA, &m, &s, &f);
+			_ftprintf(fpCue, _T("  REM LEAD-OUT %02d:%02d:%02d\n"), m, s, f);
+		}
+		if (byTrackNum == pDisc->SCSI.toc.FirstTrack || byTrackNum == pDisc->SCSI.toc.LastTrack) {
+			_ftprintf(fpCue, _T("  REM SESSION %02d\n"), pDisc->SCSI.lpSessionNumList[byTrackNum - 1]);
+		}
+	}
 	if (pDisc->MAIN.lpModeList[byTrackNum - 1] == DATA_BLOCK_MODE0) {
 		_ftprintf(fpCue, _T("  TRACK %02u AUDIO\n"), byTrackNum);
 		WriteCueForISRC(pDisc, byTrackNum - 1, fpCue);
@@ -612,7 +622,7 @@ VOID WriteCueForUnderFileDirective(
 		}
 	}
 	else {
-		if (pDisc->SCSI.byCdi) {
+		if (pDisc->SCSI.byFormat == DISK_TYPE_CDI) {
 			_ftprintf(fpCue, _T("  TRACK %02u CDI/2352\n"), byTrackNum);
 		}
 		else {
@@ -638,6 +648,7 @@ VOID WriteCueForIndexDirective(
 }
 
 VOID WriteMainChannel(
+	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
 	LPBYTE lpBuf,
@@ -654,13 +665,16 @@ VOID WriteMainChannel(
 		if (nLBA == sLBA) {
 			fwrite(lpBuf + pDisc->MAIN.uiMainDataSlideSize, sizeof(BYTE),
 				CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize, fpImg);
-			if (pDisc->SUB.lpFirstLBAListOnSub) {
-				pDisc->SUB.lpFirstLBAListOnSub[0][0] = -150;
-				pDisc->SUB.lpFirstLBAListOnSub[0][1] = nLBA - sLBA;
+			if (*pExecType != gd) {
+				if (pDisc->SUB.lpFirstLBAListOnSub) {
+					pDisc->SUB.lpFirstLBAListOnSub[0][0] = -150;
+				}
+				if (pDisc->SUB.lpFirstLBAListOnSubSync) {
+					pDisc->SUB.lpFirstLBAListOnSubSync[0][0] = -150;
+				}
 			}
-			if (pDisc->SUB.lpFirstLBAListOnSubSync) {
-				pDisc->SUB.lpFirstLBAListOnSubSync[0][0] = -150;
-				pDisc->SUB.lpFirstLBAListOnSubSync[0][1] = nLBA - sLBA;
+			else {
+				pDisc->SUB.lpFirstLBAListOnSub[2][0] = 44850;
 			}
 		}
 		// last sector in 1st session (when session 2 exists)
@@ -733,16 +747,15 @@ VOID WriteC2(
 
 VOID WriteSubChannel(
 	PDISC pDisc,
+	PDISC_PER_SECTOR pDiscPerSector,
 	LPBYTE lpSubcodeRaw,
-	LPBYTE lpSubcode,
 	INT nLBA,
-	BYTE byCurrentTrackNum,
 	FILE* fpSub,
 	FILE* fpParse
 ) {
 	if (fpSub && fpParse) {
-		fwrite(lpSubcode, sizeof(BYTE), CD_RAW_READ_SUBCODE_SIZE, fpSub);
-		OutputCDSubToLog(pDisc, lpSubcode, lpSubcodeRaw, nLBA, byCurrentTrackNum, fpParse);
+		fwrite(pDiscPerSector->subcode.current, sizeof(BYTE), CD_RAW_READ_SUBCODE_SIZE, fpSub);
+		OutputCDSubToLog(pDisc, pDiscPerSector, lpSubcodeRaw, nLBA, fpParse);
 	}
 }
 
@@ -754,15 +767,16 @@ VOID WriteErrorBuffer(
 	PDISC_PER_SECTOR pDiscPerSector,
 	LPBYTE lpScrambledBuf,
 	INT nLBA,
-	BYTE byCurrentTrackNum,
 	FILE* fpImg,
 	FILE* fpSub,
 	FILE* fpC2,
 	FILE* fpParse
 ) {
+	UNREFERENCED_PARAMETER(lpScrambledBuf);
 	UINT uiSize = 0;
 	BYTE zeroByte[CD_RAW_SECTOR_SIZE] = { 0 };
 	if (*pExecType == data || pExtArg->byBe) {
+#if 0
 		uiSize = CD_RAW_SECTOR_SIZE;
 		if ((pDiscPerSector->subQ.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 			fwrite(pDiscPerSector->mainHeader.current, sizeof(BYTE), MAINHEADER_MODE1_SIZE, fpImg);
@@ -775,11 +789,15 @@ VOID WriteErrorBuffer(
 				sizeof(BYTE), CD_RAW_SECTOR_SIZE - MAINHEADER_MODE1_SIZE, fpImg);
 		}
 		else {
+#endif
 			fwrite(zeroByte, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpImg);
+#if 0
 		}
+#endif
 	}
 	else {
 		ZeroMemory(pDiscPerSector->data.current, CD_RAW_SECTOR_SIZE);
+#if 0
 		for (UINT i = 0; i < pDisc->MAIN.uiMainDataSlideSize; i++) {
 			pDiscPerSector->data.current[i] =
 				(BYTE)(0x55 ^ lpScrambledBuf[CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize + i]);
@@ -792,46 +810,60 @@ VOID WriteErrorBuffer(
 			pDiscPerSector->data.current[i] =
 				(BYTE)(0x55 ^ lpScrambledBuf[i - pDisc->MAIN.uiMainDataSlideSize]);
 		}
+#endif
 		if (nLBA == pDisc->MAIN.nFixStartLBA) {
 			uiSize = CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize;
+#if 0
 			if ((pDiscPerSector->subQ.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 				fwrite(pDiscPerSector->data.current + pDisc->MAIN.uiMainDataSlideSize,
 					sizeof(BYTE), uiSize, fpImg);
 			}
 			else {
+#endif
 				fwrite(zeroByte, sizeof(BYTE), uiSize, fpImg);
-			}
+#if 0
 		}
+#endif
+	}
 		else if (nLBA == pDisc->MAIN.nFixEndLBA - 1) {
 			uiSize = pDisc->MAIN.uiMainDataSlideSize;
+#if 0
 			if ((pDiscPerSector->subQ.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 				fwrite(pDiscPerSector->data.current, sizeof(BYTE), uiSize, fpImg);
 			}
 			else {
+#endif
 				fwrite(zeroByte, sizeof(BYTE), uiSize, fpImg);
+#if 0
 			}
+#endif
 		}
 		else {
 			uiSize = CD_RAW_SECTOR_SIZE;
+#if 0
 			if ((pDiscPerSector->subQ.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 				fwrite(pDiscPerSector->data.current, sizeof(BYTE), uiSize, fpImg);
 			}
 			else {
+#endif
 				fwrite(zeroByte, sizeof(BYTE), uiSize, fpImg);
+#if 0
 			}
+#endif
 		}
 	}
 	OutputLogA(standardError | fileMainError,
 		"LBA[%06d, %#07x] Read error. padding [%ubyte]\n", nLBA, nLBA, uiSize);
 
-	BYTE lpSubcodeRaw[CD_RAW_READ_SUBCODE_SIZE] = { 0 };
-	AlignColumnSubcode(pDiscPerSector->subcode.current, lpSubcodeRaw);
-	WriteSubChannel(pDisc, lpSubcodeRaw
-		, pDiscPerSector->subcode.current, nLBA, byCurrentTrackNum, fpSub, fpParse);
+	if (*pExecType != swap || (*pExecType == swap && nLBA < SECOND_ERROR_OF_LEADOUT)) {
+		BYTE lpSubcodeRaw[CD_RAW_READ_SUBCODE_SIZE] = { 0 };
+		AlignColumnSubcode(lpSubcodeRaw, pDiscPerSector->subcode.current);
+		WriteSubChannel(pDisc, pDiscPerSector, lpSubcodeRaw, nLBA, fpSub, fpParse);
 
-	if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
-		fwrite(pDiscPerSector->data.current + pDevice->TRANSFER.dwBufC2Offset
-			, sizeof(BYTE), CD_RAW_READ_C2_294_SIZE, fpC2);
+		if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
+			fwrite(pDiscPerSector->data.current + pDevice->TRANSFER.dwBufC2Offset
+				, sizeof(BYTE), CD_RAW_READ_C2_294_SIZE, fpC2);
+		}
 	}
 }
 
@@ -848,8 +880,10 @@ BOOL WriteParsingSubfile(
 
 	LPBYTE data = NULL;
 	DISC discData = { 0 };
+	DISC_PER_SECTOR discPerSector = { 0 };
 	FILE* fpSub = NULL;
 	DWORD dwTrackAllocSize = MAXIMUM_NUMBER_TRACKS + 10 + 1;
+
 	try {
 		if (NULL == (fpSub = CreateOrOpenFile(
 			pszSubfile, NULL, NULL, NULL, NULL, _T(".sub"), _T("rb"), 0, 0))) {
@@ -886,15 +920,16 @@ BOOL WriteParsingSubfile(
 		INT nLBA = 0;
 
 		for (INT i = 0; i < (INT)dwFileSize; i += CD_RAW_READ_SUBCODE_SIZE) {
-			BYTE byAdr = (BYTE)(*(data + i + 12) & 0x0f);
+			memcpy(discPerSector.subcode.current, data + i, CD_RAW_READ_SUBCODE_SIZE);
+			BYTE byAdr = (BYTE)(discPerSector.subcode.current[12] & 0x0f);
 			if (byAdr == ADR_ENCODES_CURRENT_POSITION) {
-				byTrackNum = BcdToDec(*(data + i + 13));
-				nLBA = MSFtoLBA(BcdToDec(*(data + i + 19)), 
-					BcdToDec(*(data + i + 20)), BcdToDec(*(data + i + 21))) - 150;
+				byTrackNum = BcdToDec(discPerSector.subcode.current[13]);
+				nLBA = MSFtoLBA(BcdToDec(discPerSector.subcode.current[19]),
+					BcdToDec(discPerSector.subcode.current[20]), BcdToDec(discPerSector.subcode.current[21])) - 150;
 				if (byTrackNum == 0) {
-					byTrackNum = BcdToDec(*(data + i + 14));
-					nLBA = MSFtoLBA(BcdToDec(*(data + i + 15)), 
-						BcdToDec(*(data + i + 16)), BcdToDec(*(data + i + 17))) - 150;
+					byTrackNum = BcdToDec(discPerSector.subcode.current[14]);
+					nLBA = MSFtoLBA(BcdToDec(discPerSector.subcode.current[15]),
+						BcdToDec(discPerSector.subcode.current[16]), BcdToDec(discPerSector.subcode.current[17])) - 150;
 				}
 			}
 			else if (byAdr == ADR_ENCODES_MEDIA_CATALOG) {
@@ -903,8 +938,8 @@ BOOL WriteParsingSubfile(
 			}
 			else if (byAdr == ADR_ENCODES_ISRC) {
 				if (0 < byPrevTrackNum && byPrevTrackNum < dwTrackAllocSize) {
-					SetISRCToString(&discData, &data[i], 
-						discData.SUB.pszISRC[byPrevTrackNum - 1], (BYTE)(byPrevTrackNum - 1), FALSE);
+					SetISRCToString(&discData, &discPerSector, 
+						discData.SUB.pszISRC[byPrevTrackNum - 1], FALSE);
 				}
 				nLBA++;
 			}
@@ -916,7 +951,7 @@ BOOL WriteParsingSubfile(
 				}
 			}
 			byPrevTrackNum = byTrackNum;
-			OutputCDSubToLog(&discData, &data[i], lpSubcodeRtoW, nLBA, byTrackNum, fpParse);
+			OutputCDSubToLog(&discData, &discPerSector, lpSubcodeRtoW, nLBA, fpParse);
 			OutputString(
 				_T("\rParsing sub (Size) %8d/%8lu"), i + CD_RAW_READ_SUBCODE_SIZE, dwFileSize);
 		}
@@ -1773,6 +1808,7 @@ BOOL CreateBin(
 	if (!lpBuf) {
 		OutputString(_T("\n"));
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		OutputErrorString("bufSize: %zd", stBufSize);
 		return FALSE;
 	}
 	fread(lpBuf, sizeof(BYTE), stBufSize, fpImg);
@@ -1942,6 +1978,9 @@ BOOL CreateBinCueCcd(
 		if (pExtArg->byPre) {
 			nNextLBA += 150;
 		}
+#if 0
+		OutputString(" nNextLBA(%d) - nLBA(%d) = %d\n", nNextLBA, nLBA, nNextLBA - nLBA);
+#endif
 		bRet = CreateBin(pExtArg, pDisc, i, nNextLBA, nLBA, fpImg, fpBin);
 		FcloseAndNull(fpBin);
 		if (!bRet) {

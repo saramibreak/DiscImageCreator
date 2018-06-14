@@ -1258,23 +1258,26 @@ VOID OutputCDSub96Raw(
 
 VOID OutputCDSubToLog(
 	PDISC pDisc,
-	LPBYTE lpSubcode,
+	PDISC_PER_SECTOR pDiscPerSector,
 	LPBYTE lpSubcodeRaw,
 	INT nLBA,
-	BYTE byTrackNum,
 	FILE* fpParse
 ) {
 	CONST INT BufSize = 256;
 	_TCHAR szSub0[BufSize] = { 0 };
 	_sntprintf(szSub0, BufSize,
 		_T(STR_LBA "P[%02x], Q[%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x]{")
-		, nLBA, nLBA, lpSubcode[0], lpSubcode[12], lpSubcode[13], lpSubcode[14]
-		, lpSubcode[15], lpSubcode[16], lpSubcode[17], lpSubcode[18], lpSubcode[19]
-		, lpSubcode[20], lpSubcode[21], lpSubcode[22], lpSubcode[23]);
+		, nLBA, nLBA, pDiscPerSector->subcode.current[0], pDiscPerSector->subcode.current[12]
+		, pDiscPerSector->subcode.current[13], pDiscPerSector->subcode.current[14]
+		, pDiscPerSector->subcode.current[15], pDiscPerSector->subcode.current[16]
+		, pDiscPerSector->subcode.current[17], pDiscPerSector->subcode.current[18]
+		, pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20]
+		, pDiscPerSector->subcode.current[21], pDiscPerSector->subcode.current[22]
+		, pDiscPerSector->subcode.current[23]);
 
 	_TCHAR szSub[BufSize] = { 0 };
 	// Ctl
-	switch ((lpSubcode[12] >> 4) & 0x0f) {
+	switch ((pDiscPerSector->subcode.current[12] >> 4) & 0x0f) {
 	case 0:
 		_sntprintf(szSub, BufSize,
 			_T("Audio, 2ch, Copy NG, Pre-emphasis No, "));
@@ -1323,45 +1326,57 @@ VOID OutputCDSubToLog(
 
 	// ADR
 	_TCHAR szSub2[BufSize] = { 0 };
-	switch (lpSubcode[12] & 0x0f) {
+	switch (pDiscPerSector->subcode.current[12] & 0x0f) {
 	case ADR_ENCODES_CURRENT_POSITION:
-		if (lpSubcode[13] == 0) {
+		if (pDiscPerSector->subcode.current[13] == 0) {
 			// lead-in area
-			if (lpSubcode[14] == 0xa0) {
+			if (pDiscPerSector->subcode.current[14] == 0xa0) {
 				_sntprintf(szSub2, BufSize,
 					_T("Point[%02x], AMSF[%02x:%02x:%02x], TrackNumOf1stTrack[%02x], ProgramAreaFormat[%02x]"),
-					lpSubcode[14], lpSubcode[15], lpSubcode[16], lpSubcode[17], lpSubcode[19], lpSubcode[20]);
+					pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[15]
+					, pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17]
+					, pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20]);
 			}
-			else if (lpSubcode[14] == 0xa1) {
+			else if (pDiscPerSector->subcode.current[14] == 0xa1) {
 				_sntprintf(szSub2, BufSize,
 					_T("Point[%02x], AMSF[%02x:%02x:%02x], TrackNumOfLastTrack[%02x]"),
-					lpSubcode[14], lpSubcode[15], lpSubcode[16], lpSubcode[17], lpSubcode[19]);
+					pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[15]
+					, pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17]
+					, pDiscPerSector->subcode.current[19]);
 			}
-			else if (lpSubcode[14] == 0xa2) {
+			else if (pDiscPerSector->subcode.current[14] == 0xa2) {
 				_sntprintf(szSub2, BufSize,
 					_T("Point[%02x], AMSF[%02x:%02x:%02x], StartTimeOfLead-out[%02x:%02x:%02x]"),
-					lpSubcode[14], lpSubcode[15], lpSubcode[16], lpSubcode[17],
-					lpSubcode[19], lpSubcode[20], lpSubcode[21]);
+					pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[15]
+					, pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17],
+					pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20]
+					, pDiscPerSector->subcode.current[21]);
 			}
 			else {
 				_sntprintf(szSub2, BufSize,
 					_T("Point[%02x], AMSF[%02x:%02x:%02x], StartTimeOfTrack[%02x:%02x:%02x]"),
-					lpSubcode[14], lpSubcode[15], lpSubcode[16], lpSubcode[17],
-					lpSubcode[19], lpSubcode[20], lpSubcode[21]);
+					pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[15]
+					, pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17],
+					pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20]
+					, pDiscPerSector->subcode.current[21]);
 			}
 		}
-		else if (lpSubcode[13] == 0xaa) {
+		else if (pDiscPerSector->subcode.current[13] == 0xaa) {
 			// lead-out area
 			_sntprintf(szSub2, BufSize,
 				_T("LeadOut  , Idx[%02x], RMSF[%02x:%02x:%02x], AMSF[%02x:%02x:%02x]"),
-				lpSubcode[14], lpSubcode[15], lpSubcode[16], lpSubcode[17],
-				lpSubcode[19], lpSubcode[20], lpSubcode[21]);
+				pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[15]
+				, pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17],
+				pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20]
+				, pDiscPerSector->subcode.current[21]);
 		}
 		else {
 			_sntprintf(szSub2, BufSize,
 				_T("Track[%02x], Idx[%02x], RMSF[%02x:%02x:%02x], AMSF[%02x:%02x:%02x]"),
-				lpSubcode[13], lpSubcode[14], lpSubcode[15], lpSubcode[16],
-				lpSubcode[17], lpSubcode[19], lpSubcode[20], lpSubcode[21]);
+				pDiscPerSector->subcode.current[13], pDiscPerSector->subcode.current[14]
+				, pDiscPerSector->subcode.current[15], pDiscPerSector->subcode.current[16],
+				pDiscPerSector->subcode.current[17], pDiscPerSector->subcode.current[19]
+				, pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
 		}
 		break;
 	case ADR_ENCODES_MEDIA_CATALOG: {
@@ -1373,12 +1388,12 @@ VOID OutputCDSubToLog(
 		strncpy(szCatalog, pDisc->SUB.szCatalog, sizeof(szCatalog) / sizeof(szCatalog[0]));
 #endif
 		_sntprintf(szSub2, BufSize,
-			_T("MediaCatalogNumber [%13s], AMSF[     :%02x]"), szCatalog, lpSubcode[21]);
+			_T("MediaCatalogNumber [%13s], AMSF[     :%02x]"), szCatalog, pDiscPerSector->subcode.current[21]);
 		break;
 	}
 	case ADR_ENCODES_ISRC: {
-		if (byTrackNum == 0 || pDisc->SCSI.toc.LastTrack < byTrackNum) {
-			OutputSubErrorWithLBALogA(" Invalid Adr\n", nLBA, byTrackNum);
+		if (pDiscPerSector->byTrackNum == 0 || pDisc->SCSI.toc.LastTrack < pDiscPerSector->byTrackNum) {
+			OutputSubErrorWithLBALogA(" Invalid Adr\n", nLBA, pDiscPerSector->byTrackNum);
 		}
 		else {
 			_TCHAR szISRC[META_ISRC_SIZE] = { 0 };
@@ -1386,79 +1401,97 @@ VOID OutputCDSubToLog(
 			MultiByteToWideChar(CP_ACP, 0,
 				pDisc->SUB.pszISRC[byTrackNum - 1], META_ISRC_SIZE, szISRC, sizeof(szISRC));
 #else
-			strncpy(szISRC, pDisc->SUB.pszISRC[byTrackNum - 1], sizeof(szISRC) / sizeof(szISRC[0]));
+			strncpy(szISRC, pDisc->SUB.pszISRC[pDiscPerSector->byTrackNum - 1], sizeof(szISRC) / sizeof(szISRC[0]));
 #endif
 			_sntprintf(szSub2, BufSize,
-				_T("ItnStdRecordingCode [%12s], AMSF[     :%02x]"), szISRC, lpSubcode[21]);
+				_T("ItnStdRecordingCode [%12s], AMSF[     :%02x]"), szISRC, pDiscPerSector->subcode.current[21]);
 		}
 		break;
 	}
 	case 5:
-		if (lpSubcode[13] == 0) {
-			if (lpSubcode[14] == 0xb0) {
+		if (pDiscPerSector->subcode.current[13] == 0) {
+			if (pDiscPerSector->subcode.current[14] == 0xb0) {
 				_sntprintf(szSub2, BufSize,
 					_T("Point[%02x], StartTimeForTheNextSession[%02x:%02x:%02x], NumberOfDifferentMode-5[%02x], OutermostLead-out[%02x:%02x:%02x]"),
-					lpSubcode[14], lpSubcode[15], lpSubcode[16], lpSubcode[17],
-					lpSubcode[18], lpSubcode[19], lpSubcode[20], lpSubcode[21]);
+					pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[15]
+					, pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17],
+					pDiscPerSector->subcode.current[18], pDiscPerSector->subcode.current[19]
+					, pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
 			}
-			else if (lpSubcode[14] == 0xb1) {
+			else if (pDiscPerSector->subcode.current[14] == 0xb1) {
 				_sntprintf(szSub2, BufSize,
 					_T("Point[%02x], NumberOfSkipIntervalPointers[%02x], NumberOfSkipTrackAssignmentsInPoint[%02x]"),
-					lpSubcode[14], lpSubcode[19], lpSubcode[20]);
+					pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20]);
 			}
-			else if (lpSubcode[14] == 0xb2 || lpSubcode[14] == 0xb3 || lpSubcode[14] == 0xb4) {
+			else if (pDiscPerSector->subcode.current[14] == 0xb2 ||
+				pDiscPerSector->subcode.current[14] == 0xb3 || pDiscPerSector->subcode.current[14] == 0xb4) {
 				_sntprintf(szSub2, BufSize,
 					_T("Point[%02x], TrackNumberToSkipUponPlayback[%02x %02x %02x %02x %02x %02x %02x]"),
-					lpSubcode[14], lpSubcode[15], lpSubcode[16], lpSubcode[17],
-					lpSubcode[18], lpSubcode[19], lpSubcode[20], lpSubcode[21]);
+					pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[15]
+					, pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17],
+					pDiscPerSector->subcode.current[18], pDiscPerSector->subcode.current[19]
+					, pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
 			}
-			else if (lpSubcode[14] == 0xc0) {
+			else if (pDiscPerSector->subcode.current[14] == 0xc0) {
 				_sntprintf(szSub2, BufSize,
 					_T("Point[%02x], OptimumRecordingPower[%02x], StartTimeOfTheFirstLead-in[%02x:%02x:%02x]"),
-					lpSubcode[14], lpSubcode[15], lpSubcode[19], lpSubcode[20], lpSubcode[21]);
+					pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[15]
+					, pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20]
+					, pDiscPerSector->subcode.current[21]);
 			}
-			else if (lpSubcode[14] == 0xc1) {
+			else if (pDiscPerSector->subcode.current[14] == 0xc1) {
 				_sntprintf(szSub2, BufSize,
 					_T("Point[%02x], CopyOfInfoFromA1Point[%02x %02x %02x %02x %02x %02x %02x]"),
-					lpSubcode[14], lpSubcode[15], lpSubcode[16], lpSubcode[17],
-					lpSubcode[18], lpSubcode[19], lpSubcode[20], lpSubcode[21]);
+					pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[15]
+					, pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17],
+					pDiscPerSector->subcode.current[18], pDiscPerSector->subcode.current[19]
+					, pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
 			}
 			else {
 				_sntprintf(szSub2, BufSize,
 					_T("Point[%02x], SkipIntervalStopTime[%02x:%02x:%02x], SkipIntervalStartTime[%02x:%02x:%02x]"),
-					lpSubcode[14], lpSubcode[15], lpSubcode[16], lpSubcode[17],
-					lpSubcode[19], lpSubcode[20], lpSubcode[21]);
+					pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[15]
+					, pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17],
+					pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20]
+					, pDiscPerSector->subcode.current[21]);
 			}
 		}
-		else if (lpSubcode[13] == 0xaa) {
+		else if (pDiscPerSector->subcode.current[13] == 0xaa) {
 			// lead-out area
 			_sntprintf(szSub2, BufSize,
 				_T("LeadOutAdr5, Track[%02u], Idx[%02x], StartTime[%02x:%02x:%02x]"),
-				BcdToDec((BYTE)(lpSubcode[14] >> 4 & 0x0f)), lpSubcode[14] & 0x0f,
-				lpSubcode[19], lpSubcode[20], lpSubcode[21]);
+				BcdToDec((BYTE)(pDiscPerSector->subcode.current[14] >> 4 & 0x0f)), pDiscPerSector->subcode.current[14] & 0x0f,
+				pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
 		}
 		break;
 	case ADR_ENCODES_CDTV_SPECIFIC:
 		_sntprintf(szSub2, BufSize,
 			_T("CDTV Specific   [%02x%02x%02x%02x%02x%02x%02x%02x], AMSF[     :%02x]"),
-			lpSubcode[13], lpSubcode[14], lpSubcode[15], lpSubcode[16], lpSubcode[17],
-			lpSubcode[18], lpSubcode[19], lpSubcode[20], lpSubcode[21]);
+			pDiscPerSector->subcode.current[13], pDiscPerSector->subcode.current[14]
+			, pDiscPerSector->subcode.current[15], pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17],
+			pDiscPerSector->subcode.current[18], pDiscPerSector->subcode.current[19]
+			, pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
 		break;
 	case 0x0c: // I forgot what this is...
-		if (lpSubcode[13] == 0) {
-			if (lpSubcode[14] == 0xb1) {
+		if (pDiscPerSector->subcode.current[13] == 0) {
+			if (pDiscPerSector->subcode.current[14] == 0xb1) {
 				_sntprintf(szSub2, BufSize,
 					_T("Point[%02x], 15[%02x], 16[%02x], 17[%02x], 18[%02x], 19[%02x], 20[%02x], 21[%02x]"),
-					lpSubcode[14], lpSubcode[15], lpSubcode[16], lpSubcode[17],
-					lpSubcode[18], lpSubcode[19], lpSubcode[20], lpSubcode[21]);
+					pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[15]
+					, pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17],
+					pDiscPerSector->subcode.current[18], pDiscPerSector->subcode.current[19]
+					, pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
 			}
 		}
 		break;
 	default:
 		_sntprintf(szSub2, BufSize,
 			_T("Adr[%02x], Track[%02x], Idx[%02x], RMSF[%02x:%02x:%02x], AMSF[%02x:%02x:%02x]"),
-			lpSubcode[12], lpSubcode[13], lpSubcode[14], lpSubcode[15], lpSubcode[16],
-			lpSubcode[17], lpSubcode[19], lpSubcode[20], lpSubcode[21]);
+			pDiscPerSector->subcode.current[12], pDiscPerSector->subcode.current[13]
+			, pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[15]
+			, pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17]
+			, pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20]
+			, pDiscPerSector->subcode.current[21]);
 		break;
 	}
 

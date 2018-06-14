@@ -212,7 +212,9 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 					}
 				}
 				else {
-					ReadDriveInformation(pExecType, pExtArg, &device, pDisc, s_dwSpeed);
+					if (!ReadDriveInformation(pExecType, pExtArg, &device, pDisc, s_dwSpeed)) {
+						throw FALSE;
+					}
 					if (*pExecType == drivespeed) {
 						pExtArg->byQuiet = TRUE;
 						throw TRUE;
@@ -276,6 +278,10 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 							// This func needs the TOC
 							if (!ReadCDForSearchingOffset(pExecType, pExtArg, &device, pDisc)) {
 								throw FALSE;
+							}
+							if (pExtArg->byC2 && device.byPlxtrDrive == _PLXTR_DRIVE_TYPE::No) {
+								// Re-set c2 flag
+								c2 = device.supportedC2Type;
 							}
 							// needs to call ReadCDForSearchingOffset
 							if (pDisc->SUB.nSubChannelOffset && pExtArg->dwSubAddionalNum == 0) {
@@ -377,7 +383,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 							discData.SCSI.wCurrentMedia == ProfileHDDVDRDualLayer ||
 							discData.SCSI.wCurrentMedia == ProfileHDDVDRWDualLayer
 							) {
-							bRet = ReadDiscStructure(pExecType, pExtArg, &device, &discData);
+							bRet = ReadDiscStructure(pExecType, pExtArg, &device, &discData, pszFullPath);
 
 							if (pExtArg->byCmi) {
 								bRet = ReadDVDForCMI(pExtArg, &device, &discData);
@@ -386,7 +392,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 								if (pExtArg->byRawDump) {
 									while(1) {
 										if (pExtArg->byFix) {
-											discData.dwFixNum = s_dwFix;
+											pDisc->DVD.dwFixNum = s_dwFix;
 										}
 										bRet = ReadDVDRaw(pExtArg, &device, &discData, pszFullPath);
 										if (pExtArg->byFix && bRet > 6) {
@@ -410,6 +416,10 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 							OutputString(_T("Wrong command. The disc isn't DVD, DVD-R, DVD-RW\n"));
 						}
 					}
+					else if (*pExecType == xbox) {
+						bRet = ReadXboxDVD(pExecType, pExtArg, &device, pDisc, pszFullPath);
+						pExtArg->byQuiet = TRUE;
+					}
 					else if (*pExecType == bd) {
 						if (discData.SCSI.wCurrentMedia == ProfileBDRom ||
 							discData.SCSI.wCurrentMedia == ProfileBDRSequentialWritable ||
@@ -419,7 +429,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 							if (!ReadTOC(pExtArg, pExecType, &device, &discData)) {
 								throw FALSE;
 							}
-							bRet = ReadDiscStructure(pExecType, pExtArg, &device, &discData);
+							bRet = ReadDiscStructure(pExecType, pExtArg, &device, &discData, pszFullPath);
 							if (bRet) {
 								bRet = ReadDVD(pExecType, pExtArg, &device, &discData, pszFullPath);
 							}
@@ -699,7 +709,8 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 	}
 	else {
 		cmdLen = _tcslen(argv[1]);
-		if (argc >= 5 && ((cmdLen == 2 && !_tcsncmp(argv[1], _T("cd"), 2)) || (cmdLen == 4 && !_tcsncmp(argv[1], _T("swap"), 4)))) {
+		if (argc >= 5 && ((cmdLen == 2 && !_tcsncmp(argv[1], _T("cd"), 2)) ||
+			(cmdLen == 4 && !_tcsncmp(argv[1], _T("swap"), 4)))) {
 			if (cmdLen == 2) {
 				*pExecType = cd;
 			}
@@ -758,7 +769,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/am"), 3)) {
 					pExtArg->byScanAntiModStr = TRUE;
 				}
-				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/ms"), 4)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/ms"), 3)) {
 					pExtArg->byMultiSession = TRUE;
 				}
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/np"), 3)) {
@@ -780,6 +791,9 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					if (!SetOptionS(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/74"), 3)) {
+					pExtArg->by74Min = TRUE;
 				}
 				else {
 					OutputErrorString(_T("Unknown option: [%s]\n"), argv[i - 1]);
@@ -878,7 +892,14 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			*pExecType = dvd;
 			printAndSetPath(argv[3], pszFullPath);
 		}
-		else if (argc >= 4 && cmdLen == 2 && !_tcsncmp(argv[1], _T("bd"), 2)) {
+		else if (argc >= 4 && ((cmdLen == 2 && !_tcsncmp(argv[1], _T("bd"), 2)) ||
+			cmdLen == 4 && !_tcsncmp(argv[1], _T("xbox"), 4))) {
+			if (cmdLen == 2) {
+				*pExecType = bd;
+			}
+			else if (cmdLen == 4) {
+				*pExecType = xbox;
+			}
 			for (INT i = 5; i <= argc; i++) {
 				cmdLen = _tcslen(argv[i - 1]);
 				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/f"), 2)) {
@@ -894,7 +915,6 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					return FALSE;
 				}
 			}
-			*pExecType = bd;
 			printAndSetPath(argv[3], pszFullPath);
 		}
 		else if (argc >= 7 && (cmdLen == 4 && !_tcsncmp(argv[1], _T("data"), 4) ||
@@ -952,6 +972,9 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				}
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/am"), 3)) {
 					pExtArg->byScanAntiModStr = TRUE;
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/ms"), 3)) {
+					pExtArg->byMultiSession = TRUE;
 				}
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/np"), 3)) {
 					pExtArg->bySkipSubP = TRUE;
@@ -1033,7 +1056,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 	return TRUE;
 }
 
-int createCmdFile(int argc, _TCHAR* argv[], _TCHAR* pszFullPath)
+int createCmdFile(int argc, _TCHAR* argv[], _TCHAR* pszFullPath, LPSYSTEMTIME stDate)
 {
 	if (argc >= 4) {
 		FILE* fpCmd = CreateOrOpenFile(
@@ -1042,10 +1065,12 @@ int createCmdFile(int argc, _TCHAR* argv[], _TCHAR* pszFullPath)
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
 		}
-		fwrite(_T(__DATE__), sizeof(_TCHAR), _tcslen(_T(__DATE__)), fpCmd);
-		_fputts(_T(" "), fpCmd);
-		fwrite(_T(__TIME__), sizeof(_TCHAR), _tcslen(_T(__TIME__)), fpCmd);
-		_fputts(_T("\n"), fpCmd);
+		_TCHAR buf[32] = { 0 };
+		_sntprintf(buf, sizeof(buf), _T("%04d/%02d/%02d %02d:%02d:%02d\n")
+			, stDate->wYear, stDate->wMonth, stDate->wDay
+			, stDate->wHour, stDate->wMinute, stDate->wSecond);
+		fwrite(buf, sizeof(_TCHAR), _tcslen(buf), fpCmd);
+
 		for (int i = 0; i < argc; i++) {
 			fwrite(argv[i], sizeof(_TCHAR), _tcslen(argv[i]), fpCmd);
 			_fputts(_T(" "), fpCmd);
@@ -1087,6 +1112,8 @@ void printUsage(void)
 		_T("\t\tDump a HD area of GD from A to Z\n")
 		_T("\tdvd <DriveLetter> <Filename> <DriveSpeed(0-16)> [/c] [/f (val)] [/raw] [/q]\n")
 		_T("\t\tDump a DVD from A to Z\n")
+		_T("\txbox <DriveLetter> <Filename> [/f (val)] [/q]\n")
+		_T("\t\tDump a disc from A to Z\n")
 		_T("\tbd <DriveLetter> <Filename> [/f (val)] [/q]\n")
 		_T("\t\tDump a BD from A to Z\n")
 		_T("\tfd <DriveLetter> <Filename>\n")
@@ -1103,11 +1130,11 @@ void printUsage(void)
 		_T("\t\tReset the drive (Only PLEXTOR)\n")
 		_T("\tls <DriveLetter>\n")
 		_T("\t\tShow maximum speed of the drive\n")
-		_T("\tsub <Subfile>\n")
-		_T("\t\tParse CloneCD sub file and output to readable format\n")
 	);
 	_tsystem(_T("pause"));
 	OutputString(
+		_T("\tsub <Subfile>\n")
+		_T("\t\tParse CloneCD sub file and output to readable format\n")
 		_T("\tmds <Mdsfile>\n")
 		_T("\t\tParse Alchohol 120/52 mds file and output to readable format\n")
 		_T("Option (generic)\n")
@@ -1130,11 +1157,11 @@ void printUsage(void)
 		_T("\t\t\t    \tval3, 4 is used when val2 is 1\n")
 		_T("\t/m\tUse if MCN exists in the first pregap sector of the track\n")
 		_T("\t\t\tFor some PC-Engine\n")
-		_T("\t/p\tDumping the AMSF from 00:00:00 to 00:01:74\n")
-		_T("\t\t\tFor SagaFrontier Original Sound Track (Disc 3) etc.\n")
 	);
 	_tsystem(_T("pause"));
 	OutputString(
+		_T("\t/p\tDumping the AMSF from 00:00:00 to 00:01:74\n")
+		_T("\t\t\tFor SagaFrontier Original Sound Track (Disc 3) etc.\n")
 		_T("\t\t\tSupport drive: PLEXTOR PX-W5224, PREMIUM, PREMIUM2\n")
 		_T("\t\t\t               PX-704, 708, 712, 714, 716, 755, 760\n")
 		_T("\t/r\tRead CD from the reverse\n")
@@ -1157,10 +1184,10 @@ void printUsage(void)
 		_T("\t/nr\tNot fix SubRtoW\n")
 		_T("\t/nl\tNot fix SubQ (RMSF, AMSF, CRC) (LBA 10000 - 19999)\n")
 		_T("\t   \t                               (LBA 40000 - 49999)\n")
-		_T("\t\t\tFor PlayStation LibCrypt\n")
-		_T("\t/ns\tNot fix SubQ (RMSF, AMSF, CRC) (LBA 0 - 7, 5000 - 24999)\n")
 	);
 	OutputString(
+		_T("\t\t\tFor PlayStation LibCrypt\n")
+		_T("\t/ns\tNot fix SubQ (RMSF, AMSF, CRC) (LBA 0 - 7, 5000 - 24999)\n")
 		_T("\t   \t                            or (LBA 30000 - 49999)\n")
 		_T("\t\t\tFor SecuROM\n")
 		_T("\t/s\tUse if it reads subchannel precisely\n")
@@ -1178,7 +1205,7 @@ void printUsage(void)
 	_tsystem(_T("pause"));
 }
 
-int printSeveralInfo()
+int printSeveralInfo(_TCHAR* exePath, LPSYSTEMTIME stDate)
 {
 #if 0
 	if (!OutputWindowsVersion()) {
@@ -1196,7 +1223,20 @@ int printSeveralInfo()
 #else
 	OutputString(_T("AnsiBuild, "));
 #endif
-	OutputString(_T("%s %s\n"), _T(__DATE__), _T(__TIME__));
+	HANDLE hFile = CreateFile(exePath, GENERIC_READ
+		, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (hFile != INVALID_HANDLE_VALUE) {
+		FILETIME ftDate;
+		FILETIME lcDate;
+		GetFileTime(hFile, NULL, NULL, &ftDate);
+		CloseHandle(hFile);
+
+		FileTimeToLocalFileTime(&ftDate, &lcDate);
+		FileTimeToSystemTime(&lcDate, stDate);
+		OutputString("%04d/%02d/%02d %02d:%02d:%02d\n"
+			, stDate->wYear, stDate->wMonth, stDate->wDay
+			, stDate->wHour, stDate->wMinute, stDate->wSecond);
+	}
 	return TRUE;
 }
 
@@ -1219,7 +1259,8 @@ int _tmain(int argc, _TCHAR* argv[])
 		return EXIT_FAILURE;
 	}
 #endif
-	int nRet = printSeveralInfo();
+	SYSTEMTIME stDate;
+	int nRet = printSeveralInfo(argv[0], &stDate);
 	if (nRet) {
 		EXEC_TYPE execType;
 		EXT_ARG extArg = { 0 };
@@ -1236,18 +1277,18 @@ int _tmain(int argc, _TCHAR* argv[])
 
 			now = time(NULL);
 			ts = localtime(&now);
-			_tcsftime(szBuf, sizeof(szBuf) / sizeof(szBuf[0]), _T("%Y-%m-%d(%a) %H:%M:%S"), ts);
-			OutputString(_T("Start time: %s\n"), szBuf);
+			_tcsftime(szBuf, sizeof(szBuf) / sizeof(szBuf[0]), _T("%Y/%m/%d(%a) %H:%M:%S"), ts);
+			OutputString(_T("StartTime: %s\n"), szBuf);
 
-			nRet = createCmdFile(argc, argv, szFullPath);
+			nRet = createCmdFile(argc, argv, szFullPath, &stDate);
 			if (nRet) {
 				nRet = exec(argv, &execType, &extArg, szFullPath);
 			}
 
 			now = time(NULL);
 			ts = localtime(&now);
-			_tcsftime(szBuf, sizeof(szBuf) / sizeof(szBuf[0]), _T("%Y-%m-%d(%a) %H:%M:%S"), ts);
-			OutputString(_T("End time: %s\n"), szBuf);
+			_tcsftime(szBuf, sizeof(szBuf) / sizeof(szBuf[0]), _T("%Y/%m/%d(%a) %H:%M:%S"), ts);
+			OutputString(_T("EndTime: %s\n"), szBuf);
 		}
 		if (!extArg.byQuiet) {
 			nRet = soundBeep(nRet);

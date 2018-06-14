@@ -134,7 +134,8 @@ BOOL ScsiPassThroughDirect(
 		&swb, dwLength, &swb, dwLength, &dwReturned, NULL)) {
 		OutputLastErrorNumAndString(pszFuncName, lLineNum);
 		bRet = FALSE;
-		if (!pExtArg->byScanProtectViaFile || !_tcscmp(_T("SetDiscSpeed"), pszFuncName)) {
+		if (!pExtArg->byScanProtectViaFile && !_tcscmp(_T("SetDiscSpeed"), pszFuncName) &&
+			!(pExtArg->byMultiSession /*&& pDisc->MAIN.nFixFirstLBAofLeadout <= nLBA && nLBA < pDisc->MAIN.nFixFirstLBAofLeadout + 11400*/)) {
 			// When semaphore time out occurred, if doesn't execute sleep,
 			// UNIT_ATTENSION errors occurs next ScsiPassThroughDirect executing.
 			DWORD milliseconds = 25000;

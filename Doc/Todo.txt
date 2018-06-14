@@ -1,7 +1,5 @@
 ==================================== TODO =====================================
 [cue]
-. support cue file for multisession disc (SESSION directives)
-
 . support cue file of sub-pchannel version
 
 [image]
@@ -11,7 +9,7 @@
 
 . support twin sector disc (for ALPHA-ROM, ROOT, TAGES)
 
-. support Xbox / Xbox 360 disc
+. support Xbox 360 XGD3 disc
 
 [sub]
 . check parity P, Q for CD+G
@@ -79,6 +77,34 @@
        EDC, ECC is coded by "ecm - Encoder/decoder for Error Code Modeler format" of Neill Corlett.
       So, I can use these documents and source codes as reference, but I don't understand these yet.
 
+. sub fixing algo
+  http://forum.redump.org/post/61192/#p61192
+  1. You define 9 variables: SubRereadNum, CurrentSubReadNum, CurrentSectorNum, FixLevel, QCurrentSector, QNextSector, QGenSector, QEAN, QISRC.
+  2. From commandline args you read FixLevel (should be between 0 and 96) and SubRereadNum (0 or larger)
+  3. You read a sector with the LBA = CurrentSectorNum (0 by default) and put its Q-channel into QCurrentSector.
+  3.1. If QNextSector is null: you read a sector with LBA = CurrentSectorNum + 1, check its Mode (should be 0x01) and Q-CRC and put its Q-channel into QNextSector. 
+       If Q-CRC is bad or Mode != 1, you read a sector with LBA = CurrentSectorNum + 2, check its Mode and Q-CRC, if both are fine, you substract 1 frame from MSF and AMSF (MSF - 1 and AMSF - 1), fix Q-CRC and write that into Q-NextSector.
+       If Q-CRC is bad again or Mode != 1, you read a sector with LBA = CurrentSectorNum + 3, etc.
+  4. If Q-CRC of QCurrentSector matches, go to p.5.
+  4.1. If Q-CRC of QCurrentSector doesn't match: QGenSector = QNextSector - 1 frame (MSF - 1, AMSF - 1, fix Q-CRC).
+  4.2. You do a binary compare (96 bits vs 96 bits) between QCurrentSector and QGenSector and count a number of bits that differ. If their count is <= FixLevel: QCurrentSector = QGenSector and go to p.5.
+  4.3. If QEAN != null, you do a binary compare between QCurrentSector and QEAN and count a number of bits that differ. If their count is <= FixLevel: QCurrentSector = QEAN and go to p.5.
+  4.4. If QISRC != null, you do a binary compare between QCurrentSector and QISRC and count a number bits that differ. If their count is <= FixLevel: QCurrentSector = QISRC and go to p.5.
+  4.5. If still not matched and CurrentSubReadNum < SubRereadNum: clear the drive's cache and go to p.3
+  5. Write QCurrentSector to the .sub
+  5.1. If Q-CRC is bad: QNextSector = QNextSector + 1 frame (add + 1 to MSF, add + 1 to AMSF, fix Q-CRC)
+  5.2. If Q-CRC is good and QCurrentSector mode = 0x01: QNextSector = QCurrentSector + 1 frame
+  5.3. If Q-CRC is good and QCurrentSector mode = 0x02 (EAN): QEAN = QCurrentSector and QNextSector = QNextSector + 1 frame
+  5.4. If Q-CRC is good and QCurrentSector mode = 0x03 (ISRC): QISRC = QCurrentSector and QNextSector = QNextSector + 1 frame
+  5.5. CurrentSectorNum = CurrentSectorNum + 1, CurrentSubReadNum = 0
+
+  http://forum.redump.org/post/61203/#p61203
+  For each of the P, R, S, T, U, V, W channels you just need to detect the padding byte for the current sector
+  (if more than 6 bytes are 0x00 - the padding byte is 0x00, if more than 6 bytes are 0xFF - the padding byte is 0xFF), 
+  then do a bit compare of the current sector against 000000000000000000000000 or FFFFFFFFFFFFFFFFFFFFFFFF or any other variant, if exists.
+  If a number of mismatching bits is <=FixLevel: fix them, if >FixLevel: reread or skip.
+  If the padding byte can't be detected - reread or skip, for R-W channels that could mean CD+G data.
+  
 [other]
 . support 0xd8 dumping of SONY, PIONEER
   ftp://ftp.t10.org/t10/document.95/95-104r0.pdf

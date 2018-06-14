@@ -82,168 +82,6 @@ BOOL ReadCDFor3DODirectory(
 	return bRet;
 }
 
-BOOL ReadCDForFileSystem(
-	PEXEC_TYPE pExecType,
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc
-) {
-	BOOL bRet = TRUE;
-	for (BYTE i = 0; i < pDisc->SCSI.toc.LastTrack; i++) {
-		if ((pDisc->SCSI.toc.TrackData[i].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
-			// for Label Gate CD, XCP
-			if (i > 1 && pDisc->SCSI.lpLastLBAListOnToc[i] - pDisc->SCSI.lpFirstLBAListOnToc[i] + 1 <= 750) {
-				return TRUE;
-			}
-			LPBYTE pBuf = NULL;
-			LPBYTE lpBuf = NULL;
-			if (!GetAlignedCallocatedBuffer(pDevice, &pBuf,
-				pDevice->dwMaxTransferLength, &lpBuf, _T(__FUNCTION__), __LINE__)) {
-				return FALSE;
-			}
-			CDB::_READ12 cdb = { 0 };
-			cdb.OperationCode = SCSIOP_READ12;
-			cdb.LogicalUnitNumber = pDevice->address.Lun;
-			cdb.TransferLength[3] = 1;
-			BOOL bVD = FALSE;
-			PDIRECTORY_RECORD pDirRec = NULL;
-			try {
-				// general data track disc
-				VOLUME_DESCRIPTOR volDesc;
-				if (!ReadVolumeDescriptor(pExecType, pExtArg, pDevice, pDisc, i, (LPBYTE)&cdb, lpBuf, 16, 0, &bVD, &volDesc)) {
-					throw FALSE;
-				}
-				if (bVD) {
-					pDirRec = (PDIRECTORY_RECORD)calloc(DIRECTORY_RECORD_SIZE, sizeof(DIRECTORY_RECORD));
-					if (!pDirRec) {
-						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-						throw FALSE;
-					}
-					INT nDirPosNum = 0;
-					if (!ReadPathTableRecord(pExecType, pExtArg, pDevice, pDisc, (LPBYTE)&cdb
-						, volDesc.ISO_9660.dwLogicalBlkCoef, volDesc.ISO_9660.dwPathTblSize
-						, volDesc.ISO_9660.dwPathTblPos, 0, pDirRec, &nDirPosNum)) {
-						throw FALSE;
-					}
-					if (!ReadDirectoryRecord(pExecType, pExtArg, pDevice, pDisc, (LPBYTE)&cdb, lpBuf
-						, volDesc.ISO_9660.dwLogicalBlkCoef, volDesc.ISO_9660.dwRootDataLen, 0, pDirRec, nDirPosNum)) {
-						OutputVolDescLogA("Failed to read ISO9660\n");
-						nDirPosNum = 0;
-						if (!ReadPathTableRecord(pExecType, pExtArg, pDevice, pDisc, (LPBYTE)&cdb
-							, volDesc.JOLIET.dwLogicalBlkCoef, volDesc.JOLIET.dwPathTblSize
-							, volDesc.JOLIET.dwPathTblPos, 0, pDirRec, &nDirPosNum)) {
-							throw FALSE;
-						}
-						if (!ReadDirectoryRecord(pExecType, pExtArg, pDevice, pDisc, (LPBYTE)&cdb, lpBuf
-							, volDesc.JOLIET.dwLogicalBlkCoef, volDesc.JOLIET.dwRootDataLen, 0, pDirRec, nDirPosNum)) {
-							throw FALSE;
-						}
-					}
-					if (!ReadCDForCheckingExe(pExecType, pExtArg, pDevice, pDisc, (LPBYTE)&cdb, lpBuf)) {
-						throw FALSE;
-					}
-					if (pDisc->PROTECT.byExist) {
-						OutputLogA(standardOut | fileDisc, "Detected [%s], from %d to %d"
-							, pDisc->PROTECT.name, pDisc->PROTECT.ERROR_SECTOR.nExtentPos
-							, pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize);
-						if (pDisc->PROTECT.byExist == microids) {
-							OutputLogA(standardOut | fileDisc, ", %d to %d\n"
-								, pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd
-								, pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd + pDisc->PROTECT.ERROR_SECTOR.nSectorSize2nd);
-						}
-						else {
-							OutputLogA(standardOut | fileDisc, "\n");
-						}
-					}
-				}
-				else {
-					BOOL bOtherHeader = FALSE;
-					// for pce, pc-fx
-					INT nLBA = pDisc->SCSI.nFirstLBAofDataTrack;
-					if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, lpBuf,
-						DISC_RAW_READ_SIZE, _T(__FUNCTION__), __LINE__)) {
-						throw FALSE;
-					}
-					if (IsValidPceSector(lpBuf)) {
-						OutputFsPceStuff(lpBuf, nLBA);
-						nLBA = pDisc->SCSI.nFirstLBAofDataTrack + 1;
-						if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, lpBuf,
-							DISC_RAW_READ_SIZE, _T(__FUNCTION__), __LINE__)) {
-							throw FALSE;
-						}
-						OutputFsPceBootSector(lpBuf, nLBA);
-						bOtherHeader = TRUE;
-					}
-					else if (IsValidPcfxSector(lpBuf)) {
-						OutputFsPcfxHeader(lpBuf, nLBA);
-						nLBA = pDisc->SCSI.nFirstLBAofDataTrack + 1;
-						if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, lpBuf,
-							DISC_RAW_READ_SIZE, _T(__FUNCTION__), __LINE__)) {
-							throw FALSE;
-						}
-						OutputFsPcfxSector(lpBuf, nLBA);
-						bOtherHeader = TRUE;
-					}
-
-					if (!bOtherHeader) {
-						// for 3DO
-						nLBA = 0;
-						if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, lpBuf,
-							DISC_RAW_READ_SIZE, _T(__FUNCTION__), __LINE__)) {
-							throw FALSE;
-						}
-						if (IsValid3doDataHeader(lpBuf)) {
-							OutputFs3doHeader(lpBuf, nLBA);
-							if (!ReadCDFor3DODirectory(pExtArg, pDevice, pDisc, &cdb, "/",
-								MAKELONG(MAKEWORD(lpBuf[103], lpBuf[102]),
-									MAKEWORD(lpBuf[101], lpBuf[100])))) {
-								throw FALSE;
-							}
-							bOtherHeader = TRUE;
-						}
-					}
-					if (!bOtherHeader) {
-						// for MAC pattern 1
-						nLBA = 1;
-						if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, lpBuf,
-							DISC_RAW_READ_SIZE, _T(__FUNCTION__), __LINE__)) {
-							throw FALSE;
-						}
-						if (IsValidMacDataHeader(lpBuf + 1024)) {
-							OutputFsMasterDirectoryBlocks(lpBuf + 1024, nLBA);
-							bOtherHeader = TRUE;
-						}
-						else if (IsValidMacDataHeader(lpBuf + 512)) {
-							OutputFsMasterDirectoryBlocks(lpBuf + 512, nLBA);
-							bOtherHeader = TRUE;
-						}
-						// for MAC pattern 2
-						nLBA = 16;
-						if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, lpBuf,
-							DISC_RAW_READ_SIZE, _T(__FUNCTION__), __LINE__)) {
-							throw FALSE;
-						}
-						if (IsValidMacDataHeader(lpBuf + 1024)) {
-							OutputFsMasterDirectoryBlocks(lpBuf + 1024, nLBA);
-							bOtherHeader = TRUE;
-						}
-					}
-					if (bOtherHeader) {
-						FreeAndNull(pBuf);
-						break;
-					}
-				}
-			}
-			catch (BOOL bErr) {
-				bRet = bErr;
-			}
-			FreeAndNull(pDirRec);
-			FreeAndNull(pBuf);
-		}
-	}
-	return bRet;
-}
-
 VOID ManageEndOfDirectoryRecord(
 	LPINT nSectorNum,
 	BYTE byTransferLen,
@@ -310,6 +148,15 @@ BOOL ReadDirectoryRecordDetail(
 					nSectorNum++;
 					break;
 				}
+				// a DVD "DTM Race Driver 3"
+				// Path table is irregular. (L type and M type is perhaps the reverse.)
+				// ========== LBA[000019, 0x00013]: Main Channel ==========
+				//	:
+				//	:
+				//	                                2C 00 AB 3D 0C 00 00 0C   A1.HDR; 1, .. = ....
+				//	0100 : 3D AB 00 60 8B 52 52 8B  60 00 6A 01 19 10 00 0A = ..`.RR.`.j.....
+				//	0110 : 00 00 00 00 01 00 00 01  0B 44 41 54 41 32 2E 43   .........DATA2.C
+				//	0120 : 41 42 3B
 				DWORD dwMaxByte = DWORD(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE);
 				if (pDisc->SCSI.nAllLength >= 0x200000) {
 					dwMaxByte = 0xffffffff;
@@ -318,16 +165,25 @@ BOOL ReadDirectoryRecordDetail(
 				DWORD dwDataLen = GetSizeOrDwordForVolDesc(lpDirRec + 10, dwMaxByte);
 				if (dwDataLen >= dwMaxByte) {
 					OutputVolDescLogA(
-						"Data length is incorrect. Skip the reading of this sector\n");
-					nSectorNum++;
-					break;
+						"Data length is incorrect.\n");
+					// Apple Mac DL DVD
+					//										:
+					//		                     Data Length: 4294967295
+					//										:
+					//		                 File Identifier: ARCHIVEPAX.GZ
+					//										:
+					if (*pExecType != dvd) {
+						OutputVolDescLogA("Skip the reading of this sector\n");
+						nSectorNum++;
+						break;
+					}
 				}
 				OutputFsDirectoryRecord(
 					pExtArg, pDisc, lpDirRec, dwExtentPos, dwDataLen, szCurDirName);
 				OutputVolDescLogA("\n");
 				uiOfs += lpDirRec[0];
 
-				if ((lpDirRec[25] & 0x02 || (pDisc->SCSI.byCdi && lpDirRec[25] == 0))
+				if ((lpDirRec[25] & 0x02 || (pDisc->SCSI.byFormat == DISK_TYPE_CDI && lpDirRec[25] == 0))
 					&& !(lpDirRec[32] == 1 && szCurDirName[0] == 0)
 					&& !(lpDirRec[32] == 1 && szCurDirName[0] == 1)) {
 					// not upper and current directory 
@@ -579,7 +435,7 @@ BOOL ReadVolumeDescriptor(
 			break;
 		}
 		if (!strncmp((LPCH)&lpBuf[1], "CD001", 5) ||
-			(pDisc->SCSI.byCdi && !strncmp((LPCH)&lpBuf[1], "CD-I ", 5))) {
+			(pDisc->SCSI.byFormat == DISK_TYPE_CDI && !strncmp((LPCH)&lpBuf[1], "CD-I ", 5))) {
 			if (nTmpLBA == nPVD) {
 				DWORD dwLogicalBlkSize = GetSizeOrWordForVolDesc(lpBuf + 128);
 				pVolDesc->ISO_9660.dwLogicalBlkCoef = (BYTE)(DISC_RAW_READ_SIZE / dwLogicalBlkSize);
@@ -624,6 +480,168 @@ BOOL ReadVolumeDescriptor(
 		}
 	}
 	return TRUE;
+}
+
+BOOL ReadCDForFileSystem(
+	PEXEC_TYPE pExecType,
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	PDISC pDisc
+) {
+	BOOL bRet = TRUE;
+	for (BYTE i = 0; i < pDisc->SCSI.toc.LastTrack; i++) {
+		if ((pDisc->SCSI.toc.TrackData[i].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+			// for Label Gate CD, XCP
+			if (i > 1 && pDisc->SCSI.lpLastLBAListOnToc[i] - pDisc->SCSI.lpFirstLBAListOnToc[i] + 1 <= 750) {
+				return TRUE;
+			}
+			LPBYTE pBuf = NULL;
+			LPBYTE lpBuf = NULL;
+			if (!GetAlignedCallocatedBuffer(pDevice, &pBuf,
+				pDevice->dwMaxTransferLength, &lpBuf, _T(__FUNCTION__), __LINE__)) {
+				return FALSE;
+			}
+			CDB::_READ12 cdb = { 0 };
+			cdb.OperationCode = SCSIOP_READ12;
+			cdb.LogicalUnitNumber = pDevice->address.Lun;
+			cdb.TransferLength[3] = 1;
+			BOOL bVD = FALSE;
+			PDIRECTORY_RECORD pDirRec = NULL;
+			try {
+				// general data track disc
+				VOLUME_DESCRIPTOR volDesc;
+				if (!ReadVolumeDescriptor(pExecType, pExtArg, pDevice, pDisc, i, (LPBYTE)&cdb, lpBuf, 16, 0, &bVD, &volDesc)) {
+					throw FALSE;
+				}
+				if (bVD) {
+					pDirRec = (PDIRECTORY_RECORD)calloc(DIRECTORY_RECORD_SIZE, sizeof(DIRECTORY_RECORD));
+					if (!pDirRec) {
+						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+						throw FALSE;
+					}
+					INT nDirPosNum = 0;
+					if (!ReadPathTableRecord(pExecType, pExtArg, pDevice, pDisc, (LPBYTE)&cdb
+						, volDesc.ISO_9660.dwLogicalBlkCoef, volDesc.ISO_9660.dwPathTblSize
+						, volDesc.ISO_9660.dwPathTblPos, 0, pDirRec, &nDirPosNum)) {
+						throw FALSE;
+					}
+					if (!ReadDirectoryRecord(pExecType, pExtArg, pDevice, pDisc, (LPBYTE)&cdb, lpBuf
+						, volDesc.ISO_9660.dwLogicalBlkCoef, volDesc.ISO_9660.dwRootDataLen, 0, pDirRec, nDirPosNum)) {
+						OutputVolDescLogA("Failed to read ISO9660\n");
+						nDirPosNum = 0;
+						if (!ReadPathTableRecord(pExecType, pExtArg, pDevice, pDisc, (LPBYTE)&cdb
+							, volDesc.JOLIET.dwLogicalBlkCoef, volDesc.JOLIET.dwPathTblSize
+							, volDesc.JOLIET.dwPathTblPos, 0, pDirRec, &nDirPosNum)) {
+							throw FALSE;
+						}
+						if (!ReadDirectoryRecord(pExecType, pExtArg, pDevice, pDisc, (LPBYTE)&cdb, lpBuf
+							, volDesc.JOLIET.dwLogicalBlkCoef, volDesc.JOLIET.dwRootDataLen, 0, pDirRec, nDirPosNum)) {
+							throw FALSE;
+						}
+					}
+					if (!ReadCDForCheckingExe(pExecType, pExtArg, pDevice, pDisc, (LPBYTE)&cdb, lpBuf)) {
+						throw FALSE;
+					}
+					if (pDisc->PROTECT.byExist) {
+						OutputLogA(standardOut | fileDisc, "Detected [%s], from %d to %d"
+							, pDisc->PROTECT.name, pDisc->PROTECT.ERROR_SECTOR.nExtentPos
+							, pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize);
+						if (pDisc->PROTECT.byExist == microids) {
+							OutputLogA(standardOut | fileDisc, ", %d to %d\n"
+								, pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd
+								, pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd + pDisc->PROTECT.ERROR_SECTOR.nSectorSize2nd);
+						}
+						else {
+							OutputLogA(standardOut | fileDisc, "\n");
+						}
+					}
+				}
+				else {
+					BOOL bOtherHeader = FALSE;
+					// for pce, pc-fx
+					INT nLBA = pDisc->SCSI.nFirstLBAofDataTrack;
+					if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, lpBuf,
+						DISC_RAW_READ_SIZE, _T(__FUNCTION__), __LINE__)) {
+						throw FALSE;
+					}
+					if (IsValidPceSector(lpBuf)) {
+						OutputFsPceStuff(lpBuf, nLBA);
+						nLBA = pDisc->SCSI.nFirstLBAofDataTrack + 1;
+						if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, lpBuf,
+							DISC_RAW_READ_SIZE, _T(__FUNCTION__), __LINE__)) {
+							throw FALSE;
+						}
+						OutputFsPceBootSector(lpBuf, nLBA);
+						bOtherHeader = TRUE;
+					}
+					else if (IsValidPcfxSector(lpBuf)) {
+						OutputFsPcfxHeader(lpBuf, nLBA);
+						nLBA = pDisc->SCSI.nFirstLBAofDataTrack + 1;
+						if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, lpBuf,
+							DISC_RAW_READ_SIZE, _T(__FUNCTION__), __LINE__)) {
+							throw FALSE;
+						}
+						OutputFsPcfxSector(lpBuf, nLBA);
+						bOtherHeader = TRUE;
+					}
+
+					if (!bOtherHeader) {
+						// for 3DO
+						nLBA = 0;
+						if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, lpBuf,
+							DISC_RAW_READ_SIZE, _T(__FUNCTION__), __LINE__)) {
+							throw FALSE;
+						}
+						if (IsValid3doDataHeader(lpBuf)) {
+							OutputFs3doHeader(lpBuf, nLBA);
+							if (!ReadCDFor3DODirectory(pExtArg, pDevice, pDisc, &cdb, "/",
+								MAKELONG(MAKEWORD(lpBuf[103], lpBuf[102]),
+									MAKEWORD(lpBuf[101], lpBuf[100])))) {
+								throw FALSE;
+							}
+							bOtherHeader = TRUE;
+						}
+					}
+					if (!bOtherHeader) {
+						// for MAC pattern 1
+						nLBA = 1;
+						if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, lpBuf,
+							DISC_RAW_READ_SIZE, _T(__FUNCTION__), __LINE__)) {
+							throw FALSE;
+						}
+						if (IsValidMacDataHeader(lpBuf + 1024)) {
+							OutputFsMasterDirectoryBlocks(lpBuf + 1024, nLBA);
+							bOtherHeader = TRUE;
+						}
+						else if (IsValidMacDataHeader(lpBuf + 512)) {
+							OutputFsMasterDirectoryBlocks(lpBuf + 512, nLBA);
+							bOtherHeader = TRUE;
+						}
+						// for MAC pattern 2
+						nLBA = 16;
+						if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, lpBuf,
+							DISC_RAW_READ_SIZE, _T(__FUNCTION__), __LINE__)) {
+							throw FALSE;
+						}
+						if (IsValidMacDataHeader(lpBuf + 1024)) {
+							OutputFsMasterDirectoryBlocks(lpBuf + 1024, nLBA);
+							bOtherHeader = TRUE;
+						}
+					}
+					if (bOtherHeader) {
+						FreeAndNull(pBuf);
+						break;
+					}
+				}
+			}
+			catch (BOOL bErr) {
+				bRet = bErr;
+			}
+			FreeAndNull(pDirRec);
+			FreeAndNull(pBuf);
+		}
+	}
+	return bRet;
 }
 
 BOOL ReadGDForFileSystem(

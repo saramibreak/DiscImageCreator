@@ -16,13 +16,13 @@
 #pragma once
 
 BOOL AlignRowSubcode(
-	LPBYTE lpColumnSubcode,
-	LPBYTE lpRowSubcode
+	LPBYTE lpRowSubcode,
+	LPBYTE lpColumnSubcode
 );
 
 BOOL AlignColumnSubcode(
-	LPBYTE lpRowSubcode,
-	LPBYTE lpColumnSubcode
+	LPBYTE lpColumnSubcode,
+	LPBYTE lpRowSubcode
 );
 
 BYTE BcdToDec(

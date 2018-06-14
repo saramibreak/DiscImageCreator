@@ -101,17 +101,14 @@ VOID SetTrackAttribution(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
-	INT nLBA,
-	LPBYTE lpCurrentTrackNum,
-	PMAIN_HEADER pMain,
-	PSUB_Q pSubQ
+	PDISC_PER_SECTOR pDiscPerSector,
+	INT nLBA
 );
 
 VOID SetISRCToString(
 	PDISC pDisc,
-	LPBYTE lpSubcode,
+	PDISC_PER_SECTOR pDiscPerSector,
 	LPSTR pszOutString,
-	BYTE byIdxOfTrack,
 	BOOL bCopy
 );
 
@@ -150,9 +147,8 @@ VOID SetTmpSubQDataFromBuffer(
 VOID UpdateTmpSubQDataForMCN(
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
-	PSUB_Q pSubQ,
-	INT nLBA,
-	BYTE byCurrentTrackNum
+	PDISC_PER_SECTOR pDiscPerSector,
+	INT nLBA
 );
 
 VOID UpdateTmpSubQDataForISRC(
@@ -161,20 +157,15 @@ VOID UpdateTmpSubQDataForISRC(
 
 VOID UpdateTmpSubQDataForCDTV(
 	PDISC pDisc,
-	PSUB_Q pSubQ,
-	INT nLBA,
-	BYTE byCurrentTrackNum
+	PDISC_PER_SECTOR pDiscPerSector,
+	INT nLBA
 );
 
 VOID UpdateTmpSubQData(
-	PSUB_Q pSubQ,
-	BOOL bLibCrypt,
-	BOOL bSecuRom
+	PDISC_PER_SECTOR pDiscPerSector
 );
 
 VOID UpdateTmpMainHeader(
-	PMAIN_HEADER pMain,
-	LPBYTE lpBuf,
-	BYTE byCtl,
+	PDISC_PER_SECTOR pDiscPerSector,
 	INT nType
 );

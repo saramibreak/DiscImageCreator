@@ -1,6 +1,6 @@
 # DiscImageCreator
 ## Summary
-  This command-line program dumps a CD, GD, DVD, HD-DVD, BD, GC/Wii disc and Floppy.  
+  This command-line program dumps a CD, GD, DVD, HD-DVD, BD, GC/Wii, XBOX, XBOX 360 and Floppy.  
   CD and GD, it can dump considering a drive + CD (=combined) offset.  
   It works on Windows PC (WinXP or higher).
 
@@ -18,7 +18,7 @@
    - Hitachi-LG
      - UH12NS30 (Combined offset minus disc only)
    - ASUS
-     - BC-12D2HT (Combined offset minus disc only)
+     - BC-12D2HT (Combined offset minus disc only), BW-16D1HT (ditto)
 - CD: (Swappable drive) (This is the comfirmed drive list. Actually, many drive perhaps supports to swap)
    - Sony Optiarc
      - AD-7200 (Combined offset plus disc only) 
@@ -29,14 +29,17 @@
      - TS-H353A, TS-H352C, TS-H192C
      - http://forum.redump.org/post/14552/#p14552 <- This drive might be supported too.
 - DVD: All supported drive
-- HD-DVD: All supported drive
-- BD: All supported drive (PS3 is only supported by [some mediatek drive](https://rpcs3.net/quickstart)
 - GC/Wii
    - Hitachi-LG
      - GDR-8082N, GDR-8161B, GDR-8162B, GDR-8163B, GDR-8164B  
        GCC-4160N, GCC-4240N, GCC-4243N, GCC-4247N  
        (4241N, 4244N, 4246N hasn't tested yet, but probably supports to dump.)  
        (4242N supports to dump but many errors occurred in my drive.) 
+- XBOX, XBOX 360
+   - TSSTcorp
+     - TS-H353A, TS-H352C, SH-D162C, SH-D162D, SH-D163A, SH-D163B (needs the firmware hacked by kreon)
+- HD-DVD: All supported drive
+- BD: All supported drive (PS3 is only supported by [some mediatek drive](https://rpcs3.net/quickstart)
 - Floppy: All supported drive
 
 ## Not recommend
@@ -100,6 +103,12 @@
   - Sony PlayStation 2
   - VM Labs NUON DVD
 
+  Nintendo Optical Disc
+  - GameCube
+  - Wii
+  
+  XBOX, XBOX 360 (except XGD3)
+
   Protected Disc
   - Cactus Data Shield 100 [fake TOC]
   - Cactus Data Shield 200 [intentional C2 error]
@@ -118,10 +127,6 @@
   - Sony PlayStation 3
   - Sony PlayStation 4
 
-  Nintendo Optical Disc
-  - GameCube
-  - Wii
-
 ## Probably Unsupported Disc
   Protected Disc
   - RingPROTECH, ProRing [no signal sector]  
@@ -135,11 +140,6 @@
   CD
   - Atari Jaguar CD
      => Can't get the CD offsets
-
-  DVD
-  - Microsoft Xbox
-  - Microsoft Xbox 360  
-     => see this. http://forum.redump.org/topic/6073/xbox-1-360-dumping-instructions/
 
   Protected Disc
   - SecuROM(v4.x or higher), StarForce, CD-Cops [recording density]  
@@ -226,20 +226,25 @@
 ### Dumping Guide for DVD
  DiscImageCreator.exe dvd [DriveLetter] foo.iso [DriveSpeed(0-16)]
 
-### Dumping Guide for BD
- DiscImageCreator.exe bd [DriveLetter] foo.iso
-
 ### Dumping Guide for GC/Wii
 #### Attention
 Compared with Friidump and Rawdump, dumping speed is very slow.
 
-1. To unscramble GC/Wii raw image, put unscramler.exe in DiscImageCreator directory.
-   https://github.com/saramibreak/unscrambler/releases
-2. run below.  
-   DiscImageCreator.exe dvd [DriveLetter] foo.raw [DriveSpeed(0-16)] /raw
+#### Preparation
+ To unscramble GC/Wii raw image, put unscramler.exe in DiscImageCreator directory.  
+ https://github.com/saramibreak/unscrambler/releases
+
+ DiscImageCreator.exe dvd [DriveLetter] foo.raw [DriveSpeed(0-16)] /raw
+
+### Dumping Guide for XBOX/XBOX 360
+ DiscImageCreator.exe xbox [DriveLetter] foo.iso
+
+### Dumping Guide for BD
+ DiscImageCreator.exe bd [DriveLetter] foo.iso
 
 ### Dumping Guide for Floppy Disk
  DiscImageCreator.exe fd [DriveLetter] foo.bin
+
 
 ## All commands and options
         cd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/a (val)]
@@ -267,6 +272,8 @@ Compared with Friidump and Rawdump, dumping speed is very slow.
                 Dump a HD area of GD from A to Z
         dvd <DriveLetter> <Filename> <DriveSpeed(0-16)> [/c] [/f (val)] [/raw] [/q]
                 Dump a DVD from A to Z
+        xbox <DriveLetter> <Filename> [/f (val)] [/q]
+                Dump a disc from A to Z
         bd <DriveLetter> <Filename> [/f (val)] [/q]
                 Dump a BD from A to Z
         fd <DriveLetter> <Filename>

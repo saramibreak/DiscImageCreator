@@ -64,6 +64,9 @@ BOOL Inquiry(
 		(LPCH)&inquiryData.VendorId, sizeof(pDevice->szVendorId));
 	strncpy(pDevice->szProductId,
 		(LPCH)&inquiryData.ProductId, sizeof(pDevice->szProductId));
+	strncpy(pDevice->szProductRevisionLevel,
+		(LPCH)&inquiryData.ProductRevisionLevel, sizeof(pDevice->szProductRevisionLevel));
+
 	if (*pExecType != drivespeed) {
 		OutputInquiry(&inquiryData);
 	}
@@ -859,7 +862,10 @@ BOOL ReadDriveInformation(
 		return FALSE;
 	}
 	// 4th: check PLEXTOR or not here (because use modesense and from there)
-	IsValidPlextorDrive(pDevice);
+	if (!IsValidPlextorDrive(pDevice)) {
+		OutputErrorString(_T("[ERROR] This drive isn't latest firmware. Please update.\n"));
+		return FALSE;
+	}
 	if ((PLXTR_DRIVE_TYPE)pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::No) {
 		if (*pExecType != drivespeed) {
 			if (pExtArg->byPre) {

@@ -26,11 +26,11 @@ VOID OutputFsVolumeRecognitionSequence(
 );
 
 VOID OutputDVDStructureFormat(
+	PDISC pDisc,
 	BYTE byFormatCode,
 	WORD wFormatLength,
 	LPBYTE lpFormat,
-	LPDWORD lpdwSectorLength,
-	PDISC_CONTENTS pDiscContents
+	LPDWORD lpdwSectorLength
 );
 
 VOID OutputDVDCopyrightManagementInformation(
@@ -42,4 +42,9 @@ VOID OutputBDStructureFormat(
 	BYTE byFormatCode,
 	WORD wFormatLength,
 	LPBYTE lpFormat
+);
+
+VOID OutputXboxSecuritySector(
+	PDISC pDisc,
+	LPBYTE buf
 );

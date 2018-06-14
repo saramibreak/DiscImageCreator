@@ -75,7 +75,7 @@ BOOL ReadWriteDat(
 	}
 
 	WCHAR wszPathForDat[_MAX_PATH] = { 0 };
-	_TCHAR szPath[_MAX_FNAME] = { 0 };
+	_TCHAR szPath[_MAX_PATH] = { 0 };
 	if (bDesync) {
 		_sntprintf(szPath, _MAX_PATH, _T("%s\\%s\\%s (Subs indexes).dat"), szDrive, szDir, szFname);
 	}
@@ -235,12 +235,54 @@ BOOL ReadWriteDat(
 				return FALSE;
 			}
 			if (!wcsncmp(pwszLocalName, L"game", 4)) {
-				if (*pExecType == dvd || *pExecType == bd) {
-					if (!OutputHash(pWriter, pszFullPath, _T(".iso"), 1, 1, FALSE)) {
-						return FALSE;
+				if (*pExecType == dvd || *pExecType == xbox || *pExecType == bd) {
+					if (*pExecType == dvd || *pExecType == bd || *pExecType == xbox) {
+						if (!OutputHash(pWriter, pszFullPath, _T(".iso"), 1, 1, FALSE)) {
+							return FALSE;
+						}
 					}
 					if (pExtArg->byRawDump) {
 						if (!OutputHash(pWriter, pszFullPath, _T(".raw"), 1, 1, FALSE)) {
+							return FALSE;
+						}
+					}
+					if (*pExecType == dvd || *pExecType == xbox) {
+						_tcsncpy(szPath, pszFullPath, _MAX_PATH);
+						if (*pExecType == xbox) {
+							if (!PathRemoveFileSpec(szPath)) {
+								OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+								return FALSE;
+							}
+							if (!PathAppend(szPath, _T("SS.bin"))) {
+								OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+								return FALSE;
+							}
+							if (!OutputHash(pWriter, szPath, _T(".bin"), 1, 1, FALSE)) {
+								return FALSE;
+							}
+						}
+
+						if (!PathRemoveFileSpec(szPath)) {
+							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+							return FALSE;
+						}
+						if (!PathAppend(szPath, _T("PFI.bin"))) {
+							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+							return FALSE;
+						}
+						if (!OutputHash(pWriter, szPath, _T(".bin"), 1, 1, FALSE)) {
+							return FALSE;
+						}
+
+						if (!PathRemoveFileSpec(szPath)) {
+							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+							return FALSE;
+						}
+						if (!PathAppend(szPath, _T("DMI.bin"))) {
+							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+							return FALSE;
+						}
+						if (!OutputHash(pWriter, szPath, _T(".bin"), 1, 1, FALSE)) {
 							return FALSE;
 						}
 					}
@@ -342,12 +384,16 @@ BOOL OutputHash(
 	}
 	UINT64 ui64FileSize = GetFileSize64(0, fp);
 	DWORD dwSectorSizeOne = CD_RAW_SECTOR_SIZE;
-	if (!_tcsncmp(szExt, _T(".iso"), 4)) {
+	if (!_tcsncmp(szExt, _T(".iso"), 4) ||
+		!_tcsncmp(pszFnameAndExt, _T("SS.bin"), 6) ||
+		!_tcsncmp(pszFnameAndExt, _T("PFI.bin"), 7) ||
+		!_tcsncmp(pszFnameAndExt, _T("DMI.bin"), 7)
+		) {
 		dwSectorSizeOne = DISC_RAW_READ_SIZE;
 	}
 	UINT64 ui64SectorSizeAll = ui64FileSize / (UINT64)dwSectorSizeOne;
 
-	if (ui64FileSize > dwSectorSizeOne * 10) {
+	if (ui64FileSize >= dwSectorSizeOne) {
 		MD5_CTX context = { 0 };
 		SHA1Context sha = { 0 };
 		CalcInit(&context, &sha);
@@ -371,7 +417,12 @@ BOOL OutputHash(
 		BYTE digest[16] = { 0 };
 		BYTE Message_Digest[20] = { 0 };
 		if (CalcEnd(&context, &sha, digest, Message_Digest)) {
-			if (!_tcsncmp(szExt, _T(".scm"), 4) || !_tcsncmp(szExt, _T(".img"), 4)) {
+			if (!_tcsncmp(szExt, _T(".scm"), 4) ||
+				!_tcsncmp(szExt, _T(".img"), 4) ||
+				!_tcsncmp(pszFnameAndExt, _T("SS.bin"), 6) ||
+				!_tcsncmp(pszFnameAndExt, _T("PFI.bin"), 7) ||
+				!_tcsncmp(pszFnameAndExt, _T("DMI.bin"), 7)
+				) {
 #ifndef _DEBUG
 				OutputHashData(g_LogFile.fpDisc, pszFnameAndExt,
 					ui64FileSize, crc32, digest, Message_Digest);

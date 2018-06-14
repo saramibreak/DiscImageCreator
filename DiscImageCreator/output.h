@@ -397,6 +397,7 @@ VOID WriteCcdForEntry(
 );
 
 VOID WriteMainChannel(
+	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
 	LPBYTE lpBuf,
@@ -414,10 +415,9 @@ VOID WriteC2(
 
 VOID WriteSubChannel(
 	PDISC pDisc,
+	PDISC_PER_SECTOR pDiscPerSector,
 	LPBYTE lpSubcodeRaw,
-	LPBYTE lpSubcode,
 	INT nLBA,
-	BYTE byCurrentTrackNum,
 	FILE* fpSub,
 	FILE* fpParse
 );
@@ -430,7 +430,6 @@ VOID WriteErrorBuffer(
 	PDISC_PER_SECTOR pDiscPerSector,
 	LPBYTE lpScrambledBuf,
 	INT nLBA,
-	BYTE byCurrentTrackNum,
 	FILE* fpImg,
 	FILE* fpSub,
 	FILE* fpC2,

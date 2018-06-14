@@ -50,9 +50,7 @@ UINT64 GetFileSize64(
 );
 
 BYTE GetMode(
-	LPBYTE lpBuf,
-	BYTE byPrevMode,
-	BYTE byCtl,
+	PDISC_PER_SECTOR pDiscPerSector,
 	INT nType
 );
 

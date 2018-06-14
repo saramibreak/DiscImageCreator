@@ -469,3 +469,17 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - fixed: Checking error of subQ track
 - fixed: Reading path table record of GD-ROM (support path table size is over 2352)
 - fixed: dumping CD-i ready (not unscramble the pregap sector)
+
+*2018-06-14
+- added: xbox command (support XGD2 of XBOX/XBOX 360)
+- added: PIC.bin for BD based disc
+- added: /74 option in swap command (for ring data of Sega Saturn)
+- added: SESSION syntax in cue file
+- changed: the way to get the timestamp
+- changed: permit to continue reading if the disc is CD-R or CD-RW and c2 errors are over 10000
+- changed: Plextor drives support only latest firmware
+- fixed: /ms option (dumps leat-out of 1st session, lead-in of 2nd session and pregap of 1st track of 2nd session)
+- fixed: TOC of multi session disc
+- fixed: GetWriteOffset for ASUS
+- fixed: sub-qchannel reading
+- fixed: Reading directory record (incorrect data length of DVD)

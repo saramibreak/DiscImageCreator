@@ -628,8 +628,8 @@ VOID OutputFsVolumeDescriptorSequence(
 }
 
 VOID OutputDVDLayerDescriptor(
+	PDISC pDisc,
 	PDVD_FULL_LAYER_DESCRIPTOR dvdLayer,
-	LPBYTE lpBcaFlag,
 	LPDWORD lpdwSectorLength
 ) {
 	LPCSTR lpBookType[] = {
@@ -673,6 +673,12 @@ VOID OutputDVDLayerDescriptor(
 	REVERSE_LONG(&dwStartingDataSector);
 	REVERSE_LONG(&dwEndDataSector);
 	REVERSE_LONG(&dwEndLayerZeroSector);
+	if (pDisc->DVD.dwDVDStartPsn == 0) {
+		pDisc->DVD.dwDVDStartPsn = dwStartingDataSector;
+	}
+	else {
+		pDisc->DVD.dwXBOXStartPsn = dwStartingDataSector;
+	}
 
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(PhysicalFormatInformation)
 		"\t       BookVersion: %u\n"
@@ -702,7 +708,7 @@ VOID OutputDVDLayerDescriptor(
 		dwEndDataSector, dwEndDataSector,
 		dwEndLayerZeroSector, dwEndLayerZeroSector,
 		dvdLayer->commonHeader.BCAFlag == 0 ? "No" : "Exist");
-	*lpBcaFlag = dvdLayer->commonHeader.BCAFlag;
+	pDisc->DVD.ucBca = dvdLayer->commonHeader.BCAFlag;
 
 	OutputCDMain(fileDisc, dvdLayer->MediaSpecific, 0, sizeof(dvdLayer->MediaSpecific));
 
@@ -718,6 +724,13 @@ VOID OutputDVDLayerDescriptor(
 			, dwEndLayerZeroSectorLen, dwEndLayerZeroSectorLen
 			, dwEndLayerOneSectorLen, dwEndLayerOneSectorLen
 			, *lpdwSectorLength, *lpdwSectorLength);
+
+		if (pDisc->DVD.dwLayer0SectorLength == 0) {
+			pDisc->DVD.dwLayer0SectorLength = dwEndLayerZeroSectorLen;
+		}
+		if (pDisc->DVD.dwLayer1SectorLength == 0) {
+			pDisc->DVD.dwLayer1SectorLength = dwEndLayerOneSectorLen;
+		}
 	}
 	else {
 		*lpdwSectorLength = dwEndDataSector - dwStartingDataSector + 1;
@@ -1183,19 +1196,19 @@ VOID OutputDiscListOfRecognizedFormatLayers(
 }
 
 VOID OutputDVDStructureFormat(
+	PDISC pDisc,
 	BYTE byFormatCode,
 	WORD wFormatLength,
 	LPBYTE lpFormat,
-	LPDWORD lpdwSectorLength,
-	PDISC_CONTENTS pDiscContents
+	LPDWORD lpdwSectorLength
 ) {
 	switch (byFormatCode) {
 	case DvdPhysicalDescriptor:
 	case 0x10:
-		OutputDVDLayerDescriptor((PDVD_FULL_LAYER_DESCRIPTOR)lpFormat, &(pDiscContents->ucBca), lpdwSectorLength);
+		OutputDVDLayerDescriptor(pDisc, (PDVD_FULL_LAYER_DESCRIPTOR)lpFormat, lpdwSectorLength);
 		break;
 	case DvdCopyrightDescriptor:
-		OutputDVDCopyrightDescriptor((PDVD_COPYRIGHT_DESCRIPTOR)lpFormat, &(pDiscContents->protect));
+		OutputDVDCopyrightDescriptor((PDVD_COPYRIGHT_DESCRIPTOR)lpFormat, &(pDisc->DVD.protect));
 		break;
 	case DvdDiskKeyDescriptor:
 		OutputDVDDiskKeyDescriptor((PDVD_DISK_KEY_DESCRIPTOR)lpFormat);
@@ -1204,7 +1217,7 @@ VOID OutputDVDStructureFormat(
 		OutputDiscBCADescriptor((PDVD_BCA_DESCRIPTOR)lpFormat, wFormatLength);
 		break;
 	case DvdManufacturerDescriptor:
-		OutputDVDManufacturerDescriptor((PDVD_MANUFACTURER_DESCRIPTOR)lpFormat, &(pDiscContents->disc));
+		OutputDVDManufacturerDescriptor((PDVD_MANUFACTURER_DESCRIPTOR)lpFormat, &(pDisc->DVD.disc));
 		break;
 	case 0x06:
 		OutputDVDMediaId(lpFormat, wFormatLength);
@@ -1367,7 +1380,7 @@ VOID OutputBDDiscInformation(
 		OutputDiscLogA("%02x", lpFormat[12 + k]);
 	}
 	OutputDiscLogA("\n\t                               Others: ");
-	for (WORD k = 0; k < wFormatLength - 52; k++) {
+	for (WORD k = 0; k < wFormatLength - 64; k++) {
 		OutputDiscLogA("%02x", lpFormat[64 + k]);
 	}
 	OutputDiscLogA("\n");
@@ -1503,5 +1516,133 @@ VOID OutputBDStructureFormat(
 	default:
 		OutputDiscLogA("\tUnknown: %02x\n", byFormatCode);
 		break;
+	}
+}
+
+VOID OutputXboxSecuritySector(
+	PDISC pDisc,
+	LPBYTE buf
+) {
+	DWORD dwSectorLen = 0;
+	OutputDVDStructureFormat(pDisc, 0x10, DISC_RAW_READ_SIZE, buf, &dwSectorLen);
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(SecuritySector)
+		"\t                         Unknown: %08lx\n"
+		"\t      Version of challenge table: %u\n"
+		"\t     Number of challenge entries: %u\n"
+		"\t     Encrypted challenge entries: "
+		, MAKELONG(MAKEWORD(buf[720], buf[721]), MAKEWORD(buf[722], buf[723]))
+		, buf[768], buf[769]);
+	for (WORD k = 770; k < 1055; k++) {
+		OutputDiscLogA("%02x", buf[k]);
+	}
+	OutputDiscLogA(
+		"\n"
+		"\t                       timestamp: %lu%lu\n"
+		"\t                         Unknown: "
+		, MAKELONG(MAKEWORD(buf[1055], buf[1056]), MAKEWORD(buf[1057], buf[1058]))
+		, MAKELONG(MAKEWORD(buf[1059], buf[1060]), MAKEWORD(buf[1061], buf[1062]))
+	);
+	for (WORD k = 1083; k < 1099; k++) {
+		OutputDiscLogA("%02x", buf[k]);
+	}
+	OutputDiscLogA(
+		"\n"
+		"\t                         Unknown: "
+	);
+	for (WORD k = 1183; k < 1199; k++) {
+		OutputDiscLogA("%02x", buf[k]);
+	}
+	OutputDiscLogA(
+		"\n"
+		"\t                    SHA-1 hash A: "
+	);
+	for (WORD k = 1227; k < 1247; k++) {
+		OutputDiscLogA("%02x", buf[k]);
+	}
+	OutputDiscLogA(
+		"\n"
+		"\t                     Signature A: "
+	);
+	for (WORD k = 1247; k < 1503; k++) {
+		OutputDiscLogA("%02x", buf[k]);
+	}
+	OutputDiscLogA(
+		"\n"
+		"\t                         Unknown: %lu%lu\n"
+		"\t                    SHA-1 hash B: "
+		, MAKELONG(MAKEWORD(buf[1503], buf[1504]), MAKEWORD(buf[1505], buf[1506]))
+		, MAKELONG(MAKEWORD(buf[1507], buf[1508]), MAKEWORD(buf[1509], buf[1510]))
+	);
+	for (WORD k = 1547; k < 1567; k++) {
+		OutputDiscLogA("%02x", buf[k]);
+	}
+	OutputDiscLogA(
+		"\n"
+		"\t                     Signature B: "
+	);
+	for (WORD k = 1567; k < 1632; k++) {
+		OutputDiscLogA("%02x", buf[k]);
+	}
+	OutputDiscLogA(
+		"\n"
+		"\tNumber of security sector ranges: %u\n"
+		"\t          security sector ranges: \n"
+		, buf[1632]);
+
+	DWORD startLBA = 0, endLBA = 0;
+	PDVD_FULL_LAYER_DESCRIPTOR dvdLayer = (PDVD_FULL_LAYER_DESCRIPTOR)buf;
+	DWORD dwEndLayerZeroSector = dvdLayer->commonHeader.EndLayerZeroSector;
+	REVERSE_LONG(&dwEndLayerZeroSector);
+	BYTE ssNum = buf[1632];
+
+	for (WORD k = 1633, i = 0; i < ssNum; k += 9, i++) {
+		DWORD unknown = MAKEDWORD(MAKEWORD(buf[k + 2], buf[k + 1]), MAKEWORD(buf[k], 0));
+		DWORD startPsn = MAKEDWORD(MAKEWORD(buf[k + 5], buf[k + 4]), MAKEWORD(buf[k + 3], 0));
+		DWORD endPsn = MAKEDWORD(MAKEWORD(buf[k + 8], buf[k + 7]), MAKEWORD(buf[k + 6], 0));
+		if (dwEndLayerZeroSector == 0x2033af) {
+			if (i < 8) {
+				OutputDiscLogA("\t\t       Layer 0");
+				startLBA = startPsn - 0x30000;
+				endLBA = endPsn - 0x30000;
+				pDisc->DVD.securitySectorRange[i][0] = startLBA;
+				pDisc->DVD.securitySectorRange[i][1] = endLBA;
+			}
+			else if (i < 16) {
+				OutputDiscLogA("\t\t       Layer 1");
+				startLBA = dwEndLayerZeroSector * 2 - (~startPsn & 0xffffff) - 0x30000 + 1;
+				endLBA = dwEndLayerZeroSector * 2 - (~endPsn & 0xffffff) - 0x30000 + 1;
+				pDisc->DVD.securitySectorRange[i][0] = startLBA;
+				pDisc->DVD.securitySectorRange[i][1] = endLBA;
+			}
+			else {
+				OutputDiscLogA("\t\tUnknown ranges");
+				startLBA = startPsn;
+				endLBA = endPsn;
+			}
+		}
+		else if (dwEndLayerZeroSector == 0x20339f) {
+			if (i == 0) {
+				OutputDiscLogA("\t\t       Layer 0");
+				startLBA = startPsn - 0x30000;
+				endLBA = endPsn - 0x30000;
+				pDisc->DVD.securitySectorRange[i][0] = startLBA;
+				pDisc->DVD.securitySectorRange[i][1] = endLBA;
+			}
+#if 0
+			else if (i == 3) {
+				OutputDiscLogA("\t\t       Layer 1");
+				startLBA = dwEndLayerZeroSector * 2 - (~startPsn & 0xffffff) - 0x30000 + 1;
+				endLBA = dwEndLayerZeroSector * 2 - (~endPsn & 0xffffff) - 0x30000 + 1;
+				pDisc->DVD.securitySectorRange[i][0] = startLBA;
+				pDisc->DVD.securitySectorRange[i][1] = endLBA;
+			}
+#endif
+			else {
+				OutputDiscLogA("\t\tUnknown ranges");
+				startLBA = startPsn;
+				endLBA = endPsn;
+			}
+		}
+		OutputDiscLogA("\t\tUnknown: %8lx, startLBA: %8lu, endLBA: %8lu\n", unknown, startLBA, endLBA);
 	}
 }

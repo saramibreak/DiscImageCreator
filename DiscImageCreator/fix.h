@@ -15,25 +15,20 @@
  */
 #pragma once
 
-BOOL ReadCDForFileSystem(
-	PEXEC_TYPE pExecType,
+VOID FixMainHeader(
 	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc
+	PDISC pDisc,
+	PDISC_PER_SECTOR pDiscPerSector,
+	INT nLBA,
+	INT nMainDataType
 );
 
-BOOL ReadGDForFileSystem(
-	PEXEC_TYPE pExecType,
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc
-);
-
-BOOL ReadDVDForFileSystem(
+VOID FixSubChannel(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
-	CDB::_READ12* cdb,
-	LPBYTE lpBuf
+	PDISC_PER_SECTOR pDiscPerSector,
+	INT nLBA,
+	LPBOOL bReread
 );
