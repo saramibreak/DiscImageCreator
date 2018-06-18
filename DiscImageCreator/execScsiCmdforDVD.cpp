@@ -50,11 +50,10 @@ BOOL ReadDVD(
 		}
 		LPBYTE lpBuf = (LPBYTE)ConvParagraphBoundary(pDevice, pBuf);
 
-		DWORD dwTransferLen = pDevice->dwMaxTransferLength / DISC_RAW_READ_SIZE;
 		CDB::_READ12 cdb = { 0 };
 		cdb.OperationCode = SCSIOP_READ12;
 		cdb.LogicalUnitNumber = pDevice->address.Lun;
-		REVERSE_BYTES(&cdb.TransferLength, &dwTransferLen);
+
 		if (pExtArg->byFua) {
 			cdb.ForceUnitAccess = TRUE;
 		}
@@ -81,6 +80,8 @@ BOOL ReadDVD(
 		}
 		FlushLog();
 
+		DWORD dwTransferLen = pDevice->dwMaxTransferLength / DISC_RAW_READ_SIZE;
+		REVERSE_BYTES(&cdb.TransferLength, &dwTransferLen);
 		BYTE byScsiStatus = 0;
 		INT i = 0;
 		DWORD dwTransferLenOrg = dwTransferLen;

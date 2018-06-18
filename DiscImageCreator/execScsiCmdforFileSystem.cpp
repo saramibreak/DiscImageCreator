@@ -419,7 +419,6 @@ BOOL ReadVolumeDescriptor(
 	PDISC pDisc,
 	BYTE byIdx,
 	LPBYTE pCdb,
-	BYTE byTransferLen,
 	LPBYTE lpBuf,
 	INT nPVD,
 	INT nSectorOfs,
@@ -433,7 +432,7 @@ BOOL ReadVolumeDescriptor(
 	BYTE bufDec[CD_RAW_SECTOR_SIZE] = { 0 };
 	for (;;) {
 		if (!ExecReadDisc(pExecType, pExtArg, pDevice, pDisc
-			, pCdb, nTmpLBA + nSectorOfs, lpBuf, bufDec, byTransferLen)) {
+			, pCdb, nTmpLBA + nSectorOfs, lpBuf, bufDec, 1)) {
 			break;
 		}
 		if (!strncmp((LPCH)&lpBuf[1], "CD001", 5) ||
@@ -512,8 +511,8 @@ BOOL ReadCDForFileSystem(
 			try {
 				// general data track disc
 				VOLUME_DESCRIPTOR volDesc;
-				if (!ReadVolumeDescriptor(pExecType, pExtArg, pDevice, pDisc, i
-					, (LPBYTE)&cdb, cdb.TransferLength[3], lpBuf, 16, 0, &bVD, &volDesc)) {
+				if (!ReadVolumeDescriptor(pExecType, pExtArg, pDevice
+					, pDisc, i, (LPBYTE)&cdb, lpBuf, 16, 0, &bVD, &volDesc)) {
 					throw FALSE;
 				}
 				if (bVD) {
@@ -672,7 +671,7 @@ BOOL ReadGDForFileSystem(
 		BOOL bVD = FALSE;
 		VOLUME_DESCRIPTOR volDesc;
 		if (!ReadVolumeDescriptor(pExecType, pExtArg, pDevice, pDisc, 0
-			, (LPBYTE)&cdb, 1, lpBuf, FIRST_LBA_FOR_GD + 16, nSectorOfs, &bVD, &volDesc)) {
+			, (LPBYTE)&cdb, lpBuf, FIRST_LBA_FOR_GD + 16, nSectorOfs, &bVD, &volDesc)) {
 			throw FALSE;
 		}
 		if (bVD) {
@@ -709,17 +708,13 @@ BOOL ReadDVDForFileSystem(
 	CDB::_READ12* cdb,
 	LPBYTE lpBuf
 ) {
-	BYTE byScsiStatus = 0;
-	if (!ScsiPassThroughDirect(pExtArg, pDevice, cdb, CDB12GENERIC_LENGTH, lpBuf,
-		pDevice->dwMaxTransferLength, &byScsiStatus, _T(__FUNCTION__), __LINE__)
-		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-		return FALSE;
-	}
-	INT nLBA = 16;
 	BOOL bPVD = FALSE;
 	VOLUME_DESCRIPTOR volDesc;
-	if (!ReadVolumeDescriptor(pExecType, pExtArg, pDevice, pDisc
-		, 0, (LPBYTE)cdb, cdb->TransferLength[3], lpBuf, 16, 0, &bPVD, &volDesc)) {
+	DWORD dwTransferLen = 1;
+	REVERSE_BYTES(&cdb->TransferLength, &dwTransferLen);
+
+	if (!ReadVolumeDescriptor(pExecType, pExtArg, pDevice
+		, pDisc, 0, (LPBYTE)cdb, lpBuf, 16, 0, &bPVD, &volDesc)) {
 		return FALSE;
 	}
 	if (bPVD) {
@@ -743,15 +738,26 @@ BOOL ReadDVDForFileSystem(
 		FreeAndNull(pDirRec);
 	}
 
-	INT nStart = DISC_RAW_READ_SIZE * nLBA;
-	INT nEnd = DISC_RAW_READ_SIZE * 32;
-	for (INT i = nStart; i <= nEnd; i += DISC_RAW_READ_SIZE, nLBA++) {
+	INT nLBA = 18;
+	dwTransferLen = 14;
+	REVERSE_BYTES(&cdb->TransferLength, &dwTransferLen);
+	cdb->LogicalBlock[0] = 0;
+	cdb->LogicalBlock[1] = 0;
+	cdb->LogicalBlock[2] = 0;
+	cdb->LogicalBlock[3] = (UCHAR)nLBA;
+
+	BYTE byScsiStatus = 0;
+	if (!ScsiPassThroughDirect(pExtArg, pDevice, cdb, CDB12GENERIC_LENGTH, lpBuf,
+		DISC_RAW_READ_SIZE * dwTransferLen, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+		return FALSE;
+	}
+	for (INT i = 0; i < DISC_RAW_READ_SIZE * 14; i += DISC_RAW_READ_SIZE, nLBA++) {
 		OutputFsVolumeRecognitionSequence(lpBuf + i, nLBA);
 	}
 
 	nLBA = 32;
-	DWORD dwTransferLen = pDevice->dwMaxTransferLength / DISC_RAW_READ_SIZE;
-	cdb->LogicalUnitNumber = pDevice->address.Lun;
+	dwTransferLen = pDevice->dwMaxTransferLength / DISC_RAW_READ_SIZE;
 	REVERSE_BYTES(&cdb->TransferLength, &dwTransferLen);
 	cdb->LogicalBlock[0] = 0;
 	cdb->LogicalBlock[1] = 0;
@@ -759,12 +765,12 @@ BOOL ReadDVDForFileSystem(
 	cdb->LogicalBlock[3] = (UCHAR)nLBA;
 
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, cdb, CDB12GENERIC_LENGTH, lpBuf,
-		pDevice->dwMaxTransferLength, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		DISC_RAW_READ_SIZE * dwTransferLen, &byScsiStatus, _T(__FUNCTION__), __LINE__)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		return FALSE;
 	}
 	if (lpBuf[20] == 0 && lpBuf[21] == 0 && lpBuf[22] == 0 && lpBuf[23] == 0) {
-		for (INT i = 0; i <= nEnd; i += DISC_RAW_READ_SIZE, nLBA++) {
+		for (INT i = 0; i < DISC_RAW_READ_SIZE * 32; i += DISC_RAW_READ_SIZE, nLBA++) {
 			OutputFsVolumeDescriptorSequence(lpBuf + i, nLBA);
 		}
 	}
@@ -772,7 +778,7 @@ BOOL ReadDVDForFileSystem(
 	cdb->LogicalBlock[2] = 1;
 	cdb->LogicalBlock[3] = 0;
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, cdb, CDB12GENERIC_LENGTH, lpBuf,
-		pDevice->dwMaxTransferLength, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		DISC_RAW_READ_SIZE * dwTransferLen, &byScsiStatus, _T(__FUNCTION__), __LINE__)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		return FALSE;
 	}
