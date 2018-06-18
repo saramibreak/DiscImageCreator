@@ -608,15 +608,19 @@ BOOL ReadCDForCheckingSubQAdr(
 		}
 		BYTE byAdr = (BYTE)(pDiscPerSector->subcode.current[12] & 0x0f);
 		if (byAdr == ADR_ENCODES_MEDIA_CATALOG) {
+#if 0
 			if (!bCRC) {
 				SetBufferFromMCN(pDisc, pDiscPerSector->subcode.current);
 				bCRC = TRUE;
 			}
+#endif
 			BOOL bMCN = IsValidSubQAdrMCN(pDiscPerSector->subcode.current);
+#if 0
 			if (!bMCN && bCRC) {
 				// force a invalid MCN to valid MCN
 				bMCN = bCRC;
 			}
+#endif
 			if (bMCN && bCRC) {
 				nTmpMCNLBAList[nMCNIdx++] = nLBA;
 				CHAR szCatalog[META_CATALOG_SIZE] = { 0 };
@@ -640,10 +644,12 @@ BOOL ReadCDForCheckingSubQAdr(
 		}
 		else if (byAdr == ADR_ENCODES_ISRC) {
 			BOOL bISRC = IsValidSubQAdrISRC(pDiscPerSector->subcode.current);
+#if 0
 			if (!bISRC && bCRC) {
 				// force a invalid ISRC to valid ISRC
 				bISRC = bCRC;
 			}
+#endif
 			if (bISRC && bCRC) {
 				nTmpISRCLBAList[nISRCIdx++] = nLBA;
 				CHAR szISRC[META_ISRC_SIZE] = { 0 };

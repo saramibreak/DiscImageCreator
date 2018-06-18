@@ -235,7 +235,12 @@ BOOL ReadWriteDat(
 				return FALSE;
 			}
 			if (!wcsncmp(pwszLocalName, L"game", 4)) {
-				if (*pExecType == dvd || *pExecType == xbox || *pExecType == bd) {
+				if (*pExecType == fd) {
+					if (!OutputHash(pWriter, pszFullPath, _T(".bin"), 1, 1, FALSE)) {
+						return FALSE;
+					}
+				}
+				else if (*pExecType == dvd || *pExecType == xbox || *pExecType == bd) {
 					if (*pExecType == dvd || *pExecType == bd || *pExecType == xbox) {
 						if (!OutputHash(pWriter, pszFullPath, _T(".iso"), 1, 1, FALSE)) {
 							return FALSE;
@@ -387,12 +392,12 @@ BOOL OutputHash(
 	if (!_tcsncmp(szExt, _T(".iso"), 4) ||
 		!_tcsncmp(pszFnameAndExt, _T("SS.bin"), 6) ||
 		!_tcsncmp(pszFnameAndExt, _T("PFI.bin"), 7) ||
-		!_tcsncmp(pszFnameAndExt, _T("DMI.bin"), 7)
-		) {
+		!_tcsncmp(pszFnameAndExt, _T("DMI.bin"), 7) ||
+		ui64FileSize == 1228800 || ui64FileSize == 1261568 || ui64FileSize == 1474560) {
 		dwSectorSizeOne = DISC_RAW_READ_SIZE;
 	}
-	UINT64 ui64SectorSizeAll = ui64FileSize / (UINT64)dwSectorSizeOne;
 
+	UINT64 ui64SectorSizeAll = ui64FileSize / (UINT64)dwSectorSizeOne;
 	if (ui64FileSize >= dwSectorSizeOne) {
 		MD5_CTX context = { 0 };
 		SHA1Context sha = { 0 };
@@ -400,20 +405,23 @@ BOOL OutputHash(
 
 		BYTE data[CD_RAW_SECTOR_SIZE] = { 0 };
 		DWORD crc32 = 0;
-		OutputString(_T("Calculating hash: %s\n"), pszFnameAndExt);
 		int nRet = TRUE;
 		// TODO: This code can more speed up! if reduce calling fread()
-		for (UINT64 i = 0; i < ui64SectorSizeAll; i++) {
+		for (UINT64 i = 1; i <= ui64SectorSizeAll; i++) {
 			fread(data, sizeof(BYTE), dwSectorSizeOne, fp);
 			nRet = CalcHash(&crc32, &context, &sha, data, dwSectorSizeOne);
 			if (!nRet) {
 				break;
 			}
+			OutputString(_T("\rCalculating hash: %s [%lld/%lld]")
+				, pszFnameAndExt, i * dwSectorSizeOne, ui64FileSize);
 		}
+		OutputString("\n");
 		FcloseAndNull(fp);
 		if (!nRet) {
 			return nRet;
 		}
+
 		BYTE digest[16] = { 0 };
 		BYTE Message_Digest[20] = { 0 };
 		if (CalcEnd(&context, &sha, digest, Message_Digest)) {

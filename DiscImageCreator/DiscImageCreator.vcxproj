@@ -264,6 +264,10 @@
       </AdditionalDependencies>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
+    <PreBuildEvent>
+      <Command>CreateBuildDateTime.bat</Command>
+      <Message>CreateBuildDateTime.h</Message>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>

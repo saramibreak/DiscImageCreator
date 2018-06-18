@@ -39,7 +39,7 @@
    - TSSTcorp
      - TS-H353A, TS-H352C, SH-D162C, SH-D162D, SH-D163A, SH-D163B (needs the firmware hacked by kreon)
 - HD-DVD: All supported drive
-- BD: All supported drive (PS3 is only supported by [some mediatek drive](https://rpcs3.net/quickstart)
+- BD: All supported drive (PS3 is only supported by [some mediatek drive](https://rpcs3.net/quickstart))
 - Floppy: All supported drive
 
 ## Not recommend

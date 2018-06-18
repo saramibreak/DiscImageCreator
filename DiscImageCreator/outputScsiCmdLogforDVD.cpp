@@ -1599,6 +1599,7 @@ VOID OutputXboxSecuritySector(
 		DWORD unknown = MAKEDWORD(MAKEWORD(buf[k + 2], buf[k + 1]), MAKEWORD(buf[k], 0));
 		DWORD startPsn = MAKEDWORD(MAKEWORD(buf[k + 5], buf[k + 4]), MAKEWORD(buf[k + 3], 0));
 		DWORD endPsn = MAKEDWORD(MAKEWORD(buf[k + 8], buf[k + 7]), MAKEWORD(buf[k + 6], 0));
+		// XBOX
 		if (dwEndLayerZeroSector == 0x2033af) {
 			if (i < 8) {
 				OutputDiscLogA("\t\t       Layer 0");
@@ -1620,7 +1621,8 @@ VOID OutputXboxSecuritySector(
 				endLBA = endPsn;
 			}
 		}
-		else if (dwEndLayerZeroSector == 0x20339f) {
+		// XBOX 360
+		else if (dwEndLayerZeroSector == 0x20339f || dwEndLayerZeroSector == 0x238e0f) {
 			if (i == 0) {
 				OutputDiscLogA("\t\t       Layer 0");
 				startLBA = startPsn - 0x30000;
@@ -1628,7 +1630,7 @@ VOID OutputXboxSecuritySector(
 				pDisc->DVD.securitySectorRange[i][0] = startLBA;
 				pDisc->DVD.securitySectorRange[i][1] = endLBA;
 			}
-#if 0
+#if 1
 			else if (i == 3) {
 				OutputDiscLogA("\t\t       Layer 1");
 				startLBA = dwEndLayerZeroSector * 2 - (~startPsn & 0xffffff) - 0x30000 + 1;
@@ -1643,6 +1645,6 @@ VOID OutputXboxSecuritySector(
 				endLBA = endPsn;
 			}
 		}
-		OutputDiscLogA("\t\tUnknown: %8lx, startLBA: %8lu, endLBA: %8lu\n", unknown, startLBA, endLBA);
+		OutputDiscLogA("\t\tUnknown: %8lx, startLBA-endLBA: %8lu-%8lu\n", unknown, startLBA, endLBA);
 	}
 }

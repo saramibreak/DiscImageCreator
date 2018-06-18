@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "buildDateTime.h"
 #include "struct.h"
 #include "calcHash.h"
 #include "check.h"
@@ -207,9 +208,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 					throw FALSE;
 				}
 				if (*pExecType == fd) {
-					if (!DiskGetMediaTypes(&device, pszFullPath)) {
-						throw FALSE;
-					}
+					bRet = DiskGetMediaTypes(&device, pszFullPath);
 				}
 				else {
 					if (!ReadDriveInformation(pExecType, pExtArg, &device, pDisc, s_dwSpeed)) {
@@ -1056,7 +1055,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 	return TRUE;
 }
 
-int createCmdFile(int argc, _TCHAR* argv[], _TCHAR* pszFullPath, LPSYSTEMTIME stDate)
+int createCmdFile(int argc, _TCHAR* argv[], _TCHAR* pszFullPath, LPTSTR pszDateTime)
 {
 	if (argc >= 4) {
 		FILE* fpCmd = CreateOrOpenFile(
@@ -1065,15 +1064,11 @@ int createCmdFile(int argc, _TCHAR* argv[], _TCHAR* pszFullPath, LPSYSTEMTIME st
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
 		}
-		_TCHAR buf[32] = { 0 };
-		_sntprintf(buf, sizeof(buf), _T("%04d/%02d/%02d %02d:%02d:%02d\n")
-			, stDate->wYear, stDate->wMonth, stDate->wDay
-			, stDate->wHour, stDate->wMinute, stDate->wSecond);
-		fwrite(buf, sizeof(_TCHAR), _tcslen(buf), fpCmd);
+
+		_ftprintf(fpCmd, _T("%s"), pszDateTime);
 
 		for (int i = 0; i < argc; i++) {
-			fwrite(argv[i], sizeof(_TCHAR), _tcslen(argv[i]), fpCmd);
-			_fputts(_T(" "), fpCmd);
+			_ftprintf(fpCmd, _T("%s "), argv[i]);
 		}
 		FcloseAndNull(fpCmd);
 	}
@@ -1091,7 +1086,7 @@ void printUsage(void)
 		_T("\t\tFor PLEXTOR or drive that can scramble Dumping\n")
 		_T("\tswap <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/a (val)]\n")
 		_T("\t   [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4)] [/f (val)] [/m]\n")
-		_T("\t   [/p] [/ms] [/sf (val)] [/ss] [/np] [/nq] [/nr] [/ns] [/s (val)]\n")
+		_T("\t   [/p] [/ms] [/sf (val)] [/ss] [/np] [/nq] [/nr] [/ns] [/s (val)] [/74]\n")
 		_T("\t\tDump a CD from A to Z using swap trick\n")
 		_T("\t\tFor no PLEXTOR or drive that can't scramble dumping\n")
 		_T("\tdata <DriveLetter> <Filename> <DriveSpeed(0-72)> <StartLBA> <EndLBA+1>\n")
@@ -1168,6 +1163,8 @@ void printUsage(void)
 		_T("\t\t\tFor Alpha-Disc, Tages (very slow)\n")
 		_T("\t/ms\tRead the lead-out of 1st session and the lead-in of 2nd session\n")
 		_T("\t\t\tFor Multi-session\n")
+		_T("\t/74\tRead the lead-out about 74:00:00\n")
+		_T("\t\t\tFor ring data (a.k.a Saturn Ring) of Sega Saturn)\n")
 		_T("\t/sf\tScan file to detect protect. If reading error exists,\n")
 		_T("\t   \tcontinue reading and ignore c2 error on specific sector\n")
 		_T("\t\t\tFor CodeLock, LaserLock, RingProtect, RingPROTECH\n")
@@ -1182,10 +1179,11 @@ void printUsage(void)
 		_T("\t/np\tNot fix SubP\n")
 		_T("\t/nq\tNot fix SubQ\n")
 		_T("\t/nr\tNot fix SubRtoW\n")
+	);
+	_tsystem(_T("pause"));
+	OutputString(
 		_T("\t/nl\tNot fix SubQ (RMSF, AMSF, CRC) (LBA 10000 - 19999)\n")
 		_T("\t   \t                               (LBA 40000 - 49999)\n")
-	);
-	OutputString(
 		_T("\t\t\tFor PlayStation LibCrypt\n")
 		_T("\t/ns\tNot fix SubQ (RMSF, AMSF, CRC) (LBA 0 - 7, 5000 - 24999)\n")
 		_T("\t   \t                            or (LBA 30000 - 49999)\n")
@@ -1205,7 +1203,7 @@ void printUsage(void)
 	_tsystem(_T("pause"));
 }
 
-int printSeveralInfo(_TCHAR* exePath, LPSYSTEMTIME stDate)
+int printSeveralInfo(LPTSTR pszDateTime, size_t dateTimeSize)
 {
 #if 0
 	if (!OutputWindowsVersion()) {
@@ -1223,20 +1221,8 @@ int printSeveralInfo(_TCHAR* exePath, LPSYSTEMTIME stDate)
 #else
 	OutputString(_T("AnsiBuild, "));
 #endif
-	HANDLE hFile = CreateFile(exePath, GENERIC_READ
-		, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-	if (hFile != INVALID_HANDLE_VALUE) {
-		FILETIME ftDate;
-		FILETIME lcDate;
-		GetFileTime(hFile, NULL, NULL, &ftDate);
-		CloseHandle(hFile);
-
-		FileTimeToLocalFileTime(&ftDate, &lcDate);
-		FileTimeToSystemTime(&lcDate, stDate);
-		OutputString("%04d/%02d/%02d %02d:%02d:%02d\n"
-			, stDate->wYear, stDate->wMonth, stDate->wDay
-			, stDate->wHour, stDate->wMinute, stDate->wSecond);
-	}
+	_sntprintf(pszDateTime, dateTimeSize, _T("%d %d\n"), BUILD_DATE, BUILD_TIME);
+	OutputString(_T("%s"), pszDateTime);
 	return TRUE;
 }
 
@@ -1259,8 +1245,8 @@ int _tmain(int argc, _TCHAR* argv[])
 		return EXIT_FAILURE;
 	}
 #endif
-	SYSTEMTIME stDate;
-	int nRet = printSeveralInfo(argv[0], &stDate);
+	_TCHAR szDateTime[20] = { 0 };
+	int nRet = printSeveralInfo(szDateTime, sizeof(szDateTime));
 	if (nRet) {
 		EXEC_TYPE execType;
 		EXT_ARG extArg = { 0 };
@@ -1280,7 +1266,7 @@ int _tmain(int argc, _TCHAR* argv[])
 			_tcsftime(szBuf, sizeof(szBuf) / sizeof(szBuf[0]), _T("%Y/%m/%d(%a) %H:%M:%S"), ts);
 			OutputString(_T("StartTime: %s\n"), szBuf);
 
-			nRet = createCmdFile(argc, argv, szFullPath, &stDate);
+			nRet = createCmdFile(argc, argv, szFullPath, szDateTime);
 			if (nRet) {
 				nRet = exec(argv, &execType, &extArg, szFullPath);
 			}

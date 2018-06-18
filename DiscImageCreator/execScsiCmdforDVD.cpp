@@ -50,7 +50,7 @@ BOOL ReadDVD(
 		}
 		LPBYTE lpBuf = (LPBYTE)ConvParagraphBoundary(pDevice, pBuf);
 
-		DWORD dwTransferLen = 1;
+		DWORD dwTransferLen = pDevice->dwMaxTransferLength / DISC_RAW_READ_SIZE;
 		CDB::_READ12 cdb = { 0 };
 		cdb.OperationCode = SCSIOP_READ12;
 		cdb.LogicalUnitNumber = pDevice->address.Lun;
@@ -61,23 +61,34 @@ BOOL ReadDVD(
 		if (!ReadDVDForFileSystem(pExecType, pExtArg, pDevice, pDisc, &cdb, lpBuf)) {
 			throw FALSE;
 		}
+
+		DWORD dwLayer1MiddleZone =
+			pDisc->DVD.dwXBOXStartPsn - pDisc->DVD.dwDVDStartPsn - pDisc->DVD.dwLayer0SectorLength;
+		INT nAllLength = pDisc->SCSI.nAllLength;
+		if (*pExecType == xbox) {
+			OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(TotalLength)
+				"\t    L0 + L1 data: %7d (%#x)\n"
+				"\t+      L1 Middle: %7lu (%#lx)\n"
+				"\t+       L1 Video: %7lu (%#lx)\n"
+				"\t------------------------------------\n"
+				
+				, nAllLength, nAllLength
+				, dwLayer1MiddleZone, dwLayer1MiddleZone
+				, pDisc->DVD.dwLayer1SectorLength, pDisc->DVD.dwLayer1SectorLength);
+			nAllLength += dwLayer1MiddleZone + pDisc->DVD.dwLayer1SectorLength;
+			OutputDiscLogA(
+				"\t                  %7u (%#x)\n", nAllLength, nAllLength);
+		}
 		FlushLog();
 
 		BYTE byScsiStatus = 0;
-		dwTransferLen = pDevice->dwMaxTransferLength / DISC_RAW_READ_SIZE;
-		REVERSE_BYTES(&cdb.TransferLength, &dwTransferLen);
-
 		INT i = 0;
 		DWORD dwTransferLenOrg = dwTransferLen;
-		DWORD dwLayer1MiddleZone = pDisc->DVD.dwXBOXStartPsn - pDisc->DVD.dwDVDStartPsn - pDisc->DVD.dwLayer0SectorLength;
-		INT nAllLength = pDisc->SCSI.nAllLength;
-		if (*pExecType == xbox) {
-			nAllLength += dwLayer1MiddleZone + pDisc->DVD.dwLayer1SectorLength;
-		}
 
 		for (INT nLBA = 0; nLBA < pDisc->SCSI.nAllLength; nLBA += dwTransferLen) {
 			if (*pExecType == xbox) {
-				if (pDisc->DVD.securitySectorRange[i][0] <= (DWORD)nLBA && (DWORD)nLBA <= pDisc->DVD.securitySectorRange[i][1] + 1) {
+				if (pDisc->DVD.securitySectorRange[i][0] <= (DWORD)nLBA &&
+					(DWORD)nLBA <= pDisc->DVD.securitySectorRange[i][1] + 1) {
 					if ((DWORD)nLBA == pDisc->DVD.securitySectorRange[i][1] + 1) {
 						i++;
 					}
@@ -115,11 +126,11 @@ BOOL ReadDVD(
 			}
 			dwTransferLen = dwTransferLenOrg;
 			ZeroMemory(lpBuf, DISC_RAW_READ_SIZE * dwTransferLen);
-			INT nRoop = pDisc->SCSI.nAllLength + (INT)dwLayer1MiddleZone;
+			DWORD dwEndOfMiddle = pDisc->SCSI.nAllLength + dwLayer1MiddleZone;
 
-			for (INT j = pDisc->SCSI.nAllLength; j < nRoop; j += dwTransferLen) {
-				if (dwTransferLen > (DWORD)(nRoop - j)) {
-					dwTransferLen = (DWORD)(nRoop - j);
+			for (DWORD j = (DWORD)pDisc->SCSI.nAllLength; j < dwEndOfMiddle; j += dwTransferLen) {
+				if (dwTransferLen > dwEndOfMiddle - j) {
+					dwTransferLen = dwEndOfMiddle - j;
 				}
 				fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_RAW_READ_SIZE * dwTransferLen, fp);
 				OutputString(_T("\rCreating iso(LBA) %8lu/%8u"), j + dwTransferLen, nAllLength);
@@ -141,7 +152,8 @@ BOOL ReadDVD(
 					throw FALSE;
 				}
 				fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_RAW_READ_SIZE * dwTransferLen, fp);
-				OutputString(_T("\rCreating iso(LBA) %8lu/%8u"), nRoop + pDisc->DVD.dwLayer1SectorLength, nAllLength);
+				OutputString(_T("\rCreating iso(LBA) %8lu/%8u")
+					, dwEndOfMiddle + pDisc->DVD.dwLayer1SectorLength, nAllLength);
 			}
 		}
 		OutputString(_T("\n"));

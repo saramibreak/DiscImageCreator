@@ -483,3 +483,10 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - fixed: GetWriteOffset for ASUS
 - fixed: sub-qchannel reading
 - fixed: Reading directory record (incorrect data length of DVD)
+
+*2018-06-18
+- added: .dat for floppy
+- changed: the way to get the timestamp again
+- fixed: disc.txt for xbox (added total size of xbox disc, fixed #2 of security sector range)
+- fixed: misdetection of MCN before dumping
+- fixed: transfer length of DVD/BD

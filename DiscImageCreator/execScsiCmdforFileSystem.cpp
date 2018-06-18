@@ -419,6 +419,7 @@ BOOL ReadVolumeDescriptor(
 	PDISC pDisc,
 	BYTE byIdx,
 	LPBYTE pCdb,
+	BYTE byTransferLen,
 	LPBYTE lpBuf,
 	INT nPVD,
 	INT nSectorOfs,
@@ -431,7 +432,8 @@ BOOL ReadVolumeDescriptor(
 	INT nTmpLBA = nPVD;
 	BYTE bufDec[CD_RAW_SECTOR_SIZE] = { 0 };
 	for (;;) {
-		if (!ExecReadDisc(pExecType, pExtArg, pDevice, pDisc, pCdb, nTmpLBA + nSectorOfs, lpBuf, bufDec, 1)) {
+		if (!ExecReadDisc(pExecType, pExtArg, pDevice, pDisc
+			, pCdb, nTmpLBA + nSectorOfs, lpBuf, bufDec, byTransferLen)) {
 			break;
 		}
 		if (!strncmp((LPCH)&lpBuf[1], "CD001", 5) ||
@@ -510,7 +512,8 @@ BOOL ReadCDForFileSystem(
 			try {
 				// general data track disc
 				VOLUME_DESCRIPTOR volDesc;
-				if (!ReadVolumeDescriptor(pExecType, pExtArg, pDevice, pDisc, i, (LPBYTE)&cdb, lpBuf, 16, 0, &bVD, &volDesc)) {
+				if (!ReadVolumeDescriptor(pExecType, pExtArg, pDevice, pDisc, i
+					, (LPBYTE)&cdb, cdb.TransferLength[3], lpBuf, 16, 0, &bVD, &volDesc)) {
 					throw FALSE;
 				}
 				if (bVD) {
@@ -669,7 +672,7 @@ BOOL ReadGDForFileSystem(
 		BOOL bVD = FALSE;
 		VOLUME_DESCRIPTOR volDesc;
 		if (!ReadVolumeDescriptor(pExecType, pExtArg, pDevice, pDisc, 0
-			, (LPBYTE)&cdb, lpBuf, FIRST_LBA_FOR_GD + 16, nSectorOfs, &bVD, &volDesc)) {
+			, (LPBYTE)&cdb, 1, lpBuf, FIRST_LBA_FOR_GD + 16, nSectorOfs, &bVD, &volDesc)) {
 			throw FALSE;
 		}
 		if (bVD) {
@@ -715,7 +718,8 @@ BOOL ReadDVDForFileSystem(
 	INT nLBA = 16;
 	BOOL bPVD = FALSE;
 	VOLUME_DESCRIPTOR volDesc;
-	if (!ReadVolumeDescriptor(pExecType, pExtArg, pDevice, pDisc, 0, (LPBYTE)cdb, lpBuf, 16, 0, &bPVD, &volDesc)) {
+	if (!ReadVolumeDescriptor(pExecType, pExtArg, pDevice, pDisc
+		, 0, (LPBYTE)cdb, cdb->TransferLength[3], lpBuf, 16, 0, &bPVD, &volDesc)) {
 		return FALSE;
 	}
 	if (bPVD) {
