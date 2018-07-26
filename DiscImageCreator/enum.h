@@ -54,6 +54,11 @@ typedef enum _MAIN_DATA_TYPE {
 	scrambled
 } MAIN_DATA_TYPE, *PMAIN_DATA_TYPE;
 
+typedef enum _BYTE_PAD_TYPE {
+	padby0,
+	padbyff
+} BYTE_PAD_TYPE, *PBYTE_PAD_TYPE;
+
 typedef enum _TRACK_TYPE {
 	audioOnly,
 	dataExist,

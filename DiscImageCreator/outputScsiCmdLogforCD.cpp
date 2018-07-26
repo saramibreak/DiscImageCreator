@@ -112,6 +112,9 @@ VOID OutputFsDirectoryRecord(
 		, lpBuf[21], lpBuf[22], lpBuf[23], (CHAR)lpBuf[24] / 4, (CHAR)lpBuf[24] % 4 * 15
 		, lpBuf[25], str, lpBuf[26], lpBuf[27], vsn, lpBuf[32]);
 	for (INT n = 0; n < lpBuf[32]; n++) {
+#ifndef _WIN32
+		if (lpBuf[33 + n] == 0) continue;
+#endif
 		OutputVolDescLogA("%c", lpBuf[33 + n]);
 		fname[n] = (CHAR)lpBuf[33 + n];
 	}
@@ -165,7 +168,8 @@ VOID OutputFsDirectoryRecord(
 			pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)dwExtentPos;
 			pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(dwDataLen / DISC_RAW_READ_SIZE - 1);
 		}
-		else if (!strncmp(fnameForProtect, "PROTECT.PRO", 11)) {
+		else if (!strncmp(fnameForProtect, "PROTECT.PRO", 11) ||
+			!strncmp(fnameForProtect, "protect.pro", 11)) {
 			pDisc->PROTECT.byExist = proring;
 			strncpy(pDisc->PROTECT.name, fnameForProtect, 11);
 			pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)dwExtentPos;
@@ -348,9 +352,9 @@ VOID OutputFsVolumeDescriptorForISO9660(
 	PDISC pDisc,
 	LPBYTE lpBuf
 ) {
-	CHAR str32[3][32] = { 0 };
-	CHAR str128[4][128] = { 0 };
-	CHAR str37[3][37] = { 0 };
+	CHAR str32[3][32] = { { 0 } };
+	CHAR str128[4][128] = { { 0 } };
+	CHAR str37[3][37] = { { 0 } };
 	strncpy(str32[0], (LPCH)&lpBuf[8], sizeof(str32[0]));
 	strncpy(str32[1], (LPCH)&lpBuf[40], sizeof(str32[1]));
 	strncpy(str128[0], (LPCH)&lpBuf[190], sizeof(str128[0]));
@@ -500,7 +504,7 @@ VOID OutputFsVolumeDescriptorForJoliet(
 VOID OutputFsVolumePartitionDescriptor(
 	LPBYTE lpBuf
 ) {
-	CHAR str[2][32] = { 0 };
+	CHAR str[2][32] = { { 0 } };
 	strncpy(str[0], (LPCH)&lpBuf[8], sizeof(str[0]));
 	strncpy(str[1], (LPCH)&lpBuf[40], sizeof(str[1]));
 	OutputVolDescLogA(
@@ -573,37 +577,40 @@ BOOL OutputFsPathTableRecord(
 			FlushLog();
 			return FALSE;
 		}
-		pDirRec[*nDirPosNum].uiDirNameLen = lpBuf[i];
+		pDirRec[*nDirPosNum].dwDirNameLen = lpBuf[i];
 		if (pDisc->MAIN.bPathType == lType) {
-			pDirRec[*nDirPosNum].uiPosOfDir = MAKEDWORD(MAKEWORD(lpBuf[2 + i], lpBuf[3 + i]),
+			pDirRec[*nDirPosNum].dwPosOfDir = MAKEDWORD(MAKEWORD(lpBuf[2 + i], lpBuf[3 + i]),
 				MAKEWORD(lpBuf[4 + i], lpBuf[5 + i])) / dwLogicalBlkCoef;
 		}
 		else {
-			pDirRec[*nDirPosNum].uiPosOfDir = MAKEDWORD(MAKEWORD(lpBuf[5 + i], lpBuf[4 + i]),
+			pDirRec[*nDirPosNum].dwPosOfDir = MAKEDWORD(MAKEWORD(lpBuf[5 + i], lpBuf[4 + i]),
 				MAKEWORD(lpBuf[3 + i], lpBuf[2 + i])) / dwLogicalBlkCoef;
 		}
-		if (pDirRec[*nDirPosNum].uiDirNameLen > 0) {
+		if (pDirRec[*nDirPosNum].dwDirNameLen > 0) {
 			if (pDisc->MAIN.bPathType == lType) {
-				pDirRec[*nDirPosNum].uiNumOfUpperDir = MAKEWORD(lpBuf[6 + i], lpBuf[7 + i]);
+				pDirRec[*nDirPosNum].dwNumOfUpperDir = MAKEWORD(lpBuf[6 + i], lpBuf[7 + i]);
 			}
 			else {
-				pDirRec[*nDirPosNum].uiNumOfUpperDir = MAKEWORD(lpBuf[7 + i], lpBuf[6 + i]);
+				pDirRec[*nDirPosNum].dwNumOfUpperDir = MAKEWORD(lpBuf[7 + i], lpBuf[6 + i]);
 			}
 			OutputVolDescLogA(
-				"\t     Length of Directory Identifier: %u\n"
+				"\t     Length of Directory Identifier: %lu\n"
 				"\tLength of Extended Attribute Record: %u\n"
-				"\t                 Position of Extent: %u\n"
-				"\t          Number of Upper Directory: %u\n"
+				"\t                 Position of Extent: %lu\n"
+				"\t          Number of Upper Directory: %lu\n"
 				"\t               Directory Identifier: "
-				, pDirRec[*nDirPosNum].uiDirNameLen, lpBuf[1 + i]
-				, pDirRec[*nDirPosNum].uiPosOfDir, pDirRec[*nDirPosNum].uiNumOfUpperDir);
-			for (size_t n = 0; n < pDirRec[*nDirPosNum].uiDirNameLen; n++) {
+				, pDirRec[*nDirPosNum].dwDirNameLen, lpBuf[1 + i]
+				, pDirRec[*nDirPosNum].dwPosOfDir, pDirRec[*nDirPosNum].dwNumOfUpperDir);
+			for (size_t n = 0; n < pDirRec[*nDirPosNum].dwDirNameLen; n++) {
+#ifndef _WIN32
+				if (lpBuf[8 + i + n] == 0) continue;
+#endif
 				OutputVolDescLogA("%c", lpBuf[8 + i + n]);
 				pDirRec[*nDirPosNum].szDirName[n] = (CHAR)lpBuf[8 + i + n];
 			}
 			OutputVolDescLogA("\n\n");
 
-			i += 8 + pDirRec[*nDirPosNum].uiDirNameLen;
+			i += 8 + pDirRec[*nDirPosNum].dwDirNameLen;
 			if ((i % 2) != 0) {
 				i++;
 			}
@@ -611,7 +618,7 @@ BOOL OutputFsPathTableRecord(
 		}
 		else {
 			OutputVolDescLogA(
-				"\t     Length of Directory Identifier: %u\n", pDirRec[*nDirPosNum].uiDirNameLen);
+				"\t     Length of Directory Identifier: %lu\n", pDirRec[*nDirPosNum].dwDirNameLen);
 			break;
 		}
 	}
@@ -1134,7 +1141,7 @@ VOID OutputCDOffset(
 	OutputDiscLogA(STR_DOUBLE_HYPHEN_E);
 
 	if (pExtArg->byAdd && pDisc->SCSI.trackType == TRACK_TYPE::audioOnly) {
-		pDisc->MAIN.nCombinedOffset += pExtArg->nAudioCDOffsetNum * 4;
+		pDisc->MAIN.nCombinedOffset += (INT)(pExtArg->nAudioCDOffsetNum * 4);
 		pExtArg->nAudioCDOffsetNum = 0; // If it is possible, I want to repair it by a better method...
 		OutputDiscLogA(
 			"\t       Combined Offset(Byte) %6d, (Samples) %5d\n"
@@ -1207,14 +1214,25 @@ VOID OutputCDMain(
 		"       +0 +1 +2 +3 +4 +5 +6 +7  +8 +9 +A +B +C +D +E +F\n", nLBA, nLBA);
 
 	for (INT i = 0; i < nSize; i += 16) {
-		OutputLogA(type,
-			"%04X : %02X %02X %02X %02X %02X %02X %02X %02X  %02X %02X %02X %02X %02X %02X %02X %02X   "
-			, i, lpBuf[i], lpBuf[i + 1], lpBuf[i + 2], lpBuf[i + 3], lpBuf[i + 4], lpBuf[i + 5]
-			, lpBuf[i + 6], lpBuf[i + 7], lpBuf[i + 8], lpBuf[i + 9], lpBuf[i + 10], lpBuf[i + 11]
-			, lpBuf[i + 12], lpBuf[i + 13], lpBuf[i + 14], lpBuf[i + 15]);
-		for (INT j = 0; j < 16; j++) {
-			INT ch = isprint(lpBuf[i + j]) ? lpBuf[i + j] : '.';
-			OutputLogA(type, "%c", ch);
+		if (16 > nSize - i) {
+			OutputLogA(type, "%04X : ", i);
+			for (INT j = 0; j < nSize - i; j++) {
+				if (j == 8) {
+					OutputLogA(type, " ");
+				}
+				OutputLogA(type, "%02X ", lpBuf[i + j]);
+			}
+		}
+		else {
+			OutputLogA(type,
+				"%04X : %02X %02X %02X %02X %02X %02X %02X %02X  %02X %02X %02X %02X %02X %02X %02X %02X   "
+				, i, lpBuf[i], lpBuf[i + 1], lpBuf[i + 2], lpBuf[i + 3], lpBuf[i + 4], lpBuf[i + 5]
+				, lpBuf[i + 6], lpBuf[i + 7], lpBuf[i + 8], lpBuf[i + 9], lpBuf[i + 10], lpBuf[i + 11]
+				, lpBuf[i + 12], lpBuf[i + 13], lpBuf[i + 14], lpBuf[i + 15]);
+			for (INT j = 0; j < 16; j++) {
+				INT ch = isprint(lpBuf[i + j]) ? lpBuf[i + j] : '.';
+				OutputLogA(type, "%c", ch);
+			}
 		}
 		OutputLogA(type, "\n");
 	}

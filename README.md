@@ -132,7 +132,7 @@
   - RingPROTECH, ProRing [no signal sector]  
      => The result doesn't match at each drives.
   - LaserLock [no signal sector, intentional C2 error]  
-     => The result doesn't match at each drives.
+     => The result doesn't match at each drives. (0xd8 ripping is more errors than 0xbe ripping.)
   - CodeLock [intentional C2 error, invalid sync]  
      => Compared with CloneCD or CD Manipulator, plextor detects double errors.
 

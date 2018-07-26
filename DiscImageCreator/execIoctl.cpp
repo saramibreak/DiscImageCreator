@@ -40,7 +40,7 @@ BOOL DiskGetMediaTypes(
 		if (bRet) {
 			OutputFloppyInfo(geom, 1);
 			FlushLog();
-			DWORD dwFloppySize = geom[0].Cylinders.LowPart *
+			DWORD dwFloppySize = geom[0].Cylinders.u.LowPart *
 				geom[0].TracksPerCylinder * geom[0].SectorsPerTrack * geom[0].BytesPerSector;
 			OutputString(_T("Floppy size: %ld byte\n"), dwFloppySize);
 			LPBYTE lpBuf = (LPBYTE)calloc(dwFloppySize, sizeof(BYTE));
@@ -51,7 +51,7 @@ BOOL DiskGetMediaTypes(
 				return FALSE;
 			}
 			DWORD dwBytesRead = 0;
-			SetErrorMode(SEM_FAILCRITICALERRORS);
+//			SetErrorMode(SEM_FAILCRITICALERRORS);
 			bRet = ReadFile(pDevice->hDevice, lpBuf, dwFloppySize, &dwBytesRead, 0);
 			OutputString(_T("  Read size: %ld byte\n"), dwBytesRead);
 			if (bRet) {
@@ -105,26 +105,39 @@ BOOL ScsiPassThroughDirect(
 	LPVOID lpCdb,
 	BYTE byCdbLength,
 	LPVOID pvBuffer,
+	INT nDataDirection,
 	DWORD dwBufferLength,
 	LPBYTE byScsiStatus,
 	LPCTSTR pszFuncName,
 	LONG lLineNum
 ) {
 	SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER swb = { 0 };
+#ifdef _WIN32
 	swb.ScsiPassThroughDirect.Length = sizeof(SCSI_PASS_THROUGH_DIRECT);
 	swb.ScsiPassThroughDirect.PathId = pDevice->address.PathId;
 	swb.ScsiPassThroughDirect.TargetId = pDevice->address.TargetId;
 	swb.ScsiPassThroughDirect.Lun = pDevice->address.Lun;
 	swb.ScsiPassThroughDirect.CdbLength = byCdbLength;
 	swb.ScsiPassThroughDirect.SenseInfoLength = SENSE_BUFFER_SIZE;
-	swb.ScsiPassThroughDirect.DataIn = SCSI_IOCTL_DATA_IN;
+	swb.ScsiPassThroughDirect.DataIn = (UCHAR)nDataDirection;
 	swb.ScsiPassThroughDirect.DataTransferLength = dwBufferLength;
 	swb.ScsiPassThroughDirect.TimeOutValue = pDevice->dwTimeOutValue;
 	swb.ScsiPassThroughDirect.DataBuffer = pvBuffer;
 	swb.ScsiPassThroughDirect.SenseInfoOffset = 
 		offsetof(SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER, SenseData);
 	memcpy(swb.ScsiPassThroughDirect.Cdb, lpCdb, byCdbLength);
-
+#else
+	swb.io_hdr.interface_id = 'S';
+	swb.io_hdr.dxfer_direction = nDataDirection;
+	swb.io_hdr.cmd_len = byCdbLength;
+	swb.io_hdr.mx_sb_len = sizeof(swb.Dummy);
+	swb.io_hdr.dxfer_len = (unsigned int)dwBufferLength;
+	swb.io_hdr.dxferp = pvBuffer;
+	swb.io_hdr.cmdp = (unsigned char *)lpCdb;
+	swb.io_hdr.sbp = swb.Dummy;
+	swb.io_hdr.timeout = (unsigned int)pDevice->dwTimeOutValue;
+//	swb.io_hdr.flags = SG_FLAG_DIRECT_IO;
+#endif
 	DWORD dwLength = sizeof(SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER);
 	DWORD dwReturned = 0;
 	BOOL bRet = TRUE;
@@ -135,7 +148,7 @@ BOOL ScsiPassThroughDirect(
 		OutputLastErrorNumAndString(pszFuncName, lLineNum);
 		bRet = FALSE;
 		if (!pExtArg->byScanProtectViaFile && !_tcscmp(_T("SetDiscSpeed"), pszFuncName) &&
-			!(pExtArg->byMultiSession /*&& pDisc->MAIN.nFixFirstLBAofLeadout <= nLBA && nLBA < pDisc->MAIN.nFixFirstLBAofLeadout + 11400*/)) {
+			!pExtArg->byMultiSession) {
 			// When semaphore time out occurred, if doesn't execute sleep,
 			// UNIT_ATTENSION errors occurs next ScsiPassThroughDirect executing.
 			DWORD milliseconds = 25000;
@@ -151,6 +164,7 @@ BOOL ScsiPassThroughDirect(
 			swb.SenseData.AdditionalSenseCodeQualifier == 0x00) {
 			bNoSense = TRUE;
 		}
+#ifdef _WIN32
 		if (swb.ScsiPassThroughDirect.ScsiStatus >= SCSISTAT_CHECK_CONDITION &&
 			!bNoSense) {
 			INT nLBA = 0;
@@ -167,6 +181,24 @@ BOOL ScsiPassThroughDirect(
 				, _T("\rLBA[%06d, %#07x]: [F:%s][L:%ld]\n\tOpcode: %#02x\n")
 				, nLBA, nLBA, pszFuncName, lLineNum, swb.ScsiPassThroughDirect.Cdb[0]);
 			OutputScsiStatus(swb.ScsiPassThroughDirect.ScsiStatus);
+#else
+		if (swb.io_hdr.status >= SCSISTAT_CHECK_CONDITION &&
+			!bNoSense) {
+			INT nLBA = 0;
+			if (swb.io_hdr.cmdp[0] == 0xa8 ||
+				swb.io_hdr.cmdp[0] == 0xad ||
+				swb.io_hdr.cmdp[0] == 0xbe ||
+				swb.io_hdr.cmdp[0] == 0xd8) {
+				nLBA = (swb.io_hdr.cmdp[2] << 24)
+					+ (swb.io_hdr.cmdp[3] << 16)
+					+ (swb.io_hdr.cmdp[4] << 8)
+					+ swb.io_hdr.cmdp[5];
+			}
+			OutputLog(standardError | fileMainError
+				, _T("\rLBA[%06d, %#07x]: [F:%s][L:%ld]\n\tOpcode: %#02x\n")
+				, nLBA, nLBA, pszFuncName, lLineNum, swb.io_hdr.cmdp[0]);
+			OutputScsiStatus(swb.io_hdr.status);
+#endif
 			OutputSenseData(&swb.SenseData);
 			if (swb.SenseData.SenseKey == SCSI_SENSE_UNIT_ATTENTION) {
 				DWORD milliseconds = 40000;
@@ -180,7 +212,11 @@ BOOL ScsiPassThroughDirect(
 		*byScsiStatus = SCSISTAT_GOOD;
 	}
 	else {
+#ifdef _WIN32
 		*byScsiStatus = swb.ScsiPassThroughDirect.ScsiStatus;
+#else
+		*byScsiStatus = swb.io_hdr.status;
+#endif
 	}
 	return bRet;
 }
@@ -229,7 +265,7 @@ BOOL StorageQueryProperty(
 	FreeAndNull(adapterDescriptor);
 	return bRet;
 }
-
+#ifdef _WIN32
 BOOL SetStreaming(
 	PDEVICE pDevice,
 	DWORD dwDiscSpeedNum
@@ -289,114 +325,4 @@ BOOL SetStreaming(
 	}
 	return TRUE;
 }
-
-BOOL DvdStartSession(
-	PDEVICE pDevice,
-	PDVD_COPY_PROTECT_KEY dvdKey
-) {
-	DWORD dwReturned = 0;
-	if (dvdKey->SessionId != DVD_END_ALL_SESSIONS) {
-		if (!DeviceIoControl(pDevice->hDevice, IOCTL_DVD_END_SESSION
-			, &dvdKey->SessionId, sizeof(dvdKey->SessionId), NULL, 0, &dwReturned, NULL)) {
-			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-			return FALSE;
-		}
-		dvdKey->SessionId = DVD_END_ALL_SESSIONS;
-	}
-
-	if (!DeviceIoControl(pDevice->hDevice, IOCTL_DVD_START_SESSION, NULL
-		, 0, &dvdKey->SessionId, sizeof(dvdKey->SessionId), &dwReturned, NULL)) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return FALSE;
-	}
-	return TRUE;
-}
-
-BOOL ReadKey(
-	PDEVICE pDevice,
-	PDVD_COPY_PROTECT_KEY dvdKey
-) {
-	DWORD dwReturned = 0;
-	if (!DeviceIoControl(pDevice->hDevice, IOCTL_DVD_READ_KEY, dvdKey
-		, dvdKey->KeyLength, dvdKey, dvdKey->KeyLength, &dwReturned, 0)) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return FALSE;
-	}
-	else {
-		if (dvdKey->KeyType == DvdChallengeKey) {
-			OutputDriveLogA("ChallengeKey: ");
-			for (INT i = 4; i < 16; i++) {
-				OutputDriveLogA("%02x", dvdKey->KeyData[i]);
-			}
-			OutputDriveLogA("\n");
-		}
-		else if (dvdKey->KeyType == DvdBusKey1) {
-			OutputDriveLogA("BusKey1: %02x%02x%02x%02x%02x\n", dvdKey->KeyData[0]
-				, dvdKey->KeyData[1], dvdKey->KeyData[2], dvdKey->KeyData[3], dvdKey->KeyData[4]);
-		}
-		else if (dvdKey->KeyType == DvdTitleKey) {
-			INT cpm = dvdKey->KeyData[0] >> 7 & 0x01;
-			INT cpsec = dvdKey->KeyData[0] >> 6 & 0x01;
-			OutputDriveLogA(
-				"CopyrightManagement: %s\n"
-				"CopyrightSector: %s\n"
-				, BOOLEAN_TO_STRING_YES_NO_A(cpm)
-				, BOOLEAN_TO_STRING_YES_NO_A(cpsec));
-			switch (dvdKey->KeyData[0] >> 4 & 0x03) {
-			case 0:
-				OutputDriveLogA("CopyingIsPermittedWithoutRestriction\n");
-				break;
-			case 1:
-				OutputDriveLogA("Reserved\n");
-				break;
-			case 2:
-				OutputDriveLogA("OneGenerationOfCopiesMayBeMade\n");
-				break;
-			case 3:
-				OutputDriveLogA("NoCopyingIsAllowed\n");
-				break;
-			}
-			switch (dvdKey->KeyData[0] & 0x0f) {
-			case 0:
-				OutputDriveLogA("CSS\n");
-				break;
-			case 1:
-				OutputDriveLogA("CPPM\n");
-				break;
-			}
-			OutputDriveLogA("TitleKey: %02x%02x%02x%02x%02x\n", dvdKey->KeyData[1]
-				, dvdKey->KeyData[2], dvdKey->KeyData[3], dvdKey->KeyData[4], dvdKey->KeyData[5]);
-		}
-		else if (dvdKey->KeyType == DvdAsf) {
-			INT asf = dvdKey->KeyData[3] & 0x01;
-			OutputDriveLogA("AuthenticationSusscess: %s\n", BOOLEAN_TO_STRING_YES_NO_A(asf));
-		}
-	}
-	return TRUE;
-}
-
-BOOL SendKey(
-	PDEVICE pDevice,
-	PDVD_COPY_PROTECT_KEY dvdKey
-) {
-	DWORD dwReturned = 0;
-	if (!DeviceIoControl(pDevice->hDevice,
-		IOCTL_DVD_SEND_KEY, dvdKey, dvdKey->KeyLength, NULL, 0, &dwReturned, 0)) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return FALSE;
-	}
-	else {
-		if (dvdKey->KeyType == DvdChallengeKey) {
-			OutputDriveLogA("ChallengeKey: ");
-			for (INT i = 4; i < 16; i++) {
-				OutputDriveLogA("%02x", dvdKey->KeyData[i]);
-			}
-			OutputDriveLogA("\n");
-		}
-		else if (dvdKey->KeyType == DvdBusKey2) {
-			OutputDriveLogA("BusKey2: %02x%02x%02x%02x%02x\n", dvdKey->KeyData[0]
-				, dvdKey->KeyData[1], dvdKey->KeyData[2], dvdKey->KeyData[3], dvdKey->KeyData[4]);
-		}
-	}
-	return TRUE;
-}
+#endif

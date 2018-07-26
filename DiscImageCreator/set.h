@@ -37,7 +37,8 @@ VOID SetCommandForTransferLength(
 	PDEVICE pDevice,
 	LPBYTE pCdb,
 	DWORD dwSize,
-	LPBYTE lpTransferLen
+	LPBYTE lpTransferLen,
+	LPBYTE lpRoopLen
 );
 
 VOID SetBufferSizeForReadCD(
@@ -122,15 +123,15 @@ VOID SetMCNToString(
 VOID SetLBAForFirstAdr(
 	INT nFirstLBA[][2],
 	INT nRangeLBA[][2],
-	LPSTR strAdr,
+	LPCSTR strAdr,
 	LPINT nAdrLBAList,
 	BYTE byIdxOfSession,
 	BYTE byPlxtrDrive
 );
 
 VOID SetBufferFromTmpSubQData(
-	SUB_Q_PER_SECTOR pSubQ,
 	LPBYTE lpSubcode,
+	SUB_Q_PER_SECTOR pSubQ,
 	BYTE bycurrent
 );
 

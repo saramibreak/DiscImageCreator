@@ -50,9 +50,9 @@ VOID FixMainHeader(
 				f = BcdToDec(lpWorkBuf[14]);
 			}
 			else {
-				m = BcdToDec(pDiscPerSector->data.current[12]);
-				s = BcdToDec(pDiscPerSector->data.current[13]);
-				f = BcdToDec(pDiscPerSector->data.current[14]);
+				m = BcdToDec(lpWorkBuf[12]);
+				s = BcdToDec(lpWorkBuf[13]);
+				f = BcdToDec(lpWorkBuf[14]);
 			}
 			INT tmpLBA = MSFtoLBA(m, s, f) - 150;
 			if (tmpLBA != nLBA) {
@@ -78,6 +78,7 @@ VOID FixMainHeader(
 					, nLBA, pDiscPerSector->byTrackNum, lpWorkBuf[15], pDiscPerSector->mainHeader.current[15]);
 				lpWorkBuf[15] = pDiscPerSector->mainHeader.current[15];
 			}
+			FlushLog();
 		}
 	}
 	else {
@@ -120,6 +121,7 @@ VOID FixMainHeader(
 					memcpy(lpWorkBuf, pDiscPerSector->mainHeader.current, MAINHEADER_MODE1_SIZE);
 					OutputCDMain(fileMainError, lpWorkBuf, nLBA, MAINHEADER_MODE1_SIZE);
 					bHeader = TRUE;
+					FlushLog();
 				}
 			}
 		}
@@ -717,15 +719,16 @@ VOID FixSubQ(
 		BOOL bPrevPrevIndex = TRUE;
 		if (!IsValidSubQIdx(pDisc, pDiscPerSector, nLBA, &bPrevIndex, &bPrevPrevIndex)) {
 			BYTE tmpIdx = pDiscPerSector->subQ.prev.byIndex;
-			if (tmpIdx != 0 && tmpIdx != 1) {
-				if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->byTrackNum]) {
-					tmpIdx = 1;
-				}
-				else if (IsValidPregapSector(pDisc, &pDiscPerSector->subQ, nLBA)) {
-					if (pDiscPerSector->subQ.next.byIndex == 0 &&
-						pDiscPerSector->subQ.next.nRelativeTime + 1 == pDiscPerSector->subQ.current.nRelativeTime) {
-						tmpIdx = 0;
-					}
+			if (pDiscPerSector->subQ.prev.byAdr != ADR_ENCODES_CURRENT_POSITION) {
+				tmpIdx = pDiscPerSector->subQ.prevPrev.byIndex;
+			}
+
+			if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->byTrackNum - 1]) {
+				tmpIdx = 1;
+			}
+			else if (IsValidPregapSector(pDisc, &pDiscPerSector->subQ, nLBA)) {
+				if (pDiscPerSector->subQ.next.nRelativeTime + 1 == pDiscPerSector->subQ.current.nRelativeTime) {
+					tmpIdx = 0;
 				}
 			}
 			OutputSubErrorWithLBALogA("Q[14]:Idx[%02u] -> [%02u], L:[%ld]\n"
@@ -770,9 +773,9 @@ VOID FixSubQ(
 			BYTE byPrevMinute = 0;
 			INT tmpRel = 0;
 			if (pDiscPerSector->subQ.prev.byAdr == ADR_ENCODES_CURRENT_POSITION) {
-				if (!(pDiscPerSector->subQ.prev.byIndex == 0 && pDiscPerSector->subQ.current.byIndex == 1) &&
-					!(pDiscPerSector->subQ.prev.byIndex >= 1 && pDiscPerSector->subQ.current.byIndex == 0) ||
-					nLBA == 0 && pDisc->PROTECT.byExist == securomV3) {
+				if ((!(pDiscPerSector->subQ.prev.byIndex == 0 && pDiscPerSector->subQ.current.byIndex == 1) &&
+					!(pDiscPerSector->subQ.prev.byIndex >= 1 && pDiscPerSector->subQ.current.byIndex == 0)) ||
+					(nLBA == 0 && pDisc->PROTECT.byExist == securomV3)) {
 					if (pDiscPerSector->subQ.current.byIndex > 0) {
 						if (pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->byTrackNum] != nLBA) {
 							tmpRel = pDiscPerSector->subQ.prev.nRelativeTime + 1;
@@ -1014,8 +1017,8 @@ VOID FixSubQ(
 					, BcdToDec(pDiscPerSector->subcode.current[20]), BcdToDec(pDiscPerSector->subcode.current[21]));
 				INT nAMSF = MSFtoLBA(BcdToDec(SubQcodeOrg[7]), BcdToDec(SubQcodeOrg[8]), BcdToDec(SubQcodeOrg[9]));
 
-				if (nPrevRMSF + 1 == nRMSF && nPrevAMSF + 1 == nAMSF ||
-					nPrevRMSF == nRMSF && nPrevAMSF + 1 == nAMSF && pDisc->PROTECT.byExist == securomV3 && 0 <= nLBA && nLBA < 9) {
+				if ((nPrevRMSF + 1 == nRMSF && nPrevAMSF + 1 == nAMSF) ||
+					(nPrevRMSF == nRMSF && nPrevAMSF + 1 == nAMSF && pDisc->PROTECT.byExist == securomV3 && 0 <= nLBA && nLBA < 9)) {
 					OutputSubInfoWithLBALogA(
 						"Detected shifted sub. Restore RMSF[%02x:%02x:%02x to %02x:%02x:%02x] AMSF[%02x:%02x:%02x to %02x:%02x:%02x]\n"
 						, nLBA, pDiscPerSector->byTrackNum, pDiscPerSector->subcode.current[15], pDiscPerSector->subcode.current[16]

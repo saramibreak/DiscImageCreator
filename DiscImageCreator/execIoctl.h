@@ -27,9 +27,10 @@ BOOL ScsiGetAddress(
 BOOL ScsiPassThroughDirect(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
-	LPVOID lpCdbCmd,
-	BYTE byCdbCmdLength,
+	LPVOID lpCdb,
+	BYTE byCdbLength,
 	LPVOID pvBuffer,
+	INT nDataDirection,
 	DWORD dwBufferLength,
 	LPBYTE byScsiStatus,
 	LPCTSTR pszFuncName,
@@ -40,23 +41,9 @@ BOOL StorageQueryProperty(
 	PDEVICE pDevice,
 	LPBOOL lpBusTypeUSB
 );
-
+#if _WIN32
 BOOL SetStreaming(
 	PDEVICE pDevice,
 	DWORD dwDiscSpeedNum
 );
-
-BOOL DvdStartSession(
-	PDEVICE pDevice,
-	PDVD_COPY_PROTECT_KEY dvdKey
-);
-
-BOOL ReadKey(
-	PDEVICE pDevice,
-	PDVD_COPY_PROTECT_KEY dvdKey
-);
-
-BOOL SendKey(
-	PDEVICE pDevice,
-	PDVD_COPY_PROTECT_KEY dvdKey
-);
+#endif

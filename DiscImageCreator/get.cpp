@@ -37,14 +37,18 @@ BOOL GetAlignedCallocatedBuffer(
 }
 
 BOOL GetHandle(
-	PDEVICE pDevice,
-	_TCHAR* szBuf,
-	size_t bufSize
+	PDEVICE pDevice
 ) {
+#ifdef _WIN32
+	CONST size_t bufSize = 8;
+	_TCHAR szBuf[bufSize] = { 0 };
 	_sntprintf(szBuf, bufSize, _T("\\\\.\\%c:"), pDevice->byDriveLetter);
 	szBuf[7] = 0;
 	pDevice->hDevice = CreateFile(szBuf, GENERIC_READ | GENERIC_WRITE,
 		FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+#else
+	pDevice->hDevice = open(pDevice->drivepath, O_RDONLY | O_NONBLOCK, 0777);
+#endif
 	if (pDevice->hDevice == INVALID_HANDLE_VALUE) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
@@ -52,7 +56,7 @@ BOOL GetHandle(
 	return TRUE;
 }
 
-VOID GetDriveOffsetManually(
+INT GetDriveOffsetManually(
 	LPINT lpDriveOffset
 ) {
 	_TCHAR aBuf[6] = { 0 };
@@ -62,6 +66,7 @@ VOID GetDriveOffsetManually(
 	INT b = _tscanf(_T("%6[^\n]%*[^\n]"), aBuf);
 	b = _gettchar();
 	*lpDriveOffset = _ttoi(aBuf);
+	return b;
 }
 
 BOOL GetDriveOffsetAuto(
@@ -76,7 +81,7 @@ BOOL GetDriveOffsetAuto(
 	}
 
 	CHAR szProduct[DRIVE_PRODUCT_ID_SIZE + 1] = { 0 };
-	for (INT src = 0, dst = 0; dst < sizeof(szProduct) - 1; dst++) {
+	for (size_t src = 0, dst = 0; dst < sizeof(szProduct) - 1; dst++) {
 		if (szProductId[dst] == ' ' && (szProductId[dst + 1] == ' ' ||
 			szProductId[dst + 1] == '\0')) {
 			continue;
@@ -157,6 +162,29 @@ UINT64 GetFileSize64(
 	return ui64FileSize;
 }
 
+WORD  GetSizeOrWordForVolDesc(
+	LPBYTE lpBuf
+) {
+	WORD val = MAKEWORD(lpBuf[0], lpBuf[1]);
+	if (val == 0) {
+		val = MAKEWORD(lpBuf[3], lpBuf[2]);
+	}
+	return val;
+}
+
+DWORD  GetSizeOrDwordForVolDesc(
+	LPBYTE lpBuf,
+	DWORD dwMax
+) {
+	DWORD val = MAKEDWORD(MAKEWORD(lpBuf[0], lpBuf[1]),
+		MAKEWORD(lpBuf[2], lpBuf[3]));
+	if (val == 0 || val >= dwMax) {
+		val = MAKEDWORD(MAKEWORD(lpBuf[7], lpBuf[6]),
+			MAKEWORD(lpBuf[5], lpBuf[4]));
+	}
+	return val;
+}
+
 BYTE GetMode(
 	PDISC_PER_SECTOR pDiscPerSector,
 	INT nType
@@ -208,7 +236,7 @@ BOOL GetWriteOffset(
 				break;
 			}
 			INT tmpLBA = MSFtoLBA(sm, ss, sf) - 150;
-			pDisc->MAIN.nCombinedOffset = 
+			pDisc->MAIN.nCombinedOffset =
 				CD_RAW_SECTOR_SIZE * -(tmpLBA - pDisc->SCSI.nFirstLBAofDataTrack) + i;
 			bRet = TRUE;
 			break;
@@ -218,9 +246,9 @@ BOOL GetWriteOffset(
 }
 
 BOOL GetCmd(
-	_TCHAR* szPath,
-	_TCHAR* szFname,
-	_TCHAR* szExt
+	LPTSTR szPath,
+	LPCTSTR szFname,
+	LPCTSTR szExt
 ) {
 	if (!::GetModuleFileName(NULL, szPath, _MAX_PATH)) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -242,21 +270,37 @@ BOOL GetEccEdcCmd(
 	INT nEndLBA
 ) {
 	_TCHAR szPathForEcc[_MAX_PATH] = { 0 };
+#ifdef _WIN32
 	BOOL bRet = GetCmd(szPathForEcc, _T("EccEdc"), _T("exe"));
+#else
+	BOOL bRet = GetCmd(szPathForEcc, _T("./EccEdc_linux"), _T(".out"));
+#endif
 	if (bRet && PathFileExists(szPathForEcc)) {
 		if (!_tcscmp(pszCmd, _T("check"))) {
+#ifdef _WIN32
 			_sntprintf(pszStr, cmdSize,
 				_T("\"\"%s\" %s \"%s\"\""), szPathForEcc, pszCmd, pszImgPath);
+#else
+			_sntprintf(pszStr, cmdSize,
+				_T("%s %s %s"), szPathForEcc, pszCmd, pszImgPath);
+#endif
 		}
 		else if (!_tcscmp(pszCmd, _T("fix"))) {
+#ifdef _WIN32
 			_sntprintf(pszStr, cmdSize,
 				_T("\"\"%s\" %s \"%s\"\" %d %d"),
 				szPathForEcc, pszCmd, pszImgPath, nStartLBA, nEndLBA);
+#else
+			_sntprintf(pszStr, cmdSize,
+				_T("%s %s %s %d %d"),
+				szPathForEcc, pszCmd, pszImgPath, nStartLBA, nEndLBA);
+#endif
 		}
 	}
 	else {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		OutputErrorString(_T(" => %s\n"), szPathForEcc);
+		bRet = FALSE;
 	}
 	return bRet;
 }
@@ -273,38 +317,72 @@ BOOL GetUnscCmd(
 	_tmakepath(szPathForIso, szDrive, szDir, szFname, _T("iso"));
 
 	_TCHAR szPathForUnsc[_MAX_PATH] = { 0 };
+#ifdef _WIN32
 	BOOL bRet = GetCmd(szPathForUnsc, _T("unscrambler"), _T("exe"));
+#else
+	BOOL bRet = GetCmd(szPathForUnsc, _T("./unscrambler_linux"), _T(".out"));
+#endif
 	if (bRet && PathFileExists(szPathForUnsc)) {
 		size_t size = _tcslen(szPathForUnsc) + _tcslen(pszPath) + _tcslen(szPathForIso) + 9;
+#ifdef _WIN32
 		_sntprintf(pszStr, size,
 			_T("\"\"%s\" \"%s\" \"%s\"\""), szPathForUnsc, pszPath, szPathForIso);
+#else
+		_sntprintf(pszStr, size,
+			_T("%s %s %s"), szPathForUnsc, pszPath, szPathForIso);
+#endif
 	}
 	else {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		OutputErrorString(_T(" => %s\n"), szPathForUnsc);
+		bRet = FALSE;
 	}
 	return bRet;
 }
 
-WORD  GetSizeOrWordForVolDesc(
-	LPBYTE lpBuf
+BOOL GetCssCmd(
+	PDEVICE pDevice,
+	LPTSTR pszStr,
+	LPCTSTR pszPath
 ) {
-	WORD val = MAKEWORD(lpBuf[0], lpBuf[1]);
-	if (val == 0) {
-		val = MAKEWORD(lpBuf[3], lpBuf[2]);
-	}
-	return val;
-}
+	_TCHAR szDrive[_MAX_DRIVE] = { 0 };
+	_TCHAR szDir[_MAX_DIR] = { 0 };
+	_TCHAR szFname[_MAX_FNAME] = { 0 };
+	_TCHAR szPathForKey[_MAX_PATH] = { 0 };
+	_tsplitpath(pszPath, szDrive, szDir, szFname, NULL);
 
-DWORD  GetSizeOrDwordForVolDesc(
-	LPBYTE lpBuf,
-	DWORD dwMax
-) {
-	DWORD val = MAKEDWORD(MAKEWORD(lpBuf[0], lpBuf[1]),
-		MAKEWORD(lpBuf[2], lpBuf[3]));
-	if (val == 0 || val >= dwMax) {
-		val = MAKEDWORD(MAKEWORD(lpBuf[7], lpBuf[6]),
-			MAKEWORD(lpBuf[5], lpBuf[4]));
+	_TCHAR keyPath[_MAX_FNAME] = { 0 };
+	_TCHAR keyFile[] = _T("_CSSKey");
+
+	if (_tcslen(szFname) + _tcslen(keyFile) > _MAX_FNAME) {
+		OutputErrorString(_T("Path too long\n"));
+		return FALSE;
 	}
-	return val;
+	_tcsncpy(keyPath, szFname, _tcslen(szFname));
+	_tcsncat(keyPath, keyFile, _tcslen(keyFile));
+	_tmakepath(szPathForKey, szDrive, szDir, keyPath, _T("txt"));
+
+	_TCHAR szPathForCss[_MAX_PATH] = { 0 };
+#ifdef _WIN32
+	BOOL bRet = GetCmd(szPathForCss, _T("CSS"), _T("exe"));
+#else
+	BOOL bRet = GetCmd(szPathForCss, _T("./css-auth"), _T(".out"));
+#endif
+	OutputString("%s\n", szPathForCss);
+	if (bRet && PathFileExists(szPathForCss)) {
+		size_t size = _tcslen(szPathForCss) + _tcslen(szPathForKey) + 9;
+#ifdef _WIN32
+		_sntprintf(pszStr, size,
+			_T("\"\"%s\" %c %s\""), szPathForCss, pDevice->byDriveLetter, szPathForKey);
+#else
+		_sntprintf(pszStr, size,
+			_T("%s %s"), szPathForCss, pDevice->drivepath/*, szPathForKey*/);
+#endif
+	}
+	else {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		OutputErrorString(_T(" => %s\n"), szPathForCss);
+		bRet = FALSE;
+	}
+	return bRet;
 }

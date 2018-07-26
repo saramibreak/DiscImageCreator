@@ -21,13 +21,14 @@
 //  LPBOOL  => BOOL*
 //  CONST LPBOOL => BOOL* const
 //  CONST BOOL*  => const BOOL*
-
+#ifdef _WIN32
 #pragma pack(push, sensedata, 1)
 typedef struct _SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER {
 	SCSI_PASS_THROUGH_DIRECT ScsiPassThroughDirect;
 	SENSE_DATA SenseData;
 } SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER, *PSCSI_PASS_THROUGH_DIRECT_WITH_BUFFER;
 #pragma pack(pop, sensedata)
+#endif
 
 typedef struct _CDVD_CAPABILITIES_PAGE_WITH_HEADER10 {
 	MODE_PARAMETER_HEADER10 header;
@@ -198,18 +199,22 @@ typedef struct _EXT_ARG {
 	BYTE byIntentionalSub;
 	BYTE by74Min;
 	BYTE padding[3];
-	INT nAudioCDOffsetNum;
+	LONG nAudioCDOffsetNum;
 	DWORD dwMaxRereadNum;
-	INT nC2RereadingType;
-	INT nStartLBAForC2;
-	INT nEndLBAForC2;
+	LONG nC2RereadingType;
+	LONG nStartLBAForC2;
+	LONG nEndLBAForC2;
 	DWORD dwCacheDelNum;
 	DWORD dwTimeoutNum;
 	DWORD dwSubAddionalNum;
 } EXT_ARG, *PEXT_ARG;
 
 typedef struct _DEVICE {
+#ifdef _WIN32
 	HANDLE hDevice;
+#else
+	int hDevice;
+#endif
 	SCSI_ADDRESS address;
 	UINT_PTR AlignmentMask;
 	DWORD dwMaxTransferLength;
@@ -219,7 +224,11 @@ typedef struct _DEVICE {
 	BYTE byPlxtrDrive;
 	BYTE bySuccessReadToc;
 	BYTE bySuccessReadTocFull;
+#ifdef _WIN32
 	BYTE byDriveLetter;
+#else
+	CHAR drivepath[15];
+#endif
 	WORD wMaxReadSpeed;
 	BYTE padding[2];
 	_CDFLAG::_READ_CD::_ERROR_FLAGS supportedC2Type;
@@ -246,7 +255,11 @@ typedef struct _DEVICE {
 // http://msdn.microsoft.com/ja-jp/library/aa290049(v=vs.71).aspx
 typedef struct _DISC {
 	struct _SCSI {
+#ifdef _WIN32
 		_declspec(align(4)) CDROM_TOC toc; // get at CDROM_READ_TOC_EX_FORMAT_TOC
+#else
+		__attribute__ ((aligned(4))) CDROM_TOC toc; // get at CDROM_READ_TOC_EX_FORMAT_TOC
+#endif
 		INT nAllLength;				// get at CDROM_READ_TOC_EX_FORMAT_TOC
 		LPINT lpFirstLBAListOnToc;	// get at CDROM_READ_TOC_EX_FORMAT_TOC
 		LPINT lpLastLBAListOnToc;	// get at CDROM_READ_TOC_EX_FORMAT_TOC
@@ -368,11 +381,11 @@ typedef struct _VOLUME_DESCRIPTOR {
 } VOLUME_DESCRIPTOR, *PVOLUME_DESCRIPTOR;
 
 typedef struct _DIRECTORY_RECORD {
-	UINT uiDirNameLen;
-	UINT uiPosOfDir;
-	UINT uiNumOfUpperDir;
+	DWORD dwDirNameLen;
+	DWORD dwPosOfDir;
+	DWORD dwNumOfUpperDir;
 	CHAR szDirName[MAX_FNAME_FOR_VOLUME];
-	UINT uiDirSize;
+	DWORD dwDirSize;
 } DIRECTORY_RECORD, *PDIRECTORY_RECORD;
 
 // This buffer stores all CD data (main + c2 + sub) obtained from SCSI read command

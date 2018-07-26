@@ -21,7 +21,7 @@ VOID OutputFsRecordingDateAndTime(
 	LPBYTE lpBuf
 ) {
 	WORD sTime = MAKEWORD(lpBuf[0], lpBuf[1]);
-	CHAR cTimeZone = sTime >> 12 & 0x0f;
+	CHAR cTimeZone = (CHAR)(sTime >> 12 & 0x0f);
 	OutputVolDescLogA("\tRecording Date and Time: ");
 	if (cTimeZone == 0) {
 		OutputVolDescLogA("UTC ");
@@ -260,15 +260,15 @@ VOID OutputFsLogicalVolumeIntegrityDescriptor(
 		"\t             Number of Partitions: %lu\n"
 		"\t     Length of Implementation Use: %lu\n"
 		, N_P, L_IU);
-	INT nOfs = N_P * 4;
+	LONG nOfs = N_P * 4;
 	if (0 < N_P) {
 		OutputVolDescLogA("\t                 Free Space Table: ");
-		for (INT i = 0; i < N_P; i += 4) {
+		for (LONG i = 0; i < N_P; i += 4) {
 			OutputVolDescLogA("%lu \n"
 				, MAKELONG(MAKEWORD(lpBuf[80 + i], lpBuf[81 + i]), MAKEWORD(lpBuf[82 + i], lpBuf[83 + i])));
 		}
 		OutputVolDescLogA("\t                       Size Table: ");
-		for (INT i = 80 + nOfs, j = 0; j < N_P; j += 4) {
+		for (LONG i = 80 + nOfs, j = 0; j < N_P; j += 4) {
 			OutputVolDescLogA("%lu "
 				, MAKELONG(MAKEWORD(lpBuf[i + j], lpBuf[i + 1 + j]), MAKEWORD(lpBuf[i + 2 + j], lpBuf[i + 3 + j])));
 		}
@@ -666,13 +666,19 @@ VOID OutputDVDLayerDescriptor(
 		"0.353ƒÊm/bit", "Reserved", "Reserved", "Reserved",
 		"Reserved", "Reserved", "Reserved", "Reserved"
 	};
-
+#ifdef _WIN32
 	DWORD dwStartingDataSector = dvdLayer->commonHeader.StartingDataSector;
 	DWORD dwEndDataSector = dvdLayer->commonHeader.EndDataSector;
 	DWORD dwEndLayerZeroSector = dvdLayer->commonHeader.EndLayerZeroSector;
 	REVERSE_LONG(&dwStartingDataSector);
 	REVERSE_LONG(&dwEndDataSector);
 	REVERSE_LONG(&dwEndLayerZeroSector);
+#else
+	LPBYTE buf = (LPBYTE)dvdLayer;
+	DWORD dwStartingDataSector = MAKELONG(MAKEWORD(buf[7], buf[6]), MAKEWORD(buf[5], 0));
+	DWORD dwEndDataSector = MAKELONG(MAKEWORD(buf[11], buf[10]), MAKEWORD(buf[9], 0));
+	DWORD dwEndLayerZeroSector = MAKELONG(MAKEWORD(buf[15], buf[14]), MAKEWORD(buf[13], 0));
+#endif
 	if (pDisc->DVD.dwDVDStartPsn == 0) {
 		pDisc->DVD.dwDVDStartPsn = dwStartingDataSector;
 	}
@@ -739,6 +745,16 @@ VOID OutputDVDLayerDescriptor(
 	}
 }
 
+VOID OutputDVDRegion(
+	UCHAR ucRMI,
+	UCHAR ucFlag,
+	CONST CHAR* region
+) {
+	if ((ucRMI & ucFlag) == 0) {
+		OutputDiscLogA("%s", region);
+	}
+}
+
 VOID OutputDVDCopyrightDescriptor(
 	PDVD_COPYRIGHT_DESCRIPTOR dvdCopyright,
 	PPROTECT_TYPE_DVD pProtect
@@ -771,8 +787,16 @@ VOID OutputDVDCopyrightDescriptor(
 		*pProtect = noProtect;
 		break;
 	}
-	OutputDiscLogA(
-		"\tRegionManagementInformation: %02x\n", dvdCopyright->RegionManagementInformation);
+	OutputDiscLogA("\tRegionManagementInformation:");
+	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x01, " 1");
+	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x02, " 2");
+	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x04, " 3");
+	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x08, " 4");
+	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x10, " 5");
+	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x20, " 6");
+	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x40, " 7");
+	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x80, " 8");
+	OutputDiscLogA("\n");
 }
 
 VOID OutputDVDCommonInfo(
@@ -902,7 +926,7 @@ VOID OutputDVDRmdLastBorderOut(
 ) {
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(RMD in last border-out));
 	INT nRoop = wFormatLength / DISC_RAW_READ_SIZE;
-	for (BYTE i = 0; i < nRoop; i++) {
+	for (INT i = 0; i < nRoop; i++) {
 		OutputCDMain(fileDisc, lpFormat + DISC_RAW_READ_SIZE * i, 0, DISC_RAW_READ_SIZE);
 	}
 }
@@ -918,8 +942,8 @@ VOID OutputDVDRecordingManagementAreaData(
 		dvdRecordingMan->LastRecordedRMASectorNumber[2]),
 		MAKEWORD(dvdRecordingMan->LastRecordedRMASectorNumber[1],
 		dvdRecordingMan->LastRecordedRMASectorNumber[0])));
-	UINT nRoop = (wFormatLength - sizeof(DVD_RECORDING_MANAGEMENT_AREA_DATA)) / DISC_RAW_READ_SIZE;
-	for (BYTE i = 0; i < nRoop; i++) {
+	ULONG nRoop = (wFormatLength - sizeof(DVD_RECORDING_MANAGEMENT_AREA_DATA)) / DISC_RAW_READ_SIZE;
+	for (ULONG i = 0; i < nRoop; i++) {
 		OutputCDMain(fileDisc, dvdRecordingMan->RMDBytes + DISC_RAW_READ_SIZE * i, 0, DISC_RAW_READ_SIZE);
 	}
 }
@@ -1338,21 +1362,22 @@ VOID OutputDVDCopyrightManagementInformation(
 		else {
 			OutputDiscWithLBALogA("CSS or CPPM doesn't exist in this sector", nLBA);
 		}
+
 		switch (dvdCopyright->CPR_MAI & 0x30) {
 		case 0:
-			OutputDiscWithLBALogA(", copying is permitted without restriction\n", nLBA);
+			OutputDiscLogA(", copying is permitted without restriction\n");
 			break;
 		case 0x10:
-			OutputDiscWithLBALogA(", reserved\n", nLBA);
+			OutputDiscLogA(", reserved\n");
 			break;
 		case 0x20:
-			OutputDiscWithLBALogA(", one generation of copies may be made\n", nLBA);
+			OutputDiscLogA(", one generation of copies may be made\n");
 			break;
 		case 0x30:
-			OutputDiscWithLBALogA(", no copying is permitted\n", nLBA);
+			OutputDiscLogA(", no copying is permitted\n");
 			break;
 		default:
-			OutputDiscWithLBALogA("\n", nLBA);
+			OutputDiscLogA("\n");
 		}
 	}
 	else {
@@ -1404,7 +1429,7 @@ VOID OutputBDRawDefectList(
 		OutputDiscLogA("%02x ", lpFormat[16 + k]);
 	}
 	OutputDiscLogA("\nDefectEntries: ");
-	for (WORD k = 0; k < lEntries; k += 8) {
+	for (LONG k = 0; k < lEntries; k += 8) {
 		OutputDiscLogA("%02x%02x%02x%02x%02x%02x%02x%02x "
 			, lpFormat[64 + k], lpFormat[65 + k], lpFormat[66 + k], lpFormat[67 + k]
 			, lpFormat[68 + k], lpFormat[69 + k], lpFormat[70 + k], lpFormat[71 + k]);
@@ -1590,12 +1615,16 @@ VOID OutputXboxSecuritySector(
 		, buf[1632]);
 
 	DWORD startLBA = 0, endLBA = 0;
+#ifdef _WIN32
 	PDVD_FULL_LAYER_DESCRIPTOR dvdLayer = (PDVD_FULL_LAYER_DESCRIPTOR)buf;
 	DWORD dwEndLayerZeroSector = dvdLayer->commonHeader.EndLayerZeroSector;
 	REVERSE_LONG(&dwEndLayerZeroSector);
+#else
+	DWORD dwEndLayerZeroSector = MAKELONG(MAKEWORD(buf[15], buf[14]), MAKEWORD(buf[13], 0));
+#endif
 	BYTE ssNum = buf[1632];
 
-	for (WORD k = 1633, i = 0; i < ssNum; k += 9, i++) {
+	for (INT k = 1633, i = 0; i < ssNum; k += 9, i++) {
 		DWORD unknown = MAKEDWORD(MAKEWORD(buf[k + 2], buf[k + 1]), MAKEWORD(buf[k], 0));
 		DWORD startPsn = MAKEDWORD(MAKEWORD(buf[k + 5], buf[k + 4]), MAKEWORD(buf[k + 3], 0));
 		DWORD endPsn = MAKEDWORD(MAKEWORD(buf[k + 8], buf[k + 7]), MAKEWORD(buf[k + 6], 0));

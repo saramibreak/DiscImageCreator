@@ -214,7 +214,7 @@ BOOL IsValidMainDataHeader(
 	LPBYTE lpBuf
 ) {
 	BOOL bRet = TRUE;
-	for (INT c = 0; c < sizeof(g_aSyncHeader); c++) {
+	for (size_t c = 0; c < sizeof(g_aSyncHeader); c++) {
 		if (lpBuf[c] != g_aSyncHeader[c]) {
 			bRet = FALSE;
 			break;
@@ -240,7 +240,7 @@ BOOL IsValid3doDataHeader(
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 	};
 	INT i = 0;
-	for (INT c = 0; c < sizeof(a3doHeader); i++, c++) {
+	for (size_t c = 0; c < sizeof(a3doHeader); i++, c++) {
 		if (lpBuf[i] != a3doHeader[c]) {
 			bRet = FALSE;
 			break;
@@ -284,7 +284,7 @@ BOOL IsValidPceSector(
 		0x93, 0x82, 0xaa, 0x8f, 0x8a, 0x97, 0x4c, 0x82,
 		0xb5, 0x82, 0xc4, 0x82, 0xa8, 0x82, 0xe8, 0x82
 	};
-	for (INT i = 0; i < sizeof(warningStr); i++) {
+	for (size_t i = 0; i < sizeof(warningStr); i++) {
 		if (lpBuf[i] != warningStr[i]) {
 			bRet = FALSE;
 			break;
@@ -357,7 +357,7 @@ BOOL IsValidSecuRomSector(
 			}
 		}
 		else if (pDisc->PROTECT.byExist == securomV3) {
-			if (0 <= nLBA && nLBA < 8 || 5000 <= nLBA && nLBA < 25000) {
+			if ((0 <= nLBA && nLBA < 8) || (5000 <= nLBA && nLBA < 25000)) {
 				bRet = TRUE;
 			}
 		}
@@ -391,6 +391,7 @@ BOOL IsValidIntentionalC2error(
 ) {
 	BOOL bRet = FALSE;
 	if (pDisc->PROTECT.byExist == codelock || pDisc->PROTECT.byExist == datel ||
+		pDisc->PROTECT.byExist == laserlock || pDisc->PROTECT.byExist == proring ||
 		(pDisc->PROTECT.byExist == safeDisc && pDiscPerSector->dwC2errorNum == SAFEDISC_C2ERROR_NUM)) {
 		bRet = TRUE;
 	}
@@ -768,7 +769,8 @@ BOOL IsValidSubQTrack(
 					// LBA[361285, 0x58345]: P[ff], Q[0122000000000080191061a1]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[22], Idx[00], RMSF[00:00:00], AMSF[80:19:10]}, RtoW[0, 0, 0, 0]
 					// LBA[361286, 0x58346]: P[ff], Q[012201000000008019113653]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[22], Idx[01], RMSF[00:00:00], AMSF[80:19:11]}, RtoW[0, 0, 0, 0]
 					// LBA[361287, 0x58347]: P[00], Q[01220100000100801912ac61]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[22], Idx[01], RMSF[00:00:01], AMSF[80:19:12]}, RtoW[0, 0, 0, 0]
-					else if (nLBA < pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->subQ.prev.byTrackNum]) {
+					else if (nLBA < pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->subQ.prev.byTrackNum] &&
+						(pDiscPerSector->subQ.prev.nRelativeTime - 1 == pDiscPerSector->subQ.current.nRelativeTime)) {
 						s_lineNum = __LINE__;
 						bRet = FALSE;
 					}
@@ -866,7 +868,17 @@ BOOL IsValidSubQTrack(
 	}
 	else if (pDiscPerSector->subQ.prevPrev.byAdr == ADR_ENCODES_CURRENT_POSITION &&
 		pDiscPerSector->subQ.prevPrev.byTrackNum != pDiscPerSector->subQ.current.byTrackNum) {
-		if (pDiscPerSector->subQ.prevPrev.byTrackNum + 2 <= pDiscPerSector->subQ.current.byTrackNum ||
+		// Sonic CD (USA)
+		// LBA[089657, 0x15e39]: P[00], Q[01070100165000195732b85e]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[07], Idx[01], RMSF[00:16:50], AMSF[19:57:32]}, RtoW[0, 0, 0, 0]
+		// LBA[089658, 0x15e3a]: P[00], Q[01070100165100195733022e]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[07], Idx[01], RMSF[00:16:51], AMSF[19:57:33]}, RtoW[0, 0, 0, 0]
+		// LBA[089659, 0x15e3b]: P[00], Q[0200000000000000003457a2]{Audio, 2ch, Copy NG, Pre-emphasis No, MediaCatalogNumber [0000000000000], AMSF[     :34]}, RtoW[0, 0, 0, 0]
+		// LBA[089660, 0x15e3c]: P[00], Q[01060100165300195735cd48]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[06], Idx[01], RMSF[00:16:53], AMSF[19:57:35]}, RtoW[0, 0, 0, 0]
+		// LBA[089661, 0x15e3d]: P[00], Q[0107010016540019573671dc]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[07], Idx[01], RMSF[00:16:54], AMSF[19:57:36]}, RtoW[0, 0, 0, 0]
+		if (pDiscPerSector->subQ.prevPrev.byTrackNum > pDiscPerSector->subQ.current.byTrackNum) {
+			s_lineNum = __LINE__;
+			return FALSE;
+		}
+		else if (pDiscPerSector->subQ.prevPrev.byTrackNum + 2 <= pDiscPerSector->subQ.current.byTrackNum ||
 			pDiscPerSector->subQ.prevPrev.byTrackNum == 110) {
 			s_lineNum = __LINE__;
 			return FALSE;

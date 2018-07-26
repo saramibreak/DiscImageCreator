@@ -58,10 +58,10 @@ BOOL AlignRowSubcode(
 			for (INT nShift = 0; nShift < CHAR_BIT; nShift++, nColumn++) {
 				INT n = nShift - bitNum;
 				if (n > 0) {
-					lpRowSubcode[nRow] |= (lpColumnSubcode[nColumn] >> n) & nMask;
+					lpRowSubcode[nRow] |= (BYTE)((lpColumnSubcode[nColumn] >> n) & nMask);
 				}
 				else {
-					lpRowSubcode[nRow] |= (lpColumnSubcode[nColumn] << abs(n)) & nMask;
+					lpRowSubcode[nRow] |= (BYTE)((lpColumnSubcode[nColumn] << abs(n)) & nMask);
 				}
 				nMask >>= 1;
 			}
@@ -111,10 +111,10 @@ BOOL AlignColumnSubcode(
 			for (INT nShift = 0; nShift < CHAR_BIT; nShift++, nColumn++) {
 				INT n = nShift - bitNum;
 				if (n > 0) {
-					lpColumnSubcode[nColumn] |= (lpRowSubcode[nRow] << n) & nMask;
+					lpColumnSubcode[nColumn] |= (BYTE)((lpRowSubcode[nRow] << n) & nMask);
 				}
 				else {
-					lpColumnSubcode[nColumn] |= (lpRowSubcode[nRow] >> abs(n)) & nMask;
+					lpColumnSubcode[nColumn] |= (BYTE)((lpRowSubcode[nRow] >> abs(n)) & nMask);
 				}
 			}
 		}
@@ -180,7 +180,11 @@ LPVOID ConvParagraphBoundary(
 	PDEVICE pDevice,
 	LPBYTE pv
 ) {
+#ifdef _WIN32
 	return (LPVOID)(((UINT_PTR)pv + pDevice->AlignmentMask) & ~pDevice->AlignmentMask);
+#else
+	return (LPVOID)pv;
+#endif
 }
 
 DWORD PadSizeForVolDesc(

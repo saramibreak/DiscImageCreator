@@ -25,12 +25,10 @@ BOOL GetAlignedCallocatedBuffer(
 );
 
 BOOL GetHandle(
-	PDEVICE pDevice,
-	_TCHAR* szBuf,
-	size_t bufSize
+	PDEVICE pDevice
 );
 
-VOID GetDriveOffsetManually(
+INT GetDriveOffsetManually(
 	LPINT lpDriveOffset
 );
 
@@ -47,6 +45,15 @@ DWORD GetFileSize(
 UINT64 GetFileSize64(
 	INT64 n64Offset,
 	FILE *fp
+);
+
+WORD GetSizeOrWordForVolDesc(
+	LPBYTE lpBuf
+);
+
+DWORD GetSizeOrDwordForVolDesc(
+	LPBYTE lpBuf,
+	DWORD dwMax
 );
 
 BYTE GetMode(
@@ -73,11 +80,8 @@ BOOL GetUnscCmd(
 	LPCTSTR pszPath
 );
 
-WORD GetSizeOrWordForVolDesc(
-	LPBYTE lpBuf
-);
-
-DWORD GetSizeOrDwordForVolDesc(
-	LPBYTE lpBuf,
-	DWORD dwMax
+BOOL GetCssCmd(
+	PDEVICE pDevice,
+	LPTSTR pszStr,
+	LPCTSTR pszPath
 );

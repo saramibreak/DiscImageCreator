@@ -63,10 +63,16 @@ VOID SetCommandForTransferLength(
 	PDEVICE pDevice,
 	LPBYTE pCdb,
 	DWORD dwSize,
-	LPBYTE lpTransferLen
+	LPBYTE lpTransferLen,
+	LPBYTE lpRoopLen
 ) {
-	if (*pExecType == gd && dwSize == pDevice->dwMaxTransferLength) {
-		*lpTransferLen = (BYTE)(dwSize / CD_RAW_SECTOR_SIZE);
+	if (*pExecType == gd) {
+		if (dwSize == pDevice->dwMaxTransferLength) {
+			*lpTransferLen = (BYTE)(dwSize / CD_RAW_SECTOR_SIZE);
+		}
+		else {
+			*lpTransferLen = (BYTE)(dwSize / DISC_RAW_READ_SIZE + 1);
+		}
 	}
 	else {
 		*lpTransferLen = (BYTE)(dwSize / DISC_RAW_READ_SIZE);
@@ -82,10 +88,12 @@ VOID SetCommandForTransferLength(
 	if (*pExecType == gd) {
 		// 0xbe
 		pCdb[8] = *lpTransferLen;
+		*lpRoopLen = (BYTE)(*lpTransferLen - 1);
 	}
 	else {
 		// 0xa8
 		pCdb[9] = *lpTransferLen;
+		*lpRoopLen = *lpTransferLen;
 	}
 }
 
@@ -402,17 +410,17 @@ VOID SetAndOutputTocCDText(
 	WORD wTocTextEntries,
 	WORD wAllTextSize
 ) {
-	BYTE byAlbumCnt = 0, byAlbumIdx = 0;
-	BYTE byPerformerCnt = 0, byPerformerIdx = 0;
-	BYTE bySongwriterCnt = 0, bySongwriterIdx = 0;
-	BYTE byComposerCnt = 0, byComposerIdx = 0;
-	BYTE byArrangerCnt = 0, byArrangerIdx = 0;
-	BYTE byMessagesCnt = 0, byMessagesIdx = 0;
-	BYTE byDiscIdCnt = 0, byDiscIdIdx = 0;
-	BYTE byGenreCnt = 0, byGenreIdx = 0;
-	BYTE byTocInfoCnt = 0, byTocInfoIdx = 0;
-	BYTE byTocInfo2Cnt = 0, byTocInfo2Idx = 0;
-	BYTE byUpcEanCnt = 0, byUpcEanIdx = 0;
+	BYTE byAlbumCnt = 0/*, byAlbumIdx = 0*/;
+	BYTE byPerformerCnt = 0/*, byPerformerIdx = 0*/;
+	BYTE bySongwriterCnt = 0/*, bySongwriterIdx = 0*/;
+	BYTE byComposerCnt = 0/*, byComposerIdx = 0*/;
+	BYTE byArrangerCnt = 0/*, byArrangerIdx = 0*/;
+	BYTE byMessagesCnt = 0/*, byMessagesIdx = 0*/;
+	BYTE byDiscIdCnt = 0/*, byDiscIdIdx = 0*/;
+	BYTE byGenreCnt = 0/*, byGenreIdx = 0*/;
+	BYTE byTocInfoCnt = 0/*, byTocInfoIdx = 0*/;
+	BYTE byTocInfo2Cnt = 0/*, byTocInfo2Idx = 0*/;
+	BYTE byUpcEanCnt = 0/*, byUpcEanIdx = 0*/;
 	BYTE bySizeInfoCnt = 0, bySizeInfoIdx = 0;
 
 	for (size_t t = 0; t < wTocTextEntries; t++) {
@@ -434,63 +442,63 @@ VOID SetAndOutputTocCDText(
 			if (bRet) {
 				byAlbumCnt += bRet;
 			}
-			byAlbumIdx = pDesc[t].SequenceNumber;
+//			byAlbumIdx = pDesc[t].SequenceNumber;
 		}
 		else if (pDesc[t].PackType == CDROM_CD_TEXT_PACK_PERFORMER) {
 			if (bRet) {
 				byPerformerCnt += bRet;
 			}
-			byPerformerIdx = pDesc[t].SequenceNumber;
+//			byPerformerIdx = pDesc[t].SequenceNumber;
 		}
 		else if (pDesc[t].PackType == CDROM_CD_TEXT_PACK_SONGWRITER) {
 			if (bRet) {
 				bySongwriterCnt += bRet;
 			}
-			bySongwriterIdx = pDesc[t].SequenceNumber;
+//			bySongwriterIdx = pDesc[t].SequenceNumber;
 		}
 		else if (pDesc[t].PackType == CDROM_CD_TEXT_PACK_COMPOSER) {
 			if (bRet) {
 				byComposerCnt += bRet;
 			}
-			byComposerIdx = pDesc[t].SequenceNumber;
+//			byComposerIdx = pDesc[t].SequenceNumber;
 		}
 		else if (pDesc[t].PackType == CDROM_CD_TEXT_PACK_ARRANGER) {
 			if (bRet) {
 				byArrangerCnt += bRet;
 			}
-			byArrangerIdx = pDesc[t].SequenceNumber;
+//			byArrangerIdx = pDesc[t].SequenceNumber;
 		}
 		else if (pDesc[t].PackType == CDROM_CD_TEXT_PACK_MESSAGES) {
 			if (bRet) {
 				byMessagesCnt += bRet;
 			}
-			byMessagesIdx = pDesc[t].SequenceNumber;
+//			byMessagesIdx = pDesc[t].SequenceNumber;
 		}
 		else if (pDesc[t].PackType == CDROM_CD_TEXT_PACK_DISC_ID) {
 			if (bRet) {
 				byDiscIdCnt += bRet;
 			}
-			byDiscIdIdx = pDesc[t].SequenceNumber;
+//			byDiscIdIdx = pDesc[t].SequenceNumber;
 		}
 		else if (pDesc[t].PackType == CDROM_CD_TEXT_PACK_GENRE) {
 			if (bRet) {
 				byGenreCnt += bRet;
 			}
-			byGenreIdx = pDesc[t].SequenceNumber;
+//			byGenreIdx = pDesc[t].SequenceNumber;
 		}
 		else if (pDesc[t].PackType == CDROM_CD_TEXT_PACK_TOC_INFO) {
 			byTocInfoCnt++;
-			byTocInfoIdx = pDesc[t].SequenceNumber;
+//			byTocInfoIdx = pDesc[t].SequenceNumber;
 		}
 		else if (pDesc[t].PackType == CDROM_CD_TEXT_PACK_TOC_INFO2) {
 			byTocInfo2Cnt++;
-			byTocInfo2Idx = pDesc[t].SequenceNumber;
+//			byTocInfo2Idx = pDesc[t].SequenceNumber;
 		}
 		else if (pDesc[t].PackType == CDROM_CD_TEXT_PACK_UPC_EAN) {
 			if (bRet) {
 				byUpcEanCnt += bRet;
 			}
-			byUpcEanIdx = pDesc[t].SequenceNumber;
+//			byUpcEanIdx = pDesc[t].SequenceNumber;
 		}
 		else if (pDesc[t].PackType == CDROM_CD_TEXT_PACK_SIZE_INFO) {
 			bySizeInfoCnt++;
@@ -592,17 +600,17 @@ VOID SetAndOutputTocCDWText(
 	WORD wTocTextEntries,
 	WORD wAllTextSize
 ) {
-	BYTE byAlbumCnt = 0, byAlbumIdx = 0;
-	BYTE byPerformerCnt = 0, byPerformerIdx = 0;
-	BYTE bySongwriterCnt = 0, bySongwriterIdx = 0;
-	BYTE byComposerCnt = 0, byComposerIdx = 0;
-	BYTE byArrangerCnt = 0, byArrangerIdx = 0;
-	BYTE byMessagesCnt = 0, byMessagesIdx = 0;
-	BYTE byDiscIdCnt = 0, byDiscIdIdx = 0;
-	BYTE byGenreCnt = 0, byGenreIdx = 0;
-	BYTE byTocInfoCnt = 0, byTocInfoIdx = 0;
-	BYTE byTocInfo2Cnt = 0, byTocInfo2Idx = 0;
-	BYTE byUpcEanCnt = 0, byUpcEanIdx = 0;
+	BYTE byAlbumCnt = 0/*, byAlbumIdx = 0*/;
+	BYTE byPerformerCnt = 0/*, byPerformerIdx = 0*/;
+	BYTE bySongwriterCnt = 0/*, bySongwriterIdx = 0*/;
+	BYTE byComposerCnt = 0/*, byComposerIdx = 0*/;
+	BYTE byArrangerCnt = 0/*, byArrangerIdx = 0*/;
+	BYTE byMessagesCnt = 0/*, byMessagesIdx = 0*/;
+	BYTE byDiscIdCnt = 0/*, byDiscIdIdx = 0*/;
+	BYTE byGenreCnt = 0/*, byGenreIdx = 0*/;
+	BYTE byTocInfoCnt = 0/*, byTocInfoIdx = 0*/;
+	BYTE byTocInfo2Cnt = 0/*, byTocInfo2Idx = 0*/;
+	BYTE byUpcEanCnt = 0/*, byUpcEanIdx = 0*/;
 	BYTE bySizeInfoCnt = 0, bySizeInfoIdx = 0;
 
 	for (size_t t = wFirstEntries; t < wTocTextEntries; t++) {
@@ -619,63 +627,63 @@ VOID SetAndOutputTocCDWText(
 			if (bRet) {
 				byAlbumCnt++;
 			}
-			byAlbumIdx = pDesc[t].SequenceNumber;
+//			byAlbumIdx = pDesc[t].SequenceNumber;
 		}
 		else if (pDesc[t].PackType == CDROM_CD_TEXT_PACK_PERFORMER) {
 			if (bRet) {
 				byPerformerCnt++;
 			}
-			byPerformerIdx = pDesc[t].SequenceNumber;
+//			byPerformerIdx = pDesc[t].SequenceNumber;
 		}
 		else if (pDesc[t].PackType == CDROM_CD_TEXT_PACK_SONGWRITER) {
 			if (bRet) {
 				bySongwriterCnt++;
 			}
-			bySongwriterIdx = pDesc[t].SequenceNumber;
+//			bySongwriterIdx = pDesc[t].SequenceNumber;
 		}
 		else if (pDesc[t].PackType == CDROM_CD_TEXT_PACK_COMPOSER) {
 			if (bRet) {
 				byComposerCnt++;
 			}
-			byComposerIdx = pDesc[t].SequenceNumber;
+//			byComposerIdx = pDesc[t].SequenceNumber;
 		}
 		else if (pDesc[t].PackType == CDROM_CD_TEXT_PACK_ARRANGER) {
 			if (bRet) {
 				byArrangerCnt++;
 			}
-			byArrangerIdx = pDesc[t].SequenceNumber;
+//			byArrangerIdx = pDesc[t].SequenceNumber;
 		}
 		else if (pDesc[t].PackType == CDROM_CD_TEXT_PACK_MESSAGES) {
 			if (bRet) {
 				byMessagesCnt++;
 			}
-			byMessagesIdx = pDesc[t].SequenceNumber;
+//			byMessagesIdx = pDesc[t].SequenceNumber;
 		}
 		else if (pDesc[t].PackType == CDROM_CD_TEXT_PACK_DISC_ID) {
 			if (bRet) {
 				byDiscIdCnt++;
 			}
-			byDiscIdIdx = pDesc[t].SequenceNumber;
+//			byDiscIdIdx = pDesc[t].SequenceNumber;
 		}
 		else if (pDesc[t].PackType == CDROM_CD_TEXT_PACK_GENRE) {
 			if (bRet) {
 				byGenreCnt++;
 			}
-			byGenreIdx = pDesc[t].SequenceNumber;
+//			byGenreIdx = pDesc[t].SequenceNumber;
 		}
 		else if (pDesc[t].PackType == CDROM_CD_TEXT_PACK_TOC_INFO) {
 			byTocInfoCnt++;
-			byTocInfoIdx = pDesc[t].SequenceNumber;
+//			byTocInfoIdx = pDesc[t].SequenceNumber;
 		}
 		else if (pDesc[t].PackType == CDROM_CD_TEXT_PACK_TOC_INFO2) {
 			byTocInfo2Cnt++;
-			byTocInfo2Idx = pDesc[t].SequenceNumber;
+//			byTocInfo2Idx = pDesc[t].SequenceNumber;
 		}
 		else if (pDesc[t].PackType == CDROM_CD_TEXT_PACK_UPC_EAN) {
 			if (bRet) {
 				byUpcEanCnt++;
 			}
-			byUpcEanIdx = pDesc[t].SequenceNumber;
+//			byUpcEanIdx = pDesc[t].SequenceNumber;
 		}
 		else if (pDesc[t].PackType == CDROM_CD_TEXT_PACK_SIZE_INFO) {
 			bySizeInfoCnt++;
@@ -785,7 +793,7 @@ VOID SetCDOffset(
 		}
 		else {
 			pDisc->MAIN.uiMainDataSlideSize =
-				(size_t)pDisc->MAIN.nCombinedOffset % CD_RAW_SECTOR_SIZE;
+				(UINT)pDisc->MAIN.nCombinedOffset % CD_RAW_SECTOR_SIZE;
 			pDisc->MAIN.nOffsetStart = 0;
 			pDisc->MAIN.nOffsetEnd = pDisc->MAIN.nAdjustSectorNum;
 			pDisc->MAIN.nFixStartLBA = nStartLBA + pDisc->MAIN.nAdjustSectorNum - 1;
@@ -812,7 +820,7 @@ VOID SetCDOffset(
 				pDisc->MAIN.uiMainDataSlideSize = 0;
 			}
 			else {
-				pDisc->MAIN.uiMainDataSlideSize = (size_t)CD_RAW_SECTOR_SIZE + nTmp;
+				pDisc->MAIN.uiMainDataSlideSize = (UINT)CD_RAW_SECTOR_SIZE + nTmp;
 			}
 			pDisc->MAIN.nOffsetStart = pDisc->MAIN.nAdjustSectorNum;
 			pDisc->MAIN.nOffsetEnd = 0;
@@ -1102,7 +1110,7 @@ VOID SetMCNToString(
 VOID SetLBAForFirstAdr(
 	INT nFirstLBA[][2],
 	INT nRangeLBA[][2],
-	LPSTR strAdr,
+	LPCSTR strAdr,
 	LPINT nAdrLBAList,
 	BYTE byIdxOfSession,
 	BYTE byPlxtrDrive
@@ -1201,8 +1209,8 @@ VOID SetLBAForFirstAdr(
 }
 
 VOID SetBufferFromTmpSubQData(
-	SUB_Q_PER_SECTOR subQ,
 	LPBYTE lpSubcode,
+	SUB_Q_PER_SECTOR subQ,
 	BYTE bycurrent
 ) {
 	lpSubcode[12] = BYTE(subQ.byCtl << 4 | subQ.byAdr);

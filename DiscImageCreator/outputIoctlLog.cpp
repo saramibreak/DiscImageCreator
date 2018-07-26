@@ -3218,7 +3218,7 @@ VOID OutputFloppyInfo(
 			break;
 		}
 
-		DWORD dwDiskSize = pGeom[i].Cylinders.LowPart * pGeom[i].TracksPerCylinder *
+		DWORD dwDiskSize = pGeom[i].Cylinders.u.LowPart * pGeom[i].TracksPerCylinder *
 			pGeom[i].SectorsPerTrack * pGeom[i].BytesPerSector;
 		OutputDiscLogA(
 			"\t        Cylinders: %lu\n"
@@ -3227,7 +3227,7 @@ VOID OutputFloppyInfo(
 			"\t   BytesPerSector: %lu (Bytes)\n"
 			"\t--------------------------\n"
 			"\t         DiskSize: %lu (Bytes)\n\n",
-			pGeom[i].Cylinders.LowPart,
+			pGeom[i].Cylinders.u.LowPart,
 			pGeom[i].TracksPerCylinder,
 			pGeom[i].SectorsPerTrack,
 			pGeom[i].BytesPerSector,

@@ -27,8 +27,10 @@
 #include "get.h"
 #include "init.h"
 #include "output.h"
+#ifdef _WIN32
 #include "xml.h"
-#include "_external\prngcd.h"
+#endif
+#include "_external/prngcd.h"
 
 #define DEFAULT_REREAD_VAL			(4000)
 #define DEFAULT_CACHE_DELETE_VAL	(1)
@@ -49,8 +51,8 @@ static _TCHAR s_szExt[_MAX_EXT];
 // These static variable is set at checkArg().
 static DWORD s_dwFix = 0;
 static DWORD s_dwSpeed = 0;
-static INT s_nStartLBA = 0;
-static INT s_nEndLBA = 0;
+static LONG s_nStartLBA = 0;
+static LONG s_nEndLBA = 0;
 
 #define playtime (200)
 #define c4 (262)
@@ -154,13 +156,16 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 		bRet = WriteParsingMdsfile(pszFullPath);
 	}
 	else {
-		CONST size_t bufSize = 8;
-		_TCHAR szBuf[bufSize] = { 0 };
 		DEVICE device = { 0 };
+#ifdef _WIN32
 		device.byDriveLetter = (BYTE)(argv[2][0]);
-		if (!GetHandle(&device, szBuf, bufSize)) {
+#else
+		strncpy(device.drivepath, argv[2], sizeof(device.drivepath));
+#endif
+		if (!GetHandle(&device)) {
 			return FALSE;
 		}
+
 		// 1st: set TimeOutValue here (because use ScsiPassThroughDirect)
 		if (pExtArg->byScanProtectViaFile) {
 			device.dwTimeOutValue = pExtArg->dwTimeoutNum;
@@ -228,7 +233,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 								throw FALSE;
 							}
 
-							InitMainDataHeader(pExecType, pExtArg, &mainHeader, s_nStartLBA);
+							InitMainDataHeader(pExecType, pExtArg, &mainHeader, (INT)s_nStartLBA);
 							if (!InitSubData(pExecType, &pDisc)) {
 								throw FALSE;
 							}
@@ -238,8 +243,10 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 							if (!InitTocTextData(pExecType, &device, &pDisc)) {
 								throw FALSE;
 							}
-							if (!InitProtectData(&pDisc)) {
-								throw FALSE;
+							if (pExtArg->byScanProtectViaFile || pExtArg->byIntentionalSub) {
+								if (!InitProtectData(&pDisc)) {
+									throw FALSE;
+								}
 							}
 							make_scrambled_table();
 							make_crc_table();
@@ -260,10 +267,15 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 										throw FALSE;
 									}
 								}
+								if (pExtArg->dwSubAddionalNum == 0 && *pExecType != gd) {
+									OutputString(
+										_T("[WARNING] /c2 and /s 0 can't use together. Changed /s 0 to /s 1.\n"));
+									pExtArg->dwSubAddionalNum = 1;
+								}
 							}
 							else {
 								OutputString(
-									_T("[WARNING] /c2 option isn't set. The result of dumping may be incorrect if c2 error exists.\n"));
+									_T("[WARNING] /c2 isn't set. The result of dumping may be incorrect if c2 error exists.\n"));
 							}
 
 							if (discData.SCSI.wCurrentMedia == ProfileCdrom) {
@@ -354,11 +366,11 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 							}
 							else if (*pExecType == data) {
 								bRet = ReadCDPartial(pExecType, pExtArg, &device, pDisc, &discPerSector
-									, c2, pszFullPath, s_nStartLBA, s_nEndLBA, CDFLAG::_READ_CD::All, fpC2);
+									, c2, pszFullPath, (INT)s_nStartLBA, (INT)s_nEndLBA, CDFLAG::_READ_CD::All, fpC2);
 							}
 							else if (*pExecType == audio) {
 								bRet = ReadCDPartial(pExecType, pExtArg, &device, pDisc, &discPerSector
-									, c2, pszFullPath, s_nStartLBA, s_nEndLBA, CDFLAG::_READ_CD::CDDA, fpC2);
+									, c2, pszFullPath, (INT)s_nStartLBA, (INT)s_nEndLBA, CDFLAG::_READ_CD::CDDA, fpC2);
 							}
 						}
 						else {
@@ -417,7 +429,6 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 					}
 					else if (*pExecType == xbox) {
 						bRet = ReadXboxDVD(pExecType, pExtArg, &device, pDisc, pszFullPath);
-						pExtArg->byQuiet = TRUE;
 					}
 					else if (*pExecType == bd) {
 						if (discData.SCSI.wCurrentMedia == ProfileBDRom ||
@@ -438,6 +449,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 						}
 					}
 				}
+#ifdef _WIN32
 				if (bRet && (*pExecType != audio && *pExecType != data)) {
 					bRet = ReadWriteDat(pExecType, pExtArg, pDisc
 						, pszFullPath, s_szDrive, s_szDir, s_szFname, FALSE);
@@ -446,19 +458,26 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 							, pszFullPath, s_szDrive, s_szDir, s_szFname, TRUE);
 					}
 				}
+#endif
 			}
 			catch (BOOL bErr) {
 				bRet = bErr;
 			}
 			FlushLog();
-			TerminateLBAPerTrack(&pDisc);
-			TerminateSubData(pExecType, &pDisc);
-			TerminateProtectData(&pDisc);
-			TerminateTocFullData(&pDisc);
-			if (device.bySuccessReadToc) {
-				TerminateTocTextData(pExecType, &device, &pDisc);
+			if (*pExecType == cd || *pExecType == swap || *pExecType == gd ||
+				*pExecType == data || *pExecType == audio || *pExecType == bd) {
+				TerminateLBAPerTrack(&pDisc);
+				if (*pExecType == cd || *pExecType == swap || *pExecType == gd ||
+					*pExecType == data || *pExecType == audio) {
+					TerminateSubData(pExecType, &pDisc);
+					TerminateTocFullData(&pDisc);
+					TerminateTocTextData(pExecType, &device, &pDisc);
+					FcloseAndNull(fpCcd);
+				}
 			}
-			FcloseAndNull(fpCcd);
+			if (pExtArg->byScanProtectViaFile || pExtArg->byIntentionalSub) {
+				TerminateProtectData(&pDisc);
+			}
 			if (pExtArg->byC2 && device.FEATURE.byC2ErrorData) {
 				FcloseAndNull(fpC2);
 				TerminateC2(&pDisc);
@@ -511,9 +530,13 @@ int printAndSetPath(_TCHAR* szPathFromArg, _TCHAR* pszFullPath)
 			return FALSE;
 		}
 		_tsplitpath(pszFullPath, s_szDrive, s_szDir, s_szFname, NULL);
+		if (s_szExt[0] && _tcslen(pszFullPath) + _tcslen(s_szExt) < _MAX_PATH) {
+			_tcsncat(pszFullPath, s_szExt, _tcslen(s_szExt));
+		}
 	}
 	else {
-		_tcsncpy(pszFullPath, szPathFromArg, _MAX_PATH);
+		_tcsncpy(pszFullPath, s_szDrive, _tcslen(s_szDrive));
+		_tcsncat(pszFullPath, s_szDir, _tcslen(s_szDir));
 		if (!PathFileExists(pszFullPath)) {
 			OutputErrorString(_T("%s doesn't exist, so create.\n"), pszFullPath);
 #ifdef UNICODE
@@ -528,6 +551,7 @@ int printAndSetPath(_TCHAR* szPathFromArg, _TCHAR* pszFullPath)
 			}
 #endif
 		}
+		_tcsncpy(pszFullPath, szPathFromArg, _MAX_PATH);
 	}
 	OutputString(
 		_T("CurrentDirectory\n")
@@ -892,7 +916,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			printAndSetPath(argv[3], pszFullPath);
 		}
 		else if (argc >= 4 && ((cmdLen == 2 && !_tcsncmp(argv[1], _T("bd"), 2)) ||
-			cmdLen == 4 && !_tcsncmp(argv[1], _T("xbox"), 4))) {
+			(cmdLen == 4 && !_tcsncmp(argv[1], _T("xbox"), 4)))) {
 			if (cmdLen == 2) {
 				*pExecType = bd;
 			}
@@ -916,8 +940,8 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			}
 			printAndSetPath(argv[3], pszFullPath);
 		}
-		else if (argc >= 7 && (cmdLen == 4 && !_tcsncmp(argv[1], _T("data"), 4) ||
-			cmdLen == 5 && !_tcsncmp(argv[1], _T("audio"), 5))) {
+		else if (argc >= 7 && ((cmdLen == 4 && !_tcsncmp(argv[1], _T("data"), 4)) ||
+			(cmdLen == 5 && !_tcsncmp(argv[1], _T("audio"), 5)))) {
 			s_dwSpeed = _tcstoul(argv[4], &endptr, 10);
 			if (*endptr) {
 				OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
@@ -1075,7 +1099,7 @@ int createCmdFile(int argc, _TCHAR* argv[], _TCHAR* pszFullPath, LPTSTR pszDateT
 	return TRUE;
 }
 
-void printUsage(void)
+int printUsage(void)
 {
 	OutputString(
 		_T("Usage\n")
@@ -1099,7 +1123,7 @@ void printUsage(void)
 		_T("\t      [/be (str) or /d8] [/sf (val)] [/np] [/nq] [/nr] [/ns] [/s (val)]\n")
 		_T("\t\tDump a CD from start to end (using 'cdda' flag)\n")
 	);
-	_tsystem(_T("pause"));
+	int ret = _tsystem(_T("pause"));
 	OutputString(
 		_T("\t\tFor dumping a lead-in, lead-out mainly\n")
 		_T("\tgd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/be (str) or /d8]\n")
@@ -1126,7 +1150,7 @@ void printUsage(void)
 		_T("\tls <DriveLetter>\n")
 		_T("\t\tShow maximum speed of the drive\n")
 	);
-	_tsystem(_T("pause"));
+	ret = _tsystem(_T("pause"));
 	OutputString(
 		_T("\tsub <Subfile>\n")
 		_T("\t\tParse CloneCD sub file and output to readable format\n")
@@ -1153,7 +1177,7 @@ void printUsage(void)
 		_T("\t/m\tUse if MCN exists in the first pregap sector of the track\n")
 		_T("\t\t\tFor some PC-Engine\n")
 	);
-	_tsystem(_T("pause"));
+	ret = _tsystem(_T("pause"));
 	OutputString(
 		_T("\t/p\tDumping the AMSF from 00:00:00 to 00:01:74\n")
 		_T("\t\t\tFor SagaFrontier Original Sound Track (Disc 3) etc.\n")
@@ -1180,7 +1204,7 @@ void printUsage(void)
 		_T("\t/nq\tNot fix SubQ\n")
 		_T("\t/nr\tNot fix SubRtoW\n")
 	);
-	_tsystem(_T("pause"));
+	ret = _tsystem(_T("pause"));
 	OutputString(
 		_T("\t/nl\tNot fix SubQ (RMSF, AMSF, CRC) (LBA 10000 - 19999)\n")
 		_T("\t   \t                               (LBA 40000 - 49999)\n")
@@ -1200,7 +1224,8 @@ void printUsage(void)
 		_T("\t\t\t -> GDR (8082N, 8161B to 8164B) and GCC (4160N, 4240N to 4247N)\n")
 		_T("\t\t\t    supports GC/Wii dumping\n")
 	);
-	_tsystem(_T("pause"));
+	ret = _tsystem(_T("pause"));
+	return ret;
 }
 
 int printSeveralInfo(LPTSTR pszDateTime, size_t dateTimeSize)
@@ -1225,8 +1250,11 @@ int printSeveralInfo(LPTSTR pszDateTime, size_t dateTimeSize)
 	OutputString(_T("%s"), pszDateTime);
 	return TRUE;
 }
-
+#ifdef _WIN32
 int _tmain(int argc, _TCHAR* argv[])
+#else
+int main(int argc, char* argv[])
+#endif
 {
 #ifdef _DEBUG
 	_CrtSetDbgFlag(_CRTDBG_CHECK_ALWAYS_DF | _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
@@ -1277,7 +1305,9 @@ int _tmain(int argc, _TCHAR* argv[])
 			OutputString(_T("EndTime: %s\n"), szBuf);
 		}
 		if (!extArg.byQuiet) {
-			nRet = soundBeep(nRet);
+			if (!soundBeep(nRet)) {
+				nRet = FALSE;
+			}
 		}
 	}
 #ifdef _DEBUG

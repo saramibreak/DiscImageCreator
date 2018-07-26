@@ -40,17 +40,6 @@ VOID GetCrc32(
 	*crc = update_crc(*crc, lpBuf, (INT)dwSize);
 }
 
-VOID GetCrc32Ecma267(
-	LPDWORD crc,
-	LPBYTE lpBuf,
-	DWORD dwSize
-) {
-	UNREFERENCED_PARAMETER(crc);
-	UNREFERENCED_PARAMETER(lpBuf);
-	UNREFERENCED_PARAMETER(dwSize);
-//	*crc = update_crc32ecma267(*crc, lpBuf, (INT)dwSize);
-}
-
 BOOL CalcHash(
 	LPDWORD crc,
 	MD5_CTX* context,
@@ -62,9 +51,9 @@ BOOL CalcHash(
 	/* Return the CRC of the bytes buf[0..len-1]. */
 	*crc = update_crc(*crc, lpBuf, (INT)dwSize);
 	// calc md5
-	MD5Update(context, lpBuf, dwSize);
+	MD5Update(context, lpBuf, (UINT)dwSize);
 	// calc sha1
-	int err = SHA1Input(sha, lpBuf, dwSize);
+	int err = SHA1Input(sha, lpBuf, (UINT)dwSize);
 	if (err)	{
 		fprintf(stderr, "SHA1Input Error %d.\n", err);
 		bRet = FALSE;

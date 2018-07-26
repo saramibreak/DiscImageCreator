@@ -1,0 +1,198 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="_external">
+      <UniqueIdentifier>{ea124580-46e7-4ff3-93f6-c960ceb90507}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source">
+      <UniqueIdentifier>{38f96680-2b30-4d32-88ec-7ac58ac87c28}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="header">
+      <UniqueIdentifier>{0d6bb675-7fdd-49b9-aecb-61655853ffc3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="_linux">
+      <UniqueIdentifier>{c1b202c3-00ad-4fce-9c16-d81dfb48d9b7}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="calcHash.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="check.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="convert.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="_external\crc16ccitt.cpp">
+      <Filter>_external</Filter>
+    </ClCompile>
+    <ClCompile Include="_external\crc32.cpp">
+      <Filter>_external</Filter>
+    </ClCompile>
+    <ClCompile Include="DiscImageCreator.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="execIoctl.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="execScsiCmd.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="execScsiCmdforCD.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="execScsiCmdforCDCheck.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="execScsiCmdforDVD.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="execScsiCmdforFileSystem.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="fix.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="get.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="init.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="output.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="outputIoctlLog.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="_external\prngcd.cpp">
+      <Filter>_external</Filter>
+    </ClCompile>
+    <ClCompile Include="_external\sha1.cpp">
+      <Filter>_external</Filter>
+    </ClCompile>
+    <ClCompile Include="set.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="xml.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="outputScsiCmdLog.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="outputScsiCmdLogforCD.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="outputScsiCmdLogforDVD.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="_linux\defineForLinux.cpp">
+      <Filter>_linux</Filter>
+    </ClCompile>
+    <ClCompile Include="_external\md5c.cpp">
+      <Filter>_external</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="buildDateTime.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="calcHash.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="check.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="convert.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\crc16ccitt.h">
+      <Filter>_external</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\crc32.h">
+      <Filter>_external</Filter>
+    </ClInclude>
+    <ClInclude Include="enum.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="execIoctl.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="execScsiCmd.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="execScsiCmdforCD.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="execScsiCmdforCDCheck.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="execScsiCmdforDVD.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="execScsiCmdforFileSystem.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="fix.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="forwardDeclaration.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="get.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="init.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="output.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\global.h">
+      <Filter>_external</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\md5.h">
+      <Filter>_external</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\prngcd.h">
+      <Filter>_external</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\sha1.h">
+      <Filter>_external</Filter>
+    </ClInclude>
+    <ClInclude Include="outputIoctlLog.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="outputScsiCmdLog.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="outputScsiCmdLogforCD.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="outputScsiCmdLogforDVD.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="set.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="struct.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="xml.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="_linux\defineForLinux.h">
+      <Filter>_linux</Filter>
+    </ClInclude>
+    <ClInclude Include="_linux\ntddcdrm.h">
+      <Filter>_linux</Filter>
+    </ClInclude>
+    <ClInclude Include="_linux\ntddmmc.h">
+      <Filter>_linux</Filter>
+    </ClInclude>
+    <ClInclude Include="_linux\scsi.h">
+      <Filter>_linux</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

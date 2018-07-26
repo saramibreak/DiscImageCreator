@@ -154,7 +154,7 @@ BOOL ExecSearchingOffset(
 		OutputDiscLogA(
 			OUTPUT_DHYPHEN_PLUS_STR_WITH_SUBCH_F(Check Drive + CD offset), lpCmd[0], lpCmd[10]);
 	}
-	else if (!pExtArg->byD8 && !pDevice->byPlxtrDrive || pExtArg->byBe) {
+	else if ((!pExtArg->byD8 && !pDevice->byPlxtrDrive) || pExtArg->byBe) {
 		if (lpCmd[10] == CDFLAG::_READ_CD::Q) {
 			// because check only
 			return TRUE;
@@ -263,6 +263,7 @@ BOOL ReadCDForSearchingOffset(
 	if (*pExecType == gd) {
 		pDisc->SCSI.nFirstLBAofDataTrack = FIRST_LBA_FOR_GD;
 	}
+	FlushLog();
 	BYTE lpCmd[CDB12GENERIC_LENGTH] = { 0 };
 	if ((pExtArg->byD8 || pDevice->byPlxtrDrive) && !pExtArg->byBe) {
 		CDB::_PLXTR_READ_CDDA cdb = { 0 };
@@ -1012,9 +1013,10 @@ BOOL ReadCDForCheckingExe(
 	LPBYTE lpBuf
 ) {
 	BOOL bRet = TRUE;
-	BYTE byTransferLen = 1;
 	DWORD dwSize = DISC_RAW_READ_SIZE;
-	SetCommandForTransferLength(pExecType, pDevice, pCdb, dwSize, &byTransferLen);
+	BYTE byTransferLen = 1;
+	BYTE byRoopLen = byTransferLen;
+	SetCommandForTransferLength(pExecType, pDevice, pCdb, dwSize, &byTransferLen, &byRoopLen);
 	for (INT n = 0; pDisc->PROTECT.pExtentPosForExe[n] != 0; n++) {
 #if 0
 		if (strstr(pDisc->PROTECT.pNameForExe[n], ".CAB") || strstr(pDisc->PROTECT.pNameForExe[n], ".cab")) {
@@ -1050,7 +1052,7 @@ BOOL ReadCDForCheckingExe(
 						, pDisc->PROTECT.pNameForExe[n], pIDh->e_lfanew);
 				}
 				else {
-					SetCommandForTransferLength(pExecType, pDevice, pCdb, (DWORD)pIDh->e_lfanew, &byTransferLen);
+					SetCommandForTransferLength(pExecType, pDevice, pCdb, (DWORD)pIDh->e_lfanew, &byTransferLen, &byRoopLen);
 					dwSize = DWORD(DISC_RAW_READ_SIZE) * byTransferLen;
 					n--;
 				}

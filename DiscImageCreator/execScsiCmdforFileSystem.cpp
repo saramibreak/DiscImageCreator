@@ -126,12 +126,16 @@ BOOL ReadDirectoryRecordDetail(
 		, pCdb, nLBA + nOffset, lpBuf, bufDec, byTransferLen)) {
 		return FALSE;
 	}
-	for (BYTE i = 0; i < byTransferLen; i++) {
+	BYTE byRoop = byTransferLen;
+	if (*pExecType == gd) {
+		byRoop -= 1;
+	}
+	for (BYTE i = 0; i < byRoop; i++) {
 		OutputCDMain(fileMainInfo, lpBuf + DISC_RAW_READ_SIZE * i, nLBA + i, DISC_RAW_READ_SIZE);
 	}
 
 	UINT uiOfs = 0;
-	for (INT nSectorNum = 0; nSectorNum < byTransferLen;) {
+	for (INT nSectorNum = 0; nSectorNum < byRoop;) {
 		if (*(lpBuf + uiOfs) == 0) {
 			break;
 		}
@@ -188,9 +192,9 @@ BOOL ReadDirectoryRecordDetail(
 					&& !(lpDirRec[32] == 1 && szCurDirName[0] == 1)) {
 					// not upper and current directory 
 					for (INT i = 1; i < nDirPosNum; i++) {
-						if (dwExtentPos == pDirRec[i].uiPosOfDir &&
+						if (dwExtentPos == pDirRec[i].dwPosOfDir &&
 							!_strnicmp(szCurDirName, pDirRec[i].szDirName, MAX_FNAME_FOR_VOLUME)) {
-							pDirRec[i].uiDirSize = PadSizeForVolDesc(dwDataLen);
+							pDirRec[i].dwDirSize = PadSizeForVolDesc(dwDataLen);
 							break;
 						}
 					}
@@ -220,12 +224,12 @@ BOOL ReadDirectoryRecordDetail(
 						break;
 					}
 					else {
-						ManageEndOfDirectoryRecord(&nSectorNum, byTransferLen, uiZeroPaddingNum, lpDirRec, &uiOfs);
+						ManageEndOfDirectoryRecord(&nSectorNum, byRoop, uiZeroPaddingNum, lpDirRec, &uiOfs);
 						break;
 					}
 				}
 				else {
-					ManageEndOfDirectoryRecord(&nSectorNum, byTransferLen, uiZeroPaddingNum, lpDirRec, &uiOfs);
+					ManageEndOfDirectoryRecord(&nSectorNum, byRoop, uiZeroPaddingNum, lpDirRec, &uiOfs);
 					break;
 				}
 			}
@@ -256,42 +260,43 @@ BOOL ReadDirectoryRecord(
 		}
 	}
 	BYTE byTransferLen = 1;
+	BYTE byRoop = byTransferLen;
 	// for CD-I
 	if (dwRootDataLen == 0) {
 		if (!ExecReadDisc(pExecType, pExtArg, pDevice, pDisc, pCdb
-			, (INT)pDirRec[0].uiPosOfDir + nSectorOfs, lpBuf, bufDec, byTransferLen)) {
+			, (INT)pDirRec[0].dwPosOfDir + nSectorOfs, lpBuf, bufDec, byTransferLen)) {
 			return FALSE;
 		}
 		dwRootDataLen =
 			PadSizeForVolDesc(GetSizeOrDwordForVolDesc(lpBuf + 10, (DWORD)(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE)));
 	}
-	pDirRec[0].uiDirSize = dwRootDataLen;
+	pDirRec[0].dwDirSize = dwRootDataLen;
 
 	for (INT nDirRecIdx = 0; nDirRecIdx < nDirPosNum; nDirRecIdx++) {
-		INT nLBA = (INT)pDirRec[nDirRecIdx].uiPosOfDir;
-		if (pDirRec[nDirRecIdx].uiDirSize > pDevice->dwMaxTransferLength) {
+		INT nLBA = (INT)pDirRec[nDirRecIdx].dwPosOfDir;
+		if (pDirRec[nDirRecIdx].dwDirSize > pDevice->dwMaxTransferLength) {
 			// [FMT] Psychic Detective Series Vol. 4 - Orgel (Japan) (v1.0)
 			// [FMT] Psychic Detective Series Vol. 5 - Nightmare (Japan)
 			// [IBM - PC compatible] Maria 2 - Jutai Kokuchi no Nazo (Japan) (Disc 1)
 			// [IBM - PC compatible] PC Game Best Series Vol. 42 - J.B. Harold Series - Kiss of Murder - Satsui no Kuchizuke (Japan)
 			// [SS] Madou Monogatari (Japan)
 			// and more
-			DWORD dwAdditionalTransferLen = pDirRec[nDirRecIdx].uiDirSize / pDevice->dwMaxTransferLength;
-			SetCommandForTransferLength(pExecType, pDevice, pCdb, pDevice->dwMaxTransferLength, &byTransferLen);
-			OutputMainInfoLogA("nLBA %d, uiDirSize: %lu, byTransferLen: %d [L:%d]\n"
-				, nLBA, pDevice->dwMaxTransferLength, byTransferLen, (INT)__LINE__);
+			DWORD dwAdditionalTransferLen = pDirRec[nDirRecIdx].dwDirSize / pDevice->dwMaxTransferLength;
+			SetCommandForTransferLength(pExecType, pDevice, pCdb, pDevice->dwMaxTransferLength, &byTransferLen, &byRoop);
+			OutputMainInfoLogA("nLBA %d, dwDirSize: %lu, byTransferLen: %d [L:%d]\n"
+				, nLBA, pDevice->dwMaxTransferLength, byRoop, (INT)__LINE__);
 
 			for (DWORD n = 0; n < dwAdditionalTransferLen; n++) {
 				if (!ReadDirectoryRecordDetail(pExecType, pExtArg, pDevice, pDisc, pCdb, nLBA
 					, lpBuf, bufDec, byTransferLen, nDirPosNum, dwLogicalBlkCoef, nSectorOfs, pDirRec)) {
 					continue;
 				}
-				nLBA += byTransferLen;
+				nLBA += byRoop;
 			}
-			DWORD dwLastTblSize = pDirRec[nDirRecIdx].uiDirSize % pDevice->dwMaxTransferLength;
-			SetCommandForTransferLength(pExecType, pDevice, pCdb, dwLastTblSize, &byTransferLen);
-			OutputMainInfoLogA("nLBA %d, uiDirSize: %lu, byTransferLen: %d [L:%d]\n"
-				, nLBA, dwLastTblSize, byTransferLen, (INT)__LINE__);
+			DWORD dwLastTblSize = pDirRec[nDirRecIdx].dwDirSize % pDevice->dwMaxTransferLength;
+			SetCommandForTransferLength(pExecType, pDevice, pCdb, dwLastTblSize, &byTransferLen, &byRoop);
+			OutputMainInfoLogA("nLBA %d, dwDirSize: %lu, byTransferLen: %d [L:%d]\n"
+				, nLBA, dwLastTblSize, byRoop, (INT)__LINE__);
 
 			if (!ReadDirectoryRecordDetail(pExecType, pExtArg, pDevice, pDisc, pCdb, nLBA
 				, lpBuf, bufDec, byTransferLen, nDirPosNum, dwLogicalBlkCoef, nSectorOfs, pDirRec)) {
@@ -299,13 +304,13 @@ BOOL ReadDirectoryRecord(
 			}
 		}
 		else {
-			if (pDirRec[nDirRecIdx].uiDirSize == 0 || &byTransferLen == 0) {
+			if (pDirRec[nDirRecIdx].dwDirSize == 0 || byTransferLen == 0) {
 				OutputMainErrorLogA("Directory Record is invalid\n");
 				return FALSE;
 			}
-			SetCommandForTransferLength(pExecType, pDevice, pCdb, pDirRec[nDirRecIdx].uiDirSize, &byTransferLen);
-			OutputMainInfoLogA("nLBA %d, uiDirSize: %u, byTransferLen: %d [L:%d]\n"
-				, nLBA, pDirRec[nDirRecIdx].uiDirSize, byTransferLen, (INT)__LINE__);
+			SetCommandForTransferLength(pExecType, pDevice, pCdb, pDirRec[nDirRecIdx].dwDirSize, &byTransferLen, &byRoop);
+			OutputMainInfoLogA("nLBA %d, dwDirSize: %lu, byTransferLen: %d [L:%d]\n"
+				, nLBA, pDirRec[nDirRecIdx].dwDirSize, byRoop, (INT)__LINE__);
 
 			if (!ReadDirectoryRecordDetail(pExecType, pExtArg, pDevice, pDisc, pCdb, nLBA
 				, lpBuf, bufDec, byTransferLen, nDirPosNum, dwLogicalBlkCoef, nSectorOfs, pDirRec)) {
@@ -332,15 +337,17 @@ BOOL ReadPathTableRecord(
 	LPINT nDirPosNum
 ) {
 	BYTE byTransferLen = 1;
-	SetCommandForTransferLength(pExecType, pDevice, pCdb, dwPathTblSize, &byTransferLen);
-
+	BYTE byRoop = byTransferLen;
 	DWORD dwBufSize = 0;
 	if (*pExecType == gd) {
+		byTransferLen = 2;
 		dwBufSize = (CD_RAW_SECTOR_SIZE - (dwPathTblSize % CD_RAW_SECTOR_SIZE) + dwPathTblSize) * byTransferLen * 2;
 	}
 	else {
 		dwBufSize = DISC_RAW_READ_SIZE - (dwPathTblSize % DISC_RAW_READ_SIZE) + dwPathTblSize;
 	}
+	SetCommandForTransferLength(pExecType, pDevice, pCdb, dwPathTblSize, &byTransferLen, &byRoop);
+	
 	LPBYTE lpBuf = (LPBYTE)calloc(dwBufSize, sizeof(BYTE));
 	if (!lpBuf) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -358,31 +365,31 @@ BOOL ReadPathTableRecord(
 		}
 		if (dwPathTblSize > pDevice->dwMaxTransferLength) {
 			DWORD dwAdditionalTransferLen = dwPathTblSize / pDevice->dwMaxTransferLength;
-			SetCommandForTransferLength(pExecType, pDevice, pCdb, pDevice->dwMaxTransferLength, &byTransferLen);
+			SetCommandForTransferLength(pExecType, pDevice, pCdb, pDevice->dwMaxTransferLength, &byTransferLen, &byRoop);
 			OutputMainInfoLogA("dwPathTblSize: %lu, byTransferLen: %d [L:%d]\n"
-				, pDevice->dwMaxTransferLength, byTransferLen, (INT)__LINE__);
+				, pDevice->dwMaxTransferLength, byRoop, (INT)__LINE__);
 
 			for (DWORD n = 0; n < dwAdditionalTransferLen; n++) {
 				if (!ExecReadDisc(pExecType, pExtArg, pDevice, pDisc, pCdb
 					, (INT)dwPathTblPos + nSectorOfs, lpBuf + pDevice->dwMaxTransferLength * n, bufDec, byTransferLen)) {
 					throw FALSE;
 				}
-				for (BYTE i = 0; i < byTransferLen; i++) {
+				for (BYTE i = 0; i < byRoop; i++) {
 					OutputCDMain(fileMainInfo, lpBuf + DISC_RAW_READ_SIZE * i, (INT)dwPathTblPos + i, DISC_RAW_READ_SIZE);
 				}
 				dwPathTblPos += byTransferLen;
 			}
 			DWORD dwLastPathTblSize = dwPathTblSize % pDevice->dwMaxTransferLength;
-			SetCommandForTransferLength(pExecType, pDevice, pCdb, dwLastPathTblSize, &byTransferLen);
-			OutputMainInfoLogA(
-				"dwPathTblSize: %lu, byTransferLen: %d [L:%d]\n", dwLastPathTblSize, byTransferLen, (INT)__LINE__);
-
+			SetCommandForTransferLength(pExecType, pDevice, pCdb, dwLastPathTblSize, &byTransferLen, &byRoop);
 			DWORD dwBufOfs = pDevice->dwMaxTransferLength * dwAdditionalTransferLen;
+
+			OutputMainInfoLogA(
+				"dwPathTblSize: %lu, byTransferLen: %d [L:%d]\n", dwLastPathTblSize, byRoop, (INT)__LINE__);
 			if (!ExecReadDisc(pExecType, pExtArg, pDevice, pDisc, pCdb
 				, (INT)dwPathTblPos + nSectorOfs, lpBuf + dwBufOfs, bufDec, byTransferLen)) {
 				throw FALSE;
 			}
-			for (BYTE i = 0; i < byTransferLen; i++) {
+			for (BYTE i = 0; i < byRoop; i++) {
 				OutputCDMain(fileMainInfo, lpBuf + dwBufOfs + DISC_RAW_READ_SIZE * i, (INT)dwPathTblPos + i, DISC_RAW_READ_SIZE);
 			}
 			if (!OutputFsPathTableRecord(pDisc, lpBuf, dwLogicalBlkCoef, dwPathTblPos, dwPathTblSize, pDirRec, nDirPosNum)) {
@@ -390,13 +397,13 @@ BOOL ReadPathTableRecord(
 			}
 		}
 		else {
+			OutputMainInfoLogA(
+				"dwPathTblSize: %lu, byTransferLen: %d [L:%d]\n", dwPathTblSize, byRoop, (INT)__LINE__);
 			if (!ExecReadDisc(pExecType, pExtArg, pDevice, pDisc, pCdb
 				, (INT)dwPathTblPos + nSectorOfs, lpBuf, bufDec, byTransferLen)) {
 				throw FALSE;
 			}
-			OutputMainInfoLogA(
-				"dwPathTblSize: %lu, byTransferLen: %d [L:%d]\n", dwPathTblSize, byTransferLen, (INT)__LINE__);
-			for (BYTE i = 0; i < byTransferLen; i++) {
+			for (BYTE i = 0; i < byRoop; i++) {
 				OutputCDMain(fileMainInfo, lpBuf + DISC_RAW_READ_SIZE * i, (INT)dwPathTblPos + i, DISC_RAW_READ_SIZE);
 			}
 			if (!OutputFsPathTableRecord(pDisc, lpBuf, dwLogicalBlkCoef, dwPathTblPos, dwPathTblSize, pDirRec, nDirPosNum)) {
@@ -423,16 +430,17 @@ BOOL ReadVolumeDescriptor(
 	INT nPVD,
 	INT nSectorOfs,
 	LPBOOL lpReadVD,
-	PVOLUME_DESCRIPTOR pVolDesc
+	PVOLUME_DESCRIPTOR pVolDesc,
+	BYTE byTransferLen
 ) {
 	if (pDisc->SCSI.lpFirstLBAListOnToc) {
 		nPVD += pDisc->SCSI.lpFirstLBAListOnToc[byIdx];
 	}
 	INT nTmpLBA = nPVD;
-	BYTE bufDec[CD_RAW_SECTOR_SIZE] = { 0 };
+	BYTE bufDec[CD_RAW_SECTOR_SIZE * 2] = { 0 };
 	for (;;) {
 		if (!ExecReadDisc(pExecType, pExtArg, pDevice, pDisc
-			, pCdb, nTmpLBA + nSectorOfs, lpBuf, bufDec, 1)) {
+			, pCdb, nTmpLBA + nSectorOfs, lpBuf, bufDec, byTransferLen)) {
 			break;
 		}
 		if (!strncmp((LPCH)&lpBuf[1], "CD001", 5) ||
@@ -512,7 +520,7 @@ BOOL ReadCDForFileSystem(
 				// general data track disc
 				VOLUME_DESCRIPTOR volDesc;
 				if (!ReadVolumeDescriptor(pExecType, pExtArg, pDevice
-					, pDisc, i, (LPBYTE)&cdb, lpBuf, 16, 0, &bVD, &volDesc)) {
+					, pDisc, i, (LPBYTE)&cdb, lpBuf, 16, 0, &bVD, &volDesc, 1)) {
 					throw FALSE;
 				}
 				if (bVD) {
@@ -541,8 +549,10 @@ BOOL ReadCDForFileSystem(
 							throw FALSE;
 						}
 					}
-					if (!ReadCDForCheckingExe(pExecType, pExtArg, pDevice, pDisc, (LPBYTE)&cdb, lpBuf)) {
-						throw FALSE;
+					if (pExtArg->byScanProtectViaFile || pExtArg->byIntentionalSub) {
+						if (!ReadCDForCheckingExe(pExecType, pExtArg, pDevice, pDisc, (LPBYTE)&cdb, lpBuf)) {
+							throw FALSE;
+						}
 					}
 					if (pDisc->PROTECT.byExist) {
 						OutputLogA(standardOut | fileDisc, "Detected [%s], from %d to %d"
@@ -596,7 +606,7 @@ BOOL ReadCDForFileSystem(
 						}
 						if (IsValid3doDataHeader(lpBuf)) {
 							OutputFs3doHeader(lpBuf, nLBA);
-							if (!ReadCDFor3DODirectory(pExtArg, pDevice, pDisc, &cdb, "/",
+							if (!ReadCDFor3DODirectory(pExtArg, pDevice, pDisc, &cdb, (LPCH)"/",
 								MAKELONG(MAKEWORD(lpBuf[103], lpBuf[102]),
 									MAKEWORD(lpBuf[101], lpBuf[100])))) {
 								throw FALSE;
@@ -662,7 +672,7 @@ BOOL ReadGDForFileSystem(
 	PDIRECTORY_RECORD pDirRec = NULL;
 	CDB::_READ_CD cdb = { 0 };
 	SetReadCDCommand(pDevice, &cdb,
-		CDFLAG::_READ_CD::CDDA, 1, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::NoSub);
+		CDFLAG::_READ_CD::CDDA, 2, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::NoSub);
 	try {
 		INT nSectorOfs = pDisc->MAIN.nAdjustSectorNum - 1;
 		if (pDisc->MAIN.nCombinedOffset < 0) {
@@ -671,7 +681,7 @@ BOOL ReadGDForFileSystem(
 		BOOL bVD = FALSE;
 		VOLUME_DESCRIPTOR volDesc;
 		if (!ReadVolumeDescriptor(pExecType, pExtArg, pDevice, pDisc, 0
-			, (LPBYTE)&cdb, lpBuf, FIRST_LBA_FOR_GD + 16, nSectorOfs, &bVD, &volDesc)) {
+			, (LPBYTE)&cdb, lpBuf, FIRST_LBA_FOR_GD + 16, nSectorOfs, &bVD, &volDesc, 2)) {
 			throw FALSE;
 		}
 		if (bVD) {
@@ -697,7 +707,7 @@ BOOL ReadGDForFileSystem(
 	}
 	FreeAndNull(pDirRec);
 	FreeAndNull(pBuf);
-	return TRUE;
+	return bRet;
 }
 
 BOOL ReadDVDForFileSystem(
@@ -714,7 +724,7 @@ BOOL ReadDVDForFileSystem(
 	REVERSE_BYTES(&cdb->TransferLength, &dwTransferLen);
 
 	if (!ReadVolumeDescriptor(pExecType, pExtArg, pDevice
-		, pDisc, 0, (LPBYTE)cdb, lpBuf, 16, 0, &bPVD, &volDesc)) {
+		, pDisc, 0, (LPBYTE)cdb, lpBuf, 16, 0, &bPVD, &volDesc, (BYTE)dwTransferLen)) {
 		return FALSE;
 	}
 	if (bPVD) {
@@ -746,9 +756,14 @@ BOOL ReadDVDForFileSystem(
 	cdb->LogicalBlock[2] = 0;
 	cdb->LogicalBlock[3] = (UCHAR)nLBA;
 
+#ifdef _WIN32
+	INT direction = SCSI_IOCTL_DATA_IN;
+#else
+	INT direction = SG_DXFER_FROM_DEV;
+#endif
 	BYTE byScsiStatus = 0;
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, cdb, CDB12GENERIC_LENGTH, lpBuf,
-		DISC_RAW_READ_SIZE * dwTransferLen, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		direction, DISC_RAW_READ_SIZE * dwTransferLen, &byScsiStatus, _T(__FUNCTION__), __LINE__)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		return FALSE;
 	}
@@ -765,7 +780,7 @@ BOOL ReadDVDForFileSystem(
 	cdb->LogicalBlock[3] = (UCHAR)nLBA;
 
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, cdb, CDB12GENERIC_LENGTH, lpBuf,
-		DISC_RAW_READ_SIZE * dwTransferLen, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		direction, DISC_RAW_READ_SIZE * dwTransferLen, &byScsiStatus, _T(__FUNCTION__), __LINE__)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		return FALSE;
 	}
@@ -778,7 +793,7 @@ BOOL ReadDVDForFileSystem(
 	cdb->LogicalBlock[2] = 1;
 	cdb->LogicalBlock[3] = 0;
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, cdb, CDB12GENERIC_LENGTH, lpBuf,
-		DISC_RAW_READ_SIZE * dwTransferLen, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		direction, DISC_RAW_READ_SIZE * dwTransferLen, &byScsiStatus, _T(__FUNCTION__), __LINE__)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		return FALSE;
 	}

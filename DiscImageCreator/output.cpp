@@ -93,7 +93,7 @@ FILE* CreateOrOpenFile(
 #endif
 	return fp;
 }
-
+#ifdef _WIN32
 FILE* CreateOrOpenFileW(
 	LPCWSTR pszPath,
 	LPCWSTR pszPlusFname,
@@ -158,7 +158,7 @@ FILE* CreateOrOpenFileW(
 #endif
 	return fp;
 }
-
+#endif
 FILE* CreateOrOpenFileA(
 	LPCSTR pszPath,
 	LPCSTR pszPlusFname,
@@ -230,18 +230,27 @@ FILE* OpenProgrammabledFile(
 		return NULL;
 	}
 	FILE* fp = NULL;
+#ifdef _WIN32
 	_TCHAR* p = _tcsrchr(szFullPath, '\\');
+#else
+	_TCHAR* p = _tcsrchr(szFullPath, '/');
+#endif
 	if (p) {
-		p[0] = NULL;
+		p[0] = 0;
 		_TCHAR szFullPathName[_MAX_PATH] = { 0 };
+#ifdef _WIN32
 		_sntprintf(szFullPathName
 			, sizeof(szFullPathName) / sizeof(szFullPathName[0]), _T("%s\\%s"), szFullPath, pszFname);
+#else
+		_sntprintf(szFullPathName
+			, sizeof(szFullPathName) / sizeof(szFullPathName[0]), _T("%s/%s"), szFullPath, pszFname);
+#endif
 		szFullPathName[_MAX_PATH - 1] = 0;
 		fp = _tfopen(szFullPathName, pszMode);
 	}
 	return fp;
 }
-
+#ifdef _WIN32
 FILE* OpenProgrammabledFileW(
 	LPCWSTR pszFname,
 	LPCWSTR pszMode
@@ -254,7 +263,7 @@ FILE* OpenProgrammabledFileW(
 	FILE* fp = NULL;
 	LPWCH p = wcsrchr(szFullPath, '\\');
 	if (p) {
-		p[0] = NULL;
+		p[0] = 0;
 		WCHAR szFullPathName[_MAX_PATH] = { 0 };
 		_snwprintf(szFullPathName
 			, sizeof(szFullPathName) / sizeof(szFullPathName[0]), L"%s\\%s", szFullPath, pszFname);
@@ -263,7 +272,7 @@ FILE* OpenProgrammabledFileW(
 	}
 	return fp;
 }
-
+#endif
 VOID WriteCcdForDisc(
 	WORD wTocEntries,
 	BYTE LastCompleteSession,
@@ -662,7 +671,8 @@ VOID WriteMainChannel(
 	}
 	else if (sLBA <= nLBA && nLBA < eLBA) {
 		// first sector
-		if (nLBA == sLBA) {
+		if (nLBA == sLBA || (nLBA == pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize + 1 &&
+			(pDisc->PROTECT.byExist == laserlock || pDisc->PROTECT.byExist == proring))) {
 			fwrite(lpBuf + pDisc->MAIN.uiMainDataSlideSize, sizeof(BYTE),
 				CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize, fpImg);
 			if (*pExecType != gd) {
@@ -767,6 +777,8 @@ VOID WriteErrorBuffer(
 	PDISC_PER_SECTOR pDiscPerSector,
 	LPBYTE lpScrambledBuf,
 	INT nLBA,
+	INT nMainDataType,
+	INT nPadType,
 	FILE* fpImg,
 	FILE* fpSub,
 	FILE* fpC2,
@@ -775,81 +787,86 @@ VOID WriteErrorBuffer(
 	UNREFERENCED_PARAMETER(lpScrambledBuf);
 	UINT uiSize = 0;
 	BYTE zeroByte[CD_RAW_SECTOR_SIZE] = { 0 };
-	if (*pExecType == data || pExtArg->byBe) {
-#if 0
+	if (*pExecType == data || pExtArg->byBe || 
+		pDisc->PROTECT.byExist == laserlock || pDisc->PROTECT.byExist == proring) {
 		uiSize = CD_RAW_SECTOR_SIZE;
-		if ((pDiscPerSector->subQ.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
-			fwrite(pDiscPerSector->mainHeader.current, sizeof(BYTE), MAINHEADER_MODE1_SIZE, fpImg);
-		}
-		for (UINT i = MAINHEADER_MODE1_SIZE; i < CD_RAW_SECTOR_SIZE; i++) {
-			pDiscPerSector->data.current[i] = 0x55;
-		}
-		if ((pDiscPerSector->subQ.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
-			fwrite(pDiscPerSector->data.current + MAINHEADER_MODE1_SIZE,
-				sizeof(BYTE), CD_RAW_SECTOR_SIZE - MAINHEADER_MODE1_SIZE, fpImg);
+		if (nPadType == padbyff) {
+			if ((pDiscPerSector->subQ.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+				fwrite(pDiscPerSector->mainHeader.current, sizeof(BYTE), MAINHEADER_MODE1_SIZE, fpImg);
+			}
+			for (UINT i = MAINHEADER_MODE1_SIZE; i < uiSize; i++) {
+				pDiscPerSector->data.current[i] = 0x55;
+			}
+			if ((pDiscPerSector->subQ.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+				fwrite(pDiscPerSector->data.current + MAINHEADER_MODE1_SIZE,
+					sizeof(BYTE), uiSize - MAINHEADER_MODE1_SIZE, fpImg);
+			}
 		}
 		else {
-#endif
-			fwrite(zeroByte, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpImg);
-#if 0
+			fwrite(zeroByte, sizeof(BYTE), uiSize, fpImg);
 		}
-#endif
 	}
 	else {
 		ZeroMemory(pDiscPerSector->data.current, CD_RAW_SECTOR_SIZE);
-#if 0
-		for (UINT i = 0; i < pDisc->MAIN.uiMainDataSlideSize; i++) {
-			pDiscPerSector->data.current[i] =
-				(BYTE)(0x55 ^ lpScrambledBuf[CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize + i]);
+		if (nPadType == padbyff) {
+			BYTE tmp = 0;
+			for (UINT i = 0; i < pDisc->MAIN.uiMainDataSlideSize; i++) {
+				if (nMainDataType == scrambled) {
+					tmp = (BYTE)(0x55 ^ lpScrambledBuf[CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize + i]);
+				}
+				else if (nMainDataType == unscrambled) {
+					tmp = 0x55;
+				}
+				pDiscPerSector->data.current[i] = tmp;
+			}
+			for (UINT i = pDisc->MAIN.uiMainDataSlideSize; i < pDisc->MAIN.uiMainDataSlideSize + MAINHEADER_MODE1_SIZE; i++) {
+				pDiscPerSector->data.current[i] =
+					pDiscPerSector->mainHeader.current[i - pDisc->MAIN.uiMainDataSlideSize];
+			}
+			for (UINT i = pDisc->MAIN.uiMainDataSlideSize + MAINHEADER_MODE1_SIZE; i < CD_RAW_SECTOR_SIZE; i++) {
+				if (nMainDataType == scrambled) {
+					tmp = (BYTE)(0x55 ^ lpScrambledBuf[i - pDisc->MAIN.uiMainDataSlideSize]);
+				}
+				else if (nMainDataType == unscrambled) {
+					tmp = 0x55;
+				}
+				pDiscPerSector->data.current[i] = tmp;
+
+			}
 		}
-		for (UINT i = pDisc->MAIN.uiMainDataSlideSize; i < pDisc->MAIN.uiMainDataSlideSize + MAINHEADER_MODE1_SIZE; i++) {
-			pDiscPerSector->data.current[i] =
-				pDiscPerSector->mainHeader.current[i - pDisc->MAIN.uiMainDataSlideSize];
-		}
-		for (UINT i = pDisc->MAIN.uiMainDataSlideSize + MAINHEADER_MODE1_SIZE; i < CD_RAW_SECTOR_SIZE; i++) {
-			pDiscPerSector->data.current[i] =
-				(BYTE)(0x55 ^ lpScrambledBuf[i - pDisc->MAIN.uiMainDataSlideSize]);
-		}
-#endif
 		if (nLBA == pDisc->MAIN.nFixStartLBA) {
 			uiSize = CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize;
-#if 0
-			if ((pDiscPerSector->subQ.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
-				fwrite(pDiscPerSector->data.current + pDisc->MAIN.uiMainDataSlideSize,
-					sizeof(BYTE), uiSize, fpImg);
+			if (nPadType == padbyff) {
+				if ((pDiscPerSector->subQ.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+					fwrite(pDiscPerSector->data.current + pDisc->MAIN.uiMainDataSlideSize,
+						sizeof(BYTE), uiSize, fpImg);
+				}
 			}
 			else {
-#endif
 				fwrite(zeroByte, sizeof(BYTE), uiSize, fpImg);
-#if 0
+			}
 		}
-#endif
-	}
 		else if (nLBA == pDisc->MAIN.nFixEndLBA - 1) {
 			uiSize = pDisc->MAIN.uiMainDataSlideSize;
-#if 0
-			if ((pDiscPerSector->subQ.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
-				fwrite(pDiscPerSector->data.current, sizeof(BYTE), uiSize, fpImg);
+			if (nPadType == padbyff) {
+				if ((pDiscPerSector->subQ.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+					fwrite(pDiscPerSector->data.current, sizeof(BYTE), uiSize, fpImg);
+				}
 			}
 			else {
-#endif
 				fwrite(zeroByte, sizeof(BYTE), uiSize, fpImg);
-#if 0
 			}
-#endif
 		}
 		else {
 			uiSize = CD_RAW_SECTOR_SIZE;
-#if 0
-			if ((pDiscPerSector->subQ.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
-				fwrite(pDiscPerSector->data.current, sizeof(BYTE), uiSize, fpImg);
+			if (nPadType == padbyff) {
+				if ((pDiscPerSector->subQ.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+					fwrite(pDiscPerSector->data.current, sizeof(BYTE), uiSize, fpImg);
+				}
 			}
 			else {
-#endif
 				fwrite(zeroByte, sizeof(BYTE), uiSize, fpImg);
-#if 0
 			}
-#endif
 		}
 	}
 	OutputLogA(standardError | fileMainError,
@@ -857,6 +874,14 @@ VOID WriteErrorBuffer(
 
 	if (*pExecType != swap || (*pExecType == swap && nLBA < SECOND_ERROR_OF_LEADOUT)) {
 		BYTE lpSubcodeRaw[CD_RAW_READ_SUBCODE_SIZE] = { 0 };
+		if (pDiscPerSector->subQ.current.byIndex == 0) {
+			pDiscPerSector->subQ.current.nRelativeTime--;
+		}
+		else {
+			pDiscPerSector->subQ.current.nRelativeTime++;
+		}
+		pDiscPerSector->subQ.current.nAbsoluteTime++;
+		SetBufferFromTmpSubQData(pDiscPerSector->subcode.current, pDiscPerSector->subQ.current, 1);
 		AlignColumnSubcode(lpSubcodeRaw, pDiscPerSector->subcode.current);
 		WriteSubChannel(pDisc, pDiscPerSector, lpSubcodeRaw, nLBA, fpSub, fpParse);
 
@@ -996,11 +1021,15 @@ BOOL WriteParsingMdsfile(
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
-		fread(data, sizeof(BYTE), dwFileSize, fpMds);
+		if (fread(data, sizeof(BYTE), dwFileSize, fpMds) != dwFileSize) {
+			OutputErrorString(_T("Failed to read [F:%s][L:%d]\n"), _T(__FUNCTION__), __LINE__);
+			FcloseAndNull(fpMds);
+			throw FALSE;
+		};
 		FcloseAndNull(fpMds);
 
 		MDS_HEADER h = { 0 };
-		INT nOfs = 0;
+		size_t nOfs = 0;
 		size_t size = sizeof(MDS_HEADER);
 		memcpy(&h, data, size);
 		nOfs += size;
@@ -1139,9 +1168,9 @@ BOOL WriteParsingMdsfile(
 			};
 			for (INT i = 0; i < layer; i++) {
 				_ftprintf(fpParse, _T(OUTPUT_DHYPHEN_PLUS_STR(BCA)));
-				for (INT k = 0; k < sizeof(dvd[i].bca); k += 16) {
+				for (size_t k = 0; k < sizeof(dvd[i].bca); k += 16) {
 					_ftprintf(fpParse,
-						_T("%04X : %02X %02X %02X %02X %02X %02X %02X %02X  %02X %02X %02X %02X %02X %02X %02X %02X\n")
+						_T("%04zX : %02X %02X %02X %02X %02X %02X %02X %02X  %02X %02X %02X %02X %02X %02X %02X %02X\n")
 						, k, dvd[i].bca[k], dvd[i].bca[k + 1], dvd[i].bca[k + 2], dvd[i].bca[k + 3], dvd[i].bca[k + 4], dvd[i].bca[k + 5]
 						, dvd[i].bca[k + 6], dvd[i].bca[k + 7], dvd[i].bca[k + 8], dvd[i].bca[k + 9], dvd[i].bca[k + 10], dvd[i].bca[k + 11]
 						, dvd[i].bca[k + 12], dvd[i].bca[k + 13], dvd[i].bca[k + 14], dvd[i].bca[k + 15]);
@@ -1181,7 +1210,7 @@ BOOL WriteParsingMdsfile(
 					dwEndDataSector, dwEndDataSector,
 					dwEndLayerZeroSector, dwEndLayerZeroSector,
 					dvd[i].layer.commonHeader.BCAFlag == 0 ? "No" : "Exist");
-				for (INT j = 0; j < sizeof(dvd[i].layer.MediaSpecific); j += 16) {
+				for (size_t j = 0; j < sizeof(dvd[i].layer.MediaSpecific); j += 16) {
 					_ftprintf(fpParse,
 						_T("%04X : %02X %02X %02X %02X %02X %02X %02X %02X  %02X %02X %02X %02X %02X %02X %02X %02X\n")
 						, i, dvd[i].layer.MediaSpecific[j], dvd[i].layer.MediaSpecific[j + 1], dvd[i].layer.MediaSpecific[j + 2]
@@ -1283,7 +1312,7 @@ BOOL WriteParsingMdsfile(
 				BOOL bStart = FALSE;
 				BOOL bEnd = TRUE;
 				LONG prevDiff = 0;
-				LONG prevDiffAndDiff = 0;
+//				LONG prevDiffAndDiff = 0;
 				for (DWORD k = 1; k < pddb[i]->entry; k++) {
 					diff[k] = pddb[i]->readTime[k] - pddb[i]->readTime[k - 1];
 					LONG diffAndDiff = (LONG)(diff[k] - diff[k - 1]);
@@ -1302,7 +1331,7 @@ BOOL WriteParsingMdsfile(
 					_ftprintf(fpParse,
 						_T("%8ld    readTime: %8ld - %8ld = %5ld ms [%ld]")
 						, pddb[i]->resolution * k, pddb[i]->readTime[k], pddb[i]->readTime[k - 1], diff[k], diffAndDiff);
-					prevDiffAndDiff = diffAndDiff;
+//					prevDiffAndDiff = diffAndDiff;
 					if (pddb[i]->resolution == 50 || pddb[i]->resolution == 256) {
 						// SecuROM
 						if (9 < diffAndDiff && diffAndDiff < 35 && !bStart && bEnd) {
@@ -1368,7 +1397,10 @@ BOOL DescrambleMainChannelForGD(
 	BYTE bufScm[CD_RAW_SECTOR_SIZE] = { 0 };
 	BYTE bufImg[CD_RAW_SECTOR_SIZE] = { 0 };
 	for (DWORD i = 0; i < dwAllSectorVal; i++) {
-		fread(bufScm, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpScm);
+		if (fread(bufScm, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpScm) != CD_RAW_SECTOR_SIZE) {
+			OutputErrorString(_T("Failed to read\n"));
+			break;
+		}
 		if (IsValidMainDataHeader(bufScm)) {
 			if (bufScm[0x0C] == 0xC3 && bufScm[0x0D] == 0x84 && bufScm[0x0E] >= 0x00) {
 				break;
@@ -1434,7 +1466,10 @@ BOOL CreateBinCueForGD(
 		fseek(fpImg, 0x110, SEEK_SET);
 		// 0x110 - 0x31F is toc data
 		BYTE aToc[512] = { 0 };
-		fread(aToc, sizeof(BYTE), sizeof(aToc), fpImg);
+		if (fread(aToc, sizeof(BYTE), sizeof(aToc), fpImg) != sizeof(aToc)) {
+			OutputErrorString(_T("Failed to read [F:%s][L:%d]\n"), _T(__FUNCTION__), __LINE__);
+			throw FALSE;
+		}
 		if (aToc[0] != 'T' || aToc[1] != 'O' || aToc[2] != 'C' || aToc[3] != '1') {
 			OutputErrorString(_T("No GD-ROM data. Header: %c%c%c%c\n"),
 				aToc[0], aToc[1], aToc[2], aToc[3]);
@@ -1586,7 +1621,9 @@ BOOL CreateBinCueForGD(
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
-			fread(lpBuf, sizeof(BYTE), size, fpImg);
+			if (fread(lpBuf, sizeof(BYTE), size, fpImg) != size) {
+				OutputErrorString(_T("Failed to read [L:%d]\n"), __LINE__);
+			};
 			fwrite(lpBuf, sizeof(BYTE), size, fpBin);
 			FcloseAndNull(fpBin);
 			FreeAndNull(lpBuf);
@@ -1649,7 +1686,14 @@ VOID DescrambleMainChannelAll(
 				// データに矛盾が生じ、正確に書き込まれない場合や、
 				// 嘘の データを読み込む場合があります。
 				fseek(fpImg, lSeekPtr * CD_RAW_SECTOR_SIZE, SEEK_SET);
-				fread(aSrcBuf, sizeof(BYTE), sizeof(aSrcBuf), fpImg);
+				if ((pDisc->PROTECT.byExist == laserlock || pDisc->PROTECT.byExist == proring) &&
+					IsValidProtectedSector(pDisc, nFirstLBA)) {
+					continue;
+				}
+				if (fread(aSrcBuf, sizeof(BYTE), sizeof(aSrcBuf), fpImg) != sizeof(aSrcBuf)) {
+					OutputErrorString(_T("Failed to read [F:%s][L:%d]\n"), _T(__FUNCTION__), __LINE__);
+					break;
+				}
 				if (IsValidMainDataHeader(aSrcBuf)) {
 					if (aSrcBuf[0x0f] == 0x61/* || aSrcBuf[0x0f] == 0x62*/) {
 						if (IsValidReservedByte(aSrcBuf)) {
@@ -1730,7 +1774,10 @@ VOID DescrambleMainChannelPartial(
 		// データに矛盾が生じ、正確に書き込まれない場合や、
 		// 嘘の データを読み込む場合があります。
 		fseek(fpImg, lSeekPtr * CD_RAW_SECTOR_SIZE, SEEK_SET);
-		fread(aSrcBuf, sizeof(BYTE), sizeof(aSrcBuf), fpImg);
+		if (fread(aSrcBuf, sizeof(BYTE), sizeof(aSrcBuf), fpImg) != sizeof(aSrcBuf)) {
+			OutputErrorString(_T("Failed to read [F:%s][L:%d]\n"), _T(__FUNCTION__), __LINE__);
+			break;
+		}
 		if (IsValidMainDataHeader(aSrcBuf)) {
 			if (aSrcBuf[0x0f] == 0x61 || aSrcBuf[0x0f] == 0x62) {
 				fseek(fpImg, -CD_RAW_SECTOR_SIZE, SEEK_CUR);
@@ -1811,7 +1858,11 @@ BOOL CreateBin(
 		OutputErrorString("bufSize: %zd", stBufSize);
 		return FALSE;
 	}
-	fread(lpBuf, sizeof(BYTE), stBufSize, fpImg);
+	if (fread(lpBuf, sizeof(BYTE), stBufSize, fpImg) != stBufSize) {
+		OutputErrorString(_T("Failed to read [F:%s][L:%d]\n"), _T(__FUNCTION__), __LINE__);
+		FreeAndNull(lpBuf);
+		return FALSE;
+	}
 	fwrite(lpBuf, sizeof(BYTE), stBufSize, fpBin);
 	FreeAndNull(lpBuf);
 
@@ -2059,16 +2110,22 @@ VOID OutputLastErrorNumAndString(
 	LPCTSTR pszFuncName,
 	LONG lLineNum
 ) {
+#ifdef _WIN32
 	LPVOID lpMsgBuf;
 	FormatMessage(
 		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM,
 		NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&lpMsgBuf, 0, NULL);
 
-	OutputErrorString(_T("[F:%s][L:%lu] GetLastError: %lu, %s\n"), 
+	OutputErrorString(_T("[F:%s][L:%lu] GetLastError: %lu, %s\n"),
 		pszFuncName, lLineNum, GetLastError(), (LPCTSTR)lpMsgBuf);
-	LocalFree(lpMsgBuf);
-}
 
+	LocalFree(lpMsgBuf);
+#else
+	OutputErrorString(_T("[F:%s][L:%lu] GetLastError: %lu, %s\n"),
+		pszFuncName, lLineNum, GetLastError(), strerror(GetLastError()));
+#endif
+}
+#ifdef _WIN32
 VOID OutputProductType(
 	DWORD dwProductType
 ) {
@@ -2500,3 +2557,4 @@ BOOL OutputWindowsVersion(
 #endif
 	return TRUE;
 }
+#endif

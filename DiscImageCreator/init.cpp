@@ -414,9 +414,7 @@ VOID TerminateProtectData(
 	PDISC* pDisc
 ) {
 	for (size_t h = 0; h < EXELBA_STORE_SIZE; h++) {
-		if ((*pDisc)->PROTECT.pNameForExe) {
-			FreeAndNull((*pDisc)->PROTECT.pNameForExe[h]);
-		}
+		FreeAndNull((*pDisc)->PROTECT.pNameForExe[h]);
 	}
 	FreeAndNull((*pDisc)->PROTECT.pNameForExe);
 	FreeAndNull((*pDisc)->PROTECT.pExtentPosForExe);
@@ -429,12 +427,8 @@ VOID TerminateSubData(
 	size_t dwTrackAllocSize =
 		(*pExecType == gd || *pExecType == swap) ? MAXIMUM_NUMBER_TRACKS : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
 	for (size_t h = 0; h < dwTrackAllocSize; h++) {
-		if ((*pDisc)->SUB.lpFirstLBAListOnSub) {
-			FreeAndNull((*pDisc)->SUB.lpFirstLBAListOnSub[h]);
-		}
-		if ((*pDisc)->SUB.lpFirstLBAListOnSubSync) {
-			FreeAndNull((*pDisc)->SUB.lpFirstLBAListOnSubSync[h]);
-		}
+		FreeAndNull((*pDisc)->SUB.lpFirstLBAListOnSub[h]);
+		FreeAndNull((*pDisc)->SUB.lpFirstLBAListOnSubSync[h]);
 	}
 	FreeAndNull((*pDisc)->SUB.lpRtoWList);
 	FreeAndNull((*pDisc)->SUB.lpFirstLBAListOnSub);
