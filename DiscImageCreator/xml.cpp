@@ -240,11 +240,10 @@ BOOL ReadWriteDat(
 						return FALSE;
 					}
 				}
-				else if (*pExecType == dvd || *pExecType == xbox || *pExecType == bd) {
-					if (*pExecType == dvd || *pExecType == bd || *pExecType == xbox) {
-						if (!OutputHash(pWriter, pszFullPath, _T(".iso"), 1, 1, FALSE)) {
-							return FALSE;
-						}
+				else if (*pExecType == dvd || *pExecType == xbox || *pExecType == xboxswap ||
+					*pExecType == xgd2swap || *pExecType == xgd3swap || *pExecType == bd) {
+					if (!OutputHash(pWriter, pszFullPath, _T(".iso"), 1, 1, FALSE)) {
+						return FALSE;
 					}
 					if (pExtArg->byRawDump) {
 						if (!OutputHash(pWriter, pszFullPath, _T(".raw"), 1, 1, FALSE)) {

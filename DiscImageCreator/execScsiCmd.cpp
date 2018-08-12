@@ -262,8 +262,8 @@ BOOL ReadTOCFull(
 		return TRUE;
 	}
 	WORD wFullTocLen = MAKEWORD(fullToc.Length[1], fullToc.Length[0]);
-	WORD wTocEntriesAll = wFullTocLen - sizeof(fullToc.Length);
-	WORD wTocEntries = wTocEntriesAll / sizeof(CDROM_TOC_FULL_TOC_DATA_BLOCK);
+	WORD wTocEntriesAll = (WORD)(wFullTocLen - sizeof(fullToc.Length));
+	WORD wTocEntries = (WORD)(wTocEntriesAll / sizeof(CDROM_TOC_FULL_TOC_DATA_BLOCK));
 
 	if (fpCcd) {
 		WriteCcdForDisc(wTocEntries, fullToc.LastCompleteSession, fpCcd);
@@ -273,7 +273,7 @@ BOOL ReadTOCFull(
 	}
 	pDisc->SCSI.bMultiSession = fullToc.LastCompleteSession > 1 ? TRUE : FALSE;
 
-	WORD wFullTocLenFix = wTocEntriesAll + sizeof(CDROM_TOC_FULL_TOC_DATA);
+	WORD wFullTocLenFix = (WORD)(wTocEntriesAll + sizeof(CDROM_TOC_FULL_TOC_DATA));
 	// 4 byte padding
 	if (wFullTocLenFix % 4) {
 		wFullTocLenFix = (WORD)((wFullTocLenFix / 4 + 1) * 4);
@@ -363,7 +363,7 @@ BOOL ReadTOCAtip(
 		return TRUE;
 	}
 	WORD wTocAtipLen = MAKEWORD(atip.Length[1], atip.Length[0]);
-	WORD wTocAtipAll = wTocAtipLen - sizeof(atip.Length);
+	WORD wTocAtipAll = (WORD)(wTocAtipLen - sizeof(atip.Length));
 
 	LPBYTE pPTocAtip = NULL;
 	LPBYTE pTocAtip = NULL;
@@ -415,7 +415,7 @@ BOOL ReadTOCText(
 		return TRUE;
 	}
 	WORD wTocTextLen = MAKEWORD(tocText.Length[1], tocText.Length[0]);
-	WORD wTocTextEntriesAll = wTocTextLen - sizeof(tocText.Length);
+	WORD wTocTextEntriesAll = (WORD)(wTocTextLen - sizeof(tocText.Length));
 
 	WriteCcdForDiscCDTextLength(wTocTextEntriesAll, fpCcd);
 	if (!wTocTextEntriesAll) {
@@ -424,10 +424,10 @@ BOOL ReadTOCText(
 		return TRUE;
 	}
 
-	WORD wTocTextEntries = wTocTextEntriesAll / sizeof(CDROM_TOC_CD_TEXT_DATA_BLOCK);
+	WORD wTocTextEntries = (WORD)(wTocTextEntriesAll / sizeof(CDROM_TOC_CD_TEXT_DATA_BLOCK));
 	WriteCcdForCDText(wTocTextEntries, fpCcd);
 
-	WORD wTocTextLenFix = wTocTextEntriesAll + sizeof(CDROM_TOC_CD_TEXT_DATA);
+	WORD wTocTextLenFix = (WORD)(wTocTextEntriesAll + sizeof(CDROM_TOC_CD_TEXT_DATA));
 	// 4 byte padding
 	if (wTocTextLenFix % 4) {
 		wTocTextLenFix = (WORD)((wTocTextLenFix / 4 + 1) * 4);
@@ -456,7 +456,7 @@ BOOL ReadTOCText(
 			((PCDROM_TOC_CD_TEXT_DATA)pTocText)->Descriptors;
 		WriteCcdForCDTextEntry(pDesc, wTocTextEntries, fpCcd);
 
-		WORD wAllTextSize = wTocTextEntries * sizeof(pDesc->Text);
+		WORD wAllTextSize = (WORD)(wTocTextEntries * sizeof(pDesc->Text));
 		if (NULL == (pTmpText = (LPCH)calloc(wAllTextSize, sizeof(_TCHAR)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
@@ -473,7 +473,7 @@ BOOL ReadTOCText(
 		SetAndOutputTocCDText(pDisc, pDesc, pTmpText, wEntrySize, wAllTextSize);
 		if (bUnicode) {
 			PWCHAR pTmpWText = NULL;
-			if (NULL == (pTmpWText = (PWCHAR)calloc(wAllTextSize, sizeof(BYTE)))) {
+			if (NULL == (pTmpWText = (PWCHAR)calloc(wAllTextSize, sizeof(WCHAR)))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}

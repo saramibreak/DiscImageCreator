@@ -86,22 +86,22 @@ BOOL InitTocTextData(
 	try {
 		if (pDevice->FEATURE.byCanCDText || *pExecType == gd || *pExecType == swap) {
 			if (NULL == ((*pDisc)->SUB.pszISRC = 
-				(LPSTR*)calloc(dwTrackAllocSize, sizeof(UINT_PTR)))) {
+				(LPSTR*)calloc(dwTrackAllocSize, sizeof(INT_PTR)))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
 			if (NULL == ((*pDisc)->SCSI.pszTitle = 
-				(LPSTR*)calloc(dwTrackAllocSize, sizeof(UINT_PTR)))) {
+				(LPSTR*)calloc(dwTrackAllocSize, sizeof(INT_PTR)))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
 			if (NULL == ((*pDisc)->SCSI.pszPerformer = 
-				(LPSTR*)calloc(dwTrackAllocSize, sizeof(UINT_PTR)))) {
+				(LPSTR*)calloc(dwTrackAllocSize, sizeof(INT_PTR)))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
 			if (NULL == ((*pDisc)->SCSI.pszSongWriter = 
-				(LPSTR*)calloc(dwTrackAllocSize, sizeof(UINT_PTR)))) {
+				(LPSTR*)calloc(dwTrackAllocSize, sizeof(INT_PTR)))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
@@ -169,7 +169,7 @@ BOOL InitProtectData(
 			throw FALSE;
 		}
 		if (NULL == ((*pDisc)->PROTECT.pNameForExe =
-			(LPCH*)calloc(EXELBA_STORE_SIZE, sizeof(UINT_PTR)))) {
+			(LPCH*)calloc(EXELBA_STORE_SIZE, sizeof(INT_PTR)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
@@ -201,12 +201,12 @@ BOOL InitSubData(
 			throw FALSE;
 		}
 		if (NULL == ((*pDisc)->SUB.lpFirstLBAListOnSub =
-			(LPINT*)calloc(dwTrackAllocSize, sizeof(UINT_PTR)))) {
+			(LPINT*)calloc(dwTrackAllocSize, sizeof(INT_PTR)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
 		if (NULL == ((*pDisc)->SUB.lpFirstLBAListOnSubSync = 
-			(LPINT*)calloc(dwTrackAllocSize, sizeof(UINT_PTR)))) {
+			(LPINT*)calloc(dwTrackAllocSize, sizeof(INT_PTR)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
@@ -241,7 +241,7 @@ BOOL InitSubData(
 			throw FALSE;
 		}
 
-		size_t dwIndexAllocSize = (size_t)MAXIMUM_NUMBER_INDEXES * sizeof(UINT_PTR);
+		size_t dwIndexAllocSize = (size_t)MAXIMUM_NUMBER_INDEXES * sizeof(INT);
 		for (size_t h = 0; h < dwTrackAllocSize; h++) {
 			if (NULL == ((*pDisc)->SUB.lpFirstLBAListOnSub[h] = (LPINT)malloc(dwIndexAllocSize))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -334,7 +334,9 @@ BOOL InitLogFile(
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
-			if (*pExecType != dvd && *pExecType != bd && *pExecType != xbox) {
+			if (*pExecType != dvd && *pExecType != bd &&
+				*pExecType != xbox && *pExecType != xboxswap &&
+				*pExecType != xgd2swap && *pExecType != xgd3swap) {
 				if (NULL == (g_LogFile.fpSubInfo = CreateOrOpenFileA(
 					path, szSubInfoLogtxt, NULL, NULL, NULL, ".txt", "w", 0, 0))) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -452,7 +454,9 @@ VOID TerminateLogFile(
 		FcloseAndNull(g_LogFile.fpVolDesc);
 		FcloseAndNull(g_LogFile.fpMainInfo);
 		FcloseAndNull(g_LogFile.fpMainError);
-		if (*pExecType != dvd && *pExecType != bd && *pExecType != xbox) {
+		if (*pExecType != dvd && *pExecType != bd &&
+			*pExecType != xbox && *pExecType != xboxswap &&
+			*pExecType != xgd2swap && *pExecType != xgd3swap) {
 			FcloseAndNull(g_LogFile.fpSubInfo);
 			FcloseAndNull(g_LogFile.fpSubError);
 			if (pExtArg->byC2) {

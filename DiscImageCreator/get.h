@@ -28,7 +28,7 @@ BOOL GetHandle(
 	PDEVICE pDevice
 );
 
-INT GetDriveOffsetManually(
+BOOL GetDriveOffsetManually(
 	LPINT lpDriveOffset
 );
 

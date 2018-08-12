@@ -37,3 +37,11 @@ BOOL ReadDVDForFileSystem(
 	CDB::_READ12* cdb,
 	LPBYTE lpBuf
 );
+
+BOOL ReadBDForParamSfo(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	PDISC pDisc,
+	CDB::_READ12* pCdb,
+	LPBYTE lpBuf
+);

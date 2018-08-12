@@ -1211,13 +1211,14 @@ VOID SetLBAForFirstAdr(
 VOID SetBufferFromTmpSubQData(
 	LPBYTE lpSubcode,
 	SUB_Q_PER_SECTOR subQ,
-	BYTE bycurrent
+	BOOL bCurrent,
+	BOOL bUpdateCrc
 ) {
 	lpSubcode[12] = BYTE(subQ.byCtl << 4 | subQ.byAdr);
 	lpSubcode[13] = DecToBcd(subQ.byTrackNum);
 	lpSubcode[14] = DecToBcd(subQ.byIndex);
 	BYTE m, s, f;
-	if (bycurrent) {
+	if (bCurrent) {
 		LBAtoMSF(subQ.nRelativeTime, &m, &s, &f);
 	}
 	else {
@@ -1226,7 +1227,7 @@ VOID SetBufferFromTmpSubQData(
 	lpSubcode[15] = DecToBcd(m);
 	lpSubcode[16] = DecToBcd(s);
 	lpSubcode[17] = DecToBcd(f);
-	if (bycurrent) {
+	if (bCurrent) {
 		LBAtoMSF(subQ.nAbsoluteTime, &m, &s, &f);
 	}
 	else {
@@ -1235,9 +1236,11 @@ VOID SetBufferFromTmpSubQData(
 	lpSubcode[19] = DecToBcd(m);
 	lpSubcode[20] = DecToBcd(s);
 	lpSubcode[21] = DecToBcd(f);
-	WORD crc16 = (WORD)GetCrc16CCITT(10, &lpSubcode[12]);
-	lpSubcode[22] = HIBYTE(crc16);
-	lpSubcode[23] = LOBYTE(crc16);
+	if (bUpdateCrc) {
+		WORD crc16 = (WORD)GetCrc16CCITT(10, &lpSubcode[12]);
+		lpSubcode[22] = HIBYTE(crc16);
+		lpSubcode[23] = LOBYTE(crc16);
+	}
 }
 
 VOID SetBufferFromMCN(

@@ -120,6 +120,10 @@ VOID OutputFsDirectoryRecord(
 	}
 	OutputVolDescLogA("\n");
 
+	if (!strncmp(fname, "PARAM.SFO", 9)) {
+		pDisc->BD.nLBAForParamSfo = (INT)dwExtentPos;
+	}
+
 	CHAR fnameForProtect[MAX_FNAME_FOR_VOLUME] = { 0 };
 	if (lpBuf[32] != 1 && lpBuf[33] == 0) {
 		// for Joliet

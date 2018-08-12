@@ -56,17 +56,23 @@ BOOL GetHandle(
 	return TRUE;
 }
 
-INT GetDriveOffsetManually(
+BOOL GetDriveOffsetManually(
 	LPINT lpDriveOffset
 ) {
 	_TCHAR aBuf[6] = { 0 };
 	OutputString(
 		_T("This drive doesn't define in driveOffset.txt\n")
 		_T("Please input drive offset(Samples): "));
-	INT b = _tscanf(_T("%6[^\n]%*[^\n]"), aBuf);
-	b = _gettchar();
+	if (!_tscanf(_T("%6[^\n]%*[^\n]"), aBuf)) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		return FALSE;
+	}
+	if (_gettchar() == EOF) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		return FALSE;
+	}
 	*lpDriveOffset = _ttoi(aBuf);
-	return b;
+	return TRUE;
 }
 
 BOOL GetDriveOffsetAuto(
@@ -189,7 +195,7 @@ BYTE GetMode(
 	PDISC_PER_SECTOR pDiscPerSector,
 	INT nType
 ) {
-	BYTE byMode = pDiscPerSector->mainHeader.prev[15];
+	BYTE byMode = 0;
 	if ((pDiscPerSector->subQ.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 		if (IsValidMainDataHeader(pDiscPerSector->mainHeader.current)) {
 			if ((pDiscPerSector->mainHeader.current[15] & 0x60) == 0x60 && nType == unscrambled) {
@@ -373,7 +379,7 @@ BOOL GetCssCmd(
 		size_t size = _tcslen(szPathForCss) + _tcslen(szPathForKey) + 9;
 #ifdef _WIN32
 		_sntprintf(pszStr, size,
-			_T("\"\"%s\" %c %s\""), szPathForCss, pDevice->byDriveLetter, szPathForKey);
+			_T("\"\"%s\" %c \"%s\"\""), szPathForCss, pDevice->byDriveLetter, szPathForKey);
 #else
 		_sntprintf(pszStr, size,
 			_T("%s %s"), szPathForCss, pDevice->drivepath/*, szPathForKey*/);

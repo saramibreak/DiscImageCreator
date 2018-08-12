@@ -23,9 +23,13 @@
 #include "output.h"
 #include "outputScsiCmdLogforDVD.h"
 
-#define GAMECUBE_SIZE	(712880)
-#define WII_SL_SIZE		(2294912)
-#define WII_DL_SIZE		(4155840)
+#define GAMECUBE_SIZE		(712880)
+#define WII_SL_SIZE			(2294912)
+#define WII_DL_SIZE			(4155840)
+#define XBOX_SIZE			(3820880)
+#define XBOX_LAYER_BREAK	(1913776)
+#define XGD2_LAYER_BREAK	(1913760)
+#define XGD3_LAYER_BREAK	(2133520)
 
 BOOL ReadDVD(
 	PEXEC_TYPE pExecType,
@@ -52,17 +56,12 @@ BOOL ReadDVD(
 
 		CDB::_READ12 cdb = { 0 };
 		cdb.OperationCode = SCSIOP_READ12;
-		cdb.LogicalUnitNumber = pDevice->address.Lun;
-
 		if (pExtArg->byFua) {
 			cdb.ForceUnitAccess = TRUE;
 		}
-		if (!ReadDVDForFileSystem(pExecType, pExtArg, pDevice, pDisc, &cdb, lpBuf)) {
-			throw FALSE;
-		}
 
 		DWORD dwLayer1MiddleZone =
-			pDisc->DVD.dwXBOXStartPsn - pDisc->DVD.dwDVDStartPsn - pDisc->DVD.dwLayer0SectorLength;
+			pDisc->DVD.dwXboxStartPsn - pDisc->DVD.dwDVDStartPsn - pDisc->DVD.dwLayer0SectorLength;
 		INT nAllLength = pDisc->SCSI.nAllLength;
 		if (*pExecType == xbox) {
 			OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(TotalLength)
@@ -77,6 +76,25 @@ BOOL ReadDVD(
 			nAllLength += (INT)(dwLayer1MiddleZone + pDisc->DVD.dwLayer1SectorLength);
 			OutputDiscLogA(
 				"\t                  %7u (%#x)\n", nAllLength, nAllLength);
+		}
+
+		if (*pExecType == xboxswap) {
+			pDisc->SCSI.nAllLength = XBOX_SIZE + (INT)pDisc->DVD.dwXboxSwapOfs;
+			nAllLength = pDisc->SCSI.nAllLength;
+		}
+		else if (*pExecType == xgd2swap || *pExecType == xgd3swap) {
+			pDisc->SCSI.nAllLength = pExtArg->nAllSectors + (INT)pDisc->DVD.dwXboxSwapOfs;
+			nAllLength = pDisc->SCSI.nAllLength;
+		}
+
+		if (!ReadDVDForFileSystem(pExecType, pExtArg, pDevice, pDisc, &cdb, lpBuf)) {
+			throw FALSE;
+		}
+
+		if (*pExecType == bd && pDisc->BD.nLBAForParamSfo != 0) {
+			if (!ReadBDForParamSfo(pExtArg, pDevice, pDisc, &cdb, lpBuf)) {
+				throw FALSE;
+			}
 		}
 		FlushLog();
 
@@ -93,7 +111,15 @@ BOOL ReadDVD(
 #endif
 
 		for (INT nLBA = 0; nLBA < pDisc->SCSI.nAllLength; nLBA += (INT)dwTransferLen) {
-			if (*pExecType == xbox) {
+			if (*pExecType == xbox || *pExecType == xboxswap ||
+				*pExecType == xgd2swap || *pExecType == xgd3swap) {
+				if ((nLBA == XBOX_LAYER_BREAK && *pExecType == xboxswap) ||
+					(nLBA == XGD2_LAYER_BREAK && *pExecType == xgd2swap) || 
+					(nLBA == XGD3_LAYER_BREAK && *pExecType == xgd3swap)) {
+					nLBA += (INT)pDisc->DVD.dwXboxSwapOfs;
+					dwTransferLen = dwTransferLenOrg;
+					REVERSE_BYTES(&cdb.TransferLength, &dwTransferLen);
+				}
 				if (pDisc->DVD.securitySectorRange[i][0] <= (DWORD)nLBA &&
 					(DWORD)nLBA <= pDisc->DVD.securitySectorRange[i][1] + 1) {
 					if ((DWORD)nLBA == pDisc->DVD.securitySectorRange[i][1] + 1) {
@@ -114,10 +140,24 @@ BOOL ReadDVD(
 					REVERSE_BYTES(&cdb.TransferLength, &dwTransferLen);
 				}
 			}
-			if (dwTransferLen > (DWORD)(pDisc->SCSI.nAllLength - nLBA)) {
+
+			if (*pExecType == xboxswap && dwTransferLen > (DWORD)(XBOX_LAYER_BREAK - nLBA) && XBOX_LAYER_BREAK - nLBA != 0) {
+				dwTransferLen = (DWORD)(XBOX_LAYER_BREAK - nLBA);
+				REVERSE_BYTES(&cdb.TransferLength, &dwTransferLen);
+			}
+			else if (*pExecType == xgd2swap && dwTransferLen > (DWORD)(XGD2_LAYER_BREAK - nLBA) && XGD2_LAYER_BREAK - nLBA != 0) {
+				dwTransferLen = (DWORD)(XGD2_LAYER_BREAK - nLBA);
+				REVERSE_BYTES(&cdb.TransferLength, &dwTransferLen);
+			}
+			else if (*pExecType == xgd3swap && dwTransferLen > (DWORD)(XGD3_LAYER_BREAK - nLBA) && XGD3_LAYER_BREAK - nLBA != 0) {
+				dwTransferLen = (DWORD)(XGD3_LAYER_BREAK - nLBA);
+				REVERSE_BYTES(&cdb.TransferLength, &dwTransferLen);
+			}
+			else if (dwTransferLen > (DWORD)(pDisc->SCSI.nAllLength - nLBA)) {
 				dwTransferLen = (DWORD)(pDisc->SCSI.nAllLength - nLBA);
 				REVERSE_BYTES(&cdb.TransferLength, &dwTransferLen);
 			}
+
 			REVERSE_BYTES(&cdb.LogicalBlock, &nLBA);
 			if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, lpBuf,
 				direction, DISC_RAW_READ_SIZE * dwTransferLen, &byScsiStatus, _T(__FUNCTION__), __LINE__)
@@ -764,8 +804,8 @@ BOOL ReadDiscStructure(
 
 	PDVD_DESCRIPTOR_HEADER pDescHeader = ((PDVD_DESCRIPTOR_HEADER)pBuf);
 	REVERSE_SHORT(&pDescHeader->Length);
-	WORD wDataSize = pDescHeader->Length - sizeof(pDescHeader->Length);
-	WORD wEntrySize = wDataSize / sizeof(DVD_STRUCTURE_LIST_ENTRY);
+	WORD wDataSize = (WORD)(pDescHeader->Length - sizeof(pDescHeader->Length));
+	WORD wEntrySize = (WORD)(wDataSize / sizeof(DVD_STRUCTURE_LIST_ENTRY));
 
 	_TCHAR szPath[_MAX_PATH] = { 0 };
 	_tcsncpy(szPath, pszFullPath, _MAX_PATH);
@@ -819,7 +859,8 @@ BOOL ReadDiscStructure(
 			OutputDiscLogA("Skiped because length is 0\n\n");
 			continue;
 		}
-		if (*pExecType == dvd || *pExecType == xbox) {
+		if (*pExecType == dvd || *pExecType == xbox || *pExecType == xboxswap ||
+			*pExecType == xgd2swap || *pExecType == xgd3swap) {
 			if (pEntry->FormatCode == 0xff) {
 				OutputDiscLogA("Skiped\n\n");
 				break;
@@ -915,19 +956,22 @@ BOOL ReadDiscStructure(
 			OutputLogA(standardError | fileDisc, "FormatCode: %02x failed\n", pEntry->FormatCode);
 		}
 		else {
-			if (*pExecType == dvd || *pExecType == xbox) {
-				if (pEntry->FormatCode == DvdPhysicalDescriptor) {
-					// PFI doesn't include the header
-					fwrite(lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), sizeof(BYTE), DISC_RAW_READ_SIZE, fpPfi);
-					FcloseAndNull(fpPfi);
-				}
-				else if (pEntry->FormatCode == DvdManufacturerDescriptor) {
-					// DMI doesn't include the header
-					fwrite(lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), sizeof(BYTE), DISC_RAW_READ_SIZE, fpDmi);
-					FcloseAndNull(fpDmi);
+			if (*pExecType == dvd || *pExecType == xbox || *pExecType == xboxswap ||
+				*pExecType == xgd2swap || *pExecType == xgd3swap) {
+				if (*pExecType == dvd || *pExecType == xbox) {
+					if (pEntry->FormatCode == DvdPhysicalDescriptor) {
+						// PFI doesn't include the header
+						fwrite(lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), sizeof(BYTE), DISC_RAW_READ_SIZE, fpPfi);
+						FcloseAndNull(fpPfi);
+					}
+					else if (pEntry->FormatCode == DvdManufacturerDescriptor) {
+						// DMI doesn't include the header
+						fwrite(lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), sizeof(BYTE), DISC_RAW_READ_SIZE, fpDmi);
+						FcloseAndNull(fpDmi);
+					}
 				}
 				DWORD dwSectorLen = 0;
-				OutputDVDStructureFormat(pDisc, pEntry->FormatCode, wFormatLen - sizeof(DVD_DESCRIPTOR_HEADER)
+				OutputDVDStructureFormat(pDisc, pEntry->FormatCode, (WORD)(wFormatLen - sizeof(DVD_DESCRIPTOR_HEADER))
 					, lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), &dwSectorLen);
 
 				if (pEntry->FormatCode == DvdPhysicalDescriptor) {
@@ -946,7 +990,7 @@ BOOL ReadDiscStructure(
 						}
 						else {
 							DWORD dwSectorLen2 = 0;
-							OutputDVDStructureFormat(pDisc, pEntry->FormatCode, wFormatLen - sizeof(DVD_DESCRIPTOR_HEADER)
+							OutputDVDStructureFormat(pDisc, pEntry->FormatCode, (WORD)(wFormatLen - sizeof(DVD_DESCRIPTOR_HEADER))
 								, lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), &dwSectorLen2);
 							OutputDiscLogA("\tLayerAllSector : %7lu (%#lx)\n", dwSectorLen + dwSectorLen2, dwSectorLen + dwSectorLen2);
 							dwSectorLen += dwSectorLen2;
@@ -962,7 +1006,7 @@ BOOL ReadDiscStructure(
 					FcloseAndNull(fpPic);
 				}
 				OutputBDStructureFormat(pEntry->FormatCode,
-					wFormatLen - sizeof(DVD_DESCRIPTOR_HEADER),	lpFormat + sizeof(DVD_DESCRIPTOR_HEADER));
+					(WORD)(wFormatLen - sizeof(DVD_DESCRIPTOR_HEADER)),	lpFormat + sizeof(DVD_DESCRIPTOR_HEADER));
 			}
 		}
 		OutputDiscLogA("\n");
@@ -1313,6 +1357,78 @@ BOOL ReadXboxDVD(
 	// layer 0 of xbox [startPsn of xbox (0x60600) to the size of toc] -> depend on the disc
 	// layer 1 of middle zone
 	// layer 1 of dvd
+	if (!ReadDVD(pExecType, pExtArg, pDevice, pDisc, pszFullPath)) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
+BOOL ReadXboxDVDBySwap(
+	PEXEC_TYPE pExecType,
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	PDISC pDisc,
+	LPCTSTR pszFullPath
+) {
+	if (!ReadDiscStructure(pExecType, pExtArg, pDevice, pDisc, pszFullPath)) {
+		return FALSE;
+	}
+	
+	DWORD dwDvdAllLen = pDisc->DVD.dwLayer0SectorLength + pDisc->DVD.dwLayer1SectorLength;
+	if (*pExecType == xboxswap) {
+		pDisc->DVD.dwXboxSwapOfs = (pDisc->DVD.dwLayer0SectorLength - XBOX_LAYER_BREAK) * 2;
+		DWORD dwXboxAllLen = XBOX_SIZE + pDisc->DVD.dwXboxSwapOfs;
+		if (dwXboxAllLen > dwDvdAllLen) {
+			OutputErrorString(
+				_T("Short of length of DVD\n")
+				_T("\t  Your DVD length: %ld\n")
+				_T("\tNeeded DVD length: (DVD L0[%ld] - Xbox LayerBreak[%d]) * 2 + Xbox Length[%d] = %ld\n")
+				, dwDvdAllLen, pDisc->DVD.dwLayer0SectorLength, XBOX_LAYER_BREAK, XBOX_SIZE, dwXboxAllLen);
+			return FALSE;
+		}
+	}
+	else if (*pExecType == xgd2swap) {
+		pDisc->DVD.dwXboxSwapOfs = (pDisc->DVD.dwLayer0SectorLength - XGD2_LAYER_BREAK) * 2;
+		DWORD dwXboxAllLen = pExtArg->nAllSectors + pDisc->DVD.dwXboxSwapOfs;
+		if (dwXboxAllLen > dwDvdAllLen) {
+			OutputErrorString(
+				_T("Short of length of DVD\n")
+				_T("\t  Your DVD length: %ld\n")
+				_T("\tNeeded DVD length: (DVD L0[%ld] - Xbox LayerBreak[%d]) * 2 + Xbox Length[%d] = %ld\n")
+				, dwDvdAllLen, pDisc->DVD.dwLayer0SectorLength, XGD2_LAYER_BREAK, pExtArg->nAllSectors, dwXboxAllLen);
+			return FALSE;
+		}
+	}
+	else if (*pExecType == xgd3swap) {
+		pDisc->DVD.dwXboxSwapOfs = (pDisc->DVD.dwLayer0SectorLength - XGD3_LAYER_BREAK) * 2;
+		DWORD dwXboxAllLen = pExtArg->nAllSectors + pDisc->DVD.dwXboxSwapOfs;
+		if (dwXboxAllLen > dwDvdAllLen) {
+			OutputErrorString(
+				_T("Short of length of DVD\n")
+				_T("\t  Your DVD length: %ld\n")
+				_T("\tNeeded DVD length: (DVD L0[%ld] - Xbox LayerBreak[%d]) * 2 + Xbox Length[%d] = %ld\n")
+				, dwDvdAllLen, pDisc->DVD.dwLayer0SectorLength, XGD3_LAYER_BREAK, pExtArg->nAllSectors, dwXboxAllLen);
+			return FALSE;
+		}
+	}
+
+
+	for (INT i = 0; pExtArg->dwSecuritySector[i] != 0; i++) {
+		if (i < 8) {
+			if (pExtArg->dwSecuritySector[i] < 3000000) {
+				pDisc->DVD.securitySectorRange[i][0] = pExtArg->dwSecuritySector[i];
+				pDisc->DVD.securitySectorRange[i][1] = pExtArg->dwSecuritySector[i] + 4095;
+			}
+			else {
+				pDisc->DVD.securitySectorRange[i][0] = pExtArg->dwSecuritySector[i] + pDisc->DVD.dwXboxSwapOfs;
+				pDisc->DVD.securitySectorRange[i][1] = pExtArg->dwSecuritySector[i] + 4095 + pDisc->DVD.dwXboxSwapOfs;
+			}
+		}
+		else {
+			pDisc->DVD.securitySectorRange[i][0] = pExtArg->dwSecuritySector[i] + pDisc->DVD.dwXboxSwapOfs;
+			pDisc->DVD.securitySectorRange[i][1] = pExtArg->dwSecuritySector[i] + 4095 + pDisc->DVD.dwXboxSwapOfs;
+		}
+	}
 	if (!ReadDVD(pExecType, pExtArg, pDevice, pDisc, pszFullPath)) {
 		return FALSE;
 	}

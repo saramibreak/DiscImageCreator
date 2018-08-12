@@ -40,13 +40,15 @@ void _splitpath(const char* Path, char* Drive, char* Directory, char* Filename, 
 	// no drives available in linux .
 	// extensions are not common in linux
 	// but considered anyway
-	if (*CopyOfPath == '/') {
-		strncpy(Drive, Path, 1);
-		CopyOfPath++;
-		Counter++;
-	}
-	else {
-		Drive = NULL;
+	if (Drive != NULL) {
+		if (*CopyOfPath == '/') {
+			strncpy(Drive, Path, 1);
+			CopyOfPath++;
+			Counter++;
+		}
+		else {
+			Drive = NULL;
+		}
 	}
 
 	while (*CopyOfPath != '\0')

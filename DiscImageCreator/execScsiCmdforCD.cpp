@@ -419,7 +419,8 @@ BOOL ReadCDForRereadingSectorType2(
 	DWORD dwTransferLen = pDevice->dwMaxTransferLength / CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE;
 	DWORD dwTransferLenBak = dwTransferLen;
 	LPBYTE lpBufMain = NULL;
-	if (NULL == (lpBufMain = (LPBYTE)calloc(dwTransferLen * CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * pExtArg->dwMaxRereadNum, sizeof(BYTE)))) {
+	if (NULL == (lpBufMain = (LPBYTE)calloc(
+		dwTransferLen * CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * pExtArg->dwMaxRereadNum, sizeof(BYTE)))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
@@ -429,23 +430,24 @@ BOOL ReadCDForRereadingSectorType2(
 	LPDWORD* lpRepeatedNum = NULL;
 	LPDWORD* lpContainsC2 = NULL;
 	try {
-		if (NULL == (lpBufC2 = (LPBYTE)calloc(dwTransferLen * CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * pExtArg->dwMaxRereadNum, sizeof(BYTE)))) {
+		if (NULL == (lpBufC2 = (LPBYTE)calloc(
+			dwTransferLen * CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * pExtArg->dwMaxRereadNum, sizeof(BYTE)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
-		if (NULL == (lpRereadSector = (LPBYTE*)calloc(dwTransferLen, sizeof(ULONG_PTR)))) {
+		if (NULL == (lpRereadSector = (LPBYTE*)calloc(dwTransferLen, sizeof(DWORD_PTR)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
-		if (NULL == (lpCrc32RereadSector = (LPDWORD*)calloc(dwTransferLen, sizeof(ULONG_PTR)))) {
+		if (NULL == (lpCrc32RereadSector = (LPDWORD*)calloc(dwTransferLen, sizeof(DWORD_PTR)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
-		if (NULL == (lpRepeatedNum = (LPDWORD*)calloc(dwTransferLen, sizeof(ULONG_PTR)))) {
+		if (NULL == (lpRepeatedNum = (LPDWORD*)calloc(dwTransferLen, sizeof(DWORD_PTR)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
-		if (NULL == (lpContainsC2 = (LPDWORD*)calloc(dwTransferLen, sizeof(ULONG_PTR)))) {
+		if (NULL == (lpContainsC2 = (LPDWORD*)calloc(dwTransferLen, sizeof(DWORD_PTR)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
@@ -906,13 +908,22 @@ BOOL ReadCDAll(
 			AlignRowSubcode(pDiscPerSector->subcode.current, pDiscPerSector->data.current + pDevice->TRANSFER.dwBufSubOffset);
 			SetTmpSubQDataFromBuffer(&pDiscPerSector->subQ.prev, pDiscPerSector->subcode.current);
 		}
+		OutputString(_T(STR_LBA "Q[%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x]\n")
+			, -1, -1, pDiscPerSector->subcode.current[12]
+			, pDiscPerSector->subcode.current[13], pDiscPerSector->subcode.current[14]
+			, pDiscPerSector->subcode.current[15], pDiscPerSector->subcode.current[16]
+			, pDiscPerSector->subcode.current[17], pDiscPerSector->subcode.current[18]
+			, pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20]
+			, pDiscPerSector->subcode.current[21], pDiscPerSector->subcode.current[22]
+			, pDiscPerSector->subcode.current[23]);
 		// special fix begin
-		if (pDiscPerSector->subQ.prev.byAdr != ADR_ENCODES_CURRENT_POSITION) {
+//		if (pDiscPerSector->subQ.prev.byAdr != ADR_ENCODES_CURRENT_POSITION) {
 			// [PCE] 1552 Tenka Tairan
 			pDiscPerSector->subQ.prev.byAdr = ADR_ENCODES_CURRENT_POSITION;
 			pDiscPerSector->subQ.prev.byTrackNum = 1;
+			pDiscPerSector->subQ.prev.byIndex = 0;
 			pDiscPerSector->subQ.prev.nAbsoluteTime = 149;
-		}
+//		}
 		if (!ReadCDForCheckingSecuROM(pExtArg, pDevice, pDisc, pDiscPerSector, lpCmd)) {
 			throw FALSE;
 		}
@@ -1120,7 +1131,7 @@ BOOL ReadCDAll(
 
 				if ((pDisc->PROTECT.byExist == laserlock || pDisc->PROTECT.byExist == proring) &&
 					bProcessRet == RETURNED_EXIST_C2_ERROR) {
-					SetBufferFromTmpSubQData(pDiscPerSector->subcode.current, pDiscPerSector->subQ.current, 0);
+					SetBufferFromTmpSubQData(pDiscPerSector->subcode.current, pDiscPerSector->subQ.current, FALSE, TRUE);
 				}
 				SetTmpSubQDataFromBuffer(&pDiscPerSector->subQ.current, pDiscPerSector->subcode.current);
 
@@ -1814,7 +1825,7 @@ BOOL ReadCDPartial(
 				if (nStart == 0) {
 					pDiscPerSector->subQ.current.nRelativeTime = 0;
 					pDiscPerSector->subQ.current.nAbsoluteTime = 149;
-					SetBufferFromTmpSubQData(pDiscPerSector->subcode.current, pDiscPerSector->subQ.current, 1);
+					SetBufferFromTmpSubQData(pDiscPerSector->subcode.current, pDiscPerSector->subQ.current, TRUE, TRUE);
 					SetTmpSubQDataFromBuffer(&pDiscPerSector->subQ.prev, pDiscPerSector->subcode.current);
 				}
 				else {
@@ -1830,7 +1841,7 @@ BOOL ReadCDPartial(
 				if (nStart == 0) {
 					pDiscPerSector->subQ.current.nRelativeTime = 0;
 					pDiscPerSector->subQ.current.nAbsoluteTime = 150;
-					SetBufferFromTmpSubQData(pDiscPerSector->subcode.current, pDiscPerSector->subQ.current, 1);
+					SetBufferFromTmpSubQData(pDiscPerSector->subcode.current, pDiscPerSector->subQ.current, TRUE, TRUE);
 					for (INT i = 0; i < 12; i++) {
 						pDiscPerSector->subcode.current[i] = 0xff;
 					}

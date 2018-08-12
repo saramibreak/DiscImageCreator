@@ -683,7 +683,7 @@ VOID OutputDVDLayerDescriptor(
 		pDisc->DVD.dwDVDStartPsn = dwStartingDataSector;
 	}
 	else {
-		pDisc->DVD.dwXBOXStartPsn = dwStartingDataSector;
+		pDisc->DVD.dwXboxStartPsn = dwStartingDataSector;
 	}
 
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(PhysicalFormatInformation)

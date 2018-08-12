@@ -387,6 +387,8 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 							discData.SCSI.wCurrentMedia == ProfileDvdDashRLayerJump ||
 							discData.SCSI.wCurrentMedia == ProfileDvdPlusRW ||
 							discData.SCSI.wCurrentMedia == ProfileDvdPlusR ||
+							discData.SCSI.wCurrentMedia == ProfileDvdPlusRWDualLayer ||
+							discData.SCSI.wCurrentMedia == ProfileDvdPlusRDualLayer ||
 							discData.SCSI.wCurrentMedia == ProfileHDDVDRom ||
 							discData.SCSI.wCurrentMedia == ProfileHDDVDRecordable ||
 							discData.SCSI.wCurrentMedia == ProfileHDDVDRam ||
@@ -429,6 +431,9 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 					}
 					else if (*pExecType == xbox) {
 						bRet = ReadXboxDVD(pExecType, pExtArg, &device, pDisc, pszFullPath);
+					}
+					else if (*pExecType == xboxswap || *pExecType == xgd2swap || *pExecType == xgd3swap) {
+						bRet = ReadXboxDVDBySwap(pExecType, pExtArg, &device, pDisc, pszFullPath);
 					}
 					else if (*pExecType == bd) {
 						if (discData.SCSI.wCurrentMedia == ProfileBDRom ||
@@ -878,68 +883,6 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			*pExecType = gd;
 			printAndSetPath(argv[3], pszFullPath);
 		}
-		else if (argc >= 5 && cmdLen == 3 && !_tcsncmp(argv[1], _T("dvd"), 3)) {
-			s_dwSpeed = _tcstoul(argv[4], &endptr, 10);
-			if (*endptr) {
-				OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
-				return FALSE;
-			}
-			for (INT i = 6; i <= argc; i++) {
-				cmdLen = _tcslen(argv[i - 1]);
-				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/c"), 2)) {
-					pExtArg->byCmi = TRUE;
-				}
-				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/f"), 2)) {
-					if (!SetOptionF(argc, argv, pExtArg, &i)) {
-						return FALSE;
-					}
-				}
-				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/raw"), 4)) {
-					pExtArg->byRawDump = TRUE;
-				}
-				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/fix"), 4)) {
-					pExtArg->byFix = TRUE;
-					s_dwFix = _tcstoul(argv[i++], &endptr, 10);
-				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/re"), 3)) {
-					pExtArg->byResume = TRUE;
-				}
-				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), 2)) {
-					pExtArg->byQuiet = TRUE;
-				}
-				else {
-					OutputErrorString(_T("Unknown option: [%s]\n"), argv[i - 1]);
-					return FALSE;
-				}
-			}
-			*pExecType = dvd;
-			printAndSetPath(argv[3], pszFullPath);
-		}
-		else if (argc >= 4 && ((cmdLen == 2 && !_tcsncmp(argv[1], _T("bd"), 2)) ||
-			(cmdLen == 4 && !_tcsncmp(argv[1], _T("xbox"), 4)))) {
-			if (cmdLen == 2) {
-				*pExecType = bd;
-			}
-			else if (cmdLen == 4) {
-				*pExecType = xbox;
-			}
-			for (INT i = 5; i <= argc; i++) {
-				cmdLen = _tcslen(argv[i - 1]);
-				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/f"), 2)) {
-					if (!SetOptionF(argc, argv, pExtArg, &i)) {
-						return FALSE;
-					}
-				}
-				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), 2)) {
-					pExtArg->byQuiet = TRUE;
-				}
-				else {
-					OutputErrorString(_T("Unknown option: [%s]\n"), argv[i - 1]);
-					return FALSE;
-				}
-			}
-			printAndSetPath(argv[3], pszFullPath);
-		}
 		else if (argc >= 7 && ((cmdLen == 4 && !_tcsncmp(argv[1], _T("data"), 4)) ||
 			(cmdLen == 5 && !_tcsncmp(argv[1], _T("audio"), 5)))) {
 			s_dwSpeed = _tcstoul(argv[4], &endptr, 10);
@@ -1023,6 +966,130 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			}
 			else if (!_tcsncmp(argv[1], _T("audio"), 5)) {
 				*pExecType = audio;
+			}
+			printAndSetPath(argv[3], pszFullPath);
+		}
+		else if (argc >= 5 && cmdLen == 3 && !_tcsncmp(argv[1], _T("dvd"), 3)) {
+			s_dwSpeed = _tcstoul(argv[4], &endptr, 10);
+			if (*endptr) {
+				OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
+				return FALSE;
+			}
+			for (INT i = 6; i <= argc; i++) {
+				cmdLen = _tcslen(argv[i - 1]);
+				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/c"), 2)) {
+					pExtArg->byCmi = TRUE;
+				}
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/f"), 2)) {
+					if (!SetOptionF(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
+				}
+				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/raw"), 4)) {
+					pExtArg->byRawDump = TRUE;
+				}
+				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/fix"), 4)) {
+					pExtArg->byFix = TRUE;
+					s_dwFix = _tcstoul(argv[i++], &endptr, 10);
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/re"), 3)) {
+					pExtArg->byResume = TRUE;
+				}
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), 2)) {
+					pExtArg->byQuiet = TRUE;
+				}
+				else {
+					OutputErrorString(_T("Unknown option: [%s]\n"), argv[i - 1]);
+					return FALSE;
+				}
+			}
+			*pExecType = dvd;
+			printAndSetPath(argv[3], pszFullPath);
+		}
+		else if (argc >= 4 && ((cmdLen == 2 && !_tcsncmp(argv[1], _T("bd"), 2)) ||
+			(cmdLen == 4 && !_tcsncmp(argv[1], _T("xbox"), 4)))) {
+			if (cmdLen == 2) {
+				*pExecType = bd;
+			}
+			else if (cmdLen == 4) {
+				*pExecType = xbox;
+			}
+			for (INT i = 5; i <= argc; i++) {
+				cmdLen = _tcslen(argv[i - 1]);
+				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/f"), 2)) {
+					if (!SetOptionF(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
+				}
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), 2)) {
+					pExtArg->byQuiet = TRUE;
+				}
+				else {
+					OutputErrorString(_T("Unknown option: [%s]\n"), argv[i - 1]);
+					return FALSE;
+				}
+			}
+			printAndSetPath(argv[3], pszFullPath);
+		}
+		else if (argc >= 20 && ((cmdLen == 8 && !_tcsncmp(argv[1], _T("xboxswap"), 8)))) {
+			*pExecType = xboxswap;
+			for (INT i = 4; i < 20; i++) {
+				pExtArg->dwSecuritySector[i - 4] = _tcstoul(argv[i], &endptr, 10);
+				if (*endptr) {
+					OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
+					return FALSE;
+				}
+			}
+			for (INT i = 20; i <= argc; i++) {
+				cmdLen = _tcslen(argv[i]);
+				if (cmdLen == 2 && !_tcsncmp(argv[i], _T("/f"), 2)) {
+					if (!SetOptionF(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
+				}
+				else if (cmdLen == 2 && !_tcsncmp(argv[i], _T("/q"), 2)) {
+					pExtArg->byQuiet = TRUE;
+				}
+				else {
+					OutputErrorString(_T("Unknown option: [%s]\n"), argv[i]);
+					return FALSE;
+				}
+			}
+			printAndSetPath(argv[3], pszFullPath);
+		}
+		else if (argc >= 7 && ((cmdLen == 8 && (!_tcsncmp(argv[1], _T("xgd2swap"), 8) || !_tcsncmp(argv[1], _T("xgd3swap"), 8))))) {
+			pExtArg->nAllSectors = (INT)_tcstoul(argv[4], &endptr, 10);
+			if (*endptr) {
+				OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
+				return FALSE;
+			}
+			for (INT i = 5; i < 7; i++) {
+				pExtArg->dwSecuritySector[i - 5] = _tcstoul(argv[i], &endptr, 10);
+				if (*endptr) {
+					OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
+					return FALSE;
+				}
+			}
+			for (INT i = 7; i <= argc; i++) {
+				cmdLen = _tcslen(argv[i]);
+				if (cmdLen == 2 && !_tcsncmp(argv[i], _T("/f"), 2)) {
+					if (!SetOptionF(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
+				}
+				else if (cmdLen == 2 && !_tcsncmp(argv[i], _T("/q"), 2)) {
+					pExtArg->byQuiet = TRUE;
+				}
+				else {
+					OutputErrorString(_T("Unknown option: [%s]\n"), argv[i]);
+					return FALSE;
+				}
+			}
+			if (pExtArg->nAllSectors < 4000000) {
+				*pExecType = xgd2swap;
+			}
+			else {
+				*pExecType = xgd3swap;
 			}
 			printAndSetPath(argv[3], pszFullPath);
 		}
@@ -1133,11 +1200,25 @@ int printUsage(void)
 		_T("\t\tDump a DVD from A to Z\n")
 		_T("\txbox <DriveLetter> <Filename> [/f (val)] [/q]\n")
 		_T("\t\tDump a disc from A to Z\n")
+		_T("\txboxswap <DriveLetter> <Filename> <StartLBAOfSecuritySector_1>\n")
+		_T("\t                                  <StartLBAOfSecuritySector_2>\n")
+		_T("\t                                                 :            \n")
+		_T("\t                                  <StartLBAOfSecuritySector_16> [/f (val)] [/q]\n")
+		_T("\t\tDump a Xbox disc from A to Z using swap trick\n")
+		_T("\txgd2swap <DriveLetter> <Filename> <AllSectorLength>\n")
+		_T("\t          <StartLBAOfSecuritySector_1> <StartLBAOfSecuritySector_2> [/f (val)] [/q]\n")
+		_T("\t\tDump a XGD2 disc from A to Z using swap trick\n")
+		_T("\txgd3swap <DriveLetter> <Filename> <AllSectorLength>\n")
+		_T("\t          <StartLBAOfSecuritySector_1> <StartLBAOfSecuritySector_2> [/f (val)] [/q]\n")
+		_T("\t\tDump a XGD3 disc from A to Z using swap trick\n")
 		_T("\tbd <DriveLetter> <Filename> [/f (val)] [/q]\n")
 		_T("\t\tDump a BD from A to Z\n")
 		_T("\tfd <DriveLetter> <Filename>\n")
 		_T("\t\tDump a floppy disk\n")
 		_T("\tstop <DriveLetter>\n")
+	);
+	ret = _tsystem(_T("pause"));
+	OutputString(
 		_T("\t\tSpin off the disc\n")
 		_T("\tstart <DriveLetter>\n")
 		_T("\t\tSpin up the disc\n")
@@ -1149,9 +1230,6 @@ int printUsage(void)
 		_T("\t\tReset the drive (Only PLEXTOR)\n")
 		_T("\tls <DriveLetter>\n")
 		_T("\t\tShow maximum speed of the drive\n")
-	);
-	ret = _tsystem(_T("pause"));
-	OutputString(
 		_T("\tsub <Subfile>\n")
 		_T("\t\tParse CloneCD sub file and output to readable format\n")
 		_T("\tmds <Mdsfile>\n")
@@ -1165,6 +1243,9 @@ int printUsage(void)
 		_T("\t\t\tval\tsamples value\n")
 		_T("\t/be\tUse 0xbe as the opcode for Reading CD forcibly\n")
 		_T("\t\t\tstr\t raw: sub channel mode is raw (default)\n")
+	);
+	ret = _tsystem(_T("pause"));
+	OutputString(
 		_T("\t\t\t   \tpack: sub channel mode is pack\n")
 		_T("\t/d8\tUse 0xd8 as the opcode for Reading CD forcibly\n")
 		_T("\t/c2\tContinue reading CD to recover C2 error existing sector\n")
@@ -1176,9 +1257,6 @@ int printUsage(void)
 		_T("\t\t\t    \tval3, 4 is used when val2 is 1\n")
 		_T("\t/m\tUse if MCN exists in the first pregap sector of the track\n")
 		_T("\t\t\tFor some PC-Engine\n")
-	);
-	ret = _tsystem(_T("pause"));
-	OutputString(
 		_T("\t/p\tDumping the AMSF from 00:00:00 to 00:01:74\n")
 		_T("\t\t\tFor SagaFrontier Original Sound Track (Disc 3) etc.\n")
 		_T("\t\t\tSupport drive: PLEXTOR PX-W5224, PREMIUM, PREMIUM2\n")
@@ -1188,10 +1266,13 @@ int printUsage(void)
 		_T("\t/ms\tRead the lead-out of 1st session and the lead-in of 2nd session\n")
 		_T("\t\t\tFor Multi-session\n")
 		_T("\t/74\tRead the lead-out about 74:00:00\n")
-		_T("\t\t\tFor ring data (a.k.a Saturn Ring) of Sega Saturn)\n")
+		_T("\t\t\tFor ring data (a.k.a Saturn Ring) of Sega Saturn\n")
 		_T("\t/sf\tScan file to detect protect. If reading error exists,\n")
 		_T("\t   \tcontinue reading and ignore c2 error on specific sector\n")
 		_T("\t\t\tFor CodeLock, LaserLock, RingProtect, RingPROTECH\n")
+	);
+	ret = _tsystem(_T("pause"));
+	OutputString(
 		_T("\t\t\t    SafeDisc, SmartE, CD.IDX, ProtectCD-VOB, CDS300\n")
 		_T("\t\t\tval\ttimeout value (default: 60)\n")
 		_T("\t/ss\tScan sector to detect protect. If reading error exists,\n")
@@ -1203,9 +1284,6 @@ int printUsage(void)
 		_T("\t/np\tNot fix SubP\n")
 		_T("\t/nq\tNot fix SubQ\n")
 		_T("\t/nr\tNot fix SubRtoW\n")
-	);
-	ret = _tsystem(_T("pause"));
-	OutputString(
 		_T("\t/nl\tNot fix SubQ (RMSF, AMSF, CRC) (LBA 10000 - 19999)\n")
 		_T("\t   \t                               (LBA 40000 - 49999)\n")
 		_T("\t\t\tFor PlayStation LibCrypt\n")

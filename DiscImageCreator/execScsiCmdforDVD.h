@@ -59,3 +59,11 @@ BOOL ReadXboxDVD(
 	PDISC pDisc,
 	LPCTSTR pszFullPath
 );
+
+BOOL ReadXboxDVDBySwap(
+	PEXEC_TYPE pExecType,
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	PDISC pDisc,
+	LPCTSTR pszFullPath
+);

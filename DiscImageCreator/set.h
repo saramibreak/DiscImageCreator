@@ -132,7 +132,8 @@ VOID SetLBAForFirstAdr(
 VOID SetBufferFromTmpSubQData(
 	LPBYTE lpSubcode,
 	SUB_Q_PER_SECTOR pSubQ,
-	BYTE bycurrent
+	BOOL bCurrent,
+	BOOL bUpdateCrc
 );
 
 VOID SetBufferFromMCN(

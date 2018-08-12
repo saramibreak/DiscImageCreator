@@ -239,12 +239,12 @@ BOOL StorageQueryProperty(
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
-	PSTORAGE_ADAPTER_DESCRIPTOR adapterDescriptor =
-		(PSTORAGE_ADAPTER_DESCRIPTOR)calloc(header.Size, sizeof(BYTE));
-	if (!adapterDescriptor) {
+	LPBYTE tmp = (LPBYTE)calloc(header.Size, sizeof(BYTE));
+	if (!tmp) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
+	PSTORAGE_ADAPTER_DESCRIPTOR adapterDescriptor = (PSTORAGE_ADAPTER_DESCRIPTOR)tmp;
 	BOOL bRet = DeviceIoControl(pDevice->hDevice, IOCTL_STORAGE_QUERY_PROPERTY,
 		&query, sizeof(STORAGE_PROPERTY_QUERY), adapterDescriptor, header.Size, &dwReturned, FALSE);
 	if (bRet) {

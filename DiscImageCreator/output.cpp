@@ -881,7 +881,7 @@ VOID WriteErrorBuffer(
 			pDiscPerSector->subQ.current.nRelativeTime++;
 		}
 		pDiscPerSector->subQ.current.nAbsoluteTime++;
-		SetBufferFromTmpSubQData(pDiscPerSector->subcode.current, pDiscPerSector->subQ.current, 1);
+		SetBufferFromTmpSubQData(pDiscPerSector->subcode.current, pDiscPerSector->subQ.current, TRUE, TRUE);
 		AlignColumnSubcode(lpSubcodeRaw, pDiscPerSector->subcode.current);
 		WriteSubChannel(pDisc, pDiscPerSector, lpSubcodeRaw, nLBA, fpSub, fpParse);
 

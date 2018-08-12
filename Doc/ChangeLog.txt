@@ -495,3 +495,10 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - fixed: Reading directory record of GD-ROM
 - fixed: /s option (/s 0 and /c2 can't use together)
 - fixed: Disc log of DVD (Region)
+
+*2018-08-12
+- added: xboxswap, xgd2swap, xgd3swap command
+- added: Reading param.sfo
+- added: makefile for linux
+- improved: Reading sub-channel (create QGenSector from QNextSector - 1 and QPrevSector + 1)
+- fixed: _splitpath for linux (added null checking)

@@ -201,6 +201,8 @@ typedef struct _EXT_ARG {
 	BYTE padding[3];
 	LONG nAudioCDOffsetNum;
 	DWORD dwMaxRereadNum;
+	INT nAllSectors;	// use for xbox360
+	DWORD dwSecuritySector[16];	// use for xbox/xbox360
 	LONG nC2RereadingType;
 	LONG nStartLBAForC2;
 	LONG nEndLBAForC2;
@@ -358,11 +360,15 @@ typedef struct _DISC {
 		PROTECT_TYPE_DVD protect;
 		DWORD dwFixNum;
 		DWORD dwDVDStartPsn;
-		DWORD dwXBOXStartPsn;
+		DWORD dwXboxStartPsn;
 		DWORD dwLayer0SectorLength;
 		DWORD dwLayer1SectorLength;
-		DWORD securitySectorRange[23][2];
+		DWORD securitySectorRange[23][2]; // for Xbox
+		DWORD dwXboxSwapOfs;
 	} DVD;
+	struct _BD {
+		INT nLBAForParamSfo;
+	} BD;
 } DISC, *PDISC;
 
 typedef struct _VOLUME_DESCRIPTOR {

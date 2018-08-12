@@ -801,3 +801,82 @@ BOOL ReadDVDForFileSystem(
 	OutputFsVolumeDescriptorSequence(lpBuf, nLBA);
 	return TRUE;
 }
+
+BOOL ReadBDForParamSfo(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	PDISC pDisc,
+	CDB::_READ12* pCdb,
+	LPBYTE lpBuf
+) {
+	DWORD tmpTransfer = 1;
+	REVERSE_BYTES(pCdb->TransferLength, &tmpTransfer);
+	REVERSE_BYTES(pCdb->LogicalBlock, &pDisc->BD.nLBAForParamSfo);
+#ifdef _WIN32
+	INT direction = SCSI_IOCTL_DATA_IN;
+#else
+	INT direction = SG_DXFER_FROM_DEV;
+#endif
+	BYTE byScsiStatus = 0;
+	if (!ScsiPassThroughDirect(pExtArg, pDevice, pCdb, CDB12GENERIC_LENGTH, lpBuf,
+		direction, DISC_RAW_READ_SIZE, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+		return FALSE;
+	}
+	// http://www.psdevwiki.com/ps3/PARAM.SFO
+	typedef struct _sfo_header {
+		UINT magic; /************ Always PSF */
+		UINT version; /********** Usually 1.1 */
+		UINT key_table_start; /** Start offset of key_table */
+		UINT data_table_start; /* Start offset of data_table */
+		UINT tables_entries; /*** Number of entries in all tables */
+	} sfo_header, *psfo_header;
+
+	typedef struct _sfo_index_table_entry {
+		WORD key_offset; /*** param_key offset (relative to start offset of key_table) */
+		WORD data_fmt; /***** param_data data type */
+		UINT data_len; /***** param_data used bytes */
+		UINT data_max_len; /* param_data total bytes */
+		UINT data_offset; /** param_data offset (relative to start offset of data_table) */
+	} sfo_index_table_entry, *psfo_index_table_entry;
+
+	psfo_header header = (psfo_header)lpBuf;
+	OutputDiscLogA(
+		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(PARAM.SFO)
+		"\tmagic: %c%c%c\n"
+		"\tversion: %d.%02d\n"
+		, pDisc->BD.nLBAForParamSfo, pDisc->BD.nLBAForParamSfo
+		, ((header->magic >> 8) & 0x000000ff)
+		, ((header->magic >> 16) & 0x000000ff), ((header->magic >> 24) & 0x000000ff)
+		, (header->version & 0x000000ff), ((header->version >> 8) & 0x000000ff)
+	);
+
+	LPBYTE keytable = lpBuf + header->key_table_start;
+	LPBYTE datatable = lpBuf + header->data_table_start;
+	for (DWORD i = 0; i < header->tables_entries; i++) {
+		psfo_index_table_entry entry =
+			(psfo_index_table_entry)(lpBuf + sizeof(sfo_header) + sizeof(sfo_index_table_entry) * i);
+#if 0
+		OutputDiscLogA(
+			"\tkey_offset[%d]: %d\n"
+			"\tdata_fmt[%d]: %d\n"
+			"\tdata_len[%d]: %d\n"
+			"\tdata_max_len[%d]: %d\n"
+			"\tdata_offset[%d]: %d\n"
+			, i, entry[i]->key_offset, i, entry[i]->data_fmt, i
+			, entry[i]->data_len, i, entry[i]->data_max_len, i, entry[i]->data_offset
+		);
+#endif
+		if (entry->data_fmt == 516) {
+			OutputDiscLogA(
+				"\t%s: %s\n", keytable + entry->key_offset, datatable + entry->data_offset);
+		}
+		else if (entry->data_fmt == 1028) {
+			LPBYTE ofs = datatable + entry->data_offset;
+			DWORD data = MAKEDWORD(MAKEWORD(ofs[0], ofs[1]), MAKEWORD(ofs[2], ofs[3]));
+			OutputDiscLogA(
+				"\t%s: %lx\n", keytable + entry->key_offset, data);
+		}
+	}
+	return TRUE;
+}

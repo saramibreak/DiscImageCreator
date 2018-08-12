@@ -213,7 +213,7 @@
 
 #### Method 3
 1. Insert the audio trap disc to a supported drive.
-2. Run below. (stop spinning disc)  
+2. Run below. (stop spinning disc)
    DiscImageCreator.exe stop [DriveLetter]
 3. Use a pin to press the escape eject button, so the tray will eject (or remove
    the drive cover).
@@ -236,8 +236,54 @@ Compared with Friidump and Rawdump, dumping speed is very slow.
 
  DiscImageCreator.exe dvd [DriveLetter] foo.raw [DriveSpeed(0-16)] /raw
 
-### Dumping Guide for XBOX/XBOX 360
+### Dumping Guide for XBOX/XBOX 360 on kreon drive
  DiscImageCreator.exe xbox [DriveLetter] foo.iso
+
+### Dumping Guide for XBOX/XBOX360 (XGD2)/XBOX360 (XGD3) on genaral drive
+ Prepare DVD-DL or create the DVD+R DL trap disc in advance.  
+
+#### How to prepare
+ You need a pressed DVD-DL disc with around 8.5GB data on it
+ 
+ XBOX: Layerbreak larger than 1913776 and the exact size needed (in sectors) is (your_disc_layerbreak - 1913776) * 2 + 3820880
+
+ XBOX360 (XGD2): Layerbreak larger than 1913760 and the exact size needed (in sectors) is (your_disc_layerbreak - 1913760) * 2 + 3825924
+
+ XBOX360 (XGD3): Layerbreak larger than 2133520 and the exact size needed (in sectors) is (your_disc_layerbreak - 2133520) * 2 + 4267015
+
+#### How to create
+ XBOX: DVD (Length is 3820880 or larger, Layerbreak is 1913776 or larger)
+
+ XBOX360 (XGD2): DVD (Length is 3825924 or larger, Layerbreak is 1913760 or larger)
+
+ XBOX360 (XGD3): DVD (Length is 4267015 or larger, Layerbreak is 2133520 or larger)
+
+1. Create image file of the above DVD using dumping tool (e.g. isobuster)
+2. Run [ImgBurn](http://www.imgburn.com/)
+3. Setting LayerBreak manually (L0 sector num is about a half size of DVD length)  
+   e.g. If DVD length is 3900304, L0 sector num is about 1950160
+4. Before burn the image file, you need to confirm the size is correct  
+   e.g. (1950160 - 1913776) * 2 + 3820880 = 3893648 => 3893648 is smaller than 3900304, so the DVD+R DL this image is burnt can dump a XBOX disc
+5. Burn image file to DVD+R DL
+
+#### Dump the disc
+1. Insert the DVD-DL or DVD+R DL trap disc to a general DVD drive.
+2. Run below. (stop spinning disc)  
+   DiscImageCreator.exe stop [DriveLetter]
+3. Use a pin to press the escape eject button, so the tray will eject (or remove
+   the drive cover).
+4. Insert the XBOX disc and run below. (close the drive tray)  
+   DiscImageCreator.exe close [DriveLetter]  
+   (or gently push the tray back or put the drive cover back on).
+5. Run below.  
+   e.g. Dead or Alive 3 http://redump.org/disc/27157/  
+   DiscImageCreator.exe xboxswap [DriveLetter] foo.iso 292756 467910 686060 830074 999794 1212958 1579164 1719138 2010470 2372562 2527492 2682830 2915560 3065604 3219138 3455656  
+
+   e.g. Blue Dragon http://redump.org/disc/27088/  
+   DiscImageCreator.exe xgd2swap [DriveLetter] foo.iso 3825631 108976 3719856  
+
+   e.g. Battlefield 3 (Disc 1) (Multiplayer/Co-Op) http://redump.org/disc/35131/  
+   DiscImageCreator.exe xgd3swap [DriveLetter] foo.iso 4267015 12544 4246304  
 
 ### Dumping Guide for BD
  DiscImageCreator.exe bd [DriveLetter] foo.iso
@@ -274,6 +320,17 @@ Compared with Friidump and Rawdump, dumping speed is very slow.
                 Dump a DVD from A to Z
         xbox <DriveLetter> <Filename> [/f (val)] [/q]
                 Dump a disc from A to Z
+        xboxswap <DriveLetter> <Filename> <StartLBAOfSecuritySector_1>
+                                          <StartLBAOfSecuritySector_2>
+                                                         :
+                                          <StartLBAOfSecuritySector_16> [/f (val)] [/q]
+                Dump a Xbox disc from A to Z using swap trick
+        xgd2swap <DriveLetter> <Filename> <AllSectorLength>
+                  <StartLBAOfSecuritySector_1> <StartLBAOfSecuritySector_2> [/f (val)] [/q]
+                Dump a XGD2 disc from A to Z using swap trick
+        xgd3swap <DriveLetter> <Filename> <AllSectorLength>
+                  <StartLBAOfSecuritySector_1> <StartLBAOfSecuritySector_2> [/f (val)] [/q]
+                Dump a XGD3 disc from A to Z using swap trick
         bd <DriveLetter> <Filename> [/f (val)] [/q]
                 Dump a BD from A to Z
         fd <DriveLetter> <Filename>
@@ -322,6 +379,8 @@ Compared with Friidump and Rawdump, dumping speed is very slow.
                         For Alpha-Disc, Tages (very slow)
         /ms     Read the lead-out of 1st session and the lead-in of 2nd session
                         For Multi-session
+        /74     Read the lead-out about 74:00:00
+                        For ring data (a.k.a Saturn Ring) of Sega Saturn
         /sf     Scan file to detect protect. If reading error exists,
                 continue reading and ignore c2 error on specific sector
                         For CodeLock, LaserLock, RingProtect, RingPROTECH
@@ -401,17 +460,26 @@ Compared with Friidump and Rawdump, dumping speed is very slow.
 
 ## Development Tool
 - Visual Studio 2017 (Visual C++ 2017)
-- Windows Driver Kit(WDK) 7.1 (I use 7.1 to support Windows XP.)  
-  Sample code path: WinDDK\7600.16385.1\src\storage\tools\spti
-  url: http://msdn.microsoft.com/en-us/library/windows/hardware/ff561595(v=vs.85).aspx
+  - Windows build
+    - Windows Driver Kit (WDK) 7.1
+      I use 7.1 to support Windows XP.  
+      Sample code path: WinDDK\7600.16385.1\src\storage\tools\spti
+      url: http://msdn.microsoft.com/en-us/library/windows/hardware/ff561595(v=vs.85).aspx
+
+  - Linux build on Windows
+    - Windows Subsystem for Linux (WSL)
+      https://blogs.msdn.microsoft.com/vcblog/2017/02/08/targeting-windows-subsystem-for-linux-from-visual-studio/
+
+  - Linux build on Linux
+    - gcc, make 
 
 ## License & Copyright
- See LICENSE  
- About driveOffset.txt.  
+See LICENSE  
+- About driveOffset.txt.  
   http://www.accuraterip.com/driveoffsets.htm  
   Copyright (c) 2018 Illustrate. All Rights Reserved.  
 
- About _external folder  
+- About _external folder  
   prngcd.cpp: Copyright (c) 2015 Jonathan Gevaryahu. All rights reserved.  
 
   crc16: http://oku.edu.mie-u.ac.jp/~okumura/algo/  src\crc16t.c in algo.lzh  
