@@ -1040,7 +1040,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					return FALSE;
 				}
 			}
-			for (INT i = 20; i <= argc; i++) {
+			for (INT i = 20; i < argc; i++) {
 				cmdLen = _tcslen(argv[i]);
 				if (cmdLen == 2 && !_tcsncmp(argv[i], _T("/f"), 2)) {
 					if (!SetOptionF(argc, argv, pExtArg, &i)) {
@@ -1070,7 +1070,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					return FALSE;
 				}
 			}
-			for (INT i = 7; i <= argc; i++) {
+			for (INT i = 7; i < argc; i++) {
 				cmdLen = _tcslen(argv[i]);
 				if (cmdLen == 2 && !_tcsncmp(argv[i], _T("/f"), 2)) {
 					if (!SetOptionF(argc, argv, pExtArg, &i)) {
