@@ -1585,9 +1585,9 @@ int GetModuleFileName(void* a, char* path, unsigned long size);
 int WideCharToMultiByte(UINT CodePage, DWORD dwFlags, LPCWSTR lpWideCharStr
 	, int cchWideChar, LPSTR lpMultiByteStr, int cchMultiByte, LPCSTR lpDefaultChar, LPBOOL lpUsedDefaultChar);
 
-void SetLastError(int errcode);
+void SetLastError(unsigned long errcode);
 
-int GetLastError(void);
+unsigned long GetLastError(void);
 
 int CloseHandle(int fd);
 

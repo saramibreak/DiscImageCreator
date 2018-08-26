@@ -917,7 +917,7 @@ VOID OutputFsImageDosHeader(
 	PIMAGE_DOS_HEADER pIdh
 ) {
 	OutputVolDescLogA(
-		"\t========== Image Dos Header (%u byte) ==========\n"
+		"\t========== Image Dos Header (%zu byte) ==========\n"
 		"\t                     Magic number: %04x\n"
 		"\t       Bytes on last page of file: %04x\n"
 		"\t                    Pages in file: %04x\n"
@@ -947,7 +947,7 @@ VOID OutputFsImageOS2Header(
 	PIMAGE_OS2_HEADER pIoh
 ) {
 	OutputVolDescLogA(
-		"\t========== Image OS/2 .EXE header (%u byte) ==========\n"
+		"\t========== Image OS/2 .EXE header (%zu byte) ==========\n"
 		"\t                      Magic number: %04x\n"
 		"\t                    Version number: %02x\n"
 		"\t                   Revision number: %02x\n"
@@ -996,7 +996,7 @@ VOID OutputFsImageNtHeader(
 	PIMAGE_NT_HEADERS32 pInh
 ) {
 	OutputVolDescLogA(
-		"\t========== Image NT Header (%u byte) ==========\n"
+		"\t========== Image NT Header (%zu byte) ==========\n"
 		"\tSignature: %08lx\n"
 		"\t========== FileHeader ==========\n"
 		"\t\t             Machine: %04x\n"
@@ -1075,7 +1075,7 @@ VOID OutputFsImageSectionHeader(
 	PIMAGE_SECTION_HEADER pIsh
 ) {
 	OutputVolDescLogA(
-		"\t========== Image Section Header (%u byte) ==========\n"
+		"\t========== Image Section Header (%zu byte) ==========\n"
 		"\t                Name: %.8s\n"
 		"\t     PhysicalAddress: %08lx\n"
 		"\t         VirtualSize: %08lx\n"
