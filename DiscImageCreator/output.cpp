@@ -2121,7 +2121,7 @@ VOID OutputLastErrorNumAndString(
 
 	LocalFree(lpMsgBuf);
 #else
-	OutputErrorString(_T("[F:%s][L:%lu] GetLastError: %lu, %s\n"),
+	OutputErrorString(_T("[F:%s][L:%lu] GetLastError: %u, %s\n"),
 		pszFuncName, lLineNum, GetLastError(), strerror(GetLastError()));
 #endif
 }
