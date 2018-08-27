@@ -1190,7 +1190,10 @@ int printUsage(void)
 		_T("\t      [/be (str) or /d8] [/sf (val)] [/np] [/nq] [/nr] [/ns] [/s (val)]\n")
 		_T("\t\tDump a CD from start to end (using 'cdda' flag)\n")
 	);
-	int ret = _tsystem(_T("pause"));
+	int ret;
+	#ifdef _WIN32
+	ret = _tsystem(_T("pause"));
+	#endif
 	OutputString(
 		_T("\t\tFor dumping a lead-in, lead-out mainly\n")
 		_T("\tgd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/be (str) or /d8]\n")
@@ -1217,7 +1220,9 @@ int printUsage(void)
 		_T("\t\tDump a floppy disk\n")
 		_T("\tstop <DriveLetter>\n")
 	);
+	#ifdef _WIN32
 	ret = _tsystem(_T("pause"));
+	#endif
 	OutputString(
 		_T("\t\tSpin off the disc\n")
 		_T("\tstart <DriveLetter>\n")
@@ -1244,7 +1249,9 @@ int printUsage(void)
 		_T("\t/be\tUse 0xbe as the opcode for Reading CD forcibly\n")
 		_T("\t\t\tstr\t raw: sub channel mode is raw (default)\n")
 	);
+	#ifdef _WIN32
 	ret = _tsystem(_T("pause"));
+	#endif
 	OutputString(
 		_T("\t\t\t   \tpack: sub channel mode is pack\n")
 		_T("\t/d8\tUse 0xd8 as the opcode for Reading CD forcibly\n")
@@ -1271,7 +1278,9 @@ int printUsage(void)
 		_T("\t   \tcontinue reading and ignore c2 error on specific sector\n")
 		_T("\t\t\tFor CodeLock, LaserLock, RingProtect, RingPROTECH\n")
 	);
+	#ifdef _WIN32
 	ret = _tsystem(_T("pause"));
+	#endif
 	OutputString(
 		_T("\t\t\t    SafeDisc, SmartE, CD.IDX, ProtectCD-VOB, CDS300\n")
 		_T("\t\t\tval\ttimeout value (default: 60)\n")
@@ -1302,7 +1311,9 @@ int printUsage(void)
 		_T("\t\t\t -> GDR (8082N, 8161B to 8164B) and GCC (4160N, 4240N to 4247N)\n")
 		_T("\t\t\t    supports GC/Wii dumping\n")
 	);
+	#ifdef _WIN32
 	ret = _tsystem(_T("pause"));
+	#endif
 	return ret;
 }
 
