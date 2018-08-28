@@ -41,7 +41,7 @@ VOID OutputCDTextOther(
 	PCDROM_TOC_CD_TEXT_DATA_BLOCK pDesc,
 	WORD wTocTextEntries,
 	BYTE bySizeInfoIdx,
-	BYTE bySizeInfoCnt
+	UINT uiSizeInfoCnt
 );
 
 VOID OutputDiscInformation(

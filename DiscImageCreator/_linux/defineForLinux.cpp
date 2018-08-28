@@ -325,12 +325,12 @@ int WideCharToMultiByte(
 
 #define NO_ERROR 0L
 
-void SetLastError(unsigned long errcode)
+void SetLastError(int errcode)
 {
 	errno = errcode;
 }
 
-unsigned long GetLastError(void)
+int GetLastError(void)
 {
 	return errno;
 }

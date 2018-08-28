@@ -145,8 +145,8 @@ BOOL StartStopUnit(
 ) {
 	CDB::_START_STOP cdb = { 0 };
 	cdb.OperationCode = SCSIOP_START_STOP_UNIT;
-	cdb.Start = Start;
-	cdb.LoadEject = LoadEject;
+	cdb.Start = (UCHAR)(Start & 0x01);
+	cdb.LoadEject = (UCHAR)(LoadEject & 0x01);
 #ifdef _WIN32
 	INT direction = SCSI_IOCTL_DATA_IN;
 #else
@@ -866,7 +866,7 @@ BOOL ReadEeprom(
 	}
 	CDB::_CDB12 cdb = { 0 };
 	cdb.OperationCode = SCSIOP_PLXTR_READ_EEPROM;
-	cdb.RelativeAddress = (BYTE)bHigh;
+	cdb.RelativeAddress = (UCHAR)(bHigh & 0x01);
 
 	BOOL bRet = TRUE;
 #ifdef _WIN32

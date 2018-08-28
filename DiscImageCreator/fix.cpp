@@ -368,11 +368,11 @@ BOOL FixSubQAdrISRC(
 				pDiscPerSector->subcode.current[16] = (BYTE)((tmpISRC[4] - 0x30) << 2);
 				for (INT i = 17, j = 5; i < 20; i++, j += 2) {
 					pDiscPerSector->subcode.current[i] = (BYTE)(tmpISRC[j] - 0x30);
-					pDiscPerSector->subcode.current[i] <<= 4;
+					pDiscPerSector->subcode.current[i] = (BYTE)(pDiscPerSector->subcode.current[i] << 4);
 					pDiscPerSector->subcode.current[i] |= (BYTE)(tmpISRC[j + 1] - 0x30);
 				}
 				pDiscPerSector->subcode.current[20] = (BYTE)(tmpISRC[11] - 0x30);
-				pDiscPerSector->subcode.current[20] <<= 4;
+				pDiscPerSector->subcode.current[20] = (BYTE)(pDiscPerSector->subcode.current[20] << 4);
 			}
 			bRet = TRUE;
 		}
@@ -510,7 +510,7 @@ VOID FixSubQ(
 			}
 		}
 		else {
-			pDiscPerSector->subQ.current.byAdr = bBackupAdr;
+			pDiscPerSector->subQ.current.byAdr = (BYTE)(bBackupAdr & 0x0f);
 			pDiscPerSector->subcode.current[12] =
 				(BYTE)(pDiscPerSector->subQ.current.byCtl << 4 | pDiscPerSector->subQ.current.byAdr);
 			pDiscPerSector->subcode.current[13] = DecToBcd(bBackupTrackNum);
@@ -1007,6 +1007,8 @@ VOID FixSubQ(
 			pDiscPerSector->subcode.current[23] = SubQcodeOrg[11];
 			OutputIntentionalSubchannel(nLBA, &pDiscPerSector->subcode.current[12]);
 			pDisc->PROTECT.byRestoreCounter = 0;
+			pDisc->SUB.nCorruptCrcH = 0;
+			pDisc->SUB.nCorruptCrcL = 0;
 		}
 		else {
 			if (pDisc->PROTECT.byExist == securomV1 || pDisc->PROTECT.byExist == securomV2 || pDisc->PROTECT.byExist == securomV3) {
@@ -1035,6 +1037,8 @@ VOID FixSubQ(
 					pDiscPerSector->subcode.current[21] = SubQcodeOrg[9];
 					OutputIntentionalSubchannel(nLBA, &pDiscPerSector->subcode.current[12]);
 					pDisc->PROTECT.byRestoreCounter++;
+					pDisc->SUB.nCorruptCrcH = 0;
+					pDisc->SUB.nCorruptCrcL = 0;
 				}
 				else {
 					OutputSubInfoWithLBALogA("Intentional error doesn't exist.\n", nLBA, pDiscPerSector->byTrackNum);
@@ -1251,6 +1255,7 @@ VOID FixSubChannel(
 		BOOL bAFrame = IsValidSubQAFrame(pDiscPerSector->subcode.current, nLBA);
 
 		if (-76 < nLBA) {
+			BOOL bSubOk = FALSE;
 			if (!pDisc->SUB.nCorruptCrcH && !pDisc->SUB.nCorruptCrcL && (bAMSF || bAFrame)) {
 				if (*pExecType == swap) {
 					if (pDiscPerSector->byTrackNum + 1 == pDiscPerSector->subQ.current.byTrackNum) {
@@ -1282,8 +1287,9 @@ VOID FixSubChannel(
 					OutputSubErrorLogA("OK\n");
 					*bReread = FALSE;
 				}
+				bSubOk = TRUE;
 			}
-			else {
+			else if (!*bReread && !pDiscPerSector->bLibCrypt && !pDiscPerSector->bSecuRom) {
 				DISC_PER_SECTOR tmpSector = { 0 };
 				memcpy(&tmpSector, pDiscPerSector, sizeof(DISC_PER_SECTOR));
 				tmpSector.subQ.current = tmpSector.subQ.next;
@@ -1296,6 +1302,7 @@ VOID FixSubChannel(
 					memcpy(&pDiscPerSector->subcode.current[12], &tmpSector.subcode.current[12], 12);
 					SetTmpSubQDataFromBuffer(&pDiscPerSector->subQ.current, pDiscPerSector->subcode.current);
 					OutputSubErrorWithLBALogA("Q fixed using next subQ\n", nLBA, pDiscPerSector->byTrackNum);
+					bSubOk = TRUE;
 				}
 				else {
 					tmpSector.subQ.current = tmpSector.subQ.prev;
@@ -1308,25 +1315,26 @@ VOID FixSubChannel(
 						memcpy(&pDiscPerSector->subcode.current[12], &tmpSector.subcode.current[12], 12);
 						SetTmpSubQDataFromBuffer(&pDiscPerSector->subQ.current, pDiscPerSector->subcode.current);
 						OutputSubErrorWithLBALogA("Q fixed using prev subQ\n", nLBA, pDiscPerSector->byTrackNum);
-					}
-					else {
-						if (!*bReread) {
-							if (nLBA < MAX_LBA_OF_CD) {
-								OutputSubErrorWithLBALogA("Q Reread [crc16 unmatch] -> ", nLBA, pDiscPerSector->byTrackNum);
-								*bReread = TRUE;
-								return;
-							}
-							else {
-								OutputSubErrorWithLBALogA("Q [crc16 unmatch] Fix manually\n", nLBA, pDiscPerSector->byTrackNum);
-							}
-						}
-						else {
-							OutputSubErrorLogA("NG. Fix manually\n");
-							*bReread = FALSE;
-						}
-						FixSubQ(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA);
+						bSubOk = TRUE;
 					}
 				}
+			}
+			if (!bSubOk) {
+				if (!*bReread) {
+					if (nLBA < MAX_LBA_OF_CD) {
+						OutputSubErrorWithLBALogA("Q Reread [crc16 unmatch] -> ", nLBA, pDiscPerSector->byTrackNum);
+						*bReread = TRUE;
+						return;
+					}
+					else {
+						OutputSubErrorWithLBALogA("Q [crc16 unmatch] Fix manually\n", nLBA, pDiscPerSector->byTrackNum);
+					}
+				}
+				else {
+					OutputSubErrorLogA("NG. Fix manually\n");
+					*bReread = FALSE;
+				}
+				FixSubQ(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA);
 			}
 		}
 		else {

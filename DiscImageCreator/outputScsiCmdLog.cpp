@@ -1134,7 +1134,7 @@ VOID OutputCDTextOther(
 	PCDROM_TOC_CD_TEXT_DATA_BLOCK pDesc,
 	WORD wTocTextEntries,
 	BYTE bySizeInfoIdx,
-	BYTE bySizeInfoCnt
+	UINT uiSizeInfoCnt
 ) {
 	INT nTocInfoCnt = 0;
 	INT nSizeInfoCnt = 0;
@@ -1190,18 +1190,18 @@ VOID OutputCDTextOther(
 					"\t\t  Number of PACKS with MESSAGES: %u\n"
 					"\t\t   Number of PACKS with DISC_ID: %u\n"
 					"\t\t     Number of PACKS with GENRE: %u\n",
-					pDesc[wTocTextEntries - bySizeInfoCnt].Text[0],
-					pDesc[wTocTextEntries - bySizeInfoCnt].Text[1],
-					pDesc[wTocTextEntries - bySizeInfoCnt].Text[2],
-					pDesc[wTocTextEntries - bySizeInfoCnt].Text[3],
-					pDesc[wTocTextEntries - bySizeInfoCnt].Text[4],
-					pDesc[wTocTextEntries - bySizeInfoCnt].Text[5],
-					pDesc[wTocTextEntries - bySizeInfoCnt].Text[6],
-					pDesc[wTocTextEntries - bySizeInfoCnt].Text[7],
-					pDesc[wTocTextEntries - bySizeInfoCnt].Text[8],
-					pDesc[wTocTextEntries - bySizeInfoCnt].Text[9],
-					pDesc[wTocTextEntries - bySizeInfoCnt].Text[10],
-					pDesc[wTocTextEntries - bySizeInfoCnt].Text[11]);
+					pDesc[wTocTextEntries - uiSizeInfoCnt].Text[0],
+					pDesc[wTocTextEntries - uiSizeInfoCnt].Text[1],
+					pDesc[wTocTextEntries - uiSizeInfoCnt].Text[2],
+					pDesc[wTocTextEntries - uiSizeInfoCnt].Text[3],
+					pDesc[wTocTextEntries - uiSizeInfoCnt].Text[4],
+					pDesc[wTocTextEntries - uiSizeInfoCnt].Text[5],
+					pDesc[wTocTextEntries - uiSizeInfoCnt].Text[6],
+					pDesc[wTocTextEntries - uiSizeInfoCnt].Text[7],
+					pDesc[wTocTextEntries - uiSizeInfoCnt].Text[8],
+					pDesc[wTocTextEntries - uiSizeInfoCnt].Text[9],
+					pDesc[wTocTextEntries - uiSizeInfoCnt].Text[10],
+					pDesc[wTocTextEntries - uiSizeInfoCnt].Text[11]);
 			}
 			else if (nSizeInfoCnt == 1) {
 				OutputDiscLogA(
@@ -1217,18 +1217,18 @@ VOID OutputCDTextOther(
 					"\t\tLast Sequence number of BLOCK 1: %u\n"
 					"\t\tLast Sequence number of BLOCK 2: %u\n"
 					"\t\tLast Sequence number of BLOCK 3: %u\n",
-					pDesc[wTocTextEntries - bySizeInfoCnt + 1].Text[0],
-					pDesc[wTocTextEntries - bySizeInfoCnt + 1].Text[1],
-					pDesc[wTocTextEntries - bySizeInfoCnt + 1].Text[2],
-					pDesc[wTocTextEntries - bySizeInfoCnt + 1].Text[3],
-					pDesc[wTocTextEntries - bySizeInfoCnt + 1].Text[4],
-					pDesc[wTocTextEntries - bySizeInfoCnt + 1].Text[5],
-					pDesc[wTocTextEntries - bySizeInfoCnt + 1].Text[6],
-					pDesc[wTocTextEntries - bySizeInfoCnt + 1].Text[7],
-					pDesc[wTocTextEntries - bySizeInfoCnt + 1].Text[8],
-					pDesc[wTocTextEntries - bySizeInfoCnt + 1].Text[9],
-					pDesc[wTocTextEntries - bySizeInfoCnt + 1].Text[10],
-					pDesc[wTocTextEntries - bySizeInfoCnt + 1].Text[11]);
+					pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[0],
+					pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[1],
+					pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[2],
+					pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[3],
+					pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[4],
+					pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[5],
+					pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[6],
+					pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[7],
+					pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[8],
+					pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[9],
+					pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[10],
+					pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[11]);
 			}
 			else if (nSizeInfoCnt == 2) {
 				OutputDiscLogA(
@@ -1244,18 +1244,18 @@ VOID OutputCDTextOther(
 					"\t\t          Language code BLOCK 5: %u\n"
 					"\t\t          Language code BLOCK 6: %u\n"
 					"\t\t          Language code BLOCK 7: %u\n",
-					pDesc[wTocTextEntries - bySizeInfoCnt + 2].Text[0],
-					pDesc[wTocTextEntries - bySizeInfoCnt + 2].Text[1],
-					pDesc[wTocTextEntries - bySizeInfoCnt + 2].Text[2],
-					pDesc[wTocTextEntries - bySizeInfoCnt + 2].Text[3],
-					pDesc[wTocTextEntries - bySizeInfoCnt + 2].Text[4],
-					pDesc[wTocTextEntries - bySizeInfoCnt + 2].Text[5],
-					pDesc[wTocTextEntries - bySizeInfoCnt + 2].Text[6],
-					pDesc[wTocTextEntries - bySizeInfoCnt + 2].Text[7],
-					pDesc[wTocTextEntries - bySizeInfoCnt + 2].Text[8],
-					pDesc[wTocTextEntries - bySizeInfoCnt + 2].Text[9],
-					pDesc[wTocTextEntries - bySizeInfoCnt + 2].Text[10],
-					pDesc[wTocTextEntries - bySizeInfoCnt + 2].Text[11]);
+					pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[0],
+					pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[1],
+					pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[2],
+					pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[3],
+					pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[4],
+					pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[5],
+					pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[6],
+					pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[7],
+					pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[8],
+					pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[9],
+					pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[10],
+					pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[11]);
 			}
 			nSizeInfoCnt++;
 		}

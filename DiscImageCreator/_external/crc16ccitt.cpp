@@ -5,7 +5,8 @@
  */
 
 #pragma warning(push)
-#pragma warning(disable:4018)
+#pragma warning(disable:4018 4068)
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
 #include "crc16ccitt.h"
 
 /***********************************************************

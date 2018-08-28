@@ -76,6 +76,18 @@ BOOL ReadDVD(
 			nAllLength += (INT)(dwLayer1MiddleZone + pDisc->DVD.dwLayer1SectorLength);
 			OutputDiscLogA(
 				"\t                  %7u (%#x)\n", nAllLength, nAllLength);
+#if 1
+			if (nAllLength > 4000000) {
+				INT nAdditional = 4096;
+				nAllLength += nAdditional;
+				OutputDiscLogA(
+						"\t+     Additional: %7u (%#x)\n"
+						"\t------------------------------------\n"
+						"\t                  %7u (%#x)\n"
+						, nAdditional, nAdditional, nAllLength, nAllLength
+				);
+			}
+#endif
 		}
 
 		if (*pExecType == xboxswap) {
@@ -180,7 +192,11 @@ BOOL ReadDVD(
 			dwTransferLen = dwTransferLenOrg;
 			ZeroMemory(lpBuf, DISC_RAW_READ_SIZE * dwTransferLen);
 			DWORD dwEndOfMiddle = pDisc->SCSI.nAllLength + dwLayer1MiddleZone;
-
+#if 1
+			if (nAllLength > 4000000) {
+				dwEndOfMiddle += 4096;
+			}
+#endif
 			for (DWORD j = (DWORD)pDisc->SCSI.nAllLength; j < dwEndOfMiddle; j += dwTransferLen) {
 				if (dwTransferLen > dwEndOfMiddle - j) {
 					dwTransferLen = dwEndOfMiddle - j;
@@ -1093,7 +1109,7 @@ BOOL ExtractSecuritySector(
 	lpCmd[8] = 0x08;
 	lpCmd[11] = 0xc0;
 	BYTE cmd[5] = { 0 };
-	if (pDisc->SCSI.nAllLength == 3697696) {
+	if (pDisc->SCSI.nAllLength == 3697696 || pDisc->SCSI.nAllLength == 4246304) {
 		// http://beta.ivc.no/wiki/index.php/Xbox_360_Hacks#Save_security-sector
 		// https://team-xecuter.com/forums/threads/42585-Xtreme-firmware-2-0-for-TS-H943-Xbox-360
 		cmd[0] = 0x01;
@@ -1119,6 +1135,8 @@ BOOL ExtractSecuritySector(
 	} while (cmd[++i] != 0);
 
 	if (pDisc->SCSI.nAllLength == 3697696) {
+		OutputString("Output SSv1 to SS.bin\n");
+		// http://redump.org/download/ss_sector_range_1.0e.rar
 		//Fix standard SSv1 ss.bin
 		buf[552] = 0x01;
 		buf[553] = 0x00;
@@ -1139,6 +1157,54 @@ BOOL ExtractSecuritySector(
 		buf[580] = 0x01;
 		buf[582] = 0x00;
 		buf[583] = 0x00;
+	}
+	else if (pDisc->SCSI.nAllLength == 4246304)	{
+		// http://redump.org/download/ss_sector_range_1.0e.rar
+		BOOL filled = FALSE;
+		for (INT j = 32; j < 104; j++) {
+			if (buf[j] != 0) {
+				filled = TRUE;
+				break;
+			}
+		}
+		if (filled == FALSE) {
+			OutputString("Output XGD3 SSv1 to SS.bin\n");
+			//Fix XGD3 SSv1 ss.bin
+			buf[552] = 0x01;
+			buf[553] = 0x00;
+
+			buf[561] = 0x5B;
+			buf[562] = 0x00;
+
+			buf[570] = 0xB5;
+			buf[571] = 0x00;
+
+			buf[579] = 0x0F;
+			buf[580] = 0x01;
+		}
+		else {
+			OutputString("Output XGD3 AP25 to SS.bin\n");
+			//Fix XGD3 AP25 ss.bin
+			buf[72] = 0x01;
+			buf[73] = 0x00;
+			buf[75] = 0x01;
+			buf[76] = 0x00;
+
+			buf[81] = 0x5B;
+			buf[82] = 0x00;
+			buf[84] = 0x5B;
+			buf[85] = 0x00;
+
+			buf[90] = 0xB5;
+			buf[91] = 0x00;
+			buf[93] = 0xB5;
+			buf[94] = 0x00;
+
+			buf[99] = 0x0F;
+			buf[100] = 0x01;
+			buf[102] = 0x0F;
+			buf[103] = 0x01;
+		}
 	}
 	fwrite(buf, sizeof(BYTE), (size_t)DISC_RAW_READ_SIZE, fp);
 	FcloseAndNull(fp);

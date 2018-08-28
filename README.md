@@ -107,7 +107,7 @@
   - GameCube
   - Wii
   
-  XBOX, XBOX 360 (except XGD3)
+  XBOX, XBOX 360
 
   Protected Disc
   - Cactus Data Shield 100 [fake TOC]
@@ -470,8 +470,8 @@ Compared with Friidump and Rawdump, dumping speed is very slow.
     - Windows Subsystem for Linux (WSL)
       https://blogs.msdn.microsoft.com/vcblog/2017/02/08/targeting-windows-subsystem-for-linux-from-visual-studio/
 
-  - Linux build on Linux
-    - gcc, make 
+  - Linux build
+    - gcc, make, [css_auth](http://www.cs.cmu.edu/~dst/DeCSS/) (if you dump a DVD with DRM)
 
 ## License & Copyright
 See LICENSE  

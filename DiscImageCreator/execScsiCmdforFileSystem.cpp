@@ -128,7 +128,7 @@ BOOL ReadDirectoryRecordDetail(
 	}
 	BYTE byRoop = byTransferLen;
 	if (*pExecType == gd) {
-		byRoop -= 1;
+		byRoop = (BYTE)(byRoop - 1);
 	}
 	for (BYTE i = 0; i < byRoop; i++) {
 		OutputCDMain(fileMainInfo, lpBuf + DISC_RAW_READ_SIZE * i, nLBA + i, DISC_RAW_READ_SIZE);
@@ -512,7 +512,6 @@ BOOL ReadCDForFileSystem(
 			}
 			CDB::_READ12 cdb = { 0 };
 			cdb.OperationCode = SCSIOP_READ12;
-			cdb.LogicalUnitNumber = pDevice->address.Lun;
 			cdb.TransferLength[3] = 1;
 			BOOL bVD = FALSE;
 			PDIRECTORY_RECORD pDirRec = NULL;

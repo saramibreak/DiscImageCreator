@@ -1254,14 +1254,15 @@ BOOL ReadCDForCheckingSecuROM(
 #endif
 	if (pExtArg->byIntentionalSub && pDisc->PROTECT.byExist != securomV1 &&
 		(pDiscPerSector->subcode.current[12] == 0x41 || pDiscPerSector->subcode.current[12] == 0x61)) {
-		WORD crc16 = (WORD)GetCrc16CCITT(10, &pDiscPerSector->subcode.current[12]);
-		WORD bufcrc = MAKEWORD(pDiscPerSector->subcode.current[23], pDiscPerSector->subcode.current[22]);
+//		WORD crc16 = (WORD)GetCrc16CCITT(10, &pDiscPerSector->subcode.current[12]);
+//		WORD bufcrc = MAKEWORD(pDiscPerSector->subcode.current[23], pDiscPerSector->subcode.current[22]);
 		INT nRLBA = MSFtoLBA(BcdToDec(pDiscPerSector->subcode.current[15])
 			, BcdToDec(pDiscPerSector->subcode.current[16]), BcdToDec(pDiscPerSector->subcode.current[17]));
 		INT nALBA = MSFtoLBA(BcdToDec(pDiscPerSector->subcode.current[19])
 			, BcdToDec(pDiscPerSector->subcode.current[20]), BcdToDec(pDiscPerSector->subcode.current[21]));
 
-		if (crc16 != bufcrc) {
+//		if (crc16 != bufcrc) {
+		if (nRLBA == 3001 && nALBA == 299) { // 3001(00:40:01), 299(00:03:74)
 			OutputSubInfoWithLBALogA(
 				"Detected intentional error. CRC-16 is original:[%02x%02x] and XORed with 0x8001:[%02x%02x] "
 				, -1, 0, pDiscPerSector->subcode.current[22] ^ 0x80, pDiscPerSector->subcode.current[23] ^ 0x01
@@ -1277,7 +1278,7 @@ BOOL ReadCDForCheckingSecuROM(
 			pDiscPerSector->subQ.prev.nRelativeTime = -1;
 			pDiscPerSector->subQ.prev.nAbsoluteTime = 149;
 		}
-		else if ((nRLBA == 167295 || nRLBA == 0) && nALBA == 150) {
+		else if ((nRLBA == 167295 || nRLBA == 0) && nALBA == 150) { // 167295(37:10:45), 150(00:02:00)
 			OutputSubInfoWithLBALogA(
 				"Detected shifted sub. RMSF[%02x:%02x:%02x] AMSF[%02x:%02x:%02x]\n"
 				, -1, 0, pDiscPerSector->subcode.current[15], pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17]
@@ -1311,7 +1312,7 @@ BOOL ReadCDForCheckingSecuROM(
 				, BcdToDec(pDiscPerSector->subcode.current[16]), BcdToDec(pDiscPerSector->subcode.current[17]));
 			nALBA = MSFtoLBA(BcdToDec(pDiscPerSector->subcode.current[19])
 				, BcdToDec(pDiscPerSector->subcode.current[20]), BcdToDec(pDiscPerSector->subcode.current[21]));
-			if (nRLBA == 5001 && nALBA == 5151) {
+			if (nRLBA == 5001 && nALBA == 5151) { // 5001(01:06:51), 5151(01:08:51)
 				OutputLogA(standardOut | fileDisc, "Detected intentional subchannel in LBA 5000 => SecuROM Type 2 (a.k.a. NEW)\n");
 				pDisc->PROTECT.byExist = securomV2;
 			}

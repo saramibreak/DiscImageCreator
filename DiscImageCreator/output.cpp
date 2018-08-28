@@ -1060,7 +1060,7 @@ BOOL WriteParsingMdsfile(
 
 		WORD tdb = psb->totalDataBlkNum;
 		if (h.sessionNum > 1) {
-			tdb += psb[1].totalDataBlkNum;
+			tdb = (WORD)(tdb + psb[1].totalDataBlkNum);
 		}
 		PMDS_DATA_BLK db = NULL;
 		if (NULL == (db = (PMDS_DATA_BLK)calloc(tdb, sizeof(MDS_DATA_BLK)))) {

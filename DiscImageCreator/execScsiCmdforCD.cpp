@@ -266,7 +266,9 @@ BOOL ProcessReadCD(
 		}
 	}
 	if (pExtArg->byFua || pDisc->SUB.nCorruptCrcH == 1 || pDisc->SUB.nCorruptCrcL == 1) {
-		if (!(IsValidProtectedSector(pDisc, nLBA) && IsValidIntentionalC2error(pDisc, pDiscPerSector))) {
+		if (!IsValidProtectedSector(pDisc, nLBA) &&
+			!IsValidIntentionalC2error(pDisc, pDiscPerSector) &&
+			!pDiscPerSector->bLibCrypt && !pDiscPerSector->bSecuRom) {
 			FlushDriveCache(pExtArg, pDevice, nLBA);
 			pDisc->SUB.nCorruptCrcH = 0;
 			pDisc->SUB.nCorruptCrcL = 0;

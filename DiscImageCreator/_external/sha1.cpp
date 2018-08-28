@@ -59,8 +59,9 @@
 #include "sha1.h"
 
 #pragma warning(push)
-#pragma warning(disable:4242 4244 4365 6386)
-/*
+#pragma warning(disable:4068 4242 4244 4365 6386)
+#pragma GCC diagnostic ignored "-Wconversion"
+ /*
  *  Define the SHA1 circular left shift macro
  */
 #define SHA1CircularShift(bits,word) \
