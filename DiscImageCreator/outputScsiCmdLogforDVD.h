@@ -48,3 +48,8 @@ VOID OutputXboxSecuritySector(
 	PDISC pDisc,
 	LPBYTE buf
 );
+
+VOID OutputXbox360SecuritySector(
+	PDISC pDisc,
+	LPBYTE buf
+);

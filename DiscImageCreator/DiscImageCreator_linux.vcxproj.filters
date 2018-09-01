@@ -93,6 +93,12 @@
     <ClCompile Include="_external\md5c.cpp">
       <Filter>_external</Filter>
     </ClCompile>
+    <ClCompile Include="_external\abgx360.cpp">
+      <Filter>_external</Filter>
+    </ClCompile>
+    <ClCompile Include="_external\rijndael-alg-fst.cpp">
+      <Filter>_external</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="buildDateTime.h">
@@ -193,6 +199,12 @@
     </ClInclude>
     <ClInclude Include="_linux\scsi.h">
       <Filter>_linux</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\abgx360.h">
+      <Filter>_external</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\rijndael-alg-fst.h">
+      <Filter>_external</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

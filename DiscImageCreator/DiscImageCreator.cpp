@@ -831,6 +831,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			printAndSetPath(argv[3], pszFullPath);
 		}
 		else if (argc >= 5 && cmdLen == 2 && !_tcsncmp(argv[1], _T("gd"), 2)) {
+			*pExecType = gd;
 			s_dwSpeed = _tcstoul(argv[4], &endptr, 10);
 			if (*endptr) {
 				OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
@@ -880,11 +881,16 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					return FALSE;
 				}
 			}
-			*pExecType = gd;
 			printAndSetPath(argv[3], pszFullPath);
 		}
 		else if (argc >= 7 && ((cmdLen == 4 && !_tcsncmp(argv[1], _T("data"), 4)) ||
 			(cmdLen == 5 && !_tcsncmp(argv[1], _T("audio"), 5)))) {
+			if (cmdLen == 4) {
+				*pExecType = data;
+			}
+			else if (cmdLen == 5) {
+				*pExecType = audio;
+			}
 			s_dwSpeed = _tcstoul(argv[4], &endptr, 10);
 			if (*endptr) {
 				OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
@@ -961,15 +967,10 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					return FALSE;
 				}
 			}
-			if (!_tcsncmp(argv[1], _T("data"), 4)) {
-				*pExecType = data;
-			}
-			else if (!_tcsncmp(argv[1], _T("audio"), 5)) {
-				*pExecType = audio;
-			}
 			printAndSetPath(argv[3], pszFullPath);
 		}
 		else if (argc >= 5 && cmdLen == 3 && !_tcsncmp(argv[1], _T("dvd"), 3)) {
+			*pExecType = dvd;
 			s_dwSpeed = _tcstoul(argv[4], &endptr, 10);
 			if (*endptr) {
 				OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
@@ -1003,10 +1004,9 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					return FALSE;
 				}
 			}
-			*pExecType = dvd;
 			printAndSetPath(argv[3], pszFullPath);
 		}
-		else if (argc >= 4 && ((cmdLen == 2 && !_tcsncmp(argv[1], _T("bd"), 2)) ||
+		else if (argc >= 5 && ((cmdLen == 2 && !_tcsncmp(argv[1], _T("bd"), 2)) ||
 			(cmdLen == 4 && !_tcsncmp(argv[1], _T("xbox"), 4)))) {
 			if (cmdLen == 2) {
 				*pExecType = bd;
@@ -1014,7 +1014,12 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			else if (cmdLen == 4) {
 				*pExecType = xbox;
 			}
-			for (INT i = 5; i <= argc; i++) {
+			s_dwSpeed = _tcstoul(argv[4], &endptr, 10);
+			if (*endptr) {
+				OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
+				return FALSE;
+			}
+			for (INT i = 6; i <= argc; i++) {
 				cmdLen = _tcslen(argv[i - 1]);
 				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/f"), 2)) {
 					if (!SetOptionF(argc, argv, pExtArg, &i)) {
@@ -1031,16 +1036,21 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			}
 			printAndSetPath(argv[3], pszFullPath);
 		}
-		else if (argc >= 20 && ((cmdLen == 8 && !_tcsncmp(argv[1], _T("xboxswap"), 8)))) {
+		else if (argc >= 21 && ((cmdLen == 8 && !_tcsncmp(argv[1], _T("xboxswap"), 8)))) {
 			*pExecType = xboxswap;
-			for (INT i = 4; i < 20; i++) {
-				pExtArg->dwSecuritySector[i - 4] = _tcstoul(argv[i], &endptr, 10);
+			s_dwSpeed = _tcstoul(argv[4], &endptr, 10);
+			if (*endptr) {
+				OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
+				return FALSE;
+			}
+			for (INT i = 5; i < 21; i++) {
+				pExtArg->dwSecuritySector[i - 5] = _tcstoul(argv[i], &endptr, 10);
 				if (*endptr) {
 					OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 					return FALSE;
 				}
 			}
-			for (INT i = 20; i < argc; i++) {
+			for (INT i = 21; i < argc; i++) {
 				cmdLen = _tcslen(argv[i]);
 				if (cmdLen == 2 && !_tcsncmp(argv[i], _T("/f"), 2)) {
 					if (!SetOptionF(argc, argv, pExtArg, &i)) {
@@ -1057,20 +1067,31 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			}
 			printAndSetPath(argv[3], pszFullPath);
 		}
-		else if (argc >= 7 && ((cmdLen == 8 && (!_tcsncmp(argv[1], _T("xgd2swap"), 8) || !_tcsncmp(argv[1], _T("xgd3swap"), 8))))) {
-			pExtArg->nAllSectors = (INT)_tcstoul(argv[4], &endptr, 10);
+		else if (argc >= 8 && ((cmdLen == 8 && (!_tcsncmp(argv[1], _T("xgd2swap"), 8) || !_tcsncmp(argv[1], _T("xgd3swap"), 8))))) {
+			pExtArg->nAllSectors = (INT)_tcstoul(argv[5], &endptr, 10);
 			if (*endptr) {
 				OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 				return FALSE;
 			}
-			for (INT i = 5; i < 7; i++) {
-				pExtArg->dwSecuritySector[i - 5] = _tcstoul(argv[i], &endptr, 10);
+			if (pExtArg->nAllSectors < 4000000) {
+				*pExecType = xgd2swap;
+			}
+			else {
+				*pExecType = xgd3swap;
+			}
+			s_dwSpeed = _tcstoul(argv[4], &endptr, 10);
+			if (*endptr) {
+				OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
+				return FALSE;
+			}
+			for (INT i = 6; i < 8; i++) {
+				pExtArg->dwSecuritySector[i - 6] = _tcstoul(argv[i], &endptr, 10);
 				if (*endptr) {
 					OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 					return FALSE;
 				}
 			}
-			for (INT i = 7; i < argc; i++) {
+			for (INT i = 8; i < argc; i++) {
 				cmdLen = _tcslen(argv[i]);
 				if (cmdLen == 2 && !_tcsncmp(argv[i], _T("/f"), 2)) {
 					if (!SetOptionF(argc, argv, pExtArg, &i)) {
@@ -1084,12 +1105,6 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					OutputErrorString(_T("Unknown option: [%s]\n"), argv[i]);
 					return FALSE;
 				}
-			}
-			if (pExtArg->nAllSectors < 4000000) {
-				*pExecType = xgd2swap;
-			}
-			else {
-				*pExecType = xgd3swap;
 			}
 			printAndSetPath(argv[3], pszFullPath);
 		}
@@ -1208,20 +1223,21 @@ int printUsage(void)
 		_T("\t\tDump a HD area of GD from A to Z\n")
 		_T("\tdvd <DriveLetter> <Filename> <DriveSpeed(0-16)> [/c] [/f (val)] [/raw] [/q]\n")
 		_T("\t\tDump a DVD from A to Z\n")
-		_T("\txbox <DriveLetter> <Filename> [/f (val)] [/q]\n")
+		_T("\txbox <DriveLetter> <Filename> <DriveSpeed(0-16)> [/f (val)] [/q]\n")
 		_T("\t\tDump a disc from A to Z\n")
-		_T("\txboxswap <DriveLetter> <Filename> <StartLBAOfSecuritySector_1>\n")
+		_T("\txboxswap <DriveLetter> <Filename> <DriveSpeed(0-16)>\n")
+		_T("\t                                  <StartLBAOfSecuritySector_1>\n")
 		_T("\t                                  <StartLBAOfSecuritySector_2>\n")
 		_T("\t                                                 :            \n")
 		_T("\t                                  <StartLBAOfSecuritySector_16> [/f (val)] [/q]\n")
 		_T("\t\tDump a Xbox disc from A to Z using swap trick\n")
-		_T("\txgd2swap <DriveLetter> <Filename> <AllSectorLength>\n")
+		_T("\txgd2swap <DriveLetter> <Filename> <DriveSpeed(0-16)> <AllSectorLength>\n")
 		_T("\t          <StartLBAOfSecuritySector_1> <StartLBAOfSecuritySector_2> [/f (val)] [/q]\n")
 		_T("\t\tDump a XGD2 disc from A to Z using swap trick\n")
-		_T("\txgd3swap <DriveLetter> <Filename> <AllSectorLength>\n")
+		_T("\txgd3swap <DriveLetter> <Filename> <DriveSpeed(0-16)> <AllSectorLength>\n")
 		_T("\t          <StartLBAOfSecuritySector_1> <StartLBAOfSecuritySector_2> [/f (val)] [/q]\n")
 		_T("\t\tDump a XGD3 disc from A to Z using swap trick\n")
-		_T("\tbd <DriveLetter> <Filename> [/f (val)] [/q]\n")
+		_T("\tbd <DriveLetter> <Filename> <DriveSpeed(0-12)> [/f (val)] [/q]\n")
 		_T("\t\tDump a BD from A to Z\n")
 		_T("\tfd <DriveLetter> <Filename>\n")
 		_T("\t\tDump a floppy disk\n")

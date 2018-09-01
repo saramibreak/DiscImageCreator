@@ -16,6 +16,7 @@
 #include "struct.h"
 #include "output.h"
 #include "outputScsiCmdLogforCD.h"
+#include "_external/abgx360.h"
 
 VOID OutputFsRecordingDateAndTime(
 	LPBYTE lpBuf
@@ -1544,6 +1545,7 @@ VOID OutputBDStructureFormat(
 	}
 }
 
+// http://xboxdevwiki.net/Xbox_Game_Disc#Security_Sectors_.28SS.bin.29
 VOID OutputXboxSecuritySector(
 	PDISC pDisc,
 	LPBYTE buf
@@ -1551,32 +1553,42 @@ VOID OutputXboxSecuritySector(
 	DWORD dwSectorLen = 0;
 	OutputDVDStructureFormat(pDisc, 0x10, DISC_RAW_READ_SIZE, buf, &dwSectorLen);
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(SecuritySector)
-		"\t                         Unknown: %08lx\n"
-		"\t      Version of challenge table: %u\n"
+		"\t                     CPR_MAI Key: %08lx\n"
+		"\t      Version of challenge table: %02u\n"
 		"\t     Number of challenge entries: %u\n"
 		"\t     Encrypted challenge entries: "
-		, MAKELONG(MAKEWORD(buf[720], buf[721]), MAKEWORD(buf[722], buf[723]))
+		, MAKELONG(MAKEWORD(buf[723], buf[722]), MAKEWORD(buf[721], buf[720]))
 		, buf[768], buf[769]);
-	for (WORD k = 770; k < 1055; k++) {
+	for (WORD k = 770; k < 1024; k++) {
 		OutputDiscLogA("%02x", buf[k]);
 	}
+
+	char date[20] = { 0 };
+	printwin32filetime(MAKEDWORD64(MAKELONG(MAKEWORD(buf[1055], buf[1056]), MAKEWORD(buf[1057], buf[1058]))
+		, MAKELONG(MAKEWORD(buf[1059], buf[1060]), MAKEWORD(buf[1061], buf[1062]))), date);
 	OutputDiscLogA(
 		"\n"
-		"\t                       timestamp: %lu%lu\n"
+		"\t            Timestamp of unknown: %s\n"
 		"\t                         Unknown: "
-		, MAKELONG(MAKEWORD(buf[1055], buf[1056]), MAKEWORD(buf[1057], buf[1058]))
-		, MAKELONG(MAKEWORD(buf[1059], buf[1060]), MAKEWORD(buf[1061], buf[1062]))
+		, date
 	);
 	for (WORD k = 1083; k < 1099; k++) {
 		OutputDiscLogA("%02x", buf[k]);
 	}
+
+	printwin32filetime(MAKEDWORD64(MAKELONG(MAKEWORD(buf[1183], buf[1184]), MAKEWORD(buf[1185], buf[1186]))
+		, MAKELONG(MAKEWORD(buf[1187], buf[1188]), MAKEWORD(buf[1189], buf[1190]))), date);
 	OutputDiscLogA(
 		"\n"
+		"\t          Timestamp of authoring: %s\n"
+		"\t                         Unknown: %02x\n"
 		"\t                         Unknown: "
+		, date, buf[1210]
 	);
-	for (WORD k = 1183; k < 1199; k++) {
+	for (WORD k = 1211; k < 1227; k++) {
 		OutputDiscLogA("%02x", buf[k]);
 	}
+
 	OutputDiscLogA(
 		"\n"
 		"\t                    SHA-1 hash A: "
@@ -1584,6 +1596,7 @@ VOID OutputXboxSecuritySector(
 	for (WORD k = 1227; k < 1247; k++) {
 		OutputDiscLogA("%02x", buf[k]);
 	}
+
 	OutputDiscLogA(
 		"\n"
 		"\t                     Signature A: "
@@ -1591,12 +1604,179 @@ VOID OutputXboxSecuritySector(
 	for (WORD k = 1247; k < 1503; k++) {
 		OutputDiscLogA("%02x", buf[k]);
 	}
+
+	printwin32filetime(MAKEDWORD64(MAKELONG(MAKEWORD(buf[1503], buf[1504]), MAKEWORD(buf[1505], buf[1506]))
+		, MAKELONG(MAKEWORD(buf[1507], buf[1508]), MAKEWORD(buf[1509], buf[1510]))), date);
 	OutputDiscLogA(
 		"\n"
-		"\t                         Unknown: %lu%lu\n"
+		"\t          Timestamp of mastering: %s\n"
+		"\t                         Unknown: %02x\n"
+		"\t                         Unknown: "
+		, date, buf[1530]
+	);
+	for (WORD k = 1531; k < 1547; k++) {
+		OutputDiscLogA("%02x", buf[k]);
+	}
+
+	OutputDiscLogA(
+		"\n"
 		"\t                    SHA-1 hash B: "
-		, MAKELONG(MAKEWORD(buf[1503], buf[1504]), MAKEWORD(buf[1505], buf[1506]))
-		, MAKELONG(MAKEWORD(buf[1507], buf[1508]), MAKEWORD(buf[1509], buf[1510]))
+	);
+	for (WORD k = 1547; k < 1567; k++) {
+		OutputDiscLogA("%02x", buf[k]);
+	}
+
+	OutputDiscLogA(
+		"\n"
+		"\t                     Signature B: "
+	);
+	for (WORD k = 1567; k < 1632; k++) {
+		OutputDiscLogA("%02x", buf[k]);
+	}
+
+	OutputDiscLogA(
+		"\n"
+		"\tNumber of security sector ranges: %u\n"
+		"\t          security sector ranges: \n"
+		, buf[1632]);
+
+	DWORD startLBA = 0, endLBA = 0;
+#ifdef _WIN32
+	PDVD_FULL_LAYER_DESCRIPTOR dvdLayer = (PDVD_FULL_LAYER_DESCRIPTOR)buf;
+	DWORD dwEndLayerZeroSector = dvdLayer->commonHeader.EndLayerZeroSector;
+	REVERSE_LONG(&dwEndLayerZeroSector);
+#else
+	DWORD dwEndLayerZeroSector = MAKELONG(MAKEWORD(buf[15], buf[14]), MAKEWORD(buf[13], 0));
+#endif
+	BYTE ssNum = buf[1632];
+
+	for (INT k = 1633, i = 0; i < ssNum; k += 9, i++) {
+		DWORD startPsn = MAKEDWORD(MAKEWORD(buf[k + 5], buf[k + 4]), MAKEWORD(buf[k + 3], 0));
+		DWORD endPsn = MAKEDWORD(MAKEWORD(buf[k + 8], buf[k + 7]), MAKEWORD(buf[k + 6], 0));
+		if (i < 8) {
+			OutputDiscLogA("\t\t       Layer 0");
+			startLBA = startPsn - 0x30000;
+			endLBA = endPsn - 0x30000;
+			pDisc->DVD.securitySectorRange[i][0] = startLBA;
+			pDisc->DVD.securitySectorRange[i][1] = endLBA;
+		}
+		else if (i < 16) {
+			OutputDiscLogA("\t\t       Layer 1");
+			startLBA = dwEndLayerZeroSector * 2 - (~startPsn & 0xffffff) - 0x30000 + 1;
+			endLBA = dwEndLayerZeroSector * 2 - (~endPsn & 0xffffff) - 0x30000 + 1;
+			pDisc->DVD.securitySectorRange[i][0] = startLBA;
+			pDisc->DVD.securitySectorRange[i][1] = endLBA;
+		}
+		else {
+			OutputDiscLogA("\t\tUnknown ranges");
+			startLBA = startPsn;
+			endLBA = endPsn;
+		}
+		OutputDiscLogA("\t\tUnknown: %02x%02x%02x, startLBA-endLBA: %8lu-%8lu\n"
+			, buf[k], buf[k + 1], buf[k + 2], startLBA, endLBA);
+	}
+}
+
+// https://abgx360.xecuter.com/dl/abgx360_v1.0.6_source.zip
+VOID OutputXbox360SecuritySector(
+	PDISC pDisc,
+	LPBYTE buf
+) {
+	DWORD dwSectorLen = 0;
+	OutputDVDStructureFormat(pDisc, 0x10, DISC_RAW_READ_SIZE, buf, &dwSectorLen);
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(SecuritySector)
+		"\t                         Unknown: "
+	);
+	for (WORD k = 256; k < 284; k++) {
+		OutputDiscLogA("%02x", buf[k]);
+	}
+	OutputDiscLogA("\n");
+
+	for (INT i = 0; i < 21; i++) {
+		OutputDiscLogA(
+			"\t             [%02d] Challenge Data: %02x%02x%02x%02x, Response: %02x%02x%02x%02x%02x\n"
+			, i + 1, buf[512 + i * 9], buf[512 + i * 9 + 1], buf[512 + i * 9 + 2], buf[512 + i * 9 + 3]
+			, buf[512 + i * 9 + 4], buf[512 + i * 9 + 5], buf[512 + i * 9 + 6], buf[512 + i * 9 + 7], buf[512 + i * 9 + 8]
+		);
+	}
+
+	OutputDiscLogA(
+		"\t                     CPR_MAI Key: %08lx\n"
+		"\t      Version of challenge table: %02u\n"
+		"\t     Number of challenge entries: %u\n"
+		"\t     Encrypted challenge entries: "
+		, MAKELONG(MAKEWORD(buf[723], buf[722]), MAKEWORD(buf[721], buf[720]))
+		, buf[768], buf[769]);
+	for (WORD k = 770; k < 1024; k++) {
+		OutputDiscLogA("%02x", buf[k]);
+	}
+	OutputDiscLogA("\n");
+
+	BYTE dcrt[252] = { 0 };
+	decryptChallengeResponse(dcrt, buf);
+	for (INT i = 0; i < 21; i++) {
+		OutputDiscLogA(
+			"\t                    Decrypted[%02d] -> Challenge Type: %02x, Challenge ID: %02x"
+			", Tolerance: %02x, Type: %02x, Challenge Data: %02x%02x%02x%02x, Response: %02x%02x%02x%02x\n"
+			, i + 1, dcrt[i * 12], dcrt[i * 12 + 1], dcrt[i * 12 + 2], dcrt[i * 12 + 3]
+			, dcrt[i * 12 + 4], dcrt[i * 12 + 5], dcrt[i * 12 + 6], dcrt[i * 12 + 7]
+			, dcrt[i * 12 + 8], dcrt[i * 12 + 9], dcrt[i * 12 + 10], dcrt[i * 12 + 11]
+		);
+	}
+
+	OutputDiscLogA(
+		"\t                        Media ID: "
+	);
+	for (WORD k = 1120; k < 1136; k++) {
+		OutputDiscLogA("%02x", buf[k]);
+	}
+
+	CHAR date[21] = { 0 };
+	printwin32filetime(MAKEDWORD64(MAKELONG(MAKEWORD(buf[1183], buf[1184]), MAKEWORD(buf[1185], buf[1186]))
+		, MAKELONG(MAKEWORD(buf[1187], buf[1188]), MAKEWORD(buf[1189], buf[1190]))), date);
+	OutputDiscLogA(
+		"\n"
+		"\t          Timestamp of authoring: %s\n"
+		"\t                         Unknown: %02x\n"
+		"\t                         Unknown: "
+		, date, buf[1210]
+	);
+	for (WORD k = 1211; k < 1227; k++) {
+		OutputDiscLogA("%02x", buf[k]);
+	}
+
+	OutputDiscLogA(
+		"\n"
+		"\t                    SHA-1 hash A: "
+	);
+	for (WORD k = 1227; k < 1247; k++) {
+		OutputDiscLogA("%02x", buf[k]);
+	}
+
+	OutputDiscLogA(
+		"\n"
+		"\t                     Signature A: "
+	);
+	for (WORD k = 1247; k < 1503; k++) {
+		OutputDiscLogA("%02x", buf[k]);
+	}
+
+	printwin32filetime(MAKEDWORD64(MAKELONG(MAKEWORD(buf[1503], buf[1504]), MAKEWORD(buf[1505], buf[1506]))
+		, MAKELONG(MAKEWORD(buf[1507], buf[1508]), MAKEWORD(buf[1509], buf[1510]))), date);
+	OutputDiscLogA(
+		"\n"
+		"\t          Timestamp of mastering: %s\n"
+		"\t                         Unknown: %02x\n"
+		"\t                         Unknown: "
+		, date, buf[1530]
+	);
+	for (WORD k = 1531; k < 1547; k++) {
+		OutputDiscLogA("%02x", buf[k]);
+	}
+
+	OutputDiscLogA(
+		"\n"
+		"\t                    SHA-1 hash B: "
 	);
 	for (WORD k = 1547; k < 1567; k++) {
 		OutputDiscLogA("%02x", buf[k]);
@@ -1605,6 +1785,7 @@ VOID OutputXboxSecuritySector(
 		"\n"
 		"\t                     Signature B: "
 	);
+
 	for (WORD k = 1567; k < 1632; k++) {
 		OutputDiscLogA("%02x", buf[k]);
 	}
@@ -1625,55 +1806,28 @@ VOID OutputXboxSecuritySector(
 	BYTE ssNum = buf[1632];
 
 	for (INT k = 1633, i = 0; i < ssNum; k += 9, i++) {
-		DWORD unknown = MAKEDWORD(MAKEWORD(buf[k + 2], buf[k + 1]), MAKEWORD(buf[k], 0));
 		DWORD startPsn = MAKEDWORD(MAKEWORD(buf[k + 5], buf[k + 4]), MAKEWORD(buf[k + 3], 0));
 		DWORD endPsn = MAKEDWORD(MAKEWORD(buf[k + 8], buf[k + 7]), MAKEWORD(buf[k + 6], 0));
-		// XBOX
-		if (dwEndLayerZeroSector == 0x2033af) {
-			if (i < 8) {
-				OutputDiscLogA("\t\t       Layer 0");
-				startLBA = startPsn - 0x30000;
-				endLBA = endPsn - 0x30000;
-				pDisc->DVD.securitySectorRange[i][0] = startLBA;
-				pDisc->DVD.securitySectorRange[i][1] = endLBA;
-			}
-			else if (i < 16) {
-				OutputDiscLogA("\t\t       Layer 1");
-				startLBA = dwEndLayerZeroSector * 2 - (~startPsn & 0xffffff) - 0x30000 + 1;
-				endLBA = dwEndLayerZeroSector * 2 - (~endPsn & 0xffffff) - 0x30000 + 1;
-				pDisc->DVD.securitySectorRange[i][0] = startLBA;
-				pDisc->DVD.securitySectorRange[i][1] = endLBA;
-			}
-			else {
-				OutputDiscLogA("\t\tUnknown ranges");
-				startLBA = startPsn;
-				endLBA = endPsn;
-			}
+		if (i == 0) {
+			OutputDiscLogA("\t\t       Layer 0");
+			startLBA = startPsn - 0x30000;
+			endLBA = endPsn - 0x30000;
+			pDisc->DVD.securitySectorRange[i][0] = startLBA;
+			pDisc->DVD.securitySectorRange[i][1] = endLBA;
 		}
-		// XBOX 360
-		else if (dwEndLayerZeroSector == 0x20339f || dwEndLayerZeroSector == 0x238e0f) {
-			if (i == 0) {
-				OutputDiscLogA("\t\t       Layer 0");
-				startLBA = startPsn - 0x30000;
-				endLBA = endPsn - 0x30000;
-				pDisc->DVD.securitySectorRange[i][0] = startLBA;
-				pDisc->DVD.securitySectorRange[i][1] = endLBA;
-			}
-#if 1
-			else if (i == 3) {
-				OutputDiscLogA("\t\t       Layer 1");
-				startLBA = dwEndLayerZeroSector * 2 - (~startPsn & 0xffffff) - 0x30000 + 1;
-				endLBA = dwEndLayerZeroSector * 2 - (~endPsn & 0xffffff) - 0x30000 + 1;
-				pDisc->DVD.securitySectorRange[i][0] = startLBA;
-				pDisc->DVD.securitySectorRange[i][1] = endLBA;
-			}
-#endif
-			else {
-				OutputDiscLogA("\t\tUnknown ranges");
-				startLBA = startPsn;
-				endLBA = endPsn;
-			}
+		else if (i == 3) {
+			OutputDiscLogA("\t\t       Layer 1");
+			startLBA = dwEndLayerZeroSector * 2 - (~startPsn & 0xffffff) - 0x30000 + 1;
+			endLBA = dwEndLayerZeroSector * 2 - (~endPsn & 0xffffff) - 0x30000 + 1;
+			pDisc->DVD.securitySectorRange[i][0] = startLBA;
+			pDisc->DVD.securitySectorRange[i][1] = endLBA;
 		}
-		OutputDiscLogA("\t\tUnknown: %8lx, startLBA-endLBA: %8lu-%8lu\n", unknown, startLBA, endLBA);
+		else {
+			OutputDiscLogA("\t\tUnknown ranges");
+			startLBA = startPsn;
+			endLBA = endPsn;
+		}
+		OutputDiscLogA("\t\tResponse Type: %02x, Challenge ID: %02x, Mod: %02x, startLBA-endLBA: %8lu-%8lu\n"
+			, buf[k], buf[k + 1], buf[k + 2], startLBA, endLBA);
 	}
 }

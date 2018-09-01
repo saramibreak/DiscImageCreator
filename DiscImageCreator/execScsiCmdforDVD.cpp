@@ -1134,6 +1134,7 @@ BOOL ExtractSecuritySector(
 		}
 	} while (cmd[++i] != 0);
 
+	BOOL filled = FALSE;
 	if (pDisc->SCSI.nAllLength == 3697696) {
 		OutputString("Output SSv1 to SS.bin\n");
 		// http://redump.org/download/ss_sector_range_1.0e.rar
@@ -1160,7 +1161,6 @@ BOOL ExtractSecuritySector(
 	}
 	else if (pDisc->SCSI.nAllLength == 4246304)	{
 		// http://redump.org/download/ss_sector_range_1.0e.rar
-		BOOL filled = FALSE;
 		for (INT j = 32; j < 104; j++) {
 			if (buf[j] != 0) {
 				filled = TRUE;
@@ -1168,7 +1168,7 @@ BOOL ExtractSecuritySector(
 			}
 		}
 		if (filled == FALSE) {
-			OutputString("Output XGD3 SSv1 to SS.bin\n");
+			OutputString("Not Output XGD3 SSv1 to SS.bin\n");
 			//Fix XGD3 SSv1 ss.bin
 			buf[552] = 0x01;
 			buf[553] = 0x00;
@@ -1206,10 +1206,17 @@ BOOL ExtractSecuritySector(
 			buf[103] = 0x01;
 		}
 	}
-	fwrite(buf, sizeof(BYTE), (size_t)DISC_RAW_READ_SIZE, fp);
+	if (pDisc->SCSI.nAllLength < 4246304 || filled) {
+		fwrite(buf, sizeof(BYTE), (size_t)DISC_RAW_READ_SIZE, fp);
+	}
 	FcloseAndNull(fp);
 
-	OutputXboxSecuritySector(pDisc, buf);
+	if (pDisc->SCSI.nAllLength == 3697696 || pDisc->SCSI.nAllLength == 4246304) {
+		OutputXbox360SecuritySector(pDisc, buf);
+	}
+	else {
+		OutputXboxSecuritySector(pDisc, buf);
+	}
 	return TRUE;
 }
 
@@ -1442,6 +1449,14 @@ BOOL ReadXboxDVDBySwap(
 	
 	DWORD dwDvdAllLen = pDisc->DVD.dwLayer0SectorLength + pDisc->DVD.dwLayer1SectorLength;
 	if (*pExecType == xboxswap) {
+		if (pDisc->DVD.dwLayer0SectorLength < XBOX_LAYER_BREAK) {
+			OutputErrorString(
+				_T("Short of length of DVD\n")
+				_T("\tYour DVD length: %ld\n")
+				_T("\tXbox LayerBreak: %d\n")
+				, dwDvdAllLen, XBOX_LAYER_BREAK);
+			return FALSE;
+		}
 		pDisc->DVD.dwXboxSwapOfs = (pDisc->DVD.dwLayer0SectorLength - XBOX_LAYER_BREAK) * 2;
 		DWORD dwXboxAllLen = XBOX_SIZE + pDisc->DVD.dwXboxSwapOfs;
 		if (dwXboxAllLen > dwDvdAllLen) {
@@ -1454,30 +1469,45 @@ BOOL ReadXboxDVDBySwap(
 		}
 	}
 	else if (*pExecType == xgd2swap) {
+		if (pDisc->DVD.dwLayer0SectorLength < XGD2_LAYER_BREAK) {
+			OutputErrorString(
+				_T("Short of length of DVD\n")
+				_T("\tYour DVD length: %ld\n")
+				_T("\tXGD2 LayerBreak: %d\n")
+				, dwDvdAllLen, XGD2_LAYER_BREAK);
+			return FALSE;
+		}
 		pDisc->DVD.dwXboxSwapOfs = (pDisc->DVD.dwLayer0SectorLength - XGD2_LAYER_BREAK) * 2;
 		DWORD dwXboxAllLen = pExtArg->nAllSectors + pDisc->DVD.dwXboxSwapOfs;
 		if (dwXboxAllLen > dwDvdAllLen) {
 			OutputErrorString(
 				_T("Short of length of DVD\n")
 				_T("\t  Your DVD length: %ld\n")
-				_T("\tNeeded DVD length: (DVD L0[%ld] - Xbox LayerBreak[%d]) * 2 + Xbox Length[%d] = %ld\n")
+				_T("\tNeeded DVD length: (DVD L0[%ld] - XGD2 LayerBreak[%d]) * 2 + XGD2 Length[%d] = %ld\n")
 				, dwDvdAllLen, pDisc->DVD.dwLayer0SectorLength, XGD2_LAYER_BREAK, pExtArg->nAllSectors, dwXboxAllLen);
 			return FALSE;
 		}
 	}
 	else if (*pExecType == xgd3swap) {
+		if (pDisc->DVD.dwLayer0SectorLength < XGD3_LAYER_BREAK) {
+			OutputErrorString(
+				_T("Short of length of DVD\n")
+				_T("\tYour DVD length: %ld\n")
+				_T("\tXGD3 LayerBreak: %d\n")
+				, dwDvdAllLen, XGD3_LAYER_BREAK);
+			return FALSE;
+		}
 		pDisc->DVD.dwXboxSwapOfs = (pDisc->DVD.dwLayer0SectorLength - XGD3_LAYER_BREAK) * 2;
 		DWORD dwXboxAllLen = pExtArg->nAllSectors + pDisc->DVD.dwXboxSwapOfs;
 		if (dwXboxAllLen > dwDvdAllLen) {
 			OutputErrorString(
 				_T("Short of length of DVD\n")
 				_T("\t  Your DVD length: %ld\n")
-				_T("\tNeeded DVD length: (DVD L0[%ld] - Xbox LayerBreak[%d]) * 2 + Xbox Length[%d] = %ld\n")
+				_T("\tNeeded DVD length: (DVD L0[%ld] - XGD3 LayerBreak[%d]) * 2 + XGD3 Length[%d] = %ld\n")
 				, dwDvdAllLen, pDisc->DVD.dwLayer0SectorLength, XGD3_LAYER_BREAK, pExtArg->nAllSectors, dwXboxAllLen);
 			return FALSE;
 		}
 	}
-
 
 	for (INT i = 0; pExtArg->dwSecuritySector[i] != 0; i++) {
 		if (i < 8) {

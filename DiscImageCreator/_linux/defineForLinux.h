@@ -18,7 +18,25 @@ typedef unsigned int UINT_PTR, *PUINT_PTR;
 
 typedef long LONG_PTR, *PLONG_PTR;
 typedef unsigned long ULONG_PTR, *PULONG_PTR;
+//
+// Add Windows flavor DWORD_PTR types
+//
+
 typedef ULONG_PTR DWORD_PTR, *PDWORD_PTR;
+
+//
+// The following types are guaranteed to be signed and 64 bits wide.
+//
+
+typedef long long LONG64, *PLONG64;
+
+
+//
+// The following types are guaranteed to be unsigned and 64 bits wide.
+//
+
+typedef unsigned long long ULONG64, *PULONG64;
+typedef unsigned long long DWORD64, *PDWORD64;
 
 // from WinDef.h
 typedef unsigned long ULONG;

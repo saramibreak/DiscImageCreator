@@ -265,7 +265,7 @@ BOOL StorageQueryProperty(
 	FreeAndNull(adapterDescriptor);
 	return bRet;
 }
-#ifdef _WIN32
+#if 0
 BOOL SetStreaming(
 	PDEVICE pDevice,
 	DWORD dwDiscSpeedNum
@@ -284,10 +284,10 @@ BOOL SetStreaming(
 #if 1
 	setstreaming.RequestType = CdromSetStreaming;
 	if (0 < dwDiscSpeedNum && dwDiscSpeedNum <= DVD_DRIVE_MAX_SPEED) {
-		setstreaming.ReadSize = DISC_RAW_READ_SIZE * 75 * 9 * dwDiscSpeedNum;
+		setstreaming.ReadSize = 1385 * dwDiscSpeedNum;
 	}
 	else {
-		setstreaming.ReadSize = DISC_RAW_READ_SIZE * 75 * 9 * DVD_DRIVE_MAX_SPEED;
+		setstreaming.ReadSize = 1385 * DVD_DRIVE_MAX_SPEED;
 	}
 	setstreaming.ReadTime = 1000;
 	setstreaming.WriteSize = setstreaming.ReadSize;
@@ -321,7 +321,8 @@ BOOL SetStreaming(
 		return FALSE;
 	}
 	else {
-		OutputString(_T("Set the drive speed: %luKB/sec\n"), setstreaming.ReadSize / 1000);
+		OutputString(_T("Set the drive speed: %luKB/sec\n"), setstreaming.ReadSize);
+		OutputString(_T("dwReturned: %lu\n"), dwReturned);
 	}
 	return TRUE;
 }

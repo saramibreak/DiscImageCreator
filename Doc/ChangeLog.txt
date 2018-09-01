@@ -507,3 +507,8 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - added: Support XGD3 dumping on kreon drive
 - fixed: Rereading of SecuROM/Libcrypt
 - deleted: some warning
+
+*2018-09-01
+- added: Drive speed of bd and xbox. (If you don't use this, please specify 0)
+- changed: No output XGD3 SSv1
+- improved: Security Sector log of XBOX (added timestamp etc.)

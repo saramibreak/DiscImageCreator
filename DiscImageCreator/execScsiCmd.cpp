@@ -703,8 +703,8 @@ BOOL SetDiscSpeed(
 	PDEVICE pDevice,
 	DWORD dwDiscSpeedNum
 ) {
-	if ((*pExecType == cd || *pExecType == gd || *pExecType == audio || *pExecType == data)
-		&& (pDevice->FEATURE.bySetCDSpeed || *pExecType == dvd)) {
+//	if ((*pExecType == cd || *pExecType == gd || *pExecType == audio || *pExecType == data)
+//		&& (pDevice->FEATURE.bySetCDSpeed || *pExecType == dvd)) {
 		WORD wSpeed = 0;
 		// https://msdn.microsoft.com/en-us/library/windows/hardware/ff551368(v=vs.85).aspx
 		// https://msdn.microsoft.com/ja-jp/library/ff551396(v=vs.85).aspx
@@ -715,7 +715,7 @@ BOOL SetDiscSpeed(
 		__attribute__((aligned(4))) CDROM_SET_SPEED setspeed = { CdromSetSpeed, 0, 0, CdromDefaultRotation };
 		INT direction = SG_DXFER_FROM_DEV;
 #endif
-		if ((*pExecType == cd || *pExecType == gd || *pExecType == audio || *pExecType == data) &&
+		if ((*pExecType == cd || *pExecType == swap || *pExecType == gd || *pExecType == audio || *pExecType == data) &&
 			0 < dwDiscSpeedNum && dwDiscSpeedNum <= CD_DRIVE_MAX_SPEED) {
 			// http://senbee.seesaa.net/article/26247159.html
 			// 2048 x 75 = 153600 B -> 150 KiB
@@ -723,16 +723,20 @@ BOOL SetDiscSpeed(
 			wSpeed = (WORD)(CD_RAW_SECTOR_SIZE * 75 * dwDiscSpeedNum / 1000);
 			setspeed.ReadSpeed = wSpeed;
 		}
-#if 1
-		else if (*pExecType == dvd &&
+		else if ((*pExecType == dvd || *pExecType == xbox || *pExecType == xboxswap ||
+			*pExecType == xgd2swap || *pExecType == xgd3swap) &&
 			0 < dwDiscSpeedNum && dwDiscSpeedNum <= DVD_DRIVE_MAX_SPEED) {
 			// Read and write speeds for the first DVD drives and players were of
 			// 1,385 kB/s (1,353 KiB/s); this speed is usually called "1x".
 			// 2048 x 75 x 9 = 1384448 B -> 1352 KiB
-			wSpeed = (WORD)(DISC_RAW_READ_SIZE * 676 * dwDiscSpeedNum / 1000);
+			wSpeed = (WORD)(1385 * dwDiscSpeedNum);
 			setspeed.ReadSpeed = wSpeed;
 		}
-#endif
+		else if ((*pExecType == bd) &&
+			0 < dwDiscSpeedNum && dwDiscSpeedNum <= BD_DRIVE_MAX_SPEED) {
+			wSpeed = (WORD)(4496 * dwDiscSpeedNum);
+			setspeed.ReadSpeed = wSpeed;
+		}
 		else {
 			wSpeed = 0xffff;
 			setspeed.ReadSpeed = pDevice->wMaxReadSpeed;
@@ -755,7 +759,7 @@ BOOL SetDiscSpeed(
 			OutputSetSpeed(&setspeed);
 			OutputString(_T("Set the drive speed: %uKB/sec\n"), setspeed.ReadSpeed);
 		}
-	}
+//	}
 	return TRUE;
 }
 

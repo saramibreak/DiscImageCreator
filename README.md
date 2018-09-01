@@ -318,20 +318,21 @@ Compared with Friidump and Rawdump, dumping speed is very slow.
                 Dump a HD area of GD from A to Z
         dvd <DriveLetter> <Filename> <DriveSpeed(0-16)> [/c] [/f (val)] [/raw] [/q]
                 Dump a DVD from A to Z
-        xbox <DriveLetter> <Filename> [/f (val)] [/q]
+        xbox <DriveLetter> <Filename> <DriveSpeed(0-16)>  [/f (val)] [/q]
                 Dump a disc from A to Z
-        xboxswap <DriveLetter> <Filename> <StartLBAOfSecuritySector_1>
+        xboxswap <DriveLetter> <Filename> <DriveSpeed(0-16)>
+                                          <StartLBAOfSecuritySector_1>
                                           <StartLBAOfSecuritySector_2>
                                                          :
                                           <StartLBAOfSecuritySector_16> [/f (val)] [/q]
                 Dump a Xbox disc from A to Z using swap trick
-        xgd2swap <DriveLetter> <Filename> <AllSectorLength>
+        xgd2swap <DriveLetter> <Filename> <DriveSpeed(0-16)> <AllSectorLength>
                   <StartLBAOfSecuritySector_1> <StartLBAOfSecuritySector_2> [/f (val)] [/q]
                 Dump a XGD2 disc from A to Z using swap trick
-        xgd3swap <DriveLetter> <Filename> <AllSectorLength>
+        xgd3swap <DriveLetter> <Filename> <DriveSpeed(0-16)> <AllSectorLength>
                   <StartLBAOfSecuritySector_1> <StartLBAOfSecuritySector_2> [/f (val)] [/q]
                 Dump a XGD3 disc from A to Z using swap trick
-        bd <DriveLetter> <Filename> [/f (val)] [/q]
+        bd <DriveLetter> <Filename> <DriveSpeed(0-12)> [/f (val)] [/q]
                 Dump a BD from A to Z
         fd <DriveLetter> <Filename>
                 Dump a floppy disk
@@ -426,7 +427,7 @@ Compared with Friidump and Rawdump, dumping speed is very slow.
 - .img  
   2352 byte/sector binary image of CD. This file is used to a ccd file.
 - .iso  
-  2048 byte/sector binary image of DVD/BD/GC/Wii.
+  2048 byte/sector binary image of DVD/BD/GC/Wii/XBOX.
 - .scm  
   scrambled image file of img file.
 - .raw  
@@ -481,6 +482,13 @@ See LICENSE
 
 - About _external folder  
   prngcd.cpp: Copyright (c) 2015 Jonathan Gevaryahu. All rights reserved.  
+
+  abgx360.cpp: Copyright 2008-2012 by Seacrest <Seacrest[at]abgx360[dot]net>  
+  
+  rijndael-alg-fst.cpp/h: Vincent Rijmen <vincent.rijmen@esat.kuleuven.ac.be>  
+                          Antoon Bosselaers <antoon.bosselaers@esat.kuleuven.ac.be>  
+                          Paulo Barreto <paulo.barreto@terra.com.br>
+                          This code is hereby placed in the public domain.
 
   crc16: http://oku.edu.mie-u.ac.jp/~okumura/algo/  src\crc16t.c in algo.lzh  
          Copyright (c) 1991 Haruhiko Okumura  

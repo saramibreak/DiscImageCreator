@@ -41,7 +41,7 @@ BOOL StorageQueryProperty(
 	PDEVICE pDevice,
 	LPBOOL lpBusTypeUSB
 );
-#if _WIN32
+#if 0
 BOOL SetStreaming(
 	PDEVICE pDevice,
 	DWORD dwDiscSpeedNum

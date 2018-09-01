@@ -16,6 +16,7 @@
 #pragma once
 #include "enum.h"
 
+#define BD_DRIVE_MAX_SPEED	(12)
 #define DVD_DRIVE_MAX_SPEED	(16)
 #define DRIVE_VENDOR_ID_SIZE (8)
 #define DRIVE_PRODUCT_ID_SIZE (16)
@@ -142,6 +143,7 @@
 #define RETURNED_FALSE						(5)
 
 #define MAKEDWORD(a, b)      ((DWORD)(((WORD)(((DWORD_PTR)(a)) & 0xffff)) | ((DWORD)((WORD)(((DWORD_PTR)(b)) & 0xffff))) << 16))
+#define MAKEDWORD64(a, b)      ((DWORD64)(((DWORD)(((DWORD_PTR)(a)) & 0xffffffff)) | ((DWORD64)((DWORD)(((DWORD_PTR)(b)) & 0xffffffff))) << 32))
 
 struct _LOG_FILE;
 typedef struct _LOG_FILE LOG_FILE;
