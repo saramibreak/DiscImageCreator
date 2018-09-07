@@ -1214,8 +1214,17 @@ VOID SetBufferFromTmpSubQData(
 	BOOL bCurrent,
 	BOOL bUpdateCrc
 ) {
-	lpSubcode[12] = BYTE(subQ.byCtl << 4 | subQ.byAdr);
-	lpSubcode[13] = DecToBcd(subQ.byTrackNum);
+	if (subQ.byTrackNum == 110) {
+		if (subQ.byAdr == 3) {
+			subQ.byAdr = 1;
+		}
+		lpSubcode[12] = BYTE(subQ.byCtl << 4 | subQ.byAdr);
+		lpSubcode[13] = 0xaa;
+	}
+	else {
+		lpSubcode[12] = BYTE(subQ.byCtl << 4 | subQ.byAdr);
+		lpSubcode[13] = DecToBcd(subQ.byTrackNum);
+	}
 	lpSubcode[14] = DecToBcd(subQ.byIndex);
 	BYTE m, s, f;
 	if (bCurrent) {

@@ -80,10 +80,10 @@ typedef UINT			   *LPUINT;
 #endif
 
 #define MAKEWORD(a, b)      ((WORD)(((BYTE)(((DWORD_PTR)(a)) & 0xff)) | ((WORD)((BYTE)(((DWORD_PTR)(b)) & 0xff))) << 8))
-#pragma warning(push)
+#pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
 #define MAKELONG(a, b)      ((LONG)(((WORD)(((DWORD_PTR)(a)) & 0xffff)) | ((DWORD)((WORD)(((DWORD_PTR)(b)) & 0xffff))) << 16))
-#pragma warning(pop)
+#pragma GCC diagnostic pop
 #define LOWORD(l)           ((WORD)(((DWORD_PTR)(l)) & 0xffff))
 #define HIWORD(l)           ((WORD)((((DWORD_PTR)(l)) >> 16) & 0xffff))
 #define LOBYTE(w)           ((BYTE)(((DWORD_PTR)(w)) & 0xff))

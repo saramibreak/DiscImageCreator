@@ -459,6 +459,12 @@ VOID FixSubQ(
 			pDiscPerSector->subcode.current[13] = 0xaa;
 			pDiscPerSector->subQ.current.byTrackNum = 110;
 
+			if (pDiscPerSector->subQ.current.byAdr >= ADR_ENCODES_MEDIA_CATALOG) {
+				OutputSubErrorWithLBALogA("Q[12]:Adr[%02x] -> [0x01]\n"
+					, nLBA, pDiscPerSector->byTrackNum, pDiscPerSector->subcode.current[13]);
+				pDiscPerSector->subQ.current.byAdr = ADR_ENCODES_CURRENT_POSITION;
+			}
+
 			RecalcSubQCrc(pDisc, pDiscPerSector);
 			if (!pDisc->SUB.nCorruptCrcH && !pDisc->SUB.nCorruptCrcL) {
 				return;
@@ -950,7 +956,8 @@ VOID FixSubQ(
 		}
 	}
 
-	if (!IsValidSubQCtl(&pDiscPerSector->subQ, pDisc->SUB.lpEndCtlList[pDiscPerSector->subQ.current.byTrackNum - 1])) {
+//	if (!IsValidSubQCtl(&pDiscPerSector->subQ, pDisc->SUB.lpEndCtlList[pDiscPerSector->subQ.current.byTrackNum - 1])) {
+	if (!IsValidSubQCtl(&pDiscPerSector->subQ, pDisc->SUB.lpEndCtlList[pDiscPerSector->byTrackNum - 1])) {
 		OutputSubErrorWithLBALogA("Q[12]:Ctl[%u] -> [%u], L:[%ld]\n", nLBA, pDiscPerSector->byTrackNum
 			, pDiscPerSector->subQ.current.byCtl, pDiscPerSector->subQ.prev.byCtl, s_lineNum);
 		pDiscPerSector->subQ.current.byCtl = pDiscPerSector->subQ.prev.byCtl;

@@ -13,8 +13,8 @@ ifeq ($(DEBUG), 1)
 	CFLAGS += -O0 -g
 	CXXFLAGS += -O0 -g
 else
-	CFLAGS += -O2
-	CXXFLAGS += -O2
+	CFLAGS += -O2 -Wall -Wextra -Wno-unknown-pragmas
+	CXXFLAGS += -O2 -Wall -Wextra -Wno-unknown-pragmas
 endif
 
 SOURCES_CXX := \
@@ -37,10 +37,12 @@ SOURCES_CXX := \
   outputScsiCmdLogforCD.o \
   outputScsiCmdLogforDVD.o \
   set.o \
+  _external/abgx360.o \
   _external/crc16ccitt.o \
   _external/crc32.o \
   _external/md5c.o \
   _external/prngcd.o \
+  _external/rijndael-alg-fst.o \
   _external/sha1.o \
   _linux/defineForLinux.o
 
@@ -67,11 +69,11 @@ clean:
 buildDateTime:
 	echo "#pragma once" >buildDateTime.h
 	echo >>buildDateTime.h
-	echo -ne "#define BUILD_DATE \"" >>buildDateTime.h
+	echo -n "#define BUILD_DATE \"" >>buildDateTime.h
 	date +%Y%m%d | tr -d '\n' >>buildDateTime.h
-	echo -ne "\"\n" >>buildDateTime.h
-	echo -ne "#define BUILD_TIME \"" >>buildDateTime.h
+	echo "\"" >>buildDateTime.h
+	echo -n "#define BUILD_TIME \"" >>buildDateTime.h
 	date +%H%M%S | tr -d '\n' >>buildDateTime.h
-	echo -ne "\"\n" >>buildDateTime.h
+	echo "\"\n" >>buildDateTime.h
 
 .PHONY: clean clean-objs buildDateTime

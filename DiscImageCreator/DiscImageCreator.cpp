@@ -1350,7 +1350,7 @@ int printSeveralInfo(LPTSTR pszDateTime, size_t dateTimeSize)
 #else
 	OutputString(_T("AnsiBuild, "));
 #endif
-	_sntprintf(pszDateTime, dateTimeSize, _T("%d %d\n"), BUILD_DATE, BUILD_TIME);
+	_sntprintf(pszDateTime, dateTimeSize, _T("%s %s\n"), BUILD_DATE, BUILD_TIME);
 	OutputString(_T("%s"), pszDateTime);
 	return TRUE;
 }
