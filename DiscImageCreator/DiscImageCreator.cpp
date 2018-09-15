@@ -156,7 +156,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 		bRet = WriteParsingMdsfile(pszFullPath);
 	}
 	else {
-		DEVICE device = { 0 };
+		DEVICE device = {};
 #ifdef _WIN32
 		device.byDriveLetter = (BYTE)(argv[2][0]);
 #else
@@ -194,9 +194,9 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 			pExtArg->byQuiet = TRUE;
 		}
 		else {
-			DISC discData = { '\0' };
+			DISC discData = {};
 			PDISC pDisc = &discData;
-			MAIN_HEADER mainHeader = { 0 };
+			MAIN_HEADER mainHeader = {};
 			FILE* fpCcd = NULL;
 			FILE* fpC2 = NULL;
 
@@ -301,7 +301,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 								pExtArg->dwSubAddionalNum = 1;
 							}
 
-							DISC_PER_SECTOR discPerSector = { 0 };
+							DISC_PER_SECTOR discPerSector = {};
 							memcpy(&discPerSector.mainHeader, &mainHeader, sizeof(MAIN_HEADER));
 							CDFLAG::_READ_CD::_EXPECTED_SECTOR_TYPE flg = CDFLAG::_READ_CD::All;
 
@@ -1381,7 +1381,7 @@ int main(int argc, char* argv[])
 	int nRet = printSeveralInfo(szDateTime, sizeof(szDateTime));
 	if (nRet) {
 		EXEC_TYPE execType;
-		EXT_ARG extArg = { 0 };
+		EXT_ARG extArg = {};
 		extArg.dwCacheDelNum = DEFAULT_CACHE_DELETE_VAL;
 		_TCHAR szFullPath[_MAX_PATH + 1] = { 0 };
 		if (!checkArg(argc, argv, &execType, &extArg, szFullPath)) {

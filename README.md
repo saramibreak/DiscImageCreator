@@ -237,7 +237,7 @@ Compared with Friidump and Rawdump, dumping speed is very slow.
  DiscImageCreator.exe dvd [DriveLetter] foo.raw [DriveSpeed(0-16)] /raw
 
 ### Dumping Guide for XBOX/XBOX 360 on kreon drive
- DiscImageCreator.exe xbox [DriveLetter] foo.iso
+ DiscImageCreator.exe xbox [DriveLetter] foo.iso [DriveSpeed(0-16)]
 
 ### Dumping Guide for XBOX/XBOX360 (XGD2)/XBOX360 (XGD3) on genaral drive
  Prepare DVD-DL or create the DVD+R DL trap disc in advance.  
@@ -277,16 +277,16 @@ Compared with Friidump and Rawdump, dumping speed is very slow.
    (or gently push the tray back or put the drive cover back on).
 5. Run below.  
    e.g. Dead or Alive 3 http://redump.org/disc/27157/  
-   DiscImageCreator.exe xboxswap [DriveLetter] foo.iso 292756 467910 686060 830074 999794 1212958 1579164 1719138 2010470 2372562 2527492 2682830 2915560 3065604 3219138 3455656  
+   DiscImageCreator.exe xboxswap [DriveLetter] foo.iso [DriveSpeed(0-16)] 292756 467910 686060 830074 999794 1212958 1579164 1719138 2010470 2372562 2527492 2682830 2915560 3065604 3219138 3455656  
 
    e.g. Blue Dragon http://redump.org/disc/27088/  
-   DiscImageCreator.exe xgd2swap [DriveLetter] foo.iso 3825631 108976 3719856  
+   DiscImageCreator.exe xgd2swap [DriveLetter] foo.iso [DriveSpeed(0-16)] 3825631 108976 3719856  
 
    e.g. Battlefield 3 (Disc 1) (Multiplayer/Co-Op) http://redump.org/disc/35131/  
-   DiscImageCreator.exe xgd3swap [DriveLetter] foo.iso 4267015 12544 4246304  
+   DiscImageCreator.exe xgd3swap [DriveLetter] foo.iso [DriveSpeed(0-16)] 4267015 12544 4246304  
 
 ### Dumping Guide for BD
- DiscImageCreator.exe bd [DriveLetter] foo.iso
+ DiscImageCreator.exe bd [DriveLetter] foo.iso [DriveSpeed(0-12)]
 
 ### Dumping Guide for Floppy Disk
  DiscImageCreator.exe fd [DriveLetter] foo.bin
@@ -471,8 +471,8 @@ Compared with Friidump and Rawdump, dumping speed is very slow.
     - Windows Subsystem for Linux (WSL)
       https://blogs.msdn.microsoft.com/vcblog/2017/02/08/targeting-windows-subsystem-for-linux-from-visual-studio/
 
-  - Linux build
-    - gcc, make, [css_auth](http://www.cs.cmu.edu/~dst/DeCSS/) (if you dump a DVD with DRM)
+- Linux
+  - gcc, make, [css_auth](http://www.cs.cmu.edu/~dst/DeCSS/) (if you dump a DVD with DRM)
 
 ## License & Copyright
 See LICENSE  

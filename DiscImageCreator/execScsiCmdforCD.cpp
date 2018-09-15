@@ -195,7 +195,7 @@ BOOL FlushDriveCache(
 	INT nLBA
 ) {
 	if (nLBA < MAX_LBA_OF_CD && nLBA % pExtArg->dwCacheDelNum == 0) {
-		CDB::_READ12 cdb = { 0 };
+		CDB::_READ12 cdb = {};
 		cdb.OperationCode = SCSIOP_READ12;
 		cdb.ForceUnitAccess = TRUE;
 		INT NextLBAAddress = nLBA + 1;
@@ -337,13 +337,13 @@ BOOL ReadCDForRereadingSectorType1(
 	BOOL bRet = TRUE;
 	try {
 		if ((pExtArg->byD8 || pDevice->byPlxtrDrive) && !pExtArg->byBe) {
-			CDB::_PLXTR_READ_CDDA cdb = { 0 };
+			CDB::_PLXTR_READ_CDDA cdb = {};
 			SetReadD8Command(pDevice, &cdb, 2, CDFLAG::_PLXTR_READ_CDDA::MainC2Raw);
 			memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
 		}
 		else {
 			// non plextor && support scrambled ripping
-			CDB::_READ_CD cdb = { 0 };
+			CDB::_READ_CD cdb = {};
 			SetReadCDCommand(pDevice, &cdb, CDFLAG::_READ_CD::CDDA
 				, 2, CDFLAG::_READ_CD::byte294, CDFLAG::_READ_CD::NoSub);
 			memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
@@ -473,13 +473,13 @@ BOOL ReadCDForRereadingSectorType2(
 		}
 
 		if ((pExtArg->byD8 || pDevice->byPlxtrDrive) && !pExtArg->byBe) {
-			CDB::_PLXTR_READ_CDDA cdb = { 0 };
+			CDB::_PLXTR_READ_CDDA cdb = {};
 			SetReadD8Command(pDevice, &cdb, 2, CDFLAG::_PLXTR_READ_CDDA::MainC2Raw);
 			memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
 		}
 		else {
 			// non plextor && support scrambled ripping
-			CDB::_READ_CD cdb = { 0 };
+			CDB::_READ_CD cdb = {};
 			SetReadCDCommand(pDevice, &cdb, CDFLAG::_READ_CD::CDDA
 				, 2, CDFLAG::_READ_CD::byte294, CDFLAG::_READ_CD::NoSub);
 			memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
@@ -854,7 +854,7 @@ BOOL ReadCDAll(
 		BYTE lpCmd[CDB12GENERIC_LENGTH] = { 0 };
 		_TCHAR szSubCode[5] = { 0 };
 		if ((pExtArg->byD8 || pDevice->byPlxtrDrive) && !pExtArg->byBe) {
-			CDB::_PLXTR_READ_CDDA cdb = { 0 };
+			CDB::_PLXTR_READ_CDDA cdb = {};
 			if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
 				_tcsncpy(szSubCode, _T("Raw"), sizeof(szSubCode) / sizeof(szSubCode[0]));
 				SetReadD8Command(pDevice, &cdb, byTransferLen, CDFLAG::_PLXTR_READ_CDDA::MainC2Raw);
@@ -867,7 +867,7 @@ BOOL ReadCDAll(
 		}
 		else {
 			// non plextor && support scrambled ripping
-			CDB::_READ_CD cdb = { 0 };
+			CDB::_READ_CD cdb = {};
 			CDFLAG::_READ_CD::_EXPECTED_SECTOR_TYPE type = CDFLAG::_READ_CD::CDDA;
 			if (pExtArg->byBe) {
 				type = CDFLAG::_READ_CD::All;
@@ -973,7 +973,7 @@ BOOL ReadCDAll(
 					nMainDataType = scrambled;
 					pDisc->MAIN.lpModeList[pDisc->SCSI.toc.LastTrack - 1] = pDiscPerSector->mainHeader.current[15];
 					nSecondSessionLBA = nLBA;
-					CDB::_PLXTR_READ_CDDA cdb = { 0 };
+					CDB::_PLXTR_READ_CDDA cdb = {};
 					SetReadD8Command(pDevice, &cdb, byTransferLen, CDFLAG::_PLXTR_READ_CDDA::MainC2Raw);
 					memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
 				}
@@ -984,14 +984,14 @@ BOOL ReadCDAll(
 					nMainDataType = unscrambled;
 					fwrite(pDiscPerSector->data.next, sizeof(BYTE), pDisc->MAIN.uiMainDataSlideSize, fpImg);
 
-					CDB::_READ_CD cdb = { 0 };
+					CDB::_READ_CD cdb = {};
 					SetReadCDCommand(pDevice, &cdb, CDFLAG::_READ_CD::All, byTransferLen, c2, CDFLAG::_READ_CD::Raw);
 					memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
 				}
 				else if (bForcedBe && !IsValidProtectedSector(pDisc, nLBA)) {
 					bForcedBe = FALSE;
 					nMainDataType = scrambled;
-					CDB::_PLXTR_READ_CDDA cdb = { 0 };
+					CDB::_PLXTR_READ_CDDA cdb = {};
 					SetReadD8Command(pDevice, &cdb, byTransferLen, CDFLAG::_PLXTR_READ_CDDA::MainC2Raw);
 					memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
 				}
@@ -1037,7 +1037,7 @@ BOOL ReadCDAll(
 						pDiscPerSector->byTrackNum = pDisc->SCSI.toc.LastTrack;
 
 						// because unless using 0xbe, it can't get the pregap perfectly
-						CDB::_READ_CD cdb = { 0 };
+						CDB::_READ_CD cdb = {};
 						SetReadCDCommand(pDevice, &cdb, CDFLAG::_READ_CD::All, byTransferLen, c2, CDFLAG::_READ_CD::Raw);
 						memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
 						nMainDataType = unscrambled;
@@ -1047,7 +1047,7 @@ BOOL ReadCDAll(
 						continue;
 					}
 					else if (pDisc->PROTECT.byExist == laserlock && nFirstErrLBA[nLaserIdx] == 0) {
-						CDB::_READ_CD cdb = { 0 };
+						CDB::_READ_CD cdb = {};
 						SetReadCDCommand(pDevice, &cdb, CDFLAG::_READ_CD::All, 1, c2, CDFLAG::_READ_CD::Raw);
 						memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
 						if (++nRetryCnt <= 10) {
@@ -1404,7 +1404,7 @@ BOOL ReadCDForSwap(
 		BYTE lpCmd[CDB12GENERIC_LENGTH] = { 0 };
 		_TCHAR szSubCode[5] = { 0 };
 		// non plextor && support scrambled ripping
-		CDB::_READ_CD cdb = { 0 };
+		CDB::_READ_CD cdb = {};
 		_tcsncpy(szSubCode, _T("Raw"), sizeof(szSubCode) / sizeof(szSubCode[0]));
 		SetReadCDCommand(pDevice, &cdb, flg, byTransferLen, c2, CDFLAG::_READ_CD::Raw);
 		memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
@@ -1799,7 +1799,7 @@ BOOL ReadCDPartial(
 		BYTE lpCmd[CDB12GENERIC_LENGTH] = { 0 };
 		_TCHAR szSubCode[5] = { 0 };
 		if ((pExtArg->byD8 || pDevice->byPlxtrDrive) && !pExtArg->byBe) {
-			CDB::_PLXTR_READ_CDDA cdb = { 0 };
+			CDB::_PLXTR_READ_CDDA cdb = {};
 			if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
 				_tcsncpy(szSubCode, _T("Raw"), sizeof(szSubCode) / sizeof(szSubCode[0]));
 				SetReadD8Command(pDevice, &cdb, byTransferLen, CDFLAG::_PLXTR_READ_CDDA::MainC2Raw);
@@ -1812,7 +1812,7 @@ BOOL ReadCDPartial(
 		}
 		else {
 			// non plextor && support scrambled ripping
-			CDB::_READ_CD cdb = { 0 };
+			CDB::_READ_CD cdb = {};
 			_tcsncpy(szSubCode, _T("Raw"), sizeof(szSubCode) / sizeof(szSubCode[0]));
 			SetReadCDCommand(pDevice, &cdb, flg, byTransferLen, c2, CDFLAG::_READ_CD::Raw);
 			memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);

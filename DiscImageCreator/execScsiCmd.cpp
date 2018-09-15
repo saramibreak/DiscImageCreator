@@ -31,7 +31,7 @@ BOOL TestUnitReady(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice
 ) {
-	CDB::_CDB6GENERIC cdb = { 0 };
+	CDB::_CDB6GENERIC cdb = {};
 	cdb.OperationCode = SCSIOP_TEST_UNIT_READY;
 
 #ifdef _WIN32
@@ -53,14 +53,14 @@ BOOL Inquiry(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice
 ) {
-	CDB::_CDB6INQUIRY3 cdb = { 0 };
+	CDB::_CDB6INQUIRY3 cdb = {};
 	cdb.OperationCode = SCSIOP_INQUIRY;
 	cdb.AllocationLength = sizeof(INQUIRYDATA);
 #ifdef _WIN32
 	_declspec(align(4)) INQUIRYDATA inquiryData = { 0 };
 	INT direction = SCSI_IOCTL_DATA_IN;
 #else
-	__attribute__((aligned(4))) INQUIRYDATA inquiryData = { 0 };
+	__attribute__((aligned(4))) INQUIRYDATA inquiryData = {};
 	INT direction = SG_DXFER_FROM_DEV;
 #endif
 	BYTE byScsiStatus = 0;
@@ -89,7 +89,7 @@ BOOL ModeSense(
 	PDISC pDisc
 ) {
 	if (pDevice->FEATURE.byModePage2a) {
-		CDB::_MODE_SENSE cdb = { 0 };
+		CDB::_MODE_SENSE cdb = {};
 		cdb.OperationCode = SCSIOP_MODE_SENSE;
 		cdb.PageCode = MODE_PAGE_CAPABILITIES;
 		cdb.Pc = 2;// MODE_SENSE_CURRENT_VALUES;
@@ -99,7 +99,7 @@ BOOL ModeSense(
 		_declspec(align(4)) CDVD_CAPABILITIES_PAGE_WITH_HEADER modesense = { 0 };
 		INT direction = SCSI_IOCTL_DATA_IN;
 #else
-		__attribute__((aligned(4))) CDVD_CAPABILITIES_PAGE_WITH_HEADER modesense = { 0 };
+		__attribute__((aligned(4))) CDVD_CAPABILITIES_PAGE_WITH_HEADER modesense = {};
 		INT direction = SG_DXFER_FROM_DEV;
 #endif
 		BYTE byScsiStatus = 0;
@@ -143,7 +143,7 @@ BOOL StartStopUnit(
 	BYTE Start,
 	BYTE LoadEject
 ) {
-	CDB::_START_STOP cdb = { 0 };
+	CDB::_START_STOP cdb = {};
 	cdb.OperationCode = SCSIOP_START_STOP_UNIT;
 	cdb.Start = (UCHAR)(Start & 0x01);
 	cdb.LoadEject = (UCHAR)(LoadEject & 0x01);
@@ -167,7 +167,7 @@ BOOL ReadTOC(
 	PDEVICE pDevice,
 	PDISC pDisc
 ) {
-	CDB::_READ_TOC cdb = { 0 };
+	CDB::_READ_TOC cdb = {};
 	cdb.OperationCode = SCSIOP_READ_TOC;
 	cdb.Format2 = CDROM_READ_TOC_EX_FORMAT_TOC;
 	cdb.StartingTrack = 1;
@@ -216,7 +216,7 @@ BOOL ReadTOCFull(
 	PDISC_PER_SECTOR pDiscPerSector,
 	FILE* fpCcd
 ) {
-	CDB::_READ_TOC cdb = { 0 };
+	CDB::_READ_TOC cdb = {};
 	cdb.OperationCode = SCSIOP_READ_TOC;
 	cdb.Format2 = CDROM_READ_TOC_EX_FORMAT_FULL_TOC;
 	cdb.StartingTrack = 1;
@@ -227,7 +227,7 @@ BOOL ReadTOCFull(
 	_declspec(align(4)) CDROM_TOC_FULL_TOC_DATA fullToc = { 0 };
 	INT direction = SCSI_IOCTL_DATA_IN;
 #else
-	__attribute__((aligned(4))) CDROM_TOC_FULL_TOC_DATA fullToc = { 0 };
+	__attribute__((aligned(4))) CDROM_TOC_FULL_TOC_DATA fullToc = {};
 	INT direction = SG_DXFER_FROM_DEV;
 #endif
 	LPBYTE pBuf = NULL;
@@ -342,7 +342,7 @@ BOOL ReadTOCAtip(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice
 ) {
-	CDB::_READ_TOC cdb = { 0 };
+	CDB::_READ_TOC cdb = {};
 	cdb.OperationCode = SCSIOP_READ_TOC;
 	cdb.Format2 = CDROM_READ_TOC_EX_FORMAT_ATIP;
 	WORD wSize = sizeof(CDROM_TOC_ATIP_DATA);
@@ -352,7 +352,7 @@ BOOL ReadTOCAtip(
 	_declspec(align(4)) CDROM_TOC_ATIP_DATA atip = { 0 };
 	INT direction = SCSI_IOCTL_DATA_IN;
 #else
-	__attribute__((aligned(4))) CDROM_TOC_ATIP_DATA atip = { 0 };
+	__attribute__((aligned(4))) CDROM_TOC_ATIP_DATA atip = {};
 	INT direction = SG_DXFER_FROM_DEV;
 #endif
 	BYTE byScsiStatus = 0;
@@ -392,7 +392,7 @@ BOOL ReadTOCText(
 	PDISC pDisc,
 	FILE* fpCcd
 ) {
-	CDB::_READ_TOC cdb = { 0 };
+	CDB::_READ_TOC cdb = {};
 	cdb.OperationCode = SCSIOP_READ_TOC;
 	cdb.Format2 = CDROM_READ_TOC_EX_FORMAT_CDTEXT;
 	WORD wSize = sizeof(CDROM_TOC_CD_TEXT_DATA);
@@ -402,7 +402,7 @@ BOOL ReadTOCText(
 	_declspec(align(4)) CDROM_TOC_CD_TEXT_DATA tocText = { 0 };
 	INT direction = SCSI_IOCTL_DATA_IN;
 #else
-	__attribute__((aligned(4))) CDROM_TOC_CD_TEXT_DATA tocText = { 0 }; 
+	__attribute__((aligned(4))) CDROM_TOC_CD_TEXT_DATA tocText = {}; 
 	INT direction = SG_DXFER_FROM_DEV;
 #endif
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(CDTEXT));
@@ -496,7 +496,7 @@ BOOL GetConfiguration(
 	PDEVICE pDevice,
 	PDISC pDisc
 ) {
-	CDB::_GET_CONFIGURATION cdb = { 0 };
+	CDB::_GET_CONFIGURATION cdb = {};
 	cdb.OperationCode = SCSIOP_GET_CONFIGURATION;
 	cdb.RequestType = SCSI_GET_CONFIGURATION_REQUEST_TYPE_CURRENT;
 	cdb.StartingFeature[1] = FeatureProfileList;
@@ -507,7 +507,7 @@ BOOL GetConfiguration(
 	_declspec(align(4)) GET_CONFIGURATION_HEADER configHeader = { 0 };
 	INT direction = SCSI_IOCTL_DATA_IN;
 #else
-	__attribute__((aligned(4))) GET_CONFIGURATION_HEADER configHeader = { 0 };
+	__attribute__((aligned(4))) GET_CONFIGURATION_HEADER configHeader = {};
 	INT direction = SG_DXFER_FROM_DEV;
 #endif
 	BYTE byScsiStatus = 0;
@@ -579,16 +579,16 @@ BOOL ReadDiscInformation(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice
 ) {
-	CDB::_READ_DISK_INFORMATION cdb = { 0 };
+	CDB::_READ_DISK_INFORMATION cdb = {};
 	cdb.OperationCode = SCSIOP_READ_DISC_INFORMATION;
 	WORD wSize = sizeof(DISC_INFORMATION);
 	REVERSE_BYTES_SHORT(&cdb.AllocationLength, &wSize);
 
 #ifdef _WIN32
-	_declspec(align(4)) DISC_INFORMATION discInformation = { 0 };
+	_declspec(align(4)) DISC_INFORMATION discInformation = {};
 	INT direction = SCSI_IOCTL_DATA_IN;
 #else
-	__attribute__((aligned(4))) DISC_INFORMATION discInformation = { 0 };
+	__attribute__((aligned(4))) DISC_INFORMATION discInformation = {};
 	INT direction = SG_DXFER_FROM_DEV;
 #endif
 	BYTE byScsiStatus = 0;
@@ -611,7 +611,7 @@ BOOL ModeSense10(
 	PDISC pDisc
 ) {
 //	if (pDevice->FEATURE.byModePage2a) {
-		CDB::_MODE_SENSE10 cdb = { 0 };
+		CDB::_MODE_SENSE10 cdb = {};
 		cdb.OperationCode = SCSIOP_MODE_SENSE10;
 		cdb.PageCode = MODE_PAGE_CAPABILITIES;
 		cdb.Pc = 2;// MODE_SENSE_CURRENT_VALUES;
@@ -619,10 +619,10 @@ BOOL ModeSense10(
 		REVERSE_BYTES_SHORT(&cdb.AllocationLength, &wSize);
 
 #ifdef _WIN32
-		_declspec(align(4)) CDVD_CAPABILITIES_PAGE_WITH_HEADER10 modesense = { 0 };
+		_declspec(align(4)) CDVD_CAPABILITIES_PAGE_WITH_HEADER10 modesense = {};
 		INT direction = SCSI_IOCTL_DATA_IN;
 #else
-		__attribute__((aligned(4))) CDVD_CAPABILITIES_PAGE_WITH_HEADER10 modesense = { 0 };
+		__attribute__((aligned(4))) CDVD_CAPABILITIES_PAGE_WITH_HEADER10 modesense = {};
 		INT direction = SG_DXFER_FROM_DEV;
 #endif
 		BYTE byScsiStatus = 0;
@@ -671,16 +671,16 @@ BOOL ReadBufferCapacity(
 	PDEVICE pDevice
 ) {
 	if (pDevice->FEATURE.byReadBufCapa) {
-		CDB::_READ_BUFFER_CAPACITY cdb = { 0 };
+		CDB::_READ_BUFFER_CAPACITY cdb = {};
 		cdb.OperationCode = SCSIOP_READ_BUFFER_CAPACITY;
 		WORD wSize = sizeof(READ_BUFFER_CAPACITY_DATA);
 		REVERSE_BYTES_SHORT(&cdb.AllocationLength, &wSize);
 
 #ifdef _WIN32
-		_declspec(align(4)) READ_BUFFER_CAPACITY_DATA readBufCapaData = { 0 };
+		_declspec(align(4)) READ_BUFFER_CAPACITY_DATA readBufCapaData = {};
 		INT direction = SCSI_IOCTL_DATA_IN;
 #else
-		__attribute__((aligned(4))) READ_BUFFER_CAPACITY_DATA readBufCapaData = { 0 };
+		__attribute__((aligned(4))) READ_BUFFER_CAPACITY_DATA readBufCapaData = {};
 		INT direction = SG_DXFER_FROM_DEV;
 #endif
 		BYTE byScsiStatus = 0;
@@ -713,7 +713,7 @@ BOOL SetDiscSpeed(
 		INT direction = SCSI_IOCTL_DATA_IN;
 #else
 		__attribute__((aligned(4))) CDROM_SET_SPEED setspeed = { CdromSetSpeed, 0, 0, CdromDefaultRotation };
-		INT direction = SG_DXFER_FROM_DEV;
+		INT direction = SG_DXFER_TO_DEV;
 #endif
 		if ((*pExecType == cd || *pExecType == swap || *pExecType == gd || *pExecType == audio || *pExecType == data) &&
 			0 < dwDiscSpeedNum && dwDiscSpeedNum <= CD_DRIVE_MAX_SPEED) {
@@ -741,7 +741,7 @@ BOOL SetDiscSpeed(
 			wSpeed = 0xffff;
 			setspeed.ReadSpeed = pDevice->wMaxReadSpeed;
 		}
-		CDB::_SET_CD_SPEED cdb = { 0 };
+		CDB::_SET_CD_SPEED cdb = {};
 		cdb.OperationCode = SCSIOP_SET_CD_SPEED;
 		REVERSE_BYTES_SHORT(&cdb.ReadSpeed, &wSpeed);
 		// https://msdn.microsoft.com/en-us/library/windows/hardware/ff551370(v=vs.85).aspx
@@ -784,7 +784,7 @@ BOOL SetSpeedRead(
 		CONST WORD size = 8;
 		BYTE buf[size] = { 0 };
 
-		CDB::_CDB12 cdb = { 0 };
+		CDB::_CDB12 cdb = {};
 		cdb.OperationCode = SCSIOP_PLXTR_EXTEND;
 		cdb.DisablePageOut = TRUE;
 		cdb.LogicalBlock[0] = PLXTR_FLAG_SPEED_READ;
@@ -815,7 +815,7 @@ BOOL Reset(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice
 ) {
-	CDB::_CDB6GENERIC cdb = { 0 };
+	CDB::_CDB6GENERIC cdb = {};
 	cdb.OperationCode = SCSIOP_PLXTR_RESET;
 #ifdef _WIN32
 	INT direction = SCSI_IOCTL_DATA_IN;
@@ -868,7 +868,7 @@ BOOL ReadEeprom(
 		BufLen, &pBuf, _T(__FUNCTION__), __LINE__)) {
 		return FALSE;
 	}
-	CDB::_CDB12 cdb = { 0 };
+	CDB::_CDB12 cdb = {};
 	cdb.OperationCode = SCSIOP_PLXTR_READ_EEPROM;
 	cdb.RelativeAddress = (UCHAR)(bHigh & 0x01);
 
@@ -975,7 +975,7 @@ BOOL ReadGDForTOC(
 	PDEVICE pDevice,
 	PDISC pDisc
 ) {
-	CDB::_READ_CD cdb = { 0 };
+	CDB::_READ_CD cdb = {};
 	SetReadCDCommand(pDevice, &cdb,
 		CDFLAG::_READ_CD::CDDA, 2, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::NoSub);
 	BYTE aToc[CD_RAW_SECTOR_SIZE * 4] = { 0 };

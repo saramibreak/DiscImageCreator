@@ -211,7 +211,7 @@ VOID SetAndOutputTocForGD(
 	BOOL bFirstData = TRUE;
 	TRACK_TYPE trkType = TRACK_TYPE::audioOnly;
 
-	for (BYTE i = pDisc->SCSI.toc.FirstTrack, j = 0; i <= pDisc->SCSI.toc.LastTrack; i++, j += 4) {
+	for (BYTE i = pDisc->SCSI.toc.FirstTrack, j = 0; i <= pDisc->SCSI.toc.LastTrack; i++, j = (BYTE)(j + 4)) {
 		INT tIdx = i - 1;
 		// update the toc of audio trap disc to the toc of gd-rom
 		pDisc->SCSI.lpFirstLBAListOnToc[tIdx] = MAKELONG(
@@ -951,7 +951,7 @@ VOID SetTrackAttribution(
 			pDisc->MAIN.lpModeList[tIdx] = GetMode(pDiscPerSector, unscrambled);
 		}
 		// preserve the 1st LBA of the changed index 
-		if (pDiscPerSector->byTrackNum >= 0 && tmpPrevIndex + 1 == tmpCurrentIndex) {
+		if (pDiscPerSector->byTrackNum >= 1 && tmpPrevIndex + 1 == tmpCurrentIndex) {
 			if (tmpCurrentIndex != 1) {
 				if (pDisc->SUB.lpFirstLBAListOnSub[tIdx][tmpCurrentIndex] == -1) {
 					OutputSubInfoWithLBALogA("Index is changed from [%02d] to [%02d] [L:%d]\n", nLBA
@@ -984,12 +984,24 @@ VOID SetTrackAttribution(
 			}
 		}
 		else if (tmpPrevIndex >= 1 && tmpCurrentIndex == 0) {
+#if 0
+			for (INT i = pDisc->SCSI.toc.FirstTrack - 1; i < pDisc->SCSI.toc.LastTrack; i++) {
+				OutputString(_T("pDisc->SUB.lpFirstLBAListOnSub[%d][%d]: %d, %p, LBA: %d\n")
+					, i, tmpCurrentIndex, pDisc->SUB.lpFirstLBAListOnSub[i][tmpCurrentIndex], &pDisc->SUB.lpFirstLBAListOnSub[i][tmpCurrentIndex], nLBA);
+			}
+#endif
 			if (pDisc->SUB.lpFirstLBAListOnSub[tIdx][tmpCurrentIndex] == -1) {
 				OutputSubInfoWithLBALogA("Index is changed from [%02d] to [%02d] [L:%d]\n", nLBA
 					, tmpCurrentTrackNum, tmpPrevIndex, tmpCurrentIndex, (INT)__LINE__);
 				pDisc->SUB.lpFirstLBAListOnSub[tIdx][tmpCurrentIndex] = nLBA;
 				pDisc->SUB.lpFirstLBAListOnSubSync[tIdx][tmpCurrentIndex] = nLBA;
 			}
+#if 0
+			for (INT i = pDisc->SCSI.toc.FirstTrack - 1; i < pDisc->SCSI.toc.LastTrack; i++) {
+				OutputString(_T("pDisc->SUB.lpFirstLBAListOnSub[%d][%d]: %d, %p, LBA: %d\n")
+					, i, tmpCurrentIndex, pDisc->SUB.lpFirstLBAListOnSub[i][tmpCurrentIndex], &pDisc->SUB.lpFirstLBAListOnSub[i][tmpCurrentIndex], nLBA);
+			}
+#endif
 		}
 
 		if ((pDisc->SCSI.toc.TrackData[tIdx].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK &&
@@ -1258,11 +1270,11 @@ VOID SetBufferFromMCN(
 ) {
 	for (INT i = 13, j = 0; i < 19; i++, j += 2) {
 		lpSubcode[i] = (BYTE)(pDisc->SUB.szCatalog[j] - 0x30);
-		lpSubcode[i] <<= 4;
+		lpSubcode[i] = (BYTE)(lpSubcode[i] << 4);
 		lpSubcode[i] |= (BYTE)(pDisc->SUB.szCatalog[j + 1] - 0x30);
 	}
 	lpSubcode[19] = (BYTE)(pDisc->SUB.szCatalog[12] - 0x30);
-	lpSubcode[19] <<= 4;
+	lpSubcode[19] = (BYTE)(lpSubcode[19] << 4);
 	lpSubcode[20] = 0;
 }
 
@@ -1725,7 +1737,7 @@ VOID UpdateTmpMainHeader(
 	memcpy(pDiscPerSector->mainHeader.prev, pDiscPerSector->mainHeader.current, MAINHEADER_MODE1_SIZE);
 	BYTE tmp = (BYTE)(pDiscPerSector->mainHeader.current[14] + 1);
 	if ((tmp & 0x0f) == 0x0a) {
-		tmp += 6;
+		tmp = (BYTE)(tmp + 6);
 	}
 	if (tmp == 0x75) {
 		pDiscPerSector->mainHeader.current[14] = 0;
@@ -1736,7 +1748,7 @@ VOID UpdateTmpMainHeader(
 			tmp = (BYTE)(pDiscPerSector->mainHeader.current[13] + 1);
 		}
 		if ((tmp & 0x0f) == 0x0a) {
-			tmp += 6;
+			tmp = (BYTE)(tmp + 6);
 		}
 		if (tmp == 0x60) {
 			if (nMainDataType == scrambled) {
@@ -1748,7 +1760,7 @@ VOID UpdateTmpMainHeader(
 				tmp = (BYTE)(pDiscPerSector->mainHeader.current[12] + 1);
 			}
 			if ((tmp & 0x0f) == 0x0a) {
-				tmp += 6;
+				tmp = (BYTE)(tmp + 6);
 			}
 			if (nMainDataType == scrambled) {
 				pDiscPerSector->mainHeader.current[12] = (BYTE)(tmp ^ 0x01);

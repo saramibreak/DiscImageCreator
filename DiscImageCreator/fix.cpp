@@ -1297,7 +1297,7 @@ VOID FixSubChannel(
 				bSubOk = TRUE;
 			}
 			else if (!*bReread && !pDiscPerSector->bLibCrypt && !pDiscPerSector->bSecuRom) {
-				DISC_PER_SECTOR tmpSector = { 0 };
+				DISC_PER_SECTOR tmpSector = {};
 				memcpy(&tmpSector, pDiscPerSector, sizeof(DISC_PER_SECTOR));
 				tmpSector.subQ.current = tmpSector.subQ.next;
 				tmpSector.subQ.current.nRelativeTime -= 1;

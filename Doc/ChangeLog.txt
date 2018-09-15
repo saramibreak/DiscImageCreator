@@ -512,3 +512,10 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - added: Drive speed of bd and xbox. (If you don't use this, please specify 0)
 - changed: No output XGD3 SSv1
 - improved: Security Sector log of XBOX (added timestamp etc.)
+
+*2018-09-15
+- added: support mode 0x00 of CD data track
+- changed: set to invalid mode except 0x00 or 0x01 or 0x02
+- fixed: disc speed changing doesn't work for linux.
+- fixed: increased memory allocation for double pointer (subchannel, cd-text)
+- deleted: some warning when used Wextra

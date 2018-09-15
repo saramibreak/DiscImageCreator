@@ -86,22 +86,22 @@ BOOL InitTocTextData(
 	try {
 		if (pDevice->FEATURE.byCanCDText || *pExecType == gd || *pExecType == swap) {
 			if (NULL == ((*pDisc)->SUB.pszISRC = 
-				(LPSTR*)calloc(dwTrackAllocSize, sizeof(INT_PTR)))) {
+				(LPSTR*)calloc(dwTrackAllocSize * 2, sizeof(INT_PTR)))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
 			if (NULL == ((*pDisc)->SCSI.pszTitle = 
-				(LPSTR*)calloc(dwTrackAllocSize, sizeof(INT_PTR)))) {
+				(LPSTR*)calloc(dwTrackAllocSize * 2, sizeof(INT_PTR)))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
 			if (NULL == ((*pDisc)->SCSI.pszPerformer = 
-				(LPSTR*)calloc(dwTrackAllocSize, sizeof(INT_PTR)))) {
+				(LPSTR*)calloc(dwTrackAllocSize * 2, sizeof(INT_PTR)))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
 			if (NULL == ((*pDisc)->SCSI.pszSongWriter = 
-				(LPSTR*)calloc(dwTrackAllocSize, sizeof(INT_PTR)))) {
+				(LPSTR*)calloc(dwTrackAllocSize * 2, sizeof(INT_PTR)))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
@@ -201,12 +201,12 @@ BOOL InitSubData(
 			throw FALSE;
 		}
 		if (NULL == ((*pDisc)->SUB.lpFirstLBAListOnSub =
-			(LPINT*)calloc(dwTrackAllocSize, sizeof(INT_PTR)))) {
+			(LPINT*)calloc(dwTrackAllocSize * 2, sizeof(INT_PTR)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
 		if (NULL == ((*pDisc)->SUB.lpFirstLBAListOnSubSync = 
-			(LPINT*)calloc(dwTrackAllocSize, sizeof(INT_PTR)))) {
+			(LPINT*)calloc(dwTrackAllocSize * 2, sizeof(INT_PTR)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
@@ -248,6 +248,12 @@ BOOL InitSubData(
 				throw FALSE;
 			}
 			FillMemory((*pDisc)->SUB.lpFirstLBAListOnSub[h], dwIndexAllocSize, -1);
+#if 0
+			for (INT j = 0; j < 2; j++) {
+				OutputString(_T("lpFirstLBAListOnSub[%zd][%zd]: %d, %p\n")
+					, h, j, (*pDisc)->SUB.lpFirstLBAListOnSub[h][j], &(*pDisc)->SUB.lpFirstLBAListOnSub[h][j]);
+			}
+#endif
 			if (NULL == ((*pDisc)->SUB.lpFirstLBAListOnSubSync[h] = (LPINT)malloc(dwIndexAllocSize))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;

@@ -1517,7 +1517,7 @@ VOID OutputCDSubToLog(
 		break;
 	}
 
-	SUB_R_TO_W scRW[4] = { 0 };
+	SUB_R_TO_W scRW[4] = {};
 	BYTE tmpCode[24] = { 0 };
 	_TCHAR szSub3[128] = { 0 };
 	_tcsncat(szSub3, _T("}, RtoW["), 8);

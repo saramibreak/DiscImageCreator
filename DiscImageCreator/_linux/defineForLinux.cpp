@@ -1,5 +1,7 @@
 int Beep(int fz, int time)
 {
+	UNREFERENCED_PARAMETER(fz);
+	UNREFERENCED_PARAMETER(time);
 	return TRUE;
 }
 
@@ -24,14 +26,6 @@ int GetCurrentDirectory(size_t size, char *buf)
 
 void _splitpath(const char* Path, char* Drive, char* Directory, char* Filename, char* Extension)
 {
-#if 0
-	char *dirc, *basec, *bname, *dname;
-
-	dirc = strdup(Path);
-	basec = strdup(Path);
-	Directory = dirname(dirc);
-	Filename = basename(basec);
-#else
 	char* CopyOfPath = (char*)Path;
 	int Counter = 0;
 	int Last = 0;
@@ -114,7 +108,6 @@ void _splitpath(const char* Path, char* Drive, char* Directory, char* Filename, 
 		}
 //		*Extension = '\0';
 	}
-#endif
 	return;
 }
 
@@ -274,6 +267,11 @@ int MoveFileEx(const char* srcFile, const char* dstFile, int flag)
 	unsigned char buf[2352] = { 0 };
 	for (int i = 0; i < size; i += 2352) {
 		size_t readsize = fread(buf, sizeof(unsigned char), sizeof(buf), fpR);
+		if (readsize != sizeof(buf)) {
+			fclose(fpR);
+			fclose(fpW);
+			return FALSE;
+		}
 		fwrite(buf, sizeof(unsigned char), readsize, fpW);
 	}
 	fclose(fpR);
@@ -299,6 +297,7 @@ off_t _ftelli64(FILE* fp)
 // http://pdfbjj.blogspot.com/2012/04/linuxgetmodulefilename.html
 int GetModuleFileName(void* a, char* path, unsigned long size)
 {
+	UNREFERENCED_PARAMETER(a);
 	ssize_t v = readlink("/proc/self/exe", path, size);
 	if (v == -1) {
 		return FALSE;
@@ -316,6 +315,11 @@ int WideCharToMultiByte(
 	LPCSTR lpDefaultChar,
 	LPBOOL lpUsedDefaultChar)
 {
+	UNREFERENCED_PARAMETER(CodePage);
+	UNREFERENCED_PARAMETER(dwFlags);
+	UNREFERENCED_PARAMETER(cchMultiByte);
+	UNREFERENCED_PARAMETER(lpDefaultChar);
+	UNREFERENCED_PARAMETER(lpUsedDefaultChar);
 	size_t ret = wcstombs(lpMultiByteStr, lpWideCharStr, cchWideChar);
 	if (ret == (size_t)-1) {
 		return 0;
@@ -343,6 +347,11 @@ int CloseHandle(int fd)
 
 int DeviceIoControl(int fd, unsigned long ioCtlCode, void* inbuf, unsigned long a, void* b, unsigned long c, unsigned long* d, void* e)
 {
+	UNREFERENCED_PARAMETER(a);
+	UNREFERENCED_PARAMETER(b);
+	UNREFERENCED_PARAMETER(c);
+	UNREFERENCED_PARAMETER(d);
+	UNREFERENCED_PARAMETER(e);
 	PSCSI_PASS_THROUGH_DIRECT_WITH_BUFFER p = (PSCSI_PASS_THROUGH_DIRECT_WITH_BUFFER)inbuf;
 	int ret = ioctl(fd, ioCtlCode, &(p->io_hdr));
 	memcpy(&(p->SenseData), p->Dummy, 18);
@@ -351,6 +360,7 @@ int DeviceIoControl(int fd, unsigned long ioCtlCode, void* inbuf, unsigned long 
 
 int ReadFile(int fd, void* inbuf, unsigned long size, unsigned long* d, void* e)
 {
+	UNREFERENCED_PARAMETER(e);
 	int ret = 0;
 	*d = read(fd, inbuf, size);
 	return ret = ret != -1 ? TRUE : FALSE;

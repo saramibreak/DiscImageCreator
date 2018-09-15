@@ -29,7 +29,7 @@ BOOL DiskGetMediaTypes(
 		return FALSE;
 	}
 
-	DISK_GEOMETRY geom[20] = { 0 };
+	DISK_GEOMETRY geom[20] = {};
 	DWORD dwReturned = 0;
 	BOOL bRet = DeviceIoControl(pDevice->hDevice,
 		IOCTL_DISK_GET_MEDIA_TYPES, NULL, 0, &geom, sizeof(geom), &dwReturned, 0);
@@ -111,7 +111,7 @@ BOOL ScsiPassThroughDirect(
 	LPCTSTR pszFuncName,
 	LONG lLineNum
 ) {
-	SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER swb = { 0 };
+	SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER swb = {};
 #ifdef _WIN32
 	swb.ScsiPassThroughDirect.Length = sizeof(SCSI_PASS_THROUGH_DIRECT);
 	swb.ScsiPassThroughDirect.PathId = pDevice->address.PathId;
@@ -231,7 +231,7 @@ BOOL StorageQueryProperty(
 	query.QueryType = PropertyStandardQuery;
 	query.PropertyId = StorageAdapterProperty;
 
-	STORAGE_DESCRIPTOR_HEADER header = { 0 };
+	STORAGE_DESCRIPTOR_HEADER header = {};
 	DWORD dwReturned = 0;
 	if (!DeviceIoControl(pDevice->hDevice, IOCTL_STORAGE_QUERY_PROPERTY,
 		&query, sizeof(STORAGE_PROPERTY_QUERY), &header,

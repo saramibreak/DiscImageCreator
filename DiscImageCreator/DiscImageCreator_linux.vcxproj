@@ -138,6 +138,7 @@
       <ForcedIncludeFiles>_linux/defineForLinux.h</ForcedIncludeFiles>
       <CAdditionalWarning>extra;no-unknown-pragmas;%(CAdditionalWarning)</CAdditionalWarning>
       <CppAdditionalWarning>extra;no-unknown-pragmas;%(CppAdditionalWarning)</CppAdditionalWarning>
+      <Optimization>MaxSpeed</Optimization>
     </ClCompile>
     <PreBuildEvent>
       <Command>CreateBuildDateTime.bat</Command>

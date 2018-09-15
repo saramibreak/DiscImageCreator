@@ -54,7 +54,7 @@ BOOL ReadDVD(
 		}
 		LPBYTE lpBuf = (LPBYTE)ConvParagraphBoundary(pDevice, pBuf);
 
-		CDB::_READ12 cdb = { 0 };
+		CDB::_READ12 cdb = {};
 		cdb.OperationCode = SCSIOP_READ12;
 		if (pExtArg->byFua) {
 			cdb.ForceUnitAccess = TRUE;
@@ -444,7 +444,7 @@ BOOL ReadDVDRaw(
 			dwSectorNum += dwPos;
 		}
 		// for dumping from the disc
-		CDB::_READ12 cdb = { 0 };
+		CDB::_READ12 cdb = {};
 		cdb.OperationCode = SCSIOP_READ12;
 		REVERSE_BYTES(&cdb.TransferLength, &dwTransferLen);
 
@@ -731,7 +731,7 @@ BOOL ReadDVDForCMI(
 	INT direction = SG_DXFER_FROM_DEV;
 #endif
 
-	CDB::_READ_DVD_STRUCTURE cdb = { 0 };
+	CDB::_READ_DVD_STRUCTURE cdb = {};
 	cdb.OperationCode = SCSIOP_READ_DVD_STRUCTURE;
 	cdb.Format = DvdMaxDescriptor;
 	REVERSE_BYTES_SHORT(&cdb.AllocationLength, &wSize);
@@ -803,7 +803,7 @@ BOOL ReadDiscStructure(
 	__attribute__((aligned(4))) BYTE pBuf[wMaxDVDStructureSize] = { 0 };
 	INT direction = SG_DXFER_TO_FROM_DEV;
 #endif
-	CDB::_READ_DVD_STRUCTURE cdb = { 0 };
+	CDB::_READ_DVD_STRUCTURE cdb = {};
 	cdb.OperationCode = SCSIOP_READ_DVD_STRUCTURE;
 	if (*pExecType == bd) {
 		cdb.Reserved1 = 1;
@@ -1052,7 +1052,7 @@ BOOL ReadCapacity(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice
 ) {
-	CDB::_CDB10 cdb = { 0 };
+	CDB::_CDB10 cdb = {};
 	cdb.OperationCode = SCSIOP_READ_CAPACITY;
 
 	BYTE buf[8] = { 0 };

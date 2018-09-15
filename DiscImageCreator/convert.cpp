@@ -183,6 +183,7 @@ LPVOID ConvParagraphBoundary(
 #ifdef _WIN32
 	return (LPVOID)(((UINT_PTR)pv + pDevice->AlignmentMask) & ~pDevice->AlignmentMask);
 #else
+	UNREFERENCED_PARAMETER(pDevice);
 	return (LPVOID)pv;
 #endif
 }

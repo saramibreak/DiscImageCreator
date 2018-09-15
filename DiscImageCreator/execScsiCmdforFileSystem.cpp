@@ -510,7 +510,7 @@ BOOL ReadCDForFileSystem(
 				pDevice->dwMaxTransferLength, &lpBuf, _T(__FUNCTION__), __LINE__)) {
 				return FALSE;
 			}
-			CDB::_READ12 cdb = { 0 };
+			CDB::_READ12 cdb = {};
 			cdb.OperationCode = SCSIOP_READ12;
 			cdb.TransferLength[3] = 1;
 			BOOL bVD = FALSE;
@@ -669,7 +669,7 @@ BOOL ReadGDForFileSystem(
 	}
 	BOOL bRet = TRUE;
 	PDIRECTORY_RECORD pDirRec = NULL;
-	CDB::_READ_CD cdb = { 0 };
+	CDB::_READ_CD cdb = {};
 	SetReadCDCommand(pDevice, &cdb,
 		CDFLAG::_READ_CD::CDDA, 2, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::NoSub);
 	try {

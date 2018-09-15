@@ -904,8 +904,8 @@ BOOL WriteParsingSubfile(
 	}
 
 	LPBYTE data = NULL;
-	DISC discData = { 0 };
-	DISC_PER_SECTOR discPerSector = { 0 };
+	DISC discData = {};
+	DISC_PER_SECTOR discPerSector = {};
 	FILE* fpSub = NULL;
 	DWORD dwTrackAllocSize = MAXIMUM_NUMBER_TRACKS + 10 + 1;
 
@@ -1028,7 +1028,7 @@ BOOL WriteParsingMdsfile(
 		};
 		FcloseAndNull(fpMds);
 
-		MDS_HEADER h = { 0 };
+		MDS_HEADER h = {};
 		size_t nOfs = 0;
 		size_t size = sizeof(MDS_HEADER);
 		memcpy(&h, data, size);
@@ -1082,7 +1082,7 @@ BOOL WriteParsingMdsfile(
 			nOfs += size;
 		}
 
-		MDS_FNAME_BLK fb = { 0 };
+		MDS_FNAME_BLK fb = {};
 		size = sizeof(MDS_FNAME_BLK);
 		memcpy(&fb, data + nOfs, size);
 		nOfs += size;
@@ -1402,7 +1402,7 @@ BOOL DescrambleMainChannelForGD(
 			break;
 		}
 		if (IsValidMainDataHeader(bufScm)) {
-			if (bufScm[0x0C] == 0xC3 && bufScm[0x0D] == 0x84 && bufScm[0x0E] >= 0x00) {
+			if (bufScm[0x0C] == 0xC3 && bufScm[0x0D] == 0x84/* && bufScm[0x0E] >= 0x00*/) {
 				break;
 			}
 			for (INT j = 0; j < CD_RAW_SECTOR_SIZE; j++) {
@@ -1695,18 +1695,29 @@ VOID DescrambleMainChannelAll(
 					break;
 				}
 				if (IsValidMainDataHeader(aSrcBuf)) {
-					if (aSrcBuf[0x0f] == 0x61/* || aSrcBuf[0x0f] == 0x62*/) {
+					if (aSrcBuf[0x0f] == 0x60) {
+						for (INT n = 0x10; n < CD_RAW_SECTOR_SIZE; n++) {
+							if (aSrcBuf[n] != lpScrambledBuf[n]) {
+								OutputMainErrorWithLBALogA("Not all zero sector\n", nFirstLBA, k + 1);
+								OutputString(
+									_T("\rDescrambling data sector of img (LBA) %6d/%6d"), nFirstLBA, nLastLBA);
+								OutputCDMain(fileMainError, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
+								continue;
+							}
+						}
+					}
+					else if (aSrcBuf[0x0f] == 0x61) {
 						if (IsValidReservedByte(aSrcBuf)) {
 							OutputMainErrorWithLBALogA("A part of reverted sector. (Not be scrambled)\n", nFirstLBA, k + 1);
 							OutputCDMain(fileMainError, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
 						}
 					}
-					else if (aSrcBuf[0x0f] == 0x01 || aSrcBuf[0x0f] == 0x02) {
+					else if (aSrcBuf[0x0f] == 0x00 || aSrcBuf[0x0f] == 0x01 || aSrcBuf[0x0f] == 0x02) {
 						OutputMainErrorWithLBALogA("Reverted sector. (Not be scrambled)\n", nFirstLBA, k + 1);
 						OutputCDMain(fileMainError, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
 					}
-					else if (aSrcBuf[0x0f] != 0x61 && aSrcBuf[0x0f] != 0x62 &&
-						aSrcBuf[0x0f] != 0x01 && aSrcBuf[0x0f] != 0x02) {
+					else if (aSrcBuf[0x0f] != 0x60 && aSrcBuf[0x0f] != 0x61 && aSrcBuf[0x0f] != 0x62 &&
+						aSrcBuf[0x0f] != 0x00 && aSrcBuf[0x0f] != 0x01 && aSrcBuf[0x0f] != 0x02) {
 						OutputMainErrorWithLBALogA("Invalid mode. ", nFirstLBA, k + 1);
 						BYTE m, s, f = 0;
 						LBAtoMSF(nFirstLBA + 150, &m, &s, &f);
@@ -1859,7 +1870,7 @@ BOOL CreateBin(
 		return FALSE;
 	}
 	if (fread(lpBuf, sizeof(BYTE), stBufSize, fpImg) != stBufSize) {
-		OutputErrorString(_T("Failed to read [F:%s][L:%d]\n"), _T(__FUNCTION__), __LINE__);
+		OutputErrorString(_T("Failed to read: read size %zd [F:%s][L:%d]\n"), stBufSize, _T(__FUNCTION__), __LINE__);
 		FreeAndNull(lpBuf);
 		return FALSE;
 	}

@@ -1066,7 +1066,7 @@ VOID OutputGetConfigurationFeatureNumber(
 			if (0x0111 <= wCode && wCode <= 0xfeff) {
 				OutputGetConfigurationFeatureReserved((PFEATURE_DATA_RESERVED)&lpConf[n]);
 			}
-			else if (0xff00 <= wCode && wCode <= 0xffff) {
+			else if (0xff00 <= wCode/* && wCode <= 0xffff*/) {
 				OutputGetConfigurationFeatureVendorSpecific((PFEATURE_DATA_VENDOR_SPECIFIC)&lpConf[n]);
 			}
 			break;

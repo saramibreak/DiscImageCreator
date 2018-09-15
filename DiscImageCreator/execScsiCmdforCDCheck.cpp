@@ -266,7 +266,7 @@ BOOL ReadCDForSearchingOffset(
 	FlushLog();
 	BYTE lpCmd[CDB12GENERIC_LENGTH] = { 0 };
 	if ((pExtArg->byD8 || pDevice->byPlxtrDrive) && !pExtArg->byBe) {
-		CDB::_PLXTR_READ_CDDA cdb = { 0 };
+		CDB::_PLXTR_READ_CDDA cdb = {};
 		SetReadD8Command(pDevice, &cdb, 1, CDFLAG::_PLXTR_READ_CDDA::NoSub);
 		memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
 
@@ -322,7 +322,7 @@ BOOL ReadCDForSearchingOffset(
 		if (*pExecType == data) {
 			flg = CDFLAG::_READ_CD::All;
 		}
-		CDB::_READ_CD cdb = { 0 };
+		CDB::_READ_CD cdb = {};
 		SetReadCDCommand(pDevice, &cdb, flg
 			, 1, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::Raw);
 		memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
@@ -449,13 +449,13 @@ BOOL ReadCDForCheckingReadInOut(
 	BOOL bRet = TRUE;
 	BYTE lpCmd[CDB12GENERIC_LENGTH] = { 0 };
 	if ((pExtArg->byD8 || pDevice->byPlxtrDrive) && !pExtArg->byBe) {
-		CDB::_PLXTR_READ_CDDA cdb = { 0 };
+		CDB::_PLXTR_READ_CDDA cdb = {};
 		SetReadD8Command(pDevice, &cdb, 1, CDFLAG::_PLXTR_READ_CDDA::NoSub);
 		memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
 	}
 	else {
 		// non plextor && support scrambled ripping
-		CDB::_READ_CD cdb = { 0 };
+		CDB::_READ_CD cdb = {};
 		SetReadCDCommand(pDevice, &cdb, CDFLAG::_READ_CD::CDDA
 			, 1, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::NoSub);
 		memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
@@ -510,7 +510,7 @@ BOOL ReadCDForCheckingSubQAdrFirst(
 		return FALSE;
 	}
 	if ((pExtArg->byD8 || pDevice->byPlxtrDrive) && !pExtArg->byBe) {
-		CDB::_PLXTR_READ_CDDA cdb = { 0 };
+		CDB::_PLXTR_READ_CDDA cdb = {};
 		if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
 			SetReadD8Command(pDevice, &cdb, 1, CDFLAG::_PLXTR_READ_CDDA::MainC2Raw);
 			*dwBufLen = CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE;
@@ -521,7 +521,7 @@ BOOL ReadCDForCheckingSubQAdrFirst(
 		memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
 	}
 	else {
-		CDB::_READ_CD cdb = { 0 };
+		CDB::_READ_CD cdb = {};
 		if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
 			SetReadCDCommand(pDevice, &cdb, flg,
 				1, CDFLAG::_READ_CD::byte294, CDFLAG::_READ_CD::Raw);
@@ -703,7 +703,7 @@ BOOL ReadCDForCheckingSubRtoW(
 	BOOL bC2 = FALSE;
 	DWORD dwBufLen = CD_RAW_SECTOR_SIZE + CD_RAW_READ_SUBCODE_SIZE;
 	if ((pExtArg->byD8 || pDevice->byPlxtrDrive) && !pExtArg->byBe) {
-		CDB::_PLXTR_READ_CDDA cdb = { 0 };
+		CDB::_PLXTR_READ_CDDA cdb = {};
 		if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
 			SetReadD8Command(pDevice, &cdb, 1, CDFLAG::_PLXTR_READ_CDDA::MainC2Raw);
 			bC2 = TRUE;
@@ -715,7 +715,7 @@ BOOL ReadCDForCheckingSubRtoW(
 		memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
 	}
 	else {
-		CDB::_READ_CD cdb = { 0 };
+		CDB::_READ_CD cdb = {};
 		if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
 			SetReadCDCommand(pDevice, &cdb, flg,
 				1, CDFLAG::_READ_CD::byte294, CDFLAG::_READ_CD::Raw);
@@ -750,7 +750,7 @@ BOOL ReadCDForCheckingSubRtoW(
 			}
 			OutputCDSub96Align(lpSubcode, nTmpLBA);
 
-			SUB_R_TO_W scRW[4] = { 0 };
+			SUB_R_TO_W scRW[4] = {};
 			BYTE tmpCode[24] = { 0 };
 			INT nRtoW = 0;
 			BOOL bCDG = FALSE;
@@ -1097,7 +1097,7 @@ BOOL ReadCDForSegaDisc(
 	PDEVICE pDevice
 ) {
 	BYTE buf[DISC_RAW_READ_SIZE] = { 0 };
-	CDB::_READ12 cdb = { 0 };
+	CDB::_READ12 cdb = {};
 	cdb.OperationCode = SCSIOP_READ12;
 	cdb.TransferLength[3] = 1;
 
@@ -1117,7 +1117,7 @@ BOOL ReadCDForCheckingPsxRegion(
 	BYTE buf[DISC_RAW_READ_SIZE] = { 0 };
 	CONST CHAR regionPal[] =
 		"          Licensed  by          Sony Computer Entertainment Euro pe   ";
-	CDB::_READ12 cdb = { 0 };
+	CDB::_READ12 cdb = {};
 	cdb.OperationCode = SCSIOP_READ12;
 	cdb.TransferLength[3] = 1;
 
@@ -1142,7 +1142,7 @@ VOID ReadCDForScanningPsxAntiMod(
 		"     SOFTWARE TERMINATED\nCONSOLE MAY HAVE BEEN MODIFIED\n     CALL 1-888-780-7690";
 	CONST CHAR antiModStrJp[] =
 		"強制終了しました。\n本体が改造されている\nおそれがあります。";
-	CDB::_READ12 cdb = { 0 };
+	CDB::_READ12 cdb = {};
 	cdb.OperationCode = SCSIOP_READ12;
 	cdb.TransferLength[3] = 1;
 
@@ -1183,7 +1183,7 @@ BOOL ReadCDForScanningProtectViaSector(
 	BYTE lpCmd[CDB12GENERIC_LENGTH] = { 0 };
 	DWORD dwBufLen = CD_RAW_SECTOR_SIZE + CD_RAW_READ_SUBCODE_SIZE;
 	if ((pExtArg->byD8 || pDevice->byPlxtrDrive) && !pExtArg->byBe) {
-		CDB::_PLXTR_READ_CDDA cdb = { 0 };
+		CDB::_PLXTR_READ_CDDA cdb = {};
 		if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
 			SetReadD8Command(pDevice, &cdb, 1, CDFLAG::_PLXTR_READ_CDDA::MainC2Raw);
 			dwBufLen = CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE;
@@ -1194,7 +1194,7 @@ BOOL ReadCDForScanningProtectViaSector(
 		memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
 	}
 	else {
-		CDB::_READ_CD cdb = { 0 };
+		CDB::_READ_CD cdb = {};
 		if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
 			SetReadCDCommand(pDevice, &cdb, CDFLAG::_READ_CD::CDDA,
 				1, CDFLAG::_READ_CD::byte294, CDFLAG::_READ_CD::Raw);
@@ -1369,12 +1369,12 @@ BOOL ExecCheckingByteOrder(
 	}
 	BYTE lpCmd[CDB12GENERIC_LENGTH] = { 0 };
 	if ((pExtArg->byD8 || pDevice->byPlxtrDrive) && !pExtArg->byBe) {
-		CDB::_PLXTR_READ_CDDA cdb = { 0 };
+		CDB::_PLXTR_READ_CDDA cdb = {};
 		SetReadD8Command(pDevice, &cdb, 1, CDFLAG::_PLXTR_READ_CDDA::MainC2Raw);
 		memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
 	}
 	else {
-		CDB::_READ_CD cdb = { 0 };
+		CDB::_READ_CD cdb = {};
 		SetReadCDCommand(pDevice, &cdb
 			, CDFLAG::_READ_CD::All, 1, c2, sub);
 		memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
