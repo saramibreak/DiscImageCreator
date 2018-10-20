@@ -1,0 +1,2 @@
+# This is a file not to read sector. Please write the file name you want to read skipping
+SYSTEM.LSK
