@@ -114,13 +114,15 @@
   - Cactus Data Shield 200 [intentional C2 error]
   - Cactus Data Shield 300 
   - CD Lock [characteristic track]
+  - LaserLock [no signal sector]
   - LibCrypt [unique data on subchannel]
   - Key2Audio [pregap]
   - PhenoProtect [read errors?]
+  - Proring [no signal sector]
   - ProtectCD-VOB [invalid sync]
   - SafeDisc [bad(error) sector, intentional C2 error]
-  - SmartE [duplicated msf]
   - SecuROM(v1 - v3) [unique data on subchannel]
+  - SmartE [duplicated msf]
 
   BD
   - Microsoft Xbox One
@@ -129,10 +131,6 @@
 
 ## Probably Unsupported Disc
   Protected Disc
-  - RingPROTECH, ProRing [no signal sector]  
-     => The result doesn't match at each drives.
-  - LaserLock [no signal sector, intentional C2 error]  
-     => The result doesn't match at each drives. (0xd8 ripping is more errors than 0xbe ripping.)
   - CodeLock [intentional C2 error, invalid sync]  
      => Compared with CloneCD or CD Manipulator, plextor detects double errors.
 
@@ -195,6 +193,27 @@
 
 ### Dumping Guide for LibCrypt
  DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)] /nl
+
+### Dumping Guide for LaserLock and Proring
+ e.g. http://redump.org/disc/30992/
+ 1. Dump the disc except the protected file using plextor drive.
+ DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)] /sf  
+
+    * App detects the protection like this. -> Detected [LASERLOK.IN], from 337 to 10336
+
+ 2. When dumping finished, eject the disc from plextor drive and insert it in optiarc drive. 
+ 3. Dump the protected file like this.  
+ DiscImageCreator.exe data [DriveLetter] foo.bin [DriveSpeed(0-72)] 337 10338 /sf /sk 76
+
+    * CD has a offset, so please specify more +1 or +2 than endlba. (e.g. 10336 -> 10338)
+ 
+ 4. Merge plextor image and optiarc image  
+ DiscImageCreator.exe merge [plextor image file] [optiarc image file]
+
+### Dumping Guide for unnamed protected disc
+ 1. Edit EdcEccErrorProtect.txt or ReadErrorProtect.txt
+ 2. Run below  
+ DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)] /sf
 
 ### Dumping Guide for other protected disc
  DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)] /sf
@@ -305,7 +324,7 @@ Compared with Friidump and Rawdump, dumping speed is very slow.
                 For no PLEXTOR or drive that can't scramble Dumping
         data <DriveLetter> <Filename> <DriveSpeed(0-72)> <StartLBA> <EndLBA+1>
              [/q] [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4)]
-             [/sf (val)] [/ss] [/r] [/np] [/nq] [/nr] [/ns] [/s (val)]
+             [/sf (val)] [/sk (val1) (val2)] [/ss] [/r] [/np] [/nq] [/nr] [/ns] [/s (val)]
                 Dump a CD from start to end (using 'all' flag)
                 For no PLEXTOR or drive that can't scramble dumping
         audio <DriveLetter> <Filename> <DriveSpeed(0-72)> <StartLBA> <EndLBA+1>
@@ -352,6 +371,8 @@ Compared with Friidump and Rawdump, dumping speed is very slow.
                 Parse CloneCD sub file and output to readable format
         mds <Mdsfile>
                 Parse Alchohol 120/52 mds file and output to readable format
+        merge <plextor image file> <optiarc image file>
+                merge the two files (for physical error protection)
     Option (generic)
         /f      Use 'Force Unit Access' flag to delete the drive cache
                         val     delete per specified value (default: 1)
@@ -387,6 +408,9 @@ Compared with Friidump and Rawdump, dumping speed is very slow.
                         For CodeLock, LaserLock, RingProtect, RingPROTECH
                             SafeDisc, SmartE, CD.IDX, ProtectCD-VOB, CDS300
                         val     timeout value (default: 60)
+        /sk     Skip sector for physical protect (e.g. proring, LaserLock etc.)
+                        val1    sector num
+                        val2    sector num (optional)
         /ss     Scan sector to detect protect. If reading error exists,
                 continue reading and ignore c2 error on specific sector
                         For ProtectCD-VOB
@@ -487,7 +511,7 @@ See LICENSE
   
   rijndael-alg-fst.cpp/h: Vincent Rijmen <vincent.rijmen@esat.kuleuven.ac.be>  
                           Antoon Bosselaers <antoon.bosselaers@esat.kuleuven.ac.be>  
-                          Paulo Barreto <paulo.barreto@terra.com.br>
+                          Paulo Barreto <paulo.barreto@terra.com.br>  
                           This code is hereby placed in the public domain.
 
   crc16: http://oku.edu.mie-u.ac.jp/~okumura/algo/  src\crc16t.c in algo.lzh  

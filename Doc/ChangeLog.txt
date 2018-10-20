@@ -519,3 +519,12 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - fixed: disc speed changing doesn't work for linux.
 - fixed: increased memory allocation for double pointer (subchannel, cd-text)
 - deleted: some warning when used Wextra
+
+*2018-10-20
+- added: support unnamed protection (EdcEccErrorProtect.txt and ReadErrorProtect.txt)
+- added: support LaserLock and Proring (needs optiarc drive)
+- fixed: cue file (CATALOG field of linux build, pregap of track 1 of GD)
+- fixed: GD dumping for linux when plextor is used
+- fixed: /ms option (subchannel)
+- fixed: misdetect MCN of last sector of track to first sector of next track
+- deleted: some warning for linux

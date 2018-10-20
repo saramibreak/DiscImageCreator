@@ -360,7 +360,7 @@ BOOL ReadDVDRaw(
 		DWORD dwBaseAddr = 0x80000000;
 		BYTE cdblen = CDB10GENERIC_LENGTH;
 		// for dumping from memory
-		BYTE lpCmd[CDB12GENERIC_LENGTH] = { 0 };
+		BYTE lpCmd[CDB12GENERIC_LENGTH] = {};
 		INT nDriveSampleOffset = 0;
 		if (!GetDriveOffsetAuto(pDevice->szProductId, &nDriveSampleOffset)) {
 			GetDriveOffsetManually(&nDriveSampleOffset);
@@ -482,7 +482,7 @@ BOOL ReadDVDRaw(
 		if (pExtArg->byResume) {
 			INT64 size = (INT64)GetFileSize64(0, fp);
 			_fseeki64(fp, size - DVD_RAW_READ, SEEK_SET);
-			if (fread(lpBuf, sizeof(BYTE), DVD_RAW_READ, fp) != DVD_RAW_READ) {
+			if (fread(lpBuf, sizeof(BYTE), DVD_RAW_READ, fp) < DVD_RAW_READ) {
 				OutputErrorString(_T("Failed to read [F:%s][L:%d]\n"), _T(__FUNCTION__), __LINE__);
 				return FALSE;
 			}
@@ -699,7 +699,7 @@ BOOL ReadDVDRaw(
 		pDisc->SCSI.nAllLength == WII_SL_SIZE ||
 		pDisc->SCSI.nAllLength == WII_DL_SIZE)
 		&& bRet && IsSupported0xE7(pDevice)) {
-		_TCHAR str[_MAX_PATH * 3] = { 0 };
+		_TCHAR str[_MAX_PATH * 3] = {};
 		if (GetUnscCmd(str, pszFullPath)) {
 			bRet = _tsystem(str);
 			// unscrambler error code
@@ -724,10 +724,10 @@ BOOL ReadDVDForCMI(
 	CONST WORD wSize =
 		sizeof(DVD_DESCRIPTOR_HEADER) + sizeof(DVD_COPYRIGHT_MANAGEMENT_DESCRIPTOR);
 #ifdef _WIN32
-	_declspec(align(4)) BYTE pBuf[wSize] = { 0 };
+	_declspec(align(4)) BYTE pBuf[wSize] = {};
 	INT direction = SCSI_IOCTL_DATA_IN;
 #else
-	__attribute__((aligned(4))) BYTE pBuf[wSize] = { 0 };
+	__attribute__((aligned(4))) BYTE pBuf[wSize] = {};
 	INT direction = SG_DXFER_FROM_DEV;
 #endif
 
@@ -767,7 +767,7 @@ BOOL ExecReadingKey(
 	}
 	BOOL bRet = TRUE;
 	try {
-		_TCHAR str[_MAX_PATH + 10] = { 0 };
+		_TCHAR str[_MAX_PATH + 10] = {};
 		INT ret = 0;
 		if (GetCssCmd(pDevice, str, pszPath)) {
 			if ((ret = _tsystem(str)) == 1) {
@@ -797,10 +797,10 @@ BOOL ReadDiscStructure(
 	CONST WORD wMaxDVDStructureSize =
 		sizeof(DVD_DESCRIPTOR_HEADER) + sizeof(DVD_STRUCTURE_LIST_ENTRY) * 0xff;
 #ifdef _WIN32
-	_declspec(align(4)) BYTE pBuf[wMaxDVDStructureSize] = { 0 };
+	_declspec(align(4)) BYTE pBuf[wMaxDVDStructureSize] = {};
 	INT direction = SCSI_IOCTL_DATA_IN;
 #else
-	__attribute__((aligned(4))) BYTE pBuf[wMaxDVDStructureSize] = { 0 };
+	__attribute__((aligned(4))) BYTE pBuf[wMaxDVDStructureSize] = {};
 	INT direction = SG_DXFER_TO_FROM_DEV;
 #endif
 	CDB::_READ_DVD_STRUCTURE cdb = {};
@@ -823,7 +823,7 @@ BOOL ReadDiscStructure(
 	WORD wDataSize = (WORD)(pDescHeader->Length - sizeof(pDescHeader->Length));
 	WORD wEntrySize = (WORD)(wDataSize / sizeof(DVD_STRUCTURE_LIST_ENTRY));
 
-	_TCHAR szPath[_MAX_PATH] = { 0 };
+	_TCHAR szPath[_MAX_PATH] = {};
 	_tcsncpy(szPath, pszFullPath, _MAX_PATH);
 	if (!PathRemoveFileSpec(szPath)) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -1055,7 +1055,7 @@ BOOL ReadCapacity(
 	CDB::_CDB10 cdb = {};
 	cdb.OperationCode = SCSIOP_READ_CAPACITY;
 
-	BYTE buf[8] = { 0 };
+	BYTE buf[8] = {};
 #ifdef _WIN32
 	INT direction = SCSI_IOCTL_DATA_IN;
 #else
@@ -1082,7 +1082,7 @@ BOOL ExtractSecuritySector(
 	PDISC pDisc,
 	LPCTSTR pszFullPath
 ) {
-	_TCHAR szPath[_MAX_PATH] = { 0 };
+	_TCHAR szPath[_MAX_PATH] = {};
 	_tcsncpy(szPath, pszFullPath, _MAX_PATH);
 	if (!PathRemoveFileSpec(szPath)) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -1099,7 +1099,7 @@ BOOL ExtractSecuritySector(
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
-	BYTE lpCmd[CDB12GENERIC_LENGTH] = { 0 };
+	BYTE lpCmd[CDB12GENERIC_LENGTH] = {};
 	lpCmd[0] = 0xad;
 	lpCmd[2] = 0xff;
 	lpCmd[3] = 0x02;
@@ -1108,7 +1108,7 @@ BOOL ExtractSecuritySector(
 	lpCmd[6] = 0xfe;
 	lpCmd[8] = 0x08;
 	lpCmd[11] = 0xc0;
-	BYTE cmd[5] = { 0 };
+	BYTE cmd[5] = {};
 	if (pDisc->SCSI.nAllLength == 3697696 || pDisc->SCSI.nAllLength == 4246304) {
 		// http://beta.ivc.no/wiki/index.php/Xbox_360_Hacks#Save_security-sector
 		// https://team-xecuter.com/forums/threads/42585-Xtreme-firmware-2-0-for-TS-H943-Xbox-360
@@ -1117,7 +1117,7 @@ BOOL ExtractSecuritySector(
 		cmd[2] = 0x05;
 		cmd[3] = 0x07;
 	}
-	BYTE buf[DISC_RAW_READ_SIZE] = { 0 };
+	BYTE buf[DISC_RAW_READ_SIZE] = {};
 #ifdef _WIN32
 	INT direction = SCSI_IOCTL_DATA_IN;
 #else
@@ -1243,17 +1243,17 @@ BOOL GetFeatureListForXBox(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice
 ) {
-	BYTE lpCmd[CDB6GENERIC_LENGTH] = { 0 };
+	BYTE lpCmd[CDB6GENERIC_LENGTH] = {};
 	lpCmd[0] = 0xff;
 	lpCmd[1] = 0x08;
 	lpCmd[2] = 0x01;
 	lpCmd[3] = 0x10;
 
 #ifdef _WIN32
-	_declspec(align(4)) BYTE buf[26] = { 0 };
+	_declspec(align(4)) BYTE buf[26] = {};
 	INT direction = SCSI_IOCTL_DATA_IN;
 #else
-	__attribute__((aligned(4))) BYTE buf[26] = { 0 };
+	__attribute__((aligned(4))) BYTE buf[26] = {};
 	INT direction = SG_DXFER_FROM_DEV;
 #endif
 	BYTE scsiStatus = 0;
@@ -1315,7 +1315,7 @@ BOOL SetLockState(
 	PDEVICE pDevice,
 	BYTE byState
 ) {
-	BYTE lpCmd[CDB6GENERIC_LENGTH] = { 0 };
+	BYTE lpCmd[CDB6GENERIC_LENGTH] = {};
 	lpCmd[0] = 0xff;
 	lpCmd[1] = 0x08;
 	lpCmd[2] = 0x01;
@@ -1346,7 +1346,7 @@ BOOL SetErrorSkipState(
 	PDEVICE pDevice,
 	BYTE byState
 ) {
-	BYTE lpCmd[CDB6GENERIC_LENGTH] = { 0 };
+	BYTE lpCmd[CDB6GENERIC_LENGTH] = {};
 	lpCmd[0] = 0xff;
 	lpCmd[1] = 0x08;
 	lpCmd[2] = 0x01;

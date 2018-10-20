@@ -35,7 +35,8 @@ typedef enum _EXEC_TYPE {
 	reset,
 	drivespeed,
 	sub,
-	mds
+	mds,
+	merge
 } EXEC_TYPE, *PEXEC_TYPE;
 
 typedef enum _LOG_TYPE {
@@ -68,9 +69,10 @@ typedef enum _TRACK_TYPE {
 	pregapIn1stTrack
 } TRACK_TYPE, *PTRACK_TYPE;
 
+// Protection list
+// https://www.cdmediaworld.com/hardware/cdrom/cd_protections.shtml
 typedef enum _PROTECT_TYPE_CD {
 	no,
-	cdidx,
 	cds300,
 	codelock,
 	datel,
@@ -85,7 +87,8 @@ typedef enum _PROTECT_TYPE_CD {
 	securomV3, // a.k.a SecuROM NEW ((8 shifted RMSF/AMSF + 1 error) * 11 times = 99 sector error) 
 	securomV4, // a.k.a SecuROM NEW (LBA -1 + 10 random error = 11 sector error)
 	smartE,
-	bluebyte,
+	physicalErr,
+	edcEccErr,
 	microids
 } PROTECT_TYPE_CD, *PPROTECT_TYPE_CD;
 
@@ -129,6 +132,8 @@ typedef enum _PATH_TYPE {
 //     W = Wide
 typedef enum _PLXTR_DRIVE_TYPE {
 	No,
+	NotLatest,
+	Other,
 	PX760A,
 	PX755A,
 	PX716AL,

@@ -36,7 +36,7 @@ BOOL ReadWriteDat(
 	_TCHAR* szFname,
 	BOOL bDesync
 ) {
-	WCHAR wszDefaultDat[_MAX_PATH] = { 0 };
+	WCHAR wszDefaultDat[_MAX_PATH] = {};
 	if (!GetModuleFileNameW(NULL, wszDefaultDat, sizeof(wszDefaultDat) / sizeof(wszDefaultDat[0]))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
@@ -74,8 +74,8 @@ BOOL ReadWriteDat(
 		return FALSE;
 	}
 
-	WCHAR wszPathForDat[_MAX_PATH] = { 0 };
-	_TCHAR szPath[_MAX_PATH] = { 0 };
+	WCHAR wszPathForDat[_MAX_PATH] = {};
+	_TCHAR szPath[_MAX_PATH] = {};
 	if (bDesync) {
 		_sntprintf(szPath, _MAX_PATH, _T("%s\\%s\\%s (Subs indexes).dat"), szDrive, szDir, szFname);
 	}
@@ -131,7 +131,7 @@ BOOL ReadWriteDat(
 		return FALSE;
 	}
 
-	WCHAR wszDir[_MAX_DIR] = { 0 };
+	WCHAR wszDir[_MAX_DIR] = {};
 #ifndef UNICODE
 	if (!MultiByteToWideChar(CP_ACP, 0, szDir, _MAX_DIR, wszDir, sizeof(wszDir) / sizeof(wszDir[0]))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -370,8 +370,8 @@ BOOL OutputHash(
 	UCHAR uiLastTrack,
 	BOOL bDesync
 ) {
-	_TCHAR pszFnameAndExt[_MAX_PATH] = { 0 };
-	_TCHAR pszOutPath[_MAX_PATH] = { 0 };
+	_TCHAR pszFnameAndExt[_MAX_PATH] = {};
+	_TCHAR pszOutPath[_MAX_PATH] = {};
 	FILE* fp = NULL;
 	if (bDesync) {
 		fp = CreateOrOpenFile(pszFullPath, _T(" (Subs indexes)"), pszOutPath
@@ -398,11 +398,11 @@ BOOL OutputHash(
 
 	UINT64 ui64SectorSizeAll = ui64FileSize / (UINT64)dwSectorSizeOne;
 	if (ui64FileSize >= dwSectorSizeOne) {
-		MD5_CTX context = { 0 };
-		SHA1Context sha = { 0 };
+		MD5_CTX context = {};
+		SHA1Context sha = {};
 		CalcInit(&context, &sha);
 
-		BYTE data[CD_RAW_SECTOR_SIZE] = { 0 };
+		BYTE data[CD_RAW_SECTOR_SIZE] = {};
 		DWORD crc32 = 0;
 		int nRet = TRUE;
 		// TODO: This code can more speed up! if reduce calling fread()
@@ -421,8 +421,8 @@ BOOL OutputHash(
 			return nRet;
 		}
 
-		BYTE digest[16] = { 0 };
-		BYTE Message_Digest[20] = { 0 };
+		BYTE digest[16] = {};
+		BYTE Message_Digest[20] = {};
 		if (CalcEnd(&context, &sha, digest, Message_Digest)) {
 			if (!_tcsncmp(szExt, _T(".scm"), 4) ||
 				!_tcsncmp(szExt, _T(".img"), 4) ||
@@ -442,7 +442,7 @@ BOOL OutputHash(
 					OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
 					return FALSE;
 				}
-				WCHAR wszFnameAndExt[_MAX_PATH] = { 0 };
+				WCHAR wszFnameAndExt[_MAX_PATH] = {};
 #ifndef UNICODE
 				if (!MultiByteToWideChar(CP_ACP, 0
 					, pszFnameAndExt, sizeof(pszFnameAndExt) / sizeof(pszFnameAndExt[0])
@@ -460,7 +460,7 @@ BOOL OutputHash(
 					OutputErrorString(_T("Dat error: %08.8lx\n"), hr);
 					return FALSE;
 				}
-				WCHAR buf[128] = { 0 };
+				WCHAR buf[128] = {};
 				_snwprintf(buf, sizeof(buf) / sizeof(buf[0]), L"%llu", ui64FileSize);
 				buf[127] = 0;
 				if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"size", NULL, buf))) {

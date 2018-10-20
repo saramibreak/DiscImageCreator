@@ -287,21 +287,21 @@ BOOL InitLogFile(
 	PEXT_ARG pExtArg,
 	_TCHAR* szFullPath
 ) {
-	CHAR path[_MAX_PATH] = { 0 };
+	CHAR path[_MAX_PATH] = {};
 #ifdef UNICODE
 	WideCharToMultiByte(CP_ACP, 0, szFullPath, _MAX_PATH, path, sizeof(path), NULL, NULL);
 #else
 	strncpy(path, szFullPath, sizeof(path));
 #endif
 	CONST INT size = 32;
-	CHAR szDiscLogtxt[size] = { 0 };
-	CHAR szDriveLogtxt[size] = { 0 };
-	CHAR szVolDescLogtxt[size] = { 0 };
-	CHAR szMainInfoLogtxt[size] = { 0 };
-	CHAR szMainErrorLogtxt[size] = { 0 };
-	CHAR szSubInfoLogtxt[size] = { 0 };
-	CHAR szSubErrorLogtxt[size] = { 0 };
-	CHAR szC2ErrorLogtxt[size] = { 0 };
+	CHAR szDiscLogtxt[size] = {};
+	CHAR szDriveLogtxt[size] = {};
+	CHAR szVolDescLogtxt[size] = {};
+	CHAR szMainInfoLogtxt[size] = {};
+	CHAR szMainErrorLogtxt[size] = {};
+	CHAR szSubInfoLogtxt[size] = {};
+	CHAR szSubErrorLogtxt[size] = {};
+	CHAR szC2ErrorLogtxt[size] = {};
 
 	strncpy(szDiscLogtxt, "_disc", size);
 	strncpy(szDriveLogtxt, "_drive", size);

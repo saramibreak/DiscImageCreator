@@ -506,3 +506,8 @@ BOOL OutputWindowsVersion(
 	VOID
 );
 #endif
+
+BOOL OutputMergedFile(
+	LPCTSTR pszFullPath,
+	LPCTSTR pszFullPath2
+);

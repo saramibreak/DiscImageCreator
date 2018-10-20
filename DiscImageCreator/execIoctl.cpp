@@ -274,10 +274,10 @@ BOOL SetStreaming(
 	_declspec(align(4)) CDROM_SET_STREAMING setstreaming;
 #endif
 #if 0
-	CDB::_SET_STREAMING cdb = { 0 };
+	CDB::_SET_STREAMING cdb = {};
 	cdb.OperationCode = SCSIOP_SET_STREAMING;
-	_declspec(align(4)) PERFORMANCE_DESCRIPTOR pd = { 0 };
-	//	CHAR pd[28] = { 0 };
+	_declspec(align(4)) PERFORMANCE_DESCRIPTOR pd = {};
+	//	CHAR pd[28] = {};
 	size_t size = sizeof(PERFORMANCE_DESCRIPTOR);
 	REVERSE_BYTES_SHORT(&cdb.ParameterListLength, &size);
 #endif

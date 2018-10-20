@@ -57,7 +57,7 @@ VOID OutputFsDirectoryRecord(
 	DWORD dwDataLen,
 	LPSTR fname
 ) {
-	CHAR str[128] { 0 };
+	CHAR str[128] {};
 	INT nFileFlag = lpBuf[25];
 	if (nFileFlag & 0x01) {
 		strncat(str, "Invisible, ", 11);
@@ -124,7 +124,7 @@ VOID OutputFsDirectoryRecord(
 		pDisc->BD.nLBAForParamSfo = (INT)dwExtentPos;
 	}
 
-	CHAR fnameForProtect[MAX_FNAME_FOR_VOLUME] = { 0 };
+	CHAR fnameForProtect[MAX_FNAME_FOR_VOLUME] = {};
 	if (lpBuf[32] != 1 && lpBuf[33] == 0) {
 		// for Joliet
 		for (INT n = 0; n < lpBuf[32] / 2; n++) {
@@ -150,13 +150,7 @@ VOID OutputFsDirectoryRecord(
 				}
 			}
 		}
-		if (!strncmp(fnameForProtect, "CD.IDX", 6)) {
-			pDisc->PROTECT.byExist = cdidx;
-			strncpy(pDisc->PROTECT.name, fnameForProtect, 6);
-			pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)dwExtentPos;
-			pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(dwDataLen / DISC_RAW_READ_SIZE - 1);
-		}
-		else if (!strncmp(fnameForProtect, "__CDS.exe", 9)) {
+		if (!strncmp(fnameForProtect, "__CDS.exe", 9)) {
 			pDisc->PROTECT.byExist = cds300;
 			strncpy(pDisc->PROTECT.name, fnameForProtect, 9);
 		}
@@ -206,9 +200,15 @@ VOID OutputFsDirectoryRecord(
 			pDisc->PROTECT.byExist = securomV1;
 			strncpy(pDisc->PROTECT.name, fnameForProtect, 12);
 		}
-		else if (!strncmp(fnameForProtect, "SYSTEM.LSK", 10)) { // Siedler III, Die - Mission CD (Germany)
-			pDisc->PROTECT.byExist = bluebyte;
-			strncpy(pDisc->PROTECT.name, fnameForProtect, 10);
+		else if (!strncmp(fnameForProtect, pExtArg->FILE.readError, strlen(pExtArg->FILE.readError) - 1)) {
+			pDisc->PROTECT.byExist = physicalErr;
+			strncpy(pDisc->PROTECT.name, fnameForProtect, strlen(pExtArg->FILE.readError) - 1);
+			pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)dwExtentPos;
+			pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(dwDataLen / DISC_RAW_READ_SIZE - 1);
+		}
+		else if (!strncmp(fnameForProtect, pExtArg->FILE.edceccError, strlen(pExtArg->FILE.edceccError) - 1)) {
+			pDisc->PROTECT.byExist = edcEccErr;
+			strncpy(pDisc->PROTECT.name, fnameForProtect, strlen(pExtArg->FILE.edceccError) - 1);
 			pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)dwExtentPos;
 			pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(dwDataLen / DISC_RAW_READ_SIZE - 1);
 		}
@@ -300,7 +300,7 @@ VOID OutputFsVolumeDescriptorSecond(
 
 	DWORD dwExtentPos = GetSizeOrDwordForVolDesc(lpBuf + 158, DWORD(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
 	DWORD dwDataLen = GetSizeOrDwordForVolDesc(lpBuf + 166, DWORD(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
-	CHAR fname[64] = { 0 };
+	CHAR fname[64] = {};
 	OutputFsDirectoryRecord(pExtArg, pDisc, lpBuf + 156, dwExtentPos, dwDataLen, fname);
 	if (bTCHAR) {
 		OutputVolDescLogA(
@@ -356,9 +356,9 @@ VOID OutputFsVolumeDescriptorForISO9660(
 	PDISC pDisc,
 	LPBYTE lpBuf
 ) {
-	CHAR str32[3][32] = { { 0 } };
-	CHAR str128[4][128] = { { 0 } };
-	CHAR str37[3][37] = { { 0 } };
+	CHAR str32[3][32] = { {} };
+	CHAR str128[4][128] = { {} };
+	CHAR str37[3][37] = { {} };
 	strncpy(str32[0], (LPCH)&lpBuf[8], sizeof(str32[0]));
 	strncpy(str32[1], (LPCH)&lpBuf[40], sizeof(str32[1]));
 	strncpy(str128[0], (LPCH)&lpBuf[190], sizeof(str128[0]));
@@ -383,12 +383,12 @@ VOID OutputFsVolumeDescriptorForJoliet(
 	PDISC pDisc,
 	LPBYTE lpBuf
 ) {
-	CHAR str32[3][32] = { 0 };
-	CHAR str128[4][128] = { 0 };
-	CHAR str37[3][37] = { 0 };
-	WCHAR tmp16[3][16] = { 0 };
-	WCHAR tmp64[4][64] = { 0 };
-	WCHAR tmp18[3][18] = { 0 };
+	CHAR str32[3][32] = {};
+	CHAR str128[4][128] = {};
+	CHAR str37[3][37] = {};
+	WCHAR tmp16[3][16] = {};
+	WCHAR tmp64[4][64] = {};
+	WCHAR tmp18[3][18] = {};
 	BOOL bTCHAR = FALSE;
 	if (lpBuf[8] == 0 && lpBuf[9] >= 0x20) {
 		LittleToBig(tmp16[0], (LPWCH)&lpBuf[8], 16);
@@ -508,7 +508,7 @@ VOID OutputFsVolumeDescriptorForJoliet(
 VOID OutputFsVolumePartitionDescriptor(
 	LPBYTE lpBuf
 ) {
-	CHAR str[2][32] = { { 0 } };
+	CHAR str[2][32] = { {} };
 	strncpy(str[0], (LPCH)&lpBuf[8], sizeof(str[0]));
 	strncpy(str[1], (LPCH)&lpBuf[40], sizeof(str[1]));
 	OutputVolDescLogA(
@@ -634,7 +634,7 @@ VOID OutputFsMasterDirectoryBlocks(
 	LPBYTE lpBuf,
 	INT nLBA
 ) {
-	CHAR str[27] = { 0 };
+	CHAR str[27] = {};
 	strncpy(str, (LPCH)&lpBuf[36], sizeof(str));
 	OutputVolDescWithLBALogA(Master Directory Blocks,
 		"\t                       volume signature: %04x\n"
@@ -790,7 +790,7 @@ VOID OutputFs3doDirectoryRecord(
 
 	LONG cur = THREEDO_DIR_HEADER_SIZE;
 	LONG lastCopy = 0;
-	CHAR fname[32] = { 0 };
+	CHAR fname[32] = {};
 	while (cur < lDirSize) {
 		LPBYTE dirEnt = lpBuf + cur;
 		strncpy(fname, (LPCH)&dirEnt[32], sizeof(fname));
@@ -834,7 +834,7 @@ VOID OutputFsPceStuff(
 ) {
 	OutputVolDescLogA(
 		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(PCE Warning msg & all stuff), nLBA, nLBA);
-	CHAR str[39] = { 0 };
+	CHAR str[39] = {};
 	size_t len = 0;
 	for (size_t idx = 0; idx < 805; idx += len) {
 		LPCH ptr = (LPCH)&lpBuf[idx];
@@ -854,13 +854,13 @@ VOID OutputFsPceBootSector(
 	LPBYTE lpBuf,
 	INT nLBA
 ) {
-	CHAR str[24] = { 0 };
+	CHAR str[24] = {};
 	strncpy(str, (LPCH)&lpBuf[32], sizeof(str));
-	CHAR str2[50] = { 0 };
+	CHAR str2[50] = {};
 	strncpy(str2, (LPCH)&lpBuf[56], sizeof(str2));
-	CHAR str3[17] = { 0 };
+	CHAR str3[17] = {};
 	strncpy(str3, (LPCH)&lpBuf[106], sizeof(str3) - 1);
-	CHAR str4[7] = { 0 };
+	CHAR str4[7] = {};
 	strncpy(str4, (LPCH)&lpBuf[122], sizeof(str4) - 1);
 	OutputVolDescWithLBALogA(PCE Boot Sector, 
 		"\t       load start record no.of CD: %02x:%02x:%02x\n"
@@ -1286,7 +1286,7 @@ VOID OutputCDSubToLog(
 	FILE* fpParse
 ) {
 	CONST INT BufSize = 256;
-	_TCHAR szSub0[BufSize] = { 0 };
+	_TCHAR szSub0[BufSize] = {};
 	_sntprintf(szSub0, BufSize,
 		_T(STR_LBA "P[%02x], Q[%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x]{")
 		, nLBA, nLBA, pDiscPerSector->subcode.current[0], pDiscPerSector->subcode.current[12]
@@ -1297,7 +1297,7 @@ VOID OutputCDSubToLog(
 		, pDiscPerSector->subcode.current[21], pDiscPerSector->subcode.current[22]
 		, pDiscPerSector->subcode.current[23]);
 
-	_TCHAR szSub[BufSize] = { 0 };
+	_TCHAR szSub[BufSize] = {};
 	// Ctl
 	switch ((pDiscPerSector->subcode.current[12] >> 4) & 0x0f) {
 	case 0:
@@ -1342,12 +1342,12 @@ VOID OutputCDSubToLog(
 		break;
 	default:
 		_sntprintf(szSub, BufSize,
-			_T("Unknown,                               "));
+			_T("Unknown,                              "));
 		break;
 	}
 
 	// ADR
-	_TCHAR szSub2[BufSize] = { 0 };
+	_TCHAR szSub2[BufSize] = {};
 	switch (pDiscPerSector->subcode.current[12] & 0x0f) {
 	case ADR_ENCODES_CURRENT_POSITION:
 		if (pDiscPerSector->subcode.current[13] == 0) {
@@ -1402,7 +1402,7 @@ VOID OutputCDSubToLog(
 		}
 		break;
 	case ADR_ENCODES_MEDIA_CATALOG: {
-		_TCHAR szCatalog[META_CATALOG_SIZE] = { 0 };
+		_TCHAR szCatalog[META_CATALOG_SIZE] = {};
 #ifdef UNICODE
 		MultiByteToWideChar(CP_ACP, 0,
 			pDisc->SUB.szCatalog, sizeof(pDisc->SUB.szCatalog), szCatalog, sizeof(szCatalog));
@@ -1418,7 +1418,7 @@ VOID OutputCDSubToLog(
 			OutputSubErrorWithLBALogA(" Invalid Adr\n", nLBA, pDiscPerSector->byTrackNum);
 		}
 		else {
-			_TCHAR szISRC[META_ISRC_SIZE] = { 0 };
+			_TCHAR szISRC[META_ISRC_SIZE] = {};
 #ifdef UNICODE
 			MultiByteToWideChar(CP_ACP, 0,
 				pDisc->SUB.pszISRC[byTrackNum - 1], META_ISRC_SIZE, szISRC, sizeof(szISRC));
@@ -1518,8 +1518,8 @@ VOID OutputCDSubToLog(
 	}
 
 	SUB_R_TO_W scRW[4] = {};
-	BYTE tmpCode[24] = { 0 };
-	_TCHAR szSub3[128] = { 0 };
+	BYTE tmpCode[24] = {};
+	_TCHAR szSub3[128] = {};
 	_tcsncat(szSub3, _T("}, RtoW["), 8);
 	for (INT i = 0; i < 4; i++) {
 		for (INT j = 0; j < 24; j++) {

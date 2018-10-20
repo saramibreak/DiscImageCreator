@@ -1563,7 +1563,7 @@ VOID OutputXboxSecuritySector(
 		OutputDiscLogA("%02x", buf[k]);
 	}
 
-	char date[20] = { 0 };
+	char date[20] = {};
 	printwin32filetime(MAKEDWORD64(MAKELONG(MAKEWORD(buf[1055], buf[1056]), MAKEWORD(buf[1057], buf[1058]))
 		, MAKELONG(MAKEWORD(buf[1059], buf[1060]), MAKEWORD(buf[1061], buf[1062]))), date);
 	OutputDiscLogA(
@@ -1712,7 +1712,7 @@ VOID OutputXbox360SecuritySector(
 	}
 	OutputDiscLogA("\n");
 
-	BYTE dcrt[252] = { 0 };
+	BYTE dcrt[252] = {};
 	decryptChallengeResponse(dcrt, buf);
 	for (INT i = 0; i < 21; i++) {
 		OutputDiscLogA(
@@ -1731,7 +1731,7 @@ VOID OutputXbox360SecuritySector(
 		OutputDiscLogA("%02x", buf[k]);
 	}
 
-	CHAR date[21] = { 0 };
+	CHAR date[21] = {};
 	printwin32filetime(MAKEDWORD64(MAKELONG(MAKEWORD(buf[1183], buf[1184]), MAKEWORD(buf[1185], buf[1186]))
 		, MAKELONG(MAKEWORD(buf[1187], buf[1188]), MAKEWORD(buf[1189], buf[1190]))), date);
 	OutputDiscLogA(

@@ -213,7 +213,7 @@ BOOL FixSubQAdrMCN(
 		return FALSE;
 	}
 	else if (pDiscPerSector->subQ.current.byAdr == ADR_ENCODES_MEDIA_CATALOG) {
-		CHAR szCatalog[META_CATALOG_SIZE] = { 0 };
+		CHAR szCatalog[META_CATALOG_SIZE] = {};
 		BOOL bMCN = IsValidSubQAdrMCN(pDiscPerSector->subcode.current);
 		SetMCNToString(pDisc, pDiscPerSector->subcode.current, szCatalog, FALSE);
 
@@ -252,7 +252,7 @@ BOOL FixSubQAdrMCN(
 				(BYTE)(pDiscPerSector->subQ.current.byCtl << 4 | pDiscPerSector->subQ.current.byAdr);
 		}
 		if (pDiscPerSector->subQ.current.byAdr == ADR_ENCODES_MEDIA_CATALOG) {
-			CHAR szCatalog[META_CATALOG_SIZE] = { 0 };
+			CHAR szCatalog[META_CATALOG_SIZE] = {};
 			BOOL bMCN = IsValidSubQAdrMCN(pDiscPerSector->subcode.current);
 			SetMCNToString(pDisc, pDiscPerSector->subcode.current, szCatalog, FALSE);
 
@@ -268,7 +268,7 @@ BOOL FixSubQAdrMCN(
 	}
 	else {
 		if (pDiscPerSector->subQ.current.byAdr == ADR_ENCODES_MEDIA_CATALOG) {
-			CHAR szCatalog[META_CATALOG_SIZE] = { 0 };
+			CHAR szCatalog[META_CATALOG_SIZE] = {};
 			BOOL bMCN = IsValidSubQAdrMCN(pDiscPerSector->subcode.current);
 			SetMCNToString(pDisc, pDiscPerSector->subcode.current, szCatalog, FALSE);
 
@@ -313,7 +313,7 @@ BOOL FixSubQAdrISRC(
 		return FALSE;
 	}
 	else if (pDiscPerSector->subQ.current.byAdr == ADR_ENCODES_ISRC) {
-		CHAR szISRC[META_ISRC_SIZE] = { 0 };
+		CHAR szISRC[META_ISRC_SIZE] = {};
 		BOOL bISRC = IsValidSubQAdrISRC(pDiscPerSector->subcode.current);
 		SetISRCToString(pDisc, pDiscPerSector, szISRC, FALSE);
 
@@ -350,7 +350,7 @@ BOOL FixSubQAdrISRC(
 				(BYTE)(pDiscPerSector->subQ.current.byCtl << 4 | pDiscPerSector->subQ.current.byAdr);
 		}
 		if (pDiscPerSector->subQ.current.byAdr == ADR_ENCODES_ISRC) {
-			CHAR szISRC[META_ISRC_SIZE] = { 0 };
+			CHAR szISRC[META_ISRC_SIZE] = {};
 			BOOL bISRC = IsValidSubQAdrISRC(pDiscPerSector->subcode.current);
 			SetISRCToString(pDisc, pDiscPerSector, szISRC, FALSE);
 
@@ -360,7 +360,7 @@ BOOL FixSubQAdrISRC(
 					, nLBA, pDiscPerSector->byTrackNum, szISRC
 					, pDiscPerSector->subcode.current[20] & 0x0f, pDisc->SUB.pszISRC[pDiscPerSector->byTrackNum - 1]);
 
-				CHAR tmpISRC[META_ISRC_SIZE] = { 0 };
+				CHAR tmpISRC[META_ISRC_SIZE] = {};
 				strncpy(tmpISRC, pDisc->SUB.pszISRC[pDiscPerSector->byTrackNum - 1], sizeof(tmpISRC) / sizeof(tmpISRC[0]));
 				pDiscPerSector->subcode.current[13] = (BYTE)(((tmpISRC[0] - 0x30) << 2) | ((tmpISRC[1] - 0x30) >> 4));
 				pDiscPerSector->subcode.current[14] = (BYTE)(((tmpISRC[1] - 0x30) << 4) | ((tmpISRC[2] - 0x30) >> 2));
@@ -379,7 +379,7 @@ BOOL FixSubQAdrISRC(
 	}
 	else {
 		if (pDiscPerSector->subQ.current.byAdr == ADR_ENCODES_ISRC) {
-			CHAR szISRC[META_ISRC_SIZE] = { 0 };
+			CHAR szISRC[META_ISRC_SIZE] = {};
 			BOOL bISRC = IsValidSubQAdrISRC(pDiscPerSector->subcode.current);
 			SetISRCToString(pDisc, pDiscPerSector, szISRC, FALSE);
 
@@ -573,7 +573,7 @@ VOID FixSubQ(
 	// assume that adr is incorrect but MCN or ISRC is correct
 	else {
 		if (pDisc->SUB.byCatalog) {
-			CHAR szCatalog[META_CATALOG_SIZE] = { 0 };
+			CHAR szCatalog[META_CATALOG_SIZE] = {};
 			BOOL bMCN = IsValidSubQAdrMCN(pDiscPerSector->subcode.current);
 			SetMCNToString(pDisc, pDiscPerSector->subcode.current, szCatalog, FALSE);
 
@@ -592,7 +592,7 @@ VOID FixSubQ(
 			}
 		}
 		if (pDisc->SUB.lpISRCList[pDiscPerSector->byTrackNum - 1] == 0) {
-			CHAR szISRC[META_ISRC_SIZE] = { 0 };
+			CHAR szISRC[META_ISRC_SIZE] = {};
 			BOOL bISRC = IsValidSubQAdrISRC(pDiscPerSector->subcode.current);
 			SetISRCToString(pDisc, pDiscPerSector, szISRC, FALSE);
 
@@ -626,7 +626,7 @@ VOID FixSubQ(
 		}
 	}
 
-	BYTE SubQcodeOrg[12] = { 0 };
+	BYTE SubQcodeOrg[12] = {};
 	if (pDiscPerSector->bLibCrypt || pDiscPerSector->bSecuRom) {
 		memcpy(SubQcodeOrg, &pDiscPerSector->subcode.current[12], sizeof(SubQcodeOrg));
 	}
@@ -1141,10 +1141,10 @@ VOID FixSubRtoW(
 	INT nLBA
 ) {
 #if 0
-	BYTE pDiscPerSector->subcode.currentOrg[CD_RAW_READ_SUBCODE_SIZE] = { 0 };
+	BYTE pDiscPerSector->subcode.currentOrg[CD_RAW_READ_SUBCODE_SIZE] = {};
 	memcpy(pDiscPerSector->subcode.currentOrg, pDiscPerSector->data.current + pDevice->TRANSFER.dwBufSubOffset, CD_RAW_READ_SUBCODE_SIZE);
-	SUB_R_TO_W scRW[4] = { 0 };
-	BYTE tmpCode[24] = { 0 };
+	SUB_R_TO_W scRW[4] = {};
+	BYTE tmpCode[24] = {};
 	for (INT k = 0; k < 4; k++) {
 		for (INT j = 0; j < 24; j++) {
 			tmpCode[j] = (BYTE)(*(pDiscPerSector->subcode.currentOrg + (k * 24 + j)) & 0x3f);
@@ -1273,7 +1273,7 @@ VOID FixSubChannel(
 					UpdateTmpSubQDataForMCN(pExtArg, pDisc, pDiscPerSector, nLBA);
 					pDisc->SUB.nPrevMCNSector = nLBA;
 					if (!pDisc->SUB.byCatalog) {
-						CHAR szCatalog[META_CATALOG_SIZE] = { 0 };
+						CHAR szCatalog[META_CATALOG_SIZE] = {};
 						SetMCNToString(pDisc, pDiscPerSector->subcode.current, szCatalog, TRUE);
 						pDisc->SUB.byCatalog = TRUE;
 					}
@@ -1282,7 +1282,7 @@ VOID FixSubChannel(
 					UpdateTmpSubQDataForISRC(&pDiscPerSector->subQ);
 					pDisc->SUB.nPrevISRCSector = nLBA;
 					if (pDisc->SUB.lpISRCList[pDiscPerSector->byTrackNum - 1] == 0) {
-						CHAR szISRC[META_ISRC_SIZE] = { 0 };
+						CHAR szISRC[META_ISRC_SIZE] = {};
 						SetISRCToString(pDisc, pDiscPerSector, szISRC, TRUE);
 					}
 				}

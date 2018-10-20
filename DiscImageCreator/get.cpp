@@ -41,7 +41,7 @@ BOOL GetHandle(
 ) {
 #ifdef _WIN32
 	CONST size_t bufSize = 8;
-	_TCHAR szBuf[bufSize] = { 0 };
+	_TCHAR szBuf[bufSize] = {};
 	_sntprintf(szBuf, bufSize, _T("\\\\.\\%c:"), pDevice->byDriveLetter);
 	szBuf[7] = 0;
 	pDevice->hDevice = CreateFile(szBuf, GENERIC_READ | GENERIC_WRITE,
@@ -59,7 +59,7 @@ BOOL GetHandle(
 BOOL GetDriveOffsetManually(
 	LPINT lpDriveOffset
 ) {
-	_TCHAR aBuf[6] = { 0 };
+	_TCHAR aBuf[6] = {};
 	OutputString(
 		_T("This drive doesn't define in driveOffset.txt\n")
 		_T("Please input drive offset(Samples): "));
@@ -86,7 +86,7 @@ BOOL GetDriveOffsetAuto(
 		return FALSE;
 	}
 
-	CHAR szProduct[DRIVE_PRODUCT_ID_SIZE + 1] = { 0 };
+	CHAR szProduct[DRIVE_PRODUCT_ID_SIZE + 1] = {};
 	for (size_t src = 0, dst = 0; dst < sizeof(szProduct) - 1; dst++) {
 		if (szProductId[dst] == ' ' && (szProductId[dst + 1] == ' ' ||
 			szProductId[dst + 1] == '\0')) {
@@ -95,7 +95,7 @@ BOOL GetDriveOffsetAuto(
 		szProduct[src++] = szProductId[dst];
 	}
 
-	LPCH pTrimId[5] = { 0 };
+	LPCH pTrimId[5] = {};
 	LPCH pId = NULL;
 	pTrimId[0] = strtok(szProduct, " ");
 	// get model string (ex. PX-755A)
@@ -112,8 +112,8 @@ BOOL GetDriveOffsetAuto(
 		}
 	}
 	if (pId) {
-		LPCH pTrimBuf[10] = { 0 };
-		CHAR lpBuf[1024] = { 0 };
+		LPCH pTrimBuf[10] = {};
+		CHAR lpBuf[1024] = {};
 
 		while ((fgets(lpBuf, sizeof(lpBuf), fpDrive))) {
 			pTrimBuf[0] = strtok(lpBuf, " 	"); // space & tab
@@ -142,6 +142,36 @@ BOOL GetDriveOffsetAuto(
 	return bGetOffset;
 }
 
+BOOL GetFilenameToSkipError(
+	LPSTR szFilename
+) {
+	FILE* fp = OpenProgrammabledFile(_T("ReadErrorProtect.txt"), _T("r"));
+	if (!fp) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		return FALSE;
+	}
+	CHAR comment[MAX_FNAME_FOR_VOLUME] = {};
+	fgets(comment, MAX_FNAME_FOR_VOLUME, fp);
+	fgets(szFilename, MAX_FNAME_FOR_VOLUME, fp); // 2nd line is filename
+	
+	return TRUE;
+}
+
+BOOL GetFilenameToFixError(
+	LPSTR szFilename
+) {
+	FILE* fp = OpenProgrammabledFile(_T("EdcEccErrorProtect.txt"), _T("r"));
+	if (!fp) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		return FALSE;
+	}
+	CHAR comment[MAX_FNAME_FOR_VOLUME] = {};
+	fgets(comment, MAX_FNAME_FOR_VOLUME, fp);
+	fgets(szFilename, MAX_FNAME_FOR_VOLUME, fp); // 2nd line is filename
+
+	return TRUE;
+}
+
 DWORD GetFileSize(
 	LONG lOffset,
 	FILE *fp
@@ -168,7 +198,7 @@ UINT64 GetFileSize64(
 	return ui64FileSize;
 }
 
-WORD  GetSizeOrWordForVolDesc(
+WORD GetSizeOrWordForVolDesc(
 	LPBYTE lpBuf
 ) {
 	WORD val = MAKEWORD(lpBuf[0], lpBuf[1]);
@@ -178,7 +208,7 @@ WORD  GetSizeOrWordForVolDesc(
 	return val;
 }
 
-DWORD  GetSizeOrDwordForVolDesc(
+DWORD GetSizeOrDwordForVolDesc(
 	LPBYTE lpBuf,
 	DWORD dwMax
 ) {
@@ -260,8 +290,8 @@ BOOL GetCmd(
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
-	_TCHAR szDrive[_MAX_DRIVE] = { 0 };
-	_TCHAR szDir[_MAX_DIR] = { 0 };
+	_TCHAR szDrive[_MAX_DRIVE] = {};
+	_TCHAR szDir[_MAX_DIR] = {};
 	_tsplitpath(szPath, szDrive, szDir, NULL, NULL);
 	_tmakepath(szPath, szDrive, szDir, szFname, szExt);
 	return TRUE;
@@ -275,7 +305,7 @@ BOOL GetEccEdcCmd(
 	INT nStartLBA,
 	INT nEndLBA
 ) {
-	_TCHAR szPathForEcc[_MAX_PATH] = { 0 };
+	_TCHAR szPathForEcc[_MAX_PATH] = {};
 #ifdef _WIN32
 	BOOL bRet = GetCmd(szPathForEcc, _T("EccEdc"), _T("exe"));
 #else
@@ -315,14 +345,14 @@ BOOL GetUnscCmd(
 	LPTSTR pszStr,
 	LPCTSTR pszPath
 ) {
-	_TCHAR szDrive[_MAX_DRIVE] = { 0 };
-	_TCHAR szDir[_MAX_DIR] = { 0 };
-	_TCHAR szFname[_MAX_FNAME] = { 0 };
-	_TCHAR szPathForIso[_MAX_PATH] = { 0 };
+	_TCHAR szDrive[_MAX_DRIVE] = {};
+	_TCHAR szDir[_MAX_DIR] = {};
+	_TCHAR szFname[_MAX_FNAME] = {};
+	_TCHAR szPathForIso[_MAX_PATH] = {};
 	_tsplitpath(pszPath, szDrive, szDir, szFname, NULL);
 	_tmakepath(szPathForIso, szDrive, szDir, szFname, _T("iso"));
 
-	_TCHAR szPathForUnsc[_MAX_PATH] = { 0 };
+	_TCHAR szPathForUnsc[_MAX_PATH] = {};
 #ifdef _WIN32
 	BOOL bRet = GetCmd(szPathForUnsc, _T("unscrambler"), _T("exe"));
 #else
@@ -351,13 +381,13 @@ BOOL GetCssCmd(
 	LPTSTR pszStr,
 	LPCTSTR pszPath
 ) {
-	_TCHAR szDrive[_MAX_DRIVE] = { 0 };
-	_TCHAR szDir[_MAX_DIR] = { 0 };
-	_TCHAR szFname[_MAX_FNAME] = { 0 };
-	_TCHAR szPathForKey[_MAX_PATH] = { 0 };
+	_TCHAR szDrive[_MAX_DRIVE] = {};
+	_TCHAR szDir[_MAX_DIR] = {};
+	_TCHAR szFname[_MAX_FNAME] = {};
+	_TCHAR szPathForKey[_MAX_PATH] = {};
 	_tsplitpath(pszPath, szDrive, szDir, szFname, NULL);
 
-	_TCHAR keyPath[_MAX_FNAME] = { 0 };
+	_TCHAR keyPath[_MAX_FNAME] = {};
 	_TCHAR keyFile[] = _T("_CSSKey");
 
 	if (_tcslen(szFname) + _tcslen(keyFile) > _MAX_FNAME) {
@@ -368,7 +398,7 @@ BOOL GetCssCmd(
 	_tcsncat(keyPath, keyFile, _tcslen(keyFile));
 	_tmakepath(szPathForKey, szDrive, szDir, keyPath, _T("txt"));
 
-	_TCHAR szPathForCss[_MAX_PATH] = { 0 };
+	_TCHAR szPathForCss[_MAX_PATH] = {};
 #ifdef _WIN32
 	BOOL bRet = GetCmd(szPathForCss, _T("CSS"), _T("exe"));
 #else

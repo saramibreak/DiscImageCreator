@@ -267,7 +267,7 @@ int MoveFileEx(const char* srcFile, const char* dstFile, int flag)
 	unsigned char buf[2352] = { 0 };
 	for (int i = 0; i < size; i += 2352) {
 		size_t readsize = fread(buf, sizeof(unsigned char), sizeof(buf), fpR);
-		if (readsize != sizeof(buf)) {
+		if (readsize < sizeof(buf)) {
 			fclose(fpR);
 			fclose(fpW);
 			return FALSE;

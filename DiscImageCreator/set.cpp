@@ -140,7 +140,7 @@ VOID SetAndOutputToc(
 ) {
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(TOC));
 	CONST INT typeSize = 7;
-	CHAR strType[typeSize] = { 0 };
+	CHAR strType[typeSize] = {};
 	BOOL bFirstData = TRUE;
 	TRACK_TYPE trkType = TRACK_TYPE::audioOnly;
 	// for swap command
@@ -207,7 +207,7 @@ VOID SetAndOutputTocForGD(
 
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(TOC For GD(HD Area)));
 	CONST INT typeSize = 7;
-	CHAR strType[typeSize] = { 0 };
+	CHAR strType[typeSize] = {};
 	BOOL bFirstData = TRUE;
 	TRACK_TYPE trkType = TRACK_TYPE::audioOnly;
 
@@ -523,7 +523,7 @@ VOID SetAndOutputTocCDText(
 			z--;
 		}
 		else {
-			CHAR tmp[META_CDTEXT_SIZE] = { 0 };
+			CHAR tmp[META_CDTEXT_SIZE] = {};
 			strncpy(tmp, pTmpText + uiIdx, len1);
 
 			if (uiAlbumCnt != 0 && z < uiAlbumCnt) {
@@ -708,7 +708,7 @@ VOID SetAndOutputTocCDWText(
 			z--;
 		}
 		else {
-			CHAR tmp[META_CDTEXT_SIZE] = { 0 };
+			CHAR tmp[META_CDTEXT_SIZE] = {};
 			strncpy(tmp, pTmpText + uiIdx, len1);
 
 			if (uiAlbumCnt != 0 && z < uiAlbumCnt) {
@@ -869,7 +869,7 @@ VOID SetTrackAttribution(
 	BYTE tmpCurrentTrackNum = pDiscPerSector->subQ.current.byTrackNum;
 	BYTE tmpCurrentIndex = pDiscPerSector->subQ.current.byIndex;
 	if (pDiscPerSector->subQ.current.byAdr != ADR_ENCODES_CURRENT_POSITION) {
-		if (IsValidPregapSector(pDisc, &pDiscPerSector->subQ, nLBA) ||
+		if ((IsValidPregapSector(pDisc, &pDiscPerSector->subQ, nLBA) && pExtArg->byMCN) ||
 			nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->byTrackNum - 1]) {
 			tmpCurrentTrackNum = pDiscPerSector->subQ.next.byTrackNum;
 			tmpCurrentIndex = pDiscPerSector->subQ.next.byIndex;
@@ -884,7 +884,7 @@ VOID SetTrackAttribution(
 		INT tIdx = pDiscPerSector->byTrackNum - 1;
 		BYTE tmpPrevTrackNum = pDiscPerSector->subQ.prev.byTrackNum;
 		BYTE tmpPrevIndex = pDiscPerSector->subQ.prev.byIndex;
-		if (pDiscPerSector->subQ.prev.byAdr != ADR_ENCODES_CURRENT_POSITION) {
+		if (pDiscPerSector->subQ.prev.byAdr != ADR_ENCODES_CURRENT_POSITION && !pExtArg->byMCN) {
 			tmpPrevTrackNum = pDiscPerSector->subQ.prevPrev.byTrackNum;
 			tmpPrevIndex = pDiscPerSector->subQ.prevPrev.byIndex;
 		}
@@ -1083,7 +1083,12 @@ VOID SetISRCToString(
 
 	これをASCIIコードに変換するには、それぞれに 0x30 を足してやります。
 	*/
-	_snprintf(pszOutString, META_ISRC_SIZE - 1, "%c%c%c%c%c%c%c%c%c%c%c%c",
+#ifdef _WIN32
+	size_t size = META_ISRC_SIZE - 1;
+#else
+	size_t size = META_ISRC_SIZE;
+#endif
+	_snprintf(pszOutString, size, "%c%c%c%c%c%c%c%c%c%c%c%c",
 		((pDiscPerSector->subcode.current[13] >> 2) & 0x3f) + 0x30,
 		(((pDiscPerSector->subcode.current[13] << 4) & 0x30) | ((pDiscPerSector->subcode.current[14] >> 4) & 0x0f)) + 0x30, 
 		(((pDiscPerSector->subcode.current[14] << 2) & 0x3c) | ((pDiscPerSector->subcode.current[15] >> 6) & 0x03)) + 0x30, 
@@ -1105,7 +1110,12 @@ VOID SetMCNToString(
 	LPSTR pszOutString,
 	BOOL bCopy
 ) {
-	_snprintf(pszOutString, META_CATALOG_SIZE - 1, "%c%c%c%c%c%c%c%c%c%c%c%c%c",
+#ifdef _WIN32
+	size_t size = META_CATALOG_SIZE - 1;
+#else
+	size_t size = META_CATALOG_SIZE;
+#endif
+	_snprintf(pszOutString, size, "%c%c%c%c%c%c%c%c%c%c%c%c%c",
 		((lpSubcode[13] >> 4) & 0x0f) + 0x30, (lpSubcode[13] & 0x0f) + 0x30, 
 		((lpSubcode[14] >> 4) & 0x0f) + 0x30, (lpSubcode[14] & 0x0f) + 0x30, 
 		((lpSubcode[15] >> 4) & 0x0f) + 0x30, (lpSubcode[15] & 0x0f) + 0x30, 
@@ -1113,6 +1123,25 @@ VOID SetMCNToString(
 		((lpSubcode[17] >> 4) & 0x0f) + 0x30, (lpSubcode[17] & 0x0f) + 0x30, 
 		((lpSubcode[18] >> 4) & 0x0f) + 0x30, (lpSubcode[18] & 0x0f) + 0x30, 
 		((lpSubcode[19] >> 4) & 0x0f) + 0x30);
+#if 0
+	printf("mcn1: %s\n", pszOutString);
+	printf("mcn2: %c%c%c%c%c%c%c%c%c%c%c%c%c\n",
+		pszOutString[0], pszOutString[1],
+		pszOutString[2], pszOutString[3],
+		pszOutString[4], pszOutString[5],
+		pszOutString[6], pszOutString[7],
+		pszOutString[8], pszOutString[9],
+		pszOutString[10], pszOutString[11],
+		pszOutString[12]);
+	printf("mcn3: %c%c%c%c%c%c%c%c%c%c%c%c%c\n",
+		((lpSubcode[13] >> 4) & 0x0f) + 0x30, (lpSubcode[13] & 0x0f) + 0x30,
+		((lpSubcode[14] >> 4) & 0x0f) + 0x30, (lpSubcode[14] & 0x0f) + 0x30,
+		((lpSubcode[15] >> 4) & 0x0f) + 0x30, (lpSubcode[15] & 0x0f) + 0x30,
+		((lpSubcode[16] >> 4) & 0x0f) + 0x30, (lpSubcode[16] & 0x0f) + 0x30,
+		((lpSubcode[17] >> 4) & 0x0f) + 0x30, (lpSubcode[17] & 0x0f) + 0x30,
+		((lpSubcode[18] >> 4) & 0x0f) + 0x30, (lpSubcode[18] & 0x0f) + 0x30,
+		((lpSubcode[19] >> 4) & 0x0f) + 0x30);
+#endif
 	pszOutString[META_CATALOG_SIZE - 1] = 0;
 	if (bCopy) {
 		strncpy(pDisc->SUB.szCatalog, pszOutString, sizeof(pDisc->SUB.szCatalog));

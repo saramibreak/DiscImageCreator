@@ -57,7 +57,7 @@ BOOL Inquiry(
 	cdb.OperationCode = SCSIOP_INQUIRY;
 	cdb.AllocationLength = sizeof(INQUIRYDATA);
 #ifdef _WIN32
-	_declspec(align(4)) INQUIRYDATA inquiryData = { 0 };
+	_declspec(align(4)) INQUIRYDATA inquiryData = {};
 	INT direction = SCSI_IOCTL_DATA_IN;
 #else
 	__attribute__((aligned(4))) INQUIRYDATA inquiryData = {};
@@ -96,7 +96,7 @@ BOOL ModeSense(
 		cdb.AllocationLength = sizeof(CDVD_CAPABILITIES_PAGE_WITH_HEADER);
 
 #ifdef _WIN32
-		_declspec(align(4)) CDVD_CAPABILITIES_PAGE_WITH_HEADER modesense = { 0 };
+		_declspec(align(4)) CDVD_CAPABILITIES_PAGE_WITH_HEADER modesense = {};
 		INT direction = SCSI_IOCTL_DATA_IN;
 #else
 		__attribute__((aligned(4))) CDVD_CAPABILITIES_PAGE_WITH_HEADER modesense = {};
@@ -232,7 +232,7 @@ BOOL ReadTOCFull(
 #endif
 	LPBYTE pBuf = NULL;
 	LPBYTE lpBuf = NULL;
-	BYTE lpCmd[CDB12GENERIC_LENGTH] = { 0 };
+	BYTE lpCmd[CDB12GENERIC_LENGTH] = {};
 	INT nOfs = 0;
 	BYTE byMode = DATA_BLOCK_MODE0;
 	BYTE bySessionNum = 0;
@@ -782,7 +782,7 @@ BOOL SetSpeedRead(
 		pDevice->byPlxtrDrive == PLXTR_DRIVE_TYPE::PXW4824A
 		) {
 		CONST WORD size = 8;
-		BYTE buf[size] = { 0 };
+		BYTE buf[size] = {};
 
 		CDB::_CDB12 cdb = {};
 		cdb.OperationCode = SCSIOP_PLXTR_EXTEND;
@@ -931,18 +931,20 @@ BOOL ReadDriveInformation(
 		return FALSE;
 	}
 	// 4th: check PLEXTOR or not here (because use modesense and from there)
-	if (!IsValidPlextorDrive(pDevice)) {
-		OutputErrorString(_T("[ERROR] This drive isn't latest firmware. Please update.\n"));
-		return FALSE;
-	}
-	if ((PLXTR_DRIVE_TYPE)pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::No) {
-		if (*pExecType != drivespeed) {
-			if (pExtArg->byPre) {
-				SupportIndex0InTrack1(pExtArg, pDevice);
-			}
-			ReadEeprom(pExtArg, pDevice);
+	if (IsValidPlextorDrive(pDevice)) {
+		if ((PLXTR_DRIVE_TYPE)pDevice->byPlxtrDrive == PLXTR_DRIVE_TYPE::NotLatest) {
+			OutputErrorString(_T("[ERROR] This drive isn't latest firmware. Please update.\n"));
+			return FALSE;
 		}
-		SetSpeedRead(pExtArg, pDevice, TRUE);
+		if ((PLXTR_DRIVE_TYPE)pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::Other) {
+			if (*pExecType != drivespeed) {
+				if (pExtArg->byPre) {
+					SupportIndex0InTrack1(pExtArg, pDevice);
+				}
+				ReadEeprom(pExtArg, pDevice);
+			}
+			SetSpeedRead(pExtArg, pDevice, TRUE);
+		}
 	}
 	// 5th: get currentMedia, if use CD-Text, C2 error, modesense, readbuffercapacity, SetDiscSpeed or not here.
 	if (!GetConfiguration(pExecType, pExtArg, pDevice, pDisc)) {
@@ -978,8 +980,8 @@ BOOL ReadGDForTOC(
 	CDB::_READ_CD cdb = {};
 	SetReadCDCommand(pDevice, &cdb,
 		CDFLAG::_READ_CD::CDDA, 2, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::NoSub);
-	BYTE aToc[CD_RAW_SECTOR_SIZE * 4] = { 0 };
-	BYTE bufDec[CD_RAW_SECTOR_SIZE * 2] = { 0 };
+	BYTE aToc[CD_RAW_SECTOR_SIZE * 4] = {};
+	BYTE bufDec[CD_RAW_SECTOR_SIZE * 2] = {};
 	INT nOffset = pDisc->MAIN.nAdjustSectorNum - 1;
 	if (pDisc->MAIN.nCombinedOffset < 0) {
 		nOffset = pDisc->MAIN.nAdjustSectorNum;

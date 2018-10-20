@@ -39,45 +39,57 @@ BOOL IsValidPlextorDrive(
 	if (!strncmp(pDevice->szVendorId, "PLEXTOR ", DRIVE_VENDOR_ID_SIZE)) {
 		if (!strncmp(pDevice->szProductId, "DVDR   PX-760A  ", DRIVE_PRODUCT_ID_SIZE)) {
 			if (strncmp(pDevice->szProductRevisionLevel, "1.07", DRIVE_VERSION_ID_SIZE)) {
-				return FALSE;
+				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::NotLatest;
 			}
-			pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PX760A;
+			else {
+				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PX760A;
+			}
 		}
 		else if (!strncmp(pDevice->szProductId, "DVDR   PX-755A  ", DRIVE_PRODUCT_ID_SIZE)) {
 			if (strncmp(pDevice->szProductRevisionLevel, "1.08", DRIVE_VERSION_ID_SIZE)) {
-				return FALSE;
+				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::NotLatest;
 			}
-			pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PX755A;
+			else {
+				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PX755A;
+			}
 		}
 		else if (!strncmp(pDevice->szProductId, "DVDR   PX-716AL ", DRIVE_PRODUCT_ID_SIZE)) {
 			if (strncmp(pDevice->szProductRevisionLevel, "1.02", DRIVE_VERSION_ID_SIZE)) {
-				return FALSE;
+				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::NotLatest;
 			}
-			pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PX716AL;
+			else {
+				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PX716AL;
+			}
 		}
 		else if (!strncmp(pDevice->szProductId, "DVDR   PX-716A  ", DRIVE_PRODUCT_ID_SIZE)) {
 			if (strncmp(pDevice->szProductRevisionLevel, "1.11", DRIVE_VERSION_ID_SIZE)) {
-				return FALSE;
+				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::NotLatest;
 			}
-			pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PX716A;
+			else {
+				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PX716A;
+			}
 		}
 		else if (!strncmp(pDevice->szProductId, "DVDR   PX-714A  ", DRIVE_PRODUCT_ID_SIZE)) {
 			pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PX714A;
 		}
 		else if (!strncmp(pDevice->szProductId, "DVDR   PX-712A  ", DRIVE_PRODUCT_ID_SIZE)) {
 			if (strncmp(pDevice->szProductRevisionLevel, "1.09", DRIVE_VERSION_ID_SIZE)) {
-				return FALSE;
+				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::NotLatest;
 			}
-			pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PX712A;
+			else {
+				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PX712A;
+			}
 		}
 		else if (!strncmp(pDevice->szProductId, "DVDR   PX-708A2 ", DRIVE_PRODUCT_ID_SIZE)) {
 			pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PX708A2;
 		}
 		else if (!strncmp(pDevice->szProductId, "DVDR   PX-708A  ", DRIVE_PRODUCT_ID_SIZE)) {
 			if (strncmp(pDevice->szProductRevisionLevel, "1.12", DRIVE_VERSION_ID_SIZE)) {
-				return FALSE;
+				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::NotLatest;
 			}
-			pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PX708A;
+			else {
+				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PX708A;
+			}
 		}
 		else if (!strncmp(pDevice->szProductId, "DVDR   PX-704A  ", DRIVE_PRODUCT_ID_SIZE)) {
 			pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PX704A;
@@ -87,39 +99,51 @@ BOOL IsValidPlextorDrive(
 		}
 		else if (!strncmp(pDevice->szProductId, "CD-R   PREMIUM2 ", DRIVE_PRODUCT_ID_SIZE)) {
 			if (strncmp(pDevice->szProductRevisionLevel, "1.03", DRIVE_VERSION_ID_SIZE)) {
-				return FALSE;
+				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::NotLatest;
 			}
-			pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PREMIUM2;
+			else {
+				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PREMIUM2;
+			}
 		}
 		else if (!strncmp(pDevice->szProductId, "CD-R   PREMIUM  ", DRIVE_PRODUCT_ID_SIZE)) {
 			if (strncmp(pDevice->szProductRevisionLevel, "1.07", DRIVE_VERSION_ID_SIZE)) {
-				return FALSE;
+				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::NotLatest;
 			}
-			pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PREMIUM;
+			else {
+				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PREMIUM;
+			}
 		}
 		else if (!strncmp(pDevice->szProductId, "CD-R   PX-W5224A", DRIVE_PRODUCT_ID_SIZE)) {
 			if (strncmp(pDevice->szProductRevisionLevel, "1.04", DRIVE_VERSION_ID_SIZE)) {
-				return FALSE;
+				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::NotLatest;
 			}
-			pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PXW5224A;
+			else {
+				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PXW5224A;
+			}
 		}
 		else if (!strncmp(pDevice->szProductId, "CD-R   PX-W4824A", DRIVE_PRODUCT_ID_SIZE)) {
 			if (strncmp(pDevice->szProductRevisionLevel, "1.07", DRIVE_VERSION_ID_SIZE)) {
-				return FALSE;
+				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::NotLatest;
 			}
-			pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PXW4824A;
+			else {
+				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PXW4824A;
+			}
 		}
 		else if (!strncmp(pDevice->szProductId, "CD-R   PX-W4012A", DRIVE_PRODUCT_ID_SIZE)) {
 			if (strncmp(pDevice->szProductRevisionLevel, "1.07", DRIVE_VERSION_ID_SIZE)) {
-				return FALSE;
+				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::NotLatest;
 			}
-			pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PXW4012A;
+			else {
+				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PXW4012A;
+			}
 		}
 		else if (!strncmp(pDevice->szProductId, "CD-R   PX-W4012S", DRIVE_PRODUCT_ID_SIZE)) {
 			if (strncmp(pDevice->szProductRevisionLevel, "1.06", DRIVE_VERSION_ID_SIZE)) {
-				return FALSE;
+				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::NotLatest;
 			}
-			pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PXW4012S;
+			else {
+				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PXW4012S;
+			}
 		}
 		else if (!strncmp(pDevice->szProductId, "CD-R   PX-W2410A", DRIVE_PRODUCT_ID_SIZE)) {
 			pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PXW2410A;
@@ -182,10 +206,11 @@ BOOL IsValidPlextorDrive(
 			pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PX8XCS;
 		}
 		else {
-			pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::No;
+			pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::Other;
 		}
+		return TRUE;
 	}
-	return TRUE;
+	return FALSE;
 }
 
 VOID SupportIndex0InTrack1(
@@ -391,7 +416,6 @@ BOOL IsValidIntentionalC2error(
 ) {
 	BOOL bRet = FALSE;
 	if (pDisc->PROTECT.byExist == codelock || pDisc->PROTECT.byExist == datel ||
-		pDisc->PROTECT.byExist == laserlock || pDisc->PROTECT.byExist == proring ||
 		(pDisc->PROTECT.byExist == safeDisc && pDiscPerSector->dwC2errorNum == SAFEDISC_C2ERROR_NUM)) {
 		bRet = TRUE;
 	}

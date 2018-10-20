@@ -37,6 +37,14 @@ BOOL GetDriveOffsetAuto(
 	LPINT lpDriveOffset
 );
 
+BOOL GetFilenameToSkipError(
+	LPSTR szFilename
+);
+
+BOOL GetFilenameToFixError(
+	LPSTR szFilename
+);
+
 DWORD GetFileSize(
 	LONG lOffset,
 	FILE *fp

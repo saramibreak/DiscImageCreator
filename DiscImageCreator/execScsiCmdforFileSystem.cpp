@@ -52,8 +52,8 @@ BOOL ReadCDFor3DODirectory(
 		OutputFs3doDirectoryRecord(lpBuf, nLBA, pPath, lDirSize);
 
 		// next dir
-		CHAR szNewPath[_MAX_PATH] = { 0 };
-		CHAR fname[32] = { 0 };
+		CHAR szNewPath[_MAX_PATH] = {};
+		CHAR fname[32] = {};
 		while (lOfs < lDirSize) {
 			LPBYTE lpDirEnt = lpBuf + lOfs;
 			LONG lFlags = MAKELONG(
@@ -142,7 +142,7 @@ BOOL ReadDirectoryRecordDetail(
 		OutputVolDescLogA(
 			OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Directory Record), nLBA + nSectorNum, nLBA + nSectorNum);
 		for (;;) {
-			CHAR szCurDirName[MAX_FNAME_FOR_VOLUME] = { 0 };
+			CHAR szCurDirName[MAX_FNAME_FOR_VOLUME] = {};
 			LPBYTE lpDirRec = lpBuf + uiOfs;
 			if (lpDirRec[0] >= MIN_LEN_DR) {
 				if (lpDirRec[0] == MIN_LEN_DR && uiOfs > 0 && uiOfs % DISC_RAW_READ_SIZE == 0) {
@@ -437,7 +437,7 @@ BOOL ReadVolumeDescriptor(
 		nPVD += pDisc->SCSI.lpFirstLBAListOnToc[byIdx];
 	}
 	INT nTmpLBA = nPVD;
-	BYTE bufDec[CD_RAW_SECTOR_SIZE * 2] = { 0 };
+	BYTE bufDec[CD_RAW_SECTOR_SIZE * 2] = {};
 	for (;;) {
 		if (!ExecReadDisc(pExecType, pExtArg, pDevice, pDisc
 			, pCdb, nTmpLBA + nSectorOfs, lpBuf, bufDec, byTransferLen)) {
@@ -504,6 +504,10 @@ BOOL ReadCDForFileSystem(
 			if (i > 1 && pDisc->SCSI.lpLastLBAListOnToc[i] - pDisc->SCSI.lpFirstLBAListOnToc[i] + 1 <= 750) {
 				return TRUE;
 			}
+			// for Anno 1602 - Im Namen des Konigs
+			else if (i == 1 && pDisc->SCSI.lpLastLBAListOnToc[i] - pDisc->SCSI.lpFirstLBAListOnToc[i] + 1 <= 200) {
+				return TRUE;
+			}
 			LPBYTE pBuf = NULL;
 			LPBYTE lpBuf = NULL;
 			if (!GetAlignedCallocatedBuffer(pDevice, &pBuf,
@@ -517,7 +521,7 @@ BOOL ReadCDForFileSystem(
 			PDIRECTORY_RECORD pDirRec = NULL;
 			try {
 				// general data track disc
-				VOLUME_DESCRIPTOR volDesc;
+				VOLUME_DESCRIPTOR volDesc = {};
 				if (!ReadVolumeDescriptor(pExecType, pExtArg, pDevice
 					, pDisc, i, (LPBYTE)&cdb, lpBuf, 16, 0, &bVD, &volDesc, 1)) {
 					throw FALSE;

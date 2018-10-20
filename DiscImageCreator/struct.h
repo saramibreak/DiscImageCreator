@@ -209,6 +209,12 @@ typedef struct _EXT_ARG {
 	DWORD dwCacheDelNum;
 	DWORD dwTimeoutNum;
 	DWORD dwSubAddionalNum;
+	DWORD dwSkipSectors;
+	DWORD dwSkipSectors2; // for some LaserLock
+	struct _FILE {
+		CHAR readError[MAX_FNAME_FOR_VOLUME];
+		CHAR edceccError[MAX_FNAME_FOR_VOLUME];
+	} FILE;
 } EXT_ARG, *PEXT_ARG;
 
 typedef struct _DEVICE {
@@ -411,6 +417,7 @@ typedef struct _MAIN_HEADER {
 
 // This buffer stores the aligned subcode obtained from DATA_IN_CD structure
 typedef struct _SUBCODE {
+	BYTE prev[CD_RAW_READ_SUBCODE_SIZE];
 	BYTE current[CD_RAW_READ_SUBCODE_SIZE];
 	BYTE next[CD_RAW_READ_SUBCODE_SIZE];
 	BYTE nextNext[CD_RAW_READ_SUBCODE_SIZE];
@@ -504,7 +511,7 @@ typedef struct _MDS_DATA_BLK {
 	UCHAR f;
 	DWORD ofsToIndexBlk;
 	WORD sectorSize;
-	UCHAR unknown;
+	UCHAR unknown1;
 	UCHAR zero2[17];
 	DWORD trackStartSector;
 	DWORD ofsFromHeadToIdx1;

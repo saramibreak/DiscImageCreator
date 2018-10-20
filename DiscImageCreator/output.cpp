@@ -40,11 +40,11 @@ FILE* CreateOrOpenFile(
 	BYTE byTrackNum,
 	BYTE byMaxTrackNum
 ) {
-	_TCHAR szDstPath[_MAX_PATH] = { 0 };
-	_TCHAR szDrive[_MAX_DRIVE] = { 0 };
-	_TCHAR szDir[_MAX_DIR] = { 0 };
-	_TCHAR szFname[_MAX_FNAME] = { 0 };
-	_TCHAR szExt[_MAX_EXT] = { 0 };
+	_TCHAR szDstPath[_MAX_PATH] = {};
+	_TCHAR szDrive[_MAX_DRIVE] = {};
+	_TCHAR szDir[_MAX_DIR] = {};
+	_TCHAR szFname[_MAX_FNAME] = {};
+	_TCHAR szExt[_MAX_EXT] = {};
 
 	_tsplitpath(pszPath, szDrive, szDir, szFname, szExt);
 	if (pszPlusFname) {
@@ -105,11 +105,11 @@ FILE* CreateOrOpenFileW(
 	BYTE byTrackNum,
 	BYTE byMaxTrackNum
 ) {
-	WCHAR szDstPath[_MAX_PATH] = { 0 };
-	WCHAR szDrive[_MAX_DRIVE] = { 0 };
-	WCHAR szDir[_MAX_DIR] = { 0 };
-	WCHAR szFname[_MAX_FNAME] = { 0 };
-	WCHAR szExt[_MAX_EXT] = { 0 };
+	WCHAR szDstPath[_MAX_PATH] = {};
+	WCHAR szDrive[_MAX_DRIVE] = {};
+	WCHAR szDir[_MAX_DIR] = {};
+	WCHAR szFname[_MAX_FNAME] = {};
+	WCHAR szExt[_MAX_EXT] = {};
 
 	_wsplitpath(pszPath, szDrive, szDir, szFname, szExt);
 	if (pszPlusFname) {
@@ -170,11 +170,11 @@ FILE* CreateOrOpenFileA(
 	BYTE byTrackNum,
 	BYTE byMaxTrackNum
 ) {
-	CHAR szDstPath[_MAX_PATH] = { 0 };
-	CHAR szDrive[_MAX_DRIVE] = { 0 };
-	CHAR szDir[_MAX_DIR] = { 0 };
-	CHAR szFname[_MAX_FNAME] = { 0 };
-	CHAR szExt[_MAX_EXT] = { 0 };
+	CHAR szDstPath[_MAX_PATH] = {};
+	CHAR szDrive[_MAX_DRIVE] = {};
+	CHAR szDir[_MAX_DIR] = {};
+	CHAR szFname[_MAX_FNAME] = {};
+	CHAR szExt[_MAX_EXT] = {};
 
 	_splitpath(pszPath, szDrive, szDir, szFname, szExt);
 	if (pszPlusFname) {
@@ -224,7 +224,7 @@ FILE* OpenProgrammabledFile(
 	LPCTSTR pszFname,
 	LPCTSTR pszMode
 ) {
-	_TCHAR szFullPath[_MAX_PATH] = { 0 };
+	_TCHAR szFullPath[_MAX_PATH] = {};
 	if (!::GetModuleFileName(NULL, szFullPath, sizeof(szFullPath) / sizeof(szFullPath[0]))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return NULL;
@@ -237,7 +237,7 @@ FILE* OpenProgrammabledFile(
 #endif
 	if (p) {
 		p[0] = 0;
-		_TCHAR szFullPathName[_MAX_PATH] = { 0 };
+		_TCHAR szFullPathName[_MAX_PATH] = {};
 #ifdef _WIN32
 		_sntprintf(szFullPathName
 			, sizeof(szFullPathName) / sizeof(szFullPathName[0]), _T("%s\\%s"), szFullPath, pszFname);
@@ -255,7 +255,7 @@ FILE* OpenProgrammabledFileW(
 	LPCWSTR pszFname,
 	LPCWSTR pszMode
 ) {
-	WCHAR szFullPath[_MAX_PATH] = { 0 };
+	WCHAR szFullPath[_MAX_PATH] = {};
 	if (!::GetModuleFileNameW(NULL, szFullPath, sizeof(szFullPath) / sizeof(szFullPath[0]))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return NULL;
@@ -264,7 +264,7 @@ FILE* OpenProgrammabledFileW(
 	LPWCH p = wcsrchr(szFullPath, '\\');
 	if (p) {
 		p[0] = 0;
-		WCHAR szFullPathName[_MAX_PATH] = { 0 };
+		WCHAR szFullPathName[_MAX_PATH] = {};
 		_snwprintf(szFullPathName
 			, sizeof(szFullPathName) / sizeof(szFullPathName[0]), L"%s\\%s", szFullPath, pszFname);
 		szFullPathName[_MAX_PATH - 1] = 0;
@@ -305,7 +305,7 @@ VOID WriteCcdForDiscCatalog(
 	PDISC pDisc,
 	FILE* fpCcd
 ) {
-	_TCHAR szCatalog[META_CATALOG_SIZE] = { 0 };
+	_TCHAR szCatalog[META_CATALOG_SIZE] = {};
 #ifdef UNICODE
 	MultiByteToWideChar(CP_ACP, 0
 		, pDisc->SUB.szCatalog, sizeof(pDisc->SUB.szCatalog) / sizeof(pDisc->SUB.szCatalog[0])
@@ -419,7 +419,7 @@ VOID WriteCcdForTrack(
 			byTrackNum,
 			pDisc->MAIN.lpModeList[byTrackNum - 1]);
 		if (pDisc->SUB.lpISRCList[byTrackNum - 1]) {
-			_TCHAR szISRC[META_ISRC_SIZE] = { 0 };
+			_TCHAR szISRC[META_ISRC_SIZE] = {};
 #ifdef UNICODE
 			MultiByteToWideChar(CP_ACP, 0
 				, pDisc->SUB.pszISRC[byTrackNum - 1], META_ISRC_SIZE
@@ -471,7 +471,7 @@ VOID WriteCueForSongWriter(
 	FILE* fpCue
 ) {
 	if (pDisc->SCSI.pszSongWriter[byIdx][0] != 0) {
-		_TCHAR szSongWriter[META_CDTEXT_SIZE] = { 0 };
+		_TCHAR szSongWriter[META_CDTEXT_SIZE] = {};
 #ifdef UNICODE
 		MultiByteToWideChar(CP_ACP, 0
 			, pDisc->SCSI.pszSongWriter[byIdx], META_CDTEXT_SIZE
@@ -494,7 +494,7 @@ VOID WriteCueForPerformer(
 	FILE* fpCue
 ) {
 	if (pDisc->SCSI.pszPerformer[byIdx][0] != 0) {
-		_TCHAR szPerformer[META_CDTEXT_SIZE] = { 0 };
+		_TCHAR szPerformer[META_CDTEXT_SIZE] = {};
 #ifdef UNICODE
 		MultiByteToWideChar(CP_ACP, 0
 			, pDisc->SCSI.pszPerformer[byIdx], META_CDTEXT_SIZE
@@ -517,7 +517,7 @@ VOID WriteCueForTitle(
 	FILE* fpCue
 ) {
 	if (pDisc->SCSI.pszTitle[byIdx][0] != 0) {
-		_TCHAR szTitle[META_CDTEXT_SIZE] = { 0 };
+		_TCHAR szTitle[META_CDTEXT_SIZE] = {};
 #ifdef UNICODE
 		MultiByteToWideChar(CP_ACP, 0
 			, pDisc->SCSI.pszTitle[byIdx], META_CDTEXT_SIZE
@@ -540,7 +540,7 @@ VOID WriteCueForFirst(
 	FILE* fpCue
 ) {
 	if (pDisc->SUB.byCatalog) {
-		_TCHAR szCatalog[META_CATALOG_SIZE] = { 0 };
+		_TCHAR szCatalog[META_CATALOG_SIZE] = {};
 #ifdef UNICODE
 		MultiByteToWideChar(CP_ACP, 0 
 			, pDisc->SUB.szCatalog, sizeof(pDisc->SUB.szCatalog) / sizeof(pDisc->SUB.szCatalog[0])
@@ -570,7 +570,7 @@ VOID WriteCueForISRC(
 	FILE* fpCue
 ) {
 	if (pDisc->SUB.lpISRCList[nIdx]) {
-		_TCHAR szISRC[META_ISRC_SIZE] = { 0 };
+		_TCHAR szISRC[META_ISRC_SIZE] = {};
 #ifdef UNICODE
 		MultiByteToWideChar(CP_ACP, 0
 			, pDisc->SUB.pszISRC[nIdx], META_ISRC_SIZE
@@ -671,8 +671,8 @@ VOID WriteMainChannel(
 	}
 	else if (sLBA <= nLBA && nLBA < eLBA) {
 		// first sector
-		if (nLBA == sLBA || (nLBA == pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize + 1 &&
-			(pDisc->PROTECT.byExist == laserlock || pDisc->PROTECT.byExist == proring))) {
+		if (nLBA == sLBA /*|| (nLBA == pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize + 1 &&
+			(pDisc->PROTECT.byExist == laserlock || pDisc->PROTECT.byExist == proring))*/) {
 			fwrite(lpBuf + pDisc->MAIN.uiMainDataSlideSize, sizeof(BYTE),
 				CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize, fpImg);
 			if (*pExecType != gd) {
@@ -786,9 +786,8 @@ VOID WriteErrorBuffer(
 ) {
 	UNREFERENCED_PARAMETER(lpScrambledBuf);
 	UINT uiSize = 0;
-	BYTE zeroByte[CD_RAW_SECTOR_SIZE] = { 0 };
-	if (*pExecType == data || pExtArg->byBe || 
-		pDisc->PROTECT.byExist == laserlock || pDisc->PROTECT.byExist == proring) {
+	BYTE zeroByte[CD_RAW_SECTOR_SIZE] = {};
+	if (*pExecType == data || pExtArg->byBe) {
 		uiSize = CD_RAW_SECTOR_SIZE;
 		if (nPadType == padbyff) {
 			if ((pDiscPerSector->subQ.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
@@ -869,11 +868,11 @@ VOID WriteErrorBuffer(
 			}
 		}
 	}
-	OutputLogA(standardError | fileMainError,
+	OutputLogA(fileMainError,
 		"LBA[%06d, %#07x] Read error. padding [%ubyte]\n", nLBA, nLBA, uiSize);
 
 	if (*pExecType != swap || (*pExecType == swap && nLBA < SECOND_ERROR_OF_LEADOUT)) {
-		BYTE lpSubcodeRaw[CD_RAW_READ_SUBCODE_SIZE] = { 0 };
+		BYTE lpSubcodeRaw[CD_RAW_READ_SUBCODE_SIZE] = {};
 		if (pDiscPerSector->subQ.current.byIndex == 0) {
 			pDiscPerSector->subQ.current.nRelativeTime--;
 		}
@@ -939,7 +938,7 @@ BOOL WriteParsingSubfile(
 			}
 		}
 		// TODO: doesn't use RtoW in current
-		BYTE lpSubcodeRtoW[CD_RAW_READ_SUBCODE_SIZE] = { 0 };
+		BYTE lpSubcodeRtoW[CD_RAW_READ_SUBCODE_SIZE] = {};
 		BYTE byTrackNum = 1;
 		BYTE byPrevTrackNum = 1;
 		INT nLBA = 0;
@@ -1021,7 +1020,7 @@ BOOL WriteParsingMdsfile(
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
-		if (fread(data, sizeof(BYTE), dwFileSize, fpMds) != dwFileSize) {
+		if (fread(data, sizeof(BYTE), dwFileSize, fpMds) < dwFileSize) {
 			OutputErrorString(_T("Failed to read [F:%s][L:%d]\n"), _T(__FUNCTION__), __LINE__);
 			FcloseAndNull(fpMds);
 			throw FALSE;
@@ -1034,7 +1033,7 @@ BOOL WriteParsingMdsfile(
 		memcpy(&h, data, size);
 		nOfs += size;
 
-		PMDS_FOR_DVD_BLK dvd = { 0 };
+		PMDS_FOR_DVD_BLK dvd = {};
 		BYTE layer = 1;
 		if (h.mediaType == 0x10) {
 			if ((data[nOfs + 2054] >> 5 & 0x03) == 1) {
@@ -1257,7 +1256,7 @@ BOOL WriteParsingMdsfile(
 				_T("          OfsToFname: %ld\n")
 				, db[i].trackMode, db[i].numOfSubch, db[i].adrCtl, db[i].trackNum
 				, db[i].point, db[i].m, db[i].s, db[i].f, db[i].ofsToIndexBlk
-				, db[i].sectorSize, db[i].unknown, db[i].trackStartSector
+				, db[i].sectorSize, db[i].unknown1, db[i].trackStartSector
 				, db[i].ofsFromHeadToIdx1, db[i].unknown2, db[i].NumOfFname, db[i].OfsToFname
 			);
 		}
@@ -1394,10 +1393,10 @@ BOOL DescrambleMainChannelForGD(
 	}
 	DWORD dwFileSize = GetFileSize(0, fpScm);
 	DWORD dwAllSectorVal = dwFileSize / CD_RAW_SECTOR_SIZE;
-	BYTE bufScm[CD_RAW_SECTOR_SIZE] = { 0 };
-	BYTE bufImg[CD_RAW_SECTOR_SIZE] = { 0 };
+	BYTE bufScm[CD_RAW_SECTOR_SIZE] = {};
+	BYTE bufImg[CD_RAW_SECTOR_SIZE] = {};
 	for (DWORD i = 0; i < dwAllSectorVal; i++) {
-		if (fread(bufScm, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpScm) != CD_RAW_SECTOR_SIZE) {
+		if (fread(bufScm, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpScm) < CD_RAW_SECTOR_SIZE) {
 			OutputErrorString(_T("Failed to read\n"));
 			break;
 		}
@@ -1427,8 +1426,8 @@ BOOL CreateBinCueForGD(
 	LPCTSTR pszPath
 ) {
 	BOOL bRet = TRUE;
-	_TCHAR pszImgName[_MAX_FNAME] = { 0 };
-	_TCHAR pszFname[_MAX_PATH] = { 0 };
+	_TCHAR pszImgName[_MAX_FNAME] = {};
+	_TCHAR pszFname[_MAX_PATH] = {};
 	FILE* fpImg = CreateOrOpenFile(pszPath, NULL,
 		NULL, pszImgName, pszFname, _T(".img"), _T("rb"), 0, 0);
 	if (!fpImg) {
@@ -1465,8 +1464,8 @@ BOOL CreateBinCueForGD(
 		}
 		fseek(fpImg, 0x110, SEEK_SET);
 		// 0x110 - 0x31F is toc data
-		BYTE aToc[512] = { 0 };
-		if (fread(aToc, sizeof(BYTE), sizeof(aToc), fpImg) != sizeof(aToc)) {
+		BYTE aToc[512] = {};
+		if (fread(aToc, sizeof(BYTE), sizeof(aToc), fpImg) < sizeof(aToc)) {
 			OutputErrorString(_T("Failed to read [F:%s][L:%d]\n"), _T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
@@ -1558,7 +1557,7 @@ BOOL CreateBinCueForGD(
 
 		rewind(fpImg);
 		WriteCueForFileDirective(pszImgName, fpCueForImg);
-		_TCHAR pszBinFname[_MAX_PATH] = { 0 };
+		_TCHAR pszBinFname[_MAX_PATH] = {};
 
 		for (BYTE i = 3; i <= byMaxTrackNum; i++) {
 			OutputString(_T("\rCreating bin, cue (Track) %2u/%2u"), i, byMaxTrackNum);
@@ -1574,7 +1573,7 @@ BOOL CreateBinCueForGD(
 			BYTE index = 0;
 			INT nLBAofFirstIdx = pDisc->SUB.lpFirstLBAListOnSub[i - 1][0] - FIRST_LBA_FOR_GD;
 			// nothing or index 0 in track 1
-			if (nLBAofFirstIdx == -1 - FIRST_LBA_FOR_GD || nLBAofFirstIdx == -150 - FIRST_LBA_FOR_GD) {
+			if (nLBAofFirstIdx == -1 || nLBAofFirstIdx == -150) {
 				nLBAofFirstIdx = pDisc->SUB.lpFirstLBAListOnSub[i - 1][1] - FIRST_LBA_FOR_GD;
 				index++;
 			}
@@ -1621,9 +1620,9 @@ BOOL CreateBinCueForGD(
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
-			if (fread(lpBuf, sizeof(BYTE), size, fpImg) != size) {
+			if (fread(lpBuf, sizeof(BYTE), size, fpImg) < size) {
 				OutputErrorString(_T("Failed to read [L:%d]\n"), __LINE__);
-			};
+			}
 			fwrite(lpBuf, sizeof(BYTE), size, fpBin);
 			FcloseAndNull(fpBin);
 			FreeAndNull(lpBuf);
@@ -1635,6 +1634,9 @@ BOOL CreateBinCueForGD(
 	}
 	FcloseAndNull(fpImg);
 	FcloseAndNull(fpBin);
+	FcloseAndNull(fpCue);
+	FcloseAndNull(fpCueForImg);
+	FcloseAndNull(fpGdi);
 	FreeAndNull(lpToc);
 	return bRet;
 }
@@ -1657,7 +1659,7 @@ VOID DescrambleMainChannelAll(
 	LPBYTE lpScrambledBuf,
 	FILE* fpImg
 ) {
-	BYTE aSrcBuf[CD_RAW_SECTOR_SIZE] = { 0 };
+	BYTE aSrcBuf[CD_RAW_SECTOR_SIZE] = {};
 	LONG lSeekPtr = 0;
 
 	for (INT k = pDisc->SCSI.byFirstDataTrackNum - 1; k < pDisc->SCSI.byLastDataTrackNum; k++) {
@@ -1686,11 +1688,7 @@ VOID DescrambleMainChannelAll(
 				// データに矛盾が生じ、正確に書き込まれない場合や、
 				// 嘘の データを読み込む場合があります。
 				fseek(fpImg, lSeekPtr * CD_RAW_SECTOR_SIZE, SEEK_SET);
-				if ((pDisc->PROTECT.byExist == laserlock || pDisc->PROTECT.byExist == proring) &&
-					IsValidProtectedSector(pDisc, nFirstLBA)) {
-					continue;
-				}
-				if (fread(aSrcBuf, sizeof(BYTE), sizeof(aSrcBuf), fpImg) != sizeof(aSrcBuf)) {
+				if (fread(aSrcBuf, sizeof(BYTE), sizeof(aSrcBuf), fpImg) < sizeof(aSrcBuf)) {
 					OutputErrorString(_T("Failed to read [F:%s][L:%d]\n"), _T(__FUNCTION__), __LINE__);
 					break;
 				}
@@ -1774,7 +1772,7 @@ VOID DescrambleMainChannelPartial(
 	LPBYTE lpScrambledBuf,
 	FILE* fpImg
 ) {
-	BYTE aSrcBuf[CD_RAW_SECTOR_SIZE] = { 0 };
+	BYTE aSrcBuf[CD_RAW_SECTOR_SIZE] = {};
 	LONG lSeekPtr = 0;
 
 	for (; nStartLBA <= nEndLBA; nStartLBA++, lSeekPtr++) {
@@ -1785,7 +1783,7 @@ VOID DescrambleMainChannelPartial(
 		// データに矛盾が生じ、正確に書き込まれない場合や、
 		// 嘘の データを読み込む場合があります。
 		fseek(fpImg, lSeekPtr * CD_RAW_SECTOR_SIZE, SEEK_SET);
-		if (fread(aSrcBuf, sizeof(BYTE), sizeof(aSrcBuf), fpImg) != sizeof(aSrcBuf)) {
+		if (fread(aSrcBuf, sizeof(BYTE), sizeof(aSrcBuf), fpImg) < sizeof(aSrcBuf)) {
 			OutputErrorString(_T("Failed to read [F:%s][L:%d]\n"), _T(__FUNCTION__), __LINE__);
 			break;
 		}
@@ -1869,7 +1867,7 @@ BOOL CreateBin(
 		OutputErrorString("bufSize: %zd", stBufSize);
 		return FALSE;
 	}
-	if (fread(lpBuf, sizeof(BYTE), stBufSize, fpImg) != stBufSize) {
+	if (fread(lpBuf, sizeof(BYTE), stBufSize, fpImg) < stBufSize) {
 		OutputErrorString(_T("Failed to read: read size %zd [F:%s][L:%d]\n"), stBufSize, _T(__FUNCTION__), __LINE__);
 		FreeAndNull(lpBuf);
 		return FALSE;
@@ -1915,7 +1913,7 @@ BOOL CreateBinCueCcd(
 	}
 
 	BOOL bRet = TRUE;
-	_TCHAR pszFname[_MAX_FNAME] = { 0 };
+	_TCHAR pszFname[_MAX_FNAME] = {};
 	FILE* fpBin = NULL;
 	FILE* fpBinSync = NULL;
 	for (BYTE i = pDisc->SCSI.toc.FirstTrack; i <= pDisc->SCSI.toc.LastTrack; i++) {
@@ -1932,7 +1930,7 @@ BOOL CreateBinCueCcd(
 		WriteCueForUnderFileDirective(pDisc, bCanCDText, i, fpCue);
 		WriteCcdForTrack(pDisc, i, fpCcd);
 
-		_TCHAR pszFnameSync[_MAX_FNAME] = { 0 };
+		_TCHAR pszFnameSync[_MAX_FNAME] = {};
 		if (pDisc->SUB.byDesync) {
 			if (NULL == (fpBinSync = CreateOrOpenFile(pszPath, _T(" (Subs indexes)"), NULL,
 				pszFnameSync, NULL, _T(".bin"), _T("wb"), i, pDisc->SCSI.toc.LastTrack))) {
@@ -2569,3 +2567,58 @@ BOOL OutputWindowsVersion(
 	return TRUE;
 }
 #endif
+
+BOOL OutputMergedFile(
+	LPCTSTR pszFullPath,
+	LPCTSTR pszFullPath2
+) {
+	FILE* fpSrc1 = NULL;
+	if (NULL == (fpSrc1 = CreateOrOpenFileA(
+		pszFullPath, NULL, NULL, NULL, NULL, ".bin", "rb", 0, 0))) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		return FALSE;
+	}
+	FILE* fpSrc2 = NULL;
+	if (NULL == (fpSrc2 = CreateOrOpenFileA(
+		pszFullPath2, NULL, NULL, NULL, NULL, ".bin", "rb", 0, 0))) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		FcloseAndNull(fpSrc1);
+		return FALSE;
+	}
+	FILE* fpDst = NULL;
+	if (NULL == (fpDst = CreateOrOpenFileA(
+		pszFullPath, "_merge", NULL, NULL, NULL, ".bin", "wb", 0, 0))) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		FcloseAndNull(fpSrc1);
+		FcloseAndNull(fpSrc2);
+		return FALSE;
+	}
+	BYTE buf[2352] = {};
+	fread(buf, sizeof(BYTE), sizeof(buf), fpSrc2);
+	INT nLBA = MSFtoLBA(BcdToDec(buf[12]), BcdToDec(buf[13]), BcdToDec(buf[14])) - 150;
+	rewind(fpSrc2);
+
+	for (INT i = 0; i < nLBA; i++) {
+		fread(buf, sizeof(BYTE), sizeof(buf), fpSrc1);
+		fwrite(buf, sizeof(BYTE), sizeof(buf), fpDst);
+	}
+
+	fread(buf, sizeof(BYTE), sizeof(buf), fpSrc2);
+	fseek(fpSrc1, sizeof(buf), SEEK_CUR);
+	while (!feof(fpSrc2) && !ferror(fpSrc2)) {
+		fwrite(buf, sizeof(BYTE), sizeof(buf), fpDst);
+		fread(buf, sizeof(BYTE), sizeof(buf), fpSrc2);
+		fseek(fpSrc1, sizeof(buf), SEEK_CUR);
+	}
+	fseek(fpSrc1, -2352, SEEK_CUR);
+
+	fread(buf, sizeof(BYTE), sizeof(buf), fpSrc1);
+	while (!feof(fpSrc1) && !ferror(fpSrc1)) {
+		fwrite(buf, sizeof(BYTE), sizeof(buf), fpDst);
+		fread(buf, sizeof(BYTE), sizeof(buf), fpSrc1);
+	}
+	FcloseAndNull(fpSrc1);
+	FcloseAndNull(fpSrc2);
+	FcloseAndNull(fpDst);
+	return TRUE;
+}

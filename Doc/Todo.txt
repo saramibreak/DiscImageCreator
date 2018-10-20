@@ -9,8 +9,6 @@
 
 . support twin sector disc (for ALPHA-ROM, ROOT, TAGES)
 
-. support Xbox 360 XGD3 disc
-
 [sub]
 . check parity P, Q for CD+G
   https://webstore.iec.ch/publication/3885 p24

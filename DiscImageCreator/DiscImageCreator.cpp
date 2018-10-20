@@ -77,69 +77,69 @@ int soundBeep(int nRet)
 		if (!Beep(c4, playtime)) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
-		};
+		}
 		if (!Beep(d4, playtime)) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
-		};
+		}
 		if (!Beep(e4, playtime)) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
-		};
+		}
 		if (!Beep(f4, playtime)) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
-		};
+		}
 		if (!Beep(g4, playtime)) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
-		};
+		}
 		if (!Beep(a4, playtime)) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
-		};
+		}
 		if (!Beep(b4, playtime)) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
-		};
+		}
 		if (!Beep(c5, playtime)) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
-		};
+		}
 	}
 	else {
 		if (!Beep(c5, playtime)) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
-		};
+		}
 		if (!Beep(b4, playtime)) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
-		};
+		}
 		if (!Beep(a4, playtime)) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
-		};
+		}
 		if (!Beep(g4, playtime)) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
-		};
+		}
 		if (!Beep(f4, playtime)) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
-		};
+		}
 		if (!Beep(e4, playtime)) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
-		};
+		}
 		if (!Beep(d4, playtime)) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
-		};
+		}
 		if (!Beep(c4, playtime)) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
-		};
+		}
 	}
 	return TRUE;
 }
@@ -155,6 +155,9 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 	else if (*pExecType == mds) {
 		bRet = WriteParsingMdsfile(pszFullPath);
 	}
+	else if (*pExecType == merge) {
+		bRet = OutputMergedFile(pszFullPath, argv[3]);
+	}
 	else {
 		DEVICE device = {};
 #ifdef _WIN32
@@ -169,6 +172,8 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 		// 1st: set TimeOutValue here (because use ScsiPassThroughDirect)
 		if (pExtArg->byScanProtectViaFile) {
 			device.dwTimeOutValue = pExtArg->dwTimeoutNum;
+			GetFilenameToSkipError(pExtArg->FILE.readError);
+			GetFilenameToFixError(pExtArg->FILE.edceccError);
 		}
 		else {
 			device.dwTimeOutValue = DEFAULT_SPTD_TIMEOUT_VAL;
@@ -307,6 +312,9 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 
 							if (*pExecType == gd) {
 								flg = CDFLAG::_READ_CD::CDDA;
+								if (IsValidPlextorDrive(&device) && pExtArg->dwSubAddionalNum == 0) {
+									pExtArg->dwSubAddionalNum = 1;
+								}
 								// This func needs the combined offsets
 								if (!ReadGDForTOC(pExtArg, &device, pDisc)) {
 									throw FALSE;
@@ -573,6 +581,30 @@ int printAndSetPath(_TCHAR* szPathFromArg, _TCHAR* pszFullPath)
 	return TRUE;
 }
 
+int SetOptionSk(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
+{
+	_TCHAR* endptr = NULL;
+	if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
+		pExtArg->dwSkipSectors = _tcstoul(argv[(*i)++], &endptr, 10);
+		if (*endptr) {
+			OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
+			return FALSE;
+		}
+		if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
+			pExtArg->dwSkipSectors2 = _tcstoul(argv[(*i)++], &endptr, 10);
+			if (*endptr) {
+				OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
+				return FALSE;
+			}
+		}
+	}
+	else {
+		pExtArg->dwSkipSectors = 0;
+		OutputString(_T("/sk val is omitted. set [%ld]\n"), pExtArg->dwSkipSectors);
+	}
+	return TRUE;
+}
+
 int SetOptionS(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 {
 	_TCHAR* endptr = NULL;
@@ -585,7 +617,7 @@ int SetOptionS(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	}
 	else {
 		pExtArg->dwSubAddionalNum = 1;
-		OutputString(_T("/s val is omitted. set [%d]\n"), 1);
+		OutputString(_T("/s val is omitted. set [%ld]\n"), pExtArg->dwSubAddionalNum);
 	}
 	return TRUE;
 }
@@ -962,6 +994,11 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 						return FALSE;
 					}
 				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/sk"), 3)) {
+					if (!SetOptionSk(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
+				}
 				else {
 					OutputErrorString(_T("Unknown option: [%s]\n"), argv[i - 1]);
 					return FALSE;
@@ -1109,9 +1146,14 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			printAndSetPath(argv[3], pszFullPath);
 		}
 		else if (argc == 4) {
-			if (_tcslen(argv[1]) == 2 && !_tcsncmp(argv[1], _T("fd"), 2)) {
+			cmdLen = _tcslen(argv[1]);
+			if (cmdLen == 2 && !_tcsncmp(argv[1], _T("fd"), 2)) {
 				*pExecType = fd;
 				printAndSetPath(argv[3], pszFullPath);
+			}
+			else if (cmdLen == 5 && !_tcsncmp(argv[1], _T("merge"), 5)) {
+				*pExecType = merge;
+				printAndSetPath(argv[2], pszFullPath);
 			}
 			else {
 				OutputErrorString(_T("Invalid argument\n"));
@@ -1207,7 +1249,7 @@ int printUsage(void)
 		_T("\t\tFor no PLEXTOR or drive that can't scramble dumping\n")
 		_T("\tdata <DriveLetter> <Filename> <DriveSpeed(0-72)> <StartLBA> <EndLBA+1>\n")
 		_T("\t     [/q] [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4)]\n")
-		_T("\t     [/sf (val)] [/ss] [/r] [/np] [/nq] [/nr] [/ns] [/s (val)]\n")
+		_T("\t     [/sf (val)] [/sk (val1) (val2)] [/ss] [/r] [/np] [/nq] [/nr] [/ns] [/s (val)]\n")
 		_T("\t\tDump a CD from start to end (using 'all' flag)\n")
 		_T("\t\tFor no PLEXTOR or drive that can't scramble dumping\n")
 		_T("\taudio <DriveLetter> <Filename> <DriveSpeed(0-72)> <StartLBA> <EndLBA+1>\n")
@@ -1260,6 +1302,8 @@ int printUsage(void)
 		_T("\t\tParse CloneCD sub file and output to readable format\n")
 		_T("\tmds <Mdsfile>\n")
 		_T("\t\tParse Alchohol 120/52 mds file and output to readable format\n")
+		_T("\tmerge <plextor image file> <optiarc image file>\n")
+		_T("\t\tmerge the two files (for physical error protection)\n")
 		_T("Option (generic)\n")
 		_T("\t/f\tUse 'Force Unit Access' flag to delete the drive cache\n")
 		_T("\t\t\tval\tdelete per specified value (default: 1)\n")
@@ -1267,11 +1311,11 @@ int printUsage(void)
 		_T("Option (for CD read mode)\n")
 		_T("\t/a\tAdd CD offset manually (Only Audio CD)\n")
 		_T("\t\t\tval\tsamples value\n")
-		_T("\t/be\tUse 0xbe as the opcode for Reading CD forcibly\n")
-		_T("\t\t\tstr\t raw: sub channel mode is raw (default)\n")
 	);
 	ret = stopMessage();
 	OutputString(
+		_T("\t/be\tUse 0xbe as the opcode for Reading CD forcibly\n")
+		_T("\t\t\tstr\t raw: sub channel mode is raw (default)\n")
 		_T("\t\t\t   \tpack: sub channel mode is pack\n")
 		_T("\t/d8\tUse 0xd8 as the opcode for Reading CD forcibly\n")
 		_T("\t/c2\tContinue reading CD to recover C2 error existing sector\n")
@@ -1294,13 +1338,16 @@ int printUsage(void)
 		_T("\t/74\tRead the lead-out about 74:00:00\n")
 		_T("\t\t\tFor ring data (a.k.a Saturn Ring) of Sega Saturn\n")
 		_T("\t/sf\tScan file to detect protect. If reading error exists,\n")
-		_T("\t   \tcontinue reading and ignore c2 error on specific sector\n")
-		_T("\t\t\tFor CodeLock, LaserLock, RingProtect, RingPROTECH\n")
 	);
 	ret = stopMessage();
 	OutputString(
-		_T("\t\t\t    SafeDisc, SmartE, CD.IDX, ProtectCD-VOB, CDS300\n")
+		_T("\t   \tcontinue reading and ignore c2 error on specific sector\n")
+		_T("\t\t\tFor CodeLock, LaserLock, RingProtect, RingPROTECH\n")
+		_T("\t\t\t    SafeDisc, SmartE, ProtectCD-VOB, CDS300\n")
 		_T("\t\t\tval\ttimeout value (default: 60)\n")
+		_T("\t/sk\tSkip sector for physical protect (e.g. proring, LaserLock etc.)\n")
+		_T("\t\t\tval1\tsector num\n")
+		_T("\t\t\tval2\tsector num (optional)\n")
 		_T("\t/ss\tScan sector to detect protect. If reading error exists,\n")
 		_T("\t   \tcontinue reading and ignore c2 error on specific sector\n")
 		_T("\t\t\tFor ProtectCD-VOB\n")
@@ -1377,13 +1424,13 @@ int main(int argc, char* argv[])
 		return EXIT_FAILURE;
 	}
 #endif
-	_TCHAR szDateTime[20] = { 0 };
+	_TCHAR szDateTime[20] = {};
 	int nRet = printSeveralInfo(szDateTime, sizeof(szDateTime));
 	if (nRet) {
 		EXEC_TYPE execType;
 		EXT_ARG extArg = {};
 		extArg.dwCacheDelNum = DEFAULT_CACHE_DELETE_VAL;
-		_TCHAR szFullPath[_MAX_PATH + 1] = { 0 };
+		_TCHAR szFullPath[_MAX_PATH + 1] = {};
 		if (!checkArg(argc, argv, &execType, &extArg, szFullPath)) {
 			printUsage();
 			nRet = FALSE;
@@ -1391,14 +1438,16 @@ int main(int argc, char* argv[])
 		else {
 			time_t now;
 			struct tm* ts;
-			_TCHAR szBuf[128] = { 0 };
+			_TCHAR szBuf[128] = {};
 
 			now = time(NULL);
 			ts = localtime(&now);
 			_tcsftime(szBuf, sizeof(szBuf) / sizeof(szBuf[0]), _T("%Y/%m/%d(%a) %H:%M:%S"), ts);
 			OutputString(_T("StartTime: %s\n"), szBuf);
 
-			nRet = createCmdFile(argc, argv, szFullPath, szDateTime);
+			if (execType != merge) {
+				nRet = createCmdFile(argc, argv, szFullPath, szDateTime);
+			}
 			if (nRet) {
 				nRet = exec(argv, &execType, &extArg, szFullPath);
 			}
