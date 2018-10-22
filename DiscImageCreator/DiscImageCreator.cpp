@@ -63,13 +63,6 @@ static LONG s_nEndLBA = 0;
 #define a4 (440)
 #define b4 (494)
 #define c5 (523)
-#define d5 (587)
-#define e5 (659)
-#define f5 (698)
-#define g5 (784)
-#define a5 (880)
-#define b5 (988)
-#define c6 (1047)
 
 int soundBeep(int nRet)
 {

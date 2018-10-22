@@ -67,7 +67,7 @@ VOID OutputFs3doHeader(
 VOID OutputFs3doDirectoryRecord(
 	LPBYTE lpBuf,
 	INT nLBA,
-	LPCH pPath,
+	LPCCH pPath,
 	LONG lDirSize
 );
 

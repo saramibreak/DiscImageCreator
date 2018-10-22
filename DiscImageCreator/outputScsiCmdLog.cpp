@@ -1892,6 +1892,8 @@ VOID OutputEeprom(
 		case PLXTR_DRIVE_TYPE::PX8XCS:
 			OutputEepromUnknownByte(pBuf, 108, 127);
 			break;
+		default:
+			break;
 		}
 	}
 	else if (nRoop == 1 && byPlxtrDrive <= PLXTR_DRIVE_TYPE::PX714A) {

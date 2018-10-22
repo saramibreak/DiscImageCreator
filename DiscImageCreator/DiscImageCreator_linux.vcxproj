@@ -137,7 +137,7 @@
     <ClCompile>
       <ForcedIncludeFiles>_linux/defineForLinux.h</ForcedIncludeFiles>
       <CAdditionalWarning>extra;no-unknown-pragmas;%(CAdditionalWarning)</CAdditionalWarning>
-      <CppAdditionalWarning>extra;no-unknown-pragmas;%(CppAdditionalWarning)</CppAdditionalWarning>
+      <CppAdditionalWarning>extra;no-unknown-pragmas;aggregate-return;cast-align;cast-qual;conditionally-supported;disabled-optimization;double-promotion;float-equal;format-signedness;format;init-self;inline;invalid-pch;logical-op;missing-include-dirs;multichar;noexcept;overlength-strings;packed;pointer-arith;redundant-decls;shadow;stack-protector;strict-null-sentinel;switch-default;switch-enum;trampolines;unsafe-loop-optimizations;variadic-macros;vector-operation-performance;write-strings;unused-macros;%(CppAdditionalWarning)</CppAdditionalWarning>
       <Optimization>MaxSpeed</Optimization>
     </ClCompile>
     <PreBuildEvent>

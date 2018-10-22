@@ -528,3 +528,8 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - fixed: /ms option (subchannel)
 - fixed: misdetect MCN of last sector of track to first sector of next track
 - deleted: some warning for linux
+
+*2018-10-22
+- added: -W flag in makefile
+- fixed: crash /ns for external file
+- deleted: some warning for linux

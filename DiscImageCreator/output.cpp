@@ -451,6 +451,8 @@ VOID WriteCcdForTrack(
 		case TWO_FOUR_CHANNEL_AUDIO | DIGITAL_COPY_PERMITTED | AUDIO_WITH_PREEMPHASIS:
 			_ftprintf(fpCcd, _T("FLAGS= 4CH DCP PRE\n"));
 			break;
+		default:
+			break;
 		}
 	}
 }
@@ -627,6 +629,8 @@ VOID WriteCueForUnderFileDirective(
 			break;
 		case TWO_FOUR_CHANNEL_AUDIO | DIGITAL_COPY_PERMITTED | AUDIO_WITH_PREEMPHASIS:
 			_ftprintf(fpCue, _T("    FLAGS 4CH DCP PRE\n"));
+			break;
+		default:
 			break;
 		}
 	}

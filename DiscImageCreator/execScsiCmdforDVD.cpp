@@ -1298,6 +1298,8 @@ BOOL GetFeatureListForXBox(
 		case 0xF001:
 			OutputDriveLogA("0x%04x : The drive supports error skipping\n", list);
 			break;
+		default:
+			break;
 		}
 	}
 	OutputString("\n");

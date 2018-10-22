@@ -31,7 +31,7 @@ BOOL ReadCDFor3DODirectory(
 	PDEVICE pDevice,
 	PDISC pDisc,
 	CDB::_READ12* pCdb,
-	LPCH pPath,
+	LPCCH pPath,
 	INT nLBA
 ) {
 	BOOL bRet = TRUE;
@@ -609,7 +609,7 @@ BOOL ReadCDForFileSystem(
 						}
 						if (IsValid3doDataHeader(lpBuf)) {
 							OutputFs3doHeader(lpBuf, nLBA);
-							if (!ReadCDFor3DODirectory(pExtArg, pDevice, pDisc, &cdb, (LPCH)"/",
+							if (!ReadCDFor3DODirectory(pExtArg, pDevice, pDisc, &cdb, (LPCCH)"/",
 								MAKELONG(MAKEWORD(lpBuf[103], lpBuf[102]),
 									MAKEWORD(lpBuf[101], lpBuf[100])))) {
 								throw FALSE;

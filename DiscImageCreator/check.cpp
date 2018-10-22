@@ -910,6 +910,7 @@ BOOL IsValidSubQTrack(
 	}
 	return bRet;
 }
+
 BOOL IsValidBCD(
 	BYTE bySrc
 ) {

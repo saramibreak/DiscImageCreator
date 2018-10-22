@@ -327,8 +327,6 @@ int WideCharToMultiByte(
 	return cchWideChar;
 }
 
-#define NO_ERROR 0L
-
 void SetLastError(int errcode)
 {
 	errno = errcode;

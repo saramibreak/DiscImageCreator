@@ -624,6 +624,8 @@ VOID OutputFsVolumeDescriptorSequence(
 	case 266:
 		OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Extended File Entry), nLBA, nLBA);
 		break;
+	default:
+		break;
 	}
 	return;
 }

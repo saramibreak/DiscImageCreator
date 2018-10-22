@@ -1338,7 +1338,7 @@ BOOL ReadCDForCheckingSecuROM(
 					}
 				}
 				if (pDisc->PROTECT.byExist != securomV1) {
-					OutputLogA(standardOut | fileDisc, "SecuROM sector not found \n");
+					OutputLogA(standardOut | fileDisc, "[INFO] SecuROM sector not found \n");
 				}
 			}
 			if (lpCmd[0] == 0xd8) {
@@ -1349,7 +1349,7 @@ BOOL ReadCDForCheckingSecuROM(
 			}
 		}
 		else {
-			OutputLogA(standardOut | fileDisc, "SecuROM sector not found \n");
+			OutputLogA(standardOut | fileDisc, "[INFO] SecuROM sector not found \n");
 		}
 	}
 	return TRUE;

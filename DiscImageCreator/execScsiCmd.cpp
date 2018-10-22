@@ -860,6 +860,8 @@ BOOL ReadEeprom(
 		tLen = 256;
 		bHigh = TRUE;
 		break;
+	default:
+		break;
 	}
 	DWORD BufLen = tLen;
 	LPBYTE pPBuf = NULL;
