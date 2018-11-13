@@ -74,6 +74,6 @@ buildDateTime:
 	echo "\"" >>buildDateTime.h
 	echo -n "#define BUILD_TIME \"" >>buildDateTime.h
 	date +%H%M%S | tr -d '\n' >>buildDateTime.h
-	echo "\"\n" >>buildDateTime.h
+	echo "\"" >>buildDateTime.h
 
 .PHONY: clean clean-objs buildDateTime
