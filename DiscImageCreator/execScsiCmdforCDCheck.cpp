@@ -1262,7 +1262,7 @@ BOOL ReadCDForCheckingSecuROM(
 			, BcdToDec(pDiscPerSector->subcode.current[20]), BcdToDec(pDiscPerSector->subcode.current[21]));
 
 //		if (crc16 != bufcrc) {
-		if (nRLBA == 3001 && nALBA == 299) { // 3001(00:40:01), 299(00:03:74)
+		if ((nRLBA == 3000 || nRLBA == 3001) && nALBA == 299) { // 3001(00:40:01), 299(00:03:74)
 			OutputSubInfoWithLBALogA(
 				"Detected intentional error. CRC-16 is original:[%02x%02x] and XORed with 0x8001:[%02x%02x] "
 				, -1, 0, pDiscPerSector->subcode.current[22] ^ 0x80, pDiscPerSector->subcode.current[23] ^ 0x01
