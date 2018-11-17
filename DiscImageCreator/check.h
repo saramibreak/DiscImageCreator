@@ -70,6 +70,11 @@ BOOL IsValidProtectedSector(
 	INT nLBA
 );
 
+BOOL IsValidSafeDiscSector(
+	PDISC pDisc,
+	PDISC_PER_SECTOR pDiscPerSector
+);
+
 BOOL IsValidIntentionalC2error(
 	PDISC pDisc,
 	PDISC_PER_SECTOR pDiscPerSector

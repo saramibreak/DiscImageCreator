@@ -410,13 +410,25 @@ BOOL IsValidProtectedSector(
 	return bRet;
 }
 
+BOOL IsValidSafeDiscSector(
+	PDISC pDisc,
+	PDISC_PER_SECTOR pDiscPerSector
+) {
+	BOOL bRet = FALSE;
+	if ((pDisc->PROTECT.byExist == safeDisc || pDisc->PROTECT.byExist == safeDiscLite) &&
+		pDiscPerSector->dwC2errorNum == SAFEDISC_C2ERROR_NUM) {
+		bRet = TRUE;
+	}
+	return bRet;
+}
+
 BOOL IsValidIntentionalC2error(
 	PDISC pDisc,
 	PDISC_PER_SECTOR pDiscPerSector
 ) {
 	BOOL bRet = FALSE;
 	if (pDisc->PROTECT.byExist == codelock || pDisc->PROTECT.byExist == datel ||
-		(pDisc->PROTECT.byExist == safeDisc && pDiscPerSector->dwC2errorNum == SAFEDISC_C2ERROR_NUM)) {
+		IsValidSafeDiscSector(pDisc, pDiscPerSector)) {
 		bRet = TRUE;
 	}
 	return bRet;
