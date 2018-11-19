@@ -211,7 +211,8 @@ VOID SetAndOutputTocForGD(
 	BOOL bFirstData = TRUE;
 	TRACK_TYPE trkType = TRACK_TYPE::audioOnly;
 
-	for (BYTE i = pDisc->SCSI.toc.FirstTrack, j = 0; i <= pDisc->SCSI.toc.LastTrack; i++, j = (BYTE)(j + 4)) {
+	INT j = 0;
+	for (BYTE i = pDisc->SCSI.toc.FirstTrack; i <= pDisc->SCSI.toc.LastTrack; i++, j += 4) {
 		INT tIdx = i - 1;
 		// update the toc of audio trap disc to the toc of gd-rom
 		pDisc->SCSI.lpFirstLBAListOnToc[tIdx] = MAKELONG(
