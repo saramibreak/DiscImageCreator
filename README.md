@@ -31,10 +31,10 @@
 - DVD: All supported drive
 - GC/Wii
    - Hitachi-LG
-     - GDR-8082N, GDR-8161B, GDR-8162B, GDR-8163B, GDR-8164B  
-       GCC-4160N, GCC-4240N, GCC-4243N, GCC-4247N  
-       (4241N, 4244N, 4246N hasn't tested yet, but probably supports to dump.)  
-       (4242N supports to dump but many errors occurred in my drive.) 
+     - GDR-8082N, GDR-8084N, GDR-8161B, GDR-8162B, GDR-8163B, GDR-8164B  
+       GCC-4160N, GCC-4240N, GCC-4243N, GCC-4244N, GCC-4247N  
+       (GDR-8083N, GDR-8085N, GDR-8087N and GCC-4246N haven't tested yet, but probably supports to dump.)  
+       (GCC-4241N and GCC-4242N supports to dump but many errors occurred.) 
 - XBOX, XBOX 360
    - TSSTcorp
      - TS-H353A, TS-H352C, SH-D162C, SH-D162D, SH-D163A, SH-D163B (needs the firmware hacked by kreon)
@@ -196,7 +196,7 @@
 
 ### Dumping Guide for LaserLock and Proring
  e.g. http://redump.org/disc/30992/
- 1. Dump the disc except the protected file using plextor drive.
+ 1. Dump the disc except the protected file using plextor drive.  
  DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)] /sf  
 
     * App detects the protection like this. -> Detected [LASERLOK.IN], from 337 to 10336

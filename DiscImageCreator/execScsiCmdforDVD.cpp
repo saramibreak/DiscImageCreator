@@ -239,8 +239,7 @@ BOOL IsSupported0xE7Type1(
 	PDEVICE pDevice
 ) {
 	if (!strncmp(pDevice->szProductId, "RW/DVD GCC-4160N", DRIVE_PRODUCT_ID_SIZE) ||
-		!strncmp(pDevice->szProductId, "RW/DVD GCC-4240N", DRIVE_PRODUCT_ID_SIZE) ||
-		!strncmp(pDevice->szProductId, "RW/DVD GCC-4241N", DRIVE_PRODUCT_ID_SIZE)
+		!strncmp(pDevice->szProductId, "RW/DVD GCC-4240N", DRIVE_PRODUCT_ID_SIZE)
 		) {
 		return TRUE;
 	}
@@ -250,7 +249,9 @@ BOOL IsSupported0xE7Type1(
 BOOL IsSupported0xE7Type2(
 	PDEVICE pDevice
 ) {
-	if (!strncmp(pDevice->szProductId, "RW/DVD GCC-4242N", DRIVE_PRODUCT_ID_SIZE)
+	if (!strncmp(pDevice->szProductId, "RW/DVD GCC-4241N", DRIVE_PRODUCT_ID_SIZE) ||
+		!strncmp(pDevice->szProductId, "RW/DVD_GCC-4241N", DRIVE_PRODUCT_ID_SIZE) ||
+		!strncmp(pDevice->szProductId, "RW/DVD GCC-4242N", DRIVE_PRODUCT_ID_SIZE)
 		) {
 		return TRUE;
 	}
@@ -260,8 +261,9 @@ BOOL IsSupported0xE7Type2(
 BOOL IsSupported0xE7Type3(
 	PDEVICE pDevice
 ) {
-	if (!strncmp(pDevice->szProductId, "CDRW-DVD GCC4244", DRIVE_PRODUCT_ID_SIZE) ||
-		!strncmp(pDevice->szProductId, "CDRW-DVD GCC4247", DRIVE_PRODUCT_ID_SIZE) ||
+	if (!strncmp(pDevice->szProductId, "CDRW/DVD GCC4244", DRIVE_PRODUCT_ID_SIZE) ||
+		!strncmp(pDevice->szProductId, "CDRW/DVD GCC4247", DRIVE_PRODUCT_ID_SIZE) ||
+		!strncmp(pDevice->szProductId, "DVD-ROM GDR8084N", DRIVE_PRODUCT_ID_SIZE) ||
 		!strncmp(pDevice->szProductId, "RW/DVD GCC-4243N", DRIVE_PRODUCT_ID_SIZE) ||
 		!strncmp(pDevice->szProductId, "RW/DVD GCC-4244N", DRIVE_PRODUCT_ID_SIZE) ||
 		!strncmp(pDevice->szProductId, "RW/DVD GCC-4246N", DRIVE_PRODUCT_ID_SIZE) ||
@@ -298,7 +300,6 @@ BOOL IsSupported0xE7Type4(
 		!strncmp(pDevice->szProductId, "DVD-ROM GDR-T20N", DRIVE_PRODUCT_ID_SIZE) ||	
 		!strncmp(pDevice->szProductId, "DVD-ROM GDR3120L", DRIVE_PRODUCT_ID_SIZE) ||
 		!strncmp(pDevice->szProductId, "DVD-ROM GDR8083N", DRIVE_PRODUCT_ID_SIZE) ||
-		!strncmp(pDevice->szProductId, "DVD-ROM GDR8084N", DRIVE_PRODUCT_ID_SIZE) ||
 		!strncmp(pDevice->szProductId, "DVD-ROM GDR8085N", DRIVE_PRODUCT_ID_SIZE) ||
 		!strncmp(pDevice->szProductId, "DVD-ROM GDR8087N", DRIVE_PRODUCT_ID_SIZE) ||
 		!strncmp(pDevice->szProductId, "DVD-ROM GDRH10N ", DRIVE_PRODUCT_ID_SIZE) ||
