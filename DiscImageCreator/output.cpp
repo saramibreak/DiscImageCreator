@@ -2598,28 +2598,64 @@ BOOL OutputMergedFile(
 		return FALSE;
 	}
 	BYTE buf[2352] = {};
-	fread(buf, sizeof(BYTE), sizeof(buf), fpSrc2);
+	if (fread(buf, sizeof(BYTE), sizeof(buf), fpSrc2) < sizeof(buf)) {
+		OutputErrorString(_T("Failed to read: read size %zd [F:%s][L:%d]\n"), sizeof(buf), _T(__FUNCTION__), __LINE__);
+		FcloseAndNull(fpSrc1);
+		FcloseAndNull(fpSrc2);
+		FcloseAndNull(fpDst);
+		return FALSE;
+	};
 	INT nLBA = MSFtoLBA(BcdToDec(buf[12]), BcdToDec(buf[13]), BcdToDec(buf[14])) - 150;
 	rewind(fpSrc2);
 
 	for (INT i = 0; i < nLBA; i++) {
-		fread(buf, sizeof(BYTE), sizeof(buf), fpSrc1);
+		if (fread(buf, sizeof(BYTE), sizeof(buf), fpSrc1) < sizeof(buf)) {
+			OutputErrorString(_T("Failed to read: read size %zd [F:%s][L:%d]\n"), sizeof(buf), _T(__FUNCTION__), __LINE__);
+			FcloseAndNull(fpSrc1);
+			FcloseAndNull(fpSrc2);
+			FcloseAndNull(fpDst);
+			return FALSE;
+		}
 		fwrite(buf, sizeof(BYTE), sizeof(buf), fpDst);
 	}
 
-	fread(buf, sizeof(BYTE), sizeof(buf), fpSrc2);
+	if (fread(buf, sizeof(BYTE), sizeof(buf), fpSrc2) < sizeof(buf)) {
+		OutputErrorString(_T("Failed to read: read size %zd [F:%s][L:%d]\n"), sizeof(buf), _T(__FUNCTION__), __LINE__);
+		FcloseAndNull(fpSrc1);
+		FcloseAndNull(fpSrc2);
+		FcloseAndNull(fpDst);
+		return FALSE;
+	};
 	fseek(fpSrc1, sizeof(buf), SEEK_CUR);
 	while (!feof(fpSrc2) && !ferror(fpSrc2)) {
 		fwrite(buf, sizeof(BYTE), sizeof(buf), fpDst);
-		fread(buf, sizeof(BYTE), sizeof(buf), fpSrc2);
+		if (fread(buf, sizeof(BYTE), sizeof(buf), fpSrc2) < sizeof(buf)) {
+			OutputErrorString(_T("Failed to read: read size %zd [F:%s][L:%d]\n"), sizeof(buf), _T(__FUNCTION__), __LINE__);
+			FcloseAndNull(fpSrc1);
+			FcloseAndNull(fpSrc2);
+			FcloseAndNull(fpDst);
+			return FALSE;
+		};
 		fseek(fpSrc1, sizeof(buf), SEEK_CUR);
 	}
 	fseek(fpSrc1, -2352, SEEK_CUR);
 
-	fread(buf, sizeof(BYTE), sizeof(buf), fpSrc1);
+	if (fread(buf, sizeof(BYTE), sizeof(buf), fpSrc1) < sizeof(buf)) {
+		OutputErrorString(_T("Failed to read: read size %zd [F:%s][L:%d]\n"), sizeof(buf), _T(__FUNCTION__), __LINE__);
+		FcloseAndNull(fpSrc1);
+		FcloseAndNull(fpSrc2);
+		FcloseAndNull(fpDst);
+		return FALSE;
+	}
 	while (!feof(fpSrc1) && !ferror(fpSrc1)) {
 		fwrite(buf, sizeof(BYTE), sizeof(buf), fpDst);
-		fread(buf, sizeof(BYTE), sizeof(buf), fpSrc1);
+		if (fread(buf, sizeof(BYTE), sizeof(buf), fpSrc1) < sizeof(buf)) {
+			OutputErrorString(_T("Failed to read: read size %zd [F:%s][L:%d]\n"), sizeof(buf), _T(__FUNCTION__), __LINE__);
+			FcloseAndNull(fpSrc1);
+			FcloseAndNull(fpSrc2);
+			FcloseAndNull(fpDst);
+			return FALSE;
+		}
 	}
 	FcloseAndNull(fpSrc1);
 	FcloseAndNull(fpSrc2);
