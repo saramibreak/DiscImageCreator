@@ -327,6 +327,24 @@ int WideCharToMultiByte(
 	return cchWideChar;
 }
 
+int MultiByteToWideChar(
+	UINT CodePage,
+	DWORD dwFlags,
+	LPCSTR lpMultiByteStr,
+	int cchMultiByte,
+	LPWSTR lpWideCharStr,
+	int cchWideChar)
+{
+	UNREFERENCED_PARAMETER(CodePage);
+	UNREFERENCED_PARAMETER(dwFlags);
+	UNREFERENCED_PARAMETER(cchWideChar);
+	size_t ret = mbstowcs(lpWideCharStr, lpMultiByteStr, cchMultiByte);
+	if (ret == (size_t)-1) {
+		return 0;
+	}
+	return cchMultiByte;
+}
+
 void SetLastError(int errcode)
 {
 	errno = errcode;
