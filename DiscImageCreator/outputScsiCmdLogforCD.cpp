@@ -167,8 +167,7 @@ VOID OutputFsDirectoryRecord(
 				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)dwExtentPos;
 				pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(dwDataLen / DISC_RAW_READ_SIZE - 1);
 			}
-			else if (!strncmp(fnameForProtect, "PROTECT.PRO", 11) ||
-				!strncmp(fnameForProtect, "protect.pro", 11)) {
+			else if (!_strnicmp(fnameForProtect, "PROTECT.PRO", 11)) {
 				pDisc->PROTECT.byExist = proring;
 				strncpy(pDisc->PROTECT.name, fnameForProtect, 11);
 				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)dwExtentPos;
@@ -186,7 +185,7 @@ VOID OutputFsDirectoryRecord(
 				pDisc->PROTECT.byTmpForSafeDisc = TRUE;
 				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)(dwExtentPos + dwDataLen / DISC_RAW_READ_SIZE);
 			}
-			else if (!strncmp(fnameForProtect, "00002.tmp", 9)) {
+			else if (!_strnicmp(fnameForProtect, "00002.TMP", 9)) {
 				pDisc->PROTECT.byExist = smartE;
 				strncpy(pDisc->PROTECT.name, fnameForProtect, 9);
 				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)dwExtentPos;
