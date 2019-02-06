@@ -151,9 +151,14 @@ BOOL GetFilenameToSkipError(
 		return FALSE;
 	}
 	CHAR comment[MAX_FNAME_FOR_VOLUME] = {};
-	fgets(comment, MAX_FNAME_FOR_VOLUME, fp);
-	fgets(szFilename, MAX_FNAME_FOR_VOLUME, fp); // 2nd line is filename
-	
+	if (fgets(comment, MAX_FNAME_FOR_VOLUME, fp)) {
+		if (!fgets(szFilename, MAX_FNAME_FOR_VOLUME, fp)) { // 2nd line is filename
+			return FALSE;
+		}
+	}
+	else {
+		return FALSE;
+	}
 	return TRUE;
 }
 
@@ -166,9 +171,14 @@ BOOL GetFilenameToFixError(
 		return FALSE;
 	}
 	CHAR comment[MAX_FNAME_FOR_VOLUME] = {};
-	fgets(comment, MAX_FNAME_FOR_VOLUME, fp);
-	fgets(szFilename, MAX_FNAME_FOR_VOLUME, fp); // 2nd line is filename
-
+	if (fgets(comment, MAX_FNAME_FOR_VOLUME, fp)) {
+		if (!fgets(szFilename, MAX_FNAME_FOR_VOLUME, fp)) { // 2nd line is filename
+			return FALSE;
+		}
+	}
+	else {
+		return FALSE;
+	}
 	return TRUE;
 }
 
