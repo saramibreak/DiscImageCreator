@@ -558,7 +558,7 @@ BOOL ReadCDForFileSystem(
 						}
 					}
 					if (pDisc->PROTECT.byExist) {
-						OutputLogA(standardOut | fileDisc, "Detected [%s], from %d to %d"
+						OutputLogA(standardOut | fileDisc, "Detected a protected file [%s]. LBA %d to %d"
 							, pDisc->PROTECT.name, pDisc->PROTECT.ERROR_SECTOR.nExtentPos
 							, pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize);
 						if (pDisc->PROTECT.byExist == microids) {
