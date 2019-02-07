@@ -176,11 +176,17 @@ BOOL ReadDVD(
 				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 				if (++nRetryCnt <= 5) {
 					nLBA -= (INT)dwTransferLen;
+					OutputString(_T("Read retry %d/5\n"), nRetryCnt);
 					continue;
 				}
 				else {
+					OutputString(_T("Retry NG\n"));
 					throw FALSE;
 				}
+			}
+			if (nRetryCnt) {
+				OutputString(_T("Retry OK\n"));
+				nRetryCnt = 0;
 			}
 			fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_RAW_READ_SIZE * dwTransferLen, fp);
 			OutputString(_T("\rCreating iso(LBA) %8lu/%8u"), nLBA + dwTransferLen, nAllLength);
