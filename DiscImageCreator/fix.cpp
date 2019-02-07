@@ -781,7 +781,7 @@ VOID FixSubQ(
 			if (pDiscPerSector->subQ.prev.byAdr == ADR_ENCODES_CURRENT_POSITION) {
 				if ((!(pDiscPerSector->subQ.prev.byIndex == 0 && pDiscPerSector->subQ.current.byIndex == 1) &&
 					!(pDiscPerSector->subQ.prev.byIndex >= 1 && pDiscPerSector->subQ.current.byIndex == 0)) ||
-					(nLBA == 0 && pDisc->PROTECT.byExist == securomV3)) {
+					(nLBA == 0 && (pDisc->PROTECT.byExist == securomV3_1 || pDisc->PROTECT.byExist == securomV3_2))) {
 					if (pDiscPerSector->subQ.current.byIndex > 0) {
 						if (pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->byTrackNum] != nLBA) {
 							tmpRel = pDiscPerSector->subQ.prev.nRelativeTime + 1;
@@ -791,7 +791,7 @@ VOID FixSubQ(
 						tmpRel = pDiscPerSector->subQ.prev.nRelativeTime - 1;
 					}
 					// Colin McRae Rally 2.0 (Europe) (En,Fr,De,Es,It) etc
-					if (pDiscPerSector->bSecuRom && pDisc->PROTECT.byExist == securomV3 && nLBA == 7) {
+					if (pDiscPerSector->bSecuRom && pDisc->PROTECT.byExist == securomV3_1 && nLBA == 7) {
 						tmpRel -= 1;
 					}
 					LBAtoMSF(tmpRel, &byMinute, &bySecond, &byFrame);
@@ -1018,7 +1018,8 @@ VOID FixSubQ(
 			pDisc->SUB.nCorruptCrcL = 0;
 		}
 		else {
-			if (pDisc->PROTECT.byExist == securomV1 || pDisc->PROTECT.byExist == securomV2 || pDisc->PROTECT.byExist == securomV3) {
+			if (pDisc->PROTECT.byExist == securomV1 || pDisc->PROTECT.byExist == securomV2 ||
+				pDisc->PROTECT.byExist == securomV3_1 || pDisc->PROTECT.byExist == securomV3_2) {
 				INT nPrevRMSF = MSFtoLBA(BcdToDec(pDiscPerSector->subcode.current[15])
 					, BcdToDec(pDiscPerSector->subcode.current[16]), BcdToDec(pDiscPerSector->subcode.current[17]));
 				INT nRMSF = MSFtoLBA(BcdToDec(SubQcodeOrg[3]), BcdToDec(SubQcodeOrg[4]), BcdToDec(SubQcodeOrg[5]));
@@ -1027,7 +1028,8 @@ VOID FixSubQ(
 				INT nAMSF = MSFtoLBA(BcdToDec(SubQcodeOrg[7]), BcdToDec(SubQcodeOrg[8]), BcdToDec(SubQcodeOrg[9]));
 
 				if ((nPrevRMSF + 1 == nRMSF && nPrevAMSF + 1 == nAMSF) ||
-					(nPrevRMSF == nRMSF && nPrevAMSF + 1 == nAMSF && pDisc->PROTECT.byExist == securomV3 && 0 <= nLBA && nLBA < 9)) {
+					(nPrevRMSF == nRMSF && nPrevAMSF + 1 == nAMSF && 0 <= nLBA && nLBA < 9 &&
+					(pDisc->PROTECT.byExist == securomV3_1 || pDisc->PROTECT.byExist == securomV3_2))) {
 					OutputSubInfoWithLBALogA(
 						"Detected shifted sub. Restore RMSF[%02x:%02x:%02x to %02x:%02x:%02x] AMSF[%02x:%02x:%02x to %02x:%02x:%02x]\n"
 						, nLBA, pDiscPerSector->byTrackNum, pDiscPerSector->subcode.current[15], pDiscPerSector->subcode.current[16]
@@ -1341,7 +1343,17 @@ VOID FixSubChannel(
 					OutputSubErrorLogA("NG. Fix manually\n");
 					*bReread = FALSE;
 				}
+
 				FixSubQ(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA);
+				if (pDiscPerSector->subQ.current.byAdr == ADR_ENCODES_MEDIA_CATALOG) {
+					UpdateTmpSubQDataForMCN(pExtArg, pDisc, pDiscPerSector, nLBA);
+				}
+				else if (pDiscPerSector->subQ.current.byAdr == ADR_ENCODES_ISRC) {
+					UpdateTmpSubQDataForISRC(&pDiscPerSector->subQ);
+				}
+				else if (pDiscPerSector->subQ.current.byAdr == ADR_ENCODES_CDTV_SPECIFIC) {
+					UpdateTmpSubQDataForCDTV(pDisc, pDiscPerSector, nLBA);
+				}
 			}
 		}
 		else {

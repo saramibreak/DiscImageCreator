@@ -81,8 +81,8 @@
     <ClCompile Include="outputScsiCmdLogforDVD.cpp" />
     <ClCompile Include="set.cpp" />
     <ClCompile Include="xml.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="_external\abgx360.cpp" />
     <ClCompile Include="_external\crc16ccitt.cpp" />
@@ -91,6 +91,7 @@
     <ClCompile Include="_external\prngcd.cpp" />
     <ClCompile Include="_external\rijndael-alg-fst.cpp" />
     <ClCompile Include="_external\sha1.cpp" />
+    <ClCompile Include="_external\tinyxml2.cpp" />
     <ClCompile Include="_linux\defineForLinux.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -117,8 +118,8 @@
     <ClInclude Include="set.h" />
     <ClInclude Include="struct.h" />
     <ClInclude Include="xml.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="_external\abgx360.h" />
     <ClInclude Include="_external\crc16ccitt.h" />
@@ -128,6 +129,7 @@
     <ClInclude Include="_external\prngcd.h" />
     <ClInclude Include="_external\rijndael-alg-fst.h" />
     <ClInclude Include="_external\sha1.h" />
+    <ClInclude Include="_external\tinyxml2.h" />
     <ClInclude Include="_linux\defineForLinux.h" />
     <ClInclude Include="_linux\ntddcdrm.h" />
     <ClInclude Include="_linux\ntddmmc.h" />

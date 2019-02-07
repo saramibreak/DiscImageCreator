@@ -27,9 +27,7 @@
 #include "get.h"
 #include "init.h"
 #include "output.h"
-#ifdef _WIN32
 #include "xml.h"
-#endif
 #include "_external/prngcd.h"
 
 #define DEFAULT_REREAD_VAL			(4000)
@@ -455,7 +453,6 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 						}
 					}
 				}
-#ifdef _WIN32
 				if (bRet && (*pExecType != audio && *pExecType != data)) {
 					bRet = ReadWriteDat(pExecType, pExtArg, pDisc
 						, pszFullPath, s_szDrive, s_szDir, s_szFname, FALSE);
@@ -464,7 +461,6 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 							, pszFullPath, s_szDrive, s_szDir, s_szFname, TRUE);
 					}
 				}
-#endif
 			}
 			catch (BOOL bErr) {
 				bRet = bErr;
@@ -825,6 +821,9 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/ms"), 3)) {
 					pExtArg->byMultiSession = TRUE;
 				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/vn"), 3)) {
+					pExtArg->byVideoNow = TRUE;
+				}
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/np"), 3)) {
 					pExtArg->bySkipSubP = TRUE;
 				}
@@ -845,7 +844,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 						return FALSE;
 					}
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/74"), 3)) {
+				else if (*pExecType == swap && cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/74"), 3)) {
 					pExtArg->by74Min = TRUE;
 				}
 				else {
@@ -1232,7 +1231,7 @@ int printUsage(void)
 		_T("Usage\n")
 		_T("\tcd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/a (val)]\n")
 		_T("\t   [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4)] [/f (val)] [/m]\n")
-		_T("\t   [/p] [/ms] [/sf (val)] [/ss] [/np] [/nq] [/nr] [/ns] [/s (val)]\n")
+		_T("\t   [/p] [/ms] [/vn] [/sf (val)] [/ss] [/np] [/nq] [/nr] [/ns] [/s (val)]\n")
 		_T("\t\tDump a CD from A to Z\n")
 		_T("\t\tFor PLEXTOR or drive that can scramble Dumping\n")
 		_T("\tswap <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/a (val)]\n")
@@ -1346,6 +1345,8 @@ int printUsage(void)
 		_T("\t\t\tFor ProtectCD-VOB\n")
 		_T("\t/am\tScan anti-mod string\n")
 		_T("\t\t\tFor PlayStation\n")
+		_T("\t/vn\tSearch specific bytes\n")
+		_T("\t\t\tFor VideoNow\n")
 		_T("Option (for CD SubChannel)\n")
 		_T("\t/np\tNot fix SubP\n")
 		_T("\t/nq\tNot fix SubQ\n")

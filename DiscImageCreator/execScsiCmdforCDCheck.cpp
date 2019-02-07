@@ -192,14 +192,59 @@ BOOL ExecSearchingOffset(
 			OutputCDMain(fileDisc, lpBuf, nLBA + 1, CD_RAW_SECTOR_SIZE);
 
 			memcpy(aBuf + CD_RAW_SECTOR_SIZE, lpBuf, CD_RAW_SECTOR_SIZE);
-			if (!GetWriteOffset(pDisc, aBuf)) {
-				if (pDisc->SCSI.trackType == TRACK_TYPE::dataExist) {
-					OutputLogA(standardError | fileDisc, _T("Failed to get write-offset\n"));
+			if (pDisc->SCSI.trackType != TRACK_TYPE::audioOnly || *pExecType == swap) {
+				if (!GetWriteOffset(pDisc, aBuf)) {
+					if (pDisc->SCSI.trackType == TRACK_TYPE::dataExist) {
+						OutputLogA(standardError | fileDisc, _T("Failed to get write-offset\n"));
+						return FALSE;
+					}
+					// There isn't some data sector in pregap sector of track 1, that is, not CD-I ready disc.
+					pDisc->SCSI.trackType = TRACK_TYPE::audioOnly;
+				}
+			}
+		}
+		else if (pDisc->SCSI.trackType == TRACK_TYPE::audioOnly && pExtArg->byVideoNow) {
+			LPBYTE pBuf2 = NULL;
+			LPBYTE lpBuf2 = NULL;
+			if (!GetAlignedCallocatedBuffer(pDevice, &pBuf2,
+				CD_RAW_SECTOR_SIZE * 10, &lpBuf2, _T(__FUNCTION__), __LINE__)) {
+				return FALSE;
+			}
+			memcpy(lpBuf2, lpBuf, CD_RAW_SECTOR_SIZE);
+			BYTE aBuf[CD_RAW_SECTOR_WITH_C2_AND_SUBCODE_SIZE] = {};
+
+			for (INT k = 1; k < 10; k++) {
+				if (!ExecReadCD(pExtArg, pDevice, lpCmd, nLBA + k
+					, aBuf, dwBufSize, _T(__FUNCTION__), __LINE__)) {
 					return FALSE;
 				}
-				// There isn't some data sector in pregap sector of track 1, that is, not CD-I ready disc.
-				pDisc->SCSI.trackType = TRACK_TYPE::audioOnly;
+				memcpy(lpBuf2 + CD_RAW_SECTOR_SIZE * k, aBuf, CD_RAW_SECTOR_SIZE);
 			}
+			CONST BYTE aVideoNowBytes[] = {
+				0x81, 0xe3, 0xe3, 0xc7, 0xc7, 0x81, 0x81, 0xe3,
+			};
+			INT nSector = 1;
+			for (INT i = 0; i < CD_RAW_SECTOR_SIZE * 10; i++) {
+				for (size_t c = 0; c < sizeof(aVideoNowBytes); c++) {
+					if (lpBuf2[i + c] != aVideoNowBytes[c]) {
+						bRet = FALSE;
+						break;
+					}
+					if (c == sizeof(aVideoNowBytes) - 1) {
+						bRet = TRUE;
+					}
+				}
+				if (bRet) {
+					pDisc->MAIN.nCombinedOffset = i;
+					nSector--;
+					OutputCDMain(fileDisc, lpBuf2 + CD_RAW_SECTOR_SIZE * nSector, nLBA + nSector, CD_RAW_SECTOR_SIZE);
+					break;
+				}
+				else if (i == CD_RAW_SECTOR_SIZE * nSector - 1) {
+					nSector++;
+				}
+			}
+			FreeAndNull(pBuf2);
 		}
 		OutputCDOffset(pExtArg, pDisc, bGetDriveOffset
 			, nDriveSampleOffset, nDriveOffset, pDisc->SUB.nSubChannelOffset);
@@ -1284,9 +1329,17 @@ BOOL ReadCDForCheckingSecuROM(
 				, -1, 0, pDiscPerSector->subcode.current[15], pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17]
 				, pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
 
-			OutputLogA(standardOut | fileDisc, "Detected intentional subchannel in LBA -1 => SecuROM Type 3 (a.k.a. NEW)\n");
+			// Colin McRae Rally 2.0 http://redump.org/disc/31587/
+			if (nRLBA == 167295) {
+				OutputLogA(standardOut | fileDisc, "Detected intentional subchannel in LBA -1 => SecuROM Type 3_1 (a.k.a. NEW)\n");
+				pDisc->PROTECT.byExist = securomV3_1;
+			}
+			// Empire Earth http://redump.org/disc/45559/ Diablo II: Lord of Destruction (Expansion Set) http://redump.org/disc/58232/
+			else if (nRLBA == 0) {
+				OutputLogA(standardOut | fileDisc, "Detected intentional subchannel in LBA -1 => SecuROM Type 3_2 (a.k.a. NEW)\n");
+				pDisc->PROTECT.byExist = securomV3_2;
+			}
 			OutputIntentionalSubchannel(-1, &pDiscPerSector->subcode.current[12]);
-			pDisc->PROTECT.byExist = securomV3;
 			if (pDisc->SUB.nSubChannelOffset) {
 				pDisc->SUB.nSubChannelOffset -= 1;
 			}

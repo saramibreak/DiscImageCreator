@@ -99,6 +99,9 @@
     <ClCompile Include="_external\rijndael-alg-fst.cpp">
       <Filter>_external</Filter>
     </ClCompile>
+    <ClCompile Include="_external\tinyxml2.cpp">
+      <Filter>_external</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="buildDateTime.h">
@@ -204,6 +207,9 @@
       <Filter>_external</Filter>
     </ClInclude>
     <ClInclude Include="_external\rijndael-alg-fst.h">
+      <Filter>_external</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\tinyxml2.h">
       <Filter>_external</Filter>
     </ClInclude>
   </ItemGroup>

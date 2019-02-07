@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 #pragma once
+#ifndef _WIN32
+#include "_external/tinyxml2.h"
+using namespace tinyxml2;
+#endif
 
 BOOL ReadWriteDat(
 	PEXEC_TYPE pExecType,
@@ -27,7 +31,11 @@ BOOL ReadWriteDat(
 );
 
 BOOL OutputHash(
+#ifdef _WIN32
 	CComPtr<IXmlWriter> pWriter,
+#else
+	XMLElement* pWriter,
+#endif
 	_TCHAR* pszFullPath,
 	LPCTSTR szExt,
 	UCHAR uiTrack,

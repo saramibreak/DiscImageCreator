@@ -381,7 +381,7 @@ BOOL IsValidSecuRomSector(
 				bRet = TRUE;
 			}
 		}
-		else if (pDisc->PROTECT.byExist == securomV3) {
+		else if (pDisc->PROTECT.byExist == securomV3_1 || pDisc->PROTECT.byExist == securomV3_2) {
 			if ((0 <= nLBA && nLBA < 8) || (5000 <= nLBA && nLBA < 25000)) {
 				bRet = TRUE;
 			}

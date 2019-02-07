@@ -198,7 +198,8 @@ typedef struct _EXT_ARG {
 	BYTE byLibCrypt;
 	BYTE byIntentionalSub;
 	BYTE by74Min;
-	BYTE padding[3];
+	BYTE byVideoNow;
+	BYTE padding[2];
 	LONG nAudioCDOffsetNum;
 	DWORD dwMaxRereadNum;
 	INT nAllSectors;	// use for xbox360
