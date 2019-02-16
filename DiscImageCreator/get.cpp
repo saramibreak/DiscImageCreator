@@ -328,7 +328,7 @@ BOOL GetEccEdcCmd(
 				_T("\"\"%s\" %s \"%s\"\""), szPathForEcc, pszCmd, pszImgPath);
 #else
 			_sntprintf(pszStr, cmdSize,
-				_T("%s %s %s"), szPathForEcc, pszCmd, pszImgPath);
+				_T("%s %s \"%s\""), szPathForEcc, pszCmd, pszImgPath);
 #endif
 		}
 		else if (!_tcscmp(pszCmd, _T("fix"))) {
@@ -338,7 +338,7 @@ BOOL GetEccEdcCmd(
 				szPathForEcc, pszCmd, pszImgPath, nStartLBA, nEndLBA);
 #else
 			_sntprintf(pszStr, cmdSize,
-				_T("%s %s %s %d %d"),
+				_T("%s %s \"%s\" %d %d"),
 				szPathForEcc, pszCmd, pszImgPath, nStartLBA, nEndLBA);
 #endif
 		}
