@@ -166,24 +166,24 @@ BOOL ReadWriteDat(
 	}
 
 	WCHAR wszPathForDat[_MAX_PATH] = {};
-	_TCHAR szPath[_MAX_PATH] = {};
+	_TCHAR szTmpPath[_MAX_PATH] = {};
 	if (bDesync) {
-		_sntprintf(szPath, _MAX_PATH, _T("%s\\%s\\%s (Subs indexes).dat"), szDrive, szDir, szFname);
+		_sntprintf(szTmpPath, _MAX_PATH, _T("%s\\%s\\%s (Subs indexes).dat"), szDrive, szDir, szFname);
 	}
 	else {
-		_sntprintf(szPath, _MAX_PATH, _T("%s\\%s\\%s.dat"), szDrive, szDir, szFname);
+		_sntprintf(szTmpPath, _MAX_PATH, _T("%s\\%s\\%s.dat"), szDrive, szDir, szFname);
 	}
-	szPath[_MAX_FNAME - 1] = 0;
+	szTmpPath[_MAX_FNAME - 1] = 0;
 #ifndef UNICODE
 	if (!MultiByteToWideChar(CP_ACP, 0
-		, szPath, sizeof(szPath) / sizeof(szPath[0])
+		, szTmpPath, sizeof(szTmpPath) / sizeof(szTmpPath[0])
 		, wszPathForDat, sizeof(wszPathForDat) / sizeof(wszPathForDat[0]))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
 #else
 	size = sizeof(wszPathForDat) / sizeof(wszPathForDat[0]);
-	wcsncpy(wszPathForDat, szPath, size);
+	wcsncpy(wszPathForDat, szTmpPath, size);
 	wszPathForDat[size - 1] = 0;
 #endif
 
@@ -326,7 +326,7 @@ BOOL ReadWriteDat(
 				return FALSE;
 			}
 			if (!wcsncmp(pwszLocalName, L"game", 4)) {
-				OutputGameHash(pWriter, pExecType, pExtArg, pDisc, pszFullPath,	szPath, bDesync);
+				OutputGameHash(pWriter, pExecType, pExtArg, pDisc, pszFullPath,	szTmpPath, bDesync);
 			}
 			if (FAILED(hr = pWriter->WriteEndElement())) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -398,27 +398,15 @@ BOOL ReadWriteDat(
 		return FALSE;
 	}
 
-	WCHAR wszPathForDat[_MAX_PATH] = {};
-	_TCHAR szPath[_MAX_PATH] = {};
+	CHAR szPathForDat[_MAX_PATH] = {};
+	_TCHAR szTmpPath[_MAX_PATH] = {};
 	if (bDesync) {
-		_sntprintf(szPath, _MAX_PATH, _T("%s%s%s (Subs indexes).dat"), szDrive, szDir, szFname);
+		_sntprintf(szPathForDat, _MAX_PATH, _T("%s%s%s (Subs indexes).dat"), szDrive, szDir, szFname);
 	}
 	else {
-		_sntprintf(szPath, _MAX_PATH, _T("%s%s%s.dat"), szDrive, szDir, szFname);
+		_sntprintf(szPathForDat, _MAX_PATH, _T("%s%s%s.dat"), szDrive, szDir, szFname);
 	}
-	szPath[_MAX_FNAME - 1] = 0;
-#ifndef UNICODE
-	if (!MultiByteToWideChar(CP_ACP, 0
-		, szPath, sizeof(szPath) / sizeof(szPath[0])
-		, wszPathForDat, sizeof(wszPathForDat) / sizeof(wszPathForDat[0]))) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return FALSE;
-	}
-#else
-	size = sizeof(wszPathForDat) / sizeof(wszPathForDat[0]);
-	wcsncpy(wszPathForDat, szPath, size);
-	wszPathForDat[size - 1] = 0;
-#endif
+	szPathForDat[_MAX_PATH - 1] = 0;
 
 	XMLDocument xmlWriter;
 	XMLDeclaration* decl = xmlWriter.NewDeclaration();
@@ -475,7 +463,7 @@ BOOL ReadWriteDat(
 			}
 
 			if (bDescription) {
-				OutputGameHash(newElem2, pExecType, pExtArg, pDisc, pszFullPath, szPath, bDesync);
+				OutputGameHash(newElem2, pExecType, pExtArg, pDisc, pszFullPath, szTmpPath, bDesync);
 			}
 
 			newElem1->InsertEndChild(newElem2);
@@ -485,7 +473,7 @@ BOOL ReadWriteDat(
 		readElem = readElem->NextSiblingElement();
 	}
 
-	xmlWriter.SaveFile(szPath);
+	xmlWriter.SaveFile(szPathForDat);
 #endif
 	return TRUE;
 }
