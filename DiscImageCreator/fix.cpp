@@ -1224,7 +1224,7 @@ VOID FixSubRtoW(
 	return;
 }
 
-VOID FixSubChannel(
+BOOL FixSubChannel(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
@@ -1235,7 +1235,7 @@ VOID FixSubChannel(
 ) {
 	if (pExtArg->byMultiSession && pDisc->MAIN.nFixFirstLBAofLeadout <= nLBA &&
 		nLBA < pDisc->MAIN.nFixFirstLBAofLeadout + 11400) {
-		return;
+		return TRUE;
 	}
 	if (pDisc->SUB.nSubChannelOffset) {
 		SetTmpSubQDataFromBuffer(&pDiscPerSector->subQ.next, pDiscPerSector->subcode.next);
@@ -1333,7 +1333,7 @@ VOID FixSubChannel(
 					if (nLBA < MAX_LBA_OF_CD) {
 						OutputSubErrorWithLBALogA("Q Reread [crc16 unmatch] -> ", nLBA, pDiscPerSector->byTrackNum);
 						*bReread = TRUE;
-						return;
+						return TRUE;
 					}
 					else {
 						OutputSubErrorWithLBALogA("Q [crc16 unmatch] Fix manually\n", nLBA, pDiscPerSector->byTrackNum);
@@ -1344,15 +1344,21 @@ VOID FixSubChannel(
 					*bReread = FALSE;
 				}
 
-				FixSubQ(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA);
-				if (pDiscPerSector->subQ.current.byAdr == ADR_ENCODES_MEDIA_CATALOG) {
-					UpdateTmpSubQDataForMCN(pExtArg, pDisc, pDiscPerSector, nLBA);
+				if (pDiscPerSector->subcode.current[22] == 0 && pDiscPerSector->subcode.current[23] == 0) {
+					OutputSubErrorWithLBALogA("Failed to reread because crc16 of subQ is 0\n", nLBA, pDiscPerSector->byTrackNum);
+					return FALSE;
 				}
-				else if (pDiscPerSector->subQ.current.byAdr == ADR_ENCODES_ISRC) {
-					UpdateTmpSubQDataForISRC(&pDiscPerSector->subQ);
-				}
-				else if (pDiscPerSector->subQ.current.byAdr == ADR_ENCODES_CDTV_SPECIFIC) {
-					UpdateTmpSubQDataForCDTV(pDisc, pDiscPerSector, nLBA);
+				else {
+					FixSubQ(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA);
+					if (pDiscPerSector->subQ.current.byAdr == ADR_ENCODES_MEDIA_CATALOG) {
+						UpdateTmpSubQDataForMCN(pExtArg, pDisc, pDiscPerSector, nLBA);
+					}
+					else if (pDiscPerSector->subQ.current.byAdr == ADR_ENCODES_ISRC) {
+						UpdateTmpSubQDataForISRC(&pDiscPerSector->subQ);
+					}
+					else if (pDiscPerSector->subQ.current.byAdr == ADR_ENCODES_CDTV_SPECIFIC) {
+						UpdateTmpSubQDataForCDTV(pDisc, pDiscPerSector, nLBA);
+					}
 				}
 			}
 		}
@@ -1372,5 +1378,5 @@ VOID FixSubChannel(
 			FixSubRtoW(pDevice, pDisc, pDiscPerSector, nLBA);
 		}
 	}
-	return;
+	return TRUE;
 }

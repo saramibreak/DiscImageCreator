@@ -23,7 +23,7 @@ VOID FixMainHeader(
 	INT nMainDataType
 );
 
-VOID FixSubChannel(
+BOOL FixSubChannel(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,

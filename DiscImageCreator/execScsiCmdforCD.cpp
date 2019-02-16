@@ -270,7 +270,7 @@ BOOL ProcessReadCD(
 		if (!IsValidProtectedSector(pDisc, nLBA) &&
 			!IsValidIntentionalC2error(pDisc, pDiscPerSector) &&
 			!pDiscPerSector->bLibCrypt && !pDiscPerSector->bSecuRom) {
-			FlushDriveCache(pExtArg, pDevice, nLBA);
+			FlushDriveCache(pExtArg, pDevice, /*nLBA*/0);
 			pDisc->SUB.nCorruptCrcH = 0;
 			pDisc->SUB.nCorruptCrcL = 0;
 		}
@@ -1127,9 +1127,14 @@ BOOL ReadCDAll(
 						if (IsCheckingSubChannel(pExtArg, pDisc, nLBA)) {
 							pDiscPerSector->bLibCrypt = IsValidLibCryptSector(pExtArg->byLibCrypt, nLBA);
 							pDiscPerSector->bSecuRom = IsValidSecuRomSector(pExtArg->byIntentionalSub, pDisc, nLBA);
-							FixSubChannel(pExecType, pExtArg, pDevice, pDisc, pDiscPerSector, nLBA, &bReread);
+							BOOL bReturn = FixSubChannel(pExecType, pExtArg, pDevice, pDisc, pDiscPerSector, nLBA, &bReread);
 							if (bReread && bProcessRet != RETURNED_EXIST_C2_ERROR) {
 								continue;
+							}
+							else if (!bReturn) {
+								OutputErrorString(
+									STR_LBA "Failed to reread because crc16 of subQ is 0. Try to dump with different drive speed\n", nLBA, nLBA);
+								throw FALSE;
 							}
 							BYTE lpSubcodeRaw[CD_RAW_READ_SUBCODE_SIZE] = {};
 							// fix raw subchannel
@@ -1466,9 +1471,14 @@ BOOL ReadCDForSwap(
 					}
 					else {
 						if (IsCheckingSubChannel(pExtArg, pDisc, nLBA)) {
-							FixSubChannel(pExecType, pExtArg, pDevice, pDisc, pDiscPerSector, nLBA, &bReread);
+							BOOL bReturn = FixSubChannel(pExecType, pExtArg, pDevice, pDisc, pDiscPerSector, nLBA, &bReread);
 							if (bReread) {
 								continue;
+							}
+							else if (!bReturn) {
+								OutputErrorString(
+									STR_LBA "Failed to reread because crc16 of subQ is 0. Try to dump with different drive speed\n", nLBA, nLBA);
+								throw FALSE;
 							}
 							// fix raw subchannel
 							AlignColumnSubcode(lpSubcodeRaw, pDiscPerSector->subcode.current);
@@ -2026,12 +2036,18 @@ BOOL ReadCDPartial(
 					BYTE lpSubcodeRaw[CD_RAW_READ_SUBCODE_SIZE] = {};
 					if (!pExtArg->byReverse) {
 						if (IsCheckingSubChannel(pExtArg, pDisc, nLBA)) {
+							BOOL bReturn = TRUE;
 							if (!(*pExecType == audio || *pExecType == data)) {
 //							if (nStart < nLBA) {
-								FixSubChannel(pExecType, pExtArg, pDevice, pDisc, pDiscPerSector, nLBA, &bReread);
+								bReturn = FixSubChannel(pExecType, pExtArg, pDevice, pDisc, pDiscPerSector, nLBA, &bReread);
 							}
 							if (bReread) {
 								continue;
+							}
+							else if (!bReturn) {
+								OutputErrorString(
+									STR_LBA "Failed to reread because crc16 of subQ is 0. Try to dump with different drive speed\n", nLBA, nLBA);
+								throw FALSE;
 							}
 							// fix raw subchannel
 							AlignColumnSubcode(lpSubcodeRaw, pDiscPerSector->subcode.current);
