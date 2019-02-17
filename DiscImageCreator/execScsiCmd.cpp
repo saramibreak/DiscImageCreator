@@ -470,15 +470,14 @@ BOOL ReadTOCText(
 			}
 			wEntrySize++;
 		}
-		SetAndOutputTocCDText(pDisc, pDesc, pTmpText, wEntrySize, wAllTextSize);
+		SetAndOutputTocCDText(pDisc, pDesc, pTmpText, wEntrySize, 0);
 		if (bUnicode) {
-			PWCHAR pTmpWText = NULL;
-			if (NULL == (pTmpWText = (PWCHAR)calloc(wAllTextSize, sizeof(WCHAR)))) {
+			PCHAR pTmpWText = NULL;
+			if (NULL == (pTmpWText = (PCHAR)calloc(wAllTextSize, sizeof(CHAR)))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
-			SetAndOutputTocCDWText(pDesc,
-				pTmpText, wEntrySize, wTocTextEntries, wAllTextSize);
+			SetAndOutputTocCDText(pDisc, pDesc, pTmpWText, wTocTextEntries, wEntrySize);
 			FreeAndNull(pTmpWText);
 		}
 	}

@@ -78,15 +78,7 @@ VOID SetAndOutputTocCDText(
 	PCDROM_TOC_CD_TEXT_DATA_BLOCK pDesc,
 	LPCH pTmpText,
 	WORD wTocTextEntries,
-	WORD wAllTextSize
-);
-
-VOID SetAndOutputTocCDWText(
-	PCDROM_TOC_CD_TEXT_DATA_BLOCK pDesc,
-	LPCH pTmpText,
-	WORD wFirstEntries,
-	WORD wTocTextEntries,
-	WORD wAllTextSize
+	UINT uiTocTextEntriesIdx
 );
 
 VOID SetCDOffset(

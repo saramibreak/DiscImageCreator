@@ -286,6 +286,9 @@ typedef struct _DISC {
 		LPSTR* pszTitle;			// get at CDROM_READ_TOC_EX_FORMAT_CDTEXT
 		LPSTR* pszPerformer;		// get at CDROM_READ_TOC_EX_FORMAT_CDTEXT
 		LPSTR* pszSongWriter;		// get at CDROM_READ_TOC_EX_FORMAT_CDTEXT
+		LPSTR* pszTitleW;			// get at CDROM_READ_TOC_EX_FORMAT_CDTEXT
+		LPSTR* pszPerformerW;		// get at CDROM_READ_TOC_EX_FORMAT_CDTEXT
+		LPSTR* pszSongWriterW;		// get at CDROM_READ_TOC_EX_FORMAT_CDTEXT
 		WORD wCurrentMedia;			// get at SCSIOP_GET_CONFIGURATION
 		BYTE padding2[2];
 	} SCSI;

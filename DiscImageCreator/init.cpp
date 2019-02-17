@@ -105,6 +105,21 @@ BOOL InitTocTextData(
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
+			if (NULL == ((*pDisc)->SCSI.pszTitleW =
+				(LPSTR*)calloc(dwTrackAllocSize * 2, sizeof(INT_PTR)))) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				throw FALSE;
+			}
+			if (NULL == ((*pDisc)->SCSI.pszPerformerW =
+				(LPSTR*)calloc(dwTrackAllocSize * 2, sizeof(INT_PTR)))) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				throw FALSE;
+			}
+			if (NULL == ((*pDisc)->SCSI.pszSongWriterW =
+				(LPSTR*)calloc(dwTrackAllocSize * 2, sizeof(INT_PTR)))) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				throw FALSE;
+			}
 
 			size_t isrcSize = META_ISRC_SIZE;
 			size_t textSize = META_CDTEXT_SIZE;
@@ -125,6 +140,21 @@ BOOL InitTocTextData(
 					throw FALSE;
 				}
 				if (NULL == ((*pDisc)->SCSI.pszSongWriter[h] = 
+					(LPSTR)calloc(textSize, sizeof(CHAR)))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					throw FALSE;
+				}
+				if (NULL == ((*pDisc)->SCSI.pszTitleW[h] =
+					(LPSTR)calloc(textSize, sizeof(CHAR)))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					throw FALSE;
+				}
+				if (NULL == ((*pDisc)->SCSI.pszPerformerW[h] =
+					(LPSTR)calloc(textSize, sizeof(CHAR)))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					throw FALSE;
+				}
+				if (NULL == ((*pDisc)->SCSI.pszSongWriterW[h] =
 					(LPSTR)calloc(textSize, sizeof(CHAR)))) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 					throw FALSE;
@@ -410,11 +440,17 @@ VOID TerminateTocTextData(
 			FreeAndNull((*pDisc)->SCSI.pszTitle[i]);
 			FreeAndNull((*pDisc)->SCSI.pszPerformer[i]);
 			FreeAndNull((*pDisc)->SCSI.pszSongWriter[i]);
+			FreeAndNull((*pDisc)->SCSI.pszTitleW[i]);
+			FreeAndNull((*pDisc)->SCSI.pszPerformerW[i]);
+			FreeAndNull((*pDisc)->SCSI.pszSongWriterW[i]);
 		}
 		FreeAndNull((*pDisc)->SUB.pszISRC);
 		FreeAndNull((*pDisc)->SCSI.pszTitle);
 		FreeAndNull((*pDisc)->SCSI.pszPerformer);
 		FreeAndNull((*pDisc)->SCSI.pszSongWriter);
+		FreeAndNull((*pDisc)->SCSI.pszTitleW);
+		FreeAndNull((*pDisc)->SCSI.pszPerformerW);
+		FreeAndNull((*pDisc)->SCSI.pszSongWriterW);
 	}
 }
 
