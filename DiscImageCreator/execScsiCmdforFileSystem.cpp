@@ -749,6 +749,11 @@ BOOL ReadDVDForFileSystem(
 			return FALSE;
 		}
 		FreeAndNull(pDirRec);
+		if (pDisc->PROTECT.byExist) {
+			OutputLogA(standardOut | fileDisc, "Detected a protected file [%s]. LBA %d to %d\n"
+				, pDisc->PROTECT.name, pDisc->PROTECT.ERROR_SECTOR.nExtentPos
+				, pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize);
+		}
 	}
 
 	INT nLBA = 18;

@@ -395,6 +395,11 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 							discData.SCSI.wCurrentMedia == ProfileHDDVDRDualLayer ||
 							discData.SCSI.wCurrentMedia == ProfileHDDVDRWDualLayer
 							) {
+							if (pExtArg->byScanProtectViaFile) {
+								if (!InitProtectData(&pDisc)) {
+									throw FALSE;
+								}
+							}
 							bRet = ReadDiscStructure(pExecType, pExtArg, &device, &discData, pszFullPath);
 
 							if (pExtArg->byCmi) {
@@ -1012,6 +1017,11 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				}
 				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/f"), 2)) {
 					if (!SetOptionF(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/sf"), 3)) {
+					if (!SetOptionSf(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
 				}

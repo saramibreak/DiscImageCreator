@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "struct.h"
+#include "check.h"
 #include "convert.h"
 #include "execIoctl.h"
 #include "execScsiCmd.h"
@@ -116,6 +117,10 @@ BOOL ReadDVD(
 		INT i = 0;
 		DWORD dwTransferLenOrg = dwTransferLen;
 		INT nRetryCnt = 0;
+		INT nFirstErrorLBA = 0;
+		INT nLastErrorLBA = 0;
+		BOOL bErrorForward = FALSE;
+		BOOL bErrorBack = FALSE;
 #ifdef _WIN32
 		INT direction = SCSI_IOCTL_DATA_IN;
 #else
@@ -165,16 +170,45 @@ BOOL ReadDVD(
 				dwTransferLen = (DWORD)(XGD3_LAYER_BREAK - nLBA);
 				REVERSE_BYTES(&cdb.TransferLength, &dwTransferLen);
 			}
+			else if (dwTransferLen != 1 && pDisc->PROTECT.byExist == physicalErr && IsValidProtectedSector(pDisc, nLBA - 1)) {
+				dwTransferLen = 1;
+				REVERSE_BYTES(&cdb.TransferLength, &dwTransferLen);
+			}
 			else if (dwTransferLen > (DWORD)(pDisc->SCSI.nAllLength - nLBA)) {
 				dwTransferLen = (DWORD)(pDisc->SCSI.nAllLength - nLBA);
 				REVERSE_BYTES(&cdb.TransferLength, &dwTransferLen);
+			}
+
+			if (pDisc->PROTECT.byExist == physicalErr && nFirstErrorLBA != 0 && nFirstErrorLBA <= nLBA && nLBA <= nLastErrorLBA) {
+				FillMemory(lpBuf, DISC_RAW_READ_SIZE * dwTransferLen, 0x55);
+				fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_RAW_READ_SIZE * dwTransferLen, fp);
+				OutputString(_T(STR_LBA "Filled with 0x55\n"), nLBA, nLBA);
+				continue;
 			}
 
 			REVERSE_BYTES(&cdb.LogicalBlock, &nLBA);
 			if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, lpBuf,
 				direction, DISC_RAW_READ_SIZE * dwTransferLen, &byScsiStatus, _T(__FUNCTION__), __LINE__)
 				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-				if (++nRetryCnt <= 5) {
+				if (pDisc->PROTECT.byExist == physicalErr) {
+					if (!bErrorBack) {
+						if (nFirstErrorLBA == 0) {
+							nFirstErrorLBA = nLBA;
+							bErrorForward = TRUE;
+						}
+						nLBA += 99;
+						continue;
+					}
+					else {
+						nLastErrorLBA = nLBA;
+						nLBA = nFirstErrorLBA - 1;
+						OutputLog(standardOut | fileDisc, _T("Error sectors range: LBA %d to %d = %d\n")
+							, nFirstErrorLBA, nLastErrorLBA, nLastErrorLBA - nFirstErrorLBA + 1);
+						bErrorBack = FALSE;
+						continue;
+					}
+				}
+				else if (++nRetryCnt <= 5) {
 					nLBA -= (INT)dwTransferLen;
 					OutputString(_T("Read retry %d/5\n"), nRetryCnt);
 					continue;
@@ -184,7 +218,16 @@ BOOL ReadDVD(
 					throw FALSE;
 				}
 			}
-			if (nRetryCnt) {
+
+			if (bErrorForward) {
+				bErrorForward = FALSE;
+				bErrorBack = TRUE;
+			}
+			if (bErrorBack) {
+				nLBA -= 2;
+				continue;
+			}
+			else if (nRetryCnt) {
 				OutputString(_T("Retry OK\n"));
 				nRetryCnt = 0;
 			}
