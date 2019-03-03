@@ -270,7 +270,7 @@ BOOL ProcessReadCD(
 		if (!IsValidProtectedSector(pDisc, nLBA) &&
 			!IsValidIntentionalC2error(pDisc, pDiscPerSector) &&
 			!pDiscPerSector->bLibCrypt && !pDiscPerSector->bSecuRom) {
-			FlushDriveCache(pExtArg, pDevice, /*nLBA*/0);
+			FlushDriveCache(pExtArg, pDevice, nLBA);
 			pDisc->SUB.nCorruptCrcH = 0;
 			pDisc->SUB.nCorruptCrcL = 0;
 		}
@@ -729,7 +729,7 @@ BOOL ProcessDescramble(
 		return FALSE;
 	}
 	// audio only -> from .scm to .img. other descramble img.
-	if (pExtArg->byBe || pDisc->SCSI.trackType != TRACK_TYPE::dataExist) {
+	if (pExtArg->byBe || (pDisc->SCSI.trackType != TRACK_TYPE::dataExist && pDisc->SCSI.trackType != TRACK_TYPE::pregapDataIn1stTrack)) {
 		OutputString(_T("Moving .scm to .img\n"));
 		if (!MoveFileEx(pszOutScmFile, pszNewPath, MOVEFILE_REPLACE_EXISTING)) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -1133,7 +1133,11 @@ BOOL ReadCDAll(
 							}
 							else if (!bReturn) {
 								OutputErrorString(
-									STR_LBA "Failed to reread because crc16 of subQ is 0. Try to dump with different drive speed\n", nLBA, nLBA);
+									"\n" STR_LBA "Failed to reread because crc16 of subQ is 0\n"
+									"1. If your disc has scratches, it needs to be polished\n"
+									"2. Try to dump with different drive speed\n"
+									"3. Try to dump with different drive\n"
+									, nLBA, nLBA);
 								throw FALSE;
 							}
 							BYTE lpSubcodeRaw[CD_RAW_READ_SUBCODE_SIZE] = {};
@@ -1197,7 +1201,8 @@ BOOL ReadCDAll(
 		if (pDisc->SCSI.toc.FirstTrack == pDisc->SCSI.toc.LastTrack) {
 			// [3DO] Jurassic Park Interactive (Japan)
 			if (pDisc->SUB.lpFirstLBAListOnSub[0][2] == -1 &&
-				pDisc->SCSI.trackType != TRACK_TYPE::pregapIn1stTrack) {
+				pDisc->SCSI.trackType != TRACK_TYPE::pregapAudioIn1stTrack &&
+				pDisc->SCSI.trackType != TRACK_TYPE::pregapDataIn1stTrack) {
 				pDisc->SUB.lpFirstLBAListOnSub[0][1] = pDisc->SCSI.lpLastLBAListOnToc[0];
 			}
 		}
@@ -1477,7 +1482,11 @@ BOOL ReadCDForSwap(
 							}
 							else if (!bReturn) {
 								OutputErrorString(
-									STR_LBA "Failed to reread because crc16 of subQ is 0. Try to dump with different drive speed\n", nLBA, nLBA);
+									"\n" STR_LBA "Failed to reread because crc16 of subQ is 0\n"
+									"1. If your disc has scratches, it needs to be polished\n"
+									"2. Try to dump with different drive speed\n"
+									"3. Try to dump with different drive\n"
+									, nLBA, nLBA);
 								throw FALSE;
 							}
 							// fix raw subchannel
@@ -2046,7 +2055,11 @@ BOOL ReadCDPartial(
 							}
 							else if (!bReturn) {
 								OutputErrorString(
-									STR_LBA "Failed to reread because crc16 of subQ is 0. Try to dump with different drive speed\n", nLBA, nLBA);
+									"\n" STR_LBA "Failed to reread because crc16 of subQ is 0\n"
+									"1. If your disc has scratches, it needs to be polished\n"
+									"2. Try to dump with different drive speed\n"
+									"3. Try to dump with different drive\n"
+									, nLBA, nLBA);
 								throw FALSE;
 							}
 							// fix raw subchannel
