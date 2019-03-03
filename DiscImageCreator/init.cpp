@@ -470,9 +470,11 @@ VOID TerminateSubData(
 ) {
 	size_t dwTrackAllocSize =
 		(*pExecType == gd || *pExecType == swap) ? MAXIMUM_NUMBER_TRACKS : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
-	for (size_t h = 0; h < dwTrackAllocSize; h++) {
-		FreeAndNull((*pDisc)->SUB.lpFirstLBAListOnSub[h]);
-		FreeAndNull((*pDisc)->SUB.lpFirstLBAListOnSubSync[h]);
+	if ((*pDisc)->SUB.lpFirstLBAListOnSub && (*pDisc)->SUB.lpFirstLBAListOnSubSync) {
+		for (size_t h = 0; h < dwTrackAllocSize; h++) {
+			FreeAndNull((*pDisc)->SUB.lpFirstLBAListOnSub[h]);
+			FreeAndNull((*pDisc)->SUB.lpFirstLBAListOnSubSync[h]);
+		}
 	}
 	FreeAndNull((*pDisc)->SUB.lpRtoWList);
 	FreeAndNull((*pDisc)->SUB.lpFirstLBAListOnSub);
