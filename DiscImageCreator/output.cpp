@@ -1757,7 +1757,8 @@ VOID DescrambleMainChannelAll(
 					fwrite(aSrcBuf, sizeof(BYTE), sizeof(aSrcBuf), fpImg);
 				}
 				else {
-					if (pDisc->SCSI.trackType != TRACK_TYPE::pregapIn1stTrack) {
+					if (pDisc->SCSI.trackType != TRACK_TYPE::pregapAudioIn1stTrack &&
+						pDisc->SCSI.trackType != TRACK_TYPE::pregapDataIn1stTrack) {
 						OutputMainErrorWithLBALogA("Invalid sync. Skip descrambling\n", nFirstLBA, k + 1);
 						OutputCDMain(fileMainError, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
 					}
@@ -1962,7 +1963,8 @@ BOOL CreateBinCueCcd(
 		BYTE byFrame = 0, bySecond = 0, byMinute = 0;
 		if (i == pDisc->SCSI.toc.FirstTrack) { 
 			if (0 == nLBAofFirstIdx || (i == pDisc->SCSI.toc.LastTrack &&
-				pDisc->SCSI.trackType != TRACK_TYPE::pregapIn1stTrack)) {
+				pDisc->SCSI.trackType != TRACK_TYPE::pregapAudioIn1stTrack &&
+				pDisc->SCSI.trackType != TRACK_TYPE::pregapDataIn1stTrack)) {
 
 				WriteCueForIndexDirective(index, 0, 0, 0, fpCueForImg);
 				WriteCueForIndexDirective(index, 0, 0, 0, fpCue);
@@ -2128,7 +2130,7 @@ VOID OutputLastErrorNumAndString(
 	FormatMessage(
 		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM,
 		NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&lpMsgBuf, 0, NULL);
-
+	// http://blog.livedoor.jp/afsoft/archives/52230222.html
 	OutputErrorString(_T("[F:%s][L:%lu] GetLastError: %lu, %s\n"),
 		pszFuncName, lLineNum, GetLastError(), (LPCTSTR)lpMsgBuf);
 

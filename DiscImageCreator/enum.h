@@ -66,7 +66,8 @@ typedef enum _BYTE_PAD_TYPE {
 typedef enum _TRACK_TYPE {
 	audioOnly,
 	dataExist,
-	pregapIn1stTrack
+	pregapAudioIn1stTrack,
+	pregapDataIn1stTrack
 } TRACK_TYPE, *PTRACK_TYPE;
 
 // Protection list

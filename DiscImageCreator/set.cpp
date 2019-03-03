@@ -174,6 +174,7 @@ VOID SetAndOutputToc(
 			pDisc->SCSI.nLastLBAofDataTrack = pDisc->SCSI.lpLastLBAListOnToc[tIdx];
 			pDisc->SCSI.byLastDataTrackNum = i;
 		}
+
 		if (i == pDisc->SCSI.toc.FirstTrack && pDisc->SCSI.lpFirstLBAListOnToc[tIdx] > 0) {
 			pDisc->SCSI.nAllLength += pDisc->SCSI.lpFirstLBAListOnToc[tIdx];
 			OutputDiscLogA("\tPregap Track   , LBA %8u - %8u, Length %8u\n",
@@ -183,7 +184,12 @@ VOID SetAndOutputToc(
 			// actually some data sector in pregap of first sector.
 //			pDisc->SCSI.byFirstDataTrackNum = i;
 //			pDisc->SCSI.byLastDataTrackNum = i;
-			trkType = TRACK_TYPE::pregapIn1stTrack;
+			if (trkType == TRACK_TYPE::dataExist) {
+				trkType = TRACK_TYPE::pregapDataIn1stTrack;
+			}
+			else {
+				trkType = TRACK_TYPE::pregapAudioIn1stTrack;
+			}
 		}
 		OutputDiscLogA(
 			"\t%s Track %2u, LBA %8u - %8u, Length %8u\n", strType, i,
@@ -751,11 +757,14 @@ VOID SetTrackAttribution(
 ) {
 	BYTE tmpCurrentTrackNum = pDiscPerSector->subQ.current.byTrackNum;
 	BYTE tmpCurrentIndex = pDiscPerSector->subQ.current.byIndex;
+
 	if (pDiscPerSector->subQ.current.byAdr != ADR_ENCODES_CURRENT_POSITION) {
 		if ((IsValidPregapSector(pDisc, &pDiscPerSector->subQ, nLBA) && pExtArg->byMCN) ||
+			(nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->byTrackNum] && pDiscPerSector->b1stSectorMCN) ||
 			nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->byTrackNum - 1]) {
 			tmpCurrentTrackNum = pDiscPerSector->subQ.next.byTrackNum;
 			tmpCurrentIndex = pDiscPerSector->subQ.next.byIndex;
+			pDiscPerSector->b1stSectorMCN = FALSE;
 		}
 		else {
 			tmpCurrentTrackNum = pDiscPerSector->subQ.prev.byTrackNum;
@@ -767,7 +776,8 @@ VOID SetTrackAttribution(
 		INT tIdx = pDiscPerSector->byTrackNum - 1;
 		BYTE tmpPrevTrackNum = pDiscPerSector->subQ.prev.byTrackNum;
 		BYTE tmpPrevIndex = pDiscPerSector->subQ.prev.byIndex;
-		if (pDiscPerSector->subQ.prev.byAdr != ADR_ENCODES_CURRENT_POSITION && !pExtArg->byMCN) {
+		if (pDiscPerSector->subQ.prev.byAdr != ADR_ENCODES_CURRENT_POSITION && !pExtArg->byMCN &&
+			nLBA - 1 != pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->byTrackNum - 1]) {
 			tmpPrevTrackNum = pDiscPerSector->subQ.prevPrev.byTrackNum;
 			tmpPrevIndex = pDiscPerSector->subQ.prevPrev.byIndex;
 		}
@@ -1253,9 +1263,10 @@ VOID UpdateTmpSubQDataForMCN(
 					pDiscPerSector->subQ.current.byTrackNum = (BYTE)(pDiscPerSector->subQ.prev.byTrackNum + 1);
 					// pattern 1-1-1-1-1: change index. (pregap sector is 0)
 					pDiscPerSector->subQ.current.byIndex = 0;
-					OutputMainInfoWithLBALogA(
-						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d)\n",
-						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subQ.current.byTrackNum, pDiscPerSector->subQ.prev.byTrackNum);
+					OutputSubInfoWithLBALogA(
+						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d) [L:%d]\n",
+						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subQ.current.byTrackNum, pDiscPerSector->subQ.prev.byTrackNum, __LINE__);
+					pDiscPerSector->b1stSectorMCN = TRUE;
 				}
 				else {
 					// pattern 1-1-1-2: not change track.
@@ -1285,9 +1296,10 @@ VOID UpdateTmpSubQDataForMCN(
 					pDiscPerSector->subQ.current.byTrackNum = (BYTE)(pDiscPerSector->subQ.prev.byTrackNum + 1);
 					// pattern 1-1-2-1-1: change index. (pregap sector is 0)
 					pDiscPerSector->subQ.current.byIndex = 0;
-					OutputMainInfoWithLBALogA(
-						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d)\n",
-						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subQ.current.byTrackNum, pDiscPerSector->subQ.prev.byTrackNum);
+					OutputSubInfoWithLBALogA(
+						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d) [L:%d]\n",
+						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subQ.current.byTrackNum, pDiscPerSector->subQ.prev.byTrackNum, __LINE__);
+					pDiscPerSector->b1stSectorMCN = TRUE;
 				}
 				else {
 					// pattern 1-1-2-2: not change track.
@@ -1328,9 +1340,10 @@ VOID UpdateTmpSubQDataForMCN(
 					pDiscPerSector->subQ.current.byTrackNum = (BYTE)(pDiscPerSector->subQ.prev.byTrackNum + 1);
 					// pattern 1-2-1-1-1: change index. (pregap sector is 0)
 					pDiscPerSector->subQ.current.byIndex = 0;
-					OutputMainInfoWithLBALogA(
-						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d)\n",
-						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subQ.current.byTrackNum, pDiscPerSector->subQ.prev.byTrackNum);
+					OutputSubInfoWithLBALogA(
+						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d) [L:%d]\n",
+						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subQ.current.byTrackNum, pDiscPerSector->subQ.prev.byTrackNum, __LINE__);
+					pDiscPerSector->b1stSectorMCN = TRUE;
 				}
 				else {
 					// pattern 1-2-1-2: not change track.
@@ -1360,9 +1373,10 @@ VOID UpdateTmpSubQDataForMCN(
 					pDiscPerSector->subQ.current.byTrackNum = (BYTE)(pDiscPerSector->subQ.prev.byTrackNum + 1);
 					// pattern 1-2-2-1-1: change index. (pregap sector is 0)
 					pDiscPerSector->subQ.current.byIndex = 0;
-					OutputMainInfoWithLBALogA(
-						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d)\n",
-						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subQ.current.byTrackNum, pDiscPerSector->subQ.prev.byTrackNum);
+					OutputSubInfoWithLBALogA(
+						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d) [L:%d]\n",
+						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subQ.current.byTrackNum, pDiscPerSector->subQ.prev.byTrackNum, __LINE__);
+					pDiscPerSector->b1stSectorMCN = TRUE;
 				}
 				else {
 					// pattern 1-2-2-2: not change track.
@@ -1391,9 +1405,10 @@ VOID UpdateTmpSubQDataForMCN(
 					pDiscPerSector->subQ.current.byTrackNum = (BYTE)(pDiscPerSector->subQ.prev.byTrackNum + 1);
 					// pattern 2-1-1-1-2: not change index.
 					pDiscPerSector->subQ.current.byIndex = pDiscPerSector->subQ.prev.byIndex;
-					OutputMainInfoWithLBALogA(
-						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d)\n",
-						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subQ.current.byTrackNum, pDiscPerSector->subQ.prev.byTrackNum);
+					OutputSubInfoWithLBALogA(
+						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d) [L:%d]\n",
+						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subQ.current.byTrackNum, pDiscPerSector->subQ.prev.byTrackNum, __LINE__);
+					pDiscPerSector->b1stSectorMCN = TRUE;
 				}
 				// 1st next index of same tracks
 				else if (pDiscPerSector->subQ.prev.byIndex == 0 && pDiscPerSector->subQ.prev.nRelativeTime == 0) {
@@ -1457,9 +1472,10 @@ VOID UpdateTmpSubQDataForMCN(
 					pDiscPerSector->subQ.current.byTrackNum = (BYTE)(pDiscPerSector->subQ.prev.byTrackNum + 1);
 					// pattern 2-1-2-1-2: not change index.
 					pDiscPerSector->subQ.current.byIndex = pDiscPerSector->subQ.prev.byIndex;
-					OutputMainInfoWithLBALogA(
-						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d)\n",
-						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subQ.current.byTrackNum, pDiscPerSector->subQ.prev.byTrackNum);
+					OutputSubInfoWithLBALogA(
+						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d) [L:%d]\n",
+						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subQ.current.byTrackNum, pDiscPerSector->subQ.prev.byTrackNum, __LINE__);
+					pDiscPerSector->b1stSectorMCN = TRUE;
 				}
 				// 1st next index of same tracks
 				else if (pDiscPerSector->subQ.prev.byIndex == 0 && pDiscPerSector->subQ.prev.nRelativeTime == 0) {
@@ -1496,9 +1512,10 @@ VOID UpdateTmpSubQDataForMCN(
 					pDiscPerSector->subQ.current.byTrackNum = (BYTE)(pDiscPerSector->subQ.prev.byTrackNum + 1);
 					// pattern 2-2-1-1-2: not change index.
 					pDiscPerSector->subQ.current.byIndex = pDiscPerSector->subQ.prev.byIndex;
-					OutputMainInfoWithLBALogA(
-						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d)\n",
-						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subQ.current.byTrackNum, pDiscPerSector->subQ.prev.byTrackNum);
+					OutputSubInfoWithLBALogA(
+						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d) [L:%d]\n",
+						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subQ.current.byTrackNum, pDiscPerSector->subQ.prev.byTrackNum, __LINE__);
+					pDiscPerSector->b1stSectorMCN = TRUE;
 				}
 				// 1st next index of same tracks
 				else if (pDiscPerSector->subQ.prev.byIndex == 0 && pDiscPerSector->subQ.prev.nRelativeTime == 0) {
@@ -1536,9 +1553,10 @@ VOID UpdateTmpSubQDataForMCN(
 					pDiscPerSector->subQ.current.byTrackNum = (BYTE)(pDiscPerSector->subQ.prev.byTrackNum + 1);
 					// pattern 2-2-2-1-2: not change index.
 					pDiscPerSector->subQ.current.byIndex = pDiscPerSector->subQ.prev.byIndex;
-					OutputMainInfoWithLBALogA(
-						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d)\n",
-						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subQ.current.byTrackNum, pDiscPerSector->subQ.prev.byTrackNum);
+					OutputSubInfoWithLBALogA(
+						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d) [L:%d]\n",
+						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subQ.current.byTrackNum, pDiscPerSector->subQ.prev.byTrackNum, __LINE__);
+					pDiscPerSector->b1stSectorMCN = TRUE;
 				}
 				// 1st next index of same tracks
 				else if (pDiscPerSector->subQ.prev.byIndex == 0 && pDiscPerSector->subQ.prev.nRelativeTime == 0) {

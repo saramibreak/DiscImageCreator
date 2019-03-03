@@ -98,7 +98,8 @@ BOOL OutputGameHash(
 	else {
 		if (!pDisc->SUB.byDesync || !bDesync) {
 			OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(Hash(Whole image)));
-			if (pDisc->SCSI.trackType == TRACK_TYPE::dataExist) {
+			if (pDisc->SCSI.trackType == TRACK_TYPE::dataExist ||
+				pDisc->SCSI.trackType == TRACK_TYPE::pregapDataIn1stTrack) {
 				if (!OutputHash(pWriter, pszFullPath, _T(".scm"), 1, 1, FALSE)) {
 					return FALSE;
 				}

@@ -456,6 +456,7 @@ typedef struct _DISC_PER_SECTOR {
 	BYTE padding[3];
 	BOOL bLibCrypt;
 	BOOL bSecuRom;
+	BOOL b1stSectorMCN;
 } DISC_PER_SECTOR, *PDISC_PER_SECTOR;
 
 // This buffer stores the R to W channel (only use to check)

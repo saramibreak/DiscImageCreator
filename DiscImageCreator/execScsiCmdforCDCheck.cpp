@@ -194,7 +194,8 @@ BOOL ExecSearchingOffset(
 			memcpy(aBuf + CD_RAW_SECTOR_SIZE, lpBuf, CD_RAW_SECTOR_SIZE);
 			if (pDisc->SCSI.trackType != TRACK_TYPE::audioOnly || *pExecType == swap) {
 				if (!GetWriteOffset(pDisc, aBuf)) {
-					if (pDisc->SCSI.trackType == TRACK_TYPE::dataExist) {
+					if (pDisc->SCSI.trackType == TRACK_TYPE::dataExist ||
+						pDisc->SCSI.trackType == TRACK_TYPE::pregapDataIn1stTrack) {
 						OutputLogA(standardError | fileDisc, _T("Failed to get write-offset\n"));
 						return FALSE;
 					}
@@ -296,7 +297,8 @@ BOOL ReadCDForSearchingOffset(
 	}
 
 	INT nDriveOffset = nDriveSampleOffset * 4; // byte size * 4 = sample size
-	if (pDisc->SCSI.trackType != TRACK_TYPE::dataExist) {
+	if (pDisc->SCSI.trackType != TRACK_TYPE::dataExist &&
+		pDisc->SCSI.trackType != TRACK_TYPE::pregapDataIn1stTrack) {
 		pDisc->MAIN.nCombinedOffset = nDriveOffset;
 	}
 	LPBYTE pBuf = NULL;
