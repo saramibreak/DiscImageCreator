@@ -30,7 +30,8 @@ VOID OutputDVDStructureFormat(
 	BYTE byFormatCode,
 	WORD wFormatLength,
 	LPBYTE lpFormat,
-	LPDWORD lpdwSectorLength
+	LPDWORD lpdwSectorLength,
+	UCHAR layerNumber
 );
 
 VOID OutputDVDCopyrightManagementInformation(

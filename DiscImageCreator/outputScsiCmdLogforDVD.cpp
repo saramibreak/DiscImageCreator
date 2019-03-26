@@ -633,7 +633,8 @@ VOID OutputFsVolumeDescriptorSequence(
 VOID OutputDVDLayerDescriptor(
 	PDISC pDisc,
 	PDVD_FULL_LAYER_DESCRIPTOR dvdLayer,
-	LPDWORD lpdwSectorLength
+	LPDWORD lpdwSectorLength,
+	UCHAR layerNumber
 ) {
 	LPCSTR lpBookType[] = {
 		"DVD-ROM", "DVD-RAM", "DVD-R", "DVD-RW",
@@ -742,9 +743,16 @@ VOID OutputDVDLayerDescriptor(
 		}
 	}
 	else {
-		*lpdwSectorLength = dwEndDataSector - dwStartingDataSector + 1;
-		OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(SectorLength)
-			"\tLayerZeroSector: %7lu (%#lx)\n", *lpdwSectorLength, *lpdwSectorLength);
+		if (layerNumber == 0) {
+			*lpdwSectorLength = dwEndDataSector - dwStartingDataSector + 1;
+			OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(SectorLength)
+				"\tLayerZeroSector: %7lu (%#lx)\n", *lpdwSectorLength, *lpdwSectorLength);
+		}
+		else if (layerNumber == 1) {
+			*lpdwSectorLength = dwEndDataSector - dwStartingDataSector + 1;
+			OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(SectorLength)
+				"\tLayerOneSector: %7lu (%#lx)\n", *lpdwSectorLength, *lpdwSectorLength);
+		}
 	}
 }
 
@@ -1227,12 +1235,13 @@ VOID OutputDVDStructureFormat(
 	BYTE byFormatCode,
 	WORD wFormatLength,
 	LPBYTE lpFormat,
-	LPDWORD lpdwSectorLength
+	LPDWORD lpdwSectorLength,
+	UCHAR layerNumber
 ) {
 	switch (byFormatCode) {
 	case DvdPhysicalDescriptor:
 	case 0x10:
-		OutputDVDLayerDescriptor(pDisc, (PDVD_FULL_LAYER_DESCRIPTOR)lpFormat, lpdwSectorLength);
+		OutputDVDLayerDescriptor(pDisc, (PDVD_FULL_LAYER_DESCRIPTOR)lpFormat, lpdwSectorLength, layerNumber);
 		break;
 	case DvdCopyrightDescriptor:
 		OutputDVDCopyrightDescriptor((PDVD_COPYRIGHT_DESCRIPTOR)lpFormat, &(pDisc->DVD.protect));
@@ -1553,7 +1562,7 @@ VOID OutputXboxSecuritySector(
 	LPBYTE buf
 ) {
 	DWORD dwSectorLen = 0;
-	OutputDVDStructureFormat(pDisc, 0x10, DISC_RAW_READ_SIZE, buf, &dwSectorLen);
+	OutputDVDStructureFormat(pDisc, 0x10, DISC_RAW_READ_SIZE, buf, &dwSectorLen, 0);
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(SecuritySector)
 		"\t                     CPR_MAI Key: %08lx\n"
 		"\t      Version of challenge table: %02u\n"
@@ -1685,7 +1694,7 @@ VOID OutputXbox360SecuritySector(
 	LPBYTE buf
 ) {
 	DWORD dwSectorLen = 0;
-	OutputDVDStructureFormat(pDisc, 0x10, DISC_RAW_READ_SIZE, buf, &dwSectorLen);
+	OutputDVDStructureFormat(pDisc, 0x10, DISC_RAW_READ_SIZE, buf, &dwSectorLen, 0);
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(SecuritySector)
 		"\t                         Unknown: "
 	);

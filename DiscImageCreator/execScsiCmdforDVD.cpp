@@ -180,9 +180,9 @@ BOOL ReadDVD(
 			}
 
 			if (pDisc->PROTECT.byExist == physicalErr && nFirstErrorLBA != 0 && nFirstErrorLBA <= nLBA && nLBA <= nLastErrorLBA) {
-				FillMemory(lpBuf, DISC_RAW_READ_SIZE * dwTransferLen, 0x55);
+				FillMemory(lpBuf, DISC_RAW_READ_SIZE * dwTransferLen, 0x00);
 				fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_RAW_READ_SIZE * dwTransferLen, fp);
-				OutputString(_T(STR_LBA "Filled with 0x55\n"), nLBA, nLBA);
+				OutputString(_T(STR_LBA "Filled with 0x00\n"), nLBA, nLBA);
 				continue;
 			}
 
@@ -1038,7 +1038,7 @@ BOOL ReadDiscStructure(
 				}
 				DWORD dwSectorLen = 0;
 				OutputDVDStructureFormat(pDisc, pEntry->FormatCode, (WORD)(wFormatLen - sizeof(DVD_DESCRIPTOR_HEADER))
-					, lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), &dwSectorLen);
+					, lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), &dwSectorLen, cdb.LayerNumber);
 
 				if (pEntry->FormatCode == DvdPhysicalDescriptor) {
 					PDVD_FULL_LAYER_DESCRIPTOR dvdpd = (PDVD_FULL_LAYER_DESCRIPTOR)(lpFormat + sizeof(DVD_DESCRIPTOR_HEADER));
@@ -1057,8 +1057,8 @@ BOOL ReadDiscStructure(
 						else {
 							DWORD dwSectorLen2 = 0;
 							OutputDVDStructureFormat(pDisc, pEntry->FormatCode, (WORD)(wFormatLen - sizeof(DVD_DESCRIPTOR_HEADER))
-								, lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), &dwSectorLen2);
-							OutputDiscLogA("\tLayerAllSector : %7lu (%#lx)\n", dwSectorLen + dwSectorLen2, dwSectorLen + dwSectorLen2);
+								, lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), &dwSectorLen2, cdb.LayerNumber);
+							OutputDiscLogA("\tLayerAllSector: %7lu (%#lx)\n", dwSectorLen + dwSectorLen2, dwSectorLen + dwSectorLen2);
 							dwSectorLen += dwSectorLen2;
 						}
 					}
