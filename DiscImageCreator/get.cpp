@@ -148,6 +148,7 @@ BOOL GetFilenameToSkipError(
 	FILE* fp = OpenProgrammabledFile(_T("ReadErrorProtect.txt"), _T("r"));
 	if (!fp) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		OutputErrorString(_T(" => ReadErrorProtect.txt"));
 		return FALSE;
 	}
 	CHAR comment[MAX_FNAME_FOR_VOLUME] = {};
