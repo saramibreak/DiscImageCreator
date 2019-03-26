@@ -533,3 +533,20 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - added: -W flag in makefile
 - fixed: crash /ns for external file
 - deleted: some warning for linux
+
+*2019-03-26
+- added: GDR-8084N and GCC-4244N for GC/Wii
+- added: output dat for linux
+- added: /vn flag (support VideoNow)
+- added: /sf flag in dvd command for RingProtect
+- added: support pregap data track
+- added: support 288 and 264 and 240 bits of SafeDisc
+- changed: /74 option is only used by swap command
+- changed: app is aborted if crc16 of subQ is 0 when disc is reread
+- fixed: detecting SecuROM (devided v3 to v3_1 and v3_2)
+- fixed: detecting SecuROM Type 4 (4.5.x.xx - 4.6.x.xx)
+- fixed: detecting smartE
+- fixed: SafeDisc Lite dumping
+- fixed: buffer offset overflow of GD-ROM TOC
+- fixed: CDTEXT
+- fixed: Subs vs. TOC desync

@@ -68,6 +68,7 @@
   - Commodore Amiga CD32
   - Commodore Amiga CDTV
   - Fujitsu FM Towns series
+  - Hasbro VideoNow
   - IBM PC compatible
   - Mattel HyperScan
   - NEC PC-88 series CD
@@ -314,14 +315,14 @@ Compared with Friidump and Rawdump, dumping speed is very slow.
 ## All commands and options
         cd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/a (val)]
            [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4)] [/f (val)] [/m]
-           [/p] [/ms] [/sf (val)] [/ss] [/np] [/nq] [/nr] [/ns] [/s (val)]
+           [/p] [/ms] [/vn] [/sf (val)] [/ss] [/np] [/nq] [/nr] [/ns] [/s (val)]
                 Dump a CD from A to Z
                 For PLEXTOR or drive that can scramble Dumping
         swap <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/a (val)]
            [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4)] [/f (val)] [/m]
-           [/p] [/ms] [/sf (val)] [/ss] [/np] [/nq] [/nr] [/ns] [/s (val)]
+           [/p] [/ms] [/sf (val)] [/ss] [/np] [/nq] [/nr] [/ns] [/s (val)] [/74]
                 Dump a CD from A to Z using swap trick
-                For no PLEXTOR or drive that can't scramble Dumping
+                For no PLEXTOR or drive that can't scramble dumping
         data <DriveLetter> <Filename> <DriveSpeed(0-72)> <StartLBA> <EndLBA+1>
              [/q] [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4)]
              [/sf (val)] [/sk (val1) (val2)] [/ss] [/r] [/np] [/nq] [/nr] [/ns] [/s (val)]
@@ -337,7 +338,7 @@ Compared with Friidump and Rawdump, dumping speed is very slow.
                 Dump a HD area of GD from A to Z
         dvd <DriveLetter> <Filename> <DriveSpeed(0-16)> [/c] [/f (val)] [/raw] [/q]
                 Dump a DVD from A to Z
-        xbox <DriveLetter> <Filename> <DriveSpeed(0-16)>  [/f (val)] [/q]
+        xbox <DriveLetter> <Filename> <DriveSpeed(0-16)> [/f (val)] [/q]
                 Dump a disc from A to Z
         xboxswap <DriveLetter> <Filename> <DriveSpeed(0-16)>
                                           <StartLBAOfSecuritySector_1>
@@ -373,11 +374,11 @@ Compared with Friidump and Rawdump, dumping speed is very slow.
                 Parse Alchohol 120/52 mds file and output to readable format
         merge <plextor image file> <optiarc image file>
                 merge the two files (for physical error protection)
-    Option (generic)
+Option (generic)
         /f      Use 'Force Unit Access' flag to delete the drive cache
                         val     delete per specified value (default: 1)
         /q      Disable beep
-    Option (for CD read mode)
+Option (for CD read mode)
         /a      Add CD offset manually (Only Audio CD)
                         val     samples value
         /be     Use 0xbe as the opcode for Reading CD forcibly
@@ -406,7 +407,7 @@ Compared with Friidump and Rawdump, dumping speed is very slow.
         /sf     Scan file to detect protect. If reading error exists,
                 continue reading and ignore c2 error on specific sector
                         For CodeLock, LaserLock, RingProtect, RingPROTECH
-                            SafeDisc, SmartE, CD.IDX, ProtectCD-VOB, CDS300
+                            SafeDisc, SmartE, ProtectCD-VOB, CDS300
                         val     timeout value (default: 60)
         /sk     Skip sector for physical protect (e.g. proring, LaserLock etc.)
                         val1    sector num
@@ -416,7 +417,10 @@ Compared with Friidump and Rawdump, dumping speed is very slow.
                         For ProtectCD-VOB
         /am     Scan anti-mod string
                         For PlayStation
-    Option (for CD SubChannel)
+        /vn     Search specific bytes
+                        For VideoNow
+                        val     insert empty bytes in the head of the 1st track if value is set
+Option (for CD SubChannel)
         /np     Not fix SubP
         /nq     Not fix SubQ
         /nr     Not fix SubRtoW
@@ -430,7 +434,7 @@ Compared with Friidump and Rawdump, dumping speed is very slow.
                         val     0: no read next sub (fast, but lack precision)
                                 1: read next sub (normal, this val is default)
                                 2: read next & next next sub (slow, precision)
-    Option (for DVD)
+Option (for DVD)
         /c      Log Copyright Management Information
         /raw    Dumping DVD by raw (2064 byte/sector)
                         Comfirmed drive: Mediatec MT chip (Lite-on etc.), PLEXTOR
