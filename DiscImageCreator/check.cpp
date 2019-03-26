@@ -410,13 +410,24 @@ BOOL IsValidProtectedSector(
 	return bRet;
 }
 
+BOOL IsSafeDiscErrorNum(
+	DWORD errorNum
+) {
+	BOOL bRet = FALSE;
+	// 288 and 264 and 240 are reentrant's info
+	if (errorNum == 312 || errorNum == 288 || errorNum == 264 || errorNum == 240) {
+		bRet = TRUE;
+	}
+	return bRet;
+}
+
 BOOL IsValidSafeDiscSector(
 	PDISC pDisc,
 	PDISC_PER_SECTOR pDiscPerSector
 ) {
 	BOOL bRet = FALSE;
 	if ((pDisc->PROTECT.byExist == safeDisc || pDisc->PROTECT.byExist == safeDiscLite) &&
-		pDiscPerSector->dwC2errorNum == SAFEDISC_C2ERROR_NUM) {
+		 IsSafeDiscErrorNum(pDiscPerSector->dwC2errorNum)) {
 		bRet = TRUE;
 	}
 	return bRet;
