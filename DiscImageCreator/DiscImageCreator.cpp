@@ -575,6 +575,24 @@ int printAndSetPath(_TCHAR* szPathFromArg, _TCHAR* pszFullPath)
 	return TRUE;
 }
 
+int SetOptionVn(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
+{
+	_TCHAR* endptr = NULL;
+	pExtArg->byVideoNow = TRUE;
+	if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
+		pExtArg->nAudioCDOffsetNum = _tcstol(argv[(*i)++], &endptr, 10);
+		if (*endptr) {
+			OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
+			return FALSE;
+		}
+	}
+	else {
+		pExtArg->nAudioCDOffsetNum = 0;
+		OutputString(_T("/vn val is omitted. set [%d]\n"), 0);
+	}
+	return TRUE;
+}
+
 int SetOptionSk(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 {
 	_TCHAR* endptr = NULL;
@@ -827,7 +845,9 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					pExtArg->byMultiSession = TRUE;
 				}
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/vn"), 3)) {
-					pExtArg->byVideoNow = TRUE;
+					if (!SetOptionVn(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
 				}
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/np"), 3)) {
 					pExtArg->bySkipSubP = TRUE;
@@ -1241,7 +1261,7 @@ int printUsage(void)
 		_T("Usage\n")
 		_T("\tcd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/a (val)]\n")
 		_T("\t   [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4)] [/f (val)] [/m]\n")
-		_T("\t   [/p] [/ms] [/vn] [/sf (val)] [/ss] [/np] [/nq] [/nr] [/ns] [/s (val)]\n")
+		_T("\t   [/p] [/ms] [/vn (val)] [/sf (val)] [/ss] [/np] [/nq] [/nr] [/ns] [/s (val)]\n")
 		_T("\t\tDump a CD from A to Z\n")
 		_T("\t\tFor PLEXTOR or drive that can scramble Dumping\n")
 		_T("\tswap <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/a (val)]\n")
@@ -1357,6 +1377,7 @@ int printUsage(void)
 		_T("\t\t\tFor PlayStation\n")
 		_T("\t/vn\tSearch specific bytes\n")
 		_T("\t\t\tFor VideoNow\n")
+		_T("\t\t\tval\tinsert empty bytes in the head of the 1st track if value is set\n")
 		_T("Option (for CD SubChannel)\n")
 		_T("\t/np\tNot fix SubP\n")
 		_T("\t/nq\tNot fix SubQ\n")

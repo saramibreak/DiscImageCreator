@@ -208,23 +208,29 @@ BOOL ExecSearchingOffset(
 			LPBYTE pBuf2 = NULL;
 			LPBYTE lpBuf2 = NULL;
 			if (!GetAlignedCallocatedBuffer(pDevice, &pBuf2,
-				CD_RAW_SECTOR_SIZE * 10, &lpBuf2, _T(__FUNCTION__), __LINE__)) {
+				CD_RAW_SECTOR_SIZE * 15, &lpBuf2, _T(__FUNCTION__), __LINE__)) {
 				return FALSE;
 			}
 			memcpy(lpBuf2, lpBuf, CD_RAW_SECTOR_SIZE);
 			BYTE aBuf[CD_RAW_SECTOR_WITH_C2_AND_SUBCODE_SIZE] = {};
 
-			for (INT k = 1; k < 10; k++) {
+			for (INT k = 1; k < 15; k++) {
 				if (!ExecReadCD(pExtArg, pDevice, lpCmd, nLBA + k
 					, aBuf, dwBufSize, _T(__FUNCTION__), __LINE__)) {
 					return FALSE;
 				}
 				memcpy(lpBuf2 + CD_RAW_SECTOR_SIZE * k, aBuf, CD_RAW_SECTOR_SIZE);
 			}
+			// VideoNow Color Jr. XP
 			CONST BYTE aVideoNowBytes[] = {
 				0x81, 0xe3, 0xe3, 0xc7, 0xc7, 0x81, 0x81, 0xe3,
 			};
+			// VideoNow B&W
+			CONST BYTE aVideoNowBytesOrg[] = {
+				0xe1, 0xe1, 0xe1, 0x01, 0xe1, 0xe1, 0xe1, 0x00,
+			};
 			INT nSector = 1;
+
 			for (INT i = 0; i < CD_RAW_SECTOR_SIZE * 10; i++) {
 				for (size_t c = 0; c < sizeof(aVideoNowBytes); c++) {
 					if (lpBuf2[i + c] != aVideoNowBytes[c]) {
@@ -232,11 +238,24 @@ BOOL ExecSearchingOffset(
 						break;
 					}
 					if (c == sizeof(aVideoNowBytes) - 1) {
+						OutputLogA(standardOut | fileDisc, "Detected VideoNow Color or Jr. or XP\n");
 						bRet = TRUE;
 					}
 				}
+				if (!bRet) {
+					for (size_t c = 0; c < sizeof(aVideoNowBytesOrg); c++) {
+						if (lpBuf2[i + c] != aVideoNowBytesOrg[c]) {
+							bRet = FALSE;
+							break;
+						}
+						if (c == sizeof(aVideoNowBytesOrg) - 1) {
+							OutputLogA(standardOut | fileDisc, "Detected VideoNow B&W\n");
+							bRet = TRUE;
+						}
+					}
+				}
 				if (bRet) {
-					pDisc->MAIN.nCombinedOffset = i;
+					pDisc->MAIN.nCombinedOffset = i - pExtArg->nAudioCDOffsetNum;
 					nSector--;
 					OutputCDMain(fileDisc, lpBuf2 + CD_RAW_SECTOR_SIZE * nSector, nLBA + nSector, CD_RAW_SECTOR_SIZE);
 					break;
