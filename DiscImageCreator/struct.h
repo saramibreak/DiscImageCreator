@@ -199,7 +199,8 @@ typedef struct _EXT_ARG {
 	BYTE byIntentionalSub;
 	BYTE by74Min;
 	BYTE byVideoNow;
-	BYTE padding[2];
+	BYTE byNoSkipSS;
+	BYTE padding[1];
 	LONG nAudioCDOffsetNum;
 	DWORD dwMaxRereadNum;
 	INT nAllSectors;	// use for xbox360
@@ -278,7 +279,7 @@ typedef struct _DISC {
 		BYTE byFirstDataTrackNum;	// get at CDROM_READ_TOC_EX_FORMAT_TOC
 		BYTE byLastDataTrackNum;	// get at CDROM_READ_TOC_EX_FORMAT_TOC
 		BYTE byFormat;				// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
-		BYTE padding1;
+		BYTE byFirstMultiTrackNum;	// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
 		BOOL bMultiSession;			// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
 		LPBYTE lpSessionNumList;	// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
 		INT nFirstLBAofLeadout;		// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC

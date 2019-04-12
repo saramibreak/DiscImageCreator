@@ -25,6 +25,7 @@
 #include "outputScsiCmdLogforCD.h"
 #include "outputScsiCmdLogforDVD.h"
 #include "set.h"
+#include "_external/abgx360.h"
 
 BOOL ReadCDFor3DODirectory(
 	PEXT_ARG pExtArg,
@@ -283,8 +284,8 @@ BOOL ReadDirectoryRecord(
 			// and more
 			DWORD dwAdditionalTransferLen = pDirRec[nDirRecIdx].dwDirSize / pDevice->dwMaxTransferLength;
 			SetCommandForTransferLength(pExecType, pDevice, pCdb, pDevice->dwMaxTransferLength, &byTransferLen, &byRoop);
-			OutputMainInfoLogA("nLBA %d, dwDirSize: %lu, byTransferLen: %d [L:%d]\n"
-				, nLBA, pDevice->dwMaxTransferLength, byRoop, (INT)__LINE__);
+			OutputMainInfoLogA("nLBA %d, dwDirSize: %lu*%lu, byTransferLen: %d*%lu [L:%d]\n"
+				, nLBA, pDevice->dwMaxTransferLength, dwAdditionalTransferLen, byRoop, dwAdditionalTransferLen, (INT)__LINE__);
 
 			for (DWORD n = 0; n < dwAdditionalTransferLen; n++) {
 				if (!ReadDirectoryRecordDetail(pExecType, pExtArg, pDevice, pDisc, pCdb, nLBA
@@ -294,13 +295,15 @@ BOOL ReadDirectoryRecord(
 				nLBA += byRoop;
 			}
 			DWORD dwLastTblSize = pDirRec[nDirRecIdx].dwDirSize % pDevice->dwMaxTransferLength;
-			SetCommandForTransferLength(pExecType, pDevice, pCdb, dwLastTblSize, &byTransferLen, &byRoop);
-			OutputMainInfoLogA("nLBA %d, dwDirSize: %lu, byTransferLen: %d [L:%d]\n"
-				, nLBA, dwLastTblSize, byRoop, (INT)__LINE__);
+			if (dwLastTblSize != 0) {
+				SetCommandForTransferLength(pExecType, pDevice, pCdb, dwLastTblSize, &byTransferLen, &byRoop);
+				OutputMainInfoLogA("nLBA %d, dwDirSize: %lu, byTransferLen: %d [L:%d]\n"
+					, nLBA, dwLastTblSize, byRoop, (INT)__LINE__);
 
-			if (!ReadDirectoryRecordDetail(pExecType, pExtArg, pDevice, pDisc, pCdb, nLBA
-				, lpBuf, bufDec, byTransferLen, nDirPosNum, dwLogicalBlkCoef, nSectorOfs, pDirRec)) {
-				continue;
+				if (!ReadDirectoryRecordDetail(pExecType, pExtArg, pDevice, pDisc, pCdb, nLBA
+					, lpBuf, bufDec, byTransferLen, nDirPosNum, dwLogicalBlkCoef, nSectorOfs, pDirRec)) {
+					continue;
+				}
 			}
 		}
 		else {
@@ -749,7 +752,7 @@ BOOL ReadDVDForFileSystem(
 			return FALSE;
 		}
 		FreeAndNull(pDirRec);
-		if (pDisc->PROTECT.byExist) {
+		if (pDisc->PROTECT.byExist && !pExtArg->byNoSkipSS) {
 			OutputLogA(standardOut | fileDisc, "Detected a protected file [%s]. LBA %d to %d\n"
 				, pDisc->PROTECT.name, pDisc->PROTECT.ERROR_SECTOR.nExtentPos
 				, pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize);
@@ -807,6 +810,216 @@ BOOL ReadDVDForFileSystem(
 	}
 	nLBA = 256;
 	OutputFsVolumeDescriptorSequence(lpBuf, nLBA);
+	return TRUE;
+}
+
+// http://web.archive.org/web/20151026074806/http://home.comcast.net/~admiral_powerslave/dvddrives.html
+BOOL OutputXDVDFsDirectoryRecord(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	CDB::_READ12* pCdb,
+	LPBYTE lpBuf,
+	LPDWORD lpOfs,
+	DWORD dwStartLBA,
+	INT nNest,
+	LPCSTR* szTab,
+	LPBOOL pEnd
+) {
+	WORD ofsLeft = MAKEWORD(lpBuf[0], lpBuf[1]);
+	if (ofsLeft == 0xffff) {
+		*pEnd = TRUE;
+		return TRUE;
+	}
+	WORD ofsRight = MAKEWORD(lpBuf[2], lpBuf[3]);
+	DWORD startSector = MAKEDWORD(MAKEWORD(lpBuf[4], lpBuf[5]), MAKEWORD(lpBuf[6], lpBuf[7]));
+	DWORD fileSize = MAKEDWORD(MAKEWORD(lpBuf[8], lpBuf[9]), MAKEWORD(lpBuf[10], lpBuf[11]));
+	OutputVolDescLogA(
+		"%s Offset to left sub-tree entry: %d(0x%x)\n"
+		"%sOffset to right sub-tree entry: %d(0x%x)\n"
+		"%s       Starting sector of file: %ld(0x%lx)\n"
+		"%s               Total file size: %ld(0x%lx)\n"
+		"%s               File attributes: "
+		, szTab[nNest], ofsLeft, ofsLeft
+		, szTab[nNest], ofsRight, ofsRight
+		, szTab[nNest], startSector, startSector
+		, szTab[nNest], fileSize, fileSize
+		, szTab[nNest]
+	);
+
+	BYTE attribute = lpBuf[12];
+	if (attribute == 0x01) {
+		OutputVolDescLogA("read only\n");
+	}
+	else if (attribute == 0x02) {
+		OutputVolDescLogA("hidden\n");
+	}
+	else if (attribute == 0x04) {
+		OutputVolDescLogA("system file\n");
+	}
+	else if (attribute == 0x10) {
+		OutputVolDescLogA("directory\n");
+	}
+	else if (attribute == 0x20) {
+		OutputVolDescLogA("archive\n");
+	}
+	else if (attribute == 0x80) {
+		OutputVolDescLogA("normal\n");
+	}
+	else {
+		OutputVolDescLogA("other\n");
+	}
+	BYTE lenOfFile = lpBuf[13];
+	OutputVolDescLogA(
+		"%s            Length of filename: %d\n"
+		"%s                      Filename: "
+		, szTab[nNest], lenOfFile
+		, szTab[nNest]
+	);
+	for (BYTE i = 0; i < lenOfFile; i++) {
+		OutputVolDescLogA("%c", lpBuf[14 + i]);
+	}
+	OutputVolDescLogA("\n\n");
+	UINT mod = (14 + lenOfFile) % sizeof(DWORD);
+	if (mod != 0) {
+		*lpOfs = 14 + lenOfFile + sizeof(DWORD) - mod;
+	}
+	else {
+		*lpOfs = (DWORD)(14 + lenOfFile);
+	}
+
+	if (attribute == 0x10) {
+		if (nNest < 6) {
+			nNest++;
+		}
+		if (!ReadXBOXDirectoryRecord(pExtArg, pDevice, pCdb
+			, startSector + dwStartLBA, fileSize, dwStartLBA, nNest)) {
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+BOOL ReadXBOXDirectoryRecord(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	CDB::_READ12* pCdb,
+	DWORD dwDirPos,
+	DWORD dwDirTblSize,
+	DWORD dwStartLBA,
+	INT nNest
+) {
+	LPBYTE pBuf = NULL;
+	LPBYTE lpBuf = NULL;
+	if (!GetAlignedCallocatedBuffer(pDevice, &pBuf,
+		dwDirTblSize, &lpBuf, _T(__FUNCTION__), __LINE__)) {
+		return FALSE;
+	}
+	BYTE byScsiStatus = 0;
+#ifdef _WIN32
+	INT direction = SCSI_IOCTL_DATA_IN;
+#else
+	INT direction = SG_DXFER_FROM_DEV;
+#endif
+	pCdb->TransferLength[3] = (UCHAR)(dwDirTblSize / DISC_RAW_READ_SIZE);
+	REVERSE_BYTES(pCdb->LogicalBlock, &dwDirPos);
+
+	if (!ScsiPassThroughDirect(pExtArg, pDevice, pCdb, CDB12GENERIC_LENGTH, lpBuf,
+		direction, dwDirTblSize, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+		FreeAndNull(pBuf);
+		return FALSE;
+	}
+	for (UCHAR c = 0; c < pCdb->TransferLength[3]; c++) {
+		OutputCDMain(fileMainInfo, lpBuf + DISC_RAW_READ_SIZE * c, (INT)dwDirPos + c, DISC_RAW_READ_SIZE);
+	}
+	LPCSTR szTab[] = { "\t", "\t\t", "\t\t\t", "\t\t\t\t", "\t\t\t\t\t", "\t\t\t\t\t\t", "\t\t\t\t\t\t\t" };
+	OutputVolDescLogA("%s", szTab[nNest]);
+	OutputVolDescLogA(
+		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(DIRECTORY ENTRY)
+		, (INT)dwDirPos, (INT)dwDirPos
+	);
+	BOOL bEnd = FALSE;
+	DWORD dwSize = 0;
+	DWORD dwCoeff = 1;
+	for (DWORD dwOfs = 0; dwSize < dwDirTblSize;) {
+		if (!OutputXDVDFsDirectoryRecord(pExtArg, pDevice, pCdb
+			, lpBuf + dwSize, &dwOfs, dwStartLBA, nNest, szTab, &bEnd)) {
+			return FALSE;
+		}
+		if (bEnd) {
+			break;
+		}
+		else {
+			dwSize += dwOfs;
+			if (dwSize > DISC_RAW_READ_SIZE * dwCoeff - 15) {
+				dwSize += DISC_RAW_READ_SIZE * dwCoeff - dwSize;
+				dwCoeff++;
+			}
+		}
+	}
+	FreeAndNull(pBuf);
+	return TRUE;
+}
+
+BOOL ReadXBOXFileSystem(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	DWORD dwStartLBA
+) {
+	LPBYTE pBuf = NULL;
+	LPBYTE lpBuf = NULL;
+	if (!GetAlignedCallocatedBuffer(pDevice, &pBuf,
+		pDevice->dwMaxTransferLength, &lpBuf, _T(__FUNCTION__), __LINE__)) {
+		return FALSE;
+	}
+	CDB::_READ12 cdb = {};
+	cdb.OperationCode = SCSIOP_READ12;
+	BYTE byScsiStatus = 0;
+#ifdef _WIN32
+	INT direction = SCSI_IOCTL_DATA_IN;
+#else
+	INT direction = SG_DXFER_FROM_DEV;
+#endif
+	cdb.TransferLength[3] = (UCHAR)(pDevice->dwMaxTransferLength / DISC_RAW_READ_SIZE);
+	INT nLBA = (INT)dwStartLBA + 32;
+	REVERSE_BYTES(&cdb.LogicalBlock, &nLBA);
+
+	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, lpBuf,
+		direction, pDevice->dwMaxTransferLength, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+		FreeAndNull(pBuf);
+		return FALSE;
+	}
+	OutputCDMain(fileMainInfo, lpBuf, nLBA, DISC_RAW_READ_SIZE);
+
+	DWORD dwDirPos = MAKEDWORD(MAKEWORD(lpBuf[20], lpBuf[21]), MAKEWORD(lpBuf[22], lpBuf[23]));
+	DWORD dwDirTblSize = MAKEDWORD(MAKEWORD(lpBuf[24], lpBuf[25]), MAKEWORD(lpBuf[26], lpBuf[27]));
+	CHAR date[20] = {};
+	printwin32filetime(MAKEDWORD64(MAKELONG(MAKEWORD(lpBuf[28], lpBuf[29]), MAKEWORD(lpBuf[30], lpBuf[31]))
+		, MAKELONG(MAKEWORD(lpBuf[32], lpBuf[33]), MAKEWORD(lpBuf[34], lpBuf[35]))), date);
+	OutputVolDescLogA(
+		OUTPUT_DHYPHEN_PLUS_STR(XDVDFS)
+		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(VOLUME DESCRIPTOR)
+		"\t                        Header: %.20s\n"
+		"\tSector of root directory table: %ld(0x%lx)\n"
+		"\t  Size of root directory table: %ld(0x%lx)\n"
+		"\t           Image creation time: %.20s\n"
+		"\t                        Footer: %.20s\n"
+		, nLBA, nLBA
+		, (LPCH)&lpBuf[0]
+		, dwDirPos, dwDirPos
+		, dwDirTblSize, dwDirTblSize
+		, date, (LPCH)&lpBuf[2028]
+	);
+	if (dwDirTblSize % DISC_RAW_READ_SIZE != 0) {
+		dwDirTblSize += DISC_RAW_READ_SIZE * (dwDirTblSize / DISC_RAW_READ_SIZE + 1) - dwDirTblSize;
+	}
+	if (!ReadXBOXDirectoryRecord(
+		pExtArg, pDevice, &cdb, dwDirPos + dwStartLBA, dwDirTblSize, dwStartLBA, 0)) {
+		FreeAndNull(pBuf);
+		return FALSE;
+	};
+	FreeAndNull(pBuf);
 	return TRUE;
 }
 

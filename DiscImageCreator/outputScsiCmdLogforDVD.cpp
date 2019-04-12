@@ -1556,6 +1556,403 @@ VOID OutputBDStructureFormat(
 	}
 }
 
+// http://xboxdevwiki.net/Xbe#Title_ID
+VOID OutputPublisher(
+	LPBYTE buf
+) {
+	if (!strncmp((LPCH)buf, "AC", 2)) {
+		OutputDiscLogA("Acclaim Entertainment\n");
+	}
+	else if (!strncmp((LPCH)buf, "AH", 2)) {
+		OutputDiscLogA("ARUSH Entertainment\n");
+	}
+	else if (!strncmp((LPCH)buf, "AQ", 2)) {
+		OutputDiscLogA("Aqua System\n");
+	}
+	else if (!strncmp((LPCH)buf, "AS", 2)) {
+		OutputDiscLogA("ASK\n");
+	}
+	else if (!strncmp((LPCH)buf, "AT", 2)) {
+		OutputDiscLogA("Atlus\n");
+	}
+	else if (!strncmp((LPCH)buf, "AV", 2)) {
+		OutputDiscLogA("Activision\n");
+	}
+	else if (!strncmp((LPCH)buf, "AY", 2)) {
+		OutputDiscLogA("Aspyr Media\n");
+	}
+	else if (!strncmp((LPCH)buf, "BA", 2)) {
+		OutputDiscLogA("Bandai\n");
+	}
+	else if (!strncmp((LPCH)buf, "BL", 2)) {
+		OutputDiscLogA("Black Box\n");
+	}
+	else if (!strncmp((LPCH)buf, "BM", 2)) {
+		OutputDiscLogA("BAM! Entertainment\n");
+	}
+	else if (!strncmp((LPCH)buf, "BR", 2)) {
+		OutputDiscLogA("Broccoli Co.\n");
+	}
+	else if (!strncmp((LPCH)buf, "BS", 2)) {
+		OutputDiscLogA("Bethesda Softworks\n");
+	}
+	else if (!strncmp((LPCH)buf, "BU", 2)) {
+		OutputDiscLogA("Bunkasha Co.\n");
+	}
+	else if (!strncmp((LPCH)buf, "BV", 2)) {
+		OutputDiscLogA("Buena Vista Games\n");
+	}
+	else if (!strncmp((LPCH)buf, "BW", 2)) {
+		OutputDiscLogA("BBC Multimedia\n");
+	}
+	else if (!strncmp((LPCH)buf, "BZ", 2)) {
+		OutputDiscLogA("Blizzard\n");
+	}
+	else if (!strncmp((LPCH)buf, "CC", 2)) {
+		OutputDiscLogA("Capcom\n");
+	}
+	else if (!strncmp((LPCH)buf, "CK", 2)) {
+		OutputDiscLogA("Kemco Corporation\n");
+	}
+	else if (!strncmp((LPCH)buf, "CM", 2)) {
+		OutputDiscLogA("Codemasters\n");
+	}
+	else if (!strncmp((LPCH)buf, "CV", 2)) {
+		OutputDiscLogA("Crave Entertainment\n");
+	}
+	else if (!strncmp((LPCH)buf, "DC", 2)) {
+		OutputDiscLogA("DreamCatcher Interactive\n");
+	}
+	else if (!strncmp((LPCH)buf, "DX", 2)) {
+		OutputDiscLogA("Davilex\n");
+	}
+	else if (!strncmp((LPCH)buf, "EA", 2)) {
+		OutputDiscLogA("Electronic Arts\n");
+	}
+	else if (!strncmp((LPCH)buf, "EC", 2)) {
+		OutputDiscLogA("Encore inc\n");
+	}
+	else if (!strncmp((LPCH)buf, "EL", 2)) {
+		OutputDiscLogA("Enlight Software\n");
+	}
+	else if (!strncmp((LPCH)buf, "EM", 2)) {
+		OutputDiscLogA("Empire Interactive\n");
+	}
+	else if (!strncmp((LPCH)buf, "ES", 2)) {
+		OutputDiscLogA("Eidos Interactive\n");
+	}
+	else if (!strncmp((LPCH)buf, "FI", 2)) {
+		OutputDiscLogA("Fox Interactive\n");
+	}
+	else if (!strncmp((LPCH)buf, "FS", 2)) {
+		OutputDiscLogA("From Software\n");
+	}
+	else if (!strncmp((LPCH)buf, "GE", 2)) {
+		OutputDiscLogA("Genki Co.\n");
+	}
+	else if (!strncmp((LPCH)buf, "GV", 2)) {
+		OutputDiscLogA("Groove Games\n");
+	}
+	else if (!strncmp((LPCH)buf, "HE", 2)) {
+		OutputDiscLogA("Tru Blu (Entertainment division of Home Entertainment Suppliers)\n");
+	}
+	else if (!strncmp((LPCH)buf, "HP", 2)) {
+		OutputDiscLogA("Hip games\n");
+	}
+	else if (!strncmp((LPCH)buf, "HU", 2)) {
+		OutputDiscLogA("Hudson Soft\n");
+	}
+	else if (!strncmp((LPCH)buf, "HW", 2)) {
+		OutputDiscLogA("Highwaystar\n");
+	}
+	else if (!strncmp((LPCH)buf, "IA", 2)) {
+		OutputDiscLogA("Mad Catz Interactive\n");
+	}
+	else if (!strncmp((LPCH)buf, "IF", 2)) {
+		OutputDiscLogA("Idea Factory\n");
+	}
+	else if (!strncmp((LPCH)buf, "IG", 2)) {
+		OutputDiscLogA("Infogrames\n");
+	}
+	else if (!strncmp((LPCH)buf, "IL", 2)) {
+		OutputDiscLogA("Interlex Corporation\n");
+	}
+	else if (!strncmp((LPCH)buf, "IM", 2)) {
+		OutputDiscLogA("Imagine Media\n");
+	}
+	else if (!strncmp((LPCH)buf, "IO", 2)) {
+		OutputDiscLogA("Ignition Entertainment\n");
+	}
+	else if (!strncmp((LPCH)buf, "IP", 2)) {
+		OutputDiscLogA("Interplay Entertainment\n");
+	}
+	else if (!strncmp((LPCH)buf, "IX", 2)) {
+		OutputDiscLogA("InXile Entertainment\n");
+	}
+	else if (!strncmp((LPCH)buf, "JA", 2)) {
+		OutputDiscLogA("Jaleco\n");
+	}
+	else if (!strncmp((LPCH)buf, "JW", 2)) {
+		OutputDiscLogA("JoWooD\n");
+	}
+	else if (!strncmp((LPCH)buf, "KB", 2)) {
+		OutputDiscLogA("Kemco\n");
+	}
+	else if (!strncmp((LPCH)buf, "KI", 2)) {
+		OutputDiscLogA("Kids Station Inc.\n");
+	}
+	else if (!strncmp((LPCH)buf, "KN", 2)) {
+		OutputDiscLogA("Konami\n");
+	}
+	else if (!strncmp((LPCH)buf, "KO", 2)) {
+		OutputDiscLogA("KOEI\n");
+	}
+	else if (!strncmp((LPCH)buf, "KU", 2)) {
+		OutputDiscLogA("Kobi and/or GAE (formerly Global A Entertainment)\n");
+	}
+	else if (!strncmp((LPCH)buf, "LA", 2)) {
+		OutputDiscLogA("LucasArts\n");
+	}
+	else if (!strncmp((LPCH)buf, "LS", 2)) {
+		OutputDiscLogA("Black Bean Games (publishing arm of Leader S.p.A.\n");
+	}
+	else if (!strncmp((LPCH)buf, "MD", 2)) {
+		OutputDiscLogA("Metro3D\n");
+	}
+	else if (!strncmp((LPCH)buf, "ME", 2)) {
+		OutputDiscLogA("Medix\n");
+	}
+	else if (!strncmp((LPCH)buf, "MI", 2)) {
+		OutputDiscLogA("Microids\n");
+	}
+	else if (!strncmp((LPCH)buf, "MJ", 2)) {
+		OutputDiscLogA("Majesco Entertainment\n");
+	}
+	else if (!strncmp((LPCH)buf, "MM", 2)) {
+		OutputDiscLogA("Myelin Media\n");
+	}
+	else if (!strncmp((LPCH)buf, "MP", 2)) {
+		OutputDiscLogA("MediaQuest\n");
+	}
+	else if (!strncmp((LPCH)buf, "MS", 2)) {
+		OutputDiscLogA("Microsoft Game Studios\n");
+	}
+	else if (!strncmp((LPCH)buf, "MW", 2)) {
+		OutputDiscLogA("Midway Games\n");
+	}
+	else if (!strncmp((LPCH)buf, "MX", 2)) {
+		OutputDiscLogA("Empire Interactive\n");
+	}
+	else if (!strncmp((LPCH)buf, "NK", 2)) {
+		OutputDiscLogA("NewKidCo\n");
+	}
+	else if (!strncmp((LPCH)buf, "NL", 2)) {
+		OutputDiscLogA("NovaLogic\n");
+	}
+	else if (!strncmp((LPCH)buf, "NM", 2)) {
+		OutputDiscLogA("Namco\n");
+	}
+	else if (!strncmp((LPCH)buf, "OX", 2)) {
+		OutputDiscLogA("Oxygen Interactive\n");
+	}
+	else if (!strncmp((LPCH)buf, "PC", 2)) {
+		OutputDiscLogA("Playlogic Entertainment\n");
+	}
+	else if (!strncmp((LPCH)buf, "PL", 2)) {
+		OutputDiscLogA("Phantagram Co., Ltd.\n");
+	}
+	else if (!strncmp((LPCH)buf, "RA", 2)) {
+		OutputDiscLogA("Rage\n");
+	}
+	else if (!strncmp((LPCH)buf, "SA", 2)) {
+		OutputDiscLogA("Sammy\n");
+	}
+	else if (!strncmp((LPCH)buf, "SC", 2)) {
+		OutputDiscLogA("SCi Games\n");
+	}
+	else if (!strncmp((LPCH)buf, "SE", 2)) {
+		OutputDiscLogA("SEGA\n");
+	}
+	else if (!strncmp((LPCH)buf, "SN", 2)) {
+		OutputDiscLogA("SNK\n");
+	}
+	else if (!strncmp((LPCH)buf, "SS", 2)) {
+		OutputDiscLogA("Simon & Schuster\n");
+	}
+	else if (!strncmp((LPCH)buf, "SU", 2)) {
+		OutputDiscLogA("Success Corporation\n");
+	}
+	else if (!strncmp((LPCH)buf, "SW", 2)) {
+		OutputDiscLogA("Swing! Deutschland\n");
+	}
+	else if (!strncmp((LPCH)buf, "TA", 2)) {
+		OutputDiscLogA("Takara\n");
+	}
+	else if (!strncmp((LPCH)buf, "TC", 2)) {
+		OutputDiscLogA("Tecmo\n");
+	}
+	else if (!strncmp((LPCH)buf, "TD", 2)) {
+		OutputDiscLogA("The 3DO Company (or just 3DO)\n");
+	}
+	else if (!strncmp((LPCH)buf, "TK", 2)) {
+		OutputDiscLogA("Takuyo\n");
+	}
+	else if (!strncmp((LPCH)buf, "TM", 2)) {
+		OutputDiscLogA("TDK Mediactive\n");
+	}
+	else if (!strncmp((LPCH)buf, "TQ", 2)) {
+		OutputDiscLogA("THQ\n");
+	}
+	else if (!strncmp((LPCH)buf, "TS", 2)) {
+		OutputDiscLogA("Titus Interactive\n");
+	}
+	else if (!strncmp((LPCH)buf, "TT", 2)) {
+		OutputDiscLogA("Take-Two Interactive Software\n");
+	}
+	else if (!strncmp((LPCH)buf, "US", 2)) {
+		OutputDiscLogA("Ubisoft\n");
+	}
+	else if (!strncmp((LPCH)buf, "VC", 2)) {
+		OutputDiscLogA("Victor Interactive Software\n");
+	}
+	else if (!strncmp((LPCH)buf, "VN", 2)) {
+		OutputDiscLogA("Vivendi Universal (just took Interplays publishing rights)\n");
+	}
+	else if (!strncmp((LPCH)buf, "VU", 2)) {
+		OutputDiscLogA("Vivendi Universal Games\n");
+	}
+	else if (!strncmp((LPCH)buf, "VV", 2)) {
+		OutputDiscLogA("Vivendi Universal Games\n");
+	}
+	else if (!strncmp((LPCH)buf, "WE", 2)) {
+		OutputDiscLogA("Wanadoo Edition\n");
+	}
+	else if (!strncmp((LPCH)buf, "WR", 2)) {
+		OutputDiscLogA("Warner Bros. Interactive Entertainment\n");
+	}
+	else if (!strncmp((LPCH)buf, "XI", 2)) {
+		OutputDiscLogA("XPEC Entertainment and Idea Factory\n");
+	}
+	else if (!strncmp((LPCH)buf, "XK", 2)) {
+		OutputDiscLogA("Xbox kiosk disc\n");
+	}
+	else if (!strncmp((LPCH)buf, "XL", 2)) {
+		OutputDiscLogA("Xbox special bundled or live demo disc\n");
+	}
+	else if (!strncmp((LPCH)buf, "XM", 2)) {
+		OutputDiscLogA("Evolved Games\n");
+	}
+	else if (!strncmp((LPCH)buf, "XP", 2)) {
+		OutputDiscLogA("XPEC Entertainment\n");
+	}
+	else if (!strncmp((LPCH)buf, "XR", 2)) {
+		OutputDiscLogA("Panorama\n");
+	}
+	else if (!strncmp((LPCH)buf, "YB", 2)) {
+		OutputDiscLogA("YBM Sisa (South-Korea)\n");
+	}
+	else if (!strncmp((LPCH)buf, "ZD", 2)) {
+		OutputDiscLogA("Zushi Games (formerly Zoo Digital Publishing)\n");
+	}
+	else {
+		OutputDiscLogA("Unknown\n");
+	}
+}
+
+VOID OutputRegion(
+	BYTE buf
+) {
+	if (buf == 'W') {
+		OutputDiscLogA("World\n");
+	}
+	else if (buf == 'A') {
+		OutputDiscLogA("USA\n");
+	}
+	else if (buf == 'J') {
+		OutputDiscLogA("Japan\n");
+	}
+	else if (buf == 'E') {
+		OutputDiscLogA("Europe\n");
+	}
+	else if (buf == 'K') {
+		OutputDiscLogA("USA, Japan\n");
+	}
+	else if (buf == 'L') {
+		OutputDiscLogA("USA, Europe\n");
+	}
+	else if (buf == 'H') {
+		OutputDiscLogA("Japan, Europe\n");
+	}
+	else {
+		OutputDiscLogA("Other\n")
+	}
+}
+
+VOID OutputManufacturingInfoForXbox(
+	LPBYTE buf
+) {
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DiscManufacturingInformation)
+		"\tSystem Version: %02u\n"
+		, buf[0]
+	);
+
+	char date[20] = {};
+	printwin32filetime(MAKEDWORD64(MAKELONG(MAKEWORD(buf[16], buf[17]), MAKEWORD(buf[18], buf[19]))
+		, MAKELONG(MAKEWORD(buf[20], buf[21]), MAKEWORD(buf[22], buf[23]))), date);
+	if (buf[0] == 0x01) {
+		OutputDiscLogA(
+			"\t     Publisher: "
+		);
+		OutputPublisher(&buf[8]);
+		OutputDiscLogA(
+			"\t        Serial: %c%c%c\n"
+			"\t       Version: 1.%c%c\n"
+			"\t        Region: "
+			, buf[10], buf[11], buf[12], buf[13], buf[14]
+		);
+		OutputRegion(buf[15]);
+		OutputDiscLogA(
+			"\t     Timestamp: %s\n"
+			"\t       Unknown: %02u\n"
+			, date, buf[24]);
+	}
+	else if (buf[0] == 0x02) {
+		OutputDiscLogA(
+			"\t     Timestamp: %s\n"
+			"\t       Unknown: %02u\n"
+			"\t      Media ID: "
+			, date, buf[24]);
+		for (WORD k = 32; k < 48; k++) {
+			OutputDiscLogA("%02x", buf[k]);
+		}
+		OutputDiscLogA(
+			"\n"
+			"\t     Publisher: "
+		);
+		OutputPublisher(&buf[64]);
+
+		OutputDiscLogA(
+			"\t        Serial: %c%c%c%c\n"
+			"\t       Version: 1.%c%c\n"
+			"\t        Region: "
+			, buf[66], buf[67], buf[68], buf[69], buf[70], buf[71]
+		);
+		OutputRegion(buf[72]);
+		if (buf[73] == '0' && buf[74] == 'X') {
+			OutputDiscLogA(
+				"\t       Unknown: %c%c\n"
+				"\t          Disc: %c of %c\n"
+				, buf[73], buf[74], buf[75], buf[76])
+		}
+		else {
+			OutputDiscLogA(
+				"\t       Unknown: %c%c%c\n"
+				"\t          Disc: %c of %c\n"
+				, buf[73], buf[74], buf[75], buf[76], buf[77])
+		}
+	}
+}
+
 // http://xboxdevwiki.net/Xbox_Game_Disc#Security_Sectors_.28SS.bin.29
 VOID OutputXboxSecuritySector(
 	PDISC pDisc,

@@ -45,6 +45,10 @@ VOID OutputBDStructureFormat(
 	LPBYTE lpFormat
 );
 
+VOID OutputManufacturingInfoForXbox(
+	LPBYTE buf
+);
+
 VOID OutputXboxSecuritySector(
 	PDISC pDisc,
 	LPBYTE buf

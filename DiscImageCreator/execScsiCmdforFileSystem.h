@@ -38,6 +38,22 @@ BOOL ReadDVDForFileSystem(
 	LPBYTE lpBuf
 );
 
+BOOL ReadXBOXDirectoryRecord(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	CDB::_READ12* pCdb,
+	DWORD dwDirPos,
+	DWORD dwDirTblSize,
+	DWORD dwStartLBA,
+	INT nNest
+);
+
+BOOL ReadXBOXFileSystem(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	DWORD dwStartLBA
+);
+
 BOOL ReadBDForParamSfo(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,

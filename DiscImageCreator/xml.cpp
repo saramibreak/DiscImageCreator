@@ -44,16 +44,7 @@ BOOL OutputGameHash(
 			return FALSE;
 		}
 	}
-	else if (*pExecType == dvd || *pExecType == xbox || *pExecType == xboxswap ||
-		*pExecType == xgd2swap || *pExecType == xgd3swap || *pExecType == bd) {
-		if (!OutputHash(pWriter, pszFullPath, _T(".iso"), 1, 1, FALSE)) {
-			return FALSE;
-		}
-		if (pExtArg->byRawDump) {
-			if (!OutputHash(pWriter, pszFullPath, _T(".raw"), 1, 1, FALSE)) {
-				return FALSE;
-			}
-		}
+	else if (*pExecType == dvd || IsXbox(pExecType) || *pExecType == bd) {
 		if (*pExecType == dvd || *pExecType == xbox) {
 			_tcsncpy(szPath, pszFullPath, _MAX_PATH);
 			if (*pExecType == xbox) {
@@ -91,6 +82,14 @@ BOOL OutputGameHash(
 				return FALSE;
 			}
 			if (!OutputHash(pWriter, szPath, _T(".bin"), 1, 1, FALSE)) {
+				return FALSE;
+			}
+		}
+		if (!OutputHash(pWriter, pszFullPath, _T(".iso"), 1, 1, FALSE)) {
+			return FALSE;
+		}
+		if (pExtArg->byRawDump) {
+			if (!OutputHash(pWriter, pszFullPath, _T(".raw"), 1, 1, FALSE)) {
 				return FALSE;
 			}
 		}

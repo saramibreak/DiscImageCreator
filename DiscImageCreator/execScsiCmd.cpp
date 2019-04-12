@@ -722,8 +722,7 @@ BOOL SetDiscSpeed(
 			wSpeed = (WORD)(CD_RAW_SECTOR_SIZE * 75 * dwDiscSpeedNum / 1000);
 			setspeed.ReadSpeed = wSpeed;
 		}
-		else if ((*pExecType == dvd || *pExecType == xbox || *pExecType == xboxswap ||
-			*pExecType == xgd2swap || *pExecType == xgd3swap) &&
+		else if ((*pExecType == dvd || IsXbox(pExecType)) &&
 			0 < dwDiscSpeedNum && dwDiscSpeedNum <= DVD_DRIVE_MAX_SPEED) {
 			// Read and write speeds for the first DVD drives and players were of
 			// 1,385 kB/s (1,353 KiB/s); this speed is usually called "1x".

@@ -1951,7 +1951,8 @@ BOOL CreateBinCueCcd(
 		BYTE index = 0;
 		INT nLBAofFirstIdx = pDisc->SUB.lpFirstLBAListOnSub[i - 1][0];
 		// nothing or index 0 in track 1
-		if (nLBAofFirstIdx == -1 || nLBAofFirstIdx == -150) {
+		if (nLBAofFirstIdx == -1 || nLBAofFirstIdx == -150 ||
+			(pDisc->SCSI.bMultiSession && i == pDisc->SCSI.byFirstMultiTrackNum)) {
 			nLBAofFirstIdx = pDisc->SUB.lpFirstLBAListOnSub[i - 1][1];
 			index++;
 		}
@@ -1961,14 +1962,23 @@ BOOL CreateBinCueCcd(
 		}
 
 		BYTE byFrame = 0, bySecond = 0, byMinute = 0;
-		if (i == pDisc->SCSI.toc.FirstTrack) { 
+		if (i == pDisc->SCSI.toc.FirstTrack ||
+			(pDisc->SCSI.bMultiSession && i == pDisc->SCSI.byFirstMultiTrackNum)) {
 			if (0 == nLBAofFirstIdx || (i == pDisc->SCSI.toc.LastTrack &&
 				pDisc->SCSI.trackType != TRACK_TYPE::pregapAudioIn1stTrack &&
 				pDisc->SCSI.trackType != TRACK_TYPE::pregapDataIn1stTrack)) {
 
-				WriteCueForIndexDirective(index, 0, 0, 0, fpCueForImg);
 				WriteCueForIndexDirective(index, 0, 0, 0, fpCue);
-				WriteCcdForTrackIndex(index, 0, fpCcd);
+				if (pDisc->SCSI.bMultiSession && i == pDisc->SCSI.byFirstMultiTrackNum) {
+					LBAtoMSF(nLBAofFirstIdx, &byMinute, &bySecond, &byFrame);
+					WriteCueForIndexDirective(index, byMinute, bySecond, byFrame, fpCueForImg);
+					WriteCcdForTrackIndex(index, nLBAofFirstIdx, fpCcd);
+				}
+				else {
+					WriteCueForIndexDirective(index, 0, 0, 0, fpCueForImg);
+					WriteCcdForTrackIndex(index, 0, fpCcd);
+				}
+
 				if (pDisc->SUB.byDesync) {
 					WriteCueForIndexDirective(index, 0, 0, 0, fpCueSyncForImg);
 					WriteCueForIndexDirective(index, 0, 0, 0, fpCueSync);

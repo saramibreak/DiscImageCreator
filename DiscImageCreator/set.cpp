@@ -299,6 +299,9 @@ VOID SetAndOutputTocFull(
 				break;
 			}
 			pDisc->SCSI.byFormat = pTocData[a].Msf[1];
+			if (fullToc->LastCompleteSession > 1 && pTocData[a].Msf[0] > 1) {
+				pDisc->SCSI.byFirstMultiTrackNum = pTocData[a].Msf[0];
+			}
 			break;
 		case 0xa1:
 			OutputDiscLogA("  LastTrack %2u\n", pTocData[a].Msf[0]);
