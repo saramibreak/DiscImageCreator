@@ -15,6 +15,10 @@
  */
 #pragma once
 
+BOOL IsXbox(
+	PEXEC_TYPE pExecType
+);
+
 BOOL IsCDRDrive(
 	PDISC pDisc
 );

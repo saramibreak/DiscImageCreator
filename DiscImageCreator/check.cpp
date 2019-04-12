@@ -23,6 +23,16 @@ extern BYTE g_aSyncHeader[SYNC_SIZE];
 // This global variable is set if function is error
 extern LONG s_lineNum;
 
+BOOL IsXbox(
+	PEXEC_TYPE pExecType
+) {
+	if (*pExecType == xbox || *pExecType == xboxswap ||
+		*pExecType == xgd2swap || *pExecType == xgd3swap) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
 BOOL IsCDRDrive(
 	PDISC pDisc
 ) {

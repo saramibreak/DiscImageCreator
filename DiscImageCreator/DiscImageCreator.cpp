@@ -575,6 +575,24 @@ int printAndSetPath(_TCHAR* szPathFromArg, _TCHAR* pszFullPath)
 	return TRUE;
 }
 
+int SetOptionNss(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
+{
+	_TCHAR* endptr = NULL;
+	pExtArg->byNoSkipSS = TRUE;
+	if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
+		pExtArg->dwMaxRereadNum = _tcstoul(argv[(*i)++], &endptr, 10);
+		if (*endptr) {
+			OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
+			return FALSE;
+		}
+	}
+	else {
+		pExtArg->dwMaxRereadNum = 100;
+		OutputString(_T("/nss val is omitted. set [%ld]\n"), pExtArg->dwMaxRereadNum);
+	}
+	return TRUE;
+}
+
 int SetOptionVn(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 {
 	_TCHAR* endptr = NULL;
@@ -588,7 +606,7 @@ int SetOptionVn(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	}
 	else {
 		pExtArg->nAudioCDOffsetNum = 0;
-		OutputString(_T("/vn val is omitted. set [%d]\n"), 0);
+		OutputString(_T("/vn val is omitted. set [%ld]\n"), pExtArg->nAudioCDOffsetNum);
 	}
 	return TRUE;
 }
@@ -1088,6 +1106,11 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), 2)) {
 					pExtArg->byQuiet = TRUE;
 				}
+				else if (*pExecType == xbox && cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/nss"), 4)) {
+					if (!SetOptionNss(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
+				}
 				else {
 					OutputErrorString(_T("Unknown option: [%s]\n"), argv[i - 1]);
 					return FALSE;
@@ -1118,6 +1141,11 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				}
 				else if (cmdLen == 2 && !_tcsncmp(argv[i], _T("/q"), 2)) {
 					pExtArg->byQuiet = TRUE;
+				}
+				else if (cmdLen == 4 && !_tcsncmp(argv[i], _T("/nss"), 4)) {
+					if (!SetOptionNss(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
 				}
 				else {
 					OutputErrorString(_T("Unknown option: [%s]\n"), argv[i]);
@@ -1159,6 +1187,11 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				}
 				else if (cmdLen == 2 && !_tcsncmp(argv[i], _T("/q"), 2)) {
 					pExtArg->byQuiet = TRUE;
+				}
+				else if (cmdLen == 4 && !_tcsncmp(argv[i], _T("/nss"), 4)) {
+					if (!SetOptionNss(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
 				}
 				else {
 					OutputErrorString(_T("Unknown option: [%s]\n"), argv[i]);
@@ -1412,10 +1445,18 @@ int printSeveralInfo(LPTSTR pszDateTime, size_t dateTimeSize)
 	}
 #endif
 	OutputString(_T("AppVersion\n"));
-#ifdef _WIN64
-	OutputString(_T("\tx64, "));
-#else
-	OutputString(_T("\tx86, "));
+#ifdef _WIN32
+	#ifdef _WIN64
+		OutputString(_T("\tx64, "));
+	#else
+		OutputString(_T("\tx86, "));
+	#endif
+#elif __linux__
+	#ifdef __x86_64
+		OutputString(_T("\tx64, "));
+	#else
+		OutputString(_T("\tx86, "));
+	#endif
 #endif
 #ifdef UNICODE
 	OutputString(_T("UnicodeBuild, "));
@@ -1426,6 +1467,7 @@ int printSeveralInfo(LPTSTR pszDateTime, size_t dateTimeSize)
 	OutputString(_T("%s"), pszDateTime);
 	return TRUE;
 }
+
 #ifdef _WIN32
 int _tmain(int argc, _TCHAR* argv[])
 #else
