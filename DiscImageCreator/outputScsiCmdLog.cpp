@@ -358,10 +358,10 @@ VOID OutputGetConfigurationFeatureRandomReadable(
 ) {
 	OutputDriveLogA(
 		"\tFeatureRandomReadable\n"
-		"\t\t        LogicalBlockSize: %lu\n"
+		"\t\t        LogicalBlockSize: %u\n"
 		"\t\t                Blocking: %u\n"
 		"\t\tErrorRecoveryPagePresent: %s\n",
-		MAKELONG(MAKEWORD(pRandomReadable->LogicalBlockSize[3], pRandomReadable->LogicalBlockSize[2]),
+		MAKEUINT(MAKEWORD(pRandomReadable->LogicalBlockSize[3], pRandomReadable->LogicalBlockSize[2]),
 			MAKEWORD(pRandomReadable->LogicalBlockSize[1], pRandomReadable->LogicalBlockSize[0])),
 		MAKEWORD(pRandomReadable->Blocking[1], pRandomReadable->Blocking[0]),
 		BOOLEAN_TO_STRING_YES_NO_A(pRandomReadable->ErrorRecoveryPagePresent));
@@ -409,13 +409,13 @@ VOID OutputGetConfigurationFeatureRandomWritable(
 ) {
 	OutputDriveLogA(
 		"\tFeatureRandomWritable\n"
-		"\t\t                 LastLBA: %lu\n"
-		"\t\t        LogicalBlockSize: %lu\n"
+		"\t\t                 LastLBA: %u\n"
+		"\t\t        LogicalBlockSize: %u\n"
 		"\t\t                Blocking: %u\n"
 		"\t\tErrorRecoveryPagePresent: %s\n",
-		MAKELONG(MAKEWORD(pRandomWritable->LastLBA[3], pRandomWritable->LastLBA[2]),
+		MAKEUINT(MAKEWORD(pRandomWritable->LastLBA[3], pRandomWritable->LastLBA[2]),
 			MAKEWORD(pRandomWritable->LastLBA[1], pRandomWritable->LastLBA[0])),
-		MAKELONG(MAKEWORD(pRandomWritable->LogicalBlockSize[3], pRandomWritable->LogicalBlockSize[2]),
+		MAKEUINT(MAKEWORD(pRandomWritable->LogicalBlockSize[3], pRandomWritable->LogicalBlockSize[2]),
 			MAKEWORD(pRandomWritable->LogicalBlockSize[1], pRandomWritable->LogicalBlockSize[0])),
 		MAKEWORD(pRandomWritable->Blocking[1], pRandomWritable->Blocking[0]),
 		BOOLEAN_TO_STRING_YES_NO_A(pRandomWritable->ErrorRecoveryPagePresent));
@@ -486,10 +486,10 @@ VOID OutputGetConfigurationFeatureWriteOnce(
 ) {
 	OutputDriveLogA(
 		"\tFeatureWriteOnce\n"
-		"\t\t        LogicalBlockSize: %lu\n"
+		"\t\t        LogicalBlockSize: %u\n"
 		"\t\t                Blocking: %u\n"
 		"\t\tErrorRecoveryPagePresent: %s\n",
-		MAKELONG(MAKEWORD(pWriteOnce->LogicalBlockSize[3], pWriteOnce->LogicalBlockSize[2]),
+		MAKEUINT(MAKEWORD(pWriteOnce->LogicalBlockSize[3], pWriteOnce->LogicalBlockSize[2]),
 			MAKEWORD(pWriteOnce->LogicalBlockSize[1], pWriteOnce->LogicalBlockSize[0])),
 		MAKEWORD(pWriteOnce->Blocking[1], pWriteOnce->Blocking[0]),
 		BOOLEAN_TO_STRING_YES_NO_A(pWriteOnce->ErrorRecoveryPagePresent));
@@ -617,7 +617,7 @@ VOID OutputGetConfigurationFeatureCdMastering(
 		"\t\t      RawMultiSessionOk: %s\n"
 		"\t\t        SessionAtOnceOk: %s\n"
 		"\t\t     BufferUnderrunFree: %s\n"
-		"\t\t  MaximumCueSheetLength: %lu\n",
+		"\t\t  MaximumCueSheetLength: %u\n",
 		BOOLEAN_TO_STRING_YES_NO_A(pCDMastering->RWSubchannelsRecordable),
 		BOOLEAN_TO_STRING_YES_NO_A(pCDMastering->CdRewritable),
 		BOOLEAN_TO_STRING_YES_NO_A(pCDMastering->TestWriteOk),
@@ -625,7 +625,7 @@ VOID OutputGetConfigurationFeatureCdMastering(
 		BOOLEAN_TO_STRING_YES_NO_A(pCDMastering->RawMultiSessionOk),
 		BOOLEAN_TO_STRING_YES_NO_A(pCDMastering->SessionAtOnceOk),
 		BOOLEAN_TO_STRING_YES_NO_A(pCDMastering->BufferUnderrunFree),
-		MAKELONG(MAKEWORD(0, pCDMastering->MaximumCueSheetLength[2]),
+		MAKEUINT(MAKEWORD(0, pCDMastering->MaximumCueSheetLength[2]),
 			MAKEWORD(pCDMastering->MaximumCueSheetLength[1], pCDMastering->MaximumCueSheetLength[0])));
 }
 
@@ -1376,10 +1376,10 @@ VOID OutputModeParmeterHeader(
 ) {
 	OutputDriveLogA(
 		OUTPUT_DHYPHEN_PLUS_STR(ModeParmeterHeader)
-		"\t         ModeDataLength: %u\n"
-		"\t             MediumType: %u\n"
-		"\tDeviceSpecificParameter: %u\n"
-		"\t  BlockDescriptorLength: %u\n"
+		"\t           ModeDataLength: %u\n"
+		"\t               MediumType: %u\n"
+		"\t  DeviceSpecificParameter: %u\n"
+		"\t    BlockDescriptorLength: %u\n"
 		, pHeader->ModeDataLength
 		, pHeader->MediumType
 		, pHeader->DeviceSpecificParameter
@@ -1391,10 +1391,10 @@ VOID OutputModeParmeterHeader10(
 ) {
 	OutputDriveLogA(
 		OUTPUT_DHYPHEN_PLUS_STR(ModeParmeterHeader10)
-		"\t         ModeDataLength: %u\n"
-		"\t             MediumType: %u\n"
-		"\tDeviceSpecificParameter: %u\n"
-		"\t  BlockDescriptorLength: %u\n"
+		"\t           ModeDataLength: %u\n"
+		"\t               MediumType: %u\n"
+		"\t  DeviceSpecificParameter: %u\n"
+		"\t    BlockDescriptorLength: %u\n"
 		, MAKEWORD(pHeader->ModeDataLength[1],
 		pHeader->ModeDataLength[0])
 		, pHeader->MediumType
@@ -1409,41 +1409,41 @@ VOID OutputCDVDCapabilitiesPage(
 ) {
 	OutputDriveLogA(
 		OUTPUT_DHYPHEN_PLUS_STR(CDVD Capabilities & Mechanism Status Page)
-		"\t              PageCode: %#04x\n"
-		"\t                 PSBit: %s\n"
-		"\t            PageLength: %u\n"
-		"\t               CDRRead: %s\n"
-		"\t               CDERead: %s\n"
-		"\t               Method2: %s\n"
-		"\t            DVDROMRead: %s\n"
-		"\t              DVDRRead: %s\n"
-		"\t            DVDRAMRead: %s\n"
-		"\t              CDRWrite: %s\n"
-		"\t              CDEWrite: %s\n"
-		"\t             TestWrite: %s\n"
-		"\t             DVDRWrite: %s\n"
-		"\t           DVDRAMWrite: %s\n"
-		"\t             AudioPlay: %s\n"
-		"\t             Composite: %s\n"
-		"\t        DigitalPortOne: %s\n"
-		"\t        DigitalPortTwo: %s\n"
-		"\t            Mode2Form1: %s\n"
-		"\t            Mode2Form2: %s\n"
-		"\t          MultiSession: %s\n"
-		"\t    BufferUnderrunFree: %s\n"
-		"\t                  CDDA: %s\n"
-		"\t          CDDAAccurate: %s\n"
-		"\t           RWSupported: %s\n"
-		"\t       RWDeinterleaved: %s\n"
-		"\t            C2Pointers: %s\n"
-		"\t                  ISRC: %s\n"
-		"\t                   UPC: %s\n"
-		"\t    ReadBarCodeCapable: %s\n"
-		"\t                  Lock: %s\n"
-		"\t             LockState: %s\n"
-		"\t         PreventJumper: %s\n"
-		"\t                 Eject: %s\n"
-		"\t  LoadingMechanismType: "
+		"\t                 PageCode: %#04x\n"
+		"\t                    PSBit: %s\n"
+		"\t               PageLength: %u\n"
+		"\t                  CDRRead: %s\n"
+		"\t                  CDERead: %s\n"
+		"\t                  Method2: %s\n"
+		"\t               DVDROMRead: %s\n"
+		"\t                 DVDRRead: %s\n"
+		"\t               DVDRAMRead: %s\n"
+		"\t                 CDRWrite: %s\n"
+		"\t                 CDEWrite: %s\n"
+		"\t                TestWrite: %s\n"
+		"\t                DVDRWrite: %s\n"
+		"\t              DVDRAMWrite: %s\n"
+		"\t                AudioPlay: %s\n"
+		"\t                Composite: %s\n"
+		"\t           DigitalPortOne: %s\n"
+		"\t           DigitalPortTwo: %s\n"
+		"\t               Mode2Form1: %s\n"
+		"\t               Mode2Form2: %s\n"
+		"\t             MultiSession: %s\n"
+		"\t       BufferUnderrunFree: %s\n"
+		"\t                     CDDA: %s\n"
+		"\t             CDDAAccurate: %s\n"
+		"\t              RWSupported: %s\n"
+		"\t          RWDeinterleaved: %s\n"
+		"\t               C2Pointers: %s\n"
+		"\t                     ISRC: %s\n"
+		"\t                      UPC: %s\n"
+		"\t       ReadBarCodeCapable: %s\n"
+		"\t                     Lock: %s\n"
+		"\t                LockState: %s\n"
+		"\t            PreventJumper: %s\n"
+		"\t                    Eject: %s\n"
+		"\t     LoadingMechanismType: "
 		, cdvd->PageCode
 		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->PSBit)
 		, cdvd->PageLength
@@ -1481,22 +1481,22 @@ VOID OutputCDVDCapabilitiesPage(
 
 	switch (cdvd->LoadingMechanismType) {
 	case LOADING_MECHANISM_CADDY:
-		OutputDriveLogA("caddy\n")
+		OutputDriveLogA("caddy\n");
 		break;
 	case LOADING_MECHANISM_TRAY:
-		OutputDriveLogA("tray\n")
+		OutputDriveLogA("tray\n");
 		break;
 	case LOADING_MECHANISM_POPUP:
-		OutputDriveLogA("popup\n")
+		OutputDriveLogA("popup\n");
 		break;
 	case LOADING_MECHANISM_INDIVIDUAL_CHANGER:
-		OutputDriveLogA("individual changer\n")
+		OutputDriveLogA("individual changer\n");
 		break;
 	case LOADING_MECHANISM_CARTRIDGE_CHANGER:
-		OutputDriveLogA("cartridge changer\n")
+		OutputDriveLogA("cartridge changer\n");
 		break;
 	default:
-		OutputDriveLogA("unknown\n")
+		OutputDriveLogA("unknown\n");
 		break;
 	}
 	WORD rsm = MAKEWORD(cdvd->ReadSpeedMaximum[1], cdvd->ReadSpeedMaximum[0]);
@@ -1505,23 +1505,23 @@ VOID OutputCDVDCapabilitiesPage(
 	WORD wsc = MAKEWORD(cdvd->WriteSpeedCurrent[1], cdvd->WriteSpeedCurrent[0]);
 	WORD bs = MAKEWORD(cdvd->BufferSize[1], cdvd->BufferSize[0]);
 	OutputDriveLogA(
-		"\t        SeparateVolume: %s\n"
-		"\t   SeperateChannelMute: %s\n"
-		"\t   SupportsDiskPresent: %s\n"
-		"\t       SWSlotSelection: %s\n"
-		"\t     SideChangeCapable: %s\n"
-		"\t    RWInLeadInReadable: %s\n"
-		"\t      ReadSpeedMaximum: %uKB/sec (%ux)\n"
-		"\t    NumberVolumeLevels: %u\n"
-		"\t            BufferSize: %u\n"
-		"\t      ReadSpeedCurrent: %uKB/sec (%ux)\n"
-		"\t                   BCK: %s\n"
-		"\t                   RCK: %s\n"
-		"\t                  LSBF: %s\n"
-		"\t                Length: %u\n"
-		"\t     WriteSpeedMaximum: %uKB/sec (%ux)\n"
-		"\t     WriteSpeedCurrent: %uKB/sec (%ux)\n"
-		"\tCopyManagementRevision: %u\n"
+		"\t           SeparateVolume: %s\n"
+		"\t      SeperateChannelMute: %s\n"
+		"\t      SupportsDiskPresent: %s\n"
+		"\t          SWSlotSelection: %s\n"
+		"\t        SideChangeCapable: %s\n"
+		"\t       RWInLeadInReadable: %s\n"
+		"\t         ReadSpeedMaximum: %uKB/sec (%ux)\n"
+		"\t       NumberVolumeLevels: %u\n"
+		"\t               BufferSize: %u\n"
+		"\t         ReadSpeedCurrent: %uKB/sec (%ux)\n"
+		"\t                      BCK: %s\n"
+		"\t                      RCK: %s\n"
+		"\t                     LSBF: %s\n"
+		"\t                   Length: %u\n"
+		"\t        WriteSpeedMaximum: %uKB/sec (%ux)\n"
+		"\t        WriteSpeedCurrent: %uKB/sec (%ux)\n"
+		"\t   CopyManagementRevision: %u\n"
 		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->SeparateVolume)
 		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->SeperateChannelMute)
 		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->SupportsDiskPresent)
@@ -1542,21 +1542,529 @@ VOID OutputCDVDCapabilitiesPage(
 		, MAKEWORD(cdvd->CopyManagementRevision[1], cdvd->CopyManagementRevision[0]));
 }
 
+VOID OutputPageCDvdInactivity(
+	LPBYTE modesense,
+	size_t pcOfs
+) {
+	PCDVD_INACTIVITY_TIMEOUT_PAGE inactivity = (PCDVD_INACTIVITY_TIMEOUT_PAGE)(modesense + pcOfs);
+	OutputDriveLogA(
+		OUTPUT_DHYPHEN_PLUS_STR(CDVD_INACTIVITY_TIMEOUT_PAGE)
+		"\t                 PageCode: %#04x\n"
+		"\t                    PSBit: %s\n"
+		"\t               PageLength: %u\n"
+		"\t                     SWPP: %s\n"
+		"\t                     DISP: %s\n"
+		"\t   GroupOneMinimumTimeout: %d\n"
+		"\t   GroupTwoMinimumTimeout: %d\n"
+		, inactivity->PageCode
+		, BOOLEAN_TO_STRING_YES_NO_A(inactivity->PSBit)
+		, inactivity->PageLength
+		, BOOLEAN_TO_STRING_YES_NO_A(inactivity->SWPP)
+		, BOOLEAN_TO_STRING_YES_NO_A(inactivity->DISP)
+		, MAKEWORD(inactivity->GroupOneMinimumTimeout[1], inactivity->GroupOneMinimumTimeout[0])
+		, MAKEWORD(inactivity->GroupTwoMinimumTimeout[1], inactivity->GroupTwoMinimumTimeout[0])
+	);
+}
+
+VOID OutputPagePowerCondition(
+	LPBYTE modesense,
+	size_t pcOfs
+) {
+	PPOWER_CONDITION_PAGE power = (PPOWER_CONDITION_PAGE)(modesense + pcOfs);
+	OutputDriveLogA(
+		OUTPUT_DHYPHEN_PLUS_STR(POWER_CONDITION_PAGE)
+		"\t                 PageCode: %#04x\n"
+		"\t                    PSBit: %s\n"
+		"\t               PageLength: %u\n"
+		"\t                  Standby: %s\n"
+		"\t                     Idle: %s\n"
+		"\t                IdleTimer: %d\n"
+		"\t             StandbyTimer: %d\n"
+		, power->PageCode
+		, BOOLEAN_TO_STRING_YES_NO_A(power->PSBit)
+		, power->PageLength
+		, BOOLEAN_TO_STRING_YES_NO_A(power->Standby)
+		, BOOLEAN_TO_STRING_YES_NO_A(power->Idle)
+		, MAKEUINT(MAKEWORD(power->IdleTimer[3], power->IdleTimer[2])
+			, MAKEWORD(power->IdleTimer[1], power->IdleTimer[0]))
+		, MAKEUINT(MAKEWORD(power->StandbyTimer[3], power->StandbyTimer[2])
+			, MAKEWORD(power->StandbyTimer[1], power->StandbyTimer[0]))
+	);
+}
+
+VOID OutputPageCDvdFeatureSet(
+	LPBYTE modesense,
+	size_t pcOfs
+) {
+	PCDVD_FEATURE_SET_PAGE feature = (PCDVD_FEATURE_SET_PAGE)(modesense + pcOfs);
+	OutputDriveLogA(
+		OUTPUT_DHYPHEN_PLUS_STR(CDVD_FEATURE_SET_PAGE)
+		"\t                 PageCode: %#04x\n"
+		"\t                    PSBit: %s\n"
+		"\t               PageLength: %u\n"
+		"\t                  CDAudio: %d\n"
+		"\t          EmbeddedChanger: %d\n"
+		"\t              PacketSMART: %d\n"
+		"\t        PersistantPrevent: %d\n"
+		"\t  EventStatusNotification: %d\n"
+		"\t            DigitalOutput: %d\n"
+		"\t   CDSequentialRecordable: %d\n"
+		"\t  DVDSequentialRecordable: %d\n"
+		"\t         RandomRecordable: %d\n"
+		"\t              KeyExchange: %d\n"
+		, feature->PageCode
+		, BOOLEAN_TO_STRING_YES_NO_A(feature->PSBit)
+		, feature->PageLength
+		, MAKEWORD(feature->CDAudio[1], feature->CDAudio[0])
+		, MAKEWORD(feature->EmbeddedChanger[1], feature->EmbeddedChanger[0])
+		, MAKEWORD(feature->PacketSMART[1], feature->PacketSMART[0])
+		, MAKEWORD(feature->PersistantPrevent[1], feature->PersistantPrevent[0])
+		, MAKEWORD(feature->EventStatusNotification[1], feature->EventStatusNotification[0])
+		, MAKEWORD(feature->DigitalOutput[1], feature->DigitalOutput[0])
+		, MAKEWORD(feature->CDSequentialRecordable[1], feature->CDSequentialRecordable[0])
+		, MAKEWORD(feature->DVDSequentialRecordable[1], feature->DVDSequentialRecordable[0])
+		, MAKEWORD(feature->RandomRecordable[1], feature->RandomRecordable[0])
+		, MAKEWORD(feature->KeyExchange[1], feature->KeyExchange[0])
+	);
+}
+
+VOID OutputPageCdAudioControl(
+	LPBYTE modesense,
+	size_t pcOfs
+) {
+	PCDAUDIO_CONTROL_PAGE ctrl = (PCDAUDIO_CONTROL_PAGE)(modesense + pcOfs);
+	OutputDriveLogA(
+		OUTPUT_DHYPHEN_PLUS_STR(CDAUDIO_CONTROL_PAGE)
+		"\t                 PageCode: %#04x\n"
+		"\t                    PSBit: %s\n"
+		"\t               PageLength: %u\n"
+		"\t      StopOnTrackCrossing: %s\n"
+		"\t                Immediate: %s\n"
+		"\t      ChannelSelection[0]: %d\n"
+		"\t                Volume[0]: %d\n"
+		"\t      ChannelSelection[1]: %d\n"
+		"\t                Volume[1]: %d\n"
+		"\t      ChannelSelection[2]: %d\n"
+		"\t                Volume[2]: %d\n"
+		"\t      ChannelSelection[3]: %d\n"
+		"\t                Volume[3]: %d\n"
+		, ctrl->PageCode
+		, BOOLEAN_TO_STRING_YES_NO_A(ctrl->PSBit)
+		, ctrl->PageLength
+		, BOOLEAN_TO_STRING_YES_NO_A(ctrl->StopOnTrackCrossing)
+		, BOOLEAN_TO_STRING_YES_NO_A(ctrl->Immediate)
+		, ctrl->CDDAOutputPorts[0].ChannelSelection
+		, ctrl->CDDAOutputPorts[0].Volume
+		, ctrl->CDDAOutputPorts[1].ChannelSelection
+		, ctrl->CDDAOutputPorts[1].Volume
+		, ctrl->CDDAOutputPorts[2].ChannelSelection
+		, ctrl->CDDAOutputPorts[2].Volume
+		, ctrl->CDDAOutputPorts[3].ChannelSelection
+		, ctrl->CDDAOutputPorts[3].Volume
+	);
+}
+
+VOID OutputPageReadRecovery(
+	LPBYTE modesense,
+	size_t pcOfs
+) {
+	PMODE_READ_RECOVERY_PAGE rec = (PMODE_READ_RECOVERY_PAGE)(modesense + pcOfs);
+	OutputDriveLogA(
+		OUTPUT_DHYPHEN_PLUS_STR(MODE_READ_RECOVERY_PAGE)
+		"\t                 PageCode: %#04x\n"
+		"\t                    PSBit: %s\n"
+		"\t               PageLength: %u\n"
+		"\t                   DCRBit: %s\n"
+		"\t                   DTEBit: %s\n"
+		"\t                   PERBit: %s\n"
+		"\t                    RCBit: %s\n"
+		"\t                    TBBit: %s\n"
+		"\t           ReadRetryCount: %d\n"
+		, rec->PageCode
+		, BOOLEAN_TO_STRING_YES_NO_A(rec->PSBit)
+		, rec->PageLength
+		, BOOLEAN_TO_STRING_YES_NO_A(rec->DCRBit)
+		, BOOLEAN_TO_STRING_YES_NO_A(rec->DTEBit)
+		, BOOLEAN_TO_STRING_YES_NO_A(rec->PERBit)
+		, BOOLEAN_TO_STRING_YES_NO_A(rec->RCBit)
+		, BOOLEAN_TO_STRING_YES_NO_A(rec->TBBit)
+		, rec->ReadRetryCount
+	);
+}
+
+VOID OutputPageWriteCaching(
+	LPBYTE modesense,
+	size_t pcOfs
+) {
+	PMODE_CACHING_PAGE caching = (PMODE_CACHING_PAGE)(modesense + pcOfs);
+	OutputDriveLogA(
+		OUTPUT_DHYPHEN_PLUS_STR(MODE_CACHING_PAGE)
+		"\t                 PageCode: %#04x\n"
+		"\t              PageSavable: %s\n"
+		"\t               PageLength: %u\n"
+		"\t         ReadDisableCache: %s\n"
+		"\t     MultiplicationFactor: %s\n"
+		"\t         WriteCacheEnable: %s\n"
+		"\t   WriteRetensionPriority: %d\n"
+		"\t    ReadRetensionPriority: %d\n"
+		"\t  DisablePrefetchTransfer: %d\n"
+		"\t          MinimumPrefetch: %d\n"
+		"\t          MaximumPrefetch: %d\n"
+		"\t   MaximumPrefetchCeiling: %d\n"
+		, caching->PageCode
+		, BOOLEAN_TO_STRING_YES_NO_A(caching->PageSavable)
+		, caching->PageLength
+		, BOOLEAN_TO_STRING_YES_NO_A(caching->ReadDisableCache)
+		, BOOLEAN_TO_STRING_YES_NO_A(caching->MultiplicationFactor)
+		, BOOLEAN_TO_STRING_YES_NO_A(caching->WriteCacheEnable)
+		, caching->WriteRetensionPriority
+		, caching->ReadRetensionPriority
+		, MAKEWORD(caching->DisablePrefetchTransfer[1], caching->DisablePrefetchTransfer[0])
+		, MAKEWORD(caching->MinimumPrefetch[1], caching->MinimumPrefetch[0])
+		, MAKEWORD(caching->MaximumPrefetch[1], caching->MaximumPrefetch[0])
+		, MAKEWORD(caching->MaximumPrefetchCeiling[1], caching->MaximumPrefetchCeiling[0])
+	);
+}
+
+VOID OutputPageWriteParameters(
+	LPBYTE modesense,
+	size_t pcOfs
+) {
+	PMODE_CDROM_WRITE_PARAMETERS_PAGE2 wparam = (PMODE_CDROM_WRITE_PARAMETERS_PAGE2)(modesense + pcOfs);
+	OutputDriveLogA(
+		OUTPUT_DHYPHEN_PLUS_STR(MODE_CDROM_WRITE_PARAMETERS_PAGE)
+		"\t                 PageCode: %#04x\n"
+		"\t              PageSavable: %s\n"
+		"\t               PageLength: %u\n"
+		"\t                WriteType: %d\n"
+		"\t                TestWrite: %s\n"
+		"\t            LinkSizeValid: %s\n"
+		"\tBufferUnderrunFreeEnabled: %s\n"
+		"\t                TrackMode: %d\n"
+		"\t                     Copy: %s\n"
+		"\t              FixedPacket: %s\n"
+		"\t             MultiSession: %d\n"
+		"\t            DataBlockType: %d\n"
+		"\t                 LinkSize: %d\n"
+		"\t      HostApplicationCode: %d\n"
+		"\t            SessionFormat: %d\n"
+		"\t               PacketSize: %d\n"
+		"\t         AudioPauseLength: %d\n"
+		"\t       MediaCatalogNumber: %16s\n"
+		"\t                     ISRC: %16s\n"
+		"\t            SubHeaderData: %d\n"
+		, wparam->PageCode
+		, BOOLEAN_TO_STRING_YES_NO_A(wparam->PageSavable)
+		, wparam->PageLength
+		, wparam->WriteType
+		, BOOLEAN_TO_STRING_YES_NO_A(wparam->TestWrite)
+		, BOOLEAN_TO_STRING_YES_NO_A(wparam->LinkSizeValid)
+		, BOOLEAN_TO_STRING_YES_NO_A(wparam->BufferUnderrunFreeEnabled)
+		, wparam->TrackMode
+		, BOOLEAN_TO_STRING_YES_NO_A(wparam->Copy)
+		, BOOLEAN_TO_STRING_YES_NO_A(wparam->FixedPacket)
+		, wparam->MultiSession
+		, wparam->DataBlockType
+		, wparam->LinkSize
+		, wparam->HostApplicationCode
+		, wparam->SessionFormat
+		, MAKEUINT(MAKEWORD(wparam->PacketSize[3], wparam->PacketSize[2])
+			, MAKEWORD(wparam->PacketSize[1], wparam->PacketSize[0]))
+		, MAKEWORD(wparam->AudioPauseLength[1], wparam->AudioPauseLength[0])
+		, &wparam->MediaCatalogNumber[0]
+		, &wparam->ISRC[0]
+		, MAKEUINT(MAKEWORD(wparam->SubHeaderData[3], wparam->SubHeaderData[2])
+			, MAKEWORD(wparam->SubHeaderData[1], wparam->SubHeaderData[0]))
+	);
+}
+
+VOID OutputPageRigidGeometry(
+	LPBYTE modesense,
+	size_t pcOfs
+) {
+	PMODE_RIGID_GEOMETRY_PAGE geom = (PMODE_RIGID_GEOMETRY_PAGE)(modesense + pcOfs);
+	OutputDriveLogA(
+		OUTPUT_DHYPHEN_PLUS_STR(MODE_RIGID_GEOMETRY_PAGE)
+		"\t                PageCode: %#04x\n"
+		"\t             PageSavable: %s\n"
+		"\t              PageLength: %u\n"
+		"\t       NumberOfCylinders: %d\n"
+		"\t           NumberOfHeads: %d\n"
+		"\t        StartWritePrecom: %d\n"
+		"\t     StartReducedCurrent: %d\n"
+		"\t           DriveStepRate: %d\n"
+		"\t       LandZoneCyclinder: %d\n"
+		"\t  RotationalPositionLock: %s\n"
+		"\t          RotationOffset: %d\n"
+		"\t            RoataionRate: %d\n"
+		, geom->PageCode
+		, BOOLEAN_TO_STRING_YES_NO_A(geom->PageSavable)
+		, geom->PageLength
+		, MAKEUINT(MAKEWORD(geom->NumberOfCylinders[2], geom->NumberOfCylinders[1])
+			, MAKEWORD(geom->NumberOfCylinders[0], 0))
+		, geom->NumberOfHeads
+		, MAKEUINT(MAKEWORD(geom->StartWritePrecom[2], geom->StartWritePrecom[1])
+			, MAKEWORD(geom->StartWritePrecom[0], 0))
+		, MAKEUINT(MAKEWORD(geom->StartReducedCurrent[2], geom->StartReducedCurrent[1])
+			, MAKEWORD(geom->StartReducedCurrent[0], 0))
+		, MAKEWORD(geom->DriveStepRate[1], geom->DriveStepRate[0])
+		, MAKEUINT(MAKEWORD(geom->LandZoneCyclinder[2], geom->LandZoneCyclinder[1])
+			, MAKEWORD(geom->LandZoneCyclinder[0], 0))
+		, BOOLEAN_TO_STRING_YES_NO_A(geom->RotationalPositionLock)
+		, geom->RotationOffset
+		, MAKEWORD(geom->RoataionRate[1], geom->RoataionRate[0])
+	);
+}
+
+VOID OutputPageMrw(
+	LPBYTE modesense,
+	size_t pcOfs
+) {
+	PMODE_MRW_PAGE mrw = (PMODE_MRW_PAGE)(modesense + pcOfs);
+	OutputDriveLogA(
+		OUTPUT_DHYPHEN_PLUS_STR(MODE_MRW_PAGE)
+		"\t                PageCode: %#04x\n"
+		"\t             PageSavable: %s\n"
+		"\t              PageLength: %u\n"
+		"\t                LbaSpace: %s\n"
+		, mrw->PageCode
+		, BOOLEAN_TO_STRING_YES_NO_A(mrw->PageSavable)
+		, mrw->PageLength
+		, BOOLEAN_TO_STRING_YES_NO_A(mrw->LbaSpace)
+	);
+}
+
+VOID OutputPageDisconnect(
+	LPBYTE modesense,
+	size_t pcOfs
+) {
+	PMODE_DISCONNECT_PAGE dis = (PMODE_DISCONNECT_PAGE)(modesense + pcOfs);
+	OutputDriveLogA(
+		OUTPUT_DHYPHEN_PLUS_STR(MODE_DISCONNECT_PAGE)
+		"\t                 PageCode: %#04x\n"
+		"\t              PageSavable: %s\n"
+		"\t               PageLength: %u\n"
+		"\t          BufferFullRatio: %u\n"
+		"\t         BufferEmptyRatio: %u\n"
+		"\t       BusInactivityLimit: %u\n"
+		"\t        BusDisconnectTime: %u\n"
+		"\t           BusConnectTime: %u\n"
+		"\t         MaximumBurstSize: %u\n"
+		"\t   DataTransferDisconnect: %u\n"
+		, dis->PageCode
+		, BOOLEAN_TO_STRING_YES_NO_A(dis->PageSavable)
+		, dis->PageLength
+		, dis->BufferFullRatio
+		, dis->BufferEmptyRatio
+		, MAKEWORD(dis->BusInactivityLimit[1], dis->BusInactivityLimit[0])
+		, MAKEWORD(dis->BusDisconnectTime[1], dis->BusDisconnectTime[0])
+		, MAKEWORD(dis->BusConnectTime[1], dis->BusConnectTime[0])
+		, MAKEWORD(dis->MaximumBurstSize[1], dis->MaximumBurstSize[0])
+		, dis->DataTransferDisconnect
+	);
+}
+
+VOID OutputPageErrorRecovery(
+	LPBYTE modesense,
+	size_t pcOfs
+) {
+	PMODE_READ_WRITE_RECOVERY_PAGE rec = (PMODE_READ_WRITE_RECOVERY_PAGE)(modesense + pcOfs);
+	OutputDriveLogA(
+		OUTPUT_DHYPHEN_PLUS_STR(MODE_READ_WRITE_RECOVERY_PAGE)
+		"\t                 PageCode: %#04x\n"
+		"\t              PageSavable: %s\n"
+		"\t               PageLength: %u\n"
+		"\t                   DCRBit: %s\n"
+		"\t                   PERBit: %s\n"
+		"\t                   EERBit: %s\n"
+		"\t                    RCBit: %s\n"
+		"\t                    TBBit: %s\n"
+		"\t                     ARRE: %s\n"
+		"\t                     AWRE: %s\n"
+		"\t           ReadRetryCount: %d\n"
+		"\t          WriteRetryCount: %d\n"
+		, rec->PageCode
+		, BOOLEAN_TO_STRING_YES_NO_A(rec->PSBit)
+		, rec->PageLength
+		, BOOLEAN_TO_STRING_YES_NO_A(rec->DCRBit)
+		, BOOLEAN_TO_STRING_YES_NO_A(rec->PERBit)
+		, BOOLEAN_TO_STRING_YES_NO_A(rec->EERBit)
+		, BOOLEAN_TO_STRING_YES_NO_A(rec->RCBit)
+		, BOOLEAN_TO_STRING_YES_NO_A(rec->TBBit)
+		, BOOLEAN_TO_STRING_YES_NO_A(rec->ARRE)
+		, BOOLEAN_TO_STRING_YES_NO_A(rec->AWRE)
+		, rec->ReadRetryCount
+		, rec->WriteRetryCount
+	);
+}
+
+VOID OutputPageUnknown(
+	LPBYTE modesense,
+	size_t pcOfs,
+	LPCTSTR str
+) {
+	int len = *(modesense + pcOfs + 1);
+	OutputDriveLogA(
+		OUTPUT_DHYPHEN_PLUS_STR(%s)
+		"\t                 PageCode: %#04x\n"
+		"\t                    PSBit: %s\n"
+		"\t               PageLength: %u\n"
+		"\t                  Unknown: "
+		, str
+		, *(modesense + pcOfs) & 0x3f
+		, BOOLEAN_TO_STRING_YES_NO_A((*(modesense + pcOfs) >> 7) & 0x01)
+		, len
+	);
+	for (int t = 0; t < len; t++) {
+		OutputDriveLogA("%02x", *(modesense + pcOfs + t));
+	}
+	OutputDriveLogA("\n");
+}
+
+VOID OutputModeSense(
+	PEXEC_TYPE pExecType,
+	PDEVICE pDevice,
+	PDISC pDisc,
+	LPBYTE modesense
+) {
+	WORD size = MAKEWORD(modesense[1], modesense[0]);
+	BYTE pagecode = modesense[sizeof(MODE_PARAMETER_HEADER10)];
+	INT pcLen = modesense[sizeof(MODE_PARAMETER_HEADER10) + 1];
+	size_t pcOfs = sizeof(MODE_PARAMETER_HEADER10);
+	INT ofs1 = 2;
+	size_t bufOfs = sizeof(MODE_PARAMETER_HEADER10) + pcLen + ofs1;
+
+	OutputModeParmeterHeader10((PMODE_PARAMETER_HEADER10)modesense);
+	do {
+		if (pagecode == MODE_PAGE_VENDOR_SPECIFIC) {
+			OutputPageUnknown(modesense, pcOfs, "VENDOR_SPECIFIC");
+		}
+		else if (pagecode == MODE_PAGE_ERROR_RECOVERY) {
+			OutputPageErrorRecovery(modesense, pcOfs);
+		}
+		else if (pagecode == MODE_PAGE_DISCONNECT) {
+			OutputPageDisconnect(modesense, pcOfs);
+		}
+		else if (pagecode == MODE_PAGE_MRW) {
+			OutputPageMrw(modesense, pcOfs);
+		}
+		else if (pagecode == MODE_PAGE_RIGID_GEOMETRY) {
+			OutputPageRigidGeometry(modesense, pcOfs);
+		}
+		else if (pagecode == MODE_PAGE_WRITE_PARAMETERS) {
+			OutputPageWriteParameters(modesense, pcOfs);
+		}
+		else if (pagecode == MODE_PAGE_VERIFY_ERROR) {
+			OutputPageUnknown(modesense, pcOfs, "VERIFY_ERROR");
+		}
+		else if (pagecode == MODE_PAGE_CACHING) {
+			OutputPageWriteCaching(modesense, pcOfs);
+		}
+		else if (pagecode == MODE_PAGE_PERIPHERAL) {
+			OutputPageUnknown(modesense, pcOfs, "PERIPHERAL");
+		}
+		else if (pagecode == MODE_PAGE_CONTROL) {
+			OutputPageUnknown(modesense, pcOfs, "CONTROL");
+		}
+		else if (pagecode == MODE_PAGE_MEDIUM_TYPES) {
+			OutputPageUnknown(modesense, pcOfs, "MEDIUM_TYPES");
+		}
+		else if (pagecode == MODE_PAGE_NOTCH_PARTITION) {
+			OutputPageUnknown(modesense, pcOfs, "NOTCH_PARTITION");
+		}
+		else if (pagecode == 0x0d) {
+			OutputPageReadRecovery(modesense, pcOfs);
+		}
+		else if (pagecode == MODE_PAGE_CD_AUDIO_CONTROL) {
+			OutputPageCdAudioControl(modesense, pcOfs);
+		}
+		else if (pagecode == MODE_PAGE_DATA_COMPRESS) {
+			OutputPageUnknown(modesense, pcOfs, "DATA_COMPRESS");
+		}
+		else if (pagecode == MODE_PAGE_DEVICE_CONFIG) {
+			OutputPageUnknown(modesense, pcOfs, "DEVICE_CONFIG");
+		}
+		else if (pagecode == MODE_PAGE_MEDIUM_PARTITION) {
+			OutputPageUnknown(modesense, pcOfs, "MEDIUM_PARTITION");
+		}
+		else if (pagecode == MODE_PAGE_ENCLOSURE_SERVICES_MANAGEMENT) {
+			OutputPageUnknown(modesense, pcOfs, "ENCLOSURE_SERVICES_MANAGEMENT");
+		}
+		else if (pagecode == MODE_PAGE_EXTENDED) {
+			OutputPageUnknown(modesense, pcOfs, "EXTENDED");
+		}
+		else if (pagecode == MODE_PAGE_EXTENDED_DEVICE_SPECIFIC) {
+			OutputPageUnknown(modesense, pcOfs, "EXTENDED_DEVICE_SPECIFIC");
+		}
+		else if (pagecode == MODE_PAGE_CDVD_FEATURE_SET) {
+			OutputPageCDvdFeatureSet(modesense, pcOfs);
+		}
+		else if (pagecode == MODE_PAGE_PROTOCOL_SPECIFIC_PORT) {
+			OutputPageUnknown(modesense, pcOfs, "PROTOCOL_SPECIFIC_PORT");
+		}
+		else if (pagecode == MODE_PAGE_POWER_CONDITION) {
+			OutputPagePowerCondition(modesense, pcOfs);
+		}
+		else if (pagecode == MODE_PAGE_LUN_MAPPING) {
+			OutputPageUnknown(modesense, pcOfs, "LUN_MAPPING");
+		}
+		else if (pagecode == MODE_PAGE_FAULT_REPORTING) {
+			OutputPageUnknown(modesense, pcOfs, "FAULT_REPORTING");
+		}
+		else if (pagecode == MODE_PAGE_CDVD_INACTIVITY) {
+			OutputPageCDvdInactivity(modesense, pcOfs);
+		}
+		else if (pagecode == MODE_PAGE_ELEMENT_ADDRESS) {
+			OutputPageUnknown(modesense, pcOfs, "ELEMENT_ADDRESS");
+		}
+		else if (pagecode == MODE_PAGE_TRANSPORT_GEOMETRY) {
+			OutputPageUnknown(modesense, pcOfs, "TRANSPORT_GEOMETRY");
+		}
+		else if (pagecode == MODE_PAGE_DEVICE_CAPABILITIES) {
+			OutputPageUnknown(modesense, pcOfs, "DEVICE_CAPABILITIES");
+		}
+		else if (pagecode == MODE_PAGE_CAPABILITIES) {
+			PCDVD_CAPABILITIES_PAGE capabilities = (PCDVD_CAPABILITIES_PAGE)(modesense + pcOfs);
+			WORD rsm = MAKEWORD(capabilities->ReadSpeedMaximum[1],
+				capabilities->ReadSpeedMaximum[0]);
+			INT perKb = 176;
+			if (pDisc->SCSI.wCurrentMedia == ProfileDvdRom) {
+				perKb = 1385;
+			}
+			else if (pDisc->SCSI.wCurrentMedia == ProfileBDRom) {
+				perKb = 4496;
+			}
+			if (*pExecType == drivespeed) {
+				OutputString("ReadSpeedMaximum: %uKB/sec (%ux)\n", rsm, rsm / perKb);
+			}
+			else {
+				pDevice->wMaxReadSpeed = rsm;
+				OutputCDVDCapabilitiesPage(capabilities, perKb);
+			}
+			break;
+		}
+		else {
+			OutputPageUnknown(modesense, pcOfs, "Unknown");
+		}
+		pagecode = (BYTE)(modesense[bufOfs] & 0x3f);
+		pcLen += modesense[bufOfs + 1];
+		pcOfs = bufOfs;
+		ofs1 += 2;
+		bufOfs = sizeof(MODE_PARAMETER_HEADER10) + pcLen + ofs1;
+	} while (pcOfs <= size);
+}
+
 VOID OutputReadBufferCapacity(
 	PREAD_BUFFER_CAPACITY_DATA pReadBufCapaData
 ) {
 	OutputDriveLogA(
 		OUTPUT_DHYPHEN_PLUS_STR(ReadBufferCapacity)
-		"\t    TotalBufferSize: %luKByte\n"
-		"\tAvailableBufferSize: %luKByte\n",
-		MAKELONG(MAKEWORD(pReadBufCapaData->TotalBufferSize[3],
-		pReadBufCapaData->TotalBufferSize[2]),
-		MAKEWORD(pReadBufCapaData->TotalBufferSize[1],
-		pReadBufCapaData->TotalBufferSize[0])) / 1024,
-		MAKELONG(MAKEWORD(pReadBufCapaData->AvailableBufferSize[3],
-		pReadBufCapaData->AvailableBufferSize[2]),
-		MAKEWORD(pReadBufCapaData->AvailableBufferSize[1],
-		pReadBufCapaData->AvailableBufferSize[0])) / 1024);
+		"\t    TotalBufferSize: %uKByte\n"
+		"\tAvailableBufferSize: %uKByte\n",
+		MAKEUINT(MAKEWORD(pReadBufCapaData->TotalBufferSize[3],	pReadBufCapaData->TotalBufferSize[2]),
+			MAKEWORD(pReadBufCapaData->TotalBufferSize[1], pReadBufCapaData->TotalBufferSize[0])) / 1024,
+		MAKEUINT(MAKEWORD(pReadBufCapaData->AvailableBufferSize[3],	pReadBufCapaData->AvailableBufferSize[2]),
+			MAKEWORD(pReadBufCapaData->AvailableBufferSize[1], pReadBufCapaData->AvailableBufferSize[0])) / 1024);
 }
 
 VOID OutputSetSpeed(
@@ -1578,12 +2086,12 @@ VOID OutputSetSpeed(
 
 VOID OutputEepromUnknownByte(
 	LPBYTE pBuf,
-	DWORD startIdx,
-	DWORD endIdx
+	UINT startIdx,
+	UINT endIdx
 ) {
 	if (startIdx <= endIdx) {
-		OutputDriveLogA("\t   Unknown[%03ld]: ", startIdx);
-		for (DWORD i = startIdx; i <= endIdx; i++) {
+		OutputDriveLogA("\t   Unknown[%03d]: ", startIdx);
+		for (UINT i = startIdx; i <= endIdx; i++) {
 			OutputDriveLogA("%02x ", pBuf[i]);
 		}
 		OutputDriveLogA("\n");
@@ -1619,7 +2127,7 @@ VOID OutputEepromOverPX712(
 		OutputDriveLogA("Disable\n");
 	}
 	
-	DWORD tmp = 9;
+	UINT tmp = 9;
 	OutputDriveLogA("\t        SecuRec: ");
 	while (tmp < 29) {
 		OutputDriveLogA("%02x ", pBuf[tmp]);

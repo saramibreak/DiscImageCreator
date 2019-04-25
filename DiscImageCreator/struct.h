@@ -30,15 +30,6 @@ typedef struct _SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER {
 #pragma pack(pop, sensedata)
 #endif
 
-typedef struct _CDVD_CAPABILITIES_PAGE_WITH_HEADER10 {
-	MODE_PARAMETER_HEADER10 header;
-	CDVD_CAPABILITIES_PAGE cdvd;
-} CDVD_CAPABILITIES_PAGE_WITH_HEADER10, *PCDVD_CAPABILITIES_PAGE_WITH_HEADER10;
-
-typedef struct _CDVD_CAPABILITIES_PAGE_WITH_HEADER {
-	MODE_PARAMETER_HEADER header;
-	CDVD_CAPABILITIES_PAGE cdvd;
-} CDVD_CAPABILITIES_PAGE_WITH_HEADER, *PCDVD_CAPABILITIES_PAGE_WITH_HEADER;
 #if 0
 #pragma pack(push, cdbsp, 1)
 typedef union _CDBSP {
@@ -201,18 +192,18 @@ typedef struct _EXT_ARG {
 	BYTE byVideoNow;
 	BYTE byNoSkipSS;
 	BYTE padding[1];
-	LONG nAudioCDOffsetNum;
-	DWORD dwMaxRereadNum;
+	INT nAudioCDOffsetNum;
+	UINT uiMaxRereadNum;
 	INT nAllSectors;	// use for xbox360
-	DWORD dwSecuritySector[16];	// use for xbox/xbox360
-	LONG nC2RereadingType;
-	LONG nStartLBAForC2;
-	LONG nEndLBAForC2;
-	DWORD dwCacheDelNum;
+	UINT uiSecuritySector[16];	// use for xbox/xbox360
+	INT nC2RereadingType;
+	INT nStartLBAForC2;
+	INT nEndLBAForC2;
+	UINT uiCacheDelNum;
 	DWORD dwTimeoutNum;
-	DWORD dwSubAddionalNum;
-	DWORD dwSkipSectors;
-	DWORD dwSkipSectors2; // for some LaserLock
+	UINT uiSubAddionalNum;
+	UINT uiSkipSectors;
+	UINT uiSkipSectors2; // for some LaserLock
 	struct _FILE {
 		CHAR readError[MAX_FNAME_FOR_VOLUME];
 		CHAR edceccError[MAX_FNAME_FOR_VOLUME];
@@ -245,9 +236,9 @@ typedef struct _DEVICE {
 	DWORD dwTimeOutValue;
 	DRIVE_DATA_ORDER driveOrder;
 	struct _TRANSFER {
-		DWORD dwBufLen;
-		DWORD dwBufC2Offset;
-		DWORD dwBufSubOffset;
+		UINT uiBufLen;
+		UINT uiBufC2Offset;
+		UINT uiBufSubOffset;
 	} TRANSFER, *PTRANSFER;
 	struct _FEATURE {
 		BYTE byCanCDText;
@@ -369,7 +360,7 @@ typedef struct _DISC {
 		UCHAR pad[3];
 		DISC_TYPE disc;
 		PROTECT_TYPE_DVD protect;
-		DWORD dwFixNum;
+		UINT fixNum;
 		DWORD dwDVDStartPsn;
 		DWORD dwXboxStartPsn;
 		DWORD dwLayer0SectorLength;
@@ -384,25 +375,25 @@ typedef struct _DISC {
 
 typedef struct _VOLUME_DESCRIPTOR {
 	struct _ISO_9660 {
-		DWORD dwLogicalBlkCoef;
-		DWORD dwPathTblSize;
-		DWORD dwPathTblPos;
-		DWORD dwRootDataLen;
+		UINT uiLogicalBlkCoef;
+		UINT uiPathTblSize;
+		UINT uiPathTblPos;
+		UINT uiRootDataLen;
 	} ISO_9660;
 	struct _JOLIET {
-		DWORD dwLogicalBlkCoef;
-		DWORD dwPathTblSize;
-		DWORD dwPathTblPos;
-		DWORD dwRootDataLen;
+		UINT uiLogicalBlkCoef;
+		UINT uiPathTblSize;
+		UINT uiPathTblPos;
+		UINT uiRootDataLen;
 	} JOLIET;
 } VOLUME_DESCRIPTOR, *PVOLUME_DESCRIPTOR;
 
 typedef struct _DIRECTORY_RECORD {
-	DWORD dwDirNameLen;
-	DWORD dwPosOfDir;
-	DWORD dwNumOfUpperDir;
+	UINT uiDirNameLen;
+	UINT uiPosOfDir;
+	UINT uiNumOfUpperDir;
 	CHAR szDirName[MAX_FNAME_FOR_VOLUME];
-	DWORD dwDirSize;
+	UINT uiDirSize;
 } DIRECTORY_RECORD, *PDIRECTORY_RECORD;
 
 // This buffer stores all CD data (main + c2 + sub) obtained from SCSI read command
@@ -452,7 +443,7 @@ typedef struct _DISC_PER_SECTOR {
 	MAIN_HEADER mainHeader;
 	SUBCODE subcode;
 	SUB_Q subQ;
-	DWORD dwC2errorNum;
+	UINT uiC2errorNum;
 	BYTE byTrackNum;
 	BYTE padding[3];
 	BOOL bLibCrypt;
@@ -475,34 +466,34 @@ typedef struct _MDS_HEADER {
 	WORD unknown1;
 	WORD mediaType;
 	WORD sessionNum;
-	DWORD unknown2;
+	UINT unknown2;
 	WORD lenOfBca;
 	UCHAR zero1[8];
-	DWORD ofsToBca;
+	UINT ofsToBca;
 	UCHAR zero2[24];
-	DWORD ofsToDS;
+	UINT ofsToDS;
 	UCHAR zero3[12];
-	DWORD ofsTo1stSessionBlk;
-	DWORD ofsToDpm;
+	UINT ofsTo1stSessionBlk;
+	UINT ofsToDpm;
 	UCHAR zero4[8];
 } MDS_HEADER, *PMDS_HEADER;
 
 typedef struct _MDS_FOR_DVD_BLK {
 	UCHAR bca[2048];
-	DWORD zero;
+	UINT zero;
 	DVD_FULL_LAYER_DESCRIPTOR layer;
 } MDS_FOR_DVD_BLK, *PMDS_FOR_DVD_BLK;
 
 typedef struct _MDS_SESSION_BLK {
-	DWORD startSector;
-	DWORD endSector;
+	UINT startSector;
+	UINT endSector;
 	WORD sessionNum;
 	UCHAR totalDataBlkNum;
 	UCHAR DataBlkNum;
 	WORD firstTrackNum;
 	WORD lastTrackNum;
-	DWORD zero;
-	DWORD ofsTo1stDataBlk;
+	UINT zero;
+	UINT ofsTo1stDataBlk;
 } MDS_SESSION_BLK, *PMDS_SESSION_BLK;
 
 typedef struct _MDS_DATA_BLK {
@@ -511,48 +502,48 @@ typedef struct _MDS_DATA_BLK {
 	UCHAR adrCtl;
 	UCHAR trackNum;
 	UCHAR point;
-	DWORD zero;
+	UINT zero;
 	UCHAR m;
 	UCHAR s;
 	UCHAR f;
-	DWORD ofsToIndexBlk;
+	UINT ofsToIndexBlk;
 	WORD sectorSize;
 	UCHAR unknown1;
 	UCHAR zero2[17];
-	DWORD trackStartSector;
-	DWORD ofsFromHeadToIdx1;
-	DWORD unknown2;
-	DWORD NumOfFname;
-	DWORD OfsToFname;
+	UINT trackStartSector;
+	UINT ofsFromHeadToIdx1;
+	UINT unknown2;
+	UINT NumOfFname;
+	UINT OfsToFname;
 	UCHAR zero3[24];
 } MDS_DATA_BLK, *PMDS_DATA_BLK;
 
 typedef struct _MDS_IDX_BLK {
-	DWORD NumOfIdx0;
-	DWORD NumOfIdx1;
+	UINT NumOfIdx0;
+	UINT NumOfIdx1;
 } MDS_IDX_BLK, *PMDS_IDX_BLK;
 
 typedef struct _MDS_FNAME_BLK {
-	DWORD ofsToFname;
+	UINT ofsToFname;
 	UCHAR fnameFmt;
 	UCHAR zero4[11];
 	__wchar_t fnameString[6];
 } MDS_FNAME_BLK, *PMDS_FNAME_BLK;
 
 typedef struct _MDS_DPM_HEADER {
-	DWORD dpmBlkTotalNum;
+	UINT dpmBlkTotalNum;
 #if !defined(__midl)
-	DWORD ofsToDpmBlk[0];
+	UINT ofsToDpmBlk[0];
 #endif
 } MDS_DPM_HEADER, *PMDS_DPM_HEADER;
 
 typedef struct _MDS_DPM_BLK {
-	DWORD dpmBlkNum;
-	DWORD unknown1;
-	DWORD resolution;
-	DWORD entry;
+	UINT dpmBlkNum;
+	UINT unknown1;
+	UINT resolution;
+	UINT entry;
 #if !defined(__midl)
-	DWORD readTime[0];
+	UINT readTime[0];
 #endif
 } MDS_DPM_BLK, *PMDS_DPM_BLK;
 #pragma pack(pop, mds)

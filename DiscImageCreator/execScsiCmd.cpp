@@ -91,47 +91,24 @@ BOOL ModeSense(
 	if (pDevice->FEATURE.byModePage2a) {
 		CDB::_MODE_SENSE cdb = {};
 		cdb.OperationCode = SCSIOP_MODE_SENSE;
-		cdb.PageCode = MODE_PAGE_CAPABILITIES;
-		cdb.Pc = 2;// MODE_SENSE_CURRENT_VALUES;
-		cdb.AllocationLength = sizeof(CDVD_CAPABILITIES_PAGE_WITH_HEADER);
-
+		cdb.PageCode = MODE_SENSE_RETURN_ALL;
+		cdb.Pc = 2;
+		CONST WORD wSize = 256;
+		REVERSE_BYTES_SHORT(&cdb.AllocationLength, &wSize);
+		BYTE modesense[wSize] = {};
 #ifdef _WIN32
-		_declspec(align(4)) CDVD_CAPABILITIES_PAGE_WITH_HEADER modesense = {};
 		INT direction = SCSI_IOCTL_DATA_IN;
 #else
-		__attribute__((aligned(4))) CDVD_CAPABILITIES_PAGE_WITH_HEADER modesense = {};
 		INT direction = SG_DXFER_FROM_DEV;
 #endif
 		BYTE byScsiStatus = 0;
 		if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB6GENERIC_LENGTH, &modesense,
-			direction, sizeof(CDVD_CAPABILITIES_PAGE_WITH_HEADER), &byScsiStatus, _T(__FUNCTION__), __LINE__) ||
+			direction, wSize, &byScsiStatus, _T(__FUNCTION__), __LINE__) ||
 			byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 			// not false.
 		}
 		else {
-			if (modesense.cdvd.PageCode == MODE_PAGE_CAPABILITIES) {
-				WORD rsm = MAKEWORD(modesense.cdvd.ReadSpeedMaximum[1],
-					modesense.cdvd.ReadSpeedMaximum[0]);
-				INT perKb = 176;
-				if (pDisc->SCSI.wCurrentMedia == ProfileDvdRom) {
-					perKb = 1385;
-				}
-				else if (pDisc->SCSI.wCurrentMedia == ProfileBDRom) {
-					perKb = 4496;
-				}
-				if (*pExecType == drivespeed) {
-					OutputString("ReadSpeedMaximum: %uKB/sec (%ux)\n", rsm, rsm / perKb);
-				}
-				else {
-					pDevice->wMaxReadSpeed = rsm;
-					OutputModeParmeterHeader(&modesense.header);
-					OutputCDVDCapabilitiesPage(&modesense.cdvd, perKb);
-				}
-			}
-			else {
-				OutputDriveLogA(
-					"SCSIOP_MODE_SENSE didn't fail. But it couldn't get PageCode on this drive\n");
-			}
+			OutputModeSense(pExecType, pDevice, pDisc, modesense);
 		}
 	}
 	return TRUE;
@@ -240,14 +217,14 @@ BOOL ReadTOCFull(
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB10GENERIC_LENGTH
 		, &fullToc, direction, wSize, &byScsiStatus, _T(__FUNCTION__), __LINE__)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-		DWORD dwBufLen = CD_RAW_SECTOR_SIZE + CD_RAW_READ_SUBCODE_SIZE;
+		UINT uiBufLen = CD_RAW_SECTOR_SIZE + CD_RAW_READ_SUBCODE_SIZE;
 		if (!ReadCDForCheckingSubQAdrFirst(pExtArg, pDevice
-			, pDisc, &pBuf, &lpBuf, lpCmd, &dwBufLen, &nOfs, CDFLAG::_READ_CD::All)) {
+			, pDisc, &pBuf, &lpBuf, lpCmd, &uiBufLen, &nOfs, CDFLAG::_READ_CD::All)) {
 			return FALSE;
 		}
 		for (BYTE i = 0; i < pDisc->SCSI.toc.LastTrack; i++) {
 			if (!ReadCDForCheckingSubQAdr(pExtArg, pDevice, pDisc
-				, pDiscPerSector, lpCmd, lpBuf, dwBufLen, nOfs, i, &byMode, 1, fpCcd)) {
+				, pDiscPerSector, lpCmd, lpBuf, uiBufLen, nOfs, i, &byMode, 1, fpCcd)) {
 				return FALSE;
 			}
 			if (bySessionNum < 1) {
@@ -295,9 +272,9 @@ BOOL ReadTOCFull(
 		}
 		PCDROM_TOC_FULL_TOC_DATA_BLOCK pTocData =
 			((PCDROM_TOC_FULL_TOC_DATA)pFullToc)->Descriptors;
-		DWORD dwBufLen = CD_RAW_SECTOR_SIZE + CD_RAW_READ_SUBCODE_SIZE;
+		UINT uiBufLen = CD_RAW_SECTOR_SIZE + CD_RAW_READ_SUBCODE_SIZE;
 		if (!ReadCDForCheckingSubQAdrFirst(pExtArg
-			, pDevice, pDisc, &pBuf, &lpBuf, lpCmd, &dwBufLen, &nOfs, CDFLAG::_READ_CD::All)) {
+			, pDevice, pDisc, &pBuf, &lpBuf, lpCmd, &uiBufLen, &nOfs, CDFLAG::_READ_CD::All)) {
 			throw FALSE;
 		}
 		for (WORD i = 0; i < wTocEntries; i++) {
@@ -315,7 +292,7 @@ BOOL ReadTOCFull(
 			}
 			if (pTocData[i].Point < 100) {
 				if (!ReadCDForCheckingSubQAdr(pExtArg, pDevice, pDisc, pDiscPerSector, lpCmd, lpBuf
-					, dwBufLen, nOfs, (BYTE)(pTocData[i].Point - 1), &byMode, pTocData[i].SessionNumber, fpCcd)) {
+					, uiBufLen, nOfs, (BYTE)(pTocData[i].Point - 1), &byMode, pTocData[i].SessionNumber, fpCcd)) {
 					throw FALSE;
 				}
 				if (bySessionNum < pTocData[i].SessionNumber) {
@@ -542,13 +519,13 @@ BOOL GetConfiguration(
 			OutputGetConfigurationHeader(&configHeader);
 
 			DWORD dwAllLen =
-				MAKELONG(MAKEWORD(configHeader.DataLength[3], configHeader.DataLength[2]),
+				MAKEDWORD(MAKEWORD(configHeader.DataLength[3], configHeader.DataLength[2]),
 					MAKEWORD(configHeader.DataLength[1], configHeader.DataLength[0])) -
 				sizeof(configHeader.DataLength) + sizeof(GET_CONFIGURATION_HEADER);
 			LPBYTE pPConf = NULL;
 			LPBYTE lpConf = NULL;
 			if (!GetAlignedCallocatedBuffer(pDevice, &pPConf,
-				dwAllLen, &lpConf, _T(__FUNCTION__), __LINE__)) {
+				(UINT)dwAllLen, &lpConf, _T(__FUNCTION__), __LINE__)) {
 				return FALSE;
 			}
 			REVERSE_BYTES_SHORT(&cdb.AllocationLength, &dwAllLen);
@@ -609,59 +586,29 @@ BOOL ModeSense10(
 	PDEVICE pDevice,
 	PDISC pDisc
 ) {
-//	if (pDevice->FEATURE.byModePage2a) {
-		CDB::_MODE_SENSE10 cdb = {};
-		cdb.OperationCode = SCSIOP_MODE_SENSE10;
-		cdb.PageCode = MODE_PAGE_CAPABILITIES;
-		cdb.Pc = 2;// MODE_SENSE_CURRENT_VALUES;
-		WORD wSize = sizeof(CDVD_CAPABILITIES_PAGE_WITH_HEADER10);
-		REVERSE_BYTES_SHORT(&cdb.AllocationLength, &wSize);
-
+	CDB::_MODE_SENSE10 cdb = {};
+	cdb.OperationCode = SCSIOP_MODE_SENSE10;
+	cdb.PageCode = MODE_SENSE_RETURN_ALL;
+	cdb.Pc = 2;
+	CONST WORD wSize = 256;
+	REVERSE_BYTES_SHORT(&cdb.AllocationLength, &wSize);
+	BYTE modesense[wSize] = {};
 #ifdef _WIN32
-		_declspec(align(4)) CDVD_CAPABILITIES_PAGE_WITH_HEADER10 modesense = {};
-		INT direction = SCSI_IOCTL_DATA_IN;
+	INT direction = SCSI_IOCTL_DATA_IN;
 #else
-		__attribute__((aligned(4))) CDVD_CAPABILITIES_PAGE_WITH_HEADER10 modesense = {};
-		INT direction = SG_DXFER_FROM_DEV;
+	INT direction = SG_DXFER_FROM_DEV;
 #endif
-		BYTE byScsiStatus = 0;
-		if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB10GENERIC_LENGTH
-			, &modesense, direction, wSize, &byScsiStatus, _T(__FUNCTION__), __LINE__) ||
-			byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-			// not false.
-			OutputDriveNoSupportLogA(MODE_SENSE10);
-			ModeSense(pExecType, pExtArg, pDevice, pDisc);
-		}
-		else {
-			if (modesense.cdvd.PageCode == MODE_PAGE_CAPABILITIES) {
-				WORD rsm = MAKEWORD(modesense.cdvd.ReadSpeedMaximum[1],
-					modesense.cdvd.ReadSpeedMaximum[0]);
-				INT perKb = 176;
-				if (pDisc->SCSI.wCurrentMedia == ProfileDvdRom) {
-					perKb = 1385;
-				}
-				else if (pDisc->SCSI.wCurrentMedia == ProfileBDRom) {
-					perKb = 4496;
-				}
-				if (*pExecType == drivespeed) {
-					OutputString("ReadSpeedMaximum: %uKB/sec (%ux)\n", rsm, rsm / perKb);
-				}
-				else {
-					pDevice->wMaxReadSpeed = rsm;
-					OutputModeParmeterHeader10(&modesense.header);
-					OutputCDVDCapabilitiesPage(&modesense.cdvd, perKb);
-				}
-			}
-			else {
-				OutputDriveLogA(
-					"SCSIOP_MODE_SENSE10 didn't fail. But it couldn't get PageCode on this drive\n");
-				ModeSense(pExecType, pExtArg, pDevice, pDisc);
-			}
-		}
-//	}
-//	else {
-//		OutputDriveNoSupportLogA(MODE_SENSE10);
-//	}
+	BYTE byScsiStatus = 0;
+	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB10GENERIC_LENGTH
+		, &modesense, direction, wSize, &byScsiStatus, _T(__FUNCTION__), __LINE__) ||
+		byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+		// not false.
+		OutputDriveNoSupportLogA(MODE_SENSE10);
+		ModeSense(pExecType, pExtArg, pDevice, pDisc);
+	}
+	else {
+		OutputModeSense(pExecType, pDevice, pDisc, modesense);
+	}
 	return TRUE;
 }
 
@@ -700,7 +647,7 @@ BOOL SetDiscSpeed(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
-	DWORD dwDiscSpeedNum
+	UINT uiDiscSpeedNum
 ) {
 //	if ((*pExecType == cd || *pExecType == gd || *pExecType == audio || *pExecType == data)
 //		&& (pDevice->FEATURE.bySetCDSpeed || *pExecType == dvd)) {
@@ -715,24 +662,24 @@ BOOL SetDiscSpeed(
 		INT direction = SG_DXFER_TO_DEV;
 #endif
 		if ((*pExecType == cd || *pExecType == swap || *pExecType == gd || *pExecType == audio || *pExecType == data) &&
-			0 < dwDiscSpeedNum && dwDiscSpeedNum <= CD_DRIVE_MAX_SPEED) {
+			0 < uiDiscSpeedNum && uiDiscSpeedNum <= CD_DRIVE_MAX_SPEED) {
 			// http://senbee.seesaa.net/article/26247159.html
 			// 2048 x 75 = 153600 B -> 150 KiB
 			// 2352 x 75 = 176400 B -> 172,265625 KiB
-			wSpeed = (WORD)(CD_RAW_SECTOR_SIZE * 75 * dwDiscSpeedNum / 1000);
+			wSpeed = (WORD)(CD_RAW_SECTOR_SIZE * 75 * uiDiscSpeedNum / 1000);
 			setspeed.ReadSpeed = wSpeed;
 		}
 		else if ((*pExecType == dvd || IsXbox(pExecType)) &&
-			0 < dwDiscSpeedNum && dwDiscSpeedNum <= DVD_DRIVE_MAX_SPEED) {
+			0 < uiDiscSpeedNum && uiDiscSpeedNum <= DVD_DRIVE_MAX_SPEED) {
 			// Read and write speeds for the first DVD drives and players were of
 			// 1,385 kB/s (1,353 KiB/s); this speed is usually called "1x".
 			// 2048 x 75 x 9 = 1384448 B -> 1352 KiB
-			wSpeed = (WORD)(1385 * dwDiscSpeedNum);
+			wSpeed = (WORD)(1385 * uiDiscSpeedNum);
 			setspeed.ReadSpeed = wSpeed;
 		}
 		else if ((*pExecType == bd) &&
-			0 < dwDiscSpeedNum && dwDiscSpeedNum <= BD_DRIVE_MAX_SPEED) {
-			wSpeed = (WORD)(4496 * dwDiscSpeedNum);
+			0 < uiDiscSpeedNum && uiDiscSpeedNum <= BD_DRIVE_MAX_SPEED) {
+			wSpeed = (WORD)(4496 * uiDiscSpeedNum);
 			setspeed.ReadSpeed = wSpeed;
 		}
 		else {
@@ -833,7 +780,7 @@ BOOL ReadEeprom(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice
 ) {
-	DWORD tLen = 128;
+	UINT tLen = 128;
 	BOOL bHigh = FALSE;
 	switch (pDevice->byPlxtrDrive) {
 	case PLXTR_DRIVE_TYPE::PXW5224A:
@@ -861,7 +808,7 @@ BOOL ReadEeprom(
 	default:
 		break;
 	}
-	DWORD BufLen = tLen;
+	UINT BufLen = tLen;
 	LPBYTE pPBuf = NULL;
 	LPBYTE pBuf = NULL;
 	if (!GetAlignedCallocatedBuffer(pDevice, &pPBuf,
@@ -909,7 +856,7 @@ BOOL ReadDriveInformation(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
-	DWORD dwCDSpeed
+	UINT uiCDSpeed
 ) {
 #ifdef _WIN32
 	if (*pExecType != drivespeed) {
@@ -961,8 +908,8 @@ BOOL ReadDriveInformation(
 		}
 		else {
 #endif
-			if (dwCDSpeed != 0) {
-				SetDiscSpeed(pExecType, pExtArg, pDevice, dwCDSpeed);
+			if (uiCDSpeed != 0) {
+				SetDiscSpeed(pExecType, pExtArg, pDevice, uiCDSpeed);
 			}
 #if 0
 		}

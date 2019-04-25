@@ -56,9 +56,11 @@ VOID OutputModeParmeterHeader10(
 	PMODE_PARAMETER_HEADER10 pHeader
 );
 
-VOID OutputCDVDCapabilitiesPage(
-	PCDVD_CAPABILITIES_PAGE cdvd,
-	INT perKb
+VOID OutputModeSense(
+	PEXEC_TYPE pExecType,
+	PDEVICE pDevice,
+	PDISC pDisc,
+	LPBYTE modesense
 );
 
 VOID OutputReadBufferCapacity(

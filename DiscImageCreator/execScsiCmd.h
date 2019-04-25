@@ -77,7 +77,7 @@ BOOL SetDiscSpeed(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
-	DWORD dwDiscSpeedNum
+	UINT uiDiscSpeedNum
 );
 
 BOOL SetSpeedRead(
@@ -96,7 +96,7 @@ BOOL ReadDriveInformation(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
-	DWORD dwCDSpeed
+	UINT uiCDSpeed
 );
 
 BOOL ReadGDForTOC(
