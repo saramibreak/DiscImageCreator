@@ -40,7 +40,7 @@ BOOL CalcHash(
 	MD5_CTX* context,
 	SHA1Context* sha,
 	LPBYTE lpBuf,
-	DWORD dwSize
+	UINT uiSize
 );
 
 BOOL CalcEnd(

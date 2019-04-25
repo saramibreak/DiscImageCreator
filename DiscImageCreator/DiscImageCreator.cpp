@@ -47,8 +47,8 @@ static _TCHAR s_szFname[_MAX_FNAME];
 static _TCHAR s_szExt[_MAX_EXT];
 
 // These static variable is set at checkArg().
-static DWORD s_dwFix = 0;
-static DWORD s_dwSpeed = 0;
+static UINT s_uiFix = 0;
+static UINT s_uiSpeed = 0;
 static LONG s_nStartLBA = 0;
 static LONG s_nEndLBA = 0;
 
@@ -212,7 +212,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 					bRet = DiskGetMediaTypes(&device, pszFullPath);
 				}
 				else {
-					if (!ReadDriveInformation(pExecType, pExtArg, &device, pDisc, s_dwSpeed)) {
+					if (!ReadDriveInformation(pExecType, pExtArg, &device, pDisc, s_uiSpeed)) {
 						throw FALSE;
 					}
 					if (*pExecType == drivespeed) {
@@ -263,10 +263,10 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 										throw FALSE;
 									}
 								}
-								if (pExtArg->dwSubAddionalNum == 0 && *pExecType != gd) {
+								if (pExtArg->uiSubAddionalNum == 0 && *pExecType != gd) {
 									OutputString(
 										_T("[WARNING] /c2 and /s 0 can't use together. Changed /s 0 to /s 1.\n"));
-									pExtArg->dwSubAddionalNum = 1;
+									pExtArg->uiSubAddionalNum = 1;
 								}
 							}
 							else {
@@ -291,10 +291,10 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 								c2 = device.supportedC2Type;
 							}
 							// needs to call ReadCDForSearchingOffset
-							if (pDisc->SUB.nSubChannelOffset && pExtArg->dwSubAddionalNum == 0) {
+							if (pDisc->SUB.nSubChannelOffset && pExtArg->uiSubAddionalNum == 0) {
 								OutputString(
 									_T("[INFO] SubChannel offset exists in this drive. Changed /s 0 to /s 1.\n"));
-								pExtArg->dwSubAddionalNum = 1;
+								pExtArg->uiSubAddionalNum = 1;
 							}
 
 							DISC_PER_SECTOR discPerSector = {};
@@ -303,8 +303,8 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 
 							if (*pExecType == gd) {
 								flg = CDFLAG::_READ_CD::CDDA;
-								if (IsValidPlextorDrive(&device) && pExtArg->dwSubAddionalNum == 0) {
-									pExtArg->dwSubAddionalNum = 1;
+								if (IsValidPlextorDrive(&device) && pExtArg->uiSubAddionalNum == 0) {
+									pExtArg->uiSubAddionalNum = 1;
 								}
 								// This func needs the combined offsets
 								if (!ReadGDForTOC(pExtArg, &device, pDisc)) {
@@ -409,11 +409,11 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 								if (pExtArg->byRawDump) {
 									while(1) {
 										if (pExtArg->byFix) {
-											pDisc->DVD.dwFixNum = s_dwFix;
+											pDisc->DVD.fixNum = s_uiFix;
 										}
 										bRet = ReadDVDRaw(pExtArg, &device, &discData, pszFullPath);
 										if (pExtArg->byFix && bRet > 6) {
-											s_dwFix = (DWORD)bRet;
+											s_uiFix = (UINT)bRet;
 										}
 										else {
 											// 0 == no error
@@ -580,15 +580,15 @@ int SetOptionNss(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	_TCHAR* endptr = NULL;
 	pExtArg->byNoSkipSS = TRUE;
 	if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
-		pExtArg->dwMaxRereadNum = _tcstoul(argv[(*i)++], &endptr, 10);
+		pExtArg->uiMaxRereadNum = (UINT)_tcstoul(argv[(*i)++], &endptr, 10);
 		if (*endptr) {
 			OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 			return FALSE;
 		}
 	}
 	else {
-		pExtArg->dwMaxRereadNum = 100;
-		OutputString(_T("/nss val is omitted. set [%ld]\n"), pExtArg->dwMaxRereadNum);
+		pExtArg->uiMaxRereadNum = 100;
+		OutputString(_T("/nss val is omitted. set [%d]\n"), pExtArg->uiMaxRereadNum);
 	}
 	return TRUE;
 }
@@ -598,7 +598,7 @@ int SetOptionVn(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	_TCHAR* endptr = NULL;
 	pExtArg->byVideoNow = TRUE;
 	if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
-		pExtArg->nAudioCDOffsetNum = _tcstol(argv[(*i)++], &endptr, 10);
+		pExtArg->nAudioCDOffsetNum = (INT)_tcstol(argv[(*i)++], &endptr, 10);
 		if (*endptr) {
 			OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 			return FALSE;
@@ -606,7 +606,7 @@ int SetOptionVn(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	}
 	else {
 		pExtArg->nAudioCDOffsetNum = 0;
-		OutputString(_T("/vn val is omitted. set [%ld]\n"), pExtArg->nAudioCDOffsetNum);
+		OutputString(_T("/vn val is omitted. set [%d]\n"), pExtArg->nAudioCDOffsetNum);
 	}
 	return TRUE;
 }
@@ -615,13 +615,13 @@ int SetOptionSk(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 {
 	_TCHAR* endptr = NULL;
 	if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
-		pExtArg->dwSkipSectors = _tcstoul(argv[(*i)++], &endptr, 10);
+		pExtArg->uiSkipSectors = (UINT)_tcstoul(argv[(*i)++], &endptr, 10);
 		if (*endptr) {
 			OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 			return FALSE;
 		}
 		if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
-			pExtArg->dwSkipSectors2 = _tcstoul(argv[(*i)++], &endptr, 10);
+			pExtArg->uiSkipSectors2 = (UINT)_tcstoul(argv[(*i)++], &endptr, 10);
 			if (*endptr) {
 				OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 				return FALSE;
@@ -629,8 +629,8 @@ int SetOptionSk(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 		}
 	}
 	else {
-		pExtArg->dwSkipSectors = 0;
-		OutputString(_T("/sk val is omitted. set [%ld]\n"), pExtArg->dwSkipSectors);
+		pExtArg->uiSkipSectors = 0;
+		OutputString(_T("/sk val is omitted. set [%d]\n"), pExtArg->uiSkipSectors);
 	}
 	return TRUE;
 }
@@ -639,15 +639,15 @@ int SetOptionS(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 {
 	_TCHAR* endptr = NULL;
 	if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
-		pExtArg->dwSubAddionalNum = _tcstoul(argv[(*i)++], &endptr, 10);
+		pExtArg->uiSubAddionalNum = (UINT)_tcstoul(argv[(*i)++], &endptr, 10);
 		if (*endptr) {
 			OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 			return FALSE;
 		}
 	}
 	else {
-		pExtArg->dwSubAddionalNum = 1;
-		OutputString(_T("/s val is omitted. set [%ld]\n"), pExtArg->dwSubAddionalNum);
+		pExtArg->uiSubAddionalNum = 1;
+		OutputString(_T("/s val is omitted. set [%d]\n"), pExtArg->uiSubAddionalNum);
 	}
 	return TRUE;
 }
@@ -676,14 +676,14 @@ int SetOptionF(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	_TCHAR* endptr = NULL;
 	pExtArg->byFua = TRUE;
 	if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
-		pExtArg->dwCacheDelNum = _tcstoul(argv[(*i)++], &endptr, 10);
+		pExtArg->uiCacheDelNum = (UINT)_tcstoul(argv[(*i)++], &endptr, 10);
 		if (*endptr) {
 			OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 			return FALSE;
 		}
 	}
 	else {
-		pExtArg->dwCacheDelNum = DEFAULT_CACHE_DELETE_VAL;
+		pExtArg->uiCacheDelNum = DEFAULT_CACHE_DELETE_VAL;
 		OutputString(
 			_T("/f val is omitted. set [%d]\n"), DEFAULT_CACHE_DELETE_VAL);
 	}
@@ -695,26 +695,26 @@ int SetOptionC2(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	_TCHAR* endptr = NULL;
 	pExtArg->byC2 = TRUE;
 	if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
-		pExtArg->dwMaxRereadNum = _tcstoul(argv[(*i)++], &endptr, 10);
+		pExtArg->uiMaxRereadNum = (UINT)_tcstoul(argv[(*i)++], &endptr, 10);
 		if (*endptr) {
 			OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 			return FALSE;
 		}
 		if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
-			pExtArg->nC2RereadingType = _tcstol(argv[(*i)++], &endptr, 10);
+			pExtArg->nC2RereadingType = (INT)_tcstol(argv[(*i)++], &endptr, 10);
 			if (*endptr) {
 				OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 				return FALSE;
 			}
 			if (pExtArg->nC2RereadingType != 0) {
 				if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1) && pExtArg->nC2RereadingType == 1) {
-					pExtArg->nStartLBAForC2 = _tcstol(argv[(*i)++], &endptr, 10);
+					pExtArg->nStartLBAForC2 = (INT)_tcstol(argv[(*i)++], &endptr, 10);
 					if (*endptr) {
 						OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 						return FALSE;
 					}
 					if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
-						pExtArg->nEndLBAForC2 = _tcstol(argv[(*i)++], &endptr, 10);
+						pExtArg->nEndLBAForC2 = (INT)_tcstol(argv[(*i)++], &endptr, 10);
 						if (*endptr) {
 							OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 							return FALSE;
@@ -739,7 +739,7 @@ int SetOptionC2(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 		}
 	}
 	else {
-		pExtArg->dwMaxRereadNum = DEFAULT_REREAD_VAL;
+		pExtArg->uiMaxRereadNum = DEFAULT_REREAD_VAL;
 		OutputString(_T("/c2 val1 is omitted. set [%d]\n"), DEFAULT_REREAD_VAL);
 		pExtArg->nC2RereadingType = 0;
 		OutputString(_T("/c2 val2 is omitted. set [%d]\n"), 0);
@@ -777,7 +777,7 @@ int SetOptionA(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	_TCHAR* endptr = NULL;
 	pExtArg->byAdd = TRUE;
 	if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
-		pExtArg->nAudioCDOffsetNum = _tcstol(argv[(*i)++], &endptr, 10);
+		pExtArg->nAudioCDOffsetNum = (INT)_tcstol(argv[(*i)++], &endptr, 10);
 		if (*endptr) {
 			OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 			return FALSE;
@@ -807,12 +807,12 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			else if (cmdLen == 4) {
 				*pExecType = swap;
 			}
-			s_dwSpeed = _tcstoul(argv[4], &endptr, 10);
+			s_uiSpeed = (UINT)_tcstoul(argv[4], &endptr, 10);
 			if (*endptr) {
 				OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 				return FALSE;
 			}
-			pExtArg->dwSubAddionalNum = 1;
+			pExtArg->uiSubAddionalNum = 1;
 			for (INT i = 6; i <= argc; i++) {
 				cmdLen = _tcslen(argv[i - 1]);
 				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), 2)) {
@@ -899,12 +899,12 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 		}
 		else if (argc >= 5 && cmdLen == 2 && !_tcsncmp(argv[1], _T("gd"), 2)) {
 			*pExecType = gd;
-			s_dwSpeed = _tcstoul(argv[4], &endptr, 10);
+			s_uiSpeed = (UINT)_tcstoul(argv[4], &endptr, 10);
 			if (*endptr) {
 				OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 				return FALSE;
 			}
-			pExtArg->dwSubAddionalNum = 0;
+			pExtArg->uiSubAddionalNum = 0;
 			for (INT i = 6; i <= argc; i++) {
 				cmdLen = _tcslen(argv[i - 1]);
 				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), 2)) {
@@ -958,7 +958,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			else if (cmdLen == 5) {
 				*pExecType = audio;
 			}
-			s_dwSpeed = _tcstoul(argv[4], &endptr, 10);
+			s_uiSpeed = (UINT)_tcstoul(argv[4], &endptr, 10);
 			if (*endptr) {
 				OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 				return FALSE;
@@ -973,7 +973,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 				return FALSE;
 			}
-			pExtArg->dwSubAddionalNum = 1;
+			pExtArg->uiSubAddionalNum = 1;
 			for (INT i = 8; i <= argc; i++) {
 				cmdLen = _tcslen(argv[i - 1]);
 				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), 2)) {
@@ -1043,7 +1043,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 		}
 		else if (argc >= 5 && cmdLen == 3 && !_tcsncmp(argv[1], _T("dvd"), 3)) {
 			*pExecType = dvd;
-			s_dwSpeed = _tcstoul(argv[4], &endptr, 10);
+			s_uiSpeed = (UINT)_tcstoul(argv[4], &endptr, 10);
 			if (*endptr) {
 				OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 				return FALSE;
@@ -1068,7 +1068,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				}
 				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/fix"), 4)) {
 					pExtArg->byFix = TRUE;
-					s_dwFix = _tcstoul(argv[i++], &endptr, 10);
+					s_uiFix = (UINT)_tcstoul(argv[i++], &endptr, 10);
 				}
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/re"), 3)) {
 					pExtArg->byResume = TRUE;
@@ -1091,7 +1091,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			else if (cmdLen == 4) {
 				*pExecType = xbox;
 			}
-			s_dwSpeed = _tcstoul(argv[4], &endptr, 10);
+			s_uiSpeed = (UINT)_tcstoul(argv[4], &endptr, 10);
 			if (*endptr) {
 				OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 				return FALSE;
@@ -1120,29 +1120,29 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 		}
 		else if (argc >= 21 && ((cmdLen == 8 && !_tcsncmp(argv[1], _T("xboxswap"), 8)))) {
 			*pExecType = xboxswap;
-			s_dwSpeed = _tcstoul(argv[4], &endptr, 10);
+			s_uiSpeed = (UINT)_tcstoul(argv[4], &endptr, 10);
 			if (*endptr) {
 				OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 				return FALSE;
 			}
 			for (INT i = 5; i < 21; i++) {
-				pExtArg->dwSecuritySector[i - 5] = _tcstoul(argv[i], &endptr, 10);
+				pExtArg->uiSecuritySector[i - 5] = (UINT)_tcstoul(argv[i], &endptr, 10);
 				if (*endptr) {
 					OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 					return FALSE;
 				}
 			}
-			for (INT i = 21; i < argc; i++) {
-				cmdLen = _tcslen(argv[i]);
-				if (cmdLen == 2 && !_tcsncmp(argv[i], _T("/f"), 2)) {
+			for (INT i = 22; i <= argc; i++) {
+				cmdLen = _tcslen(argv[i - 1]);
+				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/f"), 2)) {
 					if (!SetOptionF(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
 				}
-				else if (cmdLen == 2 && !_tcsncmp(argv[i], _T("/q"), 2)) {
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), 2)) {
 					pExtArg->byQuiet = TRUE;
 				}
-				else if (cmdLen == 4 && !_tcsncmp(argv[i], _T("/nss"), 4)) {
+				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/nss"), 4)) {
 					if (!SetOptionNss(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
@@ -1166,29 +1166,29 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			else {
 				*pExecType = xgd3swap;
 			}
-			s_dwSpeed = _tcstoul(argv[4], &endptr, 10);
+			s_uiSpeed = (UINT)_tcstoul(argv[4], &endptr, 10);
 			if (*endptr) {
 				OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 				return FALSE;
 			}
 			for (INT i = 6; i < 8; i++) {
-				pExtArg->dwSecuritySector[i - 6] = _tcstoul(argv[i], &endptr, 10);
+				pExtArg->uiSecuritySector[i - 6] = (UINT)_tcstoul(argv[i], &endptr, 10);
 				if (*endptr) {
 					OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
 					return FALSE;
 				}
 			}
-			for (INT i = 8; i < argc; i++) {
-				cmdLen = _tcslen(argv[i]);
-				if (cmdLen == 2 && !_tcsncmp(argv[i], _T("/f"), 2)) {
+			for (INT i = 9; i <= argc; i++) {
+				cmdLen = _tcslen(argv[i - 1]);
+				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/f"), 2)) {
 					if (!SetOptionF(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
 				}
-				else if (cmdLen == 2 && !_tcsncmp(argv[i], _T("/q"), 2)) {
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), 2)) {
 					pExtArg->byQuiet = TRUE;
 				}
-				else if (cmdLen == 4 && !_tcsncmp(argv[i], _T("/nss"), 4)) {
+				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/nss"), 4)) {
 					if (!SetOptionNss(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
@@ -1427,7 +1427,7 @@ int printUsage(void)
 		_T("\t\t\t   \t2: read next & next next sub (slow, precision)\n")
 		_T("Option (for DVD)\n")
 		_T("\t/c\tLog Copyright Management Information\n")
-		_T("\t/raw\tDumping DVD by raw (2064 byte/sector)\n")
+		_T("\t/raw\tDumping DVD by raw (2064 or 2384 bytes/sector)\n")
 		_T("\t\t\tComfirmed drive: Mediatec MT chip (Lite-on etc.), PLEXTOR\n")
 		_T("\t\t\t               Hitachi-LG GDR, GCC\n")
 		_T("\t\t\t -> GDR (8082N, 8161B to 8164B) and GCC (4160N, 4240N to 4247N)\n")
@@ -1496,7 +1496,7 @@ int main(int argc, char* argv[])
 	if (nRet) {
 		EXEC_TYPE execType;
 		EXT_ARG extArg = {};
-		extArg.dwCacheDelNum = DEFAULT_CACHE_DELETE_VAL;
+		extArg.uiCacheDelNum = DEFAULT_CACHE_DELETE_VAL;
 		_TCHAR szFullPath[_MAX_PATH + 1] = {};
 		if (!checkArg(argc, argv, &execType, &extArg, szFullPath)) {
 			printUsage();

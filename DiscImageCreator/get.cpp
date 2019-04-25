@@ -22,12 +22,12 @@
 BOOL GetAlignedCallocatedBuffer(
 	PDEVICE pDevice,
 	LPBYTE* ppSrcBuf,
-	DWORD dwSize,
+	UINT uiSize,
 	LPBYTE* ppOutBuf,
 	LPCTSTR pszFuncName,
 	LONG lLineNum
 ) {
-	*ppSrcBuf = (LPBYTE)calloc(dwSize + pDevice->AlignmentMask, sizeof(BYTE));
+	*ppSrcBuf = (LPBYTE)calloc(uiSize + pDevice->AlignmentMask, sizeof(BYTE));
 	if (!*ppSrcBuf) {
 		OutputLastErrorNumAndString(pszFuncName, lLineNum);
 		return FALSE;
@@ -219,14 +219,14 @@ WORD GetSizeOrWordForVolDesc(
 	return val;
 }
 
-DWORD GetSizeOrDwordForVolDesc(
+UINT GetSizeOrUintForVolDesc(
 	LPBYTE lpBuf,
-	DWORD dwMax
+	UINT uiMax
 ) {
-	DWORD val = MAKEDWORD(MAKEWORD(lpBuf[0], lpBuf[1]),
+	UINT val = MAKEUINT(MAKEWORD(lpBuf[0], lpBuf[1]),
 		MAKEWORD(lpBuf[2], lpBuf[3]));
-	if (val == 0 || val >= dwMax) {
-		val = MAKEDWORD(MAKEWORD(lpBuf[7], lpBuf[6]),
+	if (val == 0 || val >= uiMax) {
+		val = MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]),
 			MAKEWORD(lpBuf[5], lpBuf[4]));
 	}
 	return val;

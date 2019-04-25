@@ -18,7 +18,7 @@
 BOOL GetAlignedCallocatedBuffer(
 	PDEVICE pDevice,
 	LPBYTE* ppSrcBuf,
-	DWORD dwSize,
+	UINT uiSize,
 	LPBYTE* ppOutBuf,
 	LPCTSTR pszFuncName,
 	LONG lLineNum
@@ -59,9 +59,9 @@ WORD GetSizeOrWordForVolDesc(
 	LPBYTE lpBuf
 );
 
-DWORD GetSizeOrDwordForVolDesc(
+UINT GetSizeOrUintForVolDesc(
 	LPBYTE lpBuf,
-	DWORD dwMax
+	UINT uiMax
 );
 
 BYTE GetMode(

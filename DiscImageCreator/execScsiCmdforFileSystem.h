@@ -42,9 +42,9 @@ BOOL ReadXBOXDirectoryRecord(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	CDB::_READ12* pCdb,
-	DWORD dwDirPos,
-	DWORD dwDirTblSize,
-	DWORD dwStartLBA,
+	UINT uiDirPos,
+	UINT uiDirTblSize,
+	UINT uiStartLBA,
 	INT nNest
 );
 

@@ -102,19 +102,19 @@ VOID SetBufferSizeForReadCD(
 	DRIVE_DATA_ORDER order
 ) {
 	if (order == DRIVE_DATA_ORDER::NoC2) {
-		pDevice->TRANSFER.dwBufLen = CD_RAW_SECTOR_WITH_SUBCODE_SIZE;
-		pDevice->TRANSFER.dwBufC2Offset = 0;
-		pDevice->TRANSFER.dwBufSubOffset = CD_RAW_SECTOR_SIZE;
+		pDevice->TRANSFER.uiBufLen = CD_RAW_SECTOR_WITH_SUBCODE_SIZE;
+		pDevice->TRANSFER.uiBufC2Offset = 0;
+		pDevice->TRANSFER.uiBufSubOffset = CD_RAW_SECTOR_SIZE;
 	}
 	else if (order == DRIVE_DATA_ORDER::MainC2Sub) {
-		pDevice->TRANSFER.dwBufLen = CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE;
-		pDevice->TRANSFER.dwBufC2Offset = CD_RAW_SECTOR_SIZE;
-		pDevice->TRANSFER.dwBufSubOffset = CD_RAW_SECTOR_WITH_C2_294_SIZE;
+		pDevice->TRANSFER.uiBufLen = CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE;
+		pDevice->TRANSFER.uiBufC2Offset = CD_RAW_SECTOR_SIZE;
+		pDevice->TRANSFER.uiBufSubOffset = CD_RAW_SECTOR_WITH_C2_294_SIZE;
 	}
 	else if (order == DRIVE_DATA_ORDER::MainSubC2) {
-		pDevice->TRANSFER.dwBufLen = CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE;
-		pDevice->TRANSFER.dwBufSubOffset = CD_RAW_SECTOR_SIZE;
-		pDevice->TRANSFER.dwBufC2Offset = CD_RAW_SECTOR_WITH_SUBCODE_SIZE;
+		pDevice->TRANSFER.uiBufLen = CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE;
+		pDevice->TRANSFER.uiBufSubOffset = CD_RAW_SECTOR_SIZE;
+		pDevice->TRANSFER.uiBufC2Offset = CD_RAW_SECTOR_WITH_SUBCODE_SIZE;
 	}
 }
 
@@ -208,8 +208,8 @@ VOID SetAndOutputTocForGD(
 	// update the toc of audio trap disc to the toc of gd-rom
 	pDisc->SCSI.toc.FirstTrack = bufDec[0x29a];
 	pDisc->SCSI.toc.LastTrack = bufDec[0x29e];
-	pDisc->SCSI.nAllLength = MAKELONG(
-		MAKEWORD(bufDec[0x2a0], bufDec[0x2a1]), MAKEWORD(bufDec[0x2a2], 0)) - 150;
+	pDisc->SCSI.nAllLength = (INT)(MAKELONG(
+		MAKEWORD(bufDec[0x2a0], bufDec[0x2a1]), MAKEWORD(bufDec[0x2a2], 0)) - 150);
 
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(TOC For GD(HD Area)));
 	CONST INT typeSize = 7;
@@ -221,14 +221,14 @@ VOID SetAndOutputTocForGD(
 	for (BYTE i = pDisc->SCSI.toc.FirstTrack; i <= pDisc->SCSI.toc.LastTrack; i++, j += 4) {
 		INT tIdx = i - 1;
 		// update the toc of audio trap disc to the toc of gd-rom
-		pDisc->SCSI.lpFirstLBAListOnToc[tIdx] = MAKELONG(
-			MAKEWORD(bufDec[0x114 + j], bufDec[0x115 + j]), MAKEWORD(bufDec[0x116 + j], 0)) - 150;
+		pDisc->SCSI.lpFirstLBAListOnToc[tIdx] = (INT)(MAKELONG(
+			MAKEWORD(bufDec[0x114 + j], bufDec[0x115 + j]), MAKEWORD(bufDec[0x116 + j], 0)) - 150);
 		if (i == pDisc->SCSI.toc.LastTrack) {
 			pDisc->SCSI.lpLastLBAListOnToc[tIdx] = pDisc->SCSI.nAllLength - 1;
 		}
 		else {
-			pDisc->SCSI.lpLastLBAListOnToc[tIdx] = MAKELONG(
-				MAKEWORD(bufDec[0x118 + j], bufDec[0x119 + j]), MAKEWORD(bufDec[0x11a + j], 0)) - 150 - 1;
+			pDisc->SCSI.lpLastLBAListOnToc[tIdx] = (INT)(MAKELONG(
+				MAKEWORD(bufDec[0x118 + j], bufDec[0x119 + j]), MAKEWORD(bufDec[0x11a + j], 0)) - 150 - 1);
 		}
 		pDisc->SCSI.toc.TrackData[tIdx].Adr = BYTE((bufDec[0x117 + j]) & 0x0f);
 		pDisc->SCSI.toc.TrackData[tIdx].Control = BYTE((bufDec[0x117 + j] >> 4) & 0x0f);

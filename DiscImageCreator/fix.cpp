@@ -135,13 +135,13 @@ VOID FixMainHeader(
 		INT nAdd = 0;
 
 		if (-4704 <= nOfs && nOfs < -2352) {
-			if (2 <= pExtArg->dwSubAddionalNum) {
+			if (2 <= pExtArg->uiSubAddionalNum) {
 				ctl = pDiscPerSector->subQ.nextNext.byCtl;
 				nAdd += 2;
 			}
 		}
 		else if (-2352 <= nOfs && nOfs < 0) {
-			if (1 <= pExtArg->dwSubAddionalNum) {
+			if (1 <= pExtArg->uiSubAddionalNum) {
 				ctl = pDiscPerSector->subQ.next.byCtl;
 				nAdd++;
 			}
@@ -232,13 +232,13 @@ BOOL FixSubQAdrMCN(
 
 		INT nFirstLBA = pDisc->SUB.nFirstLBAForMCN[0][session - 1];
 		INT nPrevMCNSector = pDisc->SUB.nPrevMCNSector;
-		bRet = IsValidSubQAdrSector(pExtArg->dwSubAddionalNum, &pDiscPerSector->subQ,
+		bRet = IsValidSubQAdrSector(pExtArg->uiSubAddionalNum, &pDiscPerSector->subQ,
 			nRangeLBA, nFirstLBA, nPrevMCNSector, nLBA);
 		if (!bRet) {
 			nRangeLBA = pDisc->SUB.nRangeLBAForMCN[1][session - 1];
 			if (nRangeLBA != -1) {
 				nFirstLBA = pDisc->SUB.nFirstLBAForMCN[1][session - 1];
-				bRet = IsValidSubQAdrSector(pExtArg->dwSubAddionalNum, &pDiscPerSector->subQ, nRangeLBA, nFirstLBA, nPrevMCNSector, nLBA);
+				bRet = IsValidSubQAdrSector(pExtArg->uiSubAddionalNum, &pDiscPerSector->subQ, nRangeLBA, nFirstLBA, nPrevMCNSector, nLBA);
 			}
 		}
 	}
@@ -331,12 +331,12 @@ BOOL FixSubQAdrISRC(
 		}
 		INT nFirstLBA = pDisc->SUB.nFirstLBAForISRC[0][session - 1];
 		INT nPrevISRCSector = pDisc->SUB.nPrevISRCSector;
-		bRet = IsValidSubQAdrSector(pExtArg->dwSubAddionalNum, &pDiscPerSector->subQ, nRangeLBA, nFirstLBA, nPrevISRCSector, nLBA);
+		bRet = IsValidSubQAdrSector(pExtArg->uiSubAddionalNum, &pDiscPerSector->subQ, nRangeLBA, nFirstLBA, nPrevISRCSector, nLBA);
 		if (!bRet) {
 			nRangeLBA = pDisc->SUB.nRangeLBAForISRC[1][session - 1];
 			if (nRangeLBA != -1) {
 				nFirstLBA = pDisc->SUB.nFirstLBAForISRC[1][session - 1];
-				bRet = IsValidSubQAdrSector(pExtArg->dwSubAddionalNum, &pDiscPerSector->subQ, nRangeLBA, nFirstLBA, nPrevISRCSector, nLBA);
+				bRet = IsValidSubQAdrSector(pExtArg->uiSubAddionalNum, &pDiscPerSector->subQ, nRangeLBA, nFirstLBA, nPrevISRCSector, nLBA);
 			}
 		}
 	}
@@ -475,7 +475,7 @@ VOID FixSubQ(
 	BOOL bAdrCurrent = FALSE;
 	if ((pDiscPerSector->subQ.current.byAdr == ADR_ENCODES_MEDIA_CATALOG ||
 		pDiscPerSector->subQ.current.byAdr == ADR_ENCODES_ISRC) &&
-		(pDiscPerSector->subQ.prev.byAdr != ADR_ENCODES_MEDIA_CATALOG ||
+		(pDiscPerSector->subQ.prev.byAdr != ADR_ENCODES_MEDIA_CATALOG &&
 			pDiscPerSector->subQ.prev.byAdr != ADR_ENCODES_ISRC)) {
 
 		// assume that adr is incorrect
@@ -523,7 +523,7 @@ VOID FixSubQ(
 			pDiscPerSector->subcode.current[14] = DecToBcd(bBackupIndex);
 
 			// assume that adr is correct but MCN or ISRC is incorrect
-			if (1 <= pExtArg->dwSubAddionalNum) {
+			if (1 <= pExtArg->uiSubAddionalNum) {
 				// first check adr:2
 				if (!FixSubQAdrMCN(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA)) {
 					// Next check adr:3
@@ -1144,7 +1144,7 @@ VOID FixSubRtoW(
 ) {
 #if 0
 	BYTE pDiscPerSector->subcode.currentOrg[CD_RAW_READ_SUBCODE_SIZE] = {};
-	memcpy(pDiscPerSector->subcode.currentOrg, pDiscPerSector->data.current + pDevice->TRANSFER.dwBufSubOffset, CD_RAW_READ_SUBCODE_SIZE);
+	memcpy(pDiscPerSector->subcode.currentOrg, pDiscPerSector->data.current + pDevice->TRANSFER.uiBufSubOffset, CD_RAW_READ_SUBCODE_SIZE);
 	SUB_R_TO_W scRW[4] = {};
 	BYTE tmpCode[24] = {};
 	for (INT k = 0; k < 4; k++) {
@@ -1239,14 +1239,14 @@ BOOL FixSubChannel(
 	}
 	if (pDisc->SUB.nSubChannelOffset) {
 		SetTmpSubQDataFromBuffer(&pDiscPerSector->subQ.next, pDiscPerSector->subcode.next);
-		if (1 <= pExtArg->dwSubAddionalNum) {
+		if (1 <= pExtArg->uiSubAddionalNum) {
 			SetTmpSubQDataFromBuffer(&pDiscPerSector->subQ.nextNext, pDiscPerSector->subcode.nextNext);
 		}
 	}
 	else {
-		if (1 <= pExtArg->dwSubAddionalNum) {
+		if (1 <= pExtArg->uiSubAddionalNum) {
 			SetTmpSubQDataFromBuffer(&pDiscPerSector->subQ.next, pDiscPerSector->subcode.next);
-			if (2 <= pExtArg->dwSubAddionalNum) {
+			if (2 <= pExtArg->uiSubAddionalNum) {
 				SetTmpSubQDataFromBuffer(&pDiscPerSector->subQ.nextNext, pDiscPerSector->subcode.nextNext);
 			}
 		}

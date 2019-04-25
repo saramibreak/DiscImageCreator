@@ -507,17 +507,17 @@ BOOL OutputHash(
 		return FALSE;
 	}
 	UINT64 ui64FileSize = GetFileSize64(0, fp);
-	DWORD dwSectorSizeOne = CD_RAW_SECTOR_SIZE;
+	UINT uiSectorSizeOne = CD_RAW_SECTOR_SIZE;
 	if (!_tcsncmp(szExt, _T(".iso"), 4) ||
 		!_tcsncmp(pszFnameAndExt, _T("SS.bin"), 6) ||
 		!_tcsncmp(pszFnameAndExt, _T("PFI.bin"), 7) ||
 		!_tcsncmp(pszFnameAndExt, _T("DMI.bin"), 7) ||
 		ui64FileSize == 1228800 || ui64FileSize == 1261568 || ui64FileSize == 1474560) {
-		dwSectorSizeOne = DISC_RAW_READ_SIZE;
+		uiSectorSizeOne = DISC_RAW_READ_SIZE;
 	}
 
-	UINT64 ui64SectorSizeAll = ui64FileSize / (UINT64)dwSectorSizeOne;
-	if (ui64FileSize >= dwSectorSizeOne) {
+	UINT64 ui64SectorSizeAll = ui64FileSize / (UINT64)uiSectorSizeOne;
+	if (ui64FileSize >= uiSectorSizeOne) {
 		MD5_CTX context = {};
 		SHA1Context sha = {};
 		CalcInit(&context, &sha);
@@ -527,16 +527,16 @@ BOOL OutputHash(
 		int nRet = TRUE;
 		// TODO: This code can more speed up! if reduce calling fread()
 		for (UINT64 i = 1; i <= ui64SectorSizeAll; i++) {
-			if (fread(data, sizeof(BYTE), dwSectorSizeOne, fp) < dwSectorSizeOne) {
-				OutputErrorString(_T("Failed to read: read size %ld [F:%s][L:%d]\n"), dwSectorSizeOne, _T(__FUNCTION__), __LINE__);
+			if (fread(data, sizeof(BYTE), uiSectorSizeOne, fp) < uiSectorSizeOne) {
+				OutputErrorString(_T("Failed to read: read size %d [F:%s][L:%d]\n"), uiSectorSizeOne, _T(__FUNCTION__), __LINE__);
 				return FALSE;
 			};
-			nRet = CalcHash(&crc32, &context, &sha, data, dwSectorSizeOne);
+			nRet = CalcHash(&crc32, &context, &sha, data, uiSectorSizeOne);
 			if (!nRet) {
 				break;
 			}
 			OutputString(_T("\rCalculating hash: %s [%lld/%lld]")
-				, pszFnameAndExt, i * dwSectorSizeOne, ui64FileSize);
+				, pszFnameAndExt, i * uiSectorSizeOne, ui64FileSize);
 		}
 		OutputString("\n");
 		FcloseAndNull(fp);

@@ -49,9 +49,9 @@ FILE* CreateOrOpenFile(
 	_tsplitpath(pszPath, szDrive, szDir, szFname, szExt);
 	if (pszPlusFname) {
 		size_t plusFnameLen = _tcslen(pszPlusFname);
-		DWORD pathSize = DWORD(_tcslen(szDir) + _tcslen(szFname) + plusFnameLen + _tcslen(pszExt));
+		UINT pathSize = UINT(_tcslen(szDir) + _tcslen(szFname) + plusFnameLen + _tcslen(pszExt));
 		if (pathSize > _MAX_FNAME) {
-			OutputErrorString(_T("File Size is too long: %lu\n"), pathSize);
+			OutputErrorString(_T("File Size is too long: %u\n"), pathSize);
 			return NULL;
 		}
 		_tcsncat(szFname, pszPlusFname, plusFnameLen);
@@ -114,9 +114,9 @@ FILE* CreateOrOpenFileW(
 	_wsplitpath(pszPath, szDrive, szDir, szFname, szExt);
 	if (pszPlusFname) {
 		size_t plusFnameLen = wcslen(pszPlusFname);
-		DWORD pathSize = DWORD(wcslen(szDir) + wcslen(szFname) + plusFnameLen + wcslen(pszExt));
+		UINT pathSize = UINT(wcslen(szDir) + wcslen(szFname) + plusFnameLen + wcslen(pszExt));
 		if (pathSize > _MAX_FNAME) {
-			OutputErrorString(_T("File Size is too long: %lu\n"), pathSize);
+			OutputErrorString(_T("File Size is too long: %u\n"), pathSize);
 			return NULL;
 		}
 		wcsncat(szFname, pszPlusFname, plusFnameLen);
@@ -179,9 +179,9 @@ FILE* CreateOrOpenFileA(
 	_splitpath(pszPath, szDrive, szDir, szFname, szExt);
 	if (pszPlusFname) {
 		size_t plusFnameLen = strlen(pszPlusFname);
-		DWORD pathSize = DWORD(strlen(szDir) + strlen(szFname) + plusFnameLen + strlen(pszExt));
+		UINT pathSize = UINT(strlen(szDir) + strlen(szFname) + plusFnameLen + strlen(pszExt));
 		if (pathSize > _MAX_FNAME) {
-			OutputErrorString(_T("File Size is too long: %lu\n"), pathSize);
+			OutputErrorString(_T("File Size is too long: %u\n"), pathSize);
 			return NULL;
 		}
 		strncat(szFname, pszPlusFname, plusFnameLen);
@@ -889,7 +889,7 @@ VOID WriteErrorBuffer(
 		WriteSubChannel(pDisc, pDiscPerSector, lpSubcodeRaw, nLBA, fpSub, fpParse);
 
 		if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
-			fwrite(pDiscPerSector->data.current + pDevice->TRANSFER.dwBufC2Offset
+			fwrite(pDiscPerSector->data.current + pDevice->TRANSFER.uiBufC2Offset
 				, sizeof(BYTE), CD_RAW_READ_C2_294_SIZE, fpC2);
 		}
 	}
@@ -910,7 +910,7 @@ BOOL WriteParsingSubfile(
 	DISC discData = {};
 	DISC_PER_SECTOR discPerSector = {};
 	FILE* fpSub = NULL;
-	DWORD dwTrackAllocSize = MAXIMUM_NUMBER_TRACKS + 10 + 1;
+	UINT uiTrackAllocSize = MAXIMUM_NUMBER_TRACKS + 10 + 1;
 
 	try {
 		if (NULL == (fpSub = CreateOrOpenFile(
@@ -930,11 +930,11 @@ BOOL WriteParsingSubfile(
 			throw FALSE;
 		}
 		if (NULL == (discData.SUB.pszISRC =
-			(LPSTR*)calloc(dwTrackAllocSize, sizeof(UINT_PTR)))) {
+			(LPSTR*)calloc(uiTrackAllocSize, sizeof(UINT_PTR)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
-		for (DWORD h = 0; h < dwTrackAllocSize; h++) {
+		for (UINT h = 0; h < uiTrackAllocSize; h++) {
 			if (NULL == (discData.SUB.pszISRC[h] =
 				(LPSTR)calloc((META_ISRC_SIZE), sizeof(_TCHAR)))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -965,7 +965,7 @@ BOOL WriteParsingSubfile(
 				nLBA++;
 			}
 			else if (byAdr == ADR_ENCODES_ISRC) {
-				if (0 < byPrevTrackNum && byPrevTrackNum < dwTrackAllocSize) {
+				if (0 < byPrevTrackNum && byPrevTrackNum < uiTrackAllocSize) {
 					SetISRCToString(&discData, &discPerSector, 
 						discData.SUB.pszISRC[byPrevTrackNum - 1], FALSE);
 				}
@@ -990,7 +990,7 @@ BOOL WriteParsingSubfile(
 	}
 	FcloseAndNull(fpParse);
 	FcloseAndNull(fpSub);
-	for (DWORD i = 0; i < dwTrackAllocSize; i++) {
+	for (UINT i = 0; i < uiTrackAllocSize; i++) {
 		if (discData.SUB.pszISRC) {
 			FreeAndNull(discData.SUB.pszISRC[i]);
 		}
@@ -1094,7 +1094,7 @@ BOOL WriteParsingMdsfile(
 		PMDS_DPM_BLK* pddb = NULL;
 		
 		if (h.ofsToDpm > 0) {
-			size_t allocsize = 4 + data[h.ofsToDpm] * sizeof(DWORD);
+			size_t allocsize = 4 + data[h.ofsToDpm] * sizeof(UINT);
 			if (NULL == (pdb = (PMDS_DPM_HEADER)calloc(allocsize, sizeof(UCHAR)))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
@@ -1108,8 +1108,8 @@ BOOL WriteParsingMdsfile(
 				throw FALSE;
 			}
 			for (UINT i = 0; i < pdb->dpmBlkTotalNum; i++) {
-				DWORD entry = MAKEDWORD(MAKEWORD(data[nOfs + 12], data[nOfs + 13]), MAKEWORD(data[nOfs + 14], data[nOfs + 15]));
-				allocsize = 16 + entry * sizeof(DWORD);
+				UINT entry = MAKEUINT(MAKEWORD(data[nOfs + 12], data[nOfs + 13]), MAKEWORD(data[nOfs + 14], data[nOfs + 15]));
+				allocsize = 16 + entry * sizeof(UINT);
 				if (NULL == (pddb[i] = (PMDS_DPM_BLK)calloc(allocsize, sizeof(UCHAR)))) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 					throw FALSE;
@@ -1125,11 +1125,11 @@ BOOL WriteParsingMdsfile(
 			_T("             unknown: %d\n")
 			_T("           mediaType: %d\n")
 			_T("          sessionNum: %d\n")
-			_T("             unknown: %ld\n")
+			_T("             unknown: %d\n")
 			_T("            LenOfBca: %d\n")
-			_T("            ofsToBca: %ld\n")
-			_T("  ofsTo1stSessionBlk: %ld\n")
-			_T("            ofsToDpm: %ld\n")
+			_T("            ofsToBca: %d\n")
+			_T("  ofsTo1stSessionBlk: %d\n")
+			_T("            ofsToDpm: %d\n")
 			, h.fileId, h.unknown1, h.mediaType, h.sessionNum
 			, h.unknown2, h.lenOfBca, h.ofsToBca
 			, h.ofsTo1stSessionBlk, h.ofsToDpm
@@ -1228,14 +1228,14 @@ BOOL WriteParsingMdsfile(
 		for (INT i = 0; i < h.sessionNum; i++) {
 			_ftprintf(fpParse,
 				_T(OUTPUT_DHYPHEN_PLUS_STR(SessionBlock))
-				_T("         startSector: %ld\n")
-				_T("           endSector: %ld\n")
+				_T("         startSector: %d\n")
+				_T("           endSector: %d\n")
 				_T("          sessionNum: %d\n")
 				_T("     totalDataBlkNum: %d\n")
 				_T("          DataBlkNum: %d\n")
 				_T("       firstTrackNum: %d\n")
 				_T("        lastTrackNum: %d\n")
-				_T("     ofsTo1stDataBlk: %ld\n")
+				_T("     ofsTo1stDataBlk: %d\n")
 				, psb[i].startSector, psb[i].endSector, psb[i].sessionNum
 				, psb[i].totalDataBlkNum, psb[i].DataBlkNum, psb[i].firstTrackNum
 				, psb[i].lastTrackNum, psb[i].ofsTo1stDataBlk
@@ -1250,14 +1250,14 @@ BOOL WriteParsingMdsfile(
 				_T("            trackNum: %d\n")
 				_T("               point: %d\n")
 				_T("                 msf: %02d:%02d:%02d\n")
-				_T("       ofsToIndexBlk: %ld\n")
+				_T("       ofsToIndexBlk: %d\n")
 				_T("          sectorSize: %d\n")
 				_T("             unknown: %d\n")
-				_T("    trackStartSector: %ld\n")
-				_T("   ofsFromHeadToIdx1: %ld\n")
-				_T("             unknown: %ld\n")
-				_T("          NumOfFname: %ld\n")
-				_T("          OfsToFname: %ld\n")
+				_T("    trackStartSector: %d\n")
+				_T("   ofsFromHeadToIdx1: %d\n")
+				_T("             unknown: %d\n")
+				_T("          NumOfFname: %d\n")
+				_T("          OfsToFname: %d\n")
 				, db[i].trackMode, db[i].numOfSubch, db[i].adrCtl, db[i].trackNum
 				, db[i].point, db[i].m, db[i].s, db[i].f, db[i].ofsToIndexBlk
 				, db[i].sectorSize, db[i].unknown1, db[i].trackStartSector
@@ -1268,8 +1268,8 @@ BOOL WriteParsingMdsfile(
 			for (INT i = 0; i < tdb; i++) {
 				_ftprintf(fpParse,
 					OUTPUT_DHYPHEN_PLUS_STR(IndexBlock)
-					_T("           NumOfIdx0: %ld\n")
-					_T("           NumOfIdx1: %ld\n")
+					_T("           NumOfIdx0: %d\n")
+					_T("           NumOfIdx1: %d\n")
 					, ib[i].NumOfIdx0, ib[i].NumOfIdx1
 				);
 			}
@@ -1281,7 +1281,7 @@ BOOL WriteParsingMdsfile(
 		}
 		_ftprintf(fpParse,
 			_T(OUTPUT_DHYPHEN_PLUS_STR(Fname))
-			_T("          ofsToFname: %ld\n")
+			_T("          ofsToFname: %d\n")
 			_T("            fnameFmt: %d\n")
 			_T("         fnameString: %s\n")
 			, fb.ofsToFname, fb.fnameFmt, fname
@@ -1289,38 +1289,38 @@ BOOL WriteParsingMdsfile(
 		if (h.ofsToDpm > 0) {
 			_ftprintf(fpParse,
 				OUTPUT_DHYPHEN_PLUS_STR(DPM)
-				_T("      dpmBlkTotalNum: %ld\n")
+				_T("      dpmBlkTotalNum: %d\n")
 				, pdb->dpmBlkTotalNum);
 			for (UINT i = 0; i < pdb->dpmBlkTotalNum; i++) {
 				_ftprintf(fpParse,
-					_T("        ofsToDpmInfo: %ld\n"), pdb->ofsToDpmBlk[i]);
+					_T("        ofsToDpmInfo: %d\n"), pdb->ofsToDpmBlk[i]);
 			}
 			for (UINT i = 0; i < pdb->dpmBlkTotalNum; i++) {
-				LPDWORD diff = NULL;
-				if (NULL == (diff = (LPDWORD)calloc(pddb[i]->entry, sizeof(DWORD)))) {
+				LPUINT diff = NULL;
+				if (NULL == (diff = (LPUINT)calloc(pddb[i]->entry, sizeof(UINT)))) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 					throw FALSE;
 				}
 				_ftprintf(fpParse,
-					_T("           dpmBlkNum: %ld\n")
-					_T("            unknown1: %ld\n")
-					_T("          resolution: %ld\n")
-					_T("               entry: %ld\n")
+					_T("           dpmBlkNum: %d\n")
+					_T("            unknown1: %d\n")
+					_T("          resolution: %d\n")
+					_T("               entry: %d\n")
 					, pddb[i]->dpmBlkNum, pddb[i]->unknown1, pddb[i]->resolution, pddb[i]->entry
 				);
 				_ftprintf(fpParse,
-					_T("       0    readTime:                       %5ld ms\n"), pddb[i]->readTime[0]);
+					_T("       0    readTime:                       %5d ms\n"), pddb[i]->readTime[0]);
 				diff[0] = pddb[i]->readTime[0];
 
 				BOOL bStart = FALSE;
 				BOOL bEnd = TRUE;
-				LONG prevDiff = 0;
-//				LONG prevDiffAndDiff = 0;
-				for (DWORD k = 1; k < pddb[i]->entry; k++) {
+				INT prevDiff = 0;
+//				INT prevDiffAndDiff = 0;
+				for (UINT k = 1; k < pddb[i]->entry; k++) {
 					diff[k] = pddb[i]->readTime[k] - pddb[i]->readTime[k - 1];
-					LONG diffAndDiff = (LONG)(diff[k] - diff[k - 1]);
+					INT diffAndDiff = (INT)(diff[k] - diff[k - 1]);
 					if (pddb[i]->resolution == 50 || pddb[i]->resolution == 256) {
-						LONG orgDiff = prevDiff - (LONG)diff[k];
+						INT orgDiff = prevDiff - (INT)diff[k];
 						if (((pddb[i]->resolution == 50 && abs(orgDiff) < 10) ||
 							(pddb[i]->resolution == 256 && abs(orgDiff) < 15)) && bStart && !bEnd) {
 							_ftprintf(fpParse, _T(" end changing\n"));
@@ -1332,7 +1332,7 @@ BOOL WriteParsingMdsfile(
 						}
 					}
 					_ftprintf(fpParse,
-						_T("%8ld    readTime: %8ld - %8ld = %5ld ms [%ld]")
+						_T("%8d    readTime: %8d - %8d = %5d ms [%d]")
 						, pddb[i]->resolution * k, pddb[i]->readTime[k], pddb[i]->readTime[k - 1], diff[k], diffAndDiff);
 //					prevDiffAndDiff = diffAndDiff;
 					if (pddb[i]->resolution == 50 || pddb[i]->resolution == 256) {
@@ -1343,7 +1343,7 @@ BOOL WriteParsingMdsfile(
 							bEnd = FALSE;
 						}
 						else if (!bStart && bEnd) {
-							prevDiff = (LONG)diff[k];
+							prevDiff = (INT)diff[k];
 						}
 					}
 					else if (pddb[i]->resolution == 500 || pddb[i]->resolution == 2048) {

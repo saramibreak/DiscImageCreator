@@ -56,8 +56,8 @@ BOOL DiskGetMediaTypes(
 			OutputString(_T("  Read size: %ld byte\n"), dwBytesRead);
 			if (bRet) {
 				if (dwFloppySize == dwBytesRead) {
-					DWORD dwBytesWrite = fwrite(lpBuf, sizeof(BYTE), dwFloppySize, fp);
-					OutputString(_T(" Write size: %ld byte\n"), dwBytesWrite);
+					size_t stBytesWrite = fwrite(lpBuf, sizeof(BYTE), (size_t)dwFloppySize, fp);
+					OutputString(_T(" Write size: %zd byte\n"), stBytesWrite);
 				}
 				else {
 					OutputErrorString(
@@ -151,9 +151,9 @@ BOOL ScsiPassThroughDirect(
 			!pExtArg->byMultiSession) {
 			// When semaphore time out occurred, if doesn't execute sleep,
 			// UNIT_ATTENSION errors occurs next ScsiPassThroughDirect executing.
-			DWORD milliseconds = 25000;
+			UINT milliseconds = 25000;
 			OutputErrorString(
-				_T("Please wait for %lu milliseconds until the device is returned\n"), milliseconds);
+				_T("Please wait for %u milliseconds until the device is returned\n"), milliseconds);
 			Sleep(milliseconds);
 			pDevice->FEATURE.bySetCDSpeed = FALSE;
 		}
@@ -201,9 +201,9 @@ BOOL ScsiPassThroughDirect(
 #endif
 			OutputSenseData(&swb.SenseData);
 			if (swb.SenseData.SenseKey == SCSI_SENSE_UNIT_ATTENTION) {
-				DWORD milliseconds = 40000;
+				UINT milliseconds = 40000;
 				OutputErrorString(
-					_T("Please wait for %lu milliseconds until the device is returned\n"), milliseconds);
+					_T("Please wait for %u milliseconds until the device is returned\n"), milliseconds);
 				Sleep(milliseconds);
 			}
 		}

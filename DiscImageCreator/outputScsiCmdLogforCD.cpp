@@ -41,11 +41,11 @@ VOID OutputFsVolumeDescriptorFirst(
 	LPBYTE lpBuf,
 	CHAR str32[][32]
 ) {
-	DWORD vss = GetSizeOrDwordForVolDesc(lpBuf + 80, DWORD(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
+	UINT vss = GetSizeOrUintForVolDesc(lpBuf + 80, UINT(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
 	OutputVolDescLogA(
 		"\t                            System Identifier: %.32s\n"
 		"\t                            Volume Identifier: %.32s\n"
-		"\t                            Volume Space Size: %lu\n"
+		"\t                            Volume Space Size: %u\n"
 		, str32[0], str32[1], vss);
 }
 
@@ -53,8 +53,8 @@ VOID OutputFsDirectoryRecord(
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
 	LPBYTE lpBuf,
-	DWORD dwExtentPos,
-	DWORD dwDataLen,
+	UINT uiExtentPos,
+	UINT uiDataLen,
 	LPSTR fname
 ) {
 	CHAR str[128] {};
@@ -99,8 +99,8 @@ VOID OutputFsDirectoryRecord(
 	OutputVolDescLogA(
 		"\t\t      Length of Directory Record: %u\n"
 		"\t\tExtended Attribute Record Length: %u\n"
-		"\t\t              Location of Extent: %lu\n"
-		"\t\t                     Data Length: %lu\n"
+		"\t\t              Location of Extent: %u\n"
+		"\t\t                     Data Length: %u\n"
 		"\t\t         Recording Date and Time: %u-%02u-%02u %02u:%02u:%02u %+03d:%02u\n"
 		"\t\t                      File Flags: %u (%s)\n"
 		"\t\t                  File Unit Size: %u\n"
@@ -108,7 +108,7 @@ VOID OutputFsDirectoryRecord(
 		"\t\t          Volume Sequence Number: %u\n"
 		"\t\t       Length of File Identifier: %u\n"
 		"\t\t                 File Identifier: "
-		, lpBuf[0], lpBuf[1], dwExtentPos, dwDataLen, lpBuf[18] + 1900, lpBuf[19], lpBuf[20]
+		, lpBuf[0], lpBuf[1], uiExtentPos, uiDataLen, lpBuf[18] + 1900, lpBuf[19], lpBuf[20]
 		, lpBuf[21], lpBuf[22], lpBuf[23], (CHAR)lpBuf[24] / 4, (CHAR)lpBuf[24] % 4 * 15
 		, lpBuf[25], str, lpBuf[26], lpBuf[27], vsn, lpBuf[32]);
 	for (INT n = 0; n < lpBuf[32]; n++) {
@@ -121,7 +121,7 @@ VOID OutputFsDirectoryRecord(
 	OutputVolDescLogA("\n");
 
 	if (!strncmp(fname, "PARAM.SFO", 9)) {
-		pDisc->BD.nLBAForParamSfo = (INT)dwExtentPos;
+		pDisc->BD.nLBAForParamSfo = (INT)uiExtentPos;
 	}
 
 	CHAR fnameForProtect[MAX_FNAME_FOR_VOLUME] = {};
@@ -139,15 +139,15 @@ VOID OutputFsDirectoryRecord(
 	if (pExtArg->byScanProtectViaFile || pExtArg->byIntentionalSub) {
 		if (pExtArg->byScanProtectViaFile) {
 			if ((nFileFlag & 0x02) == 0 && pDisc->PROTECT.byExist) {
-				if (pDisc->PROTECT.ERROR_SECTOR.nExtentPos < (INT)dwExtentPos) {
+				if (pDisc->PROTECT.ERROR_SECTOR.nExtentPos < (INT)uiExtentPos) {
 					if (pDisc->PROTECT.byTmpForSafeDisc) {
-						pDisc->PROTECT.ERROR_SECTOR.nNextExtentPos = (INT)dwExtentPos;
+						pDisc->PROTECT.ERROR_SECTOR.nNextExtentPos = (INT)uiExtentPos;
 						pDisc->PROTECT.byTmpForSafeDisc = FALSE;
 					}
-					if ((INT)dwExtentPos <= pDisc->PROTECT.ERROR_SECTOR.nNextExtentPos) {
+					if ((INT)uiExtentPos <= pDisc->PROTECT.ERROR_SECTOR.nNextExtentPos) {
 						// because the size of 00000001.TMP is 2048
-						pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)dwExtentPos - pDisc->PROTECT.ERROR_SECTOR.nExtentPos - 1;
-						pDisc->PROTECT.ERROR_SECTOR.nNextExtentPos = (INT)dwExtentPos;
+						pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)uiExtentPos - pDisc->PROTECT.ERROR_SECTOR.nExtentPos - 1;
+						pDisc->PROTECT.ERROR_SECTOR.nNextExtentPos = (INT)uiExtentPos;
 					}
 				}
 			}
@@ -158,60 +158,60 @@ VOID OutputFsDirectoryRecord(
 			else if (!strncmp(fnameForProtect, "BIG.DAT", 7)) {
 				pDisc->PROTECT.byExist = datel;
 				strncpy(pDisc->PROTECT.name, fnameForProtect, 7);
-				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)dwExtentPos;
-				pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(dwDataLen / DISC_RAW_READ_SIZE - 1);
+				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)uiExtentPos;
+				pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(uiDataLen / DISC_RAW_READ_SIZE - 1);
 			}
 			else if (!strncmp(fnameForProtect, "LASERLOK.IN", 11)) {
 				pDisc->PROTECT.byExist = laserlock;
 				strncpy(pDisc->PROTECT.name, fnameForProtect, 11);
-				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)dwExtentPos;
-				pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(dwDataLen / DISC_RAW_READ_SIZE - 1);
+				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)uiExtentPos;
+				pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(uiDataLen / DISC_RAW_READ_SIZE - 1);
 			}
 			else if (!_strnicmp(fnameForProtect, "PROTECT.PRO", 11)) {
 				pDisc->PROTECT.byExist = proring;
 				strncpy(pDisc->PROTECT.name, fnameForProtect, 11);
-				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)dwExtentPos;
-				pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(dwDataLen / DISC_RAW_READ_SIZE - 1);
+				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)uiExtentPos;
+				pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(uiDataLen / DISC_RAW_READ_SIZE - 1);
 			}
 			else if (!strncmp(fnameForProtect, "00000001.LT1", 12)) {
 				pDisc->PROTECT.byExist = safeDiscLite;
 				strncpy(pDisc->PROTECT.name, fnameForProtect, 12);
 				pDisc->PROTECT.byTmpForSafeDisc = TRUE;
-				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)(dwExtentPos + dwDataLen / DISC_RAW_READ_SIZE);
+				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)(uiExtentPos + uiDataLen / DISC_RAW_READ_SIZE);
 			}
 			else if (!strncmp(fnameForProtect, "00000001.TMP", 12)) {
 				pDisc->PROTECT.byExist = safeDisc;
 				strncpy(pDisc->PROTECT.name, fnameForProtect, 12);
 				pDisc->PROTECT.byTmpForSafeDisc = TRUE;
-				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)(dwExtentPos + dwDataLen / DISC_RAW_READ_SIZE);
+				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)(uiExtentPos + uiDataLen / DISC_RAW_READ_SIZE);
 			}
 			else if (!_strnicmp(fnameForProtect, "00002.TMP", 9)) {
 				pDisc->PROTECT.byExist = smartE;
 				strncpy(pDisc->PROTECT.name, fnameForProtect, 9);
-				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)dwExtentPos;
-				pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(dwDataLen / DISC_RAW_READ_SIZE - 1);
+				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)uiExtentPos;
+				pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(uiDataLen / DISC_RAW_READ_SIZE - 1);
 			}
 			else if (!strncmp(fnameForProtect, pExtArg->FILE.readError, strlen(pExtArg->FILE.readError) - 1)) {
 				pDisc->PROTECT.byExist = physicalErr;
 				strncpy(pDisc->PROTECT.name, fnameForProtect, strlen(pExtArg->FILE.readError) - 1);
-				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)dwExtentPos;
-				pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(dwDataLen / DISC_RAW_READ_SIZE - 1);
+				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)uiExtentPos;
+				pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(uiDataLen / DISC_RAW_READ_SIZE - 1);
 			}
 			else if (!strncmp(fnameForProtect, pExtArg->FILE.edceccError, strlen(pExtArg->FILE.edceccError) - 1)) {
 				pDisc->PROTECT.byExist = edcEccErr;
 				strncpy(pDisc->PROTECT.name, fnameForProtect, strlen(pExtArg->FILE.edceccError) - 1);
-				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)dwExtentPos;
-				pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(dwDataLen / DISC_RAW_READ_SIZE - 1);
+				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)uiExtentPos;
+				pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(uiDataLen / DISC_RAW_READ_SIZE - 1);
 			}
 			else if (!strncmp(fnameForProtect, "CORSAIRS.PRT", 12)) { // Der KorsaR (Germany)
 				pDisc->PROTECT.byExist = microids;
 				strncpy(pDisc->PROTECT.name, fnameForProtect, 12);
-				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)dwExtentPos;
-				pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(dwDataLen / DISC_RAW_READ_SIZE - 1);
+				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)uiExtentPos;
+				pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(uiDataLen / DISC_RAW_READ_SIZE - 1);
 			}
 			else if (pDisc->PROTECT.byExist == microids && !strncmp(fnameForProtect, "_SETUP.DLL", 10)) { // Der KorsaR (Germany)
-				pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd = (INT)dwExtentPos;
-				pDisc->PROTECT.ERROR_SECTOR.nSectorSize2nd = (INT)(dwDataLen / DISC_RAW_READ_SIZE - 1);
+				pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd = (INT)uiExtentPos;
+				pDisc->PROTECT.ERROR_SECTOR.nSectorSize2nd = (INT)(uiDataLen / DISC_RAW_READ_SIZE - 1);
 			}
 		}
 		
@@ -254,7 +254,7 @@ VOID OutputFsDirectoryRecord(
 					return;
 				}
 				size_t len = (size_t)(p - fnameForProtect + 4);
-				pDisc->PROTECT.pExtentPosForExe[pDisc->PROTECT.nCntForExe] = (INT)dwExtentPos;
+				pDisc->PROTECT.pExtentPosForExe[pDisc->PROTECT.nCntForExe] = (INT)uiExtentPos;
 				strncpy(pDisc->PROTECT.pNameForExe[pDisc->PROTECT.nCntForExe], fnameForProtect, len);
 				pDisc->PROTECT.nCntForExe++;
 			}
@@ -273,12 +273,12 @@ VOID OutputFsVolumeDescriptorSecond(
 	WORD vss = GetSizeOrWordForVolDesc(lpBuf + 120);
 	WORD vsn = GetSizeOrWordForVolDesc(lpBuf + 124);
 	WORD lbs = GetSizeOrWordForVolDesc(lpBuf + 128);
-	DWORD pts = GetSizeOrDwordForVolDesc(lpBuf + 132, DWORD(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
-	DWORD lopt = MAKEDWORD(MAKEWORD(lpBuf[140], lpBuf[141]),
+	UINT pts = GetSizeOrUintForVolDesc(lpBuf + 132, UINT(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
+	UINT lopt = MAKEUINT(MAKEWORD(lpBuf[140], lpBuf[141]),
 		MAKEWORD(lpBuf[142], lpBuf[143]));
 	pDisc->MAIN.bPathType = lType;
 	if (lopt == 0) {
-		lopt = MAKEDWORD(MAKEWORD(lpBuf[151], lpBuf[150]),
+		lopt = MAKEUINT(MAKEWORD(lpBuf[151], lpBuf[150]),
 			MAKEWORD(lpBuf[149], lpBuf[148]));
 		pDisc->MAIN.bPathType = mType;
 	}
@@ -288,25 +288,25 @@ VOID OutputFsVolumeDescriptorSecond(
 			pDisc->PROTECT.nPrevLBAOfPathTablePos = (INT)lopt - 1;
 		}
 	}
-	DWORD loopt = MAKEDWORD(MAKEWORD(lpBuf[144], lpBuf[145]),
+	UINT loopt = MAKEUINT(MAKEWORD(lpBuf[144], lpBuf[145]),
 		MAKEWORD(lpBuf[146], lpBuf[147]));
 	if (loopt == 0) {
-		loopt = MAKEDWORD(MAKEWORD(lpBuf[155], lpBuf[154]),
+		loopt = MAKEUINT(MAKEWORD(lpBuf[155], lpBuf[154]),
 			MAKEWORD(lpBuf[153], lpBuf[152]));
 	}
 	OutputVolDescLogA(
 		"\t                              Volume Set Size: %u\n"
 		"\t                       Volume Sequence Number: %u\n"
 		"\t                           Logical Block Size: %u\n"
-		"\t                              Path Table Size: %lu\n"
-		"\t         Location of Occurrence of Path Table: %lu\n"
-		"\tLocation of Optional Occurrence of Path Table: %lu\n"
+		"\t                              Path Table Size: %u\n"
+		"\t         Location of Occurrence of Path Table: %u\n"
+		"\tLocation of Optional Occurrence of Path Table: %u\n"
 		, vss, vsn, lbs, pts, lopt, loopt);
 
-	DWORD dwExtentPos = GetSizeOrDwordForVolDesc(lpBuf + 158, DWORD(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
-	DWORD dwDataLen = GetSizeOrDwordForVolDesc(lpBuf + 166, DWORD(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
+	UINT uiExtentPos = GetSizeOrUintForVolDesc(lpBuf + 158, UINT(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
+	UINT uiDataLen = GetSizeOrUintForVolDesc(lpBuf + 166, UINT(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
 	CHAR fname[64] = {};
-	OutputFsDirectoryRecord(pExtArg, pDisc, lpBuf + 156, dwExtentPos, dwDataLen, fname);
+	OutputFsDirectoryRecord(pExtArg, pDisc, lpBuf + 156, uiExtentPos, uiDataLen, fname);
 	if (bTCHAR) {
 		OutputVolDescLogA(
 			"\t                        Volume Set Identifier: %.64s\n"
@@ -519,13 +519,13 @@ VOID OutputFsVolumePartitionDescriptor(
 	OutputVolDescLogA(
 		"\t          System Identifier: %.32s\n"
 		"\tVolume Partition Identifier: %.32s\n"
-		"\t  Volume Partition Location: %lu\n"
-		"\t      Volume Partition Size: %lu\n"
+		"\t  Volume Partition Location: %u\n"
+		"\t      Volume Partition Size: %u\n"
 		"\t                 System Use: ",
 		str[0],
 		str[1],
-		MAKELONG(MAKEWORD(lpBuf[76], lpBuf[77]), MAKEWORD(lpBuf[78], lpBuf[79])),
-		MAKELONG(MAKEWORD(lpBuf[84], lpBuf[85]), MAKEWORD(lpBuf[86], lpBuf[87])));
+		MAKEUINT(MAKEWORD(lpBuf[76], lpBuf[77]), MAKEWORD(lpBuf[78], lpBuf[79])),
+		MAKEUINT(MAKEWORD(lpBuf[84], lpBuf[85]), MAKEWORD(lpBuf[86], lpBuf[87])));
 	for (INT i = 88; i < 2048; i++) {
 		OutputVolDescLogA("%x", lpBuf[i]);
 	}
@@ -572,45 +572,45 @@ VOID OutputFsVolumeDescriptor(
 BOOL OutputFsPathTableRecord(
 	PDISC pDisc,
 	LPBYTE lpBuf,
-	DWORD dwLogicalBlkCoef,
-	DWORD dwPathTblPos,
-	DWORD dwPathTblSize,
+	UINT uiLogicalBlkCoef,
+	UINT uiPathTblPos,
+	UINT uiPathTblSize,
 	PDIRECTORY_RECORD pDirRec,
 	LPINT nDirPosNum
 ) {
 	OutputVolDescLogA(
-		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Path Table Record), (INT)dwPathTblPos, (INT)dwPathTblPos);
-	for (DWORD i = 0; i < dwPathTblSize;) {
+		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Path Table Record), (INT)uiPathTblPos, (INT)uiPathTblPos);
+	for (UINT i = 0; i < uiPathTblSize;) {
 		if (*nDirPosNum > DIRECTORY_RECORD_SIZE) {
 			OutputErrorString(_T("Directory Record is over %d\n"), DIRECTORY_RECORD_SIZE);
 			FlushLog();
 			return FALSE;
 		}
-		pDirRec[*nDirPosNum].dwDirNameLen = lpBuf[i];
+		pDirRec[*nDirPosNum].uiDirNameLen = lpBuf[i];
 		if (pDisc->MAIN.bPathType == lType) {
-			pDirRec[*nDirPosNum].dwPosOfDir = MAKEDWORD(MAKEWORD(lpBuf[2 + i], lpBuf[3 + i]),
-				MAKEWORD(lpBuf[4 + i], lpBuf[5 + i])) / dwLogicalBlkCoef;
+			pDirRec[*nDirPosNum].uiPosOfDir = MAKEUINT(MAKEWORD(lpBuf[2 + i], lpBuf[3 + i]),
+				MAKEWORD(lpBuf[4 + i], lpBuf[5 + i])) / uiLogicalBlkCoef;
 		}
 		else {
-			pDirRec[*nDirPosNum].dwPosOfDir = MAKEDWORD(MAKEWORD(lpBuf[5 + i], lpBuf[4 + i]),
-				MAKEWORD(lpBuf[3 + i], lpBuf[2 + i])) / dwLogicalBlkCoef;
+			pDirRec[*nDirPosNum].uiPosOfDir = MAKEUINT(MAKEWORD(lpBuf[5 + i], lpBuf[4 + i]),
+				MAKEWORD(lpBuf[3 + i], lpBuf[2 + i])) / uiLogicalBlkCoef;
 		}
-		if (pDirRec[*nDirPosNum].dwDirNameLen > 0) {
+		if (pDirRec[*nDirPosNum].uiDirNameLen > 0) {
 			if (pDisc->MAIN.bPathType == lType) {
-				pDirRec[*nDirPosNum].dwNumOfUpperDir = MAKEWORD(lpBuf[6 + i], lpBuf[7 + i]);
+				pDirRec[*nDirPosNum].uiNumOfUpperDir = MAKEWORD(lpBuf[6 + i], lpBuf[7 + i]);
 			}
 			else {
-				pDirRec[*nDirPosNum].dwNumOfUpperDir = MAKEWORD(lpBuf[7 + i], lpBuf[6 + i]);
+				pDirRec[*nDirPosNum].uiNumOfUpperDir = MAKEWORD(lpBuf[7 + i], lpBuf[6 + i]);
 			}
 			OutputVolDescLogA(
-				"\t     Length of Directory Identifier: %lu\n"
+				"\t     Length of Directory Identifier: %u\n"
 				"\tLength of Extended Attribute Record: %u\n"
-				"\t                 Position of Extent: %lu\n"
-				"\t          Number of Upper Directory: %lu\n"
+				"\t                 Position of Extent: %u\n"
+				"\t          Number of Upper Directory: %u\n"
 				"\t               Directory Identifier: "
-				, pDirRec[*nDirPosNum].dwDirNameLen, lpBuf[1 + i]
-				, pDirRec[*nDirPosNum].dwPosOfDir, pDirRec[*nDirPosNum].dwNumOfUpperDir);
-			for (size_t n = 0; n < pDirRec[*nDirPosNum].dwDirNameLen; n++) {
+				, pDirRec[*nDirPosNum].uiDirNameLen, lpBuf[1 + i]
+				, pDirRec[*nDirPosNum].uiPosOfDir, pDirRec[*nDirPosNum].uiNumOfUpperDir);
+			for (size_t n = 0; n < pDirRec[*nDirPosNum].uiDirNameLen; n++) {
 #ifndef _WIN32
 				if (lpBuf[8 + i + n] == 0) continue;
 #endif
@@ -619,7 +619,7 @@ BOOL OutputFsPathTableRecord(
 			}
 			OutputVolDescLogA("\n\n");
 
-			i += 8 + pDirRec[*nDirPosNum].dwDirNameLen;
+			i += 8 + pDirRec[*nDirPosNum].uiDirNameLen;
 			if ((i % 2) != 0) {
 				i++;
 			}
@@ -627,7 +627,7 @@ BOOL OutputFsPathTableRecord(
 		}
 		else {
 			OutputVolDescLogA(
-				"\t     Length of Directory Identifier: %lu\n", pDirRec[*nDirPosNum].dwDirNameLen);
+				"\t     Length of Directory Identifier: %u\n", pDirRec[*nDirPosNum].uiDirNameLen);
 			break;
 		}
 	}
@@ -735,40 +735,44 @@ VOID OutputFs3doHeader(
 		, nLBA, lpBuf[0], lpBuf[1], lpBuf[2], lpBuf[3]
 		, lpBuf[4], lpBuf[5], lpBuf[6],	lpBuf[7]);
 	for (INT i = 0; i < 32; i++) {
-		OutputVolDescLogA("%c", lpBuf[8 + i]);
+		if (lpBuf[8 + i] != 0) {
+			OutputVolDescLogA("%c", lpBuf[8 + i]);
+		}
 	}
 	OutputVolDescLogA(
 		"\n"
 		"\t               Volume Label: ");
 	for (INT i = 0; i < 32; i++) {
-		OutputVolDescLogA("%c", lpBuf[40 + i]);
+		if (lpBuf[40 + i] != 0) {
+			OutputVolDescLogA("%c", lpBuf[40 + i]);
+		}
 	}
-	LONG dwNumOfCopy =
-		MAKELONG(MAKEWORD(lpBuf[99], lpBuf[98]), MAKEWORD(lpBuf[97], lpBuf[96]));
+	UINT uiNumOfCopy =
+		MAKEUINT(MAKEWORD(lpBuf[99], lpBuf[98]), MAKEWORD(lpBuf[97], lpBuf[96]));
 	OutputVolDescLogA(
 		"\n"
-		"\t                  Volume ID: %#10lx\n"
-		"\t         Logical Block Size: %lu\n"
-		"\t          Volume Space Size: %lu + 152\n"
-		"\t                Root Dir ID: %#10lx\n"
-		"\t            Root Dir Blocks: %lu\n"
-		"\t        Root Dir Block Size: %lu\n"
-		"\tNum of Pos of Root Dir Copy: %lu\n"
-		"\t            Pos of Root Dir: %lu\n",
-		MAKELONG(MAKEWORD(lpBuf[75], lpBuf[74]), MAKEWORD(lpBuf[73], lpBuf[72])),
-		MAKELONG(MAKEWORD(lpBuf[79], lpBuf[78]), MAKEWORD(lpBuf[77], lpBuf[76])),
-		MAKELONG(MAKEWORD(lpBuf[83], lpBuf[82]), MAKEWORD(lpBuf[81], lpBuf[80])),
-		MAKELONG(MAKEWORD(lpBuf[87], lpBuf[86]), MAKEWORD(lpBuf[85], lpBuf[84])),
-		MAKELONG(MAKEWORD(lpBuf[91], lpBuf[90]), MAKEWORD(lpBuf[89], lpBuf[88])),
-		MAKELONG(MAKEWORD(lpBuf[95], lpBuf[94]), MAKEWORD(lpBuf[93], lpBuf[92])),
-		dwNumOfCopy,
-		MAKELONG(MAKEWORD(lpBuf[103], lpBuf[102]), MAKEWORD(lpBuf[101], lpBuf[100])));
+		"\t                  Volume ID: %#10x\n"
+		"\t         Logical Block Size: %u\n"
+		"\t          Volume Space Size: %u + 152\n"
+		"\t                Root Dir ID: %#10x\n"
+		"\t            Root Dir Blocks: %u\n"
+		"\t        Root Dir Block Size: %u\n"
+		"\tNum of Pos of Root Dir Copy: %u\n"
+		"\t            Pos of Root Dir: %u\n",
+		MAKEUINT(MAKEWORD(lpBuf[75], lpBuf[74]), MAKEWORD(lpBuf[73], lpBuf[72])),
+		MAKEUINT(MAKEWORD(lpBuf[79], lpBuf[78]), MAKEWORD(lpBuf[77], lpBuf[76])),
+		MAKEUINT(MAKEWORD(lpBuf[83], lpBuf[82]), MAKEWORD(lpBuf[81], lpBuf[80])),
+		MAKEUINT(MAKEWORD(lpBuf[87], lpBuf[86]), MAKEWORD(lpBuf[85], lpBuf[84])),
+		MAKEUINT(MAKEWORD(lpBuf[91], lpBuf[90]), MAKEWORD(lpBuf[89], lpBuf[88])),
+		MAKEUINT(MAKEWORD(lpBuf[95], lpBuf[94]), MAKEWORD(lpBuf[93], lpBuf[92])),
+		uiNumOfCopy,
+		MAKEUINT(MAKEWORD(lpBuf[103], lpBuf[102]), MAKEWORD(lpBuf[101], lpBuf[100])));
 
-	for (LONG i = 0; i < dwNumOfCopy; i++) {
+	for (UINT i = 0; i < uiNumOfCopy; i++) {
 		OutputVolDescLogA(
-			"\t       Pos of Root Dir Copy: %lu\n",
-			MAKELONG(MAKEWORD(lpBuf[107 + i * 4], lpBuf[106 + i * 4]),
-			MAKEWORD(lpBuf[105 + i * 4], lpBuf[104 + i * 4])));
+			"\t       Pos of Root Dir Copy: %u\n",
+			MAKEUINT(MAKEWORD(lpBuf[107 + i * 4], lpBuf[106 + i * 4]),
+				MAKEWORD(lpBuf[105 + i * 4], lpBuf[104 + i * 4])));
 	}
 }
 
@@ -776,59 +780,59 @@ VOID OutputFs3doDirectoryRecord(
 	LPBYTE lpBuf,
 	INT nLBA,
 	LPCCH pPath,
-	LONG lDirSize
+	UINT uiDirSize
 ) {
 	OutputVolDescWithLBALogA(Directory Record,
 		"\tcurrentDir: %s\n"
 		"\t========== Directory Header ==========\n"
-		"\t      nextBlock: %#08lx\n"
-		"\t      prevBlock: %#08lx\n"
-		"\t          flags: %lu\n"
-		"\t  directorySize: %lu\n"
-		"\tdirectoryOffset: %lu\n"
+		"\t      nextBlock: %#08x\n"
+		"\t      prevBlock: %#08x\n"
+		"\t          flags: %u\n"
+		"\t  directorySize: %u\n"
+		"\tdirectoryOffset: %u\n"
 		, nLBA, pPath
-		, MAKELONG(MAKEWORD(lpBuf[3], lpBuf[2]), MAKEWORD(lpBuf[1], lpBuf[0]))
-		, MAKELONG(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], lpBuf[4]))
-		, MAKELONG(MAKEWORD(lpBuf[11], lpBuf[10]), MAKEWORD(lpBuf[9], lpBuf[8]))
-		, lDirSize
-		, MAKELONG(MAKEWORD(lpBuf[19], lpBuf[18]), MAKEWORD(lpBuf[17], lpBuf[16])));
+		, MAKEUINT(MAKEWORD(lpBuf[3], lpBuf[2]), MAKEWORD(lpBuf[1], lpBuf[0]))
+		, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], lpBuf[4]))
+		, MAKEUINT(MAKEWORD(lpBuf[11], lpBuf[10]), MAKEWORD(lpBuf[9], lpBuf[8]))
+		, uiDirSize
+		, MAKEUINT(MAKEWORD(lpBuf[19], lpBuf[18]), MAKEWORD(lpBuf[17], lpBuf[16])));
 
-	LONG cur = THREEDO_DIR_HEADER_SIZE;
-	LONG lastCopy = 0;
+	UINT cur = THREEDO_DIR_HEADER_SIZE;
+	UINT lastCopy = 0;
 	CHAR fname[32] = {};
-	while (cur < lDirSize) {
+	while (cur < uiDirSize) {
 		LPBYTE dirEnt = lpBuf + cur;
 		strncpy(fname, (LPCH)&dirEnt[32], sizeof(fname));
-		lastCopy = MAKELONG(MAKEWORD(dirEnt[67], dirEnt[66]), MAKEWORD(dirEnt[65], dirEnt[64]));
+		lastCopy = MAKEUINT(MAKEWORD(dirEnt[67], dirEnt[66]), MAKEWORD(dirEnt[65], dirEnt[64]));
 		cur += THREEDO_DIR_ENTRY_SIZE;
 		OutputVolDescLogA(
 			"\t========== Directory Entry ==========\n"
-			"\t            flags: %#010lx\n"
-			"\t               id: %#08lx\n"
+			"\t            flags: %#010x\n"
+			"\t               id: %#08x\n"
 			"\t              ext: %c%c%c%c\n"
-			"\t        blockSize: %lu\n"
-			"\t entryLengthBytes: %lu\n"
-			"\tentryLengthBlocks: %lu\n"
-			"\t            burst: %lu\n"
-			"\t              gap: %lu\n"
+			"\t        blockSize: %u\n"
+			"\t entryLengthBytes: %u\n"
+			"\tentryLengthBlocks: %u\n"
+			"\t            burst: %u\n"
+			"\t              gap: %u\n"
 			"\t         fileName: %s\n"
-			"\t         copy num: %lu\n"
-			"\t         data pos: %lu\n"
-			, MAKELONG(MAKEWORD(dirEnt[3], dirEnt[2]), MAKEWORD(dirEnt[1], dirEnt[0]))
-			, MAKELONG(MAKEWORD(dirEnt[7], dirEnt[6]), MAKEWORD(dirEnt[5], dirEnt[4]))
+			"\t         copy num: %u\n"
+			"\t         data pos: %u\n"
+			, MAKEUINT(MAKEWORD(dirEnt[3], dirEnt[2]), MAKEWORD(dirEnt[1], dirEnt[0]))
+			, MAKEUINT(MAKEWORD(dirEnt[7], dirEnt[6]), MAKEWORD(dirEnt[5], dirEnt[4]))
 			, dirEnt[8], dirEnt[9], dirEnt[10], dirEnt[11]
-			, MAKELONG(MAKEWORD(dirEnt[15], dirEnt[14]), MAKEWORD(dirEnt[13], dirEnt[12]))
-			, MAKELONG(MAKEWORD(dirEnt[19], dirEnt[18]), MAKEWORD(dirEnt[17], dirEnt[16]))
-			, MAKELONG(MAKEWORD(dirEnt[23], dirEnt[22]), MAKEWORD(dirEnt[21], dirEnt[20]))
-			, MAKELONG(MAKEWORD(dirEnt[27], dirEnt[26]), MAKEWORD(dirEnt[25], dirEnt[24]))
-			, MAKELONG(MAKEWORD(dirEnt[31], dirEnt[30]), MAKEWORD(dirEnt[29], dirEnt[28]))
+			, MAKEUINT(MAKEWORD(dirEnt[15], dirEnt[14]), MAKEWORD(dirEnt[13], dirEnt[12]))
+			, MAKEUINT(MAKEWORD(dirEnt[19], dirEnt[18]), MAKEWORD(dirEnt[17], dirEnt[16]))
+			, MAKEUINT(MAKEWORD(dirEnt[23], dirEnt[22]), MAKEWORD(dirEnt[21], dirEnt[20]))
+			, MAKEUINT(MAKEWORD(dirEnt[27], dirEnt[26]), MAKEWORD(dirEnt[25], dirEnt[24]))
+			, MAKEUINT(MAKEWORD(dirEnt[31], dirEnt[30]), MAKEWORD(dirEnt[29], dirEnt[28]))
 			, fname, lastCopy
-			, MAKELONG(MAKEWORD(dirEnt[71], dirEnt[70]), MAKEWORD(dirEnt[69], dirEnt[68])));
-		for (LONG i = 0; i < lastCopy; i++) {
+			, MAKEUINT(MAKEWORD(dirEnt[71], dirEnt[70]), MAKEWORD(dirEnt[69], dirEnt[68])));
+		for (UINT i = 0; i < lastCopy; i++) {
 			LPBYTE pCopyPos = lpBuf + cur + sizeof(LONG) * i;
-			OutputVolDescLogA("\t    data copy pos: %lu\n"
-				, MAKELONG(MAKEWORD(pCopyPos[3], pCopyPos[2]), MAKEWORD(pCopyPos[1], pCopyPos[0])));
-			cur += sizeof(LONG);
+			OutputVolDescLogA("\t    data copy pos: %u\n"
+				, MAKEUINT(MAKEWORD(pCopyPos[3], pCopyPos[2]), MAKEWORD(pCopyPos[1], pCopyPos[0])));
+			cur += 4;
 		}
 	}
 }

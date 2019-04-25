@@ -140,7 +140,9 @@
 #define RETURNED_SKIP_LBA					(4)
 #define RETURNED_FALSE						(5)
 
+#define MAKEUINT(a, b)      ((UINT)(((WORD)(((UINT_PTR)(a)) & 0xffff)) | ((UINT)((WORD)(((UINT_PTR)(b)) & 0xffff))) << 16))
 #define MAKEDWORD(a, b)      ((DWORD)(((WORD)(((DWORD_PTR)(a)) & 0xffff)) | ((DWORD)((WORD)(((DWORD_PTR)(b)) & 0xffff))) << 16))
+#define MAKEUINT64(a, b)      ((UINT64)(((UINT)(((UINT_PTR)(a)) & 0xffffffff)) | ((UINT64)((UINT)(((UINT_PTR)(b)) & 0xffffffff))) << 32))
 #define MAKEDWORD64(a, b)      ((DWORD64)(((DWORD)(((DWORD_PTR)(a)) & 0xffffffff)) | ((DWORD64)((DWORD)(((DWORD_PTR)(b)) & 0xffffffff))) << 32))
 
 struct _LOG_FILE;

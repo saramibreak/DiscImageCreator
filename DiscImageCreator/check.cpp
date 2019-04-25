@@ -421,11 +421,11 @@ BOOL IsValidProtectedSector(
 }
 
 BOOL IsSafeDiscErrorNum(
-	DWORD errorNum
+	UINT uiErrorNum
 ) {
 	BOOL bRet = FALSE;
 	// 288 and 264 and 240 are reentrant's info
-	if (errorNum == 312 || errorNum == 288 || errorNum == 264 || errorNum == 240) {
+	if (uiErrorNum == 312 || uiErrorNum == 288 || uiErrorNum == 264 || uiErrorNum == 240) {
 		bRet = TRUE;
 	}
 	return bRet;
@@ -437,7 +437,7 @@ BOOL IsValidSafeDiscSector(
 ) {
 	BOOL bRet = FALSE;
 	if ((pDisc->PROTECT.byExist == safeDisc || pDisc->PROTECT.byExist == safeDiscLite) &&
-		 IsSafeDiscErrorNum(pDiscPerSector->dwC2errorNum)) {
+		 IsSafeDiscErrorNum(pDiscPerSector->uiC2errorNum)) {
 		bRet = TRUE;
 	}
 	return bRet;
@@ -538,7 +538,7 @@ BOOL IsValidSubQAdrISRC(
 }
 
 BOOL IsValidSubQAdrSector(
-	DWORD dwSubAdditionalNum,
+	UINT uiSubAdditionalNum,
 	PSUB_Q pSubQ,
 	INT nRangeLBA,
 	INT nFirstLBA,
@@ -551,7 +551,7 @@ BOOL IsValidSubQAdrSector(
 	if (nLBA < 0 ||
 		(nLBA == nTmpLBA) ||
 		(nLBA - nPrevAdrSector == nRangeLBA)) {
-		if (1 <= dwSubAdditionalNum) {
+		if (1 <= uiSubAdditionalNum) {
 			if (pSubQ->next.byAdr != ADR_ENCODES_MEDIA_CATALOG &&
 				pSubQ->next.byAdr != ADR_ENCODES_ISRC) {
 				bRet = TRUE;
@@ -1116,13 +1116,13 @@ BOOL IsValidSubQAMSF(
 BOOL ContainsC2Error(
 	PDEVICE pDevice,
 	LPBYTE lpBuf,
-	LPDWORD lpdwC2errorNum
+	LPUINT lpuiC2errorNum
 ) {
 	BOOL bRet = RETURNED_NO_C2_ERROR_1ST;
-	*lpdwC2errorNum = 0;
+	*lpuiC2errorNum = 0;
 	for (WORD wC2ErrorPos = 0; wC2ErrorPos < CD_RAW_READ_C2_294_SIZE; wC2ErrorPos++) {
-		DWORD dwPos = pDevice->TRANSFER.dwBufC2Offset + wC2ErrorPos;
-		if (lpBuf[dwPos] != 0) {
+		UINT uiPos = pDevice->TRANSFER.uiBufC2Offset + wC2ErrorPos;
+		if (lpBuf[uiPos] != 0) {
 			// Ricoh based drives (+97 read offset, like the Aopen CD-RW CRW5232)
 			// use lsb points to 1st byte of main. 
 			// But almost drive is msb points to 1st byte of main.
@@ -1130,11 +1130,11 @@ BOOL ContainsC2Error(
 			INT nBit = 0x80;
 			for (INT n = 0; n < CHAR_BIT; n++) {
 				// exist C2 error
-				if (lpBuf[dwPos] & nBit) {
+				if (lpBuf[uiPos] & nBit) {
 					// wC2ErrorPos * CHAR_BIT => position of byte
 					// (position of byte) + n => position of bit
 					bRet = RETURNED_EXIST_C2_ERROR;
-					(*lpdwC2errorNum)++;
+					(*lpuiC2errorNum)++;
 				}
 //				nBit <<= 1;
 				nBit >>= 1;

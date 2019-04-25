@@ -99,7 +99,7 @@ BOOL IsValidSubQAdrISRC(
 );
 
 BOOL IsValidSubQAdrSector(
-	DWORD dwSubAdditionalNum,
+	UINT uiSubAdditionalNum,
 	PSUB_Q pSubQ,
 	INT nRangeLBA,
 	INT nFirstLBA,
@@ -157,5 +157,5 @@ BOOL IsValidSubQAMSF(
 BOOL ContainsC2Error(
 	PDEVICE pDevice,
 	LPBYTE lpBuf,
-	LPDWORD lpdwC2errorNum
+	LPUINT lpuiC2errorNum
 );

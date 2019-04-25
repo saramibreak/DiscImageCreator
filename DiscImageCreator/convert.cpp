@@ -188,30 +188,30 @@ LPVOID ConvParagraphBoundary(
 #endif
 }
 
-DWORD PadSizeForVolDesc(
-	DWORD dwSize
+UINT PadSizeForVolDesc(
+	UINT uiSize
 ) {
-	INT nPadding = DISC_RAW_READ_SIZE - (INT)dwSize;
-	// dwSize isn't 2048 byte
+	INT nPadding = DISC_RAW_READ_SIZE - (INT)uiSize;
+	// uiSize isn't 2048 byte
 	if (nPadding != 0) {
-		// dwSize is smaller than 2048 byte
+		// uiSize is smaller than 2048 byte
 		if (nPadding > 0){
 			// Generally, directory size is per 2048 byte
 			// Exception:
 			//  Codename - Outbreak (Europe) (Sold Out Software)
 			//  Commandos - Behind Enemy Lines (Europe) (Sold Out Software)
 			// and more
-			dwSize += nPadding;
+			uiSize += nPadding;
 		}
-		// dwSize is larger than 2048 byte
+		// uiSize is larger than 2048 byte
 		else {
-			nPadding = (INT)dwSize % DISC_RAW_READ_SIZE;
-			// dwSize isn't 4096, 6144, 8192 etc byte
+			nPadding = (INT)uiSize % DISC_RAW_READ_SIZE;
+			// uiSize isn't 4096, 6144, 8192 etc byte
 			if (nPadding != 0) {
 				nPadding = DISC_RAW_READ_SIZE - nPadding;
-				dwSize += nPadding;
+				uiSize += nPadding;
 			}
 		}
 	}
-	return dwSize;
+	return uiSize;
 }

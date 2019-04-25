@@ -57,6 +57,6 @@ LPVOID ConvParagraphBoundary(
 	LPBYTE pv
 );
 
-DWORD PadSizeForVolDesc(
-	DWORD dwSize
+UINT PadSizeForVolDesc(
+	UINT uiSize
 );

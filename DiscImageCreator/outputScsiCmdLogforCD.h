@@ -39,17 +39,17 @@ VOID OutputFsDirectoryRecord(
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
 	LPBYTE lpBuf,
-	DWORD dwExtentPos,
-	DWORD dwDataLen,
+	UINT uiExtentPos,
+	UINT uiDataLen,
 	LPSTR fname
 );
 
 BOOL OutputFsPathTableRecord(
 	PDISC pDisc,
 	LPBYTE lpBuf,
-	DWORD dwLogicalBlkCoef,
-	DWORD dwPathTblPos,
-	DWORD dwPathTblSize,
+	UINT uiLogicalBlkCoef,
+	UINT uiPathTblPos,
+	UINT uiPathTblSize,
 	PDIRECTORY_RECORD pDirRec,
 	LPINT nDirPosNum
 );
@@ -68,7 +68,7 @@ VOID OutputFs3doDirectoryRecord(
 	LPBYTE lpBuf,
 	INT nLBA,
 	LPCCH pPath,
-	LONG lDirSize
+	UINT uiDirSize
 );
 
 VOID OutputFsPceStuff(

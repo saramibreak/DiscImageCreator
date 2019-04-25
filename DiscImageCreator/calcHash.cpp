@@ -45,15 +45,15 @@ BOOL CalcHash(
 	MD5_CTX* context,
 	SHA1Context* sha,
 	LPBYTE lpBuf,
-	DWORD dwSize
+	UINT uiSize
 ) {
 	BOOL bRet = TRUE;
 	/* Return the CRC of the bytes buf[0..len-1]. */
-	*crc = update_crc(*crc, lpBuf, (INT)dwSize);
+	*crc = update_crc(*crc, lpBuf, (INT)uiSize);
 	// calc md5
-	MD5Update(context, lpBuf, (UINT)dwSize);
+	MD5Update(context, lpBuf, uiSize);
 	// calc sha1
-	int err = SHA1Input(sha, lpBuf, (UINT)dwSize);
+	int err = SHA1Input(sha, lpBuf, uiSize);
 	if (err)	{
 		fprintf(stderr, "SHA1Input Error %d.\n", err);
 		bRet = FALSE;

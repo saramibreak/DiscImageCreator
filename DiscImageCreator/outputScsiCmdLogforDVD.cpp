@@ -78,16 +78,16 @@ VOID OutputFsBootDescriptor(
 	OutputFsRegid(lpBuf + 8);
 
 	OutputVolDescLogA(
-		"\tBoot Extent Location: %lu\n"
-		"\t  Boot Extent Length: %lu\n"
-		"\t        Load Address: %lu%lu\n"
-		"\t       Start Address: %lu%lu\n",
-		MAKELONG(MAKEWORD(lpBuf[72], lpBuf[73]), MAKEWORD(lpBuf[74], lpBuf[75])),
-		MAKELONG(MAKEWORD(lpBuf[76], lpBuf[77]), MAKEWORD(lpBuf[78], lpBuf[79])),
-		MAKELONG(MAKEWORD(lpBuf[80], lpBuf[81]), MAKEWORD(lpBuf[82], lpBuf[83])),
-		MAKELONG(MAKEWORD(lpBuf[84], lpBuf[85]), MAKEWORD(lpBuf[86], lpBuf[87])),
-		MAKELONG(MAKEWORD(lpBuf[88], lpBuf[89]), MAKEWORD(lpBuf[90], lpBuf[91])),
-		MAKELONG(MAKEWORD(lpBuf[92], lpBuf[93]), MAKEWORD(lpBuf[94], lpBuf[95])));
+		"\tBoot Extent Location: %u\n"
+		"\t  Boot Extent Length: %u\n"
+		"\t        Load Address: %u%u\n"
+		"\t       Start Address: %u%u\n",
+		MAKEUINT(MAKEWORD(lpBuf[72], lpBuf[73]), MAKEWORD(lpBuf[74], lpBuf[75])),
+		MAKEUINT(MAKEWORD(lpBuf[76], lpBuf[77]), MAKEWORD(lpBuf[78], lpBuf[79])),
+		MAKEUINT(MAKEWORD(lpBuf[80], lpBuf[81]), MAKEWORD(lpBuf[82], lpBuf[83])),
+		MAKEUINT(MAKEWORD(lpBuf[84], lpBuf[85]), MAKEWORD(lpBuf[86], lpBuf[87])),
+		MAKEUINT(MAKEWORD(lpBuf[88], lpBuf[89]), MAKEWORD(lpBuf[90], lpBuf[91])),
+		MAKEUINT(MAKEWORD(lpBuf[92], lpBuf[93]), MAKEWORD(lpBuf[94], lpBuf[95])));
 
 	OutputFsRecordingDateAndTime(lpBuf + 96);
 	OutputVolDescLogA(
@@ -172,20 +172,20 @@ VOID OutputFsExtentDescriptor(
 	LPBYTE lpBuf
 ) {
 	OutputVolDescLogA(
-		"\t\t  Extent Length: %lu\n"
-		"\t\tExtent Location: %lu\n",
-		MAKELONG(MAKEWORD(lpBuf[0], lpBuf[1]), MAKEWORD(lpBuf[2], lpBuf[3])),
-		MAKELONG(MAKEWORD(lpBuf[4], lpBuf[5]), MAKEWORD(lpBuf[6], lpBuf[7])));
+		"\t\t  Extent Length: %u\n"
+		"\t\tExtent Location: %u\n",
+		MAKEUINT(MAKEWORD(lpBuf[0], lpBuf[1]), MAKEWORD(lpBuf[2], lpBuf[3])),
+		MAKEUINT(MAKEWORD(lpBuf[4], lpBuf[5]), MAKEWORD(lpBuf[6], lpBuf[7])));
 }
 
 VOID OutputFsLongAllocationDescriptor(
 	LPBYTE lpBuf
 ) {
 	OutputVolDescLogA(
-		"\t\t     Extent Length: %lu\n"
+		"\t\t     Extent Length: %u\n"
 		"\t\t   Extent Location: %02x%02x%02x%02x%02x%02x\n"
 		"\t\tImplementation Use: %02x%02x%02x%02x%02x%02x\n"
-		, MAKELONG(MAKEWORD(lpBuf[0], lpBuf[1]), MAKEWORD(lpBuf[2], lpBuf[3]))
+		, MAKEUINT(MAKEWORD(lpBuf[0], lpBuf[1]), MAKEWORD(lpBuf[2], lpBuf[3]))
 		, lpBuf[4], lpBuf[5], lpBuf[6], lpBuf[7], lpBuf[8], lpBuf[9]
 		, lpBuf[10], lpBuf[11], lpBuf[12], lpBuf[13], lpBuf[14], lpBuf[15]
 		);
@@ -198,17 +198,17 @@ VOID OutputFsFileSetDescriptor(
 	OutputVolDescLogA(
 		"\t                      Interchange Level: %u\n"
 		"\t              Maximum Interchange Level: %u\n"
-		"\t                     Character Set List: %lu\n"
-		"\t             Maximum Character Set List: %lu\n"
-		"\t                        File Set Number: %lu\n"
-		"\t             File Set Descriptor Number: %lu\n"
+		"\t                     Character Set List: %u\n"
+		"\t             Maximum Character Set List: %u\n"
+		"\t                        File Set Number: %u\n"
+		"\t             File Set Descriptor Number: %u\n"
 		"\tLogical Volume Identifier Character Set:\n"
 		, MAKEWORD(lpBuf[28], lpBuf[29])
 		, MAKEWORD(lpBuf[30], lpBuf[31])
-		, MAKELONG(MAKEWORD(lpBuf[32], lpBuf[33]), MAKEWORD(lpBuf[34], lpBuf[35]))
-		, MAKELONG(MAKEWORD(lpBuf[36], lpBuf[37]), MAKEWORD(lpBuf[38], lpBuf[39]))
-		, MAKELONG(MAKEWORD(lpBuf[40], lpBuf[41]), MAKEWORD(lpBuf[42], lpBuf[43]))
-		, MAKELONG(MAKEWORD(lpBuf[44], lpBuf[45]), MAKEWORD(lpBuf[46], lpBuf[47]))
+		, MAKEUINT(MAKEWORD(lpBuf[32], lpBuf[33]), MAKEWORD(lpBuf[34], lpBuf[35]))
+		, MAKEUINT(MAKEWORD(lpBuf[36], lpBuf[37]), MAKEWORD(lpBuf[38], lpBuf[39]))
+		, MAKEUINT(MAKEWORD(lpBuf[40], lpBuf[41]), MAKEWORD(lpBuf[42], lpBuf[43]))
+		, MAKEUINT(MAKEWORD(lpBuf[44], lpBuf[45]), MAKEWORD(lpBuf[46], lpBuf[47]))
 		);
 	OutputFsCharspec(lpBuf + 48);
 	OutputVolDescLogA(
@@ -242,9 +242,9 @@ VOID OutputFsLogicalVolumeIntegrityDescriptor(
 ) {
 	OutputFsRecordingDateAndTime(lpBuf + 16);
 	OutputVolDescLogA(
-		"\t                   Integrity Type: %lu\n"
+		"\t                   Integrity Type: %u\n"
 		"\tNext Integrity Extent\n"
-		, MAKELONG(MAKEWORD(lpBuf[28], lpBuf[29]), MAKEWORD(lpBuf[30], lpBuf[31])));
+		, MAKEUINT(MAKEWORD(lpBuf[28], lpBuf[29]), MAKEWORD(lpBuf[30], lpBuf[31])));
 	OutputFsExtentDescriptor(lpBuf + 32);
 
 	OutputVolDescLogA("\t      Logical Volume Contents Use: ");
@@ -252,26 +252,26 @@ VOID OutputFsLogicalVolumeIntegrityDescriptor(
 		OutputVolDescLogA("%02x", lpBuf[i]);
 	}
 
-	LONG N_P =
-		MAKELONG(MAKEWORD(lpBuf[72], lpBuf[73]), MAKEWORD(lpBuf[74], lpBuf[75]));
-	LONG L_IU =
-		MAKELONG(MAKEWORD(lpBuf[76], lpBuf[77]), MAKEWORD(lpBuf[78], lpBuf[79]));
+	UINT N_P =
+		MAKEUINT(MAKEWORD(lpBuf[72], lpBuf[73]), MAKEWORD(lpBuf[74], lpBuf[75]));
+	UINT L_IU =
+		MAKEUINT(MAKEWORD(lpBuf[76], lpBuf[77]), MAKEWORD(lpBuf[78], lpBuf[79]));
 	OutputVolDescLogA(
 		"\n"
-		"\t             Number of Partitions: %lu\n"
-		"\t     Length of Implementation Use: %lu\n"
+		"\t             Number of Partitions: %u\n"
+		"\t     Length of Implementation Use: %u\n"
 		, N_P, L_IU);
-	LONG nOfs = N_P * 4;
+	UINT nOfs = N_P * 4;
 	if (0 < N_P) {
 		OutputVolDescLogA("\t                 Free Space Table: ");
-		for (LONG i = 0; i < N_P; i += 4) {
-			OutputVolDescLogA("%lu \n"
-				, MAKELONG(MAKEWORD(lpBuf[80 + i], lpBuf[81 + i]), MAKEWORD(lpBuf[82 + i], lpBuf[83 + i])));
+		for (UINT i = 0; i < N_P; i += 4) {
+			OutputVolDescLogA("%u \n"
+				, MAKEUINT(MAKEWORD(lpBuf[80 + i], lpBuf[81 + i]), MAKEWORD(lpBuf[82 + i], lpBuf[83 + i])));
 		}
 		OutputVolDescLogA("\t                       Size Table: ");
-		for (LONG i = 80 + nOfs, j = 0; j < N_P; j += 4) {
-			OutputVolDescLogA("%lu "
-				, MAKELONG(MAKEWORD(lpBuf[i + j], lpBuf[i + 1 + j]), MAKEWORD(lpBuf[i + 2 + j], lpBuf[i + 3 + j])));
+		for (UINT i = 80 + nOfs, j = 0; j < N_P; j += 4) {
+			OutputVolDescLogA("%u "
+				, MAKEUINT(MAKEWORD(lpBuf[i + j], lpBuf[i + 1 + j]), MAKEWORD(lpBuf[i + 2 + j], lpBuf[i + 3 + j])));
 		}
 		OutputVolDescLogA("\n");
 	}
@@ -305,16 +305,16 @@ VOID OutputFsTerminatingDescriptor(
 VOID OutputFsUnallocatedSpaceDescriptor(
 	LPBYTE lpBuf
 ) {
-	LONG N_AD =
-		MAKELONG(MAKEWORD(lpBuf[20], lpBuf[21]), MAKEWORD(lpBuf[22], lpBuf[23]));
+	UINT N_AD =
+		MAKEUINT(MAKEWORD(lpBuf[20], lpBuf[21]), MAKEWORD(lpBuf[22], lpBuf[23]));
 	OutputVolDescLogA(
-		"\tVolume Descriptor Sequence Number: %lu\n"
-		"\t Number of Allocation Descriptors: %lu\n"
-		, MAKELONG(MAKEWORD(lpBuf[16], lpBuf[17]), MAKEWORD(lpBuf[18], lpBuf[19])),
+		"\tVolume Descriptor Sequence Number: %u\n"
+		"\t Number of Allocation Descriptors: %u\n"
+		, MAKEUINT(MAKEWORD(lpBuf[16], lpBuf[17]), MAKEWORD(lpBuf[18], lpBuf[19])),
 		N_AD);
 	if (0 < N_AD) {
 		OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR(Allocation Descriptors));
-		for (INT i = 0; i < N_AD * 8; i += 8) {
+		for (UINT i = 0; i < N_AD * 8; i += 8) {
 			OutputFsExtentDescriptor(lpBuf + 24 + i);
 		}
 	}
@@ -324,17 +324,17 @@ VOID OutputFsLogicalVolumeDescriptor(
 	LPBYTE lpBuf
 ) {
 	OutputVolDescLogA(
-		"\tVolume Descriptor Sequence Number: %lu\n"
+		"\tVolume Descriptor Sequence Number: %u\n"
 		"\tDescriptor Character Set\n",
-		MAKELONG(MAKEWORD(lpBuf[16], lpBuf[17]), MAKEWORD(lpBuf[18], lpBuf[19])));
+		MAKEUINT(MAKEWORD(lpBuf[16], lpBuf[17]), MAKEWORD(lpBuf[18], lpBuf[19])));
 	OutputFsCharspec(lpBuf + 20);
 
 	OutputVolDescLogA(
 		"\tLogical Volume Identifier: %.128s\n"
-		"\t      Logical Block Size : %lu\n"
+		"\t      Logical Block Size : %u\n"
 		"\tDomain Identifier\n",
 		(LPCH)&lpBuf[84],
-		MAKELONG(MAKEWORD(lpBuf[212], lpBuf[213]), MAKEWORD(lpBuf[214], lpBuf[215])));
+		MAKEUINT(MAKEWORD(lpBuf[212], lpBuf[213]), MAKEWORD(lpBuf[214], lpBuf[215])));
 	OutputFsCharspec(lpBuf + 216);
 
 	OutputVolDescLogA("\tLogical Volume Contents Use: ");
@@ -343,14 +343,14 @@ VOID OutputFsLogicalVolumeDescriptor(
 	}
 	OutputVolDescLogA("\n");
 
-	LONG MT_L =
-		MAKELONG(MAKEWORD(lpBuf[264], lpBuf[265]), MAKEWORD(lpBuf[266], lpBuf[267]));
+	UINT MT_L =
+		MAKEUINT(MAKEWORD(lpBuf[264], lpBuf[265]), MAKEWORD(lpBuf[266], lpBuf[267]));
 	OutputVolDescLogA(
-		"\t        Map Table Length: %lu\n"
-		"\tNumber of Partition Maps: %lu\n"
+		"\t        Map Table Length: %u\n"
+		"\tNumber of Partition Maps: %u\n"
 		"\tImplementation Identifier\n",
 		MT_L,
-		MAKELONG(MAKEWORD(lpBuf[268], lpBuf[269]), MAKEWORD(lpBuf[270], lpBuf[271])));
+		MAKEUINT(MAKEWORD(lpBuf[268], lpBuf[269]), MAKEWORD(lpBuf[270], lpBuf[271])));
 	OutputFsRegid(lpBuf + 272);
 
 	OutputVolDescLogA("\tImplementation Use: ");
@@ -364,7 +364,7 @@ VOID OutputFsLogicalVolumeDescriptor(
 
 	if (0 < MT_L) {
 		OutputVolDescLogA("\tPartition Maps: ");
-		for (INT i = 0; i < MT_L; i++) {
+		for (UINT i = 0; i < MT_L; i++) {
 			OutputVolDescLogA("%02x", lpBuf[440 + i]);
 		}
 		OutputVolDescLogA("\n");
@@ -375,11 +375,11 @@ VOID OutputFsPartitionDescriptor(
 	LPBYTE lpBuf
 ) {
 	OutputVolDescLogA(
-		"\tVolume Descriptor Sequence Number: %lu\n"
+		"\tVolume Descriptor Sequence Number: %u\n"
 		"\t                  Partition Flags: %u\n"
 		"\t                 Partition Number: %u\n"
 		"\tPartition Contents\n",
-		MAKELONG(MAKEWORD(lpBuf[16], lpBuf[17]), MAKEWORD(lpBuf[18], lpBuf[19])),
+		MAKEUINT(MAKEWORD(lpBuf[16], lpBuf[17]), MAKEWORD(lpBuf[18], lpBuf[19])),
 		MAKEWORD(lpBuf[20], lpBuf[21]),
 		MAKEWORD(lpBuf[22], lpBuf[23]));
 
@@ -391,13 +391,13 @@ VOID OutputFsPartitionDescriptor(
 
 	OutputVolDescLogA(
 		"\n"
-		"\t                Access Type: %lu\n"
-		"\tPartition Starting Location: %lu\n"
-		"\t           Partition Length: %lu\n"
+		"\t                Access Type: %u\n"
+		"\tPartition Starting Location: %u\n"
+		"\t           Partition Length: %u\n"
 		"\tImplementation Identifier\n",
-		MAKELONG(MAKEWORD(lpBuf[184], lpBuf[185]), MAKEWORD(lpBuf[186], lpBuf[187])),
-		MAKELONG(MAKEWORD(lpBuf[188], lpBuf[189]), MAKEWORD(lpBuf[190], lpBuf[191])),
-		MAKELONG(MAKEWORD(lpBuf[192], lpBuf[193]), MAKEWORD(lpBuf[194], lpBuf[195])));
+		MAKEUINT(MAKEWORD(lpBuf[184], lpBuf[185]), MAKEWORD(lpBuf[186], lpBuf[187])),
+		MAKEUINT(MAKEWORD(lpBuf[188], lpBuf[189]), MAKEWORD(lpBuf[190], lpBuf[191])),
+		MAKEUINT(MAKEWORD(lpBuf[192], lpBuf[193]), MAKEWORD(lpBuf[194], lpBuf[195])));
 
 	OutputFsRegid(lpBuf + 196);
 	OutputVolDescLogA("\tImplementation Use: ");
@@ -411,9 +411,9 @@ VOID OutputFsImplementationUseVolumeDescriptor(
 	LPBYTE lpBuf
 ) {
 	OutputVolDescLogA(
-		"\tVolume Descriptor Sequence Number: %lu\n"
+		"\tVolume Descriptor Sequence Number: %u\n"
 		"\tImplementation Identifier\n",
-		MAKELONG(MAKEWORD(lpBuf[16], lpBuf[17]), MAKEWORD(lpBuf[18], lpBuf[19])));
+		MAKEUINT(MAKEWORD(lpBuf[16], lpBuf[17]), MAKEWORD(lpBuf[18], lpBuf[19])));
 	OutputFsRegid(lpBuf + 20);
 
 	INT nOfs = 52;
@@ -442,9 +442,9 @@ VOID OutputFsVolumeDescriptorPointer(
 	LPBYTE lpBuf
 ) {
 	OutputVolDescLogA(
-		"\tVolume Descriptor Sequence Number: %lu\n"
+		"\tVolume Descriptor Sequence Number: %u\n"
 		OUTPUT_DHYPHEN_PLUS_STR(Next Volume Descriptor Sequence Extent),
-		MAKELONG(MAKEWORD(lpBuf[16], lpBuf[17]), MAKEWORD(lpBuf[18], lpBuf[19])));
+		MAKEUINT(MAKEWORD(lpBuf[16], lpBuf[17]), MAKEWORD(lpBuf[18], lpBuf[19])));
 	OutputFsExtentDescriptor(lpBuf + 20);
 }
 
@@ -461,26 +461,26 @@ VOID OutputFsPrimaryVolumeDescriptorForUDF(
 	LPBYTE lpBuf
 ) {
 	OutputVolDescLogA(
-		"\tVolume Descriptor Sequence Number: %lu\n"
-		"\t Primary Volume Descriptor Number: %lu\n"
+		"\tVolume Descriptor Sequence Number: %u\n"
+		"\t Primary Volume Descriptor Number: %u\n"
 		"\t                Volume Identifier: %.32s\n"
 		"\t           Volume Sequence Number: %u\n"
 		"\t   Maximum Volume Sequence Number: %u\n"
 		"\t                Interchange Level: %u\n"
 		"\t        Maximum Interchange Level: %u\n"
-		"\t               Character Set List: %lu\n"
-		"\t       Maximum Character Set List: %lu\n"
+		"\t               Character Set List: %u\n"
+		"\t       Maximum Character Set List: %u\n"
 		"\t            Volume Set Identifier: %.128s\n"
 		"\tDescriptor Character Set\n",
-		MAKELONG(MAKEWORD(lpBuf[16], lpBuf[17]), MAKEWORD(lpBuf[18], lpBuf[19])),
-		MAKELONG(MAKEWORD(lpBuf[20], lpBuf[21]), MAKEWORD(lpBuf[22], lpBuf[23])),
+		MAKEUINT(MAKEWORD(lpBuf[16], lpBuf[17]), MAKEWORD(lpBuf[18], lpBuf[19])),
+		MAKEUINT(MAKEWORD(lpBuf[20], lpBuf[21]), MAKEWORD(lpBuf[22], lpBuf[23])),
 		(LPCH)&lpBuf[24],
 		MAKEWORD(lpBuf[56], lpBuf[57]),
 		MAKEWORD(lpBuf[58], lpBuf[59]),
 		MAKEWORD(lpBuf[60], lpBuf[61]),
 		MAKEWORD(lpBuf[62], lpBuf[63]),
-		MAKELONG(MAKEWORD(lpBuf[64], lpBuf[65]), MAKEWORD(lpBuf[66], lpBuf[67])),
-		MAKELONG(MAKEWORD(lpBuf[68], lpBuf[69]), MAKEWORD(lpBuf[70], lpBuf[71])),
+		MAKEUINT(MAKEWORD(lpBuf[64], lpBuf[65]), MAKEWORD(lpBuf[66], lpBuf[67])),
+		MAKEUINT(MAKEWORD(lpBuf[68], lpBuf[69]), MAKEWORD(lpBuf[70], lpBuf[71])),
 		(LPCH)&lpBuf[72]);
 
 	OutputFsCharspec(lpBuf + 200);
@@ -508,8 +508,8 @@ VOID OutputFsPrimaryVolumeDescriptorForUDF(
 	}
 	OutputVolDescLogA(
 		"\n"
-		"\tPredecessor Volume Descriptor Sequence Location: %lu\n",
-		MAKELONG(MAKEWORD(lpBuf[484], lpBuf[485]), MAKEWORD(lpBuf[486], lpBuf[487])));
+		"\tPredecessor Volume Descriptor Sequence Location: %u\n",
+		MAKEUINT(MAKEWORD(lpBuf[484], lpBuf[485]), MAKEWORD(lpBuf[486], lpBuf[487])));
 	OutputVolDescLogA(
 		"\t                                          Flags: %u\n",
 		MAKEWORD(lpBuf[488], lpBuf[489]));
@@ -524,13 +524,13 @@ VOID OutputFsDescriptorTag(
 		"\t                Tag Serial Number: %u\n"
 		"\t                   Descriptor CRC: %x\n"
 		"\t            Descriptor CRC Length: %u\n"
-		"\t                     Tag Location: %lu\n",
+		"\t                     Tag Location: %u\n",
 		MAKEWORD(lpBuf[2], lpBuf[3]),
 		lpBuf[4],
 		MAKEWORD(lpBuf[6], lpBuf[7]),
 		MAKEWORD(lpBuf[8], lpBuf[9]),
 		MAKEWORD(lpBuf[10], lpBuf[11]),
-		MAKELONG(MAKEWORD(lpBuf[12], lpBuf[13]), MAKEWORD(lpBuf[14], lpBuf[15])));
+		MAKEUINT(MAKEWORD(lpBuf[12], lpBuf[13]), MAKEWORD(lpBuf[14], lpBuf[15])));
 }
 
 VOID OutputFsVolumeDescriptorSequence(
@@ -679,9 +679,9 @@ VOID OutputDVDLayerDescriptor(
 	REVERSE_LONG(&dwEndLayerZeroSector);
 #else
 	LPBYTE buf = (LPBYTE)dvdLayer;
-	DWORD dwStartingDataSector = MAKELONG(MAKEWORD(buf[7], buf[6]), MAKEWORD(buf[5], 0));
-	DWORD dwEndDataSector = MAKELONG(MAKEWORD(buf[11], buf[10]), MAKEWORD(buf[9], 0));
-	DWORD dwEndLayerZeroSector = MAKELONG(MAKEWORD(buf[15], buf[14]), MAKEWORD(buf[13], 0));
+	DWORD dwStartingDataSector = MAKEUINT(MAKEWORD(buf[7], buf[6]), MAKEWORD(buf[5], 0));
+	DWORD dwEndDataSector = MAKEUINT(MAKEWORD(buf[11], buf[10]), MAKEWORD(buf[9], 0));
+	DWORD dwEndLayerZeroSector = MAKEUINT(MAKEWORD(buf[15], buf[14]), MAKEWORD(buf[13], 0));
 #endif
 	if (pDisc->DVD.dwDVDStartPsn == 0) {
 		pDisc->DVD.dwDVDStartPsn = dwStartingDataSector;
@@ -909,16 +909,16 @@ VOID OutputDiscSpareAreaInformation(
 	PDVD_RAM_SPARE_AREA_INFORMATION dvdRamSpare
 ) {
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDRamSpareAreaInformation)
-		"\t          FreePrimarySpareSectors: %lu\n"
-		"\t     FreeSupplementalSpareSectors: %lu\n"
-		"\tAllocatedSupplementalSpareSectors: %lu\n",
-		MAKELONG(
+		"\t          FreePrimarySpareSectors: %u\n"
+		"\t     FreeSupplementalSpareSectors: %u\n"
+		"\tAllocatedSupplementalSpareSectors: %u\n",
+		MAKEUINT(
 		MAKEWORD(dvdRamSpare->FreePrimarySpareSectors[3], dvdRamSpare->FreePrimarySpareSectors[2]),
 		MAKEWORD(dvdRamSpare->FreePrimarySpareSectors[1], dvdRamSpare->FreePrimarySpareSectors[0])),
-		MAKELONG(
+		MAKEUINT(
 		MAKEWORD(dvdRamSpare->FreeSupplementalSpareSectors[3], dvdRamSpare->FreeSupplementalSpareSectors[2]),
 		MAKEWORD(dvdRamSpare->FreeSupplementalSpareSectors[1], dvdRamSpare->FreeSupplementalSpareSectors[0])),
-		MAKELONG(
+		MAKEUINT(
 		MAKEWORD(dvdRamSpare->AllocatedSupplementalSpareSectors[3], dvdRamSpare->AllocatedSupplementalSpareSectors[2]),
 		MAKEWORD(dvdRamSpare->AllocatedSupplementalSpareSectors[1], dvdRamSpare->AllocatedSupplementalSpareSectors[0])));
 }
@@ -947,9 +947,9 @@ VOID OutputDVDRecordingManagementAreaData(
 	WORD wFormatLength
 ) {
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDRecordingManagementAreaData)
-		"\tLastRecordedRMASectorNumber: %lu\n"
+		"\tLastRecordedRMASectorNumber: %u\n"
 		"\t                   RMDBytes: \n",
-		MAKELONG(MAKEWORD(dvdRecordingMan->LastRecordedRMASectorNumber[3],
+		MAKEUINT(MAKEWORD(dvdRecordingMan->LastRecordedRMASectorNumber[3],
 		dvdRecordingMan->LastRecordedRMASectorNumber[2]),
 		MAKEWORD(dvdRecordingMan->LastRecordedRMASectorNumber[1],
 		dvdRecordingMan->LastRecordedRMASectorNumber[0])));
@@ -966,7 +966,7 @@ VOID OutputDVDPreRecordedInformation(
 		"\t                      FieldID_1: %02x\n"
 		"\t            DiscApplicatiowCode: %02x\n"
 		"\t               DiscPhysicalCode: %02x\n"
-		"\tLastAddressOfDataRecordableArea: %lu\n"
+		"\tLastAddressOfDataRecordableArea: %u\n"
 		"\t                  ExtensiowCode: %02x\n"
 		"\t                    PartVers1on: %02x\n"
 		"\t                      FieldID_2: %02x\n"
@@ -982,7 +982,7 @@ VOID OutputDVDPreRecordedInformation(
 		dvdPreRecorded->FieldID_1,
 		dvdPreRecorded->DiscApplicationCode,
 		dvdPreRecorded->DiscPhysicalCode,
-		MAKELONG(MAKEWORD(dvdPreRecorded->LastAddressOfDataRecordableArea[0]
+		MAKEUINT(MAKEWORD(dvdPreRecorded->LastAddressOfDataRecordableArea[0]
 			, dvdPreRecorded->LastAddressOfDataRecordableArea[1]),
 		MAKEWORD(dvdPreRecorded->LastAddressOfDataRecordableArea[2], 0)),
 		dvdPreRecorded->ExtensionCode,
@@ -1030,9 +1030,9 @@ VOID OutputDVDDualLayerRecordingInformation(
 ) {
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDDualLayerRecordingInformation)
 		"\tLayer0SectorsImmutable: %s\n"
-		"\t         Layer0Sectors: %lu\n",
+		"\t         Layer0Sectors: %u\n",
 		BOOLEAN_TO_STRING_YES_NO_A(dvdDualLayer->Layer0SectorsImmutable),
-		MAKELONG(MAKEWORD(dvdDualLayer->Layer0Sectors[3], dvdDualLayer->Layer0Sectors[2]),
+		MAKEUINT(MAKEWORD(dvdDualLayer->Layer0Sectors[3], dvdDualLayer->Layer0Sectors[2]),
 		MAKEWORD(dvdDualLayer->Layer0Sectors[1], dvdDualLayer->Layer0Sectors[0])));
 }
 VOID OutputDVDDualLayerMiddleZone(
@@ -1040,9 +1040,9 @@ VOID OutputDVDDualLayerMiddleZone(
 ) {
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDDualLayerMiddleZoneStartAddress)
 		"\t                   InitStatus: %s\n"
-		"\tShiftedMiddleAreaStartAddress: %lu\n",
+		"\tShiftedMiddleAreaStartAddress: %u\n",
 		BOOLEAN_TO_STRING_YES_NO_A(dvdDualLayerMiddle->InitStatus),
-		MAKELONG(MAKEWORD(dvdDualLayerMiddle->ShiftedMiddleAreaStartAddress[3],
+		MAKEUINT(MAKEWORD(dvdDualLayerMiddle->ShiftedMiddleAreaStartAddress[3],
 		dvdDualLayerMiddle->ShiftedMiddleAreaStartAddress[2]),
 		MAKEWORD(dvdDualLayerMiddle->ShiftedMiddleAreaStartAddress[1],
 		dvdDualLayerMiddle->ShiftedMiddleAreaStartAddress[0])));
@@ -1052,8 +1052,8 @@ VOID OutputDVDDualLayerJumpInterval(
 	PDVD_DUAL_LAYER_JUMP_INTERVAL_SIZE dvdDualLayerJump
 ) {
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDDualLayerJumpIntervalSize)
-		"\tJumpIntervalSize: %lu\n",
-		MAKELONG(MAKEWORD(dvdDualLayerJump->JumpIntervalSize[3],
+		"\tJumpIntervalSize: %u\n",
+		MAKEUINT(MAKEWORD(dvdDualLayerJump->JumpIntervalSize[3],
 		dvdDualLayerJump->JumpIntervalSize[2]),
 		MAKEWORD(dvdDualLayerJump->JumpIntervalSize[1],
 		dvdDualLayerJump->JumpIntervalSize[0])));
@@ -1063,8 +1063,8 @@ VOID OutputDVDDualLayerManualLayerJump(
 	PDVD_DUAL_LAYER_MANUAL_LAYER_JUMP dvdDualLayerMan
 ) {
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDDualLayerManualLayerJump)
-		"\tManualJumpLayerAddress: %lu\n",
-		MAKELONG(MAKEWORD(dvdDualLayerMan->ManualJumpLayerAddress[3],
+		"\tManualJumpLayerAddress: %u\n",
+		MAKEUINT(MAKEWORD(dvdDualLayerMan->ManualJumpLayerAddress[3],
 		dvdDualLayerMan->ManualJumpLayerAddress[2]),
 		MAKEWORD(dvdDualLayerMan->ManualJumpLayerAddress[1],
 		dvdDualLayerMan->ManualJumpLayerAddress[0])));
@@ -1074,8 +1074,8 @@ VOID OutputDVDDualLayerRemapping(
 	PDVD_DUAL_LAYER_REMAPPING_INFORMATION dvdDualLayerRemapping
 ) {
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDDualLayerRemappingInformation)
-		"\tManualJumpLayerAddress: %lu\n",
-		MAKELONG(MAKEWORD(dvdDualLayerRemapping->RemappingAddress[3],
+		"\tManualJumpLayerAddress: %u\n",
+		MAKEUINT(MAKEWORD(dvdDualLayerRemapping->RemappingAddress[3],
 		dvdDualLayerRemapping->RemappingAddress[2]),
 		MAKEWORD(dvdDualLayerRemapping->RemappingAddress[1],
 		dvdDualLayerRemapping->RemappingAddress[0])));
@@ -1085,14 +1085,14 @@ VOID OutputDVDDiscControlBlockHeader(
 	PDVD_DISC_CONTROL_BLOCK_HEADER dvdDiscCtrlBlk
 ) {
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDDiscControlBlockHeader)
-		"\tContentDescriptor: %lu\n"
-		"\t           AsByte: %lu\n"
+		"\tContentDescriptor: %u\n"
+		"\t           AsByte: %u\n"
 		"\t         VendorId: ",
-		MAKELONG(MAKEWORD(dvdDiscCtrlBlk->ContentDescriptor[3],
+		MAKEUINT(MAKEWORD(dvdDiscCtrlBlk->ContentDescriptor[3],
 		dvdDiscCtrlBlk->ContentDescriptor[2]),
 		MAKEWORD(dvdDiscCtrlBlk->ContentDescriptor[1],
 		dvdDiscCtrlBlk->ContentDescriptor[0])),
-		MAKELONG(MAKEWORD(dvdDiscCtrlBlk->ProhibitedActions.AsByte[3],
+		MAKEUINT(MAKEWORD(dvdDiscCtrlBlk->ProhibitedActions.AsByte[3],
 		dvdDiscCtrlBlk->ProhibitedActions.AsByte[2]),
 		MAKEWORD(dvdDiscCtrlBlk->ProhibitedActions.AsByte[1],
 		dvdDiscCtrlBlk->ProhibitedActions.AsByte[0])));
@@ -1106,12 +1106,12 @@ VOID OutputDVDDiscControlBlockWriteInhibit(
 	PDVD_DISC_CONTROL_BLOCK_WRITE_INHIBIT dvdDiscCtrlBlkWrite
 ) {
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDDiscControlBlockWriteInhibit)
-		"\t      UpdateCount: %lu\n"
-		"\t           AsByte: %lu\n"
+		"\t      UpdateCount: %u\n"
+		"\t           AsByte: %u\n"
 		"\t   UpdatePassword: ",
-		MAKELONG(MAKEWORD(dvdDiscCtrlBlkWrite->UpdateCount[3], dvdDiscCtrlBlkWrite->UpdateCount[2]),
+		MAKEUINT(MAKEWORD(dvdDiscCtrlBlkWrite->UpdateCount[3], dvdDiscCtrlBlkWrite->UpdateCount[2]),
 		MAKEWORD(dvdDiscCtrlBlkWrite->UpdateCount[1], dvdDiscCtrlBlkWrite->UpdateCount[0])),
-		MAKELONG(MAKEWORD(dvdDiscCtrlBlkWrite->WriteProtectActions.AsByte[3],
+		MAKEUINT(MAKEWORD(dvdDiscCtrlBlkWrite->WriteProtectActions.AsByte[3],
 		dvdDiscCtrlBlkWrite->WriteProtectActions.AsByte[2]),
 		MAKEWORD(dvdDiscCtrlBlkWrite->WriteProtectActions.AsByte[1],
 		dvdDiscCtrlBlkWrite->WriteProtectActions.AsByte[0])));
@@ -1133,9 +1133,9 @@ VOID OutputDVDDiscControlBlockSession(
 	}
 	OutputDiscLogA("\n");
 
-	for (DWORD j = 0; j < sizeof(dvdDiscCtrlBlkSession->SessionItem); j++) {
+	for (UINT j = 0; j < sizeof(dvdDiscCtrlBlkSession->SessionItem); j++) {
 		OutputDiscLogA(
-			"\t  SessionItem: %lu\n"
+			"\t  SessionItem: %u\n"
 			"\t\t     AsByte: ", j);
 		for (WORD k = 0; k < sizeof(dvdDiscCtrlBlkSession->SessionItem[j].AsByte); k++) {
 			OutputDiscLogA("%c", dvdDiscCtrlBlkSession->SessionItem[j].AsByte[k]);
@@ -1156,8 +1156,8 @@ VOID OutputDVDDiscControlBlockList(
 	OutputDiscLogA(
 		"\tDVD_DISC_CONTROL_BLOCK_LIST_DCB: ");
 	for (WORD k = 0; k < wFormatLength - sizeof(DVD_DISC_CONTROL_BLOCK_LIST); k++) {
-		OutputDiscLogA("%lu",
-			MAKELONG(MAKEWORD(dvdDiscCtrlBlkList->Dcbs[k].DcbIdentifier[3], dvdDiscCtrlBlkList->Dcbs[k].DcbIdentifier[2]),
+		OutputDiscLogA("%u",
+			MAKEUINT(MAKEWORD(dvdDiscCtrlBlkList->Dcbs[k].DcbIdentifier[3], dvdDiscCtrlBlkList->Dcbs[k].DcbIdentifier[2]),
 			MAKEWORD(dvdDiscCtrlBlkList->Dcbs[k].DcbIdentifier[1], dvdDiscCtrlBlkList->Dcbs[k].DcbIdentifier[0])));
 	}
 	OutputDiscLogA("\n");
@@ -1428,20 +1428,20 @@ VOID OutputBDRawDefectList(
 	WORD wFormatLength
 ) {
 	UNREFERENCED_PARAMETER(wFormatLength);
-	LONG lEntries = MAKELONG(MAKEWORD(lpFormat[15], lpFormat[14]), MAKEWORD(lpFormat[13], lpFormat[12]));
+	UINT Entries = MAKEUINT(MAKEWORD(lpFormat[15], lpFormat[14]), MAKEWORD(lpFormat[13], lpFormat[12]));
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(RawDefectList)
 		"\t       DefectListIdentifier: %.2s\n"
 		"\t           DefectListFormat: %02x\n"
-		"\t      DefectListUpdateCount: %02lx\n"
-		"\t  NumberOfDefectListEntries: %02lx\n"
+		"\t      DefectListUpdateCount: %02x\n"
+		"\t  NumberOfDefectListEntries: %02x\n"
 		"\tDiscTypeSpecificInformation: "
-		, &lpFormat[0], lpFormat[2], MAKELONG(MAKEWORD(lpFormat[7], lpFormat[6])
-			, MAKEWORD(lpFormat[5], lpFormat[4])), lEntries);
+		, &lpFormat[0], lpFormat[2], MAKEUINT(MAKEWORD(lpFormat[7], lpFormat[6])
+			, MAKEWORD(lpFormat[5], lpFormat[4])), Entries);
 	for (WORD k = 0; k < 48; k++) {
 		OutputDiscLogA("%02x ", lpFormat[16 + k]);
 	}
 	OutputDiscLogA("\nDefectEntries: ");
-	for (LONG k = 0; k < lEntries; k += 8) {
+	for (UINT k = 0; k < Entries; k += 8) {
 		OutputDiscLogA("%02x%02x%02x%02x%02x%02x%02x%02x "
 			, lpFormat[64 + k], lpFormat[65 + k], lpFormat[66 + k], lpFormat[67 + k]
 			, lpFormat[68 + k], lpFormat[69 + k], lpFormat[70 + k], lpFormat[71 + k]);
@@ -1453,9 +1453,9 @@ VOID OutputBDPhysicalAddressControl(
 	LPBYTE lpFormat,
 	WORD wFormatLength
 ) {
-	DWORD dwPac = MAKEDWORD(MAKEWORD(lpFormat[4], lpFormat[3]), MAKEWORD(lpFormat[2], 0));
+	UINT dwPac = MAKEUINT(MAKEWORD(lpFormat[4], lpFormat[3]), MAKEWORD(lpFormat[2], 0));
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(PhysicalAddressControl)
-		"\tPhysicalAddressControlIdentifier: %02lx\n"
+		"\tPhysicalAddressControlIdentifier: %02x\n"
 		"\t                    FormatNumber: %02x\n"
 		, dwPac, lpFormat[5]);
 	if (dwPac == 0) {
@@ -1897,8 +1897,8 @@ VOID OutputManufacturingInfoForXbox(
 	);
 
 	char date[20] = {};
-	printwin32filetime(MAKEDWORD64(MAKELONG(MAKEWORD(buf[16], buf[17]), MAKEWORD(buf[18], buf[19]))
-		, MAKELONG(MAKEWORD(buf[20], buf[21]), MAKEWORD(buf[22], buf[23]))), date);
+	printwin32filetime(MAKEUINT64(MAKEUINT(MAKEWORD(buf[16], buf[17]), MAKEWORD(buf[18], buf[19]))
+		, MAKEUINT(MAKEWORD(buf[20], buf[21]), MAKEWORD(buf[22], buf[23]))), date);
 	if (buf[0] == 0x01) {
 		OutputDiscLogA(
 			"\t     Publisher: "
@@ -1961,19 +1961,19 @@ VOID OutputXboxSecuritySector(
 	DWORD dwSectorLen = 0;
 	OutputDVDStructureFormat(pDisc, 0x10, DISC_RAW_READ_SIZE, buf, &dwSectorLen, 0);
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(SecuritySector)
-		"\t                     CPR_MAI Key: %08lx\n"
+		"\t                     CPR_MAI Key: %08x\n"
 		"\t      Version of challenge table: %02u\n"
 		"\t     Number of challenge entries: %u\n"
 		"\t     Encrypted challenge entries: "
-		, MAKELONG(MAKEWORD(buf[723], buf[722]), MAKEWORD(buf[721], buf[720]))
+		, MAKEUINT(MAKEWORD(buf[723], buf[722]), MAKEWORD(buf[721], buf[720]))
 		, buf[768], buf[769]);
 	for (WORD k = 770; k < 1024; k++) {
 		OutputDiscLogA("%02x", buf[k]);
 	}
 
 	char date[20] = {};
-	printwin32filetime(MAKEDWORD64(MAKELONG(MAKEWORD(buf[1055], buf[1056]), MAKEWORD(buf[1057], buf[1058]))
-		, MAKELONG(MAKEWORD(buf[1059], buf[1060]), MAKEWORD(buf[1061], buf[1062]))), date);
+	printwin32filetime(MAKEUINT64(MAKEUINT(MAKEWORD(buf[1055], buf[1056]), MAKEWORD(buf[1057], buf[1058]))
+		, MAKEUINT(MAKEWORD(buf[1059], buf[1060]), MAKEWORD(buf[1061], buf[1062]))), date);
 	OutputDiscLogA(
 		"\n"
 		"\t            Timestamp of unknown: %s\n"
@@ -1984,8 +1984,8 @@ VOID OutputXboxSecuritySector(
 		OutputDiscLogA("%02x", buf[k]);
 	}
 
-	printwin32filetime(MAKEDWORD64(MAKELONG(MAKEWORD(buf[1183], buf[1184]), MAKEWORD(buf[1185], buf[1186]))
-		, MAKELONG(MAKEWORD(buf[1187], buf[1188]), MAKEWORD(buf[1189], buf[1190]))), date);
+	printwin32filetime(MAKEUINT64(MAKEUINT(MAKEWORD(buf[1183], buf[1184]), MAKEWORD(buf[1185], buf[1186]))
+		, MAKEUINT(MAKEWORD(buf[1187], buf[1188]), MAKEWORD(buf[1189], buf[1190]))), date);
 	OutputDiscLogA(
 		"\n"
 		"\t          Timestamp of authoring: %s\n"
@@ -2013,8 +2013,8 @@ VOID OutputXboxSecuritySector(
 		OutputDiscLogA("%02x", buf[k]);
 	}
 
-	printwin32filetime(MAKEDWORD64(MAKELONG(MAKEWORD(buf[1503], buf[1504]), MAKEWORD(buf[1505], buf[1506]))
-		, MAKELONG(MAKEWORD(buf[1507], buf[1508]), MAKEWORD(buf[1509], buf[1510]))), date);
+	printwin32filetime(MAKEUINT64(MAKEUINT(MAKEWORD(buf[1503], buf[1504]), MAKEWORD(buf[1505], buf[1506]))
+		, MAKEUINT(MAKEWORD(buf[1507], buf[1508]), MAKEWORD(buf[1509], buf[1510]))), date);
 	OutputDiscLogA(
 		"\n"
 		"\t          Timestamp of mastering: %s\n"
@@ -2054,7 +2054,7 @@ VOID OutputXboxSecuritySector(
 	DWORD dwEndLayerZeroSector = dvdLayer->commonHeader.EndLayerZeroSector;
 	REVERSE_LONG(&dwEndLayerZeroSector);
 #else
-	DWORD dwEndLayerZeroSector = MAKELONG(MAKEWORD(buf[15], buf[14]), MAKEWORD(buf[13], 0));
+	DWORD dwEndLayerZeroSector = MAKEUINT(MAKEWORD(buf[15], buf[14]), MAKEWORD(buf[13], 0));
 #endif
 	BYTE ssNum = buf[1632];
 
@@ -2109,11 +2109,11 @@ VOID OutputXbox360SecuritySector(
 	}
 
 	OutputDiscLogA(
-		"\t                     CPR_MAI Key: %08lx\n"
+		"\t                     CPR_MAI Key: %08x\n"
 		"\t      Version of challenge table: %02u\n"
 		"\t     Number of challenge entries: %u\n"
 		"\t     Encrypted challenge entries: "
-		, MAKELONG(MAKEWORD(buf[723], buf[722]), MAKEWORD(buf[721], buf[720]))
+		, MAKEUINT(MAKEWORD(buf[723], buf[722]), MAKEWORD(buf[721], buf[720]))
 		, buf[768], buf[769]);
 	for (WORD k = 770; k < 1024; k++) {
 		OutputDiscLogA("%02x", buf[k]);
@@ -2140,8 +2140,8 @@ VOID OutputXbox360SecuritySector(
 	}
 
 	CHAR date[21] = {};
-	printwin32filetime(MAKEDWORD64(MAKELONG(MAKEWORD(buf[1183], buf[1184]), MAKEWORD(buf[1185], buf[1186]))
-		, MAKELONG(MAKEWORD(buf[1187], buf[1188]), MAKEWORD(buf[1189], buf[1190]))), date);
+	printwin32filetime(MAKEUINT64(MAKEUINT(MAKEWORD(buf[1183], buf[1184]), MAKEWORD(buf[1185], buf[1186]))
+		, MAKEUINT(MAKEWORD(buf[1187], buf[1188]), MAKEWORD(buf[1189], buf[1190]))), date);
 	OutputDiscLogA(
 		"\n"
 		"\t          Timestamp of authoring: %s\n"
@@ -2169,8 +2169,8 @@ VOID OutputXbox360SecuritySector(
 		OutputDiscLogA("%02x", buf[k]);
 	}
 
-	printwin32filetime(MAKEDWORD64(MAKELONG(MAKEWORD(buf[1503], buf[1504]), MAKEWORD(buf[1505], buf[1506]))
-		, MAKELONG(MAKEWORD(buf[1507], buf[1508]), MAKEWORD(buf[1509], buf[1510]))), date);
+	printwin32filetime(MAKEUINT64(MAKEUINT(MAKEWORD(buf[1503], buf[1504]), MAKEWORD(buf[1505], buf[1506]))
+		, MAKEUINT(MAKEWORD(buf[1507], buf[1508]), MAKEWORD(buf[1509], buf[1510]))), date);
 	OutputDiscLogA(
 		"\n"
 		"\t          Timestamp of mastering: %s\n"
@@ -2209,7 +2209,7 @@ VOID OutputXbox360SecuritySector(
 	DWORD dwEndLayerZeroSector = dvdLayer->commonHeader.EndLayerZeroSector;
 	REVERSE_LONG(&dwEndLayerZeroSector);
 #else
-	DWORD dwEndLayerZeroSector = MAKELONG(MAKEWORD(buf[15], buf[14]), MAKEWORD(buf[13], 0));
+	DWORD dwEndLayerZeroSector = MAKEUINT(MAKEWORD(buf[15], buf[14]), MAKEWORD(buf[13], 0));
 #endif
 	BYTE ssNum = buf[1632];
 
