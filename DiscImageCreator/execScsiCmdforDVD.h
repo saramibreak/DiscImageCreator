@@ -16,6 +16,7 @@
 #pragma once
 
 #define DVD_RAW_READ	(2064)
+#define DVD_RAW_READ2	(2384)
 
 BOOL ReadDVD(
 	PEXEC_TYPE pExecType,

@@ -22,6 +22,7 @@
 #include "execScsiCmdforFileSystem.h"
 #include "get.h"
 #include "output.h"
+#include "outputScsiCmdLogforCD.h"
 #include "outputScsiCmdLogforDVD.h"
 
 #define GAMECUBE_SIZE		(712880)
@@ -105,8 +106,10 @@ BOOL ReadDVD(
 			throw FALSE;
 		}
 
-		if (IsXbox(pExecType)) {
-			ReadXBOXFileSystem(pExtArg, pDevice, pDisc->DVD.dwXboxStartPsn - pDisc->DVD.dwDVDStartPsn);
+		if (*pExecType == xbox) {
+			if (!ReadXBOXFileSystem(pExtArg, pDevice, pDisc->DVD.dwXboxStartPsn - pDisc->DVD.dwDVDStartPsn)) {
+				throw FALSE;
+			}
 		}
 		else if (*pExecType == bd && pDisc->BD.nLBAForParamSfo != 0) {
 			if (!ReadBDForParamSfo(pExtArg, pDevice, pDisc, &cdb, lpBuf)) {
@@ -125,8 +128,8 @@ BOOL ReadDVD(
 		INT nLastErrorLBA = 0;
 		BOOL bErrorForward = FALSE;
 		BOOL bErrorBack = FALSE;
-		DWORD dwErrorForwardTimes = 0;
-		DWORD dwErrorBackTimes = 0;
+		UINT uiErrorForwardTimes = 0;
+		UINT uiErrorBackTimes = 0;
 		BOOL bSetErrorSectorRange = FALSE;
 #ifdef _WIN32
 		INT direction = SCSI_IOCTL_DATA_IN;
@@ -212,23 +215,30 @@ BOOL ReadDVD(
 				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 				if (IsXbox(pExecType) && !(pDisc->DVD.securitySectorRange[i][0] <= (DWORD)nLBA &&
 					(DWORD)nLBA <= pDisc->DVD.securitySectorRange[i][1] + 1)) {
-					nLBA--;
-					continue;
+					if (++nRetryCnt <= 5) {
+						nLBA--;
+						OutputString(_T("This sector is out of the ss ranges. Read retry %d/5\n"), nRetryCnt);
+						continue;
+					}
+					else {
+						OutputString(_T("Retry NG\n"));
+						throw FALSE;
+					}
 				}
 				if (pDisc->PROTECT.byExist == physicalErr) {
 					if (IsXbox(pExecType) && bSetErrorSectorRange &&
 						nLastErrorLBA <= nLBA && nLBA <= (INT)pDisc->DVD.securitySectorRange[i][1]) {
-						if (++dwErrorForwardTimes <= pExtArg->dwMaxRereadNum) {
+						if (++uiErrorForwardTimes <= pExtArg->uiMaxRereadNum) {
 							OutputLog(standardOut | fileMainError
-								, _T("Reread this sector: %ld/%ld\n")
-								, dwErrorForwardTimes, pExtArg->dwMaxRereadNum);
+								, _T("Reread this sector: %d/%d\n")
+								, uiErrorForwardTimes, pExtArg->uiMaxRereadNum);
 							nLBA--;
 							continue;
 						}
 						else {
-							dwErrorForwardTimes = 0;
+							uiErrorForwardTimes = 0;
 							bSetErrorSectorRange = FALSE;
-							OutputLog(standardOut | fileMainError, _T("Reread NG\n"));
+							OutputLog(standardOut | fileMainError, _T("Reread NG -> Filled with 0x00\n"));
 							FillMemory(lpBuf, DISC_RAW_READ_SIZE * dwTransferLen, 0x00);
 							fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_RAW_READ_SIZE * dwTransferLen, fp);
 							continue;
@@ -236,14 +246,14 @@ BOOL ReadDVD(
 					}
 					if (!bErrorBack) {
 						if (nFirstErrorLBA == 0) {
-							if (++dwErrorForwardTimes <= pExtArg->dwMaxRereadNum) {
+							if (++uiErrorForwardTimes <= pExtArg->uiMaxRereadNum) {
 								OutputLog(standardOut | fileMainError
-									, _T("Reread this 1st error sector: %ld/%ld\n")
-									, dwErrorForwardTimes, pExtArg->dwMaxRereadNum);
+									, _T("Reread this 1st error sector: %d/%d\n")
+									, uiErrorForwardTimes, pExtArg->uiMaxRereadNum);
 								nLBA--;
 								continue;
 							}
-							dwErrorForwardTimes = 0;
+							uiErrorForwardTimes = 0;
 							OutputLog(standardOut | fileMainError, _T("Set 1st error LBA\n"));
 							nFirstErrorLBA = nLBA;
 							bErrorForward = TRUE;
@@ -252,7 +262,7 @@ BOOL ReadDVD(
 						continue;
 					}
 					else {
-						if (++dwErrorBackTimes <= pExtArg->dwMaxRereadNum) {
+						if (++uiErrorBackTimes <= pExtArg->uiMaxRereadNum) {
 							nLBA--;
 							continue;
 						}
@@ -280,15 +290,15 @@ BOOL ReadDVD(
 			if (bErrorForward) {
 				bErrorForward = FALSE;
 				bErrorBack = TRUE;
-				if (dwErrorForwardTimes) {
+				if (uiErrorForwardTimes) {
 					OutputLog(standardOut | fileMainError, _T("Reread OK\n"));
 				}
-				dwErrorForwardTimes = 0;
+				uiErrorForwardTimes = 0;
 			}
 			if (bErrorBack) {
 				OutputLog(standardOut | fileMainError, _T(STR_LBA "Read back a sector\n"), nLBA, nLBA);
 				nLBA -= 2;
-				dwErrorBackTimes = 0;
+				uiErrorBackTimes = 0;
 				continue;
 			}
 			if (nRetryCnt) {
@@ -441,6 +451,26 @@ BOOL IsSupported0xE7(
 	return FALSE;
 }
 
+BOOL IsLiteOn(
+	PDEVICE pDevice
+) {
+	if (!strncmp(pDevice->szVendorId, "LITE-ON ", DRIVE_VENDOR_ID_SIZE)) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
+BOOL IsNintendoDisc(
+	PDISC pDisc
+) {
+	if (pDisc->SCSI.nAllLength == GAMECUBE_SIZE ||
+		pDisc->SCSI.nAllLength == WII_SL_SIZE ||
+		pDisc->SCSI.nAllLength == WII_DL_SIZE) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
 BOOL ReadDVDRaw(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
@@ -462,16 +492,17 @@ BOOL ReadDVDRaw(
 	LPBYTE pBuf = NULL;
 	BOOL bRet = TRUE;
 	try {
-		DWORD dwTransferLen = 16;
-		INT nMemBlkSize = 1;
+		UINT transferLen = 16;
+		UINT memBlkSize = 1;
 		if (NULL == (pBuf = (LPBYTE)calloc(
-			(size_t)DVD_RAW_READ * dwTransferLen * 5 + pDevice->AlignmentMask, sizeof(BYTE)))) {
+			(size_t)DVD_RAW_READ * transferLen * 5 + pDevice->AlignmentMask, sizeof(BYTE)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
 		LPBYTE lpBuf = (LPBYTE)ConvParagraphBoundary(pDevice, pBuf);
 		INT nCmdType = 0;
-		DWORD dwBaseAddr = 0x80000000;
+		UINT baseAddr = 0x80000000;
+		DWORD dwSectorSize = DVD_RAW_READ;
 		BYTE cdblen = CDB10GENERIC_LENGTH;
 		// for dumping from memory
 		BYTE lpCmd[CDB12GENERIC_LENGTH] = {};
@@ -490,82 +521,108 @@ BOOL ReadDVDRaw(
 					// ac8000 - acffff (8000), ad3000 - adffff (d000), ae3000 - aeffff (d000)
 					// b08000 - b0ffff (8000), b13000 - b1ffff (d000), b23000 - b2ffff (d000)
 					//  :
-					dwBaseAddr = 0xa13000;
-				}
-				else if (IsSupported0xE7Type2(pDevice)) {
-					dwTransferLen = 8;
-					dwBaseAddr -= 0x4080;
-//					dwTransferLen = 1;
-//					dwBaseAddr -= 0x810;
+					baseAddr = 0xa13000;
 					nCmdType = 1;
 				}
-				else if (IsSupported0xE7Type3(pDevice) || IsSupported0xE7Type4(pDevice)) {
-					nMemBlkSize = 5;
+				else if (IsSupported0xE7Type2(pDevice)) {
+					transferLen = 8;
+					baseAddr -= 0x4080;
+//					transferLen = 1;
+//					baseAddr -= 0x810;
+					nCmdType = 2;
 				}
+				else if (IsSupported0xE7Type3(pDevice) || IsSupported0xE7Type4(pDevice)) {
+					memBlkSize = 5;
+					nCmdType = 1;
+				}
+				// https://web.archive.org/web/20080618095014/http://www.kev.nu/360/
 				lpCmd[0] = 0xE7; // vendor specific command
 				lpCmd[1] = 0x48; // H
 				lpCmd[2] = 0x49; // I
 				lpCmd[3] = 0x54; // T
 				lpCmd[4] = 0x01; // read MCU memory sub-command
-				lpCmd[10] = HIBYTE(LOWORD(DVD_RAW_READ * dwTransferLen));
-				lpCmd[11] = LOBYTE(LOWORD(DVD_RAW_READ * dwTransferLen));
+				lpCmd[10] = HIBYTE(LOWORD(dwSectorSize * transferLen));
+				lpCmd[11] = LOBYTE(LOWORD(dwSectorSize * transferLen));
 				cdblen = CDB12GENERIC_LENGTH;
 			}
 			else {
 				lpCmd[0] = SCSIOP_READ_DATA_BUFF;
 				lpCmd[1] = 0x01;
-				lpCmd[6] = LOBYTE(HIWORD(DVD_RAW_READ * dwTransferLen));
-				lpCmd[7] = HIBYTE(LOWORD(DVD_RAW_READ * dwTransferLen));
-				lpCmd[8] = LOBYTE(LOWORD(DVD_RAW_READ * dwTransferLen));
-				nCmdType = 2;
+				lpCmd[6] = LOBYTE(HIWORD(dwSectorSize * transferLen));
+				lpCmd[7] = HIBYTE(LOWORD(dwSectorSize * transferLen));
+				lpCmd[8] = LOBYTE(LOWORD(dwSectorSize * transferLen));
+				nCmdType = 3;
 			}
 		}
-		// Renesas chip
-		else if (nDriveSampleOffset == 667) {
-			dwTransferLen = 1;
+		// Plextor
+		else if (IsValidPlextorDrive(pDevice)) {
 			lpCmd[0] = SCSIOP_READ_DATA_BUFF;
-			lpCmd[1] = 0x05;
-			lpCmd[6] = LOBYTE(HIWORD(DVD_RAW_READ * dwTransferLen));
-			lpCmd[7] = HIBYTE(LOWORD(DVD_RAW_READ * dwTransferLen));
-			lpCmd[8] = LOBYTE(LOWORD(DVD_RAW_READ * dwTransferLen));
-//			lpCmd[9] = 0x44;
-			nCmdType = 3;
+			lpCmd[1] = 0x02;
+			lpCmd[6] = LOBYTE(HIWORD(dwSectorSize * transferLen));
+			lpCmd[7] = HIBYTE(LOWORD(dwSectorSize * transferLen));
+			lpCmd[8] = LOBYTE(LOWORD(dwSectorSize * transferLen));
 		}
 		// Mediatek MT chip
-		else if (nDriveSampleOffset == 6) {
-			dwTransferLen = 1;
+		// LITE-ON - LH-18A1P supports
+		//  0x3c 0x01 0x01(or 0x02) -> rawdata
+		//   (172bytes[raw] + 10bytes[garbage?]) * 12 + 200bytes[garbage?] = 2384bytes
+		//  0x3c 0x01 0xe2 and 0x3c 0x01 0xf1 -> eeprom?
+		else if (IsLiteOn(pDevice)) {
+			dwSectorSize = DVD_RAW_READ2;
 			lpCmd[0] = SCSIOP_READ_DATA_BUFF;
 			lpCmd[1] = 0x01;
 			lpCmd[2] = 0x01;
-			lpCmd[6] = LOBYTE(HIWORD(DVD_RAW_READ * dwTransferLen));
-			lpCmd[7] = HIBYTE(LOWORD(DVD_RAW_READ * dwTransferLen));
-			lpCmd[8] = LOBYTE(LOWORD(DVD_RAW_READ * dwTransferLen));
+			lpCmd[6] = LOBYTE(HIWORD(dwSectorSize * transferLen));
+			lpCmd[7] = HIBYTE(LOWORD(dwSectorSize * transferLen));
+			lpCmd[8] = LOBYTE(LOWORD(dwSectorSize * transferLen));
 		}
-		// Plextor etc.
+#if 1
+		// Renesas chip
+		// LG Electronics - GSA-4163B supports (lsb 3 bits is used)
+		//  0x3c 0x00, 0x01 -> perhaps same as spc3r23
+		//  0x3c 0x02 -> perhaps same as spc3r23, but rawdata is imcomplete
+		//  0x3c 0x03 -> perhaps same as spc3r23
+		//  0x3c 0x05 -> eeprom?
+		else if (nDriveSampleOffset == 667) {
+			lpCmd[0] = SCSIOP_READ_DATA_BUFF;
+			lpCmd[1] = 0x02;
+			lpCmd[6] = LOBYTE(HIWORD(dwSectorSize * transferLen));
+			lpCmd[7] = HIBYTE(LOWORD(dwSectorSize * transferLen));
+			lpCmd[8] = LOBYTE(LOWORD(dwSectorSize * transferLen));
+		}
+		// Other
+		// TOSHIBA - SD-H802A doesn't support 0x3c
+		// Tsstcorp - TS-H352C doesn't support 0x3c
+		// Optiarc - AD-7280S supports
+		//  0x3c 0x01 0x01 and 0x3c 0x01 0x02 -> eeprom?
+		// ASUS - BC-12D2HT supports
+		//  0x3c 0x05 -> eeprom?
+		//  0x3c 0x07 -> perhaps same as 0x00 of spc3r23
+		//  0x3c 0x0c -> many sectors are zero, then same the main channel?
+		//  0x3c 0x0d -> same the main channel?
 		else {
 			lpCmd[0] = SCSIOP_READ_DATA_BUFF;
 			lpCmd[1] = 0x02;
-			lpCmd[6] = LOBYTE(HIWORD(DVD_RAW_READ * dwTransferLen));
-			lpCmd[7] = HIBYTE(LOWORD(DVD_RAW_READ * dwTransferLen));
-			lpCmd[8] = LOBYTE(LOWORD(DVD_RAW_READ * dwTransferLen));
+			lpCmd[6] = LOBYTE(HIWORD(dwSectorSize * transferLen));
+			lpCmd[7] = HIBYTE(LOWORD(dwSectorSize * transferLen));
+			lpCmd[8] = LOBYTE(LOWORD(dwSectorSize * transferLen));
 		}
+#endif
+		OutputString(_T("Rawdump command [0]:%#04x [1]:%#04x [2]:%#04x\n"), lpCmd[0], lpCmd[1], lpCmd[2]);
 
 		INT nLBA = 0;
-		DWORD dwSectorNum = 0x30000;
+		UINT sectorNum = 0x30000;
 		if (pExtArg->byFix) {
-			DWORD dwPos = pDisc->DVD.dwFixNum * 16;
-			nLBA = (INT)dwPos;
-			dwSectorNum += dwPos;
+			UINT pos = pDisc->DVD.fixNum * 16;
+			nLBA = (INT)pos;
+			sectorNum += pos;
 		}
 		// for dumping from the disc
 		CDB::_READ12 cdb = {};
 		cdb.OperationCode = SCSIOP_READ12;
-		REVERSE_BYTES(&cdb.TransferLength, &dwTransferLen);
+		REVERSE_BYTES(&cdb.TransferLength, &transferLen);
 
-		if ((pDisc->SCSI.nAllLength == GAMECUBE_SIZE ||
-			pDisc->SCSI.nAllLength == WII_SL_SIZE ||
-			pDisc->SCSI.nAllLength == WII_DL_SIZE)
-			&& (IsSupported0xE7(pDevice))) {
+		if (IsNintendoDisc(pDisc) && (IsSupported0xE7(pDevice))) {
 				cdb.Streaming = TRUE;
 		}
 		else {
@@ -574,42 +631,42 @@ BOOL ReadDVDRaw(
 		FlushLog();
 
 		BYTE byScsiStatus = 0;
-		DWORD dwReadAddrForHG[5] = { 
-			dwBaseAddr + 0 * dwTransferLen * DVD_RAW_READ,
-			dwBaseAddr + 1 * dwTransferLen * DVD_RAW_READ,
-			dwBaseAddr + 2 * dwTransferLen * DVD_RAW_READ,
-			dwBaseAddr + 3 * dwTransferLen * DVD_RAW_READ,
-			dwBaseAddr + 4 * dwTransferLen * DVD_RAW_READ
+		UINT readAddrForHG[5] = { 
+			baseAddr + 0 * transferLen * dwSectorSize,
+			baseAddr + 1 * transferLen * dwSectorSize,
+			baseAddr + 2 * transferLen * dwSectorSize,
+			baseAddr + 3 * transferLen * dwSectorSize,
+			baseAddr + 4 * transferLen * dwSectorSize
 		};
-		DWORD dwTransferAndMemSize = dwTransferLen * nMemBlkSize;
-		DWORD dwReadSize = (DWORD)DISC_RAW_READ_SIZE * dwTransferLen;
-		DWORD dwRawReadSize = (DWORD)DVD_RAW_READ * dwTransferLen;
-		DWORD dwRawWriteSize = (DWORD)DVD_RAW_READ * dwTransferLen * nMemBlkSize;
+		UINT transferAndMemSize = transferLen * memBlkSize;
+		DWORD dwReadSize = (DWORD)DISC_RAW_READ_SIZE * transferLen;
+		DWORD dwRawReadSize = dwSectorSize * transferLen;
+		size_t rawWriteSize = (size_t)dwSectorSize * transferLen * memBlkSize;
 		DWORD dwOfs[16] = {
-			0, DVD_RAW_READ, DVD_RAW_READ * 2, DVD_RAW_READ * 3, DVD_RAW_READ * 4,
-			DVD_RAW_READ * 5, DVD_RAW_READ * 6, DVD_RAW_READ * 7, DVD_RAW_READ * 8,
-			DVD_RAW_READ * 9, DVD_RAW_READ * 10, DVD_RAW_READ * 11, DVD_RAW_READ * 12,
-			DVD_RAW_READ * 13, DVD_RAW_READ * 14, DVD_RAW_READ * 15
+			0, dwSectorSize, dwSectorSize * 2, dwSectorSize * 3, dwSectorSize * 4,
+			dwSectorSize * 5, dwSectorSize * 6, dwSectorSize * 7, dwSectorSize * 8,
+			dwSectorSize * 9, dwSectorSize * 10, dwSectorSize * 11, dwSectorSize * 12,
+			dwSectorSize * 13, dwSectorSize * 14, dwSectorSize * 15
 		};
 		INT nRereadNum = 0;
 
 		if (pExtArg->byResume) {
 			INT64 size = (INT64)GetFileSize64(0, fp);
-			_fseeki64(fp, size - DVD_RAW_READ, SEEK_SET);
-			if (fread(lpBuf, sizeof(BYTE), DVD_RAW_READ, fp) < DVD_RAW_READ) {
+			_fseeki64(fp, size - dwSectorSize, SEEK_SET);
+			if (fread(lpBuf, sizeof(BYTE), dwSectorSize, fp) < dwSectorSize) {
 				OutputErrorString(_T("Failed to read [F:%s][L:%d]\n"), _T(__FUNCTION__), __LINE__);
 				return FALSE;
 			}
 			_fseeki64(fp, size, SEEK_SET);
-			dwSectorNum = MAKEDWORD(MAKEWORD(lpBuf[3], lpBuf[2]), MAKEWORD(lpBuf[1], 0)) + 1;
-			nLBA = (INT)(size / DVD_RAW_READ);
+			sectorNum = MAKEUINT(MAKEWORD(lpBuf[3], lpBuf[2]), MAKEWORD(lpBuf[1], 0)) + 1;
+			nLBA = (INT)(size / dwSectorSize);
 #if 0
 			_fseeki64(fp, 0, SEEK_SET);
-			for (DWORD n = 0x30000; n < dwSectorNum; n++) {
+			for (UINT n = 0x30000; n < sectorNum; n++) {
 				fread(lpBuf, sizeof(BYTE), DVD_RAW_READ, fp);
-				DWORD dwNum = MAKEDWORD(MAKEWORD(lpBuf[3], lpBuf[2]), MAKEWORD(lpBuf[1], 0));
-				if (n != dwNum) {
-					OutputString(" Expected sector num: %6lx, Got sector num: %6lx\n", n, dwNum);
+				UINT num = MAKEUINT(MAKEWORD(lpBuf[3], lpBuf[2]), MAKEWORD(lpBuf[1], 0));
+				if (n != num) {
+					OutputString(" Expected sector num: %6x, Got sector num: %6x\n", n, num);
 				}
 				OutputString("\rChecking sector num: %6lx", n);
 			}
@@ -624,74 +681,96 @@ BOOL ReadDVDRaw(
 		INT direction = SG_DXFER_FROM_DEV;
 #endif
 		BOOL bRetry = FALSE;
-		for (; nLBA < pDisc->SCSI.nAllLength; nLBA += (INT)dwTransferAndMemSize) {
+		BOOL bReadErr = FALSE;
+		BYTE prevId = 0;
+		for (; nLBA < pDisc->SCSI.nAllLength; nLBA += (INT)transferAndMemSize) {
 			if (pExtArg->byFix) {
-				_fseeki64(fp, DVD_RAW_READ * nLBA, SEEK_SET);
+				_fseeki64(fp, dwSectorSize * nLBA, SEEK_SET);
 			}
-			if ((INT)dwSectorNum == pDisc->SCSI.nAllLength + 0x30000) {
+			if ((INT)sectorNum == pDisc->SCSI.nAllLength + 0x30000) {
 				break;
 			}
-			if ((INT)dwTransferAndMemSize > pDisc->SCSI.nAllLength - nLBA) {
-				nMemBlkSize = (pDisc->SCSI.nAllLength - nLBA) / (INT)dwTransferLen;
-				dwRawWriteSize = (DWORD)DVD_RAW_READ * dwTransferLen * nMemBlkSize;
-				dwTransferAndMemSize = dwTransferLen * nMemBlkSize;
+			if ((INT)transferAndMemSize > pDisc->SCSI.nAllLength - nLBA) {
+				memBlkSize = (UINT)(pDisc->SCSI.nAllLength - nLBA) / transferLen;
+				rawWriteSize = dwSectorSize * transferLen * memBlkSize;
+				transferAndMemSize = transferLen * memBlkSize;
 			}
 			REVERSE_BYTES(&cdb.LogicalBlock, &nLBA);
 			// store the disc data to the drive cache memory
 			if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, lpBuf,
 				direction, dwReadSize, &byScsiStatus, _T(__FUNCTION__), __LINE__)
 				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-				throw FALSE;
+				FillMemory(lpBuf, DISC_RAW_READ_SIZE * transferAndMemSize, 0x00);
+				fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_RAW_READ_SIZE * transferLen, fp);
+				sectorNum += transferAndMemSize;
+				bReadErr = TRUE;
+				continue;
+//				throw FALSE;
 			}
 			BOOL bCheckSectorNum = TRUE;
-			DWORD dwGotSectorNum = 0;
-			for (INT i = 0; i < nMemBlkSize; i++) {
-				if (nCmdType == 0) {
-					lpCmd[6] = HIBYTE(HIWORD(dwReadAddrForHG[i]));
-					lpCmd[7] = LOBYTE(HIWORD(dwReadAddrForHG[i]));
-					lpCmd[8] = HIBYTE(LOWORD(dwReadAddrForHG[i]));
-					lpCmd[9] = LOBYTE(LOWORD(dwReadAddrForHG[i]));
+			UINT gotSectorNum = 0;
+			BYTE id = 0;
+			for (UINT i = 0; i < memBlkSize; i++) {
+				if (nCmdType == 1) {
+					lpCmd[6] = HIBYTE(HIWORD(readAddrForHG[i]));
+					lpCmd[7] = LOBYTE(HIWORD(readAddrForHG[i]));
+					lpCmd[8] = HIBYTE(LOWORD(readAddrForHG[i]));
+					lpCmd[9] = LOBYTE(LOWORD(readAddrForHG[i]));
 				}
-				else if (nCmdType == 1) {
+				else if (nCmdType == 2) {
 					if (nRereadNum == 0) {
-						dwBaseAddr += 0x810 * dwTransferLen;
-						if (dwBaseAddr == 0x80008100) {
-							dwBaseAddr = 0x80000000;
+						baseAddr += 0x810 * transferLen;
+						if (baseAddr == 0x80008100) {
+							baseAddr = 0x80000000;
 						}
 					}
-					lpCmd[6] = HIBYTE(HIWORD(dwBaseAddr));
-					lpCmd[7] = LOBYTE(HIWORD(dwBaseAddr));
-					lpCmd[8] = HIBYTE(LOWORD(dwBaseAddr));
-					lpCmd[9] = LOBYTE(LOWORD(dwBaseAddr));
+					lpCmd[6] = HIBYTE(HIWORD(baseAddr));
+					lpCmd[7] = LOBYTE(HIWORD(baseAddr));
+					lpCmd[8] = HIBYTE(LOWORD(baseAddr));
+					lpCmd[9] = LOBYTE(LOWORD(baseAddr));
 				}
-				else if (nCmdType == 2 || nCmdType == 3) {
+				else if (nCmdType == 3) {
 					INT n = nLBA % 688;
 					lpCmd[3] = LOBYTE(HIWORD(n * DVD_RAW_READ));
 					lpCmd[4] = HIBYTE(LOWORD(n * DVD_RAW_READ));
 					lpCmd[5] = LOBYTE(LOWORD(n * DVD_RAW_READ));
 				}
+
 				DWORD dwOfs2 = dwRawReadSize * i;
 				// read the drive cache memory
 				if (!ScsiPassThroughDirect(pExtArg, pDevice, lpCmd, cdblen, lpBuf + dwOfs2,
 					direction, dwRawReadSize, &byScsiStatus, _T(__FUNCTION__), __LINE__)
 					|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-					Sleep(10000);
+#if 1
 					throw FALSE;
+#else
+					lpCmd[2] += 1;
+					OutputString(_T("Rawdump command [0]:%#04x [1]:%#04x [2]:%#04x\n"), lpCmd[0], lpCmd[1], lpCmd[2]);
+					continue;
+#endif
 				}
 #if 1
-				for (DWORD j = 0; j < dwTransferLen; j++) {
+				for (UINT j = 0; j < transferLen; j++) {
 					DWORD dwOfs3 = dwOfs2 + dwOfs[j];
-					dwGotSectorNum = MAKEDWORD(MAKEWORD(lpBuf[3 + dwOfs3]
+					gotSectorNum = MAKEUINT(MAKEWORD(lpBuf[3 + dwOfs3]
 						, lpBuf[2 + dwOfs3]), MAKEWORD(lpBuf[1 + dwOfs3], 0));
-					if (dwSectorNum != dwGotSectorNum - j - i * dwTransferLen) {
+					id = lpBuf[dwOfs3];
+					if ((id & 0x11) == 1 && (prevId & 0x11) == 0) {
+						OutputString(_T("\nLayer is changed: %02x -> %02x\n"), prevId, id);
+						sectorNum = gotSectorNum - j - i * transferLen;
+					}
+					else if (sectorNum != gotSectorNum - j - i * transferLen) {
 						OutputLogA(standardError | fileMainError
-							, " Expected sector num: %6lx, Got sector num: %6lx "
-							, dwSectorNum, dwGotSectorNum - j - i * dwTransferLen);
+							, " Expected sector num: %6x, Got sector num: %6x "
+							, sectorNum, gotSectorNum - j - i * transferLen);
 						OutputMainErrorLogA("\n");
 						bCheckSectorNum = FALSE;
 						break;
 					}
+					prevId = id;
 				}
+#else
+				OutputCDMain(fileMainInfo, lpBuf + dwOfs2, nLBA, DISC_RAW_READ_SIZE);
 #endif
 				if (!bCheckSectorNum) {
 					break;
@@ -699,24 +778,24 @@ BOOL ReadDVDRaw(
 			}
 			if (bCheckSectorNum) {
 				nRereadNum = 0;
-				fwrite(lpBuf, sizeof(BYTE), dwRawWriteSize, fp);
-				dwSectorNum += dwTransferAndMemSize;
+				fwrite(lpBuf, sizeof(BYTE), rawWriteSize, fp);
+				sectorNum += transferAndMemSize;
 			}
 			else {
 				if (++nRereadNum == 40) {
 					OutputString("Max Reread %d. LBA: %7d\n", nRereadNum, nLBA);
 					if (!bRetry && IsSupported0xE7Type2(pDevice)) {
-						dwTransferLen = 1;
-						dwTransferAndMemSize = dwTransferLen * nMemBlkSize;
-						dwReadSize = (DWORD)DISC_RAW_READ_SIZE * dwTransferLen;
-						dwRawReadSize = (DWORD)DVD_RAW_READ * dwTransferLen;
-						dwRawWriteSize = (DWORD)DVD_RAW_READ * dwTransferLen * nMemBlkSize;
-						dwBaseAddr = 0x7FFFF7F0;
-						nLBA = (INT)dwSectorNum - 0x30000 - 2;
+						transferLen = 1;
+						transferAndMemSize = transferLen * memBlkSize;
+						dwReadSize = (DWORD)DISC_RAW_READ_SIZE * transferLen;
+						dwRawReadSize = (DWORD)dwSectorSize * transferLen;
+						rawWriteSize = (size_t)dwSectorSize * transferLen * memBlkSize;
+						baseAddr = 0x7FFFF7F0;
+						nLBA = (INT)sectorNum - 0x30000 - 2;
 						nRereadNum = 0;
-						lpCmd[10] = HIBYTE(LOWORD(DVD_RAW_READ * dwTransferLen));
-						lpCmd[11] = LOBYTE(LOWORD(DVD_RAW_READ * dwTransferLen));
-						REVERSE_BYTES(&cdb.TransferLength, &dwTransferLen);
+						lpCmd[10] = HIBYTE(LOWORD(dwSectorSize * transferLen));
+						lpCmd[11] = LOBYTE(LOWORD(dwSectorSize * transferLen));
+						REVERSE_BYTES(&cdb.TransferLength, &transferLen);
 						bRetry = TRUE;
 						continue;
 					}
@@ -727,76 +806,82 @@ BOOL ReadDVDRaw(
 				}
 				OutputString("Reread %d. LBA: %7d\n", nRereadNum, nLBA);
 			}
-			if (nRereadNum || IsSupported0xE7Type1(pDevice) ||
-				IsSupported0xE7Type2(pDevice) || IsSupported0xE7Type3(pDevice)
-				) {
-				INT tmp = nLBA - (INT)dwTransferAndMemSize;
-				if (tmp < 0) {
-					if (IsSupported0xE7Type1(pDevice)) {
-						tmp = 16;
+			if (nRereadNum || IsNintendoDisc(pDisc)) {
+				if (IsSupported0xE7Type1(pDevice) ||
+					IsSupported0xE7Type2(pDevice) ||
+					IsSupported0xE7Type3(pDevice)) {
+					INT tmp = nLBA - (INT)transferAndMemSize;
+					if (bReadErr) {
+						tmp = nLBA;
+							bReadErr = FALSE;
 					}
-					else if (IsSupported0xE7Type2(pDevice) || IsSupported0xE7Type3(pDevice)) {
-						tmp = 0;
+					if (tmp < 0) {
+						if (IsSupported0xE7Type1(pDevice)) {
+							tmp = 16;
+						}
+						else if (IsSupported0xE7Type2(pDevice) || IsSupported0xE7Type3(pDevice)) {
+							tmp = 0;
+						}
 					}
-				}
-				if (nRereadNum) {
-					if (nCmdType == 0) {
-						nLBA = tmp;
-					}
-#if 1
-					else if (!bRetry && nCmdType == 1) {
-						if (nRereadNum == 1) {
+					if (nRereadNum) {
+						if (nCmdType == 1) {
 							nLBA = tmp;
 						}
-						else if (nRereadNum == 2) {
-							nLBA -= 16;
+#if 1
+						else if (!bRetry && nCmdType == 2) {
+							if (nRereadNum == 1) {
+								nLBA = tmp;
+							}
+							else if (nRereadNum == 2) {
+								nLBA -= 16;
+							}
+							else if (nRereadNum == 4) {
+								nLBA -= 24;
+							}
+							else if (nRereadNum == 7) {
+								nLBA -= 32;
+							}
+							else if (nRereadNum == 11) {
+								nLBA -= 40;
+							}
+							else if (nRereadNum == 16) {
+								nLBA -= 48;
+							}
+							else if (nRereadNum == 22) {
+								nLBA -= 56;
+							}
+							else if (nRereadNum == 29) {
+								nLBA -= 64;
+							}
 						}
-						else if (nRereadNum == 4) {
-							nLBA -= 24;
+						if (bRetry && nCmdType == 2) {
+							if ((INT)(gotSectorNum - sectorNum) > 0) {
+								nLBA -= 2;
+							}
+							else {
+								nLBA = tmp + 1;
+							}
 						}
-						else if (nRereadNum == 7) {
-							nLBA -= 32;
-						}
-						else if (nRereadNum == 11) {
-							nLBA -= 40;
-						}
-						else if (nRereadNum == 16) {
-							nLBA -= 48;
-						}
-						else if (nRereadNum == 22) {
-							nLBA -= 56;
-						}
-						else if (nRereadNum == 29) {
-							nLBA -= 64;
-						}
-					}
-					if (bRetry && nCmdType == 1) {
-						if ((INT)(dwGotSectorNum - dwSectorNum) > 0) {
-							nLBA -= 2;
-						}
-						else {
-							nLBA = tmp + 1;
-						}
-					}
 #endif
-					else if (nCmdType == 2) {
-						if ((INT)(dwGotSectorNum - dwSectorNum) > 0) {
-							nLBA -= 32;
+						else if (nCmdType == 3) {
+							if ((INT)(gotSectorNum - sectorNum) > 0) {
+								nLBA -= 32;
+							}
 						}
 					}
-				}
-				REVERSE_BYTES(&cdb.LogicalBlock, &tmp);
-				// delete cache memory
-				if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, lpBuf,
-					direction, dwReadSize, &byScsiStatus, _T(__FUNCTION__), __LINE__)
-					|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-					throw FALSE;
+					REVERSE_BYTES(&cdb.LogicalBlock, &tmp);
+					// delete cache memory
+					if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, lpBuf,
+						direction, dwReadSize, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+						|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+						throw FALSE;
+					}
 				}
 			}
 			OutputString(_T("\rCreating raw(LBA) %7u/%7u")
-				, nLBA + (INT)dwTransferAndMemSize, pDisc->SCSI.nAllLength);
+				, nLBA + (INT)transferAndMemSize, pDisc->SCSI.nAllLength);
 			if (pExtArg->byFix) {
-				if (nLBA == (INT)pDisc->DVD.dwFixNum * 16 + 16) {
+				if (nLBA == (INT)pDisc->DVD.fixNum * 16 + 16) {
 					break;
 				}
 			}
@@ -809,10 +894,7 @@ BOOL ReadDVDRaw(
 	FreeAndNull(pBuf);
 	FcloseAndNull(fp);
 
-	if ((pDisc->SCSI.nAllLength == GAMECUBE_SIZE ||
-		pDisc->SCSI.nAllLength == WII_SL_SIZE ||
-		pDisc->SCSI.nAllLength == WII_DL_SIZE)
-		&& bRet && IsSupported0xE7(pDevice)) {
+	if (bRet && IsNintendoDisc(pDisc) && IsSupported0xE7(pDevice)) {
 		_TCHAR str[_MAX_PATH * 3] = {};
 		if (GetUnscCmd(str, pszFullPath)) {
 			bRet = _tsystem(str);
@@ -1009,7 +1091,7 @@ BOOL ReadDiscStructure(
 				}
 				continue;
 			}
-			else if (pEntry->FormatCode == 0x03 && !pDisc->DVD.ucBca && !pExtArg->byRawDump) {
+			else if (pEntry->FormatCode == 0x03 && !pDisc->DVD.ucBca) {
 				OutputDiscLogA("Skiped because of no BCA data\n\n");
 				continue;
 			}
@@ -1047,6 +1129,12 @@ BOOL ReadDiscStructure(
 				(pDisc->SCSI.wCurrentMedia != ProfileDvdPlusRW) &&
 				(pDisc->SCSI.wCurrentMedia != ProfileDvdPlusR)) {
 				OutputDiscLogA("Skiped because of DVD+R, RW only\n\n");
+				continue;
+			}
+			else if ((pEntry->FormatCode == 0x12 || pEntry->FormatCode == 0x15 ||
+				(0x80 <= pEntry->FormatCode && pEntry->FormatCode <= 0x86)) &&
+				(pDisc->SCSI.wCurrentMedia != ProfileHDDVDRom)) {
+				OutputDiscLogA("Skiped because of HD DVD only\n\n");
 				continue;
 			}
 			else if ((0x20 <= pEntry->FormatCode && pEntry->FormatCode <= 0x24) &&
@@ -1126,7 +1214,7 @@ BOOL ReadDiscStructure(
 					}
 					pDisc->SCSI.nAllLength = (INT)dwSectorLen;
 				}
-				else if (pEntry->FormatCode == DvdManufacturerDescriptor && IsXbox(pExecType)) {
+				else if (pEntry->FormatCode == DvdManufacturerDescriptor && *pExecType == xbox) {
 					OutputManufacturingInfoForXbox(lpFormat + sizeof(DVD_DESCRIPTOR_HEADER));
 				}
 			}
@@ -1182,9 +1270,9 @@ BOOL ReadCapacity(
 		|| scsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		return FALSE;
 	}
-	DWORD len = MAKEDWORD(MAKEWORD(buf[3], buf[2]), MAKEWORD(buf[1], buf[0]));
+	UINT len = MAKEUINT(MAKEWORD(buf[3], buf[2]), MAKEWORD(buf[1], buf[0]));
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(ReadCapacity));
-	OutputDiscLogA("\tMax LBA + 1: %ld (0x%lx)\n", len + 1, len + 1);
+	OutputDiscLogA("\tMax LBA + 1: %d (0x%x)\n", len + 1, len + 1);
 	return TRUE;
 }
 
@@ -1631,20 +1719,20 @@ BOOL ReadXboxDVDBySwap(
 		}
 	}
 
-	for (INT i = 0; pExtArg->dwSecuritySector[i] != 0; i++) {
+	for (INT i = 0; pExtArg->uiSecuritySector[i] != 0; i++) {
 		if (i < 8) {
-			if (pExtArg->dwSecuritySector[i] < 3000000) {
-				pDisc->DVD.securitySectorRange[i][0] = pExtArg->dwSecuritySector[i];
-				pDisc->DVD.securitySectorRange[i][1] = pExtArg->dwSecuritySector[i] + 4095;
+			if (pExtArg->uiSecuritySector[i] < 3000000) {
+				pDisc->DVD.securitySectorRange[i][0] = pExtArg->uiSecuritySector[i];
+				pDisc->DVD.securitySectorRange[i][1] = pExtArg->uiSecuritySector[i] + 4095;
 			}
 			else {
-				pDisc->DVD.securitySectorRange[i][0] = pExtArg->dwSecuritySector[i] + pDisc->DVD.dwXboxSwapOfs;
-				pDisc->DVD.securitySectorRange[i][1] = pExtArg->dwSecuritySector[i] + 4095 + pDisc->DVD.dwXboxSwapOfs;
+				pDisc->DVD.securitySectorRange[i][0] = pExtArg->uiSecuritySector[i] + pDisc->DVD.dwXboxSwapOfs;
+				pDisc->DVD.securitySectorRange[i][1] = pExtArg->uiSecuritySector[i] + 4095 + pDisc->DVD.dwXboxSwapOfs;
 			}
 		}
 		else {
-			pDisc->DVD.securitySectorRange[i][0] = pExtArg->dwSecuritySector[i] + pDisc->DVD.dwXboxSwapOfs;
-			pDisc->DVD.securitySectorRange[i][1] = pExtArg->dwSecuritySector[i] + 4095 + pDisc->DVD.dwXboxSwapOfs;
+			pDisc->DVD.securitySectorRange[i][0] = pExtArg->uiSecuritySector[i] + pDisc->DVD.dwXboxSwapOfs;
+			pDisc->DVD.securitySectorRange[i][1] = pExtArg->uiSecuritySector[i] + 4095 + pDisc->DVD.dwXboxSwapOfs;
 		}
 	}
 	if (!ReadDVD(pExecType, pExtArg, pDevice, pDisc, pszFullPath)) {
