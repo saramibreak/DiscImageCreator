@@ -1370,6 +1370,13 @@ BOOL FixSubChannel(
 			}
 		}
 	}
+	else {
+		if (pDiscPerSector->subQ.current.byTrackNum > pDisc->SCSI.toc.LastTrack && pDiscPerSector->subQ.current.byTrackNum != 110) {
+			OutputErrorString("pDiscPerSector->subQ.current.byTrackNum:%d, pDiscPerSector->subQ.prev.byTrackNum:%d\n"
+				, pDiscPerSector->subQ.current.byTrackNum, pDiscPerSector->subQ.prev.byTrackNum);
+			pDiscPerSector->subQ.current.byTrackNum = pDiscPerSector->subQ.prev.byTrackNum;
+		}
+	}
 	if (!*bReread) {
 		if (!pExtArg->bySkipSubP) {
 			FixSubP(pDiscPerSector, nLBA);
