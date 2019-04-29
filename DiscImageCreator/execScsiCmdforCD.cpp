@@ -1128,21 +1128,37 @@ BOOL ReadCDAll(
 							pDiscPerSector->bLibCrypt = IsValidLibCryptSector(pExtArg->byLibCrypt, nLBA);
 							pDiscPerSector->bSecuRom = IsValidSecuRomSector(pExtArg->byIntentionalSub, pDisc, nLBA);
 							BOOL bReturn = FixSubChannel(pExecType, pExtArg, pDevice, pDisc, pDiscPerSector, nLBA, &bReread);
+
+							BYTE lpSubcodeRaw[CD_RAW_READ_SUBCODE_SIZE] = {};
+							// fix raw subchannel
+							AlignColumnSubcode(lpSubcodeRaw, pDiscPerSector->subcode.current);
+
 							if (bReread && bProcessRet != RETURNED_EXIST_C2_ERROR) {
 								continue;
 							}
 							else if (!bReturn) {
+								OutputCDMain(fileMainError, pDiscPerSector->data.current, nLBA, 2352);
+								OutputCDSub96Align(pDiscPerSector->subcode.current, nLBA);
+#if 0
+								OutputErrorString(
+									"\n" STR_LBA "Failed to reread because crc16 of subQ is 0. Read back 1000 sector\n", nLBA, nLBA);
+								for (INT n = 1000; n > 0; n--) {
+									FlushDriveCache(pExtArg, pDevice, nLBA + n);
+								}
+								SetDiscSpeed(pExecType, pExtArg, pDevice, 24);
+								nLBA = 0;
+								continue;
+#else
 								OutputErrorString(
 									"\n" STR_LBA "Failed to reread because crc16 of subQ is 0\n"
 									"1. If your disc has scratches, it needs to be polished\n"
 									"2. Try to dump with different drive speed\n"
 									"3. Try to dump with different drive\n"
 									, nLBA, nLBA);
+								FlushLog();
 								throw FALSE;
+#endif
 							}
-							BYTE lpSubcodeRaw[CD_RAW_READ_SUBCODE_SIZE] = {};
-							// fix raw subchannel
-							AlignColumnSubcode(lpSubcodeRaw, pDiscPerSector->subcode.current);
 #if 0
 							OutputCDSub96Align(pDiscPerSector->subcode.current, nLBA);
 							OutputCDSub96Raw(standardOut, lpSubcodeRaw, nLBA);
