@@ -789,7 +789,7 @@ VOID SetTrackAttribution(
 			pDiscPerSector->byTrackNum = tmpCurrentTrackNum;
 			tIdx = pDiscPerSector->byTrackNum - 1;
 
-			if (tmpCurrentIndex > 0) {
+			if (0 < tmpCurrentIndex && tmpCurrentIndex < MAXIMUM_NUMBER_INDEXES) {
 				if (pDisc->SCSI.nFirstLBAof2ndSession == -1 &&
 					tmpCurrentIndex == 1 &&
 					nLBA != pDisc->SCSI.lpFirstLBAListOnToc[tIdx]) {
@@ -818,7 +818,7 @@ VOID SetTrackAttribution(
 				}
 			}
 			// preserve last LBA per data track
-			if (tmpPrevTrackNum > 0) {
+			if (0 < tmpPrevTrackNum && tmpPrevTrackNum <= pDiscPerSector->byTrackNum + 1) {
 				if (pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[tmpPrevTrackNum - 1] != -1 &&
 					pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tmpPrevTrackNum - 1] == -1 &&
 					(pDiscPerSector->subQ.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
@@ -848,7 +848,7 @@ VOID SetTrackAttribution(
 		}
 		// preserve the 1st LBA of the changed index 
 		if (pDiscPerSector->byTrackNum >= 1 && tmpPrevIndex + 1 == tmpCurrentIndex) {
-			if (tmpCurrentIndex != 1) {
+			if (tmpCurrentIndex != 1 && tmpCurrentIndex < MAXIMUM_NUMBER_INDEXES) {
 				if (pDisc->SUB.lpFirstLBAListOnSub[tIdx][tmpCurrentIndex] == -1) {
 					OutputSubInfoWithLBALogA("Index is changed from [%02d] to [%02d] [L:%d]\n", nLBA
 						, tmpCurrentTrackNum, tmpPrevIndex, tmpCurrentIndex, (INT)__LINE__);
