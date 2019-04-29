@@ -1183,6 +1183,8 @@ BOOL ReadCDForCheckingPsxRegion(
 	BYTE buf[DISC_RAW_READ_SIZE] = {};
 	CONST CHAR regionPal[] =
 		"          Licensed  by          Sony Computer Entertainment Euro pe   ";
+	CONST CHAR regionPal2[] =
+		"          Licensed  by          Sony Computer Entertainment(Europe)";
 	CDB::_READ12 cdb = {};
 	cdb.OperationCode = SCSIOP_READ12;
 	cdb.TransferLength[3] = 1;
@@ -1191,9 +1193,15 @@ BOOL ReadCDForCheckingPsxRegion(
 		DISC_RAW_READ_SIZE, _T(__FUNCTION__), __LINE__)) {
 		return TRUE;
 	}
+	OutputCDMain(fileMainInfo, buf, 4, 80);
 	if (!memcmp(buf, regionPal, sizeof(regionPal))) {
 		return TRUE;
 	}
+	else if (!memcmp(buf, regionPal2, sizeof(regionPal2))) {
+		return TRUE;
+	}
+	OutputString(
+		_T("[INFO] This disc isn't PSX PAL. /nl is ignored.\n"));
 	return FALSE;
 }
 
@@ -1220,10 +1228,14 @@ VOID ReadCDForScanningPsxAntiMod(
 		for (INT i = 0; i < DISC_RAW_READ_SIZE; i++) {
 			if (!memcmp(&buf[i], antiModStrEn, sizeof(antiModStrEn))) {
 				OutputLogA(fileDisc | standardOut, "\nDetected anti-mod string (en): LBA %d", nLBA);
+				OutputCDMain(fileMainInfo, buf, nLBA, DISC_RAW_READ_SIZE);
 				bRet += TRUE;
 			}
 			if (!memcmp(&buf[i], antiModStrJp, sizeof(antiModStrJp))) {
 				OutputLogA(fileDisc | standardOut, "\nDetected anti-mod string (jp): LBA %d\n", nLBA);
+				if (!bRet) {
+					OutputCDMain(fileMainInfo, buf, nLBA, DISC_RAW_READ_SIZE);
+				}
 				bRet += TRUE;
 			}
 			if (bRet == 2) {
@@ -1581,31 +1593,32 @@ BOOL ReadCDCheck(
 				if (pDisc->SCSI.byFirstDataTrackNum == 1) {
 					ReadCDForSegaDisc(pExtArg, pDevice);
 				}
+				if (pExtArg->byLibCrypt) {
+					// PSX PAL only
+					if (!ReadCDForCheckingPsxRegion(pExtArg, pDevice)) {
+						pExtArg->byLibCrypt = FALSE;
+					}
+				}
+				if (pExtArg->byScanAntiModStr) {
+					// PSX only
+					ReadCDForScanningPsxAntiMod(pExtArg, pDevice, pDisc);
+				}
+				if (pExtArg->byScanProtectViaSector) {
+					// Now ProtectCD VOB can be detected
+					if (!ReadCDForScanningProtectViaSector(pExtArg, pDevice, pDisc)) {
+						return FALSE;
+					}
+				}
 				if (!ReadCDForFileSystem(pExecType, pExtArg, pDevice, pDisc)) {
 					return FALSE;
 				}
-			}
-			if (pExtArg->byScanProtectViaSector) {
-				if (!ReadCDForScanningProtectViaSector(pExtArg, pDevice, pDisc)) {
-					return FALSE;
-				}
-			}
-			if ((pExtArg->byScanProtectViaFile || pExtArg->byScanProtectViaSector) &&
-				pDisc->PROTECT.byExist == PROTECT_TYPE_CD::no) {
-				OutputString(
-					_T("[INFO] Protection can't be detected. /sf, /ss is ignored.\n"));
-				pExtArg->byScanProtectViaFile = FALSE;
-				pExtArg->byScanProtectViaSector = FALSE;
-			}
-			if (pExtArg->byLibCrypt) {
-				if (!ReadCDForCheckingPsxRegion(pExtArg, pDevice)) {
+				if ((pExtArg->byScanProtectViaFile || pExtArg->byScanProtectViaSector) &&
+					pDisc->PROTECT.byExist == PROTECT_TYPE_CD::no) {
 					OutputString(
-						_T("[INFO] This disc isn't PSX PAL. /nl is ignored.\n"));
-					pExtArg->byLibCrypt = FALSE;
+						_T("[INFO] Protection can't be detected. /sf, /ss is ignored.\n"));
+					pExtArg->byScanProtectViaFile = FALSE;
+					pExtArg->byScanProtectViaSector = FALSE;
 				}
-			}
-			if (pExtArg->byScanAntiModStr) {
-				ReadCDForScanningPsxAntiMod(pExtArg, pDevice, pDisc);
 			}
 		}
 	}
