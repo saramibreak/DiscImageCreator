@@ -67,13 +67,13 @@ clean:
 	rm -f buildDateTime.h
 
 buildDateTime:
-	echo "#pragma once" >buildDateTime.h
-	echo >>buildDateTime.h
-	echo -n "#define BUILD_DATE \"" >>buildDateTime.h
-	date +%Y%m%d | tr -d '\n' >>buildDateTime.h
-	echo "\"" >>buildDateTime.h
-	echo -n "#define BUILD_TIME \"" >>buildDateTime.h
-	date +%H%M%S | tr -d '\n' >>buildDateTime.h
-	echo "\"" >>buildDateTime.h
+	$(shell /usr/bin/env echo "#pragma once" >buildDateTime.h)
+	$(shell /usr/bin/env echo >>buildDateTime.h)
+	$(shell /usr/bin/env echo -n "#define BUILD_DATE \"" >>buildDateTime.h)
+	$(shell date +%Y%m%d | tr -d '\n' >>buildDateTime.h)
+	$(shell /usr/bin/env echo "\"" >>buildDateTime.h)
+	$(shell /usr/bin/env echo -n "#define BUILD_TIME \"" >>buildDateTime.h)
+	$(shell date +%H%M%S | tr -d '\n' >>buildDateTime.h)
+	$(shell /usr/bin/env echo "\"" >>buildDateTime.h)
 
 .PHONY: clean clean-objs buildDateTime
