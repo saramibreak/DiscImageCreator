@@ -907,6 +907,14 @@ BOOL ReadDVDRaw(
 			// 6 == can't write to .iso
 			// frame num == error unscrambling recording frame xx
 			OutputString("ret = %d\n", bRet);
+			if (bRet == 0) {
+				if (pDisc->DVD.disc == gamecube) {
+					ReadNintendoFileSystem(pDevice, pszFullPath, gamecube);
+				}
+				else if (pDisc->DVD.disc == wii) {
+					ReadWiiPartition(pDevice, pszFullPath);
+				}
+			}
 		}
 	}
 	return bRet;

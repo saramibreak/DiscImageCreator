@@ -54,6 +54,17 @@ BOOL ReadXBOXFileSystem(
 	DWORD dwStartLBA
 );
 
+BOOL ReadNintendoFileSystem(
+	PDEVICE pDevice,
+	LPCTSTR pszFullPath,
+	DISC_TYPE type
+);
+
+BOOL ReadWiiPartition(
+	PDEVICE pDevice,
+	LPCTSTR pszFullPath
+);
+
 BOOL ReadBDForParamSfo(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,

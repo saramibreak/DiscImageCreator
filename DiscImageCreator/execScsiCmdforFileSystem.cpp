@@ -26,6 +26,7 @@
 #include "outputScsiCmdLogforDVD.h"
 #include "set.h"
 #include "_external/abgx360.h"
+#include "_external/mbedtls/aes.h"
 
 BOOL ReadCDFor3DODirectory(
 	PEXT_ARG pExtArg,
@@ -1002,8 +1003,8 @@ BOOL ReadXBOXFileSystem(
 		OUTPUT_DHYPHEN_PLUS_STR(XDVDFS)
 		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(VOLUME DESCRIPTOR)
 		"\t                        Header: %.20s\n"
-		"\tSector of root directory table: %d(0x%x)\n"
-		"\t  Size of root directory table: %d(0x%x)\n"
+		"\tSector of root directory table: %d(%#x)\n"
+		"\t  Size of root directory table: %d(%#x)\n"
 		"\t           Image creation time: %.20s\n"
 		"\t                        Footer: %.20s\n"
 		, nLBA, nLBA
@@ -1021,6 +1022,616 @@ BOOL ReadXBOXFileSystem(
 		return FALSE;
 	};
 	FreeAndNull(pBuf);
+	return TRUE;
+}
+
+// http://hitmen.c02.at/files/yagcd/yagcd/chap13.html#sec13
+// https://wiibrew.org/wiki/Wii_Disc
+BOOL ReadNintendoSystemHeader(
+	LPCSTR pszFullPath,
+	FILE** fp,
+	LPBYTE buf
+) {
+	*fp = CreateOrOpenFileA(pszFullPath, NULL, NULL, NULL, NULL, ".iso", "rb", 0, 0);
+	if (!*fp) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		return FALSE;
+	}
+	if (fread(buf, sizeof(BYTE), 1024, *fp) != 1024) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		FcloseAndNull(*fp);
+		return FALSE;
+	};
+	OutputCDMain(fileMainInfo, buf, 0, 1024);
+	OutputVolDescLogA(
+		OUTPUT_DHYPHEN_PLUS_STR(Disc Header)
+		"\t                                 Disc ID: %.1s\n"
+		"\t                               Game Code: %.2s\n"
+		"\t                             Region Code: %.1s\n"
+		"\t                              Maker Code: %.2s\n"
+		"\t                             Disc Number: %d\n"
+		"\t                                 Version: %d\n"
+		"\t                         Audio Streaming: %d\n"
+		"\t                      Stream Buffer Size: %d\n"
+		"\t                               Game Name: %s\n"
+		, (LPCH)&buf[0], (LPCH)&buf[1], (LPCH)&buf[3], (LPCH)&buf[4]
+		, buf[6], buf[7], buf[8], buf[9], (LPCH)&buf[32]
+	);
+	return TRUE;
+}
+
+BOOL ReadNintendoFileSystem(
+	PDEVICE pDevice,
+	LPCTSTR pszFullPath,
+	DISC_TYPE type
+) {
+	FILE* fp = NULL;
+	BYTE buf[1024] = {};
+	OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR(NintendoOpticalDiscFS));
+	if (!ReadNintendoSystemHeader(pszFullPath, &fp, buf)) {
+		return FALSE;
+	};
+	if (fread(buf, sizeof(BYTE), 64, fp) != 64) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		FcloseAndNull(fp);
+		return FALSE;
+	};
+	OutputCDMain(fileMainInfo, buf, 0, 64);
+	UINT ofsOfFst = MAKEUINT(MAKEWORD(buf[39], buf[38]), MAKEWORD(buf[37], buf[36]));
+	UINT sizeOfFst = MAKEUINT(MAKEWORD(buf[43], buf[42]), MAKEWORD(buf[41], buf[40]));
+	OutputVolDescLogA(
+		"\t      offset of debug monitor (dh.bin) ?: %d(%#x)\n"
+		"\t        addr (?) to load debug monitor ?: %#x\n"
+		"\toffset of main executable DOL (bootfile): %d(%#x)\n"
+		"\t             offset of the FST (fst.bin): %d(%#x)\n"
+		"\t                             size of FST: %d(%#x)\n"
+		"\t                     maximum size of FST: %d(%#x)\n"
+		"\t                       user position (?): %#x\n"
+		"\t                         user length (?): %d(%#x)\n"
+		"\t                                 unknown: %d(%#x)\n"
+		, MAKEUINT(MAKEWORD(buf[3], buf[2]), MAKEWORD(buf[1], buf[0]))
+		, MAKEUINT(MAKEWORD(buf[3], buf[2]), MAKEWORD(buf[1], buf[0]))
+		, MAKEUINT(MAKEWORD(buf[7], buf[6]), MAKEWORD(buf[5], buf[4]))
+		, MAKEUINT(MAKEWORD(buf[35], buf[34]), MAKEWORD(buf[33], buf[32]))
+		, MAKEUINT(MAKEWORD(buf[35], buf[34]), MAKEWORD(buf[33], buf[32]))
+		, ofsOfFst, ofsOfFst, sizeOfFst, sizeOfFst
+		, MAKEUINT(MAKEWORD(buf[47], buf[46]), MAKEWORD(buf[45], buf[44]))
+		, MAKEUINT(MAKEWORD(buf[47], buf[46]), MAKEWORD(buf[45], buf[44]))
+		, MAKEUINT(MAKEWORD(buf[51], buf[50]), MAKEWORD(buf[49], buf[48]))
+		, MAKEUINT(MAKEWORD(buf[55], buf[54]), MAKEWORD(buf[53], buf[52]))
+		, MAKEUINT(MAKEWORD(buf[55], buf[54]), MAKEWORD(buf[53], buf[52]))
+		, MAKEUINT(MAKEWORD(buf[59], buf[58]), MAKEWORD(buf[57], buf[56]))
+		, MAKEUINT(MAKEWORD(buf[59], buf[58]), MAKEWORD(buf[57], buf[56]))
+	);
+	if (type == wii) {
+		ofsOfFst <<= 2;
+		sizeOfFst <<= 2;
+	}
+	fseek(fp, 0x2440, SEEK_SET);
+	if (fread(buf, sizeof(BYTE), 0x20, fp) != 0x20) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		FcloseAndNull(fp);
+		return FALSE;
+	};
+	OutputCDMain(fileMainInfo, buf, 0x2440 / 0x800, 0x20);
+	OutputVolDescLogA(
+		OUTPUT_DHYPHEN_PLUS_STR(Apploader)
+		"\tdate (version) of the apploader: %s\n"
+		"\t           apploader entrypoint: %#x\n"
+		"\t          size of the apploader: %d(%#x)\n"
+		"\t                   trailer size: %d(%#x)\n"
+		, (LPCH)&buf[0]
+		, MAKEUINT(MAKEWORD(buf[19], buf[18]), MAKEWORD(buf[17], buf[16]))
+		, MAKEUINT(MAKEWORD(buf[23], buf[22]), MAKEWORD(buf[21], buf[20]))
+		, MAKEUINT(MAKEWORD(buf[23], buf[22]), MAKEWORD(buf[21], buf[20]))
+		, MAKEUINT(MAKEWORD(buf[27], buf[26]), MAKEWORD(buf[25], buf[24]))
+		, MAKEUINT(MAKEWORD(buf[27], buf[26]), MAKEWORD(buf[25], buf[24]))
+	);
+	fseek(fp, (LONG)ofsOfFst, SEEK_SET);
+	LPBYTE pBuf = NULL;
+	LPBYTE lpBuf = NULL;
+	if (!GetAlignedCallocatedBuffer(pDevice, &pBuf, sizeOfFst, &lpBuf, _T(__FUNCTION__), __LINE__)) {
+		FcloseAndNull(fp);
+		return FALSE;
+	}
+	if (fread(lpBuf, sizeof(BYTE), sizeOfFst, fp) != sizeOfFst) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		FreeAndNull(pBuf);
+		FcloseAndNull(fp);
+		return FALSE;
+	};
+	OutputCDMain(fileMainInfo, lpBuf, (INT)ofsOfFst / 0x800, (INT)sizeOfFst);
+	UINT numOfEntries = MAKEUINT(MAKEWORD(lpBuf[11], lpBuf[10]), MAKEWORD(lpBuf[9], lpBuf[8]));
+	OutputVolDescLogA(
+		OUTPUT_DHYPHEN_PLUS_STR(Root Directory Entry)
+		"\t                   flags: %d\n"
+		"\toffset into string table: %d(%#x)\n"
+		"\t           parent_offset: %d(%#x)\n"
+		"\t             num_entries: %d\n\n"
+		, lpBuf[0]
+		, MAKEUINT(MAKEWORD(lpBuf[3], lpBuf[2]), MAKEWORD(lpBuf[1], 0))
+		, MAKEUINT(MAKEWORD(lpBuf[3], lpBuf[2]), MAKEWORD(lpBuf[1], 0))
+		, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], lpBuf[4]))
+		, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], lpBuf[4]))
+		, numOfEntries
+	);
+	
+	UINT posOfString = numOfEntries * 12;
+	OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR(Directory Entry));
+
+	for (UINT i = 12; i < posOfString; i += 12) {
+		if (lpBuf[0 + i] == 0 || lpBuf[0 + i] == 1) {
+			UINT ofsString = MAKEUINT(MAKEWORD(lpBuf[3 + i], lpBuf[2 + i]), MAKEWORD(lpBuf[1 + i], 0));
+			OutputVolDescLogA(
+				"\t                   flags: %d\n"
+				"\toffset into string table: %d(%#x)\n"
+				, lpBuf[0 + i], ofsString, ofsString
+			);
+			if (lpBuf[0 + i] == 0) {
+				OutputVolDescLogA(
+					"\t               file_name: %s\n"
+					"\t             file_offset: %d(%#x)\n"
+					"\t             file_length: %d(%#x)\n\n"
+					, (LPCH)&lpBuf[posOfString + ofsString]
+					, MAKEUINT(MAKEWORD(lpBuf[7 + i], lpBuf[6 + i]), MAKEWORD(lpBuf[5 + i], lpBuf[4 + i]))
+					, MAKEUINT(MAKEWORD(lpBuf[7 + i], lpBuf[6 + i]), MAKEWORD(lpBuf[5 + i], lpBuf[4 + i]))
+					, MAKEUINT(MAKEWORD(lpBuf[11 + i], lpBuf[10 + i]), MAKEWORD(lpBuf[9 + i], lpBuf[8 + i]))
+					, MAKEUINT(MAKEWORD(lpBuf[11 + i], lpBuf[10 + i]), MAKEWORD(lpBuf[9 + i], lpBuf[8 + i]))
+				);
+			}
+			else if (lpBuf[0 + i] == 1) {
+				OutputVolDescLogA(
+					"\t                dir_name: %s\n"
+					"\t           parent_offset: %d(%#x)\n"
+					"\t             next_offset: %d(%#x)\n\n"
+					, (LPCH)&lpBuf[posOfString + ofsString]
+					, MAKEUINT(MAKEWORD(lpBuf[7 + i], lpBuf[6 + i]), MAKEWORD(lpBuf[5 + i], lpBuf[4 + i]))
+					, MAKEUINT(MAKEWORD(lpBuf[7 + i], lpBuf[6 + i]), MAKEWORD(lpBuf[5 + i], lpBuf[4 + i]))
+					, MAKEUINT(MAKEWORD(lpBuf[11 + i], lpBuf[10 + i]), MAKEWORD(lpBuf[9 + i], lpBuf[8 + i]))
+					, MAKEUINT(MAKEWORD(lpBuf[11 + i], lpBuf[10 + i]), MAKEWORD(lpBuf[9 + i], lpBuf[8 + i]))
+				);
+			}
+		}
+		else {
+			break;
+		}
+	}
+	FreeAndNull(pBuf);
+	FcloseAndNull(fp);
+	return TRUE;
+}
+
+BOOL ReadPartitionTblEntry(
+	FILE* fp,
+	LPBYTE buf,
+	INT idx,
+	UINT numOfPartion,
+	UINT ofsOfPartionInfoTbl,
+	UINT ofsOfPartion[][4]
+) {
+	fseek(fp, (LONG)ofsOfPartionInfoTbl << 2, SEEK_SET);
+	for (UINT i = 0; i < numOfPartion; i++) {
+		if (fread(buf, sizeof(BYTE), 8, fp) != 8) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			FcloseAndNull(fp);
+			return FALSE;
+		};
+		ofsOfPartion[idx][i] = MAKEUINT(MAKEWORD(buf[3], buf[2]), MAKEWORD(buf[1], buf[0]));
+		OutputVolDescLogA(
+			OUTPUT_DHYPHEN_PLUS_STR(Partition table entry)
+			"\t           Partition offset: %#x\n"
+			"\t                       Type: %d\n"
+			, ofsOfPartion[idx][i], MAKEUINT(MAKEWORD(buf[7], buf[6]), MAKEWORD(buf[5], buf[4]))
+		);
+	}
+	return TRUE;
+}
+
+BOOL ReadWiiPartition(
+	PDEVICE pDevice,
+	LPCTSTR pszFullPath
+) {
+	FILE* fp = NULL;
+	BYTE buf[0x8000] = {};
+	OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR(WiiFS));
+	if (!ReadNintendoSystemHeader(pszFullPath, &fp, buf)) {
+		return FALSE;
+	};
+
+	fseek(fp, 0x40000, SEEK_SET);
+	if (fread(buf, sizeof(BYTE), 0x20, fp) != 0x20) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		FcloseAndNull(fp);
+		return FALSE;
+	};
+	OutputCDMain(fileMainInfo, buf, 0x40000 / 0x800, 0x20);
+	UINT numOfPartition[4] = {};
+	numOfPartition[0] = MAKEUINT(MAKEWORD(buf[3], buf[2]), MAKEWORD(buf[1], buf[0]));
+	UINT ofsOfPart1 = MAKEUINT(MAKEWORD(buf[7], buf[6]), MAKEWORD(buf[5], buf[4]));
+	numOfPartition[1] = MAKEUINT(MAKEWORD(buf[11], buf[10]), MAKEWORD(buf[9], buf[8]));
+	UINT ofsOfPart2 = MAKEUINT(MAKEWORD(buf[15], buf[14]), MAKEWORD(buf[13], buf[12]));
+	numOfPartition[2] = MAKEUINT(MAKEWORD(buf[19], buf[18]), MAKEWORD(buf[17], buf[16]));
+	UINT ofsOfPart3 = MAKEUINT(MAKEWORD(buf[23], buf[22]), MAKEWORD(buf[21], buf[20]));
+	numOfPartition[3] = MAKEUINT(MAKEWORD(buf[27], buf[26]), MAKEWORD(buf[25], buf[24]));
+	UINT ofsOfPart4 = MAKEUINT(MAKEWORD(buf[31], buf[30]), MAKEWORD(buf[29], buf[28]));
+	OutputVolDescLogA(
+		OUTPUT_DHYPHEN_PLUS_STR(Partitions information)
+		"\t       Total 1st partitions: %d\n"
+		"\tPartition info table offset: %#x\n"
+		"\t       Total 2nd partitions: %d\n"
+		"\tPartition info table offset: %#x\n"
+		"\t       Total 3rd partitions: %d\n"
+		"\tPartition info table offset: %#x\n"
+		"\t       Total 4th partitions: %d\n"
+		"\tPartition info table offset: %#x\n"
+		, numOfPartition[0], ofsOfPart1, numOfPartition[1], ofsOfPart2
+		, numOfPartition[2], ofsOfPart3, numOfPartition[3], ofsOfPart4
+	);
+	UINT ofsOfPartion[4][4] = {};
+	ReadPartitionTblEntry(fp, buf, 0, numOfPartition[0], ofsOfPart1, &ofsOfPartion[0]);
+	if (numOfPartition[1] != 0) {
+		ReadPartitionTblEntry(fp, buf, 1, numOfPartition[1], ofsOfPart2, &ofsOfPartion[1]);
+		if (numOfPartition[2] != 0) {
+			ReadPartitionTblEntry(fp, buf, 2, numOfPartition[2], ofsOfPart3, &ofsOfPartion[2]);
+			if (numOfPartition[3] != 0) {
+				ReadPartitionTblEntry(fp, buf, 3, numOfPartition[3], ofsOfPart4, &ofsOfPartion[3]);
+			}
+		}
+	}
+
+	fseek(fp, 0x4e000, SEEK_SET);
+	if (fread(buf, sizeof(BYTE), 0x20, fp) != 0x20) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		FcloseAndNull(fp);
+		return FALSE;
+	};
+	OutputCDMain(fileMainInfo, buf, 0x4e000 / 0x800, 0x20);
+	OutputVolDescLogA(
+		OUTPUT_DHYPHEN_PLUS_STR(Region setting)
+		"\t                     Region byte: %d\n"
+		"\tAge Rating byte for Japan/Taiwan: %d(%#x)\n"
+		"\tAge Rating byte for USA         : %d(%#x)\n"
+		"\tAge Rating byte for ------------: %d(%#x)\n"
+		"\tAge Rating byte for Germany     : %d(%#x)\n"
+		"\tAge Rating byte for PEGI        : %d(%#x)\n"
+		"\tAge Rating byte for Finland     : %d(%#x)\n"
+		"\tAge Rating byte for Portugal    : %d(%#x)\n"
+		"\tAge Rating byte for Britain     : %d(%#x)\n"
+		"\tAge Rating byte for Australia   : %d(%#x)\n"
+		"\tAge Rating byte for Korea       : %d(%#x)\n"
+		"\tAge Rating byte for ------------: %d(%#x)\n"
+		"\tAge Rating byte for ------------: %d(%#x)\n"
+		"\tAge Rating byte for ------------: %d(%#x)\n"
+		"\tAge Rating byte for ------------: %d(%#x)\n"
+		"\tAge Rating byte for ------------: %d(%#x)\n"
+		"\tAge Rating byte for ------------: %d(%#x)\n"
+		, MAKEUINT(MAKEWORD(buf[3], buf[2]), MAKEWORD(buf[1], buf[0]))
+		, buf[16], buf[16], buf[17], buf[17], buf[18], buf[18], buf[19], buf[19]
+		, buf[20], buf[20], buf[21], buf[21], buf[22], buf[22], buf[23], buf[23]
+		, buf[24], buf[24], buf[25], buf[25], buf[26], buf[26], buf[27], buf[27]
+		, buf[28], buf[28], buf[29], buf[29], buf[30], buf[30], buf[31], buf[31]
+	);
+
+	BYTE commonKey[16] = {};
+	BOOL bDecOK = FALSE;
+	FILE* fpKey = OpenProgrammabledFile(_T("key.bin"), _T("rb"));
+	if (!fpKey) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		OutputErrorString(_T("You can't decrypt iso because there isn't a key.bin\n"));
+	}
+	else {
+		if (fread(commonKey, sizeof(BYTE), sizeof(commonKey), fpKey) != sizeof(commonKey)) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		}
+		FcloseAndNull(fpKey);
+		bDecOK = TRUE;
+	}
+	for (UINT idx = 0; ofsOfPartion[idx][0] != 0; idx++) {
+		for (UINT idx2 = 0; idx2 < numOfPartition[idx]; idx2++) {
+			UINT realOfsOfPartion = ofsOfPartion[idx][idx2] << 2;
+			fseek(fp, (LONG)realOfsOfPartion, SEEK_SET);
+			if (fread(buf, sizeof(BYTE), 0x2C0, fp) != 0x2C0) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				FcloseAndNull(fp);
+				return FALSE;
+			};
+			OutputCDMain(fileMainInfo, buf, (INT)realOfsOfPartion / 0x800, 0x2C0);
+			UINT sigType = MAKEUINT(MAKEWORD(buf[3], buf[2]), MAKEWORD(buf[1], buf[0]));
+			OutputVolDescLogA(
+				OUTPUT_DHYPHEN_PLUS_STR(Partition)
+				"\t                  Signature type: %#x\n"
+				"\tSignature by a certificate's key: "
+				, sigType
+			);
+			INT size = 256;
+			if (sigType == 0x10000) {
+				size = 512;
+			}
+			for (INT i = 0; i < size; i++) {
+				OutputVolDescLogA("%02x", buf[4 + i]);
+			}
+			OutputVolDescLogA(
+				"\n"
+				"\t                Signature issuer: %s\n"
+				"\t                       ECDH data: "
+				, (LPCH)&buf[0x140]
+			);
+			for (INT i = 0; i < 0x3c; i++) {
+				OutputVolDescLogA("%02x", buf[0x0180 + i]);
+			}
+			OutputVolDescLogA(
+				"\n"
+				"\t             Encrypted title key: "
+			);
+			for (INT i = 0; i < 0x10; i++) {
+				OutputVolDescLogA("%02x", buf[0x01BF + i]);
+			}
+
+			// https://wiibrew.org/wiki/Wii_Security
+			BYTE decTitleKey[16] = {};
+			mbedtls_aes_context context = {};
+			if (bDecOK) {
+				BYTE iv[16] = {};
+				BYTE encTitleKey[16] = {};
+				memcpy(iv, &buf[0x1DC], 8);
+				memcpy(encTitleKey, &buf[0x1BF], sizeof(encTitleKey));
+
+				mbedtls_aes_setkey_dec(&context, commonKey, 128);
+				mbedtls_aes_crypt_cbc(&context, MBEDTLS_AES_DECRYPT, 16, iv, encTitleKey, decTitleKey);
+				mbedtls_aes_setkey_dec(&context, decTitleKey, 128);
+			}
+			OutputVolDescLogA(
+				"\n"
+				"\t                         Unknown: %#02x\n"
+				"\t                       ticket_id: %#llx\n"
+				"\t                      Console ID: %#x\n"
+				"\t                        Title ID: %#llx\n"
+				"\t                         Unknown: %#04x\n"
+				"\t            Ticket title version: %#x\n"
+				"\t           Permitted Titles Mask: %#x\n"
+				"\t                     Permit mask: %#x\n"
+				"\t                    Title Export: %#x\n"
+				"\t                Common Key index: %#x\n"
+				"\t                         Unknown: "
+				, buf[0x01CF]
+				, MAKEUINT64(MAKEUINT(MAKEWORD(buf[0x01D7], buf[0x01D6]), MAKEWORD(buf[0x01D5], buf[0x01D4]))
+					, MAKEUINT(MAKEWORD(buf[0x01D3], buf[0x01D2]), MAKEWORD(buf[0x01D1], buf[0x01D0])))
+				, MAKEUINT(MAKEWORD(buf[0x01DB], buf[0x01DA]), MAKEWORD(buf[0x01D9], buf[0x01D8]))
+				, MAKEUINT64(MAKEUINT(MAKEWORD(buf[0x01E3], buf[0x01E2]), MAKEWORD(buf[0x01E1], buf[0x01E0]))
+					, MAKEUINT(MAKEWORD(buf[0x01DF], buf[0x01DE]), MAKEWORD(buf[0x01DD], buf[0x01DC])))
+				, MAKEWORD(buf[0x01E5], buf[0x01E4])
+				, MAKEWORD(buf[0x01E7], buf[0x01E6])
+				, MAKEUINT(MAKEWORD(buf[0x01EB], buf[0x01EA]), MAKEWORD(buf[0x01E9], buf[0x01E8]))
+				, MAKEUINT(MAKEWORD(buf[0x01EF], buf[0x01EE]), MAKEWORD(buf[0x01ED], buf[0x01EC]))
+				, buf[0x01F0], buf[0x01F1]
+			);
+			for (INT i = 0; i < 0x30; i++) {
+				OutputVolDescLogA("%02x", buf[0x01F2 + i]);
+			}
+			OutputVolDescLogA(
+				"\n"
+				"\t      Content access permissions: "
+			);
+			for (INT i = 0; i < 0x40; i++) {
+				OutputVolDescLogA("%02x", buf[0x0222 + i]);
+			}
+			OutputVolDescLogA("\n");
+			for (INT i = 0; i < 7 * 8; i += 8) {
+				UINT enable = MAKEUINT(MAKEWORD(buf[0x0267 + i], buf[0x0266 + i]), MAKEWORD(buf[0x0265 + i], buf[0x0264 + i]));
+				if (enable) {
+					OutputVolDescLogA(
+						"\t               Enable time limit: %d\n"
+						"\t            Time limit (Seconds): %d\n"
+						, enable
+						, MAKEUINT(MAKEWORD(buf[0x026B + i], buf[0x026A + i]), MAKEWORD(buf[0x0269 + i], buf[0x0268 + i]))
+					);
+				}
+			}
+			UINT dataSize = MAKEUINT(MAKEWORD(buf[0x02BF], buf[0x02BE]), MAKEWORD(buf[0x02BD], buf[0x02BC]));
+			OutputVolDescLogA(
+				"\t                        TMD size: %d(%#x)\n"
+				"\t                      TMD offset: %#x\n"
+				"\t                 Cert chain size: %d(%#x)\n"
+				"\t               Cert chain offset: %#x\n"
+				"\t          Offset to the H3 table: %#x\n"
+				"\t                     Data offset: %#x\n"
+				"\t                       Data size: %d(%#x)\n"
+				, MAKEUINT(MAKEWORD(buf[0x02A7], buf[0x02A6]), MAKEWORD(buf[0x02A5], buf[0x02A4]))
+				, MAKEUINT(MAKEWORD(buf[0x02A7], buf[0x02A6]), MAKEWORD(buf[0x02A5], buf[0x02A4]))
+				, MAKEUINT(MAKEWORD(buf[0x02AB], buf[0x02AA]), MAKEWORD(buf[0x02A9], buf[0x02A8]))
+				, MAKEUINT(MAKEWORD(buf[0x02AF], buf[0x02AE]), MAKEWORD(buf[0x02AD], buf[0x02AC]))
+				, MAKEUINT(MAKEWORD(buf[0x02AF], buf[0x02AE]), MAKEWORD(buf[0x02AD], buf[0x02AC]))
+				, MAKEUINT(MAKEWORD(buf[0x02B3], buf[0x02B2]), MAKEWORD(buf[0x02B1], buf[0x02B0]))
+				, MAKEUINT(MAKEWORD(buf[0x02B7], buf[0x02B6]), MAKEWORD(buf[0x02B5], buf[0x02B4]))
+				, MAKEUINT(MAKEWORD(buf[0x02BB], buf[0x02BA]), MAKEWORD(buf[0x02B9], buf[0x02B8]))
+				, dataSize, dataSize
+			);
+
+			if (fread(buf, sizeof(BYTE), 0x1E0, fp) != 0x1E0) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				FcloseAndNull(fp);
+				return FALSE;
+			};
+			OutputCDMain(fileMainInfo, buf, (INT)realOfsOfPartion / 0x800, 0x1E0);
+			sigType = MAKEUINT(MAKEWORD(buf[3], buf[2]), MAKEWORD(buf[1], buf[0]));
+			OutputVolDescLogA(
+				OUTPUT_DHYPHEN_PLUS_STR(Partition)
+				"\t                  Signature type: %#x\n"
+				"\t                       Signature: "
+				, sigType
+			);
+			size = 256;
+			if (sigType == 0x10000) {
+				size = 512;
+			}
+			for (INT i = 0; i < size; i++) {
+				OutputVolDescLogA("%02x", buf[4 + i]);
+			}
+			OutputVolDescLogA(
+				"\n"
+				"\t               Padding modulo 64: "
+			);
+			for (INT i = 0; i < 60; i++) {
+				OutputVolDescLogA("%02x", buf[0x104 + i]);
+			}
+			OutputVolDescLogA(
+				"\n"
+				"\t                          Issuer: %s\n"
+				"\t                         Version: %x\n"
+				"\t                  ca_crl_version: %x\n"
+				"\t              signer_crl_version: %x\n"
+				"\t               Padding modulo 64: %x\n"
+				"\t                  System Version: %llx\n"
+				"\t                        Title ID: %llx\n"
+				"\t                      Title type: %x\n"
+				"\t                        Group ID: %x\n"
+				"\t                          Region: %x\n"
+				"\t                         Ratings: "
+				, (LPCH)&buf[0x140], buf[0x180], buf[0x181], buf[0x182], buf[0x183]
+				, MAKEUINT64(MAKEUINT(MAKEWORD(buf[0x18B], buf[0x18A]), MAKEWORD(buf[0x189], buf[0x188]))
+					, MAKEUINT(MAKEWORD(buf[0x187], buf[0x186]), MAKEWORD(buf[0x185], buf[0x184])))
+				, MAKEUINT64(MAKEUINT(MAKEWORD(buf[0x193], buf[0x192]), MAKEWORD(buf[0x191], buf[0x190]))
+					, MAKEUINT(MAKEWORD(buf[0x18F], buf[0x18E]), MAKEWORD(buf[0x18D], buf[0x18C])))
+				, MAKEUINT(MAKEWORD(buf[0x197], buf[0x196]), MAKEWORD(buf[0x195], buf[0x194]))
+				, MAKEWORD(buf[0x199], buf[0x198])
+				, MAKEWORD(buf[0x19D], buf[0x19C])
+			);
+			for (INT i = 0; i < 16; i++) {
+				OutputVolDescLogA("%02x", buf[0x19E + i]);
+			}
+			OutputVolDescLogA(
+				"\n"
+				"\t                        IPC Mask: "
+			);
+			for (INT i = 0; i < 12; i++) {
+				OutputVolDescLogA("%02x", buf[0x1BA + i]);
+			}
+			WORD numOfContents = MAKEWORD(buf[0x1DF], buf[0x1DE]);
+			OutputVolDescLogA(
+				"\n"
+				"\t                   Access rights: %x\n"
+				"\t                   Title version: %x\n"
+				"\t              Number of contents: %d\n"
+				, MAKEUINT(MAKEWORD(buf[0x1DB], buf[0x1DA]), MAKEWORD(buf[0x1D9], buf[0x1D8]))
+				, MAKEWORD(buf[0x1DD], buf[0x1DC]), numOfContents
+			);
+			if (fread(buf, sizeof(BYTE), 4, fp) != 4) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				FcloseAndNull(fp);
+				return FALSE;
+			};
+			OutputCDMain(fileMainInfo, buf, (INT)realOfsOfPartion / 0x800, 4);
+			OutputVolDescLogA(
+				"\t                      boot index: %d\n"
+				"\t               Padding modulo 64: %d\n"
+				, MAKEWORD(buf[1], buf[0]), MAKEWORD(buf[3], buf[2])
+			);
+			size_t contentsSize = (size_t)36 * numOfContents;
+			if (fread(buf, sizeof(BYTE), contentsSize, fp) != contentsSize) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				FcloseAndNull(fp);
+				return FALSE;
+			};
+			OutputCDMain(fileMainInfo, buf, (INT)realOfsOfPartion / 0x800, 36 * numOfContents);
+			for (size_t i = 0; i < contentsSize; i += 36) {
+				OutputVolDescLogA(
+					"\t                      Content ID: %d\n"
+					"\t                           Index: %d\n"
+					"\t                            Type: %d\n"
+					"\t                            Size: %lld(%#llx)\n"
+					"\t                       SHA1 hash: "
+					, MAKEUINT(MAKEWORD(buf[3], buf[2]), MAKEWORD(buf[1], buf[0]))
+					, MAKEWORD(buf[5], buf[4])
+					, MAKEWORD(buf[7], buf[6])
+					, MAKEUINT64(MAKEUINT(MAKEWORD(buf[15], buf[14]), MAKEWORD(buf[13], buf[12]))
+						, MAKEUINT(MAKEWORD(buf[11], buf[10]), MAKEWORD(buf[9], buf[8])))
+					, MAKEUINT64(MAKEUINT(MAKEWORD(buf[15], buf[14]), MAKEWORD(buf[13], buf[12]))
+						, MAKEUINT(MAKEWORD(buf[11], buf[10]), MAKEWORD(buf[9], buf[8])))
+				);
+				for (INT j = 0; j < 20; j++) {
+					OutputVolDescLogA("%02x", buf[16 + j + i]);
+				}
+			}
+			OutputVolDescLogA("\n");
+
+			fseek(fp, 24, SEEK_CUR);
+			for (INT k = 0; k < 3; k++) {
+				if (fread(buf, sizeof(BYTE), 4, fp) != 4) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					FcloseAndNull(fp);
+					return FALSE;
+				};
+				sigType = MAKEUINT(MAKEWORD(buf[3], buf[2]), MAKEWORD(buf[1], buf[0]));
+				if (sigType == 0x10000) {
+					size = 512;
+					if (fread(&buf[4], sizeof(BYTE), 1020, fp) != 1020) {
+						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+						FcloseAndNull(fp);
+						return FALSE;
+					};
+				}
+				else if (sigType == 0x10001) {
+					size = 256;
+					if (fread(&buf[4], sizeof(BYTE), 764, fp) != 764) {
+						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+						FcloseAndNull(fp);
+						return FALSE;
+					};
+				}
+				OutputVolDescLogA(
+					OUTPUT_DHYPHEN_PLUS_STR(Certificates)
+					"\t                  Signature type: %#x\n"
+					"\t                       Signature: "
+					, sigType
+				);
+				for (INT i = 0; i < size; i++) {
+					OutputVolDescLogA("%02x", buf[4 + i]);
+				}
+				INT ofs = 4 + size + 60;
+				OutputVolDescLogA(
+					"\n"
+					"\t                          Issuer: %s\n"
+					"\t                             Tag: %x\n"
+					"\t                            Name: %s\n"
+					"\t                             Key: "
+					, (LPCH)&buf[ofs]
+					, MAKEUINT(MAKEWORD(buf[ofs + 67], buf[ofs + 66]), MAKEWORD(buf[ofs + 65], buf[ofs + 64]))
+					, (LPCH)&buf[ofs + 68]
+				);
+				for (INT i = 0; i < 316; i++) {
+					OutputVolDescLogA("%02x", buf[ofs + 132 + i]);
+				}
+				OutputVolDescLogA("\n");
+			}
+
+			if (bDecOK) {
+				CHAR decPath[_MAX_PATH] = {};
+				FILE* fpDec = CreateOrOpenFileA(pszFullPath, "_dec"
+					, decPath, NULL, NULL, ".iso", "wb", (BYTE)idx2, (BYTE)numOfPartition[idx]);
+				if (!fpDec) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					return FALSE;
+				}
+				BYTE decBuf[0x8000] = {};
+				for (UINT i = 0; i < dataSize; i += 0x8000) {
+					fseek(fp, (LONG)(realOfsOfPartion + 0x20000 + i), SEEK_SET);
+					if (fread(buf, sizeof(BYTE), 0x8000, fp) != 0x8000) {
+						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+						FcloseAndNull(fp);
+						FcloseAndNull(fpDec);
+						return FALSE;
+					};
+					mbedtls_aes_crypt_cbc(&context, MBEDTLS_AES_DECRYPT, 0x7c00, &buf[0x3D0], &buf[0x400], decBuf);
+					fwrite(decBuf, sizeof(BYTE), 0x7c00, fpDec);
+					OutputString(_T("\rDecrypting iso %7u/%7u"), i, dataSize);
+				}
+				OutputString("\n");
+				FcloseAndNull(fpDec);
+				ReadNintendoFileSystem(pDevice, decPath, wii);
+			}
+		}
+	}
+	FcloseAndNull(fp);
 	return TRUE;
 }
 
