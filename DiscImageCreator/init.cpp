@@ -323,27 +323,8 @@ BOOL InitLogFile(
 #else
 	strncpy(path, szFullPath, sizeof(path));
 #endif
-	CONST INT size = 32;
-	CHAR szDiscLogtxt[size] = {};
-	CHAR szDriveLogtxt[size] = {};
-	CHAR szVolDescLogtxt[size] = {};
-	CHAR szMainInfoLogtxt[size] = {};
-	CHAR szMainErrorLogtxt[size] = {};
-	CHAR szSubInfoLogtxt[size] = {};
-	CHAR szSubErrorLogtxt[size] = {};
-	CHAR szC2ErrorLogtxt[size] = {};
-
-	strncpy(szDiscLogtxt, "_disc", size);
-	strncpy(szDriveLogtxt, "_drive", size);
-	strncpy(szVolDescLogtxt, "_volDesc", size);
-	strncpy(szMainInfoLogtxt, "_mainInfo", size);
-	strncpy(szMainErrorLogtxt, "_mainError", size);
-	strncpy(szSubInfoLogtxt, "_subInfo", size);
-	strncpy(szSubErrorLogtxt, "_subError", size);
-	strncpy(szC2ErrorLogtxt, "_c2Error", size);
-		
 	if (NULL == (g_LogFile.fpDisc = CreateOrOpenFileA(
-		path, szDiscLogtxt, NULL, NULL, NULL, ".txt", "w", 0, 0))) {
+		path, "_disc", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
@@ -351,22 +332,22 @@ BOOL InitLogFile(
 	try {
 		if (*pExecType != fd) {
 			if (NULL == (g_LogFile.fpDrive = CreateOrOpenFileA(
-				path, szDriveLogtxt, NULL, NULL, NULL, ".txt", "w", 0, 0))) {
+				path, "_drive", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
 			if (NULL == (g_LogFile.fpVolDesc = CreateOrOpenFileA(
-				path, szVolDescLogtxt, NULL, NULL, NULL, ".txt", "w", 0, 0))) {
+				path, "_volDesc", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
 			if (NULL == (g_LogFile.fpMainInfo = CreateOrOpenFileA(
-				path, szMainInfoLogtxt, NULL, NULL, NULL, ".txt", "w", 0, 0))) {
+				path, "_mainInfo", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
 			if (NULL == (g_LogFile.fpMainError = CreateOrOpenFileA(
-				path, szMainErrorLogtxt, NULL, NULL, NULL, ".txt", "w", 0, 0))) {
+				path, "_mainError", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
@@ -374,18 +355,23 @@ BOOL InitLogFile(
 				*pExecType != xbox && *pExecType != xboxswap &&
 				*pExecType != xgd2swap && *pExecType != xgd3swap) {
 				if (NULL == (g_LogFile.fpSubInfo = CreateOrOpenFileA(
-					path, szSubInfoLogtxt, NULL, NULL, NULL, ".txt", "w", 0, 0))) {
+					path, "_subInfo", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 					throw FALSE;
 				}
 				if (NULL == (g_LogFile.fpSubError = CreateOrOpenFileA(
-					path, szSubErrorLogtxt, NULL, NULL, NULL, ".txt", "w", 0, 0))) {
+					path, "_subError", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					throw FALSE;
+				}
+				if (NULL == (g_LogFile.fpSubReadable = CreateOrOpenFileA(
+					path, "_subReadable", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 					throw FALSE;
 				}
 				if (pExtArg->byC2) {
 					if (NULL == (g_LogFile.fpC2Error = CreateOrOpenFileA(
-						path, szC2ErrorLogtxt, NULL, NULL, NULL, ".txt", "w", 0, 0))) {
+						path, "_c2Error", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
 						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 						throw FALSE;
 					}
@@ -503,6 +489,7 @@ VOID TerminateLogFile(
 			*pExecType != xgd2swap && *pExecType != xgd3swap) {
 			FcloseAndNull(g_LogFile.fpSubInfo);
 			FcloseAndNull(g_LogFile.fpSubError);
+			FcloseAndNull(g_LogFile.fpSubReadable);
 			if (pExtArg->byC2) {
 				FcloseAndNull(g_LogFile.fpC2Error);
 			}
