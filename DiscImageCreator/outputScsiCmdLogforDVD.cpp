@@ -636,11 +636,12 @@ VOID OutputDVDLayerDescriptor(
 	LPDWORD lpdwSectorLength,
 	UCHAR layerNumber
 ) {
+	// Nintendo optical discs output "Reserved5"
 	LPCSTR lpBookType[] = {
 		"DVD-ROM", "DVD-RAM", "DVD-R", "DVD-RW",
-		"HD DVD-ROM", "HD DVD-RAM", "HD DVD-R", "Reserved",
-		"Reserved", "DVD+RW", "DVD+R", "Reserved",
-		"Reserved", "DVD+RW DL", "DVD+R DL", "Reserved"
+		"HD DVD-ROM", "HD DVD-RAM", "HD DVD-R", "Reserved1",
+		"Reserved2", "DVD+RW", "DVD+R", "Reserved3",
+		"Reserved4", "DVD+RW DL", "DVD+R DL", "Reserved5"
 	};
 
 	LPCSTR lpMaximumRate[] = {
@@ -658,16 +659,16 @@ VOID OutputDVDLayerDescriptor(
 	};
 
 	LPCSTR lpTrackDensity[] = {
-		"0.74ƒÊm/track", "0.80ƒÊm/track", "0.615ƒÊm/track", "0.40ƒÊm/track",
-		"0.34ƒÊm/track", "Reserved", "Reserved", "Reserved",
+		"0.74um/track", "0.80um/track", "0.615um/track", "0.40um/track",
+		"0.34um/track", "Reserved", "Reserved", "Reserved",
 		"Reserved", "Reserved", "Reserved", "Reserved",
 		"Reserved", "Reserved", "Reserved", "Reserved"
 	};
 
 	LPCSTR lpLinearDensity[] = {
-		"0.267ƒÊm/bit", "0.293ƒÊm/bit", "0.409 to 0.435ƒÊm/bit", "Reserved",
-		"0.280 to 0.291ƒÊm/bit", "0.153ƒÊm/bit", "0.130 to 0.140ƒÊm/bit", "Reserved",
-		"0.353ƒÊm/bit", "Reserved", "Reserved", "Reserved",
+		"0.267um/bit", "0.293um/bit", "0.409 to 0.435um/bit", "Reserved",
+		"0.280 to 0.291um/bit", "0.153um/bit", "0.130 to 0.140um/bit", "Reserved",
+		"0.353um/bit", "Reserved", "Reserved", "Reserved",
 		"Reserved", "Reserved", "Reserved", "Reserved"
 	};
 #ifdef _WIN32
@@ -794,7 +795,8 @@ VOID OutputDVDCopyrightDescriptor(
 		*pProtect = aacs;
 		break;
 	default:
-		OutputDiscLogA("Unknown: %02x\n", dvdCopyright->CopyrightProtectionType);
+		// Nintendo optical discs output 0xfd
+		OutputDiscLogA("Unknown (%#02x)\n", dvdCopyright->CopyrightProtectionType);
 		*pProtect = noProtect;
 		break;
 	}
