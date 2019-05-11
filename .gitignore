@@ -6,3 +6,4 @@ ipch/
 .vs/
 DiscImageCreator.VC.*
 DiscImageCreator.vcxproj.user
+DiscImageCreator/buildDateTime.h
