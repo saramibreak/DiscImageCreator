@@ -13,6 +13,9 @@
     <Filter Include="_linux">
       <UniqueIdentifier>{c1b202c3-00ad-4fce-9c16-d81dfb48d9b7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="_external\mbedtls">
+      <UniqueIdentifier>{a56d4b2c-fbc8-46d2-a34d-80dbb8b08f8e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="calcHash.cpp">
@@ -102,11 +105,17 @@
     <ClCompile Include="_external\tinyxml2.cpp">
       <Filter>_external</Filter>
     </ClCompile>
+    <ClCompile Include="_external\aes.cpp">
+      <Filter>_external</Filter>
+    </ClCompile>
+    <ClCompile Include="_external\platform_util.cpp">
+      <Filter>_external</Filter>
+    </ClCompile>
+    <ClCompile Include="_external\aesni.cpp">
+      <Filter>_external</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="buildDateTime.h">
-      <Filter>header</Filter>
-    </ClInclude>
     <ClInclude Include="calcHash.h">
       <Filter>header</Filter>
     </ClInclude>
@@ -211,6 +220,36 @@
     </ClInclude>
     <ClInclude Include="_external\tinyxml2.h">
       <Filter>_external</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\mbedtls\aes.h">
+      <Filter>_external\mbedtls</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\mbedtls\aesni.h">
+      <Filter>_external\mbedtls</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\mbedtls\check_config.h">
+      <Filter>_external\mbedtls</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\mbedtls\config.h">
+      <Filter>_external\mbedtls</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\mbedtls\padlock.h">
+      <Filter>_external\mbedtls</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\mbedtls\platform.h">
+      <Filter>_external\mbedtls</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\mbedtls\platform_time.h">
+      <Filter>_external\mbedtls</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\mbedtls\platform_util.h">
+      <Filter>_external\mbedtls</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\mbedtls\threading.h">
+      <Filter>_external\mbedtls</Filter>
+    </ClInclude>
+    <ClInclude Include="buildDateTime.h">
+      <Filter>header</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

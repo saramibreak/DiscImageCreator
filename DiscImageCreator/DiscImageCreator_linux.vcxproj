@@ -85,9 +85,12 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="_external\abgx360.cpp" />
+    <ClCompile Include="_external\aes.cpp" />
+    <ClCompile Include="_external\aesni.cpp" />
     <ClCompile Include="_external\crc16ccitt.cpp" />
     <ClCompile Include="_external\crc32.cpp" />
     <ClCompile Include="_external\md5c.cpp" />
+    <ClCompile Include="_external\platform_util.cpp" />
     <ClCompile Include="_external\prngcd.cpp" />
     <ClCompile Include="_external\rijndael-alg-fst.cpp" />
     <ClCompile Include="_external\sha1.cpp" />
@@ -125,6 +128,15 @@
     <ClInclude Include="_external\crc16ccitt.h" />
     <ClInclude Include="_external\crc32.h" />
     <ClInclude Include="_external\global.h" />
+    <ClInclude Include="_external\mbedtls\aes.h" />
+    <ClInclude Include="_external\mbedtls\aesni.h" />
+    <ClInclude Include="_external\mbedtls\check_config.h" />
+    <ClInclude Include="_external\mbedtls\config.h" />
+    <ClInclude Include="_external\mbedtls\padlock.h" />
+    <ClInclude Include="_external\mbedtls\platform.h" />
+    <ClInclude Include="_external\mbedtls\platform_time.h" />
+    <ClInclude Include="_external\mbedtls\platform_util.h" />
+    <ClInclude Include="_external\mbedtls\threading.h" />
     <ClInclude Include="_external\md5.h" />
     <ClInclude Include="_external\prngcd.h" />
     <ClInclude Include="_external\rijndael-alg-fst.h" />
