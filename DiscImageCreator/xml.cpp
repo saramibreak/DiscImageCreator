@@ -525,6 +525,7 @@ BOOL OutputHash(
 		BYTE data[CD_RAW_SECTOR_SIZE] = {};
 		DWORD crc32 = 0;
 		int nRet = TRUE;
+		OutputString(_T("Hashing: %s\n"), pszFnameAndExt);
 		// TODO: This code can more speed up! if reduce calling fread()
 		for (UINT64 i = 1; i <= ui64SectorSizeAll; i++) {
 			if (fread(data, sizeof(BYTE), uiSectorSizeOne, fp) < uiSectorSizeOne) {
@@ -535,10 +536,10 @@ BOOL OutputHash(
 			if (!nRet) {
 				break;
 			}
-			OutputString(_T("\rCalculating hash: %s [%lld/%lld]")
-				, pszFnameAndExt, i * uiSectorSizeOne, ui64FileSize);
+//			OutputString(_T("\rCalculating hash: %s [%lld/%lld]")
+//				, pszFnameAndExt, i * uiSectorSizeOne, ui64FileSize);
 		}
-		OutputString("\n");
+//		OutputString("\n");
 		FcloseAndNull(fp);
 		if (!nRet) {
 			return nRet;
