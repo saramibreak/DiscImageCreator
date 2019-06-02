@@ -2,9 +2,18 @@
 ## Summary
   This command-line program dumps a CD, GD, DVD, HD-DVD, BD, GC/Wii, XBOX, XBOX 360 and Floppy.  
   CD and GD, it can dump considering a drive + CD (=combined) offset.  
-  It works on Windows PC (WinXP or higher).
+  What drive offset? Please look [this document](http://dbpoweramp.com/spoons-audio-guide-cd-ripping.htm)
+  
+  This program works on Windows PC (WinXP or higher) and Linux.
+  
+  [DICUI](https://github.com/SabreTools/DICUI) can work this program with GUI.
 
-## Recommend drive
+## Requirement
+### Package
+ Download and install Visual C++ Redistributable Packages. (for Windows PC)
+  https://go.microsoft.com/fwlink/?LinkId=746571
+
+### Recommend drive
 - CD: (Drives must be able to dump by scrambled mode and read lead-out and read lead-in).
    - PLEXTOR (No OEM Drive)
      - PX-760, PX-755, PX-716, PX-714, PX-712, PX-708, PX-704, 
@@ -38,11 +47,14 @@
 - XBOX, XBOX 360
    - TSSTcorp
      - TS-H353A, TS-H352C, SH-D162C, SH-D162D, SH-D163A, SH-D163B (needs the firmware hacked by kreon)
+- XBOX, XBOX 360: (Swappable drive) (This is the comfirmed drive list. Actually, many drive perhaps supports to swap)
+   - Hitachi-LG
+     - GSA-4163B
 - HD-DVD: All supported drive
 - BD: All supported drive (PS3 is only supported by [some mediatek drive](https://rpcs3.net/quickstart))
 - Floppy: All supported drive
 
-## Not recommend
+### Not recommend
 - CD: (Because it can't read lead-in and/or lead-out and can't exec 0xd8 opcode)
    - PLEXTOR (OEM drive)
       PX-8xx/PX-Bxxx(many maker), PX-751A(BenQ DW1670), PX-750A/UF(TEAC DV-W516E),
@@ -57,6 +69,9 @@
    - CDS100, CDS200, Label Gate, XCP
      - PLEXTOR
        PX-4824A (doesn't get the TOC correctly)
+
+## How to use
+See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)
 
 ## Supported Disc
   CD
@@ -150,297 +165,6 @@
   Nintendo Wii U
    => This is a BD based disc, but I don't know the details.
 
-## How to use
-### Preparation
- Download and install Visual C++ Redistributable Packages.
-  https://go.microsoft.com/fwlink/?LinkId=746571
-
-### Dumping Guide for CD
- DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)]
-
- For secure dumping, I recommend using /c2 option  
-  DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)] /c2
- 
- About other options, run exe without args to get detail info.
-
-### Dumping Guide for CD with swap
-#### Preparation
- create the audio trap disc in advance.  
- (a disc with a hacked TOC of 99 mins audio, burn it with CloneCD or Alcohol 52/120%).  
- http://www.mediafire.com/?2nygv2oyzzz
-
-1. Insert the audio trap disc to a supported drive.
-2. Run below. (stop spinning disc)  
-   DiscImageCreator.exe stop [DriveLetter]
-3. Use a pin to press the escape eject button, so the tray will eject (or remove the drive cover).
-4. Insert the disc and run below.  
-   DiscImageCreator.exe close [DriveLetter]  
-   (or gently push the tray back or put the drive cover back on).
-5. Run below. (start dumping scrambled img)  
-   DiscImageCreator.exe swap [DriveLetter] foo.bin [DriveSpeed(0-72)]
-6. When dumping finished, the drive tray open automatically.
-7. The drive tray close automatically after 3000 msec.
-8. Read TOC and img is descrambled automatically.
-
-### Dumping Guide for SafeDisc
-#### Method 1 (Other tools)
- http://forum.redump.org/topic/2201/dumping-safedisc-cds/
-
-#### Method 2
- DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)] /sf
-
-### Dumping Guide for SecuROM(v1 - v5.xx)
- DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)] /ns
-
-### Dumping Guide for LibCrypt
- DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)] /nl
-
-### Dumping Guide for LaserLock and Proring
- e.g. http://redump.org/disc/30992/
- 1. Dump the disc except the protected file using plextor drive.  
- DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)] /sf  
-
-    * App detects the protection like this. -> Detected [LASERLOK.IN], from 337 to 10336
-
- 2. When dumping finished, eject the disc from plextor drive and insert it in optiarc drive. 
- 3. Dump the protected file like this.  
- DiscImageCreator.exe data [DriveLetter] foo.bin [DriveSpeed(0-72)] 337 10338 /sf /sk 76
-
-    * CD has a offset, so please specify more +1 or +2 than endlba. (e.g. 10336 -> 10338)
- 
- 4. Merge plextor image and optiarc image  
- DiscImageCreator.exe merge [plextor image file] [optiarc image file]
-
-### Dumping Guide for unnamed protected disc
- 1. Edit EdcEccErrorProtect.txt or ReadErrorProtect.txt
- 2. Run below  
- DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)] /sf
-
-### Dumping Guide for other protected disc
- DiscImageCreator.exe cd [DriveLetter] foo.bin [DriveSpeed(0-72)] /sf
-
-### Dumping Guide for GD-ROM (The high density area)
-#### Preparation
- create the audio trap disc in advance.  
- (a disc with a hacked TOC of 99 mins audio, burn it with CloneCD or Alcohol 52/120%).  
- http://www.mediafire.com/?2nygv2oyzzz
-
-#### Method 1 (Other tools)
- http://forum.redump.org/topic/2620/dreamcastnaomi-gdrom-dumping-instructions/
-
-#### Method 2 (Other tools)
- http://forum.redump.org/topic/9436/new-dreamcast-dumping-program-test-please/
-
-#### Method 3
-1. Insert the audio trap disc to a supported drive.
-2. Run below. (stop spinning disc)
-   DiscImageCreator.exe stop [DriveLetter]
-3. Use a pin to press the escape eject button, so the tray will eject (or remove
-   the drive cover).
-4. Insert the gdrom and run below. (close the drive tray)  
-   DiscImageCreator.exe close [DriveLetter]  
-   (or gently push the tray back or put the drive cover back on).
-5. Run below. (start dumping the GD-ROM)  
-   DiscImageCreator.exe gd [DriveLetter] foo.bin [DriveSpeed(0-72)]
-
-### Dumping Guide for DVD
- DiscImageCreator.exe dvd [DriveLetter] foo.iso [DriveSpeed(0-16)]
-
-### Dumping Guide for GC/Wii
-#### Attention
-Compared with Friidump and Rawdump, dumping speed is very slow.
-
-#### Preparation
- To unscramble GC/Wii raw image, put unscramler.exe in DiscImageCreator directory.  
- https://github.com/saramibreak/unscrambler/releases
-
- DiscImageCreator.exe dvd [DriveLetter] foo.raw [DriveSpeed(0-16)] /raw
-
-### Dumping Guide for XBOX/XBOX 360 on kreon drive
- DiscImageCreator.exe xbox [DriveLetter] foo.iso [DriveSpeed(0-16)]
-
-### Dumping Guide for XBOX/XBOX360 (XGD2)/XBOX360 (XGD3) on genaral drive
- Prepare DVD-DL or create the DVD+R DL trap disc in advance.  
-
-#### How to prepare
- You need a pressed DVD-DL disc with around 8.5GB data on it
- 
- XBOX: Layerbreak larger than 1913776 and the exact size needed (in sectors) is (your_disc_layerbreak - 1913776) * 2 + 3820880
-
- XBOX360 (XGD2): Layerbreak larger than 1913760 and the exact size needed (in sectors) is (your_disc_layerbreak - 1913760) * 2 + 3825924
-
- XBOX360 (XGD3): Layerbreak larger than 2133520 and the exact size needed (in sectors) is (your_disc_layerbreak - 2133520) * 2 + 4267015
-
-#### How to create
- XBOX: DVD (Length is 3820880 or larger, Layerbreak is 1913776 or larger)
-
- XBOX360 (XGD2): DVD (Length is 3825924 or larger, Layerbreak is 1913760 or larger)
-
- XBOX360 (XGD3): DVD (Length is 4267015 or larger, Layerbreak is 2133520 or larger)
-
-1. Create image file of the above DVD using dumping tool (e.g. isobuster)
-2. Run [ImgBurn](http://www.imgburn.com/)
-3. Setting LayerBreak manually (L0 sector num is about a half size of DVD length)  
-   e.g. If DVD length is 3900304, L0 sector num is about 1950160
-4. Before burn the image file, you need to confirm the size is correct  
-   e.g. (1950160 - 1913776) * 2 + 3820880 = 3893648 => 3893648 is smaller than 3900304, so the DVD+R DL this image is burnt can dump a XBOX disc
-5. Burn image file to DVD+R DL
-
-#### Dump the disc
-1. Insert the DVD-DL or DVD+R DL trap disc to a general DVD drive.
-2. Run below. (stop spinning disc)  
-   DiscImageCreator.exe stop [DriveLetter]
-3. Use a pin to press the escape eject button, so the tray will eject (or remove
-   the drive cover).
-4. Insert the XBOX disc and run below. (close the drive tray)  
-   DiscImageCreator.exe close [DriveLetter]  
-   (or gently push the tray back or put the drive cover back on).
-5. Run below.  
-   e.g. Dead or Alive 3 http://redump.org/disc/27157/  
-   DiscImageCreator.exe xboxswap [DriveLetter] foo.iso [DriveSpeed(0-16)] 292756 467910 686060 830074 999794 1212958 1579164 1719138 2010470 2372562 2527492 2682830 2915560 3065604 3219138 3455656  
-
-   e.g. Blue Dragon http://redump.org/disc/27088/  
-   DiscImageCreator.exe xgd2swap [DriveLetter] foo.iso [DriveSpeed(0-16)] 3825631 108976 3719856  
-
-   e.g. Battlefield 3 (Disc 1) (Multiplayer/Co-Op) http://redump.org/disc/35131/  
-   DiscImageCreator.exe xgd3swap [DriveLetter] foo.iso [DriveSpeed(0-16)] 4267015 12544 4246304  
-
-### Dumping Guide for BD
- DiscImageCreator.exe bd [DriveLetter] foo.iso [DriveSpeed(0-12)]
-
-### Dumping Guide for Floppy Disk
- DiscImageCreator.exe fd [DriveLetter] foo.bin
-
-
-## All commands and options
-        cd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/a (val)]
-           [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4)] [/f (val)] [/m]
-           [/p] [/ms] [/vn] [/sf (val)] [/ss] [/np] [/nq] [/nr] [/ns] [/s (val)]
-                Dump a CD from A to Z
-                For PLEXTOR or drive that can scramble Dumping
-        swap <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/a (val)]
-           [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4)] [/f (val)] [/m]
-           [/p] [/ms] [/sf (val)] [/ss] [/np] [/nq] [/nr] [/ns] [/s (val)] [/74]
-                Dump a CD from A to Z using swap trick
-                For no PLEXTOR or drive that can't scramble dumping
-        data <DriveLetter> <Filename> <DriveSpeed(0-72)> <StartLBA> <EndLBA+1>
-             [/q] [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4)]
-             [/sf (val)] [/sk (val1) (val2)] [/ss] [/r] [/np] [/nq] [/nr] [/ns] [/s (val)]
-                Dump a CD from start to end (using 'all' flag)
-                For no PLEXTOR or drive that can't scramble dumping
-        audio <DriveLetter> <Filename> <DriveSpeed(0-72)> <StartLBA> <EndLBA+1>
-              [/q] [/a (val)] [/c2 (val1) (val2) (val3) (val4)]
-              [/be (str) or /d8] [/sf (val)] [/np] [/nq] [/nr] [/ns] [/s (val)]
-                Dump a CD from start to end (using 'cdda' flag)
-                For dumping a lead-in, lead-out mainly
-        gd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/be (str) or /d8]
-           [/c2 (val1) (val2) (val3) (val4)] [/np] [/nq] [/nr] [/ns] [/s (val)]
-                Dump a HD area of GD from A to Z
-        dvd <DriveLetter> <Filename> <DriveSpeed(0-16)> [/c] [/f (val)] [/raw] [/q]
-                Dump a DVD from A to Z
-        xbox <DriveLetter> <Filename> <DriveSpeed(0-16)> [/f (val)] [/q]
-                Dump a disc from A to Z
-        xboxswap <DriveLetter> <Filename> <DriveSpeed(0-16)>
-                                          <StartLBAOfSecuritySector_1>
-                                          <StartLBAOfSecuritySector_2>
-                                                         :
-                                          <StartLBAOfSecuritySector_16> [/f (val)] [/q]
-                Dump a Xbox disc from A to Z using swap trick
-        xgd2swap <DriveLetter> <Filename> <DriveSpeed(0-16)> <AllSectorLength>
-                  <StartLBAOfSecuritySector_1> <StartLBAOfSecuritySector_2> [/f (val)] [/q]
-                Dump a XGD2 disc from A to Z using swap trick
-        xgd3swap <DriveLetter> <Filename> <DriveSpeed(0-16)> <AllSectorLength>
-                  <StartLBAOfSecuritySector_1> <StartLBAOfSecuritySector_2> [/f (val)] [/q]
-                Dump a XGD3 disc from A to Z using swap trick
-        bd <DriveLetter> <Filename> <DriveSpeed(0-12)> [/f (val)] [/q]
-                Dump a BD from A to Z
-        fd <DriveLetter> <Filename>
-                Dump a floppy disk
-        stop <DriveLetter>
-                Spin off the disc
-        start <DriveLetter>
-                Spin up the disc
-        eject <DriveLetter>
-                Eject the tray
-        close <DriveLetter>
-                Close the tray
-        reset <DriveLetter>
-                Reset the drive (Only PLEXTOR)
-        ls <DriveLetter>
-                Show maximum speed of the drive
-        sub <Subfile>
-                Parse CloneCD sub file and output to readable format
-        mds <Mdsfile>
-                Parse Alchohol 120/52 mds file and output to readable format
-        merge <plextor image file> <optiarc image file>
-                merge the two files (for physical error protection)
-Option (generic)
-        /f      Use 'Force Unit Access' flag to delete the drive cache
-                        val     delete per specified value (default: 1)
-        /q      Disable beep
-Option (for CD read mode)
-        /a      Add CD offset manually (Only Audio CD)
-                        val     samples value
-        /be     Use 0xbe as the opcode for Reading CD forcibly
-                        str      raw: sub channel mode is raw (default)
-                                pack: sub channel mode is pack
-        /d8     Use 0xd8 as the opcode for Reading CD forcibly
-        /c2     Continue reading CD to recover C2 error existing sector
-                        val1    value to reread (default: 4000)
-                        val2    0: reread sector c2 error is reported (default)
-                                1: reread all (or from first to last) sector
-                        val3    first LBA to reread (default: 0)
-                        val4    last LBA to reread (default: end-of-sector)
-                                val3, 4 is used when val2 is 1
-        /m      Use if MCN exists in the first pregap sector of the track
-                        For some PC-Engine
-        /p      Dumping the AMSF from 00:00:00 to 00:01:74
-                        For SagaFrontier Original Sound Track (Disc 3) etc.
-                        Support drive: PLEXTOR PX-W5224, PREMIUM, PREMIUM2
-                                       PX-704, 708, 712, 714, 716, 755, 760
-        /r      Read CD from the reverse
-                        For Alpha-Disc, Tages (very slow)
-        /ms     Read the lead-out of 1st session and the lead-in of 2nd session
-                        For Multi-session
-        /74     Read the lead-out about 74:00:00
-                        For ring data (a.k.a Saturn Ring) of Sega Saturn
-        /sf     Scan file to detect protect. If reading error exists,
-                continue reading and ignore c2 error on specific sector
-                        For CodeLock, LaserLock, RingProtect, RingPROTECH
-                            SafeDisc, SmartE, ProtectCD-VOB, CDS300
-                        val     timeout value (default: 60)
-        /sk     Skip sector for physical protect (e.g. proring, LaserLock etc.)
-                        val1    sector num
-                        val2    sector num (optional)
-        /ss     Scan sector to detect protect. If reading error exists,
-                continue reading and ignore c2 error on specific sector
-                        For ProtectCD-VOB
-        /am     Scan anti-mod string
-                        For PlayStation
-        /vn     Search specific bytes
-                        For VideoNow
-                        val     insert empty bytes in the head of the 1st track if value is set
-Option (for CD SubChannel)
-        /np     Not fix SubP
-        /nq     Not fix SubQ
-        /nr     Not fix SubRtoW
-        /nl     Not fix SubQ (RMSF, AMSF, CRC) (LBA 10000 - 19999)
-                                               (LBA 40000 - 49999)
-                        For PlayStation LibCrypt
-        /ns     Not fix SubQ (RMSF, AMSF, CRC) (LBA 0 - 7, 5000 - 24999)
-                                            or (LBA 30000 - 49999)
-                        For SecuROM
-        /s      Use if it reads subchannel precisely
-                        val     0: no read next sub (fast, but lack precision)
-                                1: read next sub (normal, this val is default)
-                                2: read next & next next sub (slow, precision)
-Option (for DVD)
-        /c      Log Copyright Management Information
-        /raw    Dumping DVD by raw (2064 byte/sector)
-                        Comfirmed drive: Mediatec MT chip (Lite-on etc.), PLEXTOR
-                                       Hitachi-LG GDR, GCC
-                         -> GDR (8082N, 8161B to 8164B) and GCC (4160N, 4240N to 4247N)
-                            supports GC/Wii dumping
 ## Created files information
 - .bin  
   2352 byte/sector binary image of CD. This file is used to a cue file.
@@ -505,30 +229,48 @@ Option (for DVD)
 ## License & Copyright
 See LICENSE  
 - About driveOffset.txt.  
-  http://www.accuraterip.com/driveoffsets.htm  
-  Copyright (c) 2018 Illustrate. All Rights Reserved.  
+    http://www.accuraterip.com/driveoffsets.htm  
+    Copyright (c) 2018 Illustrate. All Rights Reserved.  
 
 - About _external folder  
-  prngcd.cpp: Copyright (c) 2015 Jonathan Gevaryahu. All rights reserved.  
+  prngcd.cpp  
+    Copyright (c) 2015 Jonathan Gevaryahu. All rights reserved.  
 
-  abgx360.cpp: Copyright 2008-2012 by Seacrest <Seacrest[at]abgx360[dot]net>  
-  
-  rijndael-alg-fst.cpp/h: Vincent Rijmen <vincent.rijmen@esat.kuleuven.ac.be>  
-                          Antoon Bosselaers <antoon.bosselaers@esat.kuleuven.ac.be>  
-                          Paulo Barreto <paulo.barreto@terra.com.br>  
-                          This code is hereby placed in the public domain.
+  aes.cpp, aesni.cpp, platform_util.cpp, mbedtls folder  
+    https://github.com/ARMmbed/mbedtls  
+    Apache License Version 2.0  
+    Copyright (C) 2006-2015, ARM Limited, All Rights Reserved  
 
-  crc16: http://oku.edu.mie-u.ac.jp/~okumura/algo/  src\crc16t.c in algo.lzh  
-         Copyright (c) 1991 Haruhiko Okumura  
+  abgx360.cpp  
+    http://abgx360.cc/  
+    Copyright 2008-2012 by Seacrest <Seacrest[at]abgx360[dot]net>  
 
-  crc32: https://www.rfc-editor.org/info/rfc1952  
-         Copyright (c) 1996 L. Peter Deutsch  
+  rijndael-alg-fst.cpp/h  
+    Vincent Rijmen <vincent.rijmen@esat.kuleuven.ac.be>  
+    Antoon Bosselaers <antoon.bosselaers@esat.kuleuven.ac.be>  
+    Paulo Barreto <paulo.barreto@terra.com.br>  
+    This code is hereby placed in the public domain.
 
-  md5: https://www.rfc-editor.org/info/rfc1321  
-       Copyright (C) 1991-2, RSA Data Security, Inc. Created 1991. All rights reserved.  
+  crc16  
+    http://oku.edu.mie-u.ac.jp/~okumura/algo/  src\crc16t.c in algo.lzh  
+    Copyright (c) 1991 Haruhiko Okumura  
 
-  sha1: https://www.rfc-editor.org/info/rfc3174  
-        Copyright (C) The Internet Society (2001).  All Rights Reserved.
+  crc32  
+    https://www.rfc-editor.org/info/rfc1952  
+    Copyright (c) 1996 L. Peter Deutsch  
+
+  md5  
+    https://www.rfc-editor.org/info/rfc1321  
+    Copyright (C) 1991-2, RSA Data Security, Inc. Created 1991. All rights reserved.  
+
+  sha1  
+    https://www.rfc-editor.org/info/rfc3174  
+    Copyright (C) The Internet Society (2001).  All Rights Reserved.
+
+  tinyxml2  
+    https://github.com/leethomason/tinyxml2  
+    zlib license  
+    Original code by Lee Thomason (www.grinninglizard.com)
 
 ## Disclaimer
  Use this tool at own your risk.
