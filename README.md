@@ -313,6 +313,7 @@ Compared with Friidump and Rawdump, dumping speed is very slow.
 
 
 ## All commands and options
+```
         cd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/a (val)]
            [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4)] [/f (val)] [/m]
            [/p] [/ms] [/vn] [/sf (val)] [/ss] [/np] [/nq] [/nr] [/ns] [/s (val)]
@@ -441,6 +442,8 @@ Option (for DVD)
                                        Hitachi-LG GDR, GCC
                          -> GDR (8082N, 8161B to 8164B) and GCC (4160N, 4240N to 4247N)
                             supports GC/Wii dumping
+```
+
 ## Created files information
 - .bin  
   2352 byte/sector binary image of CD. This file is used to a cue file.
