@@ -74,6 +74,12 @@ BOOL GetWriteOffset(
 	LPBYTE lpBuf
 );
 
+BOOL GetCmd(
+	LPTSTR szPath,
+	LPCTSTR szFname,
+	LPCTSTR szExt
+);
+
 BOOL GetEccEdcCmd(
 	LPTSTR pszStr,
 	size_t cmdSize,
