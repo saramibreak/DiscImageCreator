@@ -218,6 +218,15 @@ VOID OutputGetConfigurationFeatureProfileType(
 	case ProfileHDDVDRWDualLayer:
 		OutputDriveLogA("HD-DVD-RW DL");
 		break;
+	case 0xff50:
+		OutputDriveLogA("PlayStation Disc"); // SONY PS-SYSTEM   302R output
+		break;
+	case 0xff61:
+		OutputDriveLogA("PlayStation 2 Disc"); // SONY PS-SYSTEM   302R output
+		break;
+	case 0xff71:
+		OutputDriveLogA("PlayStation 3 Disc"); // SONY PS-SYSTEM   302R output
+		break;
 	case ProfileNonStandard:
 		OutputDriveLogA("NonStandard");
 		break;
@@ -680,6 +689,14 @@ VOID OutputGetConfigurationFeatureCDRWMediaWriteSupport(
 		BOOLEAN_TO_STRING_YES_NO_A(pCDRWMediaWrite->CDRWMediaSubtypeSupport.Subtype7));
 }
 
+VOID OutputGetConfigurationFeatureBDRPseudoOverwrite(
+	PFEATURE_BD_R_PSEUDO_OVERWRITE pBDRPseudoOverwrite
+) {
+	UNREFERENCED_PARAMETER(pBDRPseudoOverwrite);
+	OutputDriveLogA(
+		"\tFeatureBDRPseudoOverwrite\n");
+}
+
 VOID OutputGetConfigurationFeatureDvdPlusRWDualLayer(
 	PFEATURE_DATA_DVD_PLUS_RW_DUAL_LAYER pDVDPlusRWDL
 ) {
@@ -700,6 +717,692 @@ VOID OutputGetConfigurationFeatureDvdPlusRDualLayer(
 		"\tFeatureDvdPlusRDualLayer\n"
 		"\t\tWrite: %s\n",
 		BOOLEAN_TO_STRING_YES_NO_A(pDVDPlusRDL->Write));
+}
+
+VOID OutputGetConfigurationFeatureBDRead(
+	PFEATURE_BD_READ pBDRead
+) {
+	OutputDriveLogA(
+		"\tFeatureBDRead\n"
+		"\t\tClass0BitmapBDREReadSupport Version8: %s\n"
+		"\t\tClass0BitmapBDREReadSupport Version9: %s\n"
+		"\t\tClass0BitmapBDREReadSupport Version10: %s\n"
+		"\t\tClass0BitmapBDREReadSupport Version11: %s\n"
+		"\t\tClass0BitmapBDREReadSupport Version12: %s\n"
+		"\t\tClass0BitmapBDREReadSupport Version13: %s\n"
+		"\t\tClass0BitmapBDREReadSupport Version14: %s\n"
+		"\t\tClass0BitmapBDREReadSupport Version15: %s\n"
+		"\t\tClass0BitmapBDREReadSupport Version0: %s\n"
+		"\t\tClass0BitmapBDREReadSupport Version1: %s\n"
+		"\t\tClass0BitmapBDREReadSupport Version2: %s\n"
+		"\t\tClass0BitmapBDREReadSupport Version3: %s\n"
+		"\t\tClass0BitmapBDREReadSupport Version4: %s\n"
+		"\t\tClass0BitmapBDREReadSupport Version5: %s\n"
+		"\t\tClass0BitmapBDREReadSupport Version6: %s\n"
+		"\t\tClass0BitmapBDREReadSupport Version7: %s\n"
+		"\t\tClass1BitmapBDREReadSupport Version8: %s\n"
+		"\t\tClass1BitmapBDREReadSupport Version9: %s\n"
+		"\t\tClass1BitmapBDREReadSupport Version10: %s\n"
+		"\t\tClass1BitmapBDREReadSupport Version11: %s\n"
+		"\t\tClass1BitmapBDREReadSupport Version12: %s\n"
+		"\t\tClass1BitmapBDREReadSupport Version13: %s\n"
+		"\t\tClass1BitmapBDREReadSupport Version14: %s\n"
+		"\t\tClass1BitmapBDREReadSupport Version15: %s\n"
+		"\t\tClass1BitmapBDREReadSupport Version0: %s\n"
+		"\t\tClass1BitmapBDREReadSupport Version1: %s\n"
+		"\t\tClass1BitmapBDREReadSupport Version2: %s\n"
+		"\t\tClass1BitmapBDREReadSupport Version3: %s\n"
+		"\t\tClass1BitmapBDREReadSupport Version4: %s\n"
+		"\t\tClass1BitmapBDREReadSupport Version5: %s\n"
+		"\t\tClass1BitmapBDREReadSupport Version6: %s\n"
+		"\t\tClass1BitmapBDREReadSupport Version7: %s\n"
+		"\t\tClass2BitmapBDREReadSupport Version8: %s\n"
+		"\t\tClass2BitmapBDREReadSupport Version9: %s\n"
+		"\t\tClass2BitmapBDREReadSupport Version10: %s\n"
+		"\t\tClass2BitmapBDREReadSupport Version11: %s\n"
+		"\t\tClass2BitmapBDREReadSupport Version12: %s\n"
+		"\t\tClass2BitmapBDREReadSupport Version13: %s\n"
+		"\t\tClass2BitmapBDREReadSupport Version14: %s\n"
+		"\t\tClass2BitmapBDREReadSupport Version15: %s\n"
+		"\t\tClass2BitmapBDREReadSupport Version0: %s\n"
+		"\t\tClass2BitmapBDREReadSupport Version1: %s\n"
+		"\t\tClass2BitmapBDREReadSupport Version2: %s\n"
+		"\t\tClass2BitmapBDREReadSupport Version3: %s\n"
+		"\t\tClass2BitmapBDREReadSupport Version4: %s\n"
+		"\t\tClass2BitmapBDREReadSupport Version5: %s\n"
+		"\t\tClass2BitmapBDREReadSupport Version6: %s\n"
+		"\t\tClass2BitmapBDREReadSupport Version7: %s\n"
+		"\t\tClass3BitmapBDREReadSupport Version8: %s\n"
+		"\t\tClass3BitmapBDREReadSupport Version9: %s\n"
+		"\t\tClass3BitmapBDREReadSupport Version10: %s\n"
+		"\t\tClass3BitmapBDREReadSupport Version11: %s\n"
+		"\t\tClass3BitmapBDREReadSupport Version12: %s\n"
+		"\t\tClass3BitmapBDREReadSupport Version13: %s\n"
+		"\t\tClass3BitmapBDREReadSupport Version14: %s\n"
+		"\t\tClass3BitmapBDREReadSupport Version15: %s\n"
+		"\t\tClass3BitmapBDREReadSupport Version0: %s\n"
+		"\t\tClass3BitmapBDREReadSupport Version1: %s\n"
+		"\t\tClass3BitmapBDREReadSupport Version2: %s\n"
+		"\t\tClass3BitmapBDREReadSupport Version3: %s\n"
+		"\t\tClass3BitmapBDREReadSupport Version4: %s\n"
+		"\t\tClass3BitmapBDREReadSupport Version5: %s\n"
+		"\t\tClass3BitmapBDREReadSupport Version6: %s\n"
+		"\t\tClass3BitmapBDREReadSupport Version7: %s\n"
+		"\t\tClass0BitmapBDRReadSupport Version8: %s\n"
+		"\t\tClass0BitmapBDRReadSupport Version9: %s\n"
+		"\t\tClass0BitmapBDRReadSupport Version10: %s\n"
+		"\t\tClass0BitmapBDRReadSupport Version11: %s\n"
+		"\t\tClass0BitmapBDRReadSupport Version12: %s\n"
+		"\t\tClass0BitmapBDRReadSupport Version13: %s\n"
+		"\t\tClass0BitmapBDRReadSupport Version14: %s\n"
+		"\t\tClass0BitmapBDRReadSupport Version15: %s\n"
+		"\t\tClass0BitmapBDRReadSupport Version0: %s\n"
+		"\t\tClass0BitmapBDRReadSupport Version1: %s\n"
+		"\t\tClass0BitmapBDRReadSupport Version2: %s\n"
+		"\t\tClass0BitmapBDRReadSupport Version3: %s\n"
+		"\t\tClass0BitmapBDRReadSupport Version4: %s\n"
+		"\t\tClass0BitmapBDRReadSupport Version5: %s\n"
+		"\t\tClass0BitmapBDRReadSupport Version6: %s\n"
+		"\t\tClass0BitmapBDRReadSupport Version7: %s\n"
+		"\t\tClass1BitmapBDRReadSupport Version8: %s\n"
+		"\t\tClass1BitmapBDRReadSupport Version9: %s\n"
+		"\t\tClass1BitmapBDRReadSupport Version10: %s\n"
+		"\t\tClass1BitmapBDRReadSupport Version11: %s\n"
+		"\t\tClass1BitmapBDRReadSupport Version12: %s\n"
+		"\t\tClass1BitmapBDRReadSupport Version13: %s\n"
+		"\t\tClass1BitmapBDRReadSupport Version14: %s\n"
+		"\t\tClass1BitmapBDRReadSupport Version15: %s\n"
+		"\t\tClass1BitmapBDRReadSupport Version0: %s\n"
+		"\t\tClass1BitmapBDRReadSupport Version1: %s\n"
+		"\t\tClass1BitmapBDRReadSupport Version2: %s\n"
+		"\t\tClass1BitmapBDRReadSupport Version3: %s\n"
+		"\t\tClass1BitmapBDRReadSupport Version4: %s\n"
+		"\t\tClass1BitmapBDRReadSupport Version5: %s\n"
+		"\t\tClass1BitmapBDRReadSupport Version6: %s\n"
+		"\t\tClass1BitmapBDRReadSupport Version7: %s\n"
+		"\t\tClass2BitmapBDRReadSupport Version8: %s\n"
+		"\t\tClass2BitmapBDRReadSupport Version9: %s\n"
+		"\t\tClass2BitmapBDRReadSupport Version10: %s\n"
+		"\t\tClass2BitmapBDRReadSupport Version11: %s\n"
+		"\t\tClass2BitmapBDRReadSupport Version12: %s\n"
+		"\t\tClass2BitmapBDRReadSupport Version13: %s\n"
+		"\t\tClass2BitmapBDRReadSupport Version14: %s\n"
+		"\t\tClass2BitmapBDRReadSupport Version15: %s\n"
+		"\t\tClass2BitmapBDRReadSupport Version0: %s\n"
+		"\t\tClass2BitmapBDRReadSupport Version1: %s\n"
+		"\t\tClass2BitmapBDRReadSupport Version2: %s\n"
+		"\t\tClass2BitmapBDRReadSupport Version3: %s\n"
+		"\t\tClass2BitmapBDRReadSupport Version4: %s\n"
+		"\t\tClass2BitmapBDRReadSupport Version5: %s\n"
+		"\t\tClass2BitmapBDRReadSupport Version6: %s\n"
+		"\t\tClass2BitmapBDRReadSupport Version7: %s\n"
+		"\t\tClass3BitmapBDRReadSupport Version8: %s\n"
+		"\t\tClass3BitmapBDRReadSupport Version9: %s\n"
+		"\t\tClass3BitmapBDRReadSupport Version10: %s\n"
+		"\t\tClass3BitmapBDRReadSupport Version11: %s\n"
+		"\t\tClass3BitmapBDRReadSupport Version12: %s\n"
+		"\t\tClass3BitmapBDRReadSupport Version13: %s\n"
+		"\t\tClass3BitmapBDRReadSupport Version14: %s\n"
+		"\t\tClass3BitmapBDRReadSupport Version15: %s\n"
+		"\t\tClass3BitmapBDRReadSupport Version0: %s\n"
+		"\t\tClass3BitmapBDRReadSupport Version1: %s\n"
+		"\t\tClass3BitmapBDRReadSupport Version2: %s\n"
+		"\t\tClass3BitmapBDRReadSupport Version3: %s\n"
+		"\t\tClass3BitmapBDRReadSupport Version4: %s\n"
+		"\t\tClass3BitmapBDRReadSupport Version5: %s\n"
+		"\t\tClass3BitmapBDRReadSupport Version6: %s\n"
+		"\t\tClass3BitmapBDRReadSupport Version7: %s\n"
+		"\t\tClass0BitmapBDROMReadSupport Version8: %s\n"
+		"\t\tClass0BitmapBDROMReadSupport Version9: %s\n"
+		"\t\tClass0BitmapBDROMReadSupport Version10: %s\n"
+		"\t\tClass0BitmapBDROMReadSupport Version11: %s\n"
+		"\t\tClass0BitmapBDROMReadSupport Version12: %s\n"
+		"\t\tClass0BitmapBDROMReadSupport Version13: %s\n"
+		"\t\tClass0BitmapBDROMReadSupport Version14: %s\n"
+		"\t\tClass0BitmapBDROMReadSupport Version15: %s\n"
+		"\t\tClass0BitmapBDROMReadSupport Version0: %s\n"
+		"\t\tClass0BitmapBDROMReadSupport Version1: %s\n"
+		"\t\tClass0BitmapBDROMReadSupport Version2: %s\n"
+		"\t\tClass0BitmapBDROMReadSupport Version3: %s\n"
+		"\t\tClass0BitmapBDROMReadSupport Version4: %s\n"
+		"\t\tClass0BitmapBDROMReadSupport Version5: %s\n"
+		"\t\tClass0BitmapBDROMReadSupport Version6: %s\n"
+		"\t\tClass0BitmapBDROMReadSupport Version7: %s\n"
+		"\t\tClass1BitmapBDROMReadSupport Version8: %s\n"
+		"\t\tClass1BitmapBDROMReadSupport Version9: %s\n"
+		"\t\tClass1BitmapBDROMReadSupport Version10: %s\n"
+		"\t\tClass1BitmapBDROMReadSupport Version11: %s\n"
+		"\t\tClass1BitmapBDROMReadSupport Version12: %s\n"
+		"\t\tClass1BitmapBDROMReadSupport Version13: %s\n"
+		"\t\tClass1BitmapBDROMReadSupport Version14: %s\n"
+		"\t\tClass1BitmapBDROMReadSupport Version15: %s\n"
+		"\t\tClass1BitmapBDROMReadSupport Version0: %s\n"
+		"\t\tClass1BitmapBDROMReadSupport Version1: %s\n"
+		"\t\tClass1BitmapBDROMReadSupport Version2: %s\n"
+		"\t\tClass1BitmapBDROMReadSupport Version3: %s\n"
+		"\t\tClass1BitmapBDROMReadSupport Version4: %s\n"
+		"\t\tClass1BitmapBDROMReadSupport Version5: %s\n"
+		"\t\tClass1BitmapBDROMReadSupport Version6: %s\n"
+		"\t\tClass1BitmapBDROMReadSupport Version7: %s\n"
+		"\t\tClass2BitmapBDROMReadSupport Version8: %s\n"
+		"\t\tClass2BitmapBDROMReadSupport Version9: %s\n"
+		"\t\tClass2BitmapBDROMReadSupport Version10: %s\n"
+		"\t\tClass2BitmapBDROMReadSupport Version11: %s\n"
+		"\t\tClass2BitmapBDROMReadSupport Version12: %s\n"
+		"\t\tClass2BitmapBDROMReadSupport Version13: %s\n"
+		"\t\tClass2BitmapBDROMReadSupport Version14: %s\n"
+		"\t\tClass2BitmapBDROMReadSupport Version15: %s\n"
+		"\t\tClass2BitmapBDROMReadSupport Version0: %s\n"
+		"\t\tClass2BitmapBDROMReadSupport Version1: %s\n"
+		"\t\tClass2BitmapBDROMReadSupport Version2: %s\n"
+		"\t\tClass2BitmapBDROMReadSupport Version3: %s\n"
+		"\t\tClass2BitmapBDROMReadSupport Version4: %s\n"
+		"\t\tClass2BitmapBDROMReadSupport Version5: %s\n"
+		"\t\tClass2BitmapBDROMReadSupport Version6: %s\n"
+		"\t\tClass2BitmapBDROMReadSupport Version7: %s\n"
+		"\t\tClass3BitmapBDROMReadSupport Version8: %s\n"
+		"\t\tClass3BitmapBDROMReadSupport Version9: %s\n"
+		"\t\tClass3BitmapBDROMReadSupport Version10: %s\n"
+		"\t\tClass3BitmapBDROMReadSupport Version11: %s\n"
+		"\t\tClass3BitmapBDROMReadSupport Version12: %s\n"
+		"\t\tClass3BitmapBDROMReadSupport Version13: %s\n"
+		"\t\tClass3BitmapBDROMReadSupport Version14: %s\n"
+		"\t\tClass3BitmapBDROMReadSupport Version15: %s\n"
+		"\t\tClass3BitmapBDROMReadSupport Version0: %s\n"
+		"\t\tClass3BitmapBDROMReadSupport Version1: %s\n"
+		"\t\tClass3BitmapBDROMReadSupport Version2: %s\n"
+		"\t\tClass3BitmapBDROMReadSupport Version3: %s\n"
+		"\t\tClass3BitmapBDROMReadSupport Version4: %s\n"
+		"\t\tClass3BitmapBDROMReadSupport Version5: %s\n"
+		"\t\tClass3BitmapBDROMReadSupport Version6: %s\n"
+		"\t\tClass3BitmapBDROMReadSupport Version7: %s\n"
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version7));
+}
+
+VOID OutputGetConfigurationFeatureBDWrite(
+	PFEATURE_BD_WRITE pBDWrite
+) {
+	OutputDriveLogA(
+		"\tFeatureBDWrite\n"
+		"\t\tSupportsVerifyNotRequired: %s\n"
+		"\t\tClass0BitmapBDREWriteSupport Version8: %s\n"
+		"\t\tClass0BitmapBDREWriteSupport Version9: %s\n"
+		"\t\tClass0BitmapBDREWriteSupport Version10: %s\n"
+		"\t\tClass0BitmapBDREWriteSupport Version11: %s\n"
+		"\t\tClass0BitmapBDREWriteSupport Version12: %s\n"
+		"\t\tClass0BitmapBDREWriteSupport Version13: %s\n"
+		"\t\tClass0BitmapBDREWriteSupport Version14: %s\n"
+		"\t\tClass0BitmapBDREWriteSupport Version15: %s\n"
+		"\t\tClass0BitmapBDREWriteSupport Version0: %s\n"
+		"\t\tClass0BitmapBDREWriteSupport Version1: %s\n"
+		"\t\tClass0BitmapBDREWriteSupport Version2: %s\n"
+		"\t\tClass0BitmapBDREWriteSupport Version3: %s\n"
+		"\t\tClass0BitmapBDREWriteSupport Version4: %s\n"
+		"\t\tClass0BitmapBDREWriteSupport Version5: %s\n"
+		"\t\tClass0BitmapBDREWriteSupport Version6: %s\n"
+		"\t\tClass0BitmapBDREWriteSupport Version7: %s\n"
+		"\t\tClass1BitmapBDREWriteSupport Version8: %s\n"
+		"\t\tClass1BitmapBDREWriteSupport Version9: %s\n"
+		"\t\tClass1BitmapBDREWriteSupport Version10: %s\n"
+		"\t\tClass1BitmapBDREWriteSupport Version11: %s\n"
+		"\t\tClass1BitmapBDREWriteSupport Version12: %s\n"
+		"\t\tClass1BitmapBDREWriteSupport Version13: %s\n"
+		"\t\tClass1BitmapBDREWriteSupport Version14: %s\n"
+		"\t\tClass1BitmapBDREWriteSupport Version15: %s\n"
+		"\t\tClass1BitmapBDREWriteSupport Version0: %s\n"
+		"\t\tClass1BitmapBDREWriteSupport Version1: %s\n"
+		"\t\tClass1BitmapBDREWriteSupport Version2: %s\n"
+		"\t\tClass1BitmapBDREWriteSupport Version3: %s\n"
+		"\t\tClass1BitmapBDREWriteSupport Version4: %s\n"
+		"\t\tClass1BitmapBDREWriteSupport Version5: %s\n"
+		"\t\tClass1BitmapBDREWriteSupport Version6: %s\n"
+		"\t\tClass1BitmapBDREWriteSupport Version7: %s\n"
+		"\t\tClass2BitmapBDREWriteSupport Version8: %s\n"
+		"\t\tClass2BitmapBDREWriteSupport Version9: %s\n"
+		"\t\tClass2BitmapBDREWriteSupport Version10: %s\n"
+		"\t\tClass2BitmapBDREWriteSupport Version11: %s\n"
+		"\t\tClass2BitmapBDREWriteSupport Version12: %s\n"
+		"\t\tClass2BitmapBDREWriteSupport Version13: %s\n"
+		"\t\tClass2BitmapBDREWriteSupport Version14: %s\n"
+		"\t\tClass2BitmapBDREWriteSupport Version15: %s\n"
+		"\t\tClass2BitmapBDREWriteSupport Version0: %s\n"
+		"\t\tClass2BitmapBDREWriteSupport Version1: %s\n"
+		"\t\tClass2BitmapBDREWriteSupport Version2: %s\n"
+		"\t\tClass2BitmapBDREWriteSupport Version3: %s\n"
+		"\t\tClass2BitmapBDREWriteSupport Version4: %s\n"
+		"\t\tClass2BitmapBDREWriteSupport Version5: %s\n"
+		"\t\tClass2BitmapBDREWriteSupport Version6: %s\n"
+		"\t\tClass2BitmapBDREWriteSupport Version7: %s\n"
+		"\t\tClass3BitmapBDREWriteSupport Version8: %s\n"
+		"\t\tClass3BitmapBDREWriteSupport Version9: %s\n"
+		"\t\tClass3BitmapBDREWriteSupport Version10: %s\n"
+		"\t\tClass3BitmapBDREWriteSupport Version11: %s\n"
+		"\t\tClass3BitmapBDREWriteSupport Version12: %s\n"
+		"\t\tClass3BitmapBDREWriteSupport Version13: %s\n"
+		"\t\tClass3BitmapBDREWriteSupport Version14: %s\n"
+		"\t\tClass3BitmapBDREWriteSupport Version15: %s\n"
+		"\t\tClass3BitmapBDREWriteSupport Version0: %s\n"
+		"\t\tClass3BitmapBDREWriteSupport Version1: %s\n"
+		"\t\tClass3BitmapBDREWriteSupport Version2: %s\n"
+		"\t\tClass3BitmapBDREWriteSupport Version3: %s\n"
+		"\t\tClass3BitmapBDREWriteSupport Version4: %s\n"
+		"\t\tClass3BitmapBDREWriteSupport Version5: %s\n"
+		"\t\tClass3BitmapBDREWriteSupport Version6: %s\n"
+		"\t\tClass3BitmapBDREWriteSupport Version7: %s\n"
+		"\t\tClass0BitmapBDRWriteSupport Version8: %s\n"
+		"\t\tClass0BitmapBDRWriteSupport Version9: %s\n"
+		"\t\tClass0BitmapBDRWriteSupport Version10: %s\n"
+		"\t\tClass0BitmapBDRWriteSupport Version11: %s\n"
+		"\t\tClass0BitmapBDRWriteSupport Version12: %s\n"
+		"\t\tClass0BitmapBDRWriteSupport Version13: %s\n"
+		"\t\tClass0BitmapBDRWriteSupport Version14: %s\n"
+		"\t\tClass0BitmapBDRWriteSupport Version15: %s\n"
+		"\t\tClass0BitmapBDRWriteSupport Version0: %s\n"
+		"\t\tClass0BitmapBDRWriteSupport Version1: %s\n"
+		"\t\tClass0BitmapBDRWriteSupport Version2: %s\n"
+		"\t\tClass0BitmapBDRWriteSupport Version3: %s\n"
+		"\t\tClass0BitmapBDRWriteSupport Version4: %s\n"
+		"\t\tClass0BitmapBDRWriteSupport Version5: %s\n"
+		"\t\tClass0BitmapBDRWriteSupport Version6: %s\n"
+		"\t\tClass0BitmapBDRWriteSupport Version7: %s\n"
+		"\t\tClass1BitmapBDRWriteSupport Version8: %s\n"
+		"\t\tClass1BitmapBDRWriteSupport Version9: %s\n"
+		"\t\tClass1BitmapBDRWriteSupport Version10: %s\n"
+		"\t\tClass1BitmapBDRWriteSupport Version11: %s\n"
+		"\t\tClass1BitmapBDRWriteSupport Version12: %s\n"
+		"\t\tClass1BitmapBDRWriteSupport Version13: %s\n"
+		"\t\tClass1BitmapBDRWriteSupport Version14: %s\n"
+		"\t\tClass1BitmapBDRWriteSupport Version15: %s\n"
+		"\t\tClass1BitmapBDRWriteSupport Version0: %s\n"
+		"\t\tClass1BitmapBDRWriteSupport Version1: %s\n"
+		"\t\tClass1BitmapBDRWriteSupport Version2: %s\n"
+		"\t\tClass1BitmapBDRWriteSupport Version3: %s\n"
+		"\t\tClass1BitmapBDRWriteSupport Version4: %s\n"
+		"\t\tClass1BitmapBDRWriteSupport Version5: %s\n"
+		"\t\tClass1BitmapBDRWriteSupport Version6: %s\n"
+		"\t\tClass1BitmapBDRWriteSupport Version7: %s\n"
+		"\t\tClass2BitmapBDRWriteSupport Version8: %s\n"
+		"\t\tClass2BitmapBDRWriteSupport Version9: %s\n"
+		"\t\tClass2BitmapBDRWriteSupport Version10: %s\n"
+		"\t\tClass2BitmapBDRWriteSupport Version11: %s\n"
+		"\t\tClass2BitmapBDRWriteSupport Version12: %s\n"
+		"\t\tClass2BitmapBDRWriteSupport Version13: %s\n"
+		"\t\tClass2BitmapBDRWriteSupport Version14: %s\n"
+		"\t\tClass2BitmapBDRWriteSupport Version15: %s\n"
+		"\t\tClass2BitmapBDRWriteSupport Version0: %s\n"
+		"\t\tClass2BitmapBDRWriteSupport Version1: %s\n"
+		"\t\tClass2BitmapBDRWriteSupport Version2: %s\n"
+		"\t\tClass2BitmapBDRWriteSupport Version3: %s\n"
+		"\t\tClass2BitmapBDRWriteSupport Version4: %s\n"
+		"\t\tClass2BitmapBDRWriteSupport Version5: %s\n"
+		"\t\tClass2BitmapBDRWriteSupport Version6: %s\n"
+		"\t\tClass2BitmapBDRWriteSupport Version7: %s\n"
+		"\t\tClass3BitmapBDRWriteSupport Version8: %s\n"
+		"\t\tClass3BitmapBDRWriteSupport Version9: %s\n"
+		"\t\tClass3BitmapBDRWriteSupport Version10: %s\n"
+		"\t\tClass3BitmapBDRWriteSupport Version11: %s\n"
+		"\t\tClass3BitmapBDRWriteSupport Version12: %s\n"
+		"\t\tClass3BitmapBDRWriteSupport Version13: %s\n"
+		"\t\tClass3BitmapBDRWriteSupport Version14: %s\n"
+		"\t\tClass3BitmapBDRWriteSupport Version15: %s\n"
+		"\t\tClass3BitmapBDRWriteSupport Version0: %s\n"
+		"\t\tClass3BitmapBDRWriteSupport Version1: %s\n"
+		"\t\tClass3BitmapBDRWriteSupport Version2: %s\n"
+		"\t\tClass3BitmapBDRWriteSupport Version3: %s\n"
+		"\t\tClass3BitmapBDRWriteSupport Version4: %s\n"
+		"\t\tClass3BitmapBDRWriteSupport Version5: %s\n"
+		"\t\tClass3BitmapBDRWriteSupport Version6: %s\n"
+		"\t\tClass3BitmapBDRWriteSupport Version7: %s\n"
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->SupportsVerifyNotRequired)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version7));
+}
+
+VOID OutputGetConfigurationFeatureTSR(
+	PFEATURE_TSR pTsr
+) {
+	UNREFERENCED_PARAMETER(pTsr);
+	OutputDriveLogA(
+		"\tFeatureTSR\n");
+}
+
+VOID OutputGetConfigurationFeatureHDDVDRead(
+	PFEATURE_DATA_HDDVD_READ pHdRead
+) {
+	OutputDriveLogA(
+		"\tFeatureHDDVDRead\n"
+		"\t\tRecordable: %s\n"
+		"\t\tRewritable: %s\n"
+		, BOOLEAN_TO_STRING_YES_NO_A(pHdRead->Recordable)
+		, BOOLEAN_TO_STRING_YES_NO_A(pHdRead->Rewritable));
+}
+
+VOID OutputGetConfigurationFeatureHDDVDWrite(
+	PFEATURE_DATA_HDDVD_WRITE pHdWrite
+) {
+	OutputDriveLogA(
+		"\tFeatureHDDVDWrite\n"
+		"\t\tRecordable: %s\n"
+		"\t\tRewritable: %s\n"
+		, BOOLEAN_TO_STRING_YES_NO_A(pHdWrite->Recordable)
+		, BOOLEAN_TO_STRING_YES_NO_A(pHdWrite->Rewritable));
 }
 
 VOID OutputGetConfigurationFeatureHybridDisc(
@@ -1001,17 +1704,41 @@ VOID OutputGetConfigurationFeatureNumber(
 		case FeatureDvdRecordableWrite:
 			OutputGetConfigurationFeatureDvdRecordableWrite((PFEATURE_DATA_DVD_RECORDABLE_WRITE)&lpConf[n]);
 			break;
+		case FeatureDDCDRead:
+			break;
+		case FeatureDDCDRWrite:
+			break;
+		case FeatureDDCDRWWrite:
+			break;
 		case FeatureLayerJumpRecording:
 			OutputGetConfigurationFeatureLayerJumpRecording((PFEATURE_DATA_LAYER_JUMP_RECORDING)&lpConf[n]);
 			break;
 		case FeatureCDRWMediaWriteSupport:
 			OutputGetConfigurationFeatureCDRWMediaWriteSupport((PFEATURE_CD_RW_MEDIA_WRITE_SUPPORT)&lpConf[n]);
 			break;
+		case FeatureBDRPseudoOverwrite:
+			OutputGetConfigurationFeatureBDRPseudoOverwrite((PFEATURE_BD_R_PSEUDO_OVERWRITE)&lpConf[n]);
+			break;
 		case FeatureDvdPlusRWDualLayer:
 			OutputGetConfigurationFeatureDvdPlusRWDualLayer((PFEATURE_DATA_DVD_PLUS_RW_DUAL_LAYER)&lpConf[n]);
 			break;
 		case FeatureDvdPlusRDualLayer:
 			OutputGetConfigurationFeatureDvdPlusRDualLayer((PFEATURE_DATA_DVD_PLUS_R_DUAL_LAYER)&lpConf[n]);
+			break;
+		case FeatureBDRead:
+			OutputGetConfigurationFeatureBDRead((PFEATURE_BD_READ)&lpConf[n]);
+			break;
+		case FeatureBDWrite:
+			OutputGetConfigurationFeatureBDWrite((PFEATURE_BD_WRITE)&lpConf[n]);
+			break;
+		case FeatureTSR:
+			OutputGetConfigurationFeatureTSR((PFEATURE_TSR)&lpConf[n]);
+			break;
+		case FeatureHDDVDRead:
+			OutputGetConfigurationFeatureHDDVDRead((PFEATURE_DATA_HDDVD_READ)&lpConf[n]);
+			break;
+		case FeatureHDDVDWrite:
+			OutputGetConfigurationFeatureHDDVDWrite((PFEATURE_DATA_HDDVD_WRITE)&lpConf[n]);
 			break;
 		case FeatureHybridDisc:
 			OutputGetConfigurationFeatureHybridDisc((PFEATURE_HYBRID_DISC)&lpConf[n]);
