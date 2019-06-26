@@ -18,7 +18,7 @@
 unsigned long crc_table[256];
 
 /* Flag: has the table been computed? Initially false. */
-int crc_table_computed = 0;
+//int crc_table_computed = 0;
 
 /* Make the table for a fast CRC. */
 void make_crc_table(void)
@@ -36,7 +36,7 @@ void make_crc_table(void)
     }
     crc_table[n] = c;
   }
-  crc_table_computed = 1;
+//  crc_table_computed = 1;
 }
 
 /*
@@ -58,8 +58,8 @@ unsigned long update_crc(unsigned long crc,
   unsigned long c = crc ^ 0xffffffffL;
   int n;
 
-  if (!crc_table_computed)
-    make_crc_table();
+//  if (!crc_table_computed)
+//    make_crc_table();
   for (n = 0; n < len; n++) {
     c = crc_table[(c ^ buf[n]) & 0xff] ^ (c >> 8);
   }
