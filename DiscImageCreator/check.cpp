@@ -43,6 +43,17 @@ BOOL IsCDRDrive(
 	return FALSE;
 }
 
+BOOL IsValidPS3Drive(
+	PDEVICE pDevice
+) {
+	if (!strncmp(pDevice->szVendorId, "SONY    ", DRIVE_VENDOR_ID_SIZE)) {
+		if (!strncmp(pDevice->szProductId, "PS-SYSTEM   302R", DRIVE_PRODUCT_ID_SIZE)) {
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
 BOOL IsValidPlextorDrive(
 	PDEVICE pDevice
 ) {
@@ -1116,18 +1127,23 @@ BOOL IsValidSubQAMSF(
 BOOL ContainsC2Error(
 	PDEVICE pDevice,
 	LPBYTE lpBuf,
-	LPUINT lpuiC2errorNum
+	LPUINT lpuiC2errorNum,
+	BOOL bOutputLog
 ) {
 	BOOL bRet = RETURNED_NO_C2_ERROR_1ST;
 	*lpuiC2errorNum = 0;
+	BOOL bErr = FALSE;
 	for (WORD wC2ErrorPos = 0; wC2ErrorPos < CD_RAW_READ_C2_294_SIZE; wC2ErrorPos++) {
 		UINT uiPos = pDevice->TRANSFER.uiBufC2Offset + wC2ErrorPos;
 		if (lpBuf[uiPos] != 0) {
 			// Ricoh based drives (+97 read offset, like the Aopen CD-RW CRW5232)
 			// use lsb points to 1st byte of main. 
 			// But almost drive is msb points to 1st byte of main.
-			//			INT nBit = 0x01;
+//			INT nBit = 0x01;
 			INT nBit = 0x80;
+			if (bOutputLog && !bErr) {
+				OutputC2ErrorLogA("                 ofs: ");
+			}
 			for (INT n = 0; n < CHAR_BIT; n++) {
 				// exist C2 error
 				if (lpBuf[uiPos] & nBit) {
@@ -1135,11 +1151,18 @@ BOOL ContainsC2Error(
 					// (position of byte) + n => position of bit
 					bRet = RETURNED_EXIST_C2_ERROR;
 					(*lpuiC2errorNum)++;
+					if (bOutputLog) {
+						OutputC2ErrorLogA("%x, ", wC2ErrorPos * 8 + n);
+						bErr = TRUE;
+					}
 				}
 //				nBit <<= 1;
 				nBit >>= 1;
 			}
 		}
+	}
+	if (bOutputLog && bErr) {
+		OutputC2ErrorLogA("\n");
 	}
 	return bRet;
 }

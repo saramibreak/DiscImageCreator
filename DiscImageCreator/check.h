@@ -23,6 +23,10 @@ BOOL IsCDRDrive(
 	PDISC pDisc
 );
 
+BOOL IsValidPS3Drive(
+	PDEVICE pDevice
+);
+
 BOOL IsValidPlextorDrive(
 	PDEVICE pDevice
 );
@@ -157,5 +161,6 @@ BOOL IsValidSubQAMSF(
 BOOL ContainsC2Error(
 	PDEVICE pDevice,
 	LPBYTE lpBuf,
-	LPUINT lpuiC2errorNum
+	LPUINT lpuiC2errorNum,
+	BOOL bOutputLog
 );

@@ -72,3 +72,8 @@ BOOL ReadBDForParamSfo(
 	CDB::_READ12* pCdb,
 	LPBYTE lpBuf
 );
+
+BOOL ReadSACDFileSystem(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice
+);

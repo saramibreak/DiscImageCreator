@@ -276,11 +276,9 @@ VOID OutputFsVolumeDescriptorSecond(
 	UINT pts = GetSizeOrUintForVolDesc(lpBuf + 132, UINT(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
 	UINT lopt = MAKEUINT(MAKEWORD(lpBuf[140], lpBuf[141]),
 		MAKEWORD(lpBuf[142], lpBuf[143]));
-	pDisc->MAIN.bPathType = lType;
 	if (lopt == 0) {
 		lopt = MAKEUINT(MAKEWORD(lpBuf[151], lpBuf[150]),
 			MAKEWORD(lpBuf[149], lpBuf[148]));
-		pDisc->MAIN.bPathType = mType;
 	}
 	// for Codelock
 	if (pExtArg->byScanProtectViaFile) {
@@ -570,11 +568,11 @@ VOID OutputFsVolumeDescriptor(
 }
 
 BOOL OutputFsPathTableRecord(
-	PDISC pDisc,
 	LPBYTE lpBuf,
 	UINT uiLogicalBlkCoef,
 	UINT uiPathTblPos,
 	UINT uiPathTblSize,
+	BOOL bPathType,
 	PDIRECTORY_RECORD pDirRec,
 	LPINT nDirPosNum
 ) {
@@ -587,7 +585,7 @@ BOOL OutputFsPathTableRecord(
 			return FALSE;
 		}
 		pDirRec[*nDirPosNum].uiDirNameLen = lpBuf[i];
-		if (pDisc->MAIN.bPathType == lType) {
+		if (bPathType == lType) {
 			pDirRec[*nDirPosNum].uiPosOfDir = MAKEUINT(MAKEWORD(lpBuf[2 + i], lpBuf[3 + i]),
 				MAKEWORD(lpBuf[4 + i], lpBuf[5 + i])) / uiLogicalBlkCoef;
 		}
@@ -596,7 +594,7 @@ BOOL OutputFsPathTableRecord(
 				MAKEWORD(lpBuf[3 + i], lpBuf[2 + i])) / uiLogicalBlkCoef;
 		}
 		if (pDirRec[*nDirPosNum].uiDirNameLen > 0) {
-			if (pDisc->MAIN.bPathType == lType) {
+			if (bPathType == lType) {
 				pDirRec[*nDirPosNum].uiNumOfUpperDir = MAKEWORD(lpBuf[6 + i], lpBuf[7 + i]);
 			}
 			else {
@@ -1291,8 +1289,7 @@ VOID OutputCDSubToLog(
 	PDISC pDisc,
 	PDISC_PER_SECTOR pDiscPerSector,
 	LPBYTE lpSubcodeRaw,
-	INT nLBA,
-	FILE* fpParse
+	INT nLBA
 ) {
 	CONST INT BufSize = 256;
 	_TCHAR szSub0[BufSize] = {};
@@ -1391,6 +1388,12 @@ VOID OutputCDSubToLog(
 					pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20]
 					, pDiscPerSector->subcode.current[21]);
 			}
+			if (pDiscPerSector->subcode.prev[13] == 0xaa) {
+				pDisc->SCSI.nLeadoutLenOf1stSession = nLBA - pDisc->SCSI.nFirstLBAofLeadout;
+				OutputLogA(standardOut | fileDisc, " Lead-out length of 1st session: %d\n"
+					, pDisc->SCSI.nLeadoutLenOf1stSession);
+				pDisc->SCSI.nFirstLBAofLeadin = nLBA;
+			}
 		}
 		else if (pDiscPerSector->subcode.current[13] == 0xaa) {
 			// lead-out area
@@ -1408,6 +1411,23 @@ VOID OutputCDSubToLog(
 				, pDiscPerSector->subcode.current[15], pDiscPerSector->subcode.current[16],
 				pDiscPerSector->subcode.current[17], pDiscPerSector->subcode.current[19]
 				, pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
+			if (pDiscPerSector->subcode.current[13] > 1) {
+				if (pDiscPerSector->subcode.prev[13] == 0 &&
+					(pDiscPerSector->subcode.prev[14] == 0xa0 ||
+					pDiscPerSector->subcode.prev[14] == 0xa1 ||
+					pDiscPerSector->subcode.prev[14] == 0xa2)
+					) {
+					pDisc->SCSI.nLeadinLenOf2ndSession = nLBA - pDisc->SCSI.nFirstLBAofLeadin;
+					OutputLogA(standardOut | fileDisc, " Lead-in length of 2nd session: %d\n"
+						, pDisc->SCSI.nLeadinLenOf2ndSession);
+				}
+				else if (BcdToDec(pDiscPerSector->subcode.current[13]) == pDisc->SCSI.byFirstMultiSessionTrackNum &&
+					pDiscPerSector->subcode.prev[14] == 0 && pDiscPerSector->subcode.current[14] == 1) {
+					pDisc->SCSI.nPregapLenOf1stTrkOf2ndSession = nLBA - (pDisc->SCSI.nFirstLBAof2ndSession - 150);
+					OutputLogA(standardOut | fileDisc, " Pregap length of 1st track of 2nd session: %d\n"
+						, pDisc->SCSI.nPregapLenOf1stTrkOf2ndSession);
+				}
+			}
 		}
 		break;
 	case ADR_ENCODES_MEDIA_CATALOG: {
@@ -1568,5 +1588,9 @@ VOID OutputCDSubToLog(
 			_tcsncat(szSub3, _T("]\n"), 2);
 		}
 	}
-	_ftprintf(fpParse, _T("%s%s%s%s"), szSub0, szSub, szSub2, szSub3);
+#ifndef _DEBUG
+	_ftprintf(g_LogFile.fpSubReadable, _T("%s%s%s%s"), szSub0, szSub, szSub2, szSub3);
+#else
+	OutputDebugStringExA(_T("%s%s%s%s"), szSub0, szSub, szSub2, szSub3);
+#endif
 }

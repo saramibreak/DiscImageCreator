@@ -32,6 +32,17 @@ VOID SetReadD8Command(
 	CDFLAG::_PLXTR_READ_CDDA::_SUB_CHANNEL_SELECTION Sub
 );
 
+VOID SetReadDiscCommand(
+	PEXEC_TYPE pExecType,
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	BYTE byTransferLen,
+	CDFLAG::_READ_CD::_ERROR_FLAGS c2,
+	CDFLAG::_READ_CD::_SUB_CHANNEL_SELECTION tmpsub,
+	LPBYTE lpCmd,
+	BOOL bOutputLog
+);
+
 VOID SetCommandForTransferLength(
 	PEXEC_TYPE pExecType,
 	PDEVICE pDevice,

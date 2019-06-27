@@ -1748,3 +1748,67 @@ BOOL ReadXboxDVDBySwap(
 	}
 	return TRUE;
 }
+
+BOOL ReadSACD(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	PDISC pDisc,
+	LPCTSTR pszFullPath
+) {
+	ReadSACDFileSystem(pExtArg, pDevice);
+
+	FILE* fp = CreateOrOpenFile(
+		pszFullPath, NULL, NULL, NULL, NULL, _T(".iso"), _T("wb"), 0, 0);
+	if (!fp) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		return FALSE;
+	}
+	BOOL bRet = TRUE;
+	LPBYTE pBuf = NULL;
+	try {
+		if (NULL == (pBuf = (LPBYTE)calloc(
+			pDevice->dwMaxTransferLength + pDevice->AlignmentMask, sizeof(BYTE)))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			throw FALSE;
+		}
+		LPBYTE lpBuf = (LPBYTE)ConvParagraphBoundary(pDevice, pBuf);
+
+		CDB::_READ12 cdb = {};
+		cdb.OperationCode = SCSIOP_READ12;
+		if (pExtArg->byFua) {
+			cdb.ForceUnitAccess = TRUE;
+		}
+		DWORD dwTransferLen = pDevice->dwMaxTransferLength / DISC_RAW_READ_SIZE;
+		REVERSE_BYTES(&cdb.TransferLength, &dwTransferLen);
+#ifdef _WIN32
+		INT direction = SCSI_IOCTL_DATA_IN;
+#else
+		INT direction = SG_DXFER_FROM_DEV;
+#endif
+		BYTE byScsiStatus = 0;
+
+		for (INT nLBA = 0; nLBA < pDisc->SCSI.nAllLength; nLBA += (INT)dwTransferLen) {
+			if (dwTransferLen > (DWORD)(pDisc->SCSI.nAllLength - nLBA)) {
+				dwTransferLen = (DWORD)(pDisc->SCSI.nAllLength - nLBA);
+				REVERSE_BYTES(&cdb.TransferLength, &dwTransferLen);
+			}
+
+			REVERSE_BYTES(&cdb.LogicalBlock, &nLBA);
+			if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, lpBuf,
+				direction, DISC_RAW_READ_SIZE * dwTransferLen, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+					throw FALSE;
+			}
+
+			fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_RAW_READ_SIZE * dwTransferLen, fp);
+			OutputString(_T("\rCreating iso(LBA) %8lu/%8u"), nLBA + dwTransferLen, pDisc->SCSI.nAllLength);
+		}
+		OutputString(_T("\n"));
+	}
+	catch (BOOL ret) {
+		bRet = ret;
+	}
+	FreeAndNull(pBuf);
+	FcloseAndNull(fp);
+	return TRUE;
+}

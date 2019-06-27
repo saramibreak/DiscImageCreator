@@ -190,8 +190,10 @@ BOOL ReadTOCFull(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
-	PDISC_PER_SECTOR pDiscPerSector,
-	FILE* fpCcd
+	PCDROM_TOC_FULL_TOC_DATA pFullTocData,
+	PCDROM_TOC_FULL_TOC_DATA_BLOCK* pTocData,
+	LPWORD wTocEntries,
+	LPBYTE* pPFullToc
 ) {
 	CDB::_READ_TOC cdb = {};
 	cdb.OperationCode = SCSIOP_READ_TOC;
@@ -201,22 +203,15 @@ BOOL ReadTOCFull(
 	REVERSE_BYTES_SHORT(&cdb.AllocationLength, &wSize);
 
 #ifdef _WIN32
-	_declspec(align(4)) CDROM_TOC_FULL_TOC_DATA fullToc = { 0 };
 	INT direction = SCSI_IOCTL_DATA_IN;
 #else
-	__attribute__((aligned(4))) CDROM_TOC_FULL_TOC_DATA fullToc = {};
 	INT direction = SG_DXFER_FROM_DEV;
 #endif
-	LPBYTE pBuf = NULL;
-	LPBYTE lpBuf = NULL;
-	BYTE lpCmd[CDB12GENERIC_LENGTH] = {};
-	INT nOfs = 0;
-	BYTE byMode = DATA_BLOCK_MODE0;
-	BYTE bySessionNum = 0;
 	BYTE byScsiStatus = 0;
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB10GENERIC_LENGTH
-		, &fullToc, direction, wSize, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		, pFullTocData, direction, wSize, &byScsiStatus, _T(__FUNCTION__), __LINE__)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+#if 0
 		UINT uiBufLen = CD_RAW_SECTOR_SIZE + CD_RAW_READ_SUBCODE_SIZE;
 		if (!ReadCDForCheckingSubQAdrFirst(pExtArg, pDevice
 			, pDisc, &pBuf, &lpBuf, lpCmd, &uiBufLen, &nOfs, CDFLAG::_READ_CD::All)) {
@@ -235,29 +230,23 @@ BOOL ReadTOCFull(
 				_T("\rChecking SubQ adr (Track) %2u/%2u"), i + 1, pDisc->SCSI.toc.LastTrack);
 		}
 		OutputString(_T("\n"));
+#endif
 		pDevice->bySuccessReadTocFull = FALSE;
 		return TRUE;
 	}
-	WORD wFullTocLen = MAKEWORD(fullToc.Length[1], fullToc.Length[0]);
-	WORD wTocEntriesAll = (WORD)(wFullTocLen - sizeof(fullToc.Length));
-	WORD wTocEntries = (WORD)(wTocEntriesAll / sizeof(CDROM_TOC_FULL_TOC_DATA_BLOCK));
+	WORD wFullTocLen = MAKEWORD(pFullTocData->Length[1], pFullTocData->Length[0]);
+	WORD wTocEntriesAll = (WORD)(wFullTocLen - sizeof(pFullTocData->Length));
+	*wTocEntries = (WORD)(wTocEntriesAll / sizeof(CDROM_TOC_FULL_TOC_DATA_BLOCK));
 
-	if (fpCcd) {
-		WriteCcdForDisc(wTocEntries, fullToc.LastCompleteSession, fpCcd);
-		if (pDevice->FEATURE.byCanCDText) {
-			ReadTOCText(pExtArg, pDevice, pDisc, fpCcd);
-		}
-	}
-	pDisc->SCSI.bMultiSession = fullToc.LastCompleteSession > 1 ? TRUE : FALSE;
+	pDisc->SCSI.bMultiSession = pFullTocData->LastCompleteSession > 1 ? TRUE : FALSE;
 
 	WORD wFullTocLenFix = (WORD)(wTocEntriesAll + sizeof(CDROM_TOC_FULL_TOC_DATA));
 	// 4 byte padding
 	if (wFullTocLenFix % 4) {
 		wFullTocLenFix = (WORD)((wFullTocLenFix / 4 + 1) * 4);
 	}
-	LPBYTE pPFullToc = NULL;
 	LPBYTE pFullToc = NULL;
-	if (!GetAlignedCallocatedBuffer(pDevice, &pPFullToc,
+	if (!GetAlignedCallocatedBuffer(pDevice, pPFullToc,
 		wFullTocLenFix, &pFullToc, _T(__FUNCTION__), __LINE__)) {
 		return FALSE;
 	}
@@ -270,48 +259,21 @@ BOOL ReadTOCFull(
 			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 			throw FALSE;
 		}
-		PCDROM_TOC_FULL_TOC_DATA_BLOCK pTocData =
-			((PCDROM_TOC_FULL_TOC_DATA)pFullToc)->Descriptors;
-		UINT uiBufLen = CD_RAW_SECTOR_SIZE + CD_RAW_READ_SUBCODE_SIZE;
-		if (!ReadCDForCheckingSubQAdrFirst(pExtArg
-			, pDevice, pDisc, &pBuf, &lpBuf, lpCmd, &uiBufLen, &nOfs, CDFLAG::_READ_CD::All)) {
-			throw FALSE;
-		}
-		for (WORD i = 0; i < wTocEntries; i++) {
-			if (pDevice->byPlxtrDrive == PLXTR_DRIVE_TYPE::PX40TS) {
-				// Somehow Ultraplex seems to get the fulltoc data as "hexadecimal"
-				pTocData[i].Msf[0] = BcdToDec(pTocData[i].Msf[0]);
-				pTocData[i].Msf[1] = BcdToDec(pTocData[i].Msf[1]);
-				pTocData[i].Msf[2] = BcdToDec(pTocData[i].Msf[2]);
-				pTocData[i].MsfExtra[0] = BcdToDec(pTocData[i].MsfExtra[0]);
-				pTocData[i].MsfExtra[1] = BcdToDec(pTocData[i].MsfExtra[1]);
-				pTocData[i].MsfExtra[2] = BcdToDec(pTocData[i].MsfExtra[2]);
-				if (pTocData[i].Point < 0xa0) {
-					pTocData[i].Point = BcdToDec(pTocData[i].Point);
-				}
-			}
-			if (pTocData[i].Point < 100) {
-				if (!ReadCDForCheckingSubQAdr(pExtArg, pDevice, pDisc, pDiscPerSector, lpCmd, lpBuf
-					, uiBufLen, nOfs, (BYTE)(pTocData[i].Point - 1), &byMode, pTocData[i].SessionNumber, fpCcd)) {
-					throw FALSE;
-				}
-				if (bySessionNum < pTocData[i].SessionNumber) {
-					WriteCcdForSession(pTocData[i].SessionNumber, byMode, fpCcd);
-					bySessionNum++;
-				}
-				OutputString(
-					_T("\rChecking SubQ adr (Track) %2u/%2u"), pTocData[i].Point, pDisc->SCSI.toc.LastTrack);
+		*pTocData = ((PCDROM_TOC_FULL_TOC_DATA)(pFullToc))->Descriptors;
+		for (WORD a = 0; a < *wTocEntries; a++) {
+			switch ((*pTocData + a)->Point) {
+			case 0xa0:
+				pDisc->SCSI.byFormat = (*pTocData + a)->Msf[1];
+				break;
+			default:
+				break;
 			}
 		}
-		OutputString(_T("\n"));
-		SetAndOutputTocFull(pDisc, &fullToc, pTocData, wTocEntries, fpCcd);
 	}
 	catch (BOOL ret) {
 		bRet = ret;
 	}
 	pDevice->bySuccessReadTocFull = TRUE;
-	FreeAndNull(pPFullToc);
-	FreeAndNull(pBuf);
 	return bRet;
 }
 

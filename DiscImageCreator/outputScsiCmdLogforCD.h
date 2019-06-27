@@ -45,11 +45,11 @@ VOID OutputFsDirectoryRecord(
 );
 
 BOOL OutputFsPathTableRecord(
-	PDISC pDisc,
 	LPBYTE lpBuf,
 	UINT uiLogicalBlkCoef,
 	UINT uiPathTblPos,
 	UINT uiPathTblSize,
+	BOOL bPathType,
 	PDIRECTORY_RECORD pDirRec,
 	LPINT nDirPosNum
 );
@@ -149,6 +149,5 @@ VOID OutputCDSubToLog(
 	PDISC pDisc,
 	PDISC_PER_SECTOR pDiscPerSector,
 	LPBYTE lpSubcodeRaw,
-	INT nLBA,
-	FILE* fpParse
+	INT nLBA
 );

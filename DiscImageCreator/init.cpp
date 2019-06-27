@@ -351,7 +351,7 @@ BOOL InitLogFile(
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
-			if (*pExecType != dvd && *pExecType != bd &&
+			if (*pExecType != dvd && *pExecType != bd && *pExecType != sacd &&
 				*pExecType != xbox && *pExecType != xboxswap &&
 				*pExecType != xgd2swap && *pExecType != xgd3swap) {
 				if (NULL == (g_LogFile.fpSubInfo = CreateOrOpenFileA(

@@ -27,6 +27,7 @@ typedef enum _EXEC_TYPE {
 	xgd2swap,
 	xgd3swap,
 	bd,
+	sacd,
 	fd,
 	stop,
 	start,
@@ -59,8 +60,10 @@ typedef enum _MAIN_DATA_TYPE {
 } MAIN_DATA_TYPE, *PMAIN_DATA_TYPE;
 
 typedef enum _BYTE_PAD_TYPE {
-	padby0,
-	padbyff
+	padByAll0,
+	padByUsr0,
+	padByUsr55,
+	padByPrevSector
 } BYTE_PAD_TYPE, *PBYTE_PAD_TYPE;
 
 typedef enum _TRACK_TYPE {

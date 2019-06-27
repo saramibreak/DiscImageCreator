@@ -44,7 +44,7 @@ BOOL OutputGameHash(
 			return FALSE;
 		}
 	}
-	else if (*pExecType == dvd || IsXbox(pExecType) || *pExecType == bd) {
+	else if (*pExecType == dvd || IsXbox(pExecType) || *pExecType == bd || *pExecType == sacd) {
 		if (*pExecType == dvd || *pExecType == xbox) {
 			_tcsncpy(szPath, pszFullPath, _MAX_PATH);
 			if (*pExecType == xbox) {

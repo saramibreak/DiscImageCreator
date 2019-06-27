@@ -159,6 +159,7 @@ typedef struct _LOG_FILE {
 	FILE* fpMainError;
 	FILE* fpSubInfo;
 	FILE* fpSubIntention;
+	FILE* fpSubReadable;
 	FILE* fpSubError;
 	FILE* fpC2Error;
 } LOG_FILE, *PLOG_FILE;
@@ -270,10 +271,14 @@ typedef struct _DISC {
 		BYTE byFirstDataTrackNum;	// get at CDROM_READ_TOC_EX_FORMAT_TOC
 		BYTE byLastDataTrackNum;	// get at CDROM_READ_TOC_EX_FORMAT_TOC
 		BYTE byFormat;				// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
-		BYTE byFirstMultiTrackNum;	// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
+		BYTE byFirstMultiSessionTrackNum;	// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
 		BOOL bMultiSession;			// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
 		LPBYTE lpSessionNumList;	// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
 		INT nFirstLBAofLeadout;		// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
+		INT nFirstLBAofLeadin;
+		INT nLeadoutLenOf1stSession;
+		INT nLeadinLenOf2ndSession;
+		INT nPregapLenOf1stTrkOf2ndSession;
 		INT nFirstLBAof2ndSession;	// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
 		LPSTR* pszTitle;			// get at CDROM_READ_TOC_EX_FORMAT_CDTEXT
 		LPSTR* pszPerformer;		// get at CDROM_READ_TOC_EX_FORMAT_CDTEXT
@@ -296,7 +301,6 @@ typedef struct _DISC {
 		INT nFixFirstLBAof2ndSession;	// for sliding offset
 		// 0 origin, max is last track num.
 		LPBYTE lpModeList;
-		BOOL bPathType; // use path table record
 		LPDWORD lpAllSectorCrc32;
 		LPINT lpAllLBAOfC2Error;
 		INT nC2ErrorCnt;
@@ -386,6 +390,7 @@ typedef struct _VOLUME_DESCRIPTOR {
 		UINT uiPathTblPos;
 		UINT uiRootDataLen;
 	} JOLIET;
+	BOOL bPathType; // use path table record
 } VOLUME_DESCRIPTOR, *PVOLUME_DESCRIPTOR;
 
 typedef struct _DIRECTORY_RECORD {

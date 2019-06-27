@@ -52,8 +52,10 @@ BOOL ReadTOCFull(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
-	PDISC_PER_SECTOR pDiscPerSector,
-	FILE* fpCcd
+	PCDROM_TOC_FULL_TOC_DATA pFullTocData,
+	PCDROM_TOC_FULL_TOC_DATA_BLOCK* pTocData,
+	LPWORD wTocEntries,
+	LPBYTE* pPFullToc
 );
 
 BOOL ReadTOCAtip(

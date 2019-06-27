@@ -77,7 +77,6 @@ BOOL ReadCDForSwap(
 	LPCTSTR pszPath,
 	INT nStart,
 	INT nEnd,
-	CDFLAG::_READ_CD::_EXPECTED_SECTOR_TYPE flg,
 	FILE* fpCcd,
 	FILE* fpC2
 );
@@ -91,6 +90,5 @@ BOOL ReadCDPartial(
 	LPCTSTR pszPath,
 	INT nStart,
 	INT nEnd,
-	CDFLAG::_READ_CD::_EXPECTED_SECTOR_TYPE flg,
 	FILE* fpC2
 );

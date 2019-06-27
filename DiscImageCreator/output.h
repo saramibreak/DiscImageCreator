@@ -391,6 +391,17 @@ VOID WriteCcdForSession(
 	FILE* fpCcd
 );
 
+BOOL WriteCcdFirst(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	PDISC pDisc,
+	PDISC_PER_SECTOR pDiscPerSector,
+	PCDROM_TOC_FULL_TOC_DATA fullToc,
+	PCDROM_TOC_FULL_TOC_DATA_BLOCK pTocData,
+	WORD wTocEntries,
+	FILE* fpCcd
+);
+
 VOID WriteCcdForEntry(
 	PCDROM_TOC_FULL_TOC_DATA_BLOCK toc,
 	UINT a,
@@ -419,8 +430,7 @@ VOID WriteSubChannel(
 	PDISC_PER_SECTOR pDiscPerSector,
 	LPBYTE lpSubcodeRaw,
 	INT nLBA,
-	FILE* fpSub,
-	FILE* fpParse
+	FILE* fpSub
 );
 
 VOID WriteErrorBuffer(
@@ -435,8 +445,7 @@ VOID WriteErrorBuffer(
 	INT nPadType,
 	FILE* fpImg,
 	FILE* fpSub,
-	FILE* fpC2,
-	FILE* fpParse
+	FILE* fpC2
 );
 
 BOOL WriteParsingSubfile(

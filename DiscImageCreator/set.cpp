@@ -58,6 +58,54 @@ VOID SetReadD8Command(
 	cdb->SubCode = (UCHAR)Sub;
 }
 
+VOID SetReadDiscCommand(
+	PEXEC_TYPE pExecType,
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	BYTE byTransferLen,
+	CDFLAG::_READ_CD::_ERROR_FLAGS c2,
+	CDFLAG::_READ_CD::_SUB_CHANNEL_SELECTION tmpsub,
+	LPBYTE lpCmd,
+	BOOL bOutputLog
+) {
+	_TCHAR szSubCode[5] = {};
+	if ((pExtArg->byD8 || pDevice->byPlxtrDrive) && !pExtArg->byBe) {
+		CDB::_PLXTR_READ_CDDA cdb = {};
+		if (tmpsub == CDFLAG::_READ_CD::NoSub) {
+			SetReadD8Command(pDevice, &cdb, byTransferLen, CDFLAG::_PLXTR_READ_CDDA::NoSub);
+		}
+		else if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
+			_tcsncpy(szSubCode, _T("Raw"), sizeof(szSubCode) / sizeof(szSubCode[0]));
+			SetReadD8Command(pDevice, &cdb, byTransferLen, CDFLAG::_PLXTR_READ_CDDA::MainC2Raw);
+		}
+		else {
+			_tcsncpy(szSubCode, _T("Pack"), sizeof(szSubCode) / sizeof(szSubCode[0]));
+			SetReadD8Command(pDevice, &cdb, byTransferLen, CDFLAG::_PLXTR_READ_CDDA::MainPack);
+		}
+		memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
+	}
+	else {
+		// non plextor && support scrambled ripping
+		CDB::_READ_CD cdb = {};
+		CDFLAG::_READ_CD::_EXPECTED_SECTOR_TYPE type = CDFLAG::_READ_CD::CDDA;
+		if (pExtArg->byBe || (pExecType != NULL && *pExecType == data)) {
+			type = CDFLAG::_READ_CD::All;
+		}
+		CDFLAG::_READ_CD::_SUB_CHANNEL_SELECTION sub = tmpsub;
+		_tcsncpy(szSubCode, _T("Raw"), sizeof(szSubCode) / sizeof(szSubCode[0]));
+		if (pExtArg->byPack) {
+			sub = CDFLAG::_READ_CD::Pack;
+			_tcsncpy(szSubCode, _T("Pack"), sizeof(szSubCode) / sizeof(szSubCode[0]));
+		}
+		SetReadCDCommand(pDevice, &cdb, type, byTransferLen, c2, sub);
+		memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
+	}
+	if (bOutputLog) {
+		OutputLog(standardOut | fileDisc,
+			_T("Set OpCode: %#02x, SubCode: %x(%s)\n"), lpCmd[0], lpCmd[10], szSubCode);
+	}
+}
+
 VOID SetCommandForTransferLength(
 	PEXEC_TYPE pExecType,
 	PDEVICE pDevice,
@@ -148,12 +196,20 @@ VOID SetAndOutputToc(
 
 	for (BYTE i = pDisc->SCSI.toc.FirstTrack; i <= pDisc->SCSI.toc.LastTrack; i++) {
 		INT tIdx = i - 1;
+		if (pDisc->SCSI.byFormat == DISK_TYPE_CDI && pDisc->SCSI.toc.LastTrack > 1) {
+			if (i == pDisc->SCSI.toc.LastTrack) {
+				break;
+			}
+			else {
+				tIdx = i;
+			}
+		}
 		// for swap command
 		pDisc->SCSI.lpFirstLBAListOnToc[tIdx] = 0;
 		pDisc->SCSI.lpLastLBAListOnToc[tIdx] = 0;
 
 		for (INT j = 0, k = 24; j < 4; j++, k -= 8) {
-			pDisc->SCSI.lpFirstLBAListOnToc[tIdx] |= pDisc->SCSI.toc.TrackData[tIdx].Address[j] << k;
+			pDisc->SCSI.lpFirstLBAListOnToc[tIdx] |= pDisc->SCSI.toc.TrackData[i - 1].Address[j] << k;
 			pDisc->SCSI.lpLastLBAListOnToc[tIdx] |= pDisc->SCSI.toc.TrackData[i].Address[j] << k;
 		}
 		pDisc->SCSI.lpLastLBAListOnToc[tIdx] -= 1;
@@ -176,25 +232,38 @@ VOID SetAndOutputToc(
 		}
 
 		if (i == pDisc->SCSI.toc.FirstTrack && pDisc->SCSI.lpFirstLBAListOnToc[tIdx] > 0) {
-			pDisc->SCSI.nAllLength += pDisc->SCSI.lpFirstLBAListOnToc[tIdx];
-			OutputDiscLogA("\tPregap Track   , LBA %8u - %8u, Length %8u\n",
-				0, pDisc->SCSI.lpFirstLBAListOnToc[tIdx] - 1, pDisc->SCSI.lpFirstLBAListOnToc[tIdx]);
-			// This flag exists for The Apprentice (CD-i), Dimo's Quest (CD-i), that is, CD-I ready disc.
-			// These discs have only audio track on TOC, but there are
-			// actually some data sector in pregap of first sector.
-//			pDisc->SCSI.byFirstDataTrackNum = i;
-//			pDisc->SCSI.byLastDataTrackNum = i;
-			if (trkType == TRACK_TYPE::dataExist) {
-				trkType = TRACK_TYPE::pregapDataIn1stTrack;
-			}
-			else {
-				trkType = TRACK_TYPE::pregapAudioIn1stTrack;
+			if (pDisc->SCSI.byFormat != DISK_TYPE_CDI) {
+				pDisc->SCSI.nAllLength += pDisc->SCSI.lpFirstLBAListOnToc[tIdx];
+				OutputDiscLogA("\tPregap Track   , LBA %8u - %8u, Length %8u\n",
+					0, pDisc->SCSI.lpFirstLBAListOnToc[tIdx] - 1, pDisc->SCSI.lpFirstLBAListOnToc[tIdx]);
+				if (trkType == TRACK_TYPE::dataExist) {
+					trkType = TRACK_TYPE::pregapDataIn1stTrack;
+				}
+				else {
+					trkType = TRACK_TYPE::pregapAudioIn1stTrack;
+				}
 			}
 		}
+		INT idx = i;
+		if (pDisc->SCSI.byFormat == DISK_TYPE_CDI && pDisc->SCSI.toc.LastTrack > 1) {
+			if (i == pDisc->SCSI.toc.FirstTrack) {
+				OutputDiscLogA(
+					"\t Audio Track %2u, LBA %8u - \n", i,	0);
+				pDisc->SCSI.nFirstLBAofDataTrack = 0;
+				pDisc->SCSI.byFirstDataTrackNum = 1;
+				pDisc->SCSI.byLastDataTrackNum = 1;
+				trkType = TRACK_TYPE::pregapDataIn1stTrack;
+			}
+			idx = i + 1;
+		}
 		OutputDiscLogA(
-			"\t%s Track %2u, LBA %8u - %8u, Length %8u\n", strType, i,
+			"\t%s Track %2u, LBA %8u - %8u, Length %8u\n", strType, idx,
 			pDisc->SCSI.lpFirstLBAListOnToc[tIdx], pDisc->SCSI.lpLastLBAListOnToc[tIdx],
 			pDisc->SCSI.lpLastLBAListOnToc[tIdx] - pDisc->SCSI.lpFirstLBAListOnToc[tIdx] + 1);
+	}
+	if (pDisc->SCSI.byFormat == DISK_TYPE_CDI && pDisc->SCSI.toc.LastTrack > 1) {
+		pDisc->SCSI.lpLastLBAListOnToc[0] = pDisc->SCSI.lpFirstLBAListOnToc[1] - 1;
+		pDisc->SCSI.nAllLength += pDisc->SCSI.lpFirstLBAListOnToc[1];
 	}
 	OutputDiscLogA(
 		"\t                                          Total  %8u\n", pDisc->SCSI.nAllLength);
@@ -270,7 +339,6 @@ VOID SetAndOutputTocFull(
 		"\t LastCompleteSession: %u\n",
 		fullToc->FirstCompleteSession,
 		fullToc->LastCompleteSession);
-	BOOL bFirst2ndSession = TRUE;
 	UCHAR ucTmpLastTrack = 0;
 
 	for (WORD a = 0; a < wTocEntries; a++) {
@@ -298,9 +366,10 @@ VOID SetAndOutputTocFull(
 				OutputDiscLogA("Format: Other\n");
 				break;
 			}
-			pDisc->SCSI.byFormat = pTocData[a].Msf[1];
+			// set this by ReadTOCFull
+//			pDisc->SCSI.byFormat = pTocData[a].Msf[1];
 			if (fullToc->LastCompleteSession > 1 && pTocData[a].Msf[0] > 1) {
-				pDisc->SCSI.byFirstMultiTrackNum = pTocData[a].Msf[0];
+				pDisc->SCSI.byFirstMultiSessionTrackNum = pTocData[a].Msf[0];
 			}
 			break;
 		case 0xa1:
@@ -309,32 +378,33 @@ VOID SetAndOutputTocFull(
 			break;
 		case 0xa2:
 			nTmpLBA = 
-				MSFtoLBA(pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]);
+				MSFtoLBA(pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]) - 150;
 			OutputDiscLogA(
-				"      Lead-out, MSF %02u:%02u:%02u (LBA[%06d, %#07x])\n"
+				"      Lead-out, AMSF %02u:%02u:%02u (LBA[%06d, %#07x])\n"
 				, pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2], nTmpLBA, nTmpLBA);
 			if (fullToc->LastCompleteSession > 1) {
 				// Rayman (USA) [SS], Wolfchild (Europe) [MCD]
 				// Last LBA is corrupt, so this doesn't use in single session disc.
-				pDisc->SCSI.lpLastLBAListOnToc[ucTmpLastTrack - 1] = nTmpLBA - 150 - 1;
+				pDisc->SCSI.lpLastLBAListOnToc[ucTmpLastTrack - 1] = nTmpLBA - 1;
 			}
 			if (pTocData[a].SessionNumber == 1) {
-				pDisc->SCSI.nFirstLBAofLeadout = nTmpLBA - 150;
+				pDisc->SCSI.nFirstLBAofLeadout = nTmpLBA;
 			}
 			break;
 		case 0xb0: // (multi-session disc)
 			nTmpLBAExt =
-				MSFtoLBA(pTocData[a].MsfExtra[0], pTocData[a].MsfExtra[1], pTocData[a].MsfExtra[2]);
+				MSFtoLBA(pTocData[a].MsfExtra[0], pTocData[a].MsfExtra[1], pTocData[a].MsfExtra[2]) - 150;
 			nTmpLBA =
-				MSFtoLBA(pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]);
+				MSFtoLBA(pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]) - 150;
 			OutputDiscLogA(
-				"   NextSession, MSF %02u:%02u:%02u (LBA[%06d, %#07x])\n"
-				"\t                    Outermost Lead-out of the disc, MSF %02u:%02u:%02u (LBA[%06d, %#07x])\n" 
+				"   NextSession, AMSF %02u:%02u:%02u (LBA[%06d, %#07x])\n"
+				"\t                    Outermost Lead-out of the disc, AMSF %02u:%02u:%02u (LBA[%06d, %#07x])\n" 
 				"\t                         Num of pointers in Mode 5, %02u\n", 
 				pTocData[a].MsfExtra[0], pTocData[a].MsfExtra[1], pTocData[a].MsfExtra[2], 
 				nTmpLBAExt, nTmpLBAExt,
 				pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2],
 				nTmpLBA, nTmpLBA, pTocData[a].Zero);
+			pDisc->SCSI.nFirstLBAof2ndSession = nTmpLBAExt + 150;
 			break;
 		case 0xb1: // (Audio only: This identifies the presence of skip intervals)
 			OutputDiscLogA(
@@ -351,13 +421,11 @@ VOID SetAndOutputTocFull(
 				pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]);
 			break;
 		case 0xc0: // (Together with POINT=B0h, this is used to identify a multi-session disc)
-			nTmpLBAExt =
-				MSFtoLBA(pTocData[a].MsfExtra[0], pTocData[a].MsfExtra[1], pTocData[a].MsfExtra[2]);
 			nTmpLBA =
-				MSFtoLBA(pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]);
+				MSFtoLBA(pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]) - 150;
 			OutputDiscLogA(
 				" Optimum recording power, %02u\n"
-				"\t                         First Lead-in of the disc, MSF %02u:%02u:%02u (LBA[%06d, %#07x])\n", 
+				"\t                         First Lead-in of the disc, AMSF %02u:%02u:%02u (LBA[%06d, %#07x])\n", 
 				pTocData[a].MsfExtra[0], 
 				pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2],
 				nTmpLBA, nTmpLBA);
@@ -371,9 +439,9 @@ VOID SetAndOutputTocFull(
 		default:
 			if (pTocData[a].Adr == 1) {
 				nTmpLBA =
-					MSFtoLBA(pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]);
+					MSFtoLBA(pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]) - 150;
 				OutputDiscLogA(
-					"      Track %2u, MSF %02u:%02u:%02u (LBA[%06d, %#07x])\n"
+					"      Track %2u, AMSF %02u:%02u:%02u (LBA[%06d, %#07x])\n"
 					, pTocData[a].Point, pTocData[a].Msf[0],
 					pTocData[a].Msf[1], pTocData[a].Msf[2], nTmpLBA, nTmpLBA);
 				if (fullToc->LastCompleteSession > 1) {
@@ -387,22 +455,32 @@ VOID SetAndOutputTocFull(
 						pDisc->SCSI.lpLastLBAListOnToc[pTocData[a].Point - 2] = nTmpLBA - 150 - 1;
 						pDisc->SCSI.lpFirstLBAListOnToc[pTocData[a].Point - 1] = nTmpLBA - 150;
 					}
-#endif
+					// Track 2 is incorrect...
+					//	Session 1, Ctl 0, Adr 5, Point 0xb0,   NextSession, AMSF 02:36:02 (LBA[011702, 0x02db6])
+					//	                    Outermost Lead-out of the disc, AMSF 16:19:71 (LBA[073496, 0x11f18])
+					//	                         Num of pointers in Mode 5, 02
+					//	Session 1, Ctl 0, Adr 5, Point 0xc0, Optimum recording power, 00
+					//	                         First Lead-in of the disc, AMSF 95:00:00 (LBA[427500, 0x685ec])
+					//	Session 2, Ctl 4, Adr 1, Point 0xa0, FirstTrack  2, Format: CD-ROM-XA
+					//	Session 2, Ctl 4, Adr 1, Point 0xa1,  LastTrack  2
+					//	Session 2, Ctl 4, Adr 1, Point 0xa2,      Lead-out, AMSF 16:19:71 (LBA[073496, 0x11f18])
+					//	Session 2, Ctl 4, Adr 1, Point 0x02,      Track  2, AMSF 02:00:00 (LBA[009000, 0x02328])
 					if (pTocData[a].SessionNumber == 2 && bFirst2ndSession) {
 						pDisc->SCSI.nFirstLBAof2ndSession = nTmpLBA - 150;
 						bFirst2ndSession = FALSE;
 					}
+#endif
 				}
 				pDisc->SCSI.lpSessionNumList[pTocData[a].Point - 1] = pTocData[a].SessionNumber;
 			}
 			else if (pTocData[a].Adr == 5) {
 				nTmpLBAExt =
-					MSFtoLBA(pTocData[a].MsfExtra[0], pTocData[a].MsfExtra[1], pTocData[a].MsfExtra[2]);
+					MSFtoLBA(pTocData[a].MsfExtra[0], pTocData[a].MsfExtra[1], pTocData[a].MsfExtra[2]) - 150;
 				nTmpLBA =
-					MSFtoLBA(pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]);
+					MSFtoLBA(pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]) - 150;
 				OutputDiscLogA(
-					"\t              Skipped interval end time, MSF %02u:%02u:%02u (LBA[%06d, %#07x])\n"
-					"\t              Skipped interval start time on playback, MSF %02u:%02u:%02u (LBA[%06d, %#07x])\n",
+					"\t              Skipped interval end time, AMSF %02u:%02u:%02u (LBA[%06d, %#07x])\n"
+					"\t              Skipped interval start time on playback, AMSF %02u:%02u:%02u (LBA[%06d, %#07x])\n",
 					pTocData[a].MsfExtra[0], pTocData[a].MsfExtra[1], pTocData[a].MsfExtra[2],
 					nTmpLBAExt, nTmpLBAExt,
 					pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2],
@@ -818,7 +896,7 @@ VOID SetTrackAttribution(
 				}
 			}
 			// preserve last LBA per data track
-			if (0 < tmpPrevTrackNum && tmpPrevTrackNum <= pDiscPerSector->byTrackNum + 1) {
+			if (0 < tmpPrevTrackNum && tmpPrevTrackNum <= tmpCurrentTrackNum + 1) {
 				if (pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[tmpPrevTrackNum - 1] != -1 &&
 					pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tmpPrevTrackNum - 1] == -1 &&
 					(pDiscPerSector->subQ.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
@@ -858,10 +936,20 @@ VOID SetTrackAttribution(
 			}
 			else {
 				if (nLBA != pDisc->SCSI.lpFirstLBAListOnToc[tIdx]) {
-					OutputSubInfoWithLBALogA(
-						"Subchannel & TOC doesn't sync. LBA on TOC[%d, %#x], prevIndex[%02u]\n",
-						nLBA, tmpCurrentTrackNum, pDisc->SCSI.lpFirstLBAListOnToc[tIdx],
-						pDisc->SCSI.lpFirstLBAListOnToc[tIdx], tmpPrevIndex);
+					if (pDisc->SCSI.byFormat == DISK_TYPE_CDI && pDisc->SCSI.toc.LastTrack > 1) {
+						pDisc->SCSI.lpFirstLBAListOnToc[tIdx] = nLBA;
+						pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[tIdx] = 0;
+						pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tIdx] = nLBA - 1;
+					}
+					else {
+						OutputSubInfoWithLBALogA(
+							"Subchannel & TOC doesn't sync. LBA on TOC[%d, %#x], prevIndex[%02u]\n",
+							nLBA, tmpCurrentTrackNum, pDisc->SCSI.lpFirstLBAListOnToc[tIdx],
+							pDisc->SCSI.lpFirstLBAListOnToc[tIdx], tmpPrevIndex);
+					}
+					if (*pExecType != gd && *pExecType != swap) {
+						pDisc->SUB.byDesync = TRUE;
+					}
 				}
 				OutputSubInfoWithLBALogA("Index is changed from [%02d] to [%02d] [L:%d]\n", nLBA
 					, tmpCurrentTrackNum, tmpPrevIndex, tmpCurrentIndex, (INT)__LINE__);
@@ -943,8 +1031,18 @@ VOID SetTrackAttribution(
 			}
 		}
 	}
-	else if (*pExecType != swap && tmpCurrentTrackNum == 110) {
-		pDisc->SUB.lpLastLBAListOfDataTrackOnSub[pDiscPerSector->byTrackNum - 1] = nLBA;
+	else if (*pExecType != swap && (pDiscPerSector->subQ.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK &&
+		(tmpCurrentTrackNum == 110 || // '110' is Lead-out, '100'&'101' is Lead-in
+		((tmpCurrentTrackNum == 0 && (tmpCurrentIndex == 100 || tmpCurrentIndex == 101))))) {
+		if (pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[pDiscPerSector->byTrackNum - 1] == -1) {
+			pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[pDiscPerSector->byTrackNum - 1] = nLBA;
+			if (pDiscPerSector->byTrackNum < pDisc->SCSI.byFirstDataTrackNum) {
+				pDisc->SCSI.byFirstDataTrackNum = pDiscPerSector->byTrackNum;
+			}
+		}
+		else {
+			pDisc->SUB.lpLastLBAListOfDataTrackOnSub[pDiscPerSector->byTrackNum - 1] = nLBA;
+		}
 	}
 }
 
