@@ -47,6 +47,8 @@ SOURCES_CXX := \
   _external/rijndael-alg-fst.o \
   _external/tinyxml2.o \
   _external/sha1.o \
+  _external/tinyxml2.o \
+  xml.o \
   _linux/defineForLinux.o
 
 OBJECTS := $(SOURCES_C:.c=.o) $(SOURCES_CXX:.cpp=.o)

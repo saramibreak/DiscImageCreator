@@ -7,3 +7,11 @@ ipch/
 DiscImageCreator.VC.*
 DiscImageCreator.vcxproj.user
 DiscImageCreator/buildDateTime.h
+
+# generated linux obj files
+DiscImageCreator/*.o
+DiscImageCreator/_external/*.o
+DiscImageCreator/_linux/*.o
+
+# linux binary
+DiscImageCreator/DiscImageCreator
