@@ -550,3 +550,19 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - fixed: buffer offset overflow of GD-ROM TOC
 - fixed: CDTEXT
 - fixed: Subs vs. TOC desync
+
+*2019-06-27
+- added: extract several string from DMI.bin to _disc.txt for Xbox
+- added: output volume descriptor and directory entry of XDVDFS to volDesc.txt(readable format) and mainInfo.txt(binary format)
+- added: output all mode sense
+- added: detecting "          Licensed  by          Sony Computer Entertainment(Europe)"
+- added: reading nintendo optical disc filesystem
+- added: support CD-i multi-track disc (Dimo's Quest (USA))
+- added: support PS3 drive (PS-SYSTEM   302R)
+- added: sacd command
+- changed: hashing count off for speeding up
+- changed: multi-session cue file
+- fixed: checking the directory table size when transfer length is beyond a maximum
+- fixed: tracknum of SubQ manually if /nq is used
+- fixed: rawdump of lite-on
+- fixed: Subchannel & TOC desync flag was not set in some cases
