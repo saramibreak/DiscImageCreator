@@ -81,13 +81,13 @@ VOID OutputFsDirectoryRecord(
 		strncat(str, "File has record format, ", 24);
 	}
 	else {
-		strncat(str, "File has't record format, ", 26);
+		strncat(str, "File hasn't record format, ", 26);
 	}
 	if (nFileFlag & 0x10) {
 		strncat(str, "Owner/Group ID has, ", 20);
 	}
 	else {
-		strncat(str, "Owner/Group ID has't, ", 22);
+		strncat(str, "Owner/Group ID hasn't, ", 22);
 	}
 	if (nFileFlag & 0x80) {
 		strncat(str, "Next Directory Record has", 25);
