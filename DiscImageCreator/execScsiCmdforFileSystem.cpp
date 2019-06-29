@@ -1759,12 +1759,12 @@ BOOL ReadSACDFileSystem(
 		CHAR Language_Code[2];
 		BYTE Character_Set_Code;
 		BYTE Reserved;
-	} Locale, *PLocale;
+	} Locale;
 	typedef struct _TextChannel {
 		BYTE Max_Text_Channels;
 		BYTE Reserved6[7];
 		Locale locale[8];
-	} Text_Channel, *PText_Channel;
+	} Text_Channel;
 	typedef struct _Master_TOC {
 		CHAR Master_TOC_Signature[8];	// 0..15 M_TOC_0_Header
 		BYTE Major_Version;
@@ -1793,7 +1793,7 @@ BOOL ReadSACDFileSystem(
 		UINT Reserved5;
 		Text_Channel Txt_Ch;
 		BYTE Disc_WebLink_Info[128];
-	} Master_TOC, *PMaster_TOC;
+	} Master_TOC;
 	Master_TOC mToc = {};
 	memcpy(&mToc, lpBuf, sizeof(Master_TOC));
 	REVERSE_BYTES_SHORT(&mToc.Album_Set_Size, &lpBuf[0x10]);
@@ -1886,7 +1886,7 @@ BOOL ReadSACDFileSystem(
 		USHORT Disc_Publisher_Phonetic_Ptr;
 		USHORT Disc_Copyright_Phonetic_Ptr;
 		BYTE Reserved2[16];
-	} Master_Text, *PMaster_Text;
+	} Master_Text;
 
 	for (nLBA = 511; nLBA <= 518; nLBA++) {
 		REVERSE_BYTES(&cdb.LogicalBlock, &nLBA);
@@ -2073,7 +2073,7 @@ BOOL ReadSACDFileSystem(
 			USHORT Track_WebLink_List_Ptr;
 			BYTE Reserved7[8];
 			BYTE Area_Text[1904];
-		} Area_TOC, *PArea_TOC;
+		} Area_TOC;
 		Area_TOC aToc = {};
 		memcpy(&aToc, lpBuf, sizeof(Area_TOC));
 		REVERSE_BYTES(&aToc.Unknown1, &lpBuf[0x10]);
@@ -2146,7 +2146,7 @@ BOOL ReadSACDFileSystem(
 				CHAR Track_List_1_Signature[8];
 				UINT Track_Start_Address[255];
 				UINT Track_Length[255];
-			} Track_List, *PTrack_List;
+			} Track_List;
 			Track_List tList = {};
 			OutputVolDescLogA(
 				OUTPUT_DHYPHEN_PLUS_STR(Track_List)
@@ -2209,10 +2209,10 @@ BOOL ReadSACDFileSystem(
 			typedef struct _Main_Acc_List {
 				USHORT Access_Flags;
 				BYTE Entrys[3];
-			} Main_Acc_List, *PMain_Acc_List;
+			} Main_Acc_List;
 			typedef struct _Detailed_Access {
 				BYTE Sub_Entrys[3];
-			} Detailed_Access, *PDetailed_Access;
+			} Detailed_Access;
 #pragma pack(pop, acc)
 			typedef struct _Access_List {
 				CHAR Access_List_Signature[8];
@@ -2221,7 +2221,7 @@ BOOL ReadSACDFileSystem(
 				BYTE Reserved[5];
 				Main_Acc_List mAList[6550];
 				Detailed_Access dAccess[6550];
-			} Access_List, *PAccess_List;
+			} Access_List;
 			Access_List alist = {};
 			memcpy(&alist, lpBuf, sizeof(Access_List));
 			REVERSE_BYTES_SHORT(&alist.N_Entries, &lpBuf[0x8]);
@@ -2272,7 +2272,7 @@ BOOL ReadSACDFileSystem(
 			typedef struct _Track_Text {
 				CHAR Track_Text_Signature[8];
 				USHORT Track_Text_Pos[255];
-			} Track_Text, *PTrack_Text;
+			} Track_Text;
 
 			Track_Text TTxt = {};
 			OutputVolDescLogA(

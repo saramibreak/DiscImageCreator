@@ -631,7 +631,7 @@ BOOL ReadDVDRaw(
 		FlushLog();
 
 		BYTE byScsiStatus = 0;
-		UINT readAddrForHG[5] = { 
+		DWORD readAddrForHG[5] = { 
 			baseAddr + 0 * transferLen * dwSectorSize,
 			baseAddr + 1 * transferLen * dwSectorSize,
 			baseAddr + 2 * transferLen * dwSectorSize,
@@ -920,18 +920,18 @@ BOOL ReadDVDRaw(
 	return bRet;
 }
 
+#define CMI_SIZE (sizeof(DVD_DESCRIPTOR_HEADER) + sizeof(DVD_COPYRIGHT_MANAGEMENT_DESCRIPTOR))
 BOOL ReadDVDForCMI(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc
 ) {
-	CONST WORD wSize =
-		sizeof(DVD_DESCRIPTOR_HEADER) + sizeof(DVD_COPYRIGHT_MANAGEMENT_DESCRIPTOR);
+	WORD wSize = CMI_SIZE;
 #ifdef _WIN32
-	_declspec(align(4)) BYTE pBuf[wSize] = {};
+	_declspec(align(4)) BYTE pBuf[CMI_SIZE] = {};
 	INT direction = SCSI_IOCTL_DATA_IN;
 #else
-	__attribute__((aligned(4))) BYTE pBuf[wSize] = {};
+	__attribute__((aligned(4))) BYTE pBuf[CMI_SIZE] = {};
 	INT direction = SG_DXFER_FROM_DEV;
 #endif
 
@@ -991,6 +991,7 @@ BOOL ExecReadingKey(
 	return bRet;
 }
 
+#define DVD_STRUCTURE_SIZE (sizeof(DVD_DESCRIPTOR_HEADER) + (sizeof(DVD_STRUCTURE_LIST_ENTRY) * 0xff))
 BOOL ReadDiscStructure(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
@@ -998,13 +999,11 @@ BOOL ReadDiscStructure(
 	PDISC pDisc,
 	LPCTSTR pszFullPath
 ) {
-	CONST WORD wMaxDVDStructureSize =
-		sizeof(DVD_DESCRIPTOR_HEADER) + sizeof(DVD_STRUCTURE_LIST_ENTRY) * 0xff;
 #ifdef _WIN32
-	_declspec(align(4)) BYTE pBuf[wMaxDVDStructureSize] = {};
+	_declspec(align(4)) BYTE pBuf[DVD_STRUCTURE_SIZE] = {};
 	INT direction = SCSI_IOCTL_DATA_IN;
 #else
-	__attribute__((aligned(4))) BYTE pBuf[wMaxDVDStructureSize] = {};
+	__attribute__((aligned(4))) BYTE pBuf[DVD_STRUCTURE_SIZE] = {};
 	INT direction = SG_DXFER_TO_FROM_DEV;
 #endif
 	CDB::_READ_DVD_STRUCTURE cdb = {};
@@ -1013,6 +1012,7 @@ BOOL ReadDiscStructure(
 		cdb.Reserved1 = 1; // media type
 	}
 	cdb.Format = 0xff;
+	WORD wMaxDVDStructureSize = DVD_STRUCTURE_SIZE;
 	REVERSE_BYTES_SHORT(&cdb.AllocationLength, &wMaxDVDStructureSize);
 
 	BYTE byScsiStatus = 0;
@@ -1810,5 +1810,5 @@ BOOL ReadSACD(
 	}
 	FreeAndNull(pBuf);
 	FcloseAndNull(fp);
-	return TRUE;
+	return bRet;
 }

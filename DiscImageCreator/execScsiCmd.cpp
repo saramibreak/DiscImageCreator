@@ -82,6 +82,7 @@ BOOL Inquiry(
 	return TRUE;
 }
 
+#define MODE_SENSE_SIZE 256
 BOOL ModeSense(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
@@ -93,9 +94,9 @@ BOOL ModeSense(
 		cdb.OperationCode = SCSIOP_MODE_SENSE;
 		cdb.PageCode = MODE_SENSE_RETURN_ALL;
 		cdb.Pc = 2;
-		CONST WORD wSize = 256;
+		WORD wSize = MODE_SENSE_SIZE;
 		REVERSE_BYTES_SHORT(&cdb.AllocationLength, &wSize);
-		BYTE modesense[wSize] = {};
+		BYTE modesense[MODE_SENSE_SIZE] = {};
 #ifdef _WIN32
 		INT direction = SCSI_IOCTL_DATA_IN;
 #else
@@ -552,9 +553,9 @@ BOOL ModeSense10(
 	cdb.OperationCode = SCSIOP_MODE_SENSE10;
 	cdb.PageCode = MODE_SENSE_RETURN_ALL;
 	cdb.Pc = 2;
-	CONST WORD wSize = 256;
+	WORD wSize = MODE_SENSE_SIZE;
 	REVERSE_BYTES_SHORT(&cdb.AllocationLength, &wSize);
-	BYTE modesense[wSize] = {};
+	BYTE modesense[MODE_SENSE_SIZE] = {};
 #ifdef _WIN32
 	INT direction = SCSI_IOCTL_DATA_IN;
 #else

@@ -635,7 +635,7 @@ BOOL ReadCDForCheckingSubQAdr(
 			memcpy(pDiscPerSector->mainHeader.current, lpBuf + nOfs, MAINHEADER_MODE1_SIZE);
 			// this func is used to get a SubChannel Offset
 			SetTmpSubQDataFromBuffer(&pDiscPerSector->subQ.current, pDiscPerSector->subcode.current);
-			pDiscPerSector->subQ.current.byCtl = (BYTE)((pDiscPerSector->subcode.current[12] >> 4) & 0x0f);
+			pDiscPerSector->subQ.current.byCtl = (BYTE)((BYTE)(pDiscPerSector->subcode.current[12] >> 4) & 0x0f);
 			*byMode = GetMode(pDiscPerSector, unscrambled);
 		}
 		BOOL bCRC = FALSE;

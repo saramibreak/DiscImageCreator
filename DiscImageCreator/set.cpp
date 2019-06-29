@@ -299,8 +299,8 @@ VOID SetAndOutputTocForGD(
 			pDisc->SCSI.lpLastLBAListOnToc[tIdx] = (INT)(MAKELONG(
 				MAKEWORD(bufDec[0x118 + j], bufDec[0x119 + j]), MAKEWORD(bufDec[0x11a + j], 0)) - 150 - 1);
 		}
-		pDisc->SCSI.toc.TrackData[tIdx].Adr = BYTE((bufDec[0x117 + j]) & 0x0f);
-		pDisc->SCSI.toc.TrackData[tIdx].Control = BYTE((bufDec[0x117 + j] >> 4) & 0x0f);
+		pDisc->SCSI.toc.TrackData[tIdx].Adr = (BYTE)((bufDec[0x117 + j]) & 0x0f);
+		pDisc->SCSI.toc.TrackData[tIdx].Control = (BYTE)((BYTE)(bufDec[0x117 + j] >> 4) & 0x0f);
 		pDisc->SCSI.toc.TrackData[tIdx].TrackNumber = i;
 
 		if ((pDisc->SCSI.toc.TrackData[tIdx].Control & AUDIO_DATA_TRACK) == 0) {
@@ -1305,7 +1305,7 @@ VOID SetTmpSubQDataFromBuffer(
 	PSUB_Q_PER_SECTOR pSubQ,
 	LPBYTE lpSubcode
 ) {
-	pSubQ->byCtl = (BYTE)((lpSubcode[12] >> 4) & 0x0f);
+	pSubQ->byCtl = (BYTE)((BYTE)(lpSubcode[12] >> 4) & 0x0f);
 	pSubQ->byAdr = (BYTE)(lpSubcode[12] & 0x0f);
 	pSubQ->byTrackNum = BcdToDec(lpSubcode[13]);
 	pSubQ->byIndex = BcdToDec(lpSubcode[14]);

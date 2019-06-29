@@ -1135,7 +1135,7 @@ VOID OutputDVDDiscControlBlockSession(
 	}
 	OutputDiscLogA("\n");
 
-	for (UINT j = 0; j < sizeof(dvdDiscCtrlBlkSession->SessionItem); j++) {
+	for (UINT j = 0; j < sizeof(dvdDiscCtrlBlkSession->SessionItem) / sizeof(DVD_DISC_CONTROL_BLOCK_SESSION_ITEM); j++) {
 		OutputDiscLogA(
 			"\t  SessionItem: %u\n"
 			"\t\t     AsByte: ", j);
