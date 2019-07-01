@@ -38,6 +38,7 @@ SOURCES_CXX := \
   outputScsiCmdLogforDVD.o \
   set.o \
   _external/abgx360.o \
+  _external/aesni.o \
   _external/aes.o \
   _external/crc16ccitt.o \
   _external/crc32.o \
@@ -47,7 +48,6 @@ SOURCES_CXX := \
   _external/rijndael-alg-fst.o \
   _external/tinyxml2.o \
   _external/sha1.o \
-  _external/tinyxml2.o \
   xml.o \
   _linux/defineForLinux.o
 
