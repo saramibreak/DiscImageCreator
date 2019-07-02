@@ -27,18 +27,16 @@ BOOL Inquiry(
 	PDEVICE pDevice
 );
 
-BOOL ModeSense10(
-	PEXEC_TYPE pExecType,
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc
-);
-
 BOOL StartStopUnit(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	BYTE Start,
 	BYTE LoadEject
+);
+
+BOOL SynchronizeCache(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice
 );
 
 BOOL ReadTOC(
@@ -73,6 +71,13 @@ BOOL ReadTOCText(
 BOOL ReadDiscInformation(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice
+);
+
+BOOL ModeSense10(
+	PEXEC_TYPE pExecType,
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	PDISC pDisc
 );
 
 BOOL SetDiscSpeed(

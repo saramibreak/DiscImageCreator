@@ -267,6 +267,7 @@ BOOL ProcessReadCD(
 			!IsValidIntentionalC2error(pDisc, pDiscPerSector) &&
 			!pDiscPerSector->bLibCrypt && !pDiscPerSector->bSecuRom) {
 			FlushDriveCache(pExtArg, pDevice, nLBA);
+			SynchronizeCache(pExtArg, pDevice);
 			pDisc->SUB.nCorruptCrcH = 0;
 			pDisc->SUB.nCorruptCrcL = 0;
 		}

@@ -131,9 +131,30 @@ BOOL StartStopUnit(
 	INT direction = SG_DXFER_NONE;
 #endif
 	BYTE byScsiStatus = 0;
-	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB6GENERIC_LENGTH,
-		NULL, direction, 0, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB6GENERIC_LENGTH
+		, NULL, direction, 0, &byScsiStatus, _T(__FUNCTION__), __LINE__)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
+BOOL SynchronizeCache(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice
+) {
+	CDB::_SYNCHRONIZE_CACHE10 cdb = {};
+	cdb.OperationCode = SCSIOP_SYNCHRONIZE_CACHE;
+	cdb.Immediate = TRUE;
+#ifdef _WIN32
+	INT direction = SCSI_IOCTL_DATA_IN;
+#else
+	INT direction = SG_DXFER_FROM_DEV;
+#endif
+	BYTE byScsiStatus = 0;
+	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB10GENERIC_LENGTH
+		, NULL, direction, 0, &byScsiStatus, _T(__FUNCTION__), __LINE__) ||
+		byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		return FALSE;
 	}
 	return TRUE;
@@ -552,7 +573,7 @@ BOOL ModeSense10(
 	CDB::_MODE_SENSE10 cdb = {};
 	cdb.OperationCode = SCSIOP_MODE_SENSE10;
 	cdb.PageCode = MODE_SENSE_RETURN_ALL;
-	cdb.Pc = 2;
+	cdb.Pc = 0; // 0: Current Values, 1:Changeable Values, 2:Default Values, 3:Saved Values
 	WORD wSize = MODE_SENSE_SIZE;
 	REVERSE_BYTES_SHORT(&cdb.AllocationLength, &wSize);
 	BYTE modesense[MODE_SENSE_SIZE] = {};
@@ -863,7 +884,6 @@ BOOL ReadDriveInformation(
 	if (*pExecType == drivespeed) {
 		pDevice->FEATURE.byModePage2a = TRUE;
 	}
-	ModeSense10(pExecType, pExtArg, pDevice, pDisc);
 	if (*pExecType != drivespeed) {
 #if 0
 		if (*pExecType == dvd) {
@@ -879,6 +899,7 @@ BOOL ReadDriveInformation(
 #endif
 		ReadBufferCapacity(pExtArg, pDevice);
 	}
+	ModeSense10(pExecType, pExtArg, pDevice, pDisc);
 	return TRUE;
 }
 
