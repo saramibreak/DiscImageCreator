@@ -2391,31 +2391,25 @@ VOID OutputPageCdAudioControl(
 	);
 }
 
-VOID OutputPageReadRecovery(
+VOID OutputPageCdDeviceParameters(
 	LPBYTE modesense,
 	size_t pcOfs
 ) {
-	PMODE_READ_RECOVERY_PAGE rec = (PMODE_READ_RECOVERY_PAGE)(modesense + pcOfs);
+	LPBYTE buf = modesense + pcOfs;
 	OutputDriveLogA(
-		OUTPUT_DHYPHEN_PLUS_STR(MODE_READ_RECOVERY_PAGE)
+		OUTPUT_DHYPHEN_PLUS_STR(CD_DEVICE_PARAMETERS_PAGE)
 		"\t                 PageCode: %#04x\n"
 		"\t                    PSBit: %s\n"
 		"\t               PageLength: %u\n"
-		"\t                   DCRBit: %s\n"
-		"\t                   DTEBit: %s\n"
-		"\t                   PERBit: %s\n"
-		"\t                    RCBit: %s\n"
-		"\t                    TBBit: %s\n"
-		"\t           ReadRetryCount: %d\n"
-		, rec->PageCode
-		, BOOLEAN_TO_STRING_YES_NO_A(rec->PSBit)
-		, rec->PageLength
-		, BOOLEAN_TO_STRING_YES_NO_A(rec->DCRBit)
-		, BOOLEAN_TO_STRING_YES_NO_A(rec->DTEBit)
-		, BOOLEAN_TO_STRING_YES_NO_A(rec->PERBit)
-		, BOOLEAN_TO_STRING_YES_NO_A(rec->RCBit)
-		, BOOLEAN_TO_STRING_YES_NO_A(rec->TBBit)
-		, rec->ReadRetryCount
+		"\tInactivityTimerMultiplier: %u\n"
+		"\t TheNumberOfSUnitPerMUnit: %d\n"
+		"\t TheNumberOfFUnitPerSUnit: %d\n"
+		, buf[0] & 0x3f
+		, BOOLEAN_TO_STRING_YES_NO_A((buf[0] >> 7) & 0x01)
+		, buf[1]
+		, buf[3] & 0x0f
+		, MAKEWORD(buf[5], buf[4])
+		, MAKEWORD(buf[7], buf[6])
 	);
 }
 
@@ -2700,7 +2694,7 @@ VOID OutputModeSense(
 			OutputPageUnknown(modesense, pcOfs, "NOTCH_PARTITION");
 		}
 		else if (pagecode == 0x0d) {
-			OutputPageReadRecovery(modesense, pcOfs);
+			OutputPageCdDeviceParameters(modesense, pcOfs);
 		}
 		else if (pagecode == MODE_PAGE_CD_AUDIO_CONTROL) {
 			OutputPageCdAudioControl(modesense, pcOfs);
@@ -2840,15 +2834,15 @@ VOID OutputEepromOverPX712(
 			OutputDriveLogA("Slow\n");
 		}
 		OutputDriveLogA(
-			"\t\t    Max Read Speed: %dx\n"
-			"\t\t           Unknown: %dx\n"
-			"\t\t   Max Write Speed: %dx\n"
-			"\t\t           Unknown: %dx\n"
+			"\t\t     CD Read Speed: %dx\n"
+			"\t\t    DVD Read Speed: %dx\n"
+			"\t\t    CD Write Speed: %dx\n"
+			"\t\t           Unknown: %02x\n"
 			"\t\t           Unknown: %02x\n"
 			"\t\t  Tray Speed Eject: %02x (Low d0 - 80 High)\n"
-			"\t\tTray Speed Loading: %02x (Low 2f - 7f High)\n",
-			pBuf[2], pBuf[3], pBuf[4], 
-			pBuf[5], pBuf[6], pBuf[7], pBuf[8]);
+			"\t\tTray Speed Loading: %02x (Low 2f - 7f High)\n"
+			, pBuf[2], pBuf[3], pBuf[4]
+			, pBuf[5], pBuf[6], pBuf[7], pBuf[8]);
 	}
 	else {
 		OutputDriveLogA("Disable\n");
