@@ -209,18 +209,18 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 				if (!TestUnitReady(pExtArg, &device)) {
 					throw FALSE;
 				}
+				if (!ReadDriveInformation(pExecType, pExtArg, &device, pDisc, s_uiSpeed)) {
+					throw FALSE;
+				}
+				make_crc_table();
 				if (*pExecType == fd) {
 					bRet = DiskGetMediaTypes(&device, pszFullPath);
 				}
 				else {
-					if (!ReadDriveInformation(pExecType, pExtArg, &device, pDisc, s_uiSpeed)) {
-						throw FALSE;
-					}
 					if (*pExecType == drivespeed) {
 						pExtArg->byQuiet = TRUE;
 						throw TRUE;
 					}
-					make_crc_table();
 					if (*pExecType == cd || *pExecType == swap || *pExecType == gd || *pExecType == data || *pExecType == audio) {
 						if (discData.SCSI.wCurrentMedia == ProfileCdrom ||
 							discData.SCSI.wCurrentMedia == ProfileCdRecordable ||

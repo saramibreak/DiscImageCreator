@@ -861,43 +861,45 @@ BOOL ReadDriveInformation(
 	if (!Inquiry(pExecType, pExtArg, pDevice)) {
 		return FALSE;
 	}
-	// 4th: check PLEXTOR or not here (because use modesense and from there)
-	if (IsValidPlextorDrive(pDevice)) {
-		if ((PLXTR_DRIVE_TYPE)pDevice->byPlxtrDrive == PLXTR_DRIVE_TYPE::NotLatest) {
-			OutputErrorString(_T("[ERROR] This drive isn't latest firmware. Please update.\n"));
+	if (*pExecType != fd) {
+		// 4th: check PLEXTOR or not here (because use modesense and from there)
+		if (IsValidPlextorDrive(pDevice)) {
+			if ((PLXTR_DRIVE_TYPE)pDevice->byPlxtrDrive == PLXTR_DRIVE_TYPE::NotLatest) {
+				OutputErrorString(_T("[ERROR] This drive isn't latest firmware. Please update.\n"));
+				return FALSE;
+			}
+			if ((PLXTR_DRIVE_TYPE)pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::Other) {
+				if (*pExecType != drivespeed) {
+					if (pExtArg->byPre) {
+						SupportIndex0InTrack1(pExtArg, pDevice);
+					}
+					ReadEeprom(pExtArg, pDevice);
+				}
+				SetSpeedRead(pExtArg, pDevice, TRUE);
+			}
+		}
+		// 5th: get currentMedia, if use CD-Text, C2 error, modesense, readbuffercapacity, SetDiscSpeed or not here.
+		if (!GetConfiguration(pExecType, pExtArg, pDevice, pDisc)) {
 			return FALSE;
 		}
-		if ((PLXTR_DRIVE_TYPE)pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::Other) {
-			if (*pExecType != drivespeed) {
-				if (pExtArg->byPre) {
-					SupportIndex0InTrack1(pExtArg, pDevice);
+		if (*pExecType == drivespeed) {
+			pDevice->FEATURE.byModePage2a = TRUE;
+		}
+		if (*pExecType != drivespeed) {
+#if 0
+			if (*pExecType == dvd) {
+				SetStreaming(pDevice, dwCDSpeed);
+			}
+			else {
+#endif
+				if (uiCDSpeed != 0) {
+					SetDiscSpeed(pExecType, pExtArg, pDevice, uiCDSpeed);
 				}
-				ReadEeprom(pExtArg, pDevice);
-			}
-			SetSpeedRead(pExtArg, pDevice, TRUE);
-		}
-	}
-	// 5th: get currentMedia, if use CD-Text, C2 error, modesense, readbuffercapacity, SetDiscSpeed or not here.
-	if (!GetConfiguration(pExecType, pExtArg, pDevice, pDisc)) {
-		return FALSE;
-	}
-	if (*pExecType == drivespeed) {
-		pDevice->FEATURE.byModePage2a = TRUE;
-	}
-	if (*pExecType != drivespeed) {
 #if 0
-		if (*pExecType == dvd) {
-			SetStreaming(pDevice, dwCDSpeed);
-		}
-		else {
-#endif
-			if (uiCDSpeed != 0) {
-				SetDiscSpeed(pExecType, pExtArg, pDevice, uiCDSpeed);
 			}
-#if 0
-		}
 #endif
-		ReadBufferCapacity(pExtArg, pDevice);
+			ReadBufferCapacity(pExtArg, pDevice);
+		}
 	}
 	ModeSense10(pExecType, pExtArg, pDevice, pDisc);
 	return TRUE;

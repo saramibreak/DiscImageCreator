@@ -3214,7 +3214,7 @@ VOID OutputFloppyInfo(
 			OutputDiscLogA("3.5, 32Mb Floppy\n");
 			break;
 		default:
-			OutputDiscLogA("Unknown\n");
+			OutputDiscLogA("Unknown media type\n");
 			break;
 		}
 

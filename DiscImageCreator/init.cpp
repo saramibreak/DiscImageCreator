@@ -330,12 +330,12 @@ BOOL InitLogFile(
 	}
 	BOOL bRet = TRUE;
 	try {
+		if (NULL == (g_LogFile.fpDrive = CreateOrOpenFileA(
+			path, "_drive", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			throw FALSE;
+		}
 		if (*pExecType != fd) {
-			if (NULL == (g_LogFile.fpDrive = CreateOrOpenFileA(
-				path, "_drive", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				throw FALSE;
-			}
 			if (NULL == (g_LogFile.fpVolDesc = CreateOrOpenFileA(
 				path, "_volDesc", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -479,8 +479,8 @@ VOID TerminateLogFile(
 	PEXT_ARG pExtArg
 ) {
 	FcloseAndNull(g_LogFile.fpDisc);
+	FcloseAndNull(g_LogFile.fpDrive);
 	if (*pExecType != fd) {
-		FcloseAndNull(g_LogFile.fpDrive);
 		FcloseAndNull(g_LogFile.fpVolDesc);
 		FcloseAndNull(g_LogFile.fpMainInfo);
 		FcloseAndNull(g_LogFile.fpMainError);

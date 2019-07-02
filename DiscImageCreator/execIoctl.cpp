@@ -35,45 +35,51 @@ BOOL DiskGetMediaTypes(
 		IOCTL_DISK_GET_MEDIA_TYPES, NULL, 0, &geom, sizeof(geom), &dwReturned, 0);
 	if (bRet) {
 		OutputFloppyInfo(geom, dwReturned / sizeof(DISK_GEOMETRY));
-		bRet = DeviceIoControl(pDevice->hDevice, IOCTL_DISK_GET_DRIVE_GEOMETRY, 
-			NULL, 0, &geom, sizeof(DISK_GEOMETRY), &dwReturned, 0);
-		if (bRet) {
-			OutputFloppyInfo(geom, 1);
-			FlushLog();
-			DWORD dwFloppySize = geom[0].Cylinders.u.LowPart *
-				geom[0].TracksPerCylinder * geom[0].SectorsPerTrack * geom[0].BytesPerSector;
-			OutputString(_T("Floppy size: %ld byte\n"), dwFloppySize);
-			LPBYTE lpBuf = (LPBYTE)calloc(dwFloppySize, sizeof(BYTE));
-//			LPVOID lpBuf = VirtualAlloc(NULL, dwFloppySize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-			if (!lpBuf) {
-				FcloseAndNull(fp);
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				return FALSE;
-			}
-			DWORD dwBytesRead = 0;
-//			SetErrorMode(SEM_FAILCRITICALERRORS);
-			bRet = ReadFile(pDevice->hDevice, lpBuf, dwFloppySize, &dwBytesRead, 0);
-			OutputString(_T("  Read size: %ld byte\n"), dwBytesRead);
+	}
+	else {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+	}
+	bRet = DeviceIoControl(pDevice->hDevice, IOCTL_DISK_GET_DRIVE_GEOMETRY, 
+		NULL, 0, &geom, sizeof(DISK_GEOMETRY), &dwReturned, 0);
+	if (bRet) {
+		OutputFloppyInfo(geom, 1);
+		FlushLog();
+		DWORD dwDiskSize = geom[0].Cylinders.u.LowPart *
+			geom[0].TracksPerCylinder * geom[0].SectorsPerTrack * geom[0].BytesPerSector;
+		OutputString(_T("Disk size: %ld byte\n"), dwDiskSize);
+		DWORD dwReadSize = dwDiskSize;
+		DWORD dwRoopCnt = 1;
+		if (geom[0].BytesPerSector >= DISC_RAW_READ_SIZE) {
+			dwReadSize = DISC_RAW_READ_SIZE;
+			dwRoopCnt = dwDiskSize / DISC_RAW_READ_SIZE;
+		}
+		LPBYTE lpBuf = (LPBYTE)calloc(dwReadSize, sizeof(BYTE));
+		if (!lpBuf) {
+			FcloseAndNull(fp);
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			return FALSE;
+		}
+		DWORD dwBytesRead = 0;
+		for (DWORD i = 0; i < dwRoopCnt; i++) {
+			bRet = ReadFile(pDevice->hDevice, lpBuf, dwReadSize, &dwBytesRead, 0);
 			if (bRet) {
-				if (dwFloppySize == dwBytesRead) {
-					size_t stBytesWrite = fwrite(lpBuf, sizeof(BYTE), (size_t)dwFloppySize, fp);
-					OutputString(_T(" Write size: %zd byte\n"), stBytesWrite);
+				if (dwReadSize == dwBytesRead) {
+					fwrite(lpBuf, sizeof(BYTE), (size_t)dwReadSize, fp);
 				}
 				else {
 					OutputErrorString(
-						_T("Read size is different. Floppy size: %ld, Read size: %ld\n")
-						, dwFloppySize, dwBytesRead);
+						_T("Read size is different. Disk size: %ld, Read size: %ld\n")
+						, dwReadSize, dwBytesRead);
 				}
 			}
 			else {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				break;
 			}
-			FreeAndNull(lpBuf);
-//			VirtualFree(lpBuf, 0, MEM_RELEASE);
+			OutputString(_T("\rCreating .bin (Sector) %6ld/%6ld"), i + 1, dwRoopCnt);
 		}
-		else {
-			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		}
+		OutputString(_T("\n"));
+		FreeAndNull(lpBuf);
 	}
 	else {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
