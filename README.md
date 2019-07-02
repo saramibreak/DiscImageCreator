@@ -20,10 +20,14 @@
        Premium2, Premium, PX-W5224, PX-4824, PX-4012 (PX-714, PX-704 can't test it enough.)
        - [Firmware of a plextor drive](http://www.skcj.co.jp/discon/download/index.html)
          Without a reason, you should update the latest firmware.
-       - [PleXTools Professional XL](https://web.archive.org/web/*/http://www.plextor-digital.com/index.php/component/option,com_jdownloads/Itemid,55/catid,86/cid,470/task,view.download//)
-          Useful tool for PLEXTOR.
-       - [PX-Info Utility](https://web.archive.org/web/*/http://www.plextor-digital.com/index.php/component/option,com_jdownloads/Itemid,0/catid,86/cid,468/task,view.download/)
-          Useful tool for PLEXTOR.
+       - Various Tools for Plextor
+         - [PleXTools Professional XL](https://web.archive.org/web/20140910033037/http://www.plextor-digital.com/index.php/component/option,com_jdownloads/Itemid,55/catid,86/cid,470/task,finish/)
+         - [PlexTools Professional LE](https://web.archive.org/web/20070608230432/http://www.plextools.com/download/download.asp)
+         - [SecuViewer](https://web.archive.org/web/20060921233459/http://www.plextools.com/downloadfiles/secuviewer105.zip)
+         - [PX-Info Utility](https://web.archive.org/web/20061210233147/http://www.plextor.be:80/download/ftp1/PXInfo.zip)
+         - [CDVD Info](https://web.archive.org/web/20061210233351/http://www.plextor.be/download/ftp1/CDVDInfo.zip)
+         - [PxScan, PxView](http://www.alexander-noe.com/cdvd/px/index.php)
+         - [QPxTool](http://qpxtool.sourceforge.net/qpxtool.html)
    - Hitachi-LG
      - UH12NS30 (Combined offset minus disc only)
    - ASUS
