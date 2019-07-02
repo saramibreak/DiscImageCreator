@@ -179,7 +179,7 @@ VOID OutputFsDirectoryRecord(
 				pDisc->PROTECT.byTmpForSafeDisc = TRUE;
 				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)(uiExtentPos + uiDataLen / DISC_RAW_READ_SIZE);
 			}
-			else if (!strncmp(fnameForProtect, "00000001.TMP", 12)) {
+			else if (!strncmp(fnameForProtect, "00000001.TMP", 12) && pDisc->PROTECT.byExist != safeDisc) {
 				pDisc->PROTECT.byExist = safeDisc;
 				strncpy(pDisc->PROTECT.name, fnameForProtect, 12);
 				pDisc->PROTECT.byTmpForSafeDisc = TRUE;
