@@ -1,4 +1,4 @@
-// DiscImageCreator.cpp : コンソール アプリケーションのエントリ ポイントを定義します。
+// DiscImageCreator.cpp : 繧ｳ繝ｳ繧ｽ繝ｼ繝ｫ 繧｢繝励Μ繧ｱ繝ｼ繧ｷ繝ｧ繝ｳ縺ｮ繧ｨ繝ｳ繝医Μ 繝昴う繝ｳ繝医ｒ螳夂ｾｩ縺励∪縺吶�
 //
 /**
  * Copyright 2011-2018 sarami
@@ -452,7 +452,8 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 							discData.SCSI.wCurrentMedia == ProfileBDRSequentialWritable ||
 							discData.SCSI.wCurrentMedia == ProfileBDRRandomWritable ||
 							discData.SCSI.wCurrentMedia == ProfileBDRewritable ||
-							discData.SCSI.wCurrentMedia == 0xff71 // PS3 disc on "SONY PS-SYSTEM   302R"
+							discData.SCSI.wCurrentMedia == 0xff71 || // PS3 disc on "SONY PS-SYSTEM   302R"
+							discData.SCSI.wCurrentMedia == 0xff80 // PS4 disc on "SONY PS-SYSTEM   408R"
 							) {
 							if (!ReadTOC(pExtArg, pExecType, &device, &discData)) {
 								throw FALSE;
