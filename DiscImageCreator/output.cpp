@@ -2091,9 +2091,12 @@ BOOL CreateBinCueCcd(
 			nLBAofFirstIdx = pDisc->SUB.lpFirstLBAListOnSub[i - 1][1];
 			index++;
 		}
+
+		BYTE indexSync = 0;
 		INT nLBAofFirstIdxSync = pDisc->SUB.lpFirstLBAListOnSubSync[i - 1][0];
 		if (nLBAofFirstIdxSync == -1 || nLBAofFirstIdxSync == -150) {
 			nLBAofFirstIdxSync = pDisc->SUB.lpFirstLBAListOnSubSync[i - 1][1];
+			indexSync++;
 		}
 
 		BYTE byFrame = 0, bySecond = 0, byMinute = 0;
@@ -2113,11 +2116,6 @@ BOOL CreateBinCueCcd(
 					WriteCueForIndexDirective(index, 0, 0, 0, fpCueForImg);
 					WriteCcdForTrackIndex(index, 0, fpCcd);
 				}
-
-				if (pDisc->SUB.byDesync) {
-					WriteCueForIndexDirective(index, 0, 0, 0, fpCueSyncForImg);
-					WriteCueForIndexDirective(index, 0, 0, 0, fpCueSync);
-				}
 			}
 			else if (0 < nLBAofFirstIdx) {
 				// index 0 in track 1
@@ -2133,14 +2131,27 @@ BOOL CreateBinCueCcd(
 				WriteCueForIndexDirective(index, byMinute, bySecond, byFrame, fpCueForImg);
 				WriteCueForIndexDirective(index, byMinute, bySecond, byFrame, fpCue);
 				WriteCcdForTrackIndex(index, nLBAofFirstIdx, fpCcd);
-				if (pDisc->SUB.byDesync) {
-					WriteCueForIndexDirective(0, 0, 0, 0, fpCueSyncForImg);
-					WriteCueForIndexDirective(0, 0, 0, 0, fpCueSync);
-					WriteCueForIndexDirective(index, byMinute, bySecond, byFrame, fpCueSyncForImg);
-					WriteCueForIndexDirective(index, byMinute, bySecond, byFrame, fpCueSync);
-				}
 			}
 			index++;
+
+			if (pDisc->SUB.byDesync) {
+				if (0 == nLBAofFirstIdxSync || (i == pDisc->SCSI.byFirstMultiSessionTrackNum &&
+					pDisc->SCSI.trackType != TRACK_TYPE::pregapAudioIn1stTrack &&
+					pDisc->SCSI.trackType != TRACK_TYPE::pregapDataIn1stTrack)) {
+
+					WriteCueForIndexDirective(indexSync, 0, 0, 0, fpCueSyncForImg);
+					WriteCueForIndexDirective(indexSync, 0, 0, 0, fpCueSync);
+				}
+				else if (0 < nLBAofFirstIdxSync) {
+					WriteCueForIndexDirective(0, 0, 0, 0, fpCueSyncForImg);
+					WriteCueForIndexDirective(0, 0, 0, 0, fpCueSync);
+
+					LBAtoMSF(nLBAofFirstIdxSync, &byMinute, &bySecond, &byFrame);
+					WriteCueForIndexDirective(indexSync, byMinute, bySecond, byFrame, fpCueSyncForImg);
+					WriteCueForIndexDirective(indexSync, byMinute, bySecond, byFrame, fpCueSync);
+				}
+				indexSync++;
+			}
 		}
 
 		for (; index < MAXIMUM_NUMBER_INDEXES; index++) {
@@ -2159,14 +2170,21 @@ BOOL CreateBinCueCcd(
 					break;
 				}
 			}
-			if (pDisc->SUB.byDesync) {
-				INT nLBAofNextIdxSync = pDisc->SUB.lpFirstLBAListOnSubSync[i - 1][index];
+		}
+		if (pDisc->SUB.byDesync) {
+			for (; indexSync < MAXIMUM_NUMBER_INDEXES; indexSync++) {
+				INT nLBAofNextIdxSync = pDisc->SUB.lpFirstLBAListOnSubSync[i - 1][indexSync];
 				if (nLBAofNextIdxSync != -1) {
-					LBAtoMSF(nLBAofNextIdxSync,	&byMinute, &bySecond, &byFrame);
-					WriteCueForIndexDirective(index, byMinute, bySecond, byFrame, fpCueSyncForImg);
+					LBAtoMSF(nLBAofNextIdxSync, &byMinute, &bySecond, &byFrame);
+					WriteCueForIndexDirective(indexSync, byMinute, bySecond, byFrame, fpCueSyncForImg);
 
 					LBAtoMSF(nLBAofNextIdxSync - nLBAofFirstIdxSync, &byMinute, &bySecond, &byFrame);
-					WriteCueForIndexDirective(index, byMinute, bySecond, byFrame, fpCueSync);
+					WriteCueForIndexDirective(indexSync, byMinute, bySecond, byFrame, fpCueSync);
+				}
+				else {
+					if (indexSync >= 2) {
+						break;
+					}
 				}
 			}
 		}
