@@ -598,8 +598,8 @@ BOOL ReadCDForCheckingSubQAdr(
 	CHAR szTmpISRC[META_ISRC_SIZE] = {};
 	INT nMCNIdx = 0;
 	INT nISRCIdx = 0;
-	INT nTmpMCNLBAList[9] = { -1 };
-	INT nTmpISRCLBAList[9] = { -1 };
+	INT nTmpMCNLBAList[25] = { -1 };
+	INT nTmpISRCLBAList[25] = { -1 };
 	INT nTmpLBA = pDisc->SCSI.lpFirstLBAListOnToc[byIdxOfTrack];
 	INT nTmpNextLBA = 0;
 	if (byIdxOfTrack + 1 < pDisc->SCSI.byLastDataTrackNum) {
