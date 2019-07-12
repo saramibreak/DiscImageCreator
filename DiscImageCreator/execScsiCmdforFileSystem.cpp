@@ -835,8 +835,7 @@ BOOL OutputXDVDFsDirectoryRecord(
 	LPBYTE lpBuf,
 	LPUINT lpOfs,
 	UINT uiStartLBA,
-	INT nNest,
-	LPCSTR* szTab,
+	LPBYTE pTab,
 	LPBOOL pEnd
 ) {
 	WORD ofsLeft = MAKEWORD(lpBuf[0], lpBuf[1]);
@@ -853,11 +852,11 @@ BOOL OutputXDVDFsDirectoryRecord(
 		"%s       Starting sector of file: %d(0x%x)\n"
 		"%s               Total file size: %d(0x%x)\n"
 		"%s               File attributes: "
-		, szTab[nNest], ofsLeft, ofsLeft
-		, szTab[nNest], ofsRight, ofsRight
-		, szTab[nNest], startSector, startSector
-		, szTab[nNest], fileSize, fileSize
-		, szTab[nNest]
+		, (LPCH)&pTab[0], ofsLeft, ofsLeft
+		, (LPCH)&pTab[0], ofsRight, ofsRight
+		, (LPCH)&pTab[0], startSector, startSector
+		, (LPCH)&pTab[0], fileSize, fileSize
+		, (LPCH)&pTab[0]
 	);
 
 	BYTE attribute = lpBuf[12];
@@ -886,8 +885,8 @@ BOOL OutputXDVDFsDirectoryRecord(
 	OutputVolDescLogA(
 		"%s            Length of filename: %d\n"
 		"%s                      Filename: "
-		, szTab[nNest], lenOfFile
-		, szTab[nNest]
+		, (LPCH)&pTab[0], lenOfFile
+		, (LPCH)&pTab[0]
 	);
 	for (BYTE i = 0; i < lenOfFile; i++) {
 		OutputVolDescLogA("%c", lpBuf[14 + i]);
@@ -902,13 +901,13 @@ BOOL OutputXDVDFsDirectoryRecord(
 	}
 
 	if (attribute == 0x10) {
-		if (nNest < 6) {
-			nNest++;
-		}
+		size_t idx = strlen((LPCH)&pTab[0]);
+		pTab[idx] = '\t';
 		if (!ReadXBOXDirectoryRecord(pExtArg, pDevice, pCdb
-			, startSector + uiStartLBA, fileSize, uiStartLBA, nNest)) {
+			, startSector + uiStartLBA, fileSize, uiStartLBA, pTab)) {
 			return FALSE;
 		}
+		pTab[idx] = 0;
 	}
 	return TRUE;
 }
@@ -920,7 +919,7 @@ BOOL ReadXBOXDirectoryRecord(
 	UINT uiDirPos,
 	UINT uiDirTblSize,
 	UINT uiStartLBA,
-	INT nNest
+	LPBYTE pTab
 ) {
 	LPBYTE pBuf = NULL;
 	LPBYTE lpBuf = NULL;
@@ -946,18 +945,16 @@ BOOL ReadXBOXDirectoryRecord(
 	for (UCHAR c = 0; c < pCdb->TransferLength[3]; c++) {
 		OutputCDMain(fileMainInfo, lpBuf + DISC_RAW_READ_SIZE * c, (INT)uiDirPos + c, DISC_RAW_READ_SIZE);
 	}
-	LPCSTR szTab[] = { "\t", "\t\t", "\t\t\t", "\t\t\t\t", "\t\t\t\t\t", "\t\t\t\t\t\t", "\t\t\t\t\t\t\t" };
-	OutputVolDescLogA("%s", szTab[nNest]);
-	OutputVolDescLogA(
+	OutputVolDescLogA("%s"
 		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(DIRECTORY ENTRY)
-		, (INT)uiDirPos, (INT)uiDirPos
+		, (LPCH)&pTab[0], (INT)uiDirPos, (INT)uiDirPos
 	);
 	BOOL bEnd = FALSE;
 	UINT uiSize = 0;
 	UINT uiCoeff = 1;
 	for (UINT uiOfs = 0; uiSize < uiDirTblSize;) {
 		if (!OutputXDVDFsDirectoryRecord(pExtArg, pDevice, pCdb
-			, lpBuf + uiSize, &uiOfs, uiStartLBA, nNest, szTab, &bEnd)) {
+			, lpBuf + uiSize, &uiOfs, uiStartLBA, pTab, &bEnd)) {
 			return FALSE;
 		}
 		if (bEnd) {
@@ -1028,8 +1025,10 @@ BOOL ReadXBOXFileSystem(
 	if (uiDirTblSize % DISC_RAW_READ_SIZE != 0) {
 		uiDirTblSize += DISC_RAW_READ_SIZE * (uiDirTblSize / DISC_RAW_READ_SIZE + 1) - uiDirTblSize;
 	}
+	BYTE szTab[256] = {};
+	szTab[0] = '\t';
 	if (!ReadXBOXDirectoryRecord(
-		pExtArg, pDevice, &cdb, uiDirPos + (UINT)dwStartLBA, uiDirTblSize, (UINT)dwStartLBA, 0)) {
+		pExtArg, pDevice, &cdb, uiDirPos + (UINT)dwStartLBA, uiDirTblSize, (UINT)dwStartLBA, szTab)) {
 		FreeAndNull(pBuf);
 		return FALSE;
 	};

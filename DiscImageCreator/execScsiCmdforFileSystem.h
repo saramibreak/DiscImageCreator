@@ -45,7 +45,7 @@ BOOL ReadXBOXDirectoryRecord(
 	UINT uiDirPos,
 	UINT uiDirTblSize,
 	UINT uiStartLBA,
-	INT nNest
+	LPBYTE pTab
 );
 
 BOOL ReadXBOXFileSystem(
