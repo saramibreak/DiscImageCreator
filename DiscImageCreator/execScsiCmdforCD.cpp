@@ -1247,6 +1247,7 @@ BOOL ReadCDAll(
 		}
 		FcloseAndNull(fpImg);
 		OutputTocWithPregap(pDisc);
+		FlushLog();
 
 		if (!ProcessDescramble(pExtArg, pDisc, pszPath, pszOutScmFile)) {
 			throw FALSE;
