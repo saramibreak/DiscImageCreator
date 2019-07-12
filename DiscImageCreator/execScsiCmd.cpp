@@ -861,7 +861,7 @@ BOOL ReadDriveInformation(
 	if (!Inquiry(pExecType, pExtArg, pDevice)) {
 		return FALSE;
 	}
-	if (*pExecType != fd) {
+	if (*pExecType != fd && *pExecType != disk) {
 		// 4th: check PLEXTOR or not here (because use modesense and from there)
 		if (IsValidPlextorDrive(pDevice)) {
 			if ((PLXTR_DRIVE_TYPE)pDevice->byPlxtrDrive == PLXTR_DRIVE_TYPE::NotLatest) {

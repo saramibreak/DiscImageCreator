@@ -552,3 +552,11 @@ typedef struct _MDS_DPM_BLK {
 #endif
 } MDS_DPM_BLK, *PMDS_DPM_BLK;
 #pragma pack(pop, mds)
+
+typedef struct _FAT {
+	BYTE SecPerClus;
+	BYTE padding;
+	WORD RootEntCnt;
+	UINT RootDirStartSector;
+	UINT DataStartSector;
+} FAT, *PFAT;

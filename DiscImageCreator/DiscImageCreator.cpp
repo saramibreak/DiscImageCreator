@@ -1,5 +1,3 @@
-// DiscImageCreator.cpp : コンソール アプリケーションのエントリ ポイントを定義します。
-//
 /**
  * Copyright 2011-2018 sarami
  *
@@ -213,8 +211,8 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 					throw FALSE;
 				}
 				make_crc_table();
-				if (*pExecType == fd) {
-					bRet = DiskGetMediaTypes(&device, pszFullPath);
+				if (*pExecType == fd || *pExecType == disk) {
+					bRet = ReadDisk(pExecType, &device, pszFullPath);
 				}
 				else {
 					if (*pExecType == drivespeed) {
@@ -226,7 +224,9 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 							discData.SCSI.wCurrentMedia == ProfileCdRecordable ||
 							discData.SCSI.wCurrentMedia == ProfileCdRewritable ||
 							(discData.SCSI.wCurrentMedia == ProfileInvalid && (*pExecType == gd)) ||
-							discData.SCSI.wCurrentMedia == 0xff50) { // PS disc on "SONY PS-SYSTEM   302R"
+							discData.SCSI.wCurrentMedia == ProfilePlaystationCdrom ||
+							discData.SCSI.wCurrentMedia == ProfilePlaystation2Cdrom
+							) {
 #ifdef _WIN32
 							_declspec(align(4)) CDROM_TOC_FULL_TOC_DATA fullToc = { 0 };
 #else
@@ -401,7 +401,8 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 							discData.SCSI.wCurrentMedia == ProfileHDDVDRewritable ||
 							discData.SCSI.wCurrentMedia == ProfileHDDVDRDualLayer ||
 							discData.SCSI.wCurrentMedia == ProfileHDDVDRWDualLayer ||
-							discData.SCSI.wCurrentMedia == 0xff61 // PS2 disc on "SONY PS-SYSTEM   302R"
+							discData.SCSI.wCurrentMedia == ProfilePlaystation2DvdRom ||
+							discData.SCSI.wCurrentMedia == ProfilePlaystation3DvdRom
 							) {
 							if (pExtArg->byScanProtectViaFile) {
 								if (!InitProtectData(&pDisc)) {
@@ -452,8 +453,8 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 							discData.SCSI.wCurrentMedia == ProfileBDRSequentialWritable ||
 							discData.SCSI.wCurrentMedia == ProfileBDRRandomWritable ||
 							discData.SCSI.wCurrentMedia == ProfileBDRewritable ||
-							discData.SCSI.wCurrentMedia == 0xff71 || // PS3 disc on "SONY PS-SYSTEM   302R"
-							discData.SCSI.wCurrentMedia == 0xff80 // PS4 disc on "SONY PS-SYSTEM   408R"
+							discData.SCSI.wCurrentMedia == ProfilePlaystation3BDRom ||
+							discData.SCSI.wCurrentMedia == ProfilePlaystation4BDRom
 							) {
 							if (!ReadTOC(pExtArg, pExecType, &device, &discData)) {
 								throw FALSE;
@@ -1251,6 +1252,10 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				*pExecType = fd;
 				printAndSetPath(argv[3], pszFullPath);
 			}
+			else if (cmdLen == 4 && !_tcsncmp(argv[1], _T("disk"), 4)) {
+				*pExecType = disk;
+				printAndSetPath(argv[3], pszFullPath);
+			}
 			else if (cmdLen == 5 && !_tcsncmp(argv[1], _T("merge"), 5)) {
 				*pExecType = merge;
 				printAndSetPath(argv[2], pszFullPath);
@@ -1388,6 +1393,8 @@ int printUsage(void)
 	);
 	ret = stopMessage();
 	OutputString(
+		_T("\tdisk <DriveLetter> <Filename>\n")
+		_T("\t\tDump a removable media other than floppy\n")
 		_T("\tstop <DriveLetter>\n")
 		_T("\t\tSpin off the disc\n")
 		_T("\tstart <DriveLetter>\n")
@@ -1410,11 +1417,11 @@ int printUsage(void)
 		_T("\t/f\tUse 'Force Unit Access' flag to delete the drive cache\n")
 		_T("\t\t\tval\tdelete per specified value (default: 1)\n")
 		_T("\t/q\tDisable beep\n")
-		_T("Option (for CD read mode)\n")
-		_T("\t/a\tAdd CD offset manually (Only Audio CD)\n")
 	);
 	ret = stopMessage();
 	OutputString(
+		_T("Option (for CD read mode)\n")
+		_T("\t/a\tAdd CD offset manually (Only Audio CD)\n")
 		_T("\t\t\tval\tsamples value\n")
 		_T("\t/be\tUse 0xbe as the opcode for Reading CD forcibly\n")
 		_T("\t\t\tstr\t raw: sub channel mode is raw (default)\n")
@@ -1437,11 +1444,11 @@ int printUsage(void)
 		_T("\t\t\tFor Alpha-Disc, Tages (very slow)\n")
 		_T("\t/ms\tRead the lead-out of 1st session and the lead-in of 2nd session\n")
 		_T("\t\t\tFor Multi-session\n")
-		_T("\t/74\tRead the lead-out about 74:00:00\n")
-		_T("\t\t\tFor ring data (a.k.a Saturn Ring) of Sega Saturn\n")
 	);
 	ret = stopMessage();
 	OutputString(
+		_T("\t/74\tRead the lead-out about 74:00:00\n")
+		_T("\t\t\tFor ring data (a.k.a Saturn Ring) of Sega Saturn\n")
 		_T("\t/sf\tScan file to detect protect. If reading error exists,\n")
 		_T("\t   \tcontinue reading and ignore c2 error on specific sector\n")
 		_T("\t\t\tFor CodeLock, LaserLock, RingProtect, RingPROTECH\n")
@@ -1463,11 +1470,11 @@ int printUsage(void)
 		_T("\t/nq\tNot fix SubQ\n")
 		_T("\t/nr\tNot fix SubRtoW\n")
 		_T("\t/nl\tNot fix SubQ (RMSF, AMSF, CRC) (LBA 10000 - 19999)\n")
-		_T("\t   \t                               (LBA 40000 - 49999)\n")
-		_T("\t\t\tFor PlayStation LibCrypt\n")
 	);
 	ret = stopMessage();
 	OutputString(
+		_T("\t   \t                               (LBA 40000 - 49999)\n")
+		_T("\t\t\tFor PlayStation LibCrypt\n")
 		_T("\t/ns\tNot fix SubQ (RMSF, AMSF, CRC) (LBA 0 - 7, 5000 - 24999)\n")
 		_T("\t   \t                            or (LBA 30000 - 49999)\n")
 		_T("\t\t\tFor SecuROM\n")

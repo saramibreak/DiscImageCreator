@@ -3122,102 +3122,109 @@ VOID OutputStorageAdaptorDescriptor(
 		pAdapterDescriptor->BusMinorVersion);
 }
 
-VOID OutputFloppyInfo(
+VOID OutputMediaType(
+	MEDIA_TYPE mType
+) {
+	switch (mType) {
+	case Unknown:
+		OutputDiscLogA("Format is unknown\n");
+		break;
+	case F5_1Pt2_512:
+		OutputDiscLogA("5.25, 1.2MB, 512 bytes/sector\n");
+		break;
+	case F3_1Pt44_512:
+		OutputDiscLogA("3.5, 1.44MB, 512 bytes/sector\n");
+		break;
+	case F3_2Pt88_512:
+		OutputDiscLogA("3.5, 2.88MB, 512 bytes/sector\n");
+		break;
+	case F3_20Pt8_512:
+		OutputDiscLogA("3.5, 20.8MB, 512 bytes/sector\n");
+		break;
+	case F3_720_512:
+		OutputDiscLogA("3.5, 720KB, 512 bytes/sector\n");
+		break;
+	case F5_360_512:
+		OutputDiscLogA("5.25, 360KB, 512 bytes/sector\n");
+		break;
+	case F5_320_512:
+		OutputDiscLogA("5.25, 320KB, 512 bytes/sector\n");
+		break;
+	case F5_320_1024:
+		OutputDiscLogA("5.25, 320KB, 1024 bytes/sector\n");
+		break;
+	case F5_180_512:
+		OutputDiscLogA("5.25, 180KB, 512 bytes/sector\n");
+		break;
+	case F5_160_512:
+		OutputDiscLogA("5.25, 160KB, 512 bytes/sector\n");
+		break;
+	case RemovableMedia:
+		OutputDiscLogA("Removable media other than floppy\n");
+		break;
+	case FixedMedia:
+		OutputDiscLogA("Fixed hard disk media\n");
+		break;
+	case F3_120M_512:
+		OutputDiscLogA("3.5, 120M Floppy\n");
+		break;
+	case F3_640_512:
+		OutputDiscLogA("3.5, 640KB, 512 bytes/sector\n");
+		break;
+	case F5_640_512:
+		OutputDiscLogA("5.25, 640KB, 512 bytes/sector\n");
+		break;
+	case F5_720_512:
+		OutputDiscLogA("5.25, 720KB, 512 bytes/sector\n");
+		break;
+	case F3_1Pt2_512:
+		OutputDiscLogA("3.5, 1.2Mb, 512 bytes/sector\n");
+		break;
+	case F3_1Pt23_1024:
+		OutputDiscLogA("3.5, 1.23Mb, 1024 bytes/sector\n");
+		break;
+	case F5_1Pt23_1024:
+		OutputDiscLogA("5.25, 1.23MB, 1024 bytes/sector\n");
+		break;
+	case F3_128Mb_512:
+		OutputDiscLogA("3.5 MO, 128Mb, 512 bytes/sector\n");
+		break;
+	case F3_230Mb_512:
+		OutputDiscLogA("3.5 MO, 230Mb, 512 bytes/sector\n");
+		break;
+	case F8_256_128:
+		OutputDiscLogA("8, 256KB, 128 bytes/sector\n");
+		break;
+	case F3_200Mb_512:
+		OutputDiscLogA("3.5, 200M Floppy (HiFD)\n");
+		break;
+	case F3_240M_512:
+		OutputDiscLogA("3.5, 240Mb Floppy (HiFD)\n");
+		break;
+	case F3_32M_512:
+		OutputDiscLogA("3.5, 32Mb Floppy\n");
+		break;
+	default:
+		OutputDiscLogA("Unknown media type\n");
+		break;
+	}
+}
+
+VOID OutputDiskGeometry(
 	PDISK_GEOMETRY pGeom,
 	DWORD dwGeomNum
 ) {
 	if (dwGeomNum > 1) {
-		OutputDiscLogA("SupportedMediaType\n");
+		OutputDiscLogA(
+			OUTPUT_DHYPHEN_PLUS_STR(DISK_GEOMETRY)
+			"SupportedMediaType\n");
 	}
 	else if (dwGeomNum == 1) {
 		OutputDiscLogA("CurrentMediaType\n");
 	}
 	for (DWORD i = 0; i < dwGeomNum; i++) {
 		OutputDiscLogA("\t        MediaType: ");
-		switch (pGeom[i].MediaType) {
-		case Unknown:
-			OutputDiscLogA("Format is unknown\n");
-			break;
-		case F5_1Pt2_512:
-			OutputDiscLogA("5.25, 1.2MB, 512 bytes/sector\n");
-			break;
-		case F3_1Pt44_512:
-			OutputDiscLogA("3.5, 1.44MB, 512 bytes/sector\n");
-			break;
-		case F3_2Pt88_512:
-			OutputDiscLogA("3.5, 2.88MB, 512 bytes/sector\n");
-			break;
-		case F3_20Pt8_512:
-			OutputDiscLogA("3.5, 20.8MB, 512 bytes/sector\n");
-			break;
-		case F3_720_512:
-			OutputDiscLogA("3.5, 720KB, 512 bytes/sector\n");
-			break;
-		case F5_360_512:
-			OutputDiscLogA("5.25, 360KB, 512 bytes/sector\n");
-			break;
-		case F5_320_512:
-			OutputDiscLogA("5.25, 320KB, 512 bytes/sector\n");
-			break;
-		case F5_320_1024:
-			OutputDiscLogA("5.25, 320KB, 1024 bytes/sector\n");
-			break;
-		case F5_180_512:
-			OutputDiscLogA("5.25, 180KB, 512 bytes/sector\n");
-			break;
-		case F5_160_512:
-			OutputDiscLogA("5.25, 160KB, 512 bytes/sector\n");
-			break;
-		case RemovableMedia:
-			OutputDiscLogA("Removable media other than floppy\n");
-			break;
-		case FixedMedia:
-			OutputDiscLogA("Fixed hard disk media\n");
-			break;
-		case F3_120M_512:
-			OutputDiscLogA("3.5, 120M Floppy\n");
-			break;
-		case F3_640_512:
-			OutputDiscLogA("3.5, 640KB, 512 bytes/sector\n");
-			break;
-		case F5_640_512:
-			OutputDiscLogA("5.25, 640KB, 512 bytes/sector\n");
-			break;
-		case F5_720_512:
-			OutputDiscLogA("5.25, 720KB, 512 bytes/sector\n");
-			break;
-		case F3_1Pt2_512:
-			OutputDiscLogA("3.5, 1.2Mb, 512 bytes/sector\n");
-			break;
-		case F3_1Pt23_1024:
-			OutputDiscLogA("3.5, 1.23Mb, 1024 bytes/sector\n");
-			break;
-		case F5_1Pt23_1024:
-			OutputDiscLogA("5.25, 1.23MB, 1024 bytes/sector\n");
-			break;
-		case F3_128Mb_512:
-			OutputDiscLogA("3.5 MO, 128Mb, 512 bytes/sector\n");
-			break;
-		case F3_230Mb_512:
-			OutputDiscLogA("3.5 MO, 230Mb, 512 bytes/sector\n");
-			break;
-		case F8_256_128:
-			OutputDiscLogA("8, 256KB, 128 bytes/sector\n");
-			break;
-		case F3_200Mb_512:
-			OutputDiscLogA("3.5, 200M Floppy (HiFD)\n");
-			break;
-		case F3_240M_512:
-			OutputDiscLogA("3.5, 240Mb Floppy (HiFD)\n");
-			break;
-		case F3_32M_512:
-			OutputDiscLogA("3.5, 32Mb Floppy\n");
-			break;
-		default:
-			OutputDiscLogA("Unknown media type\n");
-			break;
-		}
-
+		OutputMediaType(pGeom[i].MediaType);
 		DWORD dwDiskSize = pGeom[i].Cylinders.u.LowPart * pGeom[i].TracksPerCylinder *
 			pGeom[i].SectorsPerTrack * pGeom[i].BytesPerSector;
 		OutputDiscLogA(
@@ -3226,11 +3233,328 @@ VOID OutputFloppyInfo(
 			"\t  SectorsPerTrack: %lu\n"
 			"\t   BytesPerSector: %lu (Bytes)\n"
 			"\t--------------------------\n"
-			"\t         DiskSize: %lu (Bytes)\n\n",
-			pGeom[i].Cylinders.u.LowPart,
-			pGeom[i].TracksPerCylinder,
-			pGeom[i].SectorsPerTrack,
-			pGeom[i].BytesPerSector,
-			dwDiskSize);
+			"\t         DiskSize: %lu (Bytes)\n\n"
+			, pGeom[i].Cylinders.u.LowPart
+			, pGeom[i].TracksPerCylinder
+			, pGeom[i].SectorsPerTrack
+			, pGeom[i].BytesPerSector
+			, dwDiskSize);
+	}
+}
+
+VOID OutputDiskGeometryEx(
+	PDISK_GEOMETRY_EX pGeom
+) {
+	PDISK_PARTITION_INFO partition = DiskGeometryGetPartition(pGeom);
+	PDISK_DETECTION_INFO detection = DiskGeometryGetDetect(pGeom);
+	OutputDiscLogA(
+		OUTPUT_DHYPHEN_PLUS_STR(DISK_GEOMETRY_EX)
+		"\t            DiskSize: %llu (Bytes)\n"
+		"\t SizeOfPartitionInfo: %lu\n"
+		"\t      PartitionStyle: %u\n"
+		, pGeom->DiskSize.QuadPart
+		, partition->SizeOfPartitionInfo
+		, partition->PartitionStyle
+	);
+	if (partition->SizeOfPartitionInfo) {
+		switch (partition->PartitionStyle) {
+		case PARTITION_STYLE_MBR:
+#ifdef _WIN32
+			OutputDiscLogA(
+				"\t           Signiture: %lu\n"
+				"\t            CheckSum: %lu\n"
+				, partition->Mbr.Signature
+				, partition->Mbr.CheckSum
+			);
+#else
+			OutputDiscLogA(
+				"\t           Signiture: %lu\n"
+				"\t            CheckSum: %lu\n"
+				, partition->DUMMYUNIONNAME.Mbr.Signature
+				, partition->DUMMYUNIONNAME.Mbr.CheckSum
+			);
+#endif
+			break;
+		case PARTITION_STYLE_GPT:
+#ifdef _WIN32
+			OutputDiscLogA(
+				"\t        DiskId.Data1: %lu\n"
+				"\t        DiskId.Data2: %u\n"
+				"\t        DiskId.Data3: %u\n"
+				"\t        DiskId.Data4: %02x%02x%02x%02x%02x%02x%02x%02x\n"
+				, partition->Gpt.DiskId.Data1
+				, partition->Gpt.DiskId.Data2
+				, partition->Gpt.DiskId.Data3
+				, partition->Gpt.DiskId.Data4[0], partition->Gpt.DiskId.Data4[1]
+				, partition->Gpt.DiskId.Data4[2], partition->Gpt.DiskId.Data4[3]
+				, partition->Gpt.DiskId.Data4[4], partition->Gpt.DiskId.Data4[5]
+				, partition->Gpt.DiskId.Data4[6], partition->Gpt.DiskId.Data4[7]
+			);
+#else
+			OutputDiscLogA(
+				"\t        DiskId.Data1: %lu\n"
+				"\t        DiskId.Data2: %u\n"
+				"\t        DiskId.Data3: %u\n"
+				"\t        DiskId.Data4: %02x%02x%02x%02x%02x%02x%02x%02x\n"
+				, partition->DUMMYUNIONNAME.Gpt.DiskId.Data1
+				, partition->DUMMYUNIONNAME.Gpt.DiskId.Data2
+				, partition->DUMMYUNIONNAME.Gpt.DiskId.Data3
+				, partition->DUMMYUNIONNAME.Gpt.DiskId.Data4[0], partition->DUMMYUNIONNAME.Gpt.DiskId.Data4[1]
+				, partition->DUMMYUNIONNAME.Gpt.DiskId.Data4[2], partition->DUMMYUNIONNAME.Gpt.DiskId.Data4[3]
+				, partition->DUMMYUNIONNAME.Gpt.DiskId.Data4[4], partition->DUMMYUNIONNAME.Gpt.DiskId.Data4[5]
+				, partition->DUMMYUNIONNAME.Gpt.DiskId.Data4[6], partition->DUMMYUNIONNAME.Gpt.DiskId.Data4[7]
+			);
+#endif
+			break;
+		case PARTITION_STYLE_RAW:
+			break;
+		default:
+			break;
+		}
+		OutputDiscLogA(
+			"\t    SizeOfDetectInfo: %lu\n"
+			"\t       DetectionType: %u\n"
+			, detection->SizeOfDetectInfo
+			, detection->DetectionType
+		);
+	}
+	if (detection->SizeOfDetectInfo) {
+		switch (detection->DetectionType) {
+		case DetectNone:
+			break;
+		case DetectInt13:
+#ifdef _WIN32
+			OutputDiscLogA(
+				"\t         DriveSelect: %u\n"
+				"\t        MaxCylinders: %lu\n"
+				"\t     SectorsPerTrack: %u\n"
+				"\t            MaxHeads: %u\n"
+				"\t        NumberDrives: %u\n"
+				, detection->Int13.DriveSelect
+				, detection->Int13.MaxCylinders
+				, detection->Int13.SectorsPerTrack
+				, detection->Int13.MaxHeads
+				, detection->Int13.NumberDrives
+			);
+#else
+			OutputDiscLogA(
+				"\t         DriveSelect: %u\n"
+				"\t        MaxCylinders: %lu\n"
+				"\t     SectorsPerTrack: %u\n"
+				"\t            MaxHeads: %u\n"
+				"\t        NumberDrives: %u\n"
+				, detection->DUMMYUNIONNAME.DUMMYSTRUCTNAME.Int13.DriveSelect
+				, detection->DUMMYUNIONNAME.DUMMYSTRUCTNAME.Int13.MaxCylinders
+				, detection->DUMMYUNIONNAME.DUMMYSTRUCTNAME.Int13.SectorsPerTrack
+				, detection->DUMMYUNIONNAME.DUMMYSTRUCTNAME.Int13.MaxHeads
+				, detection->DUMMYUNIONNAME.DUMMYSTRUCTNAME.Int13.NumberDrives
+			);
+#endif
+			break;
+		case DetectExInt13:
+#ifdef _WIN32
+			OutputDiscLogA(
+				"\t        ExBufferSize: %u\n"
+				"\t             ExFlags: %u\n"
+				"\t         ExCylinders: %lu\n"
+				"\t             ExHeads: %lu\n"
+				"\t   ExSectorsPerTrack: %lu\n"
+				"\t   ExSectorsPerDrive: %llu\n"
+				"\t        ExSectorSize: %u\n"
+				"\t          ExReserved: %u\n"
+				, detection->ExInt13.ExBufferSize
+				, detection->ExInt13.ExFlags
+				, detection->ExInt13.ExCylinders
+				, detection->ExInt13.ExHeads
+				, detection->ExInt13.ExSectorsPerTrack
+				, detection->ExInt13.ExSectorsPerDrive
+				, detection->ExInt13.ExSectorSize
+				, detection->ExInt13.ExReserved
+			);
+#else
+			OutputDiscLogA(
+				"\t        ExBufferSize: %u\n"
+				"\t             ExFlags: %u\n"
+				"\t         ExCylinders: %lu\n"
+				"\t             ExHeads: %lu\n"
+				"\t   ExSectorsPerTrack: %lu\n"
+				"\t   ExSectorsPerDrive: %llu\n"
+				"\t        ExSectorSize: %u\n"
+				"\t          ExReserved: %u\n"
+				, detection->DUMMYUNIONNAME.DUMMYSTRUCTNAME.ExInt13.ExBufferSize
+				, detection->DUMMYUNIONNAME.DUMMYSTRUCTNAME.ExInt13.ExFlags
+				, detection->DUMMYUNIONNAME.DUMMYSTRUCTNAME.ExInt13.ExCylinders
+				, detection->DUMMYUNIONNAME.DUMMYSTRUCTNAME.ExInt13.ExHeads
+				, detection->DUMMYUNIONNAME.DUMMYSTRUCTNAME.ExInt13.ExSectorsPerTrack
+				, detection->DUMMYUNIONNAME.DUMMYSTRUCTNAME.ExInt13.ExSectorsPerDrive
+				, detection->DUMMYUNIONNAME.DUMMYSTRUCTNAME.ExInt13.ExSectorSize
+				, detection->DUMMYUNIONNAME.DUMMYSTRUCTNAME.ExInt13.ExReserved
+			);
+#endif
+			break;
+		default:
+			break;
+		}
+	}
+
+}
+
+VOID OutputRemovableDiskInfo(
+	PGET_MEDIA_TYPES pMedia
+) {
+	OutputDiscLogA(
+		OUTPUT_DHYPHEN_PLUS_STR(DEVICE_MEDIA_INFO)
+		"\t          DeviceType: %ld\n"
+		"\t      MediaInfoCount: %ld\n"
+		, pMedia->DeviceType, pMedia->MediaInfoCount
+	);
+	for (DWORD i = 0; i < pMedia->MediaInfoCount; i++) {
+		OutputDiscLogA(
+			"\t           Cylinders: %ld\n"
+			"\t           MediaType: "
+			, pMedia->MediaInfo[i].DeviceSpecific.RemovableDiskInfo.Cylinders.u.LowPart
+		);
+		STORAGE_MEDIA_TYPE mType = pMedia->MediaInfo[i].DeviceSpecific.RemovableDiskInfo.MediaType;
+		if (mType < DDS_4mm) {
+			OutputMediaType((MEDIA_TYPE)mType);
+		}
+		else {
+			// TODO
+			OutputDiscLogA("Other media\n");
+		}
+
+		OutputDiscLogA(
+			"\t   TracksPerCylinder: %ld\n"
+			"\t     SectorsPerTrack: %ld\n"
+			"\t      BytesPerSector: %ld\n"
+			"\t    NumberMediaSides: %ld\n"
+			"\tMediaCharacteristics: %lx\n"
+			, pMedia->MediaInfo[i].DeviceSpecific.RemovableDiskInfo.TracksPerCylinder
+			, pMedia->MediaInfo[i].DeviceSpecific.RemovableDiskInfo.SectorsPerTrack
+			, pMedia->MediaInfo[i].DeviceSpecific.RemovableDiskInfo.BytesPerSector
+			, pMedia->MediaInfo[i].DeviceSpecific.RemovableDiskInfo.NumberMediaSides
+			, pMedia->MediaInfo[i].DeviceSpecific.RemovableDiskInfo.MediaCharacteristics
+		);
+	}
+}
+
+VOID OutputFileAllocationTable(
+	LPBYTE lpBuf,
+	PFAT fat
+) {
+	if ((lpBuf[0] == 0xeb && lpBuf[2] == 0x90) || lpBuf[0] == 0xe9) {
+		WORD BytsPerSec = MAKEWORD(lpBuf[11], lpBuf[12]);
+		fat->SecPerClus = lpBuf[13];
+		WORD RsvdSecCnt = MAKEWORD(lpBuf[14], lpBuf[15]);
+		BYTE NumFATs = lpBuf[16];
+		fat->RootEntCnt = MAKEWORD(lpBuf[17], lpBuf[18]);
+		UINT FATSz = MAKEWORD(lpBuf[22], lpBuf[23]);
+		UINT TotSec16 = MAKEWORD(lpBuf[19], lpBuf[20]);
+		UINT TotSec32 = MAKEUINT(MAKEWORD(lpBuf[32], lpBuf[33]), MAKEWORD(lpBuf[34], lpBuf[35]));
+		OutputDiscLogA(
+			OUTPUT_DHYPHEN_PLUS_STR(FileAllocationTable)
+			"\t        BS_JmpBoot: %#02x %#02x %#02x\n"
+			"\t        BS_OEMName: %.8s\n"
+			"\t    BPB_BytsPerSec: %d\n"
+			"\t    BPB_SecPerClus: %d\n"
+			"\t    BPB_RsvdSecCnt: %d\n"
+			"\t       BPB_NumFATs: %d\n"
+			"\t    BPB_RootEntCnt: %d\n"
+			"\t      BPB_TotSec16: %d\n"
+			"\t         BPB_Media: %#x\n"
+			"\t       BPB_FATSz16: %d\n"
+			"\t     BPB_SecPerTrk: %d\n"
+			"\t      BPB_NumHeads: %d\n"
+			"\t       BPB_HiddSec: %d\n"
+			"\t      BPB_TotSec32: %d\n"
+			, lpBuf[0], lpBuf[1], lpBuf[2]
+			, (LPCH)&lpBuf[3]
+			, BytsPerSec
+			, fat->SecPerClus
+			, RsvdSecCnt
+			, NumFATs
+			, fat->RootEntCnt
+			, TotSec16
+			, lpBuf[21]
+			, FATSz
+			, MAKEWORD(lpBuf[24], lpBuf[25])
+			, MAKEWORD(lpBuf[26], lpBuf[27])
+			, MAKEUINT(MAKEWORD(lpBuf[28], lpBuf[29]), MAKEWORD(lpBuf[30], lpBuf[31]))
+			, TotSec32
+		);
+		INT i = 36;
+		if (fat->RootEntCnt == 0 && FATSz == 0) {
+			FATSz = MAKEUINT(MAKEWORD(lpBuf[36], lpBuf[37]), MAKEWORD(lpBuf[38], lpBuf[39]));
+			OutputDiscLogA(
+				"\t       BPB_FATSz32: %d\n"
+				"\t      BPB_ExtFlags: %#04x\n"
+				"\t         BPB_FSVer: %#04x\n"
+				"\t      BPB_RootClus: %d\n"
+				"\t        BPB_FSInfo: %d\n"
+				"\t     BPB_BkBootSec: %d\n"
+				, FATSz
+				, MAKEWORD(lpBuf[40], lpBuf[41])
+				, MAKEWORD(lpBuf[42], lpBuf[43])
+				, MAKEUINT(MAKEWORD(lpBuf[44], lpBuf[45]), MAKEWORD(lpBuf[46], lpBuf[47]))
+				, MAKEWORD(lpBuf[48], lpBuf[49])
+				, MAKEWORD(lpBuf[50], lpBuf[51])
+			);
+			i = 64;
+		}
+		OutputDiscLogA(
+			"\t         BS_DrvNum: %#x\n"
+			"\t      BS_Reserved1: %d\n"
+			"\t        BS_BootSig: %#x\n"
+			"\t          BS_VolID: %#08x\n"
+			"\t         BS_VolLab: %.11s\n"
+			"\t     BS_FilSysType: %.8s\n"
+			"\t       BS_BootCode: "
+			, lpBuf[i]
+			, lpBuf[i + 1]
+			, lpBuf[i + 2]
+			, MAKEUINT(MAKEWORD(lpBuf[i + 3], lpBuf[i + 4]), MAKEWORD(lpBuf[i + 5], lpBuf[i + 6]))
+			, (LPCH)&lpBuf[i + 7]
+			, (LPCH)&lpBuf[i + 18]
+		);
+		for (INT j = i + 26; j < 510; j++) {
+			OutputDiscLogA("%02x ", lpBuf[j]);
+		}
+		OutputDiscLogA(
+			"\n"
+			"\t       BS_BootSign: %#x\n"
+			, MAKEWORD(lpBuf[510], lpBuf[511])
+		);
+
+		WORD FatStartSector = RsvdSecCnt;
+		UINT FatSectorSize = FATSz * NumFATs;
+		fat->RootDirStartSector = FatStartSector + FatSectorSize;
+		UINT RootDirSectorSize = (UINT)(32 * fat->RootEntCnt + BytsPerSec - 1) / BytsPerSec;
+		fat->DataStartSector = fat->RootDirStartSector + RootDirSectorSize;
+
+		UINT TotSec = TotSec16 != 0 ? TotSec16 : TotSec32;
+		UINT DataSectorSize = TotSec - fat->DataStartSector;
+		UINT CountofClusters = DataSectorSize / fat->SecPerClus;
+		OutputDiscLogA(
+			"\t    FatStartSector: %d\n"
+			"\t     FatSectorSize: %d\n"
+			"\tRootDirStartSector: %d\n"
+			"\t RootDirSectorSize: %d\n"
+			"\t   DataStartSector: %d\n"
+			"\t    DataSectorSize: %d\n"
+			"\t   CountofClusters: %d "
+			, FatStartSector, FatSectorSize
+			, fat->RootDirStartSector, RootDirSectorSize
+			, fat->DataStartSector, DataSectorSize
+			, CountofClusters
+		);
+		if (CountofClusters <= 4085) {
+			OutputDiscLogA(" => FAT12\n");
+		}
+		else if (4086 <= CountofClusters && CountofClusters <= 65525) {
+			OutputDiscLogA(" => FAT16\n");
+		}
+		else {
+			OutputDiscLogA(" => FAT32\n");
+		}
 	}
 }

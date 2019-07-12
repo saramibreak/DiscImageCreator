@@ -218,14 +218,23 @@ VOID OutputGetConfigurationFeatureProfileType(
 	case ProfileHDDVDRWDualLayer:
 		OutputDriveLogA("HD-DVD-RW DL");
 		break;
-	case 0xff50:
-		OutputDriveLogA("PlayStation Disc"); // SONY PS-SYSTEM   302R output
+	case ProfilePlaystationCdrom:
+		OutputDriveLogA("PlayStation CD-ROM");
 		break;
-	case 0xff61:
-		OutputDriveLogA("PlayStation 2 Disc"); // SONY PS-SYSTEM   302R output
+	case ProfilePlaystation2Cdrom:
+		OutputDriveLogA("PlayStation2 CD-ROM");
 		break;
-	case 0xff71:
-		OutputDriveLogA("PlayStation 3 Disc"); // SONY PS-SYSTEM   302R output
+	case ProfilePlaystation2DvdRom:
+		OutputDriveLogA("PlayStation2 DVD-ROM");
+		break;
+	case ProfilePlaystation3DvdRom:
+		OutputDriveLogA("PlayStation3 DVD-ROM");
+		break;
+	case ProfilePlaystation3BDRom:
+		OutputDriveLogA("PlayStation3 BD-ROM");
+		break;
+	case ProfilePlaystation4BDRom:
+		OutputDriveLogA("PlayStation4 BD-ROM");
 		break;
 	case ProfileNonStandard:
 		OutputDriveLogA("NonStandard");

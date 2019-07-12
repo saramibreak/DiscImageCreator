@@ -32,7 +32,20 @@ VOID OutputStorageAdaptorDescriptor(
 	LPBOOL lpBusTypeUSB
 );
 
-VOID OutputFloppyInfo(
+VOID OutputDiskGeometry(
 	PDISK_GEOMETRY pGeom,
 	DWORD dwGeomNum
+);
+
+VOID OutputDiskGeometryEx(
+	PDISK_GEOMETRY_EX pGeom
+);
+
+VOID OutputRemovableDiskInfo(
+	PGET_MEDIA_TYPES pMedia
+);
+
+VOID OutputFileAllocationTable(
+	LPBYTE lpBuf,
+	PFAT fat
 );

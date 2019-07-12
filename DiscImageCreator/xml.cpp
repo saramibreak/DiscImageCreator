@@ -39,7 +39,7 @@ BOOL OutputGameHash(
 	_TCHAR* szPath,
 	BOOL bDesync
 ) {
-	if (*pExecType == fd) {
+	if (*pExecType == fd || *pExecType == disk) {
 		if (!OutputHash(pWriter, pszFullPath, _T(".bin"), 1, 1, FALSE)) {
 			return FALSE;
 		}
@@ -395,6 +395,7 @@ BOOL ReadWriteDat(
 	XMLError err = xmlReader.LoadFile(szDefaultDat);
 	if (err != XML_SUCCESS) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		OutputErrorString(_T(" => %s\n"), szDefaultDat);
 		return FALSE;
 	}
 
@@ -512,7 +513,7 @@ BOOL OutputHash(
 		!_tcsncmp(pszFnameAndExt, _T("SS.bin"), 6) ||
 		!_tcsncmp(pszFnameAndExt, _T("PFI.bin"), 7) ||
 		!_tcsncmp(pszFnameAndExt, _T("DMI.bin"), 7) ||
-		ui64FileSize == 1228800 || ui64FileSize == 1261568 || ui64FileSize == 1474560) {
+		ui64FileSize % DISC_RAW_READ_SIZE == 0) {
 		uiSectorSizeOne = DISC_RAW_READ_SIZE;
 	}
 

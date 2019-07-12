@@ -15,7 +15,8 @@
  */
 #pragma once
 
-BOOL DiskGetMediaTypes(
+BOOL ReadDisk(
+	PEXEC_TYPE pExecType,
 	PDEVICE pDevice,
 	LPCTSTR pszPath
 );

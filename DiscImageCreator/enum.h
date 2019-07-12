@@ -29,6 +29,7 @@ typedef enum _EXEC_TYPE {
 	bd,
 	sacd,
 	fd,
+	disk,
 	stop,
 	start,
 	ejecttray,
@@ -190,3 +191,13 @@ typedef enum _SUB_RTOW_TYPE {
 	AnyFull,
 	PSXSpecific
 } SUB_RTOW_TYPE, *PSUB_RTOW_TYPE;
+
+// SONY PS-SYSTEM   302R and 408R
+typedef enum _FEATURE_PROFILE_TYPE_EX {
+	ProfilePlaystationCdrom = 0xff50,
+	ProfilePlaystation2Cdrom = 0xff60,
+	ProfilePlaystation2DvdRom = 0xff61,
+	ProfilePlaystation3DvdRom = 0xff70,
+	ProfilePlaystation3BDRom = 0xff71,
+	ProfilePlaystation4BDRom = 0xff80,
+} FEATURE_PROFILE_TYPE_EX, *PFEATURE_PROFILE_TYPE_EX;

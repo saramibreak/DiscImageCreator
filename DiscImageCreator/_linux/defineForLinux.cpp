@@ -382,6 +382,12 @@ int ReadFile(int fd, void* inbuf, unsigned long size, unsigned long* d, void* e)
 	return ret = ret != -1 ? TRUE : FALSE;
 }
 
+off_t SetFilePointer(int fd, off_t pos, void* a, int origin)
+{
+	UNREFERENCED_PARAMETER(a);
+	return lseek(fd, pos, origin);
+}
+
 unsigned int Sleep(unsigned long seconds)
 {
 	return sleep((unsigned int)seconds / 1000);
