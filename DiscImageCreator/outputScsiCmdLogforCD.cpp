@@ -1135,6 +1135,23 @@ VOID OutputTocWithPregap(
 		}
 		OutputDiscLogA("\n");
 	}
+	if (pDisc->SUB.byDesync) {
+		OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(TOC with pregap on desync));
+		for (INT i = pDisc->SCSI.toc.FirstTrack - 1; i < pDisc->SCSI.toc.LastTrack; i++) {
+			OutputDiscLogA("\tTrack %2u, Ctl %u, Mode %u", i + 1,
+				pDisc->SUB.lpCtlList[i], pDisc->MAIN.lpModeList[i]);
+
+			for (UINT j = 0; j < MAXIMUM_NUMBER_INDEXES; j++) {
+				if (pDisc->SUB.lpFirstLBAListOnSubSync[i][j] != -1) {
+					OutputDiscLogA(", Index%u %6d", j, pDisc->SUB.lpFirstLBAListOnSubSync[i][j]);
+				}
+				else if (j == 0) {
+					OutputDiscLogA(",              ");
+				}
+			}
+			OutputDiscLogA("\n");
+		}
+	}
 }
 
 VOID OutputCDOffset(
