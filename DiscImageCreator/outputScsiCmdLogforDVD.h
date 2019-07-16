@@ -42,7 +42,8 @@ VOID OutputDVDCopyrightManagementInformation(
 VOID OutputBDStructureFormat(
 	BYTE byFormatCode,
 	WORD wFormatLength,
-	LPBYTE lpFormat
+	LPBYTE lpFormat,
+	INT nPacCnt
 );
 
 VOID OutputManufacturingInfoForXbox(

@@ -630,6 +630,158 @@ VOID OutputFsVolumeDescriptorSequence(
 	return;
 }
 
+VOID OutputDVDRamLayerDescriptor(
+	PDISC pDisc,
+	LPBYTE lpBuf
+) {
+	if ((lpBuf[0] & 0x0f) == 1) { // ECMA-272
+		// TODO
+	}
+	else if ((lpBuf[0] & 0x0f) == 6) { // ECMA-330
+		OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(PhysicalFormatInformation)
+			"\t                                      Disk Category: %s\n"
+			"\t                                     Version Number: %d\n"
+			"\t                                          Disk size: %s\n"
+			"\t                              Maximum transfer rate: %s\n"
+			"\t                         Number of recording layers: %s\n"
+			"\t                           Type of recording layers: %s\n"
+			"\t                         Average Channel bit length: %s\n"
+			"\t                                Average track pitch: %s\n"
+			"\t         First Recorded Data Field of the Data Zone: %7u (%#x)\n"
+			"\t          Last Recorded Data Field of the Data Zone: %7u (%#x)\n"
+			"\t                                            BCAFlag: %s\n"
+			"\t                           Disk type identification: %s\n"
+			"\t                                           Velocity: %s\n"
+			"\t                             Read power at Velocity: %s\n"
+			"\t                  Adaptive write pulse control mode: case %s\n"
+			"\t                         Peak power for land tracks: %02x\n"
+			"\t                       Bias power 1 for land tracks: %02x\n"
+			"\t                       Bias power 2 for land tracks: %02x\n"
+			"\t                       Bias power 3 for land tracks: %02x\n"
+			"\t                       Peak power for groove tracks: %02x\n"
+			"\t                     Bias power 1 for groove tracks: %02x\n"
+			"\t                     Bias power 2 for groove tracks: %02x\n"
+			"\t                     Bias power 3 for groove tracks: %02x\n"
+			"\t                               First pulse end time: %02x\n"
+			"\t                               First pulse duration: %02x\n"
+			"\t                            Multiple pulse duration: %02x\n"
+			"\t                              Last pulse start time: %02x\n"
+			"\t                                Last pulse duration: %02x\n"
+			"\t Bias power 2 duration on land tracks at Velocity 1: %02x\n"
+			"\t  First pulse start time, Mark 3T, Leading Space 3T: direction is the %s to the laser spot scanning, %02x\n"
+			"\t  First pulse start time, Mark 4T, Leading Space 3T: direction is the %s to the laser spot scanning, %02x\n"
+			"\t  First pulse start time, Mark 5T, Leading Space 3T: direction is the %s to the laser spot scanning, %02x\n"
+			"\t First pulse start time, Mark >5T, Leading Space 3T: direction is the %s to the laser spot scanning, %02x\n"
+			"\t  First pulse start time, Mark 3T, Leading Space 4T: direction is the %s to the laser spot scanning, %02x\n"
+			"\t  First pulse start time, Mark 4T, Leading Space 4T: direction is the %s to the laser spot scanning, %02x\n"
+			"\t  First pulse start time, Mark 5T, Leading Space 4T: direction is the %s to the laser spot scanning, %02x\n"
+			"\t First pulse start time, Mark >5T, Leading Space 4T: direction is the %s to the laser spot scanning, %02x\n"
+			"\t  First pulse start time, Mark 3T, Leading Space 5T: direction is the %s to the laser spot scanning, %02x\n"
+			"\t  First pulse start time, Mark 4T, Leading Space 5T: direction is the %s to the laser spot scanning, %02x\n"
+			"\t  First pulse start time, Mark 5T, Leading Space 5T: direction is the %s to the laser spot scanning, %02x\n"
+			"\t First pulse start time, Mark >5T, Leading Space 5T: direction is the %s to the laser spot scanning, %02x\n"
+			"\t First pulse start time, Mark 3T, Leading Space >5T: direction is the %s to the laser spot scanning, %02x\n"
+			"\t First pulse start time, Mark 4T, Leading Space >5T: direction is the %s to the laser spot scanning, %02x\n"
+			"\t First pulse start time, Mark 5T, Leading Space >5T: direction is the %s to the laser spot scanning, %02x\n"
+			"\tFirst pulse start time, Mark >5T, Leading Space >5T: direction is the %s to the laser spot scanning, %02x\n"
+			"\t    Last pulse end time, Mark 3T, Trailing Space 3T: %02x\n"
+			"\t    Last pulse end time, Mark 4T, Trailing Space 3T: %02x\n"
+			"\t    Last pulse end time, Mark 5T, Trailing Space 3T: %02x\n"
+			"\t   Last pulse end time, Mark >5T, Trailing Space 3T: %02x\n"
+			"\t    Last pulse end time, Mark 3T, Trailing Space 4T: %02x\n"
+			"\t    Last pulse end time, Mark 4T, Trailing Space 4T: %02x\n"
+			"\t    Last pulse end time, Mark 5T, Trailing Space 4T: %02x\n"
+			"\t   Last pulse end time, Mark >5T, Trailing Space 4T: %02x\n"
+			"\t    Last pulse end time, Mark 3T, Trailing Space 5T: %02x\n"
+			"\t    Last pulse end time, Mark 4T, Trailing Space 5T: %02x\n"
+			"\t    Last pulse end time, Mark 5T, Trailing Space 5T: %02x\n"
+			"\t   Last pulse end time, Mark >5T, Trailing Space 5T: %02x\n"
+			"\t   Last pulse end time, Mark 3T, Trailing Space >5T: %02x\n"
+			"\t   Last pulse end time, Mark 4T, Trailing Space >5T: %02x\n"
+			"\t   Last pulse end time, Mark 5T, Trailing Space >5T: %02x\n"
+			"\t  Last pulse end time, Mark >5T, Trailing Space >5T: %02x\n"
+			"\t                           Disk manufacturer's name: %.48s\n"
+			"\t      Disk manufacturer's supplementary information: %.16s\n"
+			"\t                                                     Write power control parameters\n"
+			"\t                                                                         Identifier: %02x%02x\n"
+			"\t        Ratio of Peak power for land tracks to threshold peak power for land tracks: %02x\n"
+			"\t                                                             T     Target asymmetry: %s, %02x\n"
+			"\t                                                               Temporary Peak power: %02x\n"
+			"\t                                                             Temporary Bias power 1: %02x\n"
+			"\t                                                             Temporary Bias power 2: %02x\n"
+			"\t                                                             Temporary Bias power 3: %02x\n"
+			"\t   Ratio of Peak power for groove tracks to threshold peak power for groove tracks : %02x\n"
+			"\t     Ratio of Peak power for land tracks to threshold 6T peak power for land tracks: %02x\n"
+			"\tRatio of Peak power for groove tracks to threshold 6T peak power for groove tracks : %02x\n"
+			, (lpBuf[0] & 0x10) == 0x10 ? "rewritable disk" : "other"
+			, lpBuf[0] & 0x0f
+			, (lpBuf[1] & 0xf0) == 0 ? "120mm" : "80mm"
+			, (lpBuf[1] & 0x0f) == 0x0f ? "not specified" : "other"
+			, (lpBuf[2] & 0x60) == 0 ? "single layer" : "other"
+			, (lpBuf[2] & 0x0f) == 0x04 ? "rewritable recording layer" : "other"
+			, (lpBuf[3] & 0xf0) == 0x40 ? "0,140 um to 0,148 um" : "other"
+			, (lpBuf[3] & 0x0f) == 0x02 ? "0,615 um" : "other"
+			, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], 0))
+			, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], 0))
+			, MAKEUINT(MAKEWORD(lpBuf[11], lpBuf[10]), MAKEWORD(lpBuf[9], 0))
+			, MAKEUINT(MAKEWORD(lpBuf[11], lpBuf[10]), MAKEWORD(lpBuf[9], 0))
+			, (lpBuf[16] & 0x80) == 0x80 ? "Exist" : "No"
+			, lpBuf[32] == 0 ? "disk shall not be recorded without a case" : "disk may be recorded with or without a case"
+			, lpBuf[500] == 0x52 ? "8,2 m/s" : "other"
+			, lpBuf[501] == 0x0a ? "1,0 mW" : "other"
+			, (lpBuf[502] & 0x80) == 0x80 ? "2" : "1"
+			, lpBuf[503], lpBuf[504], lpBuf[505], lpBuf[506]
+			, lpBuf[507], lpBuf[508], lpBuf[509], lpBuf[510]
+			, lpBuf[511], lpBuf[512], lpBuf[513], lpBuf[514]
+			, lpBuf[515], lpBuf[516]
+			, (lpBuf[517] & 0x80) == 0x80 ? "opposite" : "same"
+			, lpBuf[517] & 0x3f
+			, (lpBuf[518] & 0x80) == 0x80 ? "opposite" : "same"
+			, lpBuf[518] & 0x3f
+			, (lpBuf[519] & 0x80) == 0x80 ? "opposite" : "same"
+			, lpBuf[519] & 0x3f
+			, (lpBuf[520] & 0x80) == 0x80 ? "opposite" : "same"
+			, lpBuf[520] & 0x3f
+			, (lpBuf[521] & 0x80) == 0x80 ? "opposite" : "same"
+			, lpBuf[521] & 0x3f
+			, (lpBuf[522] & 0x80) == 0x80 ? "opposite" : "same"
+			, lpBuf[522] & 0x3f
+			, (lpBuf[523] & 0x80) == 0x80 ? "opposite" : "same"
+			, lpBuf[523] & 0x3f
+			, (lpBuf[524] & 0x80) == 0x80 ? "opposite" : "same"
+			, lpBuf[524] & 0x3f
+			, (lpBuf[525] & 0x80) == 0x80 ? "opposite" : "same"
+			, lpBuf[525] & 0x3f
+			, (lpBuf[526] & 0x80) == 0x80 ? "opposite" : "same"
+			, lpBuf[526] & 0x3f
+			, (lpBuf[527] & 0x80) == 0x80 ? "opposite" : "same"
+			, lpBuf[527] & 0x3f
+			, (lpBuf[528] & 0x80) == 0x80 ? "opposite" : "same"
+			, lpBuf[528] & 0x3f
+			, (lpBuf[529] & 0x80) == 0x80 ? "opposite" : "same"
+			, lpBuf[529] & 0x3f
+			, (lpBuf[530] & 0x80) == 0x80 ? "opposite" : "same"
+			, lpBuf[530] & 0x3f
+			, (lpBuf[531] & 0x80) == 0x80 ? "opposite" : "same"
+			, lpBuf[531] & 0x3f
+			, (lpBuf[532] & 0x80) == 0x80 ? "opposite" : "same"
+			, lpBuf[532] & 0x3f
+			, lpBuf[533], lpBuf[534], lpBuf[535], lpBuf[536], lpBuf[537], lpBuf[538]
+			, lpBuf[539], lpBuf[540], lpBuf[541], lpBuf[542], lpBuf[543], lpBuf[544]
+			, lpBuf[545], lpBuf[546], lpBuf[547], lpBuf[548]
+			, (LPCH)&lpBuf[549], (LPCH)&lpBuf[597]
+			, lpBuf[613], lpBuf[614]
+			, lpBuf[615]
+			, (lpBuf[616] & 0x80) == 0x80 ? "in case of minus sign" : "in case of 0 or plus sign"
+			, lpBuf[616] & 0x3f
+			, lpBuf[617]
+			, lpBuf[618], lpBuf[619], lpBuf[620], lpBuf[621], lpBuf[622], lpBuf[623]
+		);
+		pDisc->DVD.version = (UCHAR)(lpBuf[0] & 0x0f);
+		pDisc->DVD.ucBca = (UCHAR)((lpBuf[16] >> 7) & 0x01);
+	}
+}
+
 VOID OutputDVDLayerDescriptor(
 	PDISC pDisc,
 	PDVD_FULL_LAYER_DESCRIPTOR dvdLayer,
@@ -880,11 +1032,50 @@ VOID OutputDVDMediaKeyBlock(
 }
 
 VOID OutputDiscDefinitionStructure(
-	LPBYTE lpFormat,
-	WORD wFormatLength
+	UCHAR version,
+	LPBYTE lpFormat
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DiscDefinitionStructure)"\t");
-	OutputDVDCommonInfo(lpFormat, wFormatLength);
+	if (version == 1) {
+
+	}
+	else if (version == 6) {
+		WORD zonesNum = MAKEWORD(lpFormat[11], lpFormat[10]);
+		OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DiscDefinitionStructure)
+			"\t                        DDS Identifier: %02x%02x\n"
+			"\t                    Disk Certification\n"
+			"\t                            Formatting: %s\n"
+			"\t                           The disk has %s certified by a user\n"
+			"\t                           The disk has %s certified by a manufacturer\n"
+			"\t                  DDS/PDL Update Count: %d\n"
+			"\t                      Number of Groups: %d\n"
+			"\t                       Number of Zones: %d\n"
+			"\tFirst sector in the Primary spare area: %7u (%#x)\n"
+			"\t Last sector in the Primary spare area: %7u (%#x)\n"
+			"\t                  First logical sector: %7u (%#x)\n"
+			, lpFormat[0], lpFormat[1]
+			, (lpFormat[3] & 0x80) == 0x80 ? "in process" : "has been completed"
+			, (lpFormat[3] & 0x10) == 0x10 ? "been" : "not been"
+			, (lpFormat[3] & 0x01) == 0x01 ? "been" : "not been"
+			, MAKEUINT(MAKEWORD(lpFormat[7], lpFormat[6]), MAKEWORD(lpFormat[5], lpFormat[4]))
+			, MAKEWORD(lpFormat[9], lpFormat[8])
+			, zonesNum
+			, MAKEUINT(MAKEWORD(lpFormat[83], lpFormat[82]), MAKEWORD(lpFormat[81], lpFormat[80]))
+			, MAKEUINT(MAKEWORD(lpFormat[83], lpFormat[82]), MAKEWORD(lpFormat[81], lpFormat[80]))
+			, MAKEUINT(MAKEWORD(lpFormat[87], lpFormat[86]), MAKEWORD(lpFormat[85], lpFormat[84]))
+			, MAKEUINT(MAKEWORD(lpFormat[87], lpFormat[86]), MAKEWORD(lpFormat[85], lpFormat[84]))
+			, MAKEUINT(MAKEWORD(lpFormat[91], lpFormat[90]), MAKEWORD(lpFormat[89], lpFormat[88]))
+			, MAKEUINT(MAKEWORD(lpFormat[91], lpFormat[90]), MAKEWORD(lpFormat[89], lpFormat[88]))
+		);
+		for (WORD i = 256, j = 0; j < zonesNum; i += 4, j++) {
+			OutputDiscLogA("\t                Start LSN for the Zone: %7u (%#x)\n"
+				, MAKEUINT(MAKEWORD(lpFormat[i + 3], lpFormat[i + 2]), MAKEWORD(lpFormat[i + 1], lpFormat[i]))
+				, MAKEUINT(MAKEWORD(lpFormat[i + 3], lpFormat[i + 2]), MAKEWORD(lpFormat[i + 1], lpFormat[i]))
+			);
+		}
+	}
+	else {
+		OutputCDMain(fileDisc, lpFormat, 0, 2048);
+	}
 }
 
 VOID OutputDiscMediumStatus(
@@ -1243,7 +1434,12 @@ VOID OutputDVDStructureFormat(
 	switch (byFormatCode) {
 	case DvdPhysicalDescriptor:
 	case 0x10:
-		OutputDVDLayerDescriptor(pDisc, (PDVD_FULL_LAYER_DESCRIPTOR)lpFormat, lpdwSectorLength, layerNumber);
+		if (pDisc->SCSI.wCurrentMedia == ProfileDvdRam || pDisc->SCSI.wCurrentMedia == ProfileHDDVDRam) {
+			OutputDVDRamLayerDescriptor(pDisc, lpFormat);
+		}
+		else {
+			OutputDVDLayerDescriptor(pDisc, (PDVD_FULL_LAYER_DESCRIPTOR)lpFormat, lpdwSectorLength, layerNumber);
+		}
 		break;
 	case DvdCopyrightDescriptor:
 		OutputDVDCopyrightDescriptor((PDVD_COPYRIGHT_DESCRIPTOR)lpFormat, &(pDisc->DVD.protect));
@@ -1264,7 +1460,7 @@ VOID OutputDVDStructureFormat(
 		OutputDVDMediaKeyBlock(lpFormat, wFormatLength);
 		break;
 	case 0x08:
-		OutputDiscDefinitionStructure(lpFormat, wFormatLength);
+		OutputDiscDefinitionStructure(pDisc->DVD.version, lpFormat);
 		break;
 	case 0x09:
 		OutputDiscMediumStatus((PDVD_RAM_MEDIUM_STATUS)lpFormat);
@@ -1453,50 +1649,58 @@ VOID OutputBDRawDefectList(
 
 VOID OutputBDPhysicalAddressControl(
 	LPBYTE lpFormat,
-	WORD wFormatLength
+	WORD wFormatLength,
+	INT nPacCnt
 ) {
-	UINT dwPac = MAKEUINT(MAKEWORD(lpFormat[4], lpFormat[3]), MAKEWORD(lpFormat[2], 0));
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(PhysicalAddressControl)
-		"\tPhysicalAddressControlIdentifier: %02x\n"
-		"\t                    FormatNumber: %02x\n"
-		, dwPac, lpFormat[5]);
-	if (dwPac == 0) {
-		INT nLen = MAKEWORD(lpFormat[7], lpFormat[6]) - 2;
-		for (WORD i = 0; i < nLen /  384; i++) {
-			OutputDiscLogA("PhysicalAddressControlHeader: ");
-			for (WORD k = 0; k < 384; k++) {
-				OutputDiscLogA("%02x ", lpFormat[10 + k + 384 * i]);
+	if (nPacCnt == 0) {
+		OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(PacHeaderList));
+		for (WORD i = 0; i < (wFormatLength - 2) / 384; i++) {
+			OutputDiscLogA(
+				"\t                       PAC ID: %.3s\n"
+				"\t            PAC format number: %02x\n"
+				"\t             PAC Update Count: %d\n"
+				"\t            Unknown PAC Rules: %02x %02x %02x %02x\n"
+				"\tUnknown PAC Entire Disc Flags: %d\n"
+				"\t           Number of Segments: %d\n"
+				, (LPCH)&lpFormat[0]
+				, lpFormat[3]
+				, MAKEUINT(MAKEWORD(lpFormat[7], lpFormat[6]), MAKEWORD(lpFormat[5], lpFormat[4]))
+				, lpFormat[8], lpFormat[9], lpFormat[10], lpFormat[11]
+				, lpFormat[12]
+				, lpFormat[15]
+			);
+			for (BYTE j = 0; j < lpFormat[15]; j++) {
+				OutputDiscLogA("\t Segment %d: %02x %02x %02x %02x %02x %02x %02x %02x\n"
+					, j
+					, lpFormat[16 + j * 8], lpFormat[17 + j * 8], lpFormat[18 + j * 8], lpFormat[19 + j * 8]
+					, lpFormat[20 + j * 8], lpFormat[21 + j * 8], lpFormat[22 + j * 8], lpFormat[23 + j * 8]
+				);
+
 			}
-			OutputDiscLogA("\n");
 		}
 	}
-	else if (1 <= dwPac && dwPac <= 0xfffffe) {
-		OutputDiscLogA("PhysicalAddressControlHeader: ");
-		for (WORD k = 0; k < 384; k++) {
-			OutputDiscLogA("%02x ", lpFormat[10 + k]);
+	else if (nPacCnt == 1) {
+		OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(PacHeaderList));
+		for (WORD i = 0; i < (wFormatLength - 2) / 4; i++) {
+			OutputDiscLogA(
+				"\t                       PAC ID: %.3s\n"
+				"\t            PAC format number: %02x\n"
+				, (LPCH)&lpFormat[0]
+				, lpFormat[3]
+			);
 		}
-		OutputDiscLogA("\nPhysicalAddressControlSpecificInformation: ");
-		for (WORD k = 0; k < wFormatLength; k++) {
-			OutputDiscLogA("%02x ", lpFormat[384 + k]);
-		}
-		OutputDiscLogA("\n");
 	}
-	else if (dwPac == 0xffffff) {
-		INT nLen = MAKEWORD(lpFormat[7], lpFormat[6]) - 2;
-		for (WORD i = 0; i < nLen / 4; i++) {
-			OutputDiscLogA("PhysicalAddressControlIdentifierAndFormat: ");
-			for (WORD k = 0; k < 4; k++) {
-				OutputDiscLogA("%02x ", lpFormat[10 + k + 4 * i]);
-			}
-			OutputDiscLogA("\n");
-		}
+	else {
+		OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(PacData));
+		OutputCDMain(fileDisc, lpFormat, 0, (INT)wFormatLength);
 	}
 }
 
 VOID OutputBDStructureFormat(
 	BYTE byFormatCode,
 	WORD wFormatLength,
-	LPBYTE lpFormat
+	LPBYTE lpFormat,
+	INT nPacCnt
 ) {
 	switch (byFormatCode) {
 	case 0:
@@ -1508,7 +1712,7 @@ VOID OutputBDStructureFormat(
 		break;
 		// format 0x04 - 0x07 is reserved
 	case 0x08:
-		OutputDiscDefinitionStructure(lpFormat, wFormatLength);
+		OutputDiscDefinitionStructure(0, lpFormat);
 		break;
 	case 0x09:
 		OutputDiscMediumStatus((PDVD_RAM_MEDIUM_STATUS)lpFormat);
@@ -1522,7 +1726,7 @@ VOID OutputBDStructureFormat(
 		break;
 		// format 0x13 - 0x2f is reserved
 	case 0x30:
-		OutputBDPhysicalAddressControl(lpFormat, wFormatLength);
+		OutputBDPhysicalAddressControl(lpFormat, wFormatLength, nPacCnt);
 		break;
 		// formats 0x31 through 0x7F are not yet defined
 	case 0x80:

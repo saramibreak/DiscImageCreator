@@ -1066,6 +1066,9 @@ BOOL ReadDiscStructure(
 		}
 	}
 
+	INT nPacCnt = 0; // BD, format 0x30
+	INT nPacNum = 0; // BD, format 0x30
+	BYTE pacIdList[256][4] = {}; // BD, format 0x30
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DiscStructure));
 	for (WORD i = 0; i < wEntrySize; i++) {
 		PDVD_STRUCTURE_LIST_ENTRY pEntry = 
@@ -1108,19 +1111,10 @@ BOOL ReadDiscStructure(
 				continue;
 			}
 			else if (pEntry->FormatCode == 0x06 || pEntry->FormatCode == 0x07) {
-				if (pDisc->DVD.protect == cprm) {
-					if (ExecReadingKey(pDevice, pszFullPath)) {
-						OutputDiscLogA("Outputted to _CSSKey.txt\n\n");
-					}
-					else {
-						OutputDiscLogA("Failed to run CSS.exe\n\n");
-						return FALSE;
-					}
-				}
-				else {
+				if (pDisc->DVD.protect != cprm) {
 					OutputDiscLogA("Skiped because of DVD with CPRM only\n\n");
+					continue;
 				}
-				continue;
 			}
 			else if ((0x08 <= pEntry->FormatCode && pEntry->FormatCode <= 0x0b) &&
 				pDisc->SCSI.wCurrentMedia != ProfileDvdRam) {
@@ -1158,12 +1152,15 @@ BOOL ReadDiscStructure(
 		}
 		else if (*pExecType == bd) {
 			if ((pEntry->FormatCode == 0x08 || pEntry->FormatCode == 0x0a ||
-				pEntry->FormatCode == 0x12 || pEntry->FormatCode == 0x30) &&
+				pEntry->FormatCode == 0x12) &&
 				pDisc->SCSI.wCurrentMedia != ProfileBDRSequentialWritable &&
 				pDisc->SCSI.wCurrentMedia != ProfileBDRRandomWritable &&
 				pDisc->SCSI.wCurrentMedia != ProfileBDRewritable) {
 				OutputDiscLogA("Skiped because of BD-R, RW only\n\n");
 				continue;
+			}
+			if (pEntry->FormatCode == 0x30) {
+				wFormatLen = 65535;
 			}
 		}
 		LPBYTE lpFormat = (LPBYTE)calloc(wFormatLen, sizeof(BYTE));
@@ -1232,8 +1229,49 @@ BOOL ReadDiscStructure(
 					fwrite(lpFormat, sizeof(BYTE), wFormatLen, fpPic);
 					FcloseAndNull(fpPic);
 				}
+				else if (pEntry->FormatCode == 0x30) {
+					if (nPacCnt == 0) {
+						nPacNum = (MAKEWORD(lpFormat[1], lpFormat[0]) - 2) / 384;
+					}
+				}
 				OutputBDStructureFormat(pEntry->FormatCode,
-					(WORD)(wFormatLen - sizeof(DVD_DESCRIPTOR_HEADER)),	lpFormat + sizeof(DVD_DESCRIPTOR_HEADER));
+					MAKEWORD(lpFormat[1], lpFormat[0]), lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), nPacCnt);
+				if (pEntry->FormatCode == 0x30) {
+					if (nPacCnt == 0) {
+						pacIdList[1][0] = 0xff;
+						pacIdList[1][1] = 0xff;
+						pacIdList[1][2] = 0xff;
+						pacIdList[1][3] = 0xff;
+						cdb.RMDBlockNumber[0] = pacIdList[1][0];
+						cdb.RMDBlockNumber[1] = pacIdList[1][1];
+						cdb.RMDBlockNumber[2] = pacIdList[1][2];
+						cdb.RMDBlockNumber[3] = pacIdList[1][3];
+						nPacCnt++;
+						i--;
+					}
+					else if (nPacCnt == 1) {
+						for (INT k = 2, m = 1; m <= nPacNum; k++, m++) {
+							pacIdList[k][0] = lpFormat[4 * m];
+							pacIdList[k][1] = lpFormat[5 * m];
+							pacIdList[k][2] = lpFormat[6 * m];
+							pacIdList[k][3] = lpFormat[7 * m];
+						}
+						cdb.RMDBlockNumber[0] = pacIdList[2][0];
+						cdb.RMDBlockNumber[1] = pacIdList[2][1];
+						cdb.RMDBlockNumber[2] = pacIdList[2][2];
+						cdb.RMDBlockNumber[3] = pacIdList[2][3];
+						nPacCnt++;
+						i--;
+					}
+					else if (nPacCnt < nPacNum + 1) {
+						cdb.RMDBlockNumber[0] = pacIdList[nPacCnt + 1][0];
+						cdb.RMDBlockNumber[1] = pacIdList[nPacCnt + 1][1];
+						cdb.RMDBlockNumber[2] = pacIdList[nPacCnt + 1][2];
+						cdb.RMDBlockNumber[3] = pacIdList[nPacCnt + 1][3];
+						nPacCnt++;
+						i--;
+					}
+				}
 			}
 		}
 		OutputDiscLogA("\n");

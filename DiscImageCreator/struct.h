@@ -361,7 +361,8 @@ typedef struct _DISC {
 	} PROTECT;
 	struct _DVD {
 		UCHAR ucBca;
-		UCHAR pad[3];
+		UCHAR version; // for DVD-RAM
+		UCHAR pad[2];
 		DISC_TYPE disc;
 		PROTECT_TYPE_DVD protect;
 		UINT fixNum;
