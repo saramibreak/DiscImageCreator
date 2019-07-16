@@ -409,8 +409,10 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 									throw FALSE;
 								}
 							}
+							if (discData.SCSI.wCurrentMedia == ProfileDvdRam || discData.SCSI.wCurrentMedia == ProfileHDDVDRam) {
+								ReadTOC(pExtArg, pExecType, &device, &discData);
+							}
 							bRet = ReadDiscStructure(pExecType, pExtArg, &device, &discData, pszFullPath);
-
 							if (pExtArg->byCmi) {
 								bRet = ReadDVDForCMI(pExtArg, &device, &discData);
 							}
