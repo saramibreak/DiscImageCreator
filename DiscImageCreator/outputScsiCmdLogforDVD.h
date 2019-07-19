@@ -40,6 +40,7 @@ VOID OutputDVDCopyrightManagementInformation(
 );
 
 VOID OutputBDStructureFormat(
+	PDISC pDisc,
 	BYTE byFormatCode,
 	WORD wFormatLength,
 	LPBYTE lpFormat,

@@ -80,6 +80,24 @@ BOOL ModeSense10(
 	PDISC pDisc
 );
 
+BOOL SendKey(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	BYTE agid,
+	BYTE keyFormat,
+	LPBYTE key,
+	WORD keyLength
+);
+
+BOOL ReportKey(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	BYTE agid,
+	BYTE keyFormat,
+	LPBYTE key,
+	WORD keyLength
+);
+
 BOOL SetDiscSpeed(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,

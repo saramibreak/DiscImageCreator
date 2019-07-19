@@ -983,11 +983,43 @@ VOID OutputDVDDiskKeyDescriptor(
 }
 
 VOID OutputDiscBCADescriptor(
+	PDISC pDisc,
 	PDVD_BCA_DESCRIPTOR dvdBca,
 	WORD wFormatLength
 ) {
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(BCAInformation));
-	OutputCDMain(fileDisc, dvdBca->BCAInformation, 0, wFormatLength);
+	if (pDisc->DVD.protect == cprm) {
+		OutputDiscLogA(
+			"\t   BCA Record ID: %d\n"
+			"\t  Version Number: %d\n"
+			"\t     Data Length: %d\n"
+			"\tMedia Identifier:"
+			, MAKEWORD(dvdBca->BCAInformation[1], dvdBca->BCAInformation[0])
+			, dvdBca->BCAInformation[2], dvdBca->BCAInformation[3]
+		);
+		for (BYTE i = 0; i < dvdBca->BCAInformation[3]; i++) {
+			OutputDiscLogA(" %02x", dvdBca->BCAInformation[4 + i]);
+		}
+		OutputDiscLogA("\n");
+		if (pDisc->SCSI.wCurrentMedia == ProfileDvdRecordable ||
+			pDisc->SCSI.wCurrentMedia == ProfileDvdRewritable) {
+			OutputDiscLogA(
+				"\t      BCA Record ID: %d\n"
+				"\t     Version Number: %d\n"
+				"\t        Data Length: %d\n"
+				"\tMKB Validation Data:"
+				, MAKEWORD(dvdBca->BCAInformation[13], dvdBca->BCAInformation[12])
+				, dvdBca->BCAInformation[14], dvdBca->BCAInformation[15]
+			);
+			for (BYTE i = 0; i < dvdBca->BCAInformation[15]; i++) {
+				OutputDiscLogA(" %02x", dvdBca->BCAInformation[16 + i]);
+			}
+			OutputDiscLogA("\n");
+		}
+	}
+	else {
+		OutputCDMain(fileDisc, dvdBca->BCAInformation, 0, wFormatLength);
+	}
 }
 
 VOID OutputDVDManufacturerDescriptor(
@@ -1010,11 +1042,19 @@ VOID OutputDVDManufacturerDescriptor(
 }
 
 VOID OutputDVDMediaId(
-	LPBYTE lpFormat,
-	WORD wFormatLength
+	LPBYTE lpFormat
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(Media ID));
-	OutputDVDCommonInfo(lpFormat, wFormatLength);
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(MediaID)
+		"\t           Media Identifier:");
+	for (INT i = 0; i < 8; i++) {
+		OutputDiscLogA(" %02x", lpFormat[i]);
+	}
+	OutputDiscLogA(
+		"\n\tMessage Authentication Code:");
+	for (INT i = 8; i < 18; i++) {
+		OutputDiscLogA(" %02x", lpFormat[i]);
+	}
+	OutputDiscLogA(" -> it seems it's always random\n");
 }
 
 VOID OutputDVDMediaKeyBlock(
@@ -1022,13 +1062,18 @@ VOID OutputDVDMediaKeyBlock(
 	WORD wFormatLength
 ) {
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(MediaKeyBlock)
-		"\tMedia Key Block Total Packs: %u"
-		"\tmedia key block: ",
-		lpFormat[3]);
-	for (WORD k = 0; k < wFormatLength; k++) {
-		OutputDiscLogA("%02x", lpFormat[k]);
+		"\tMedia Key Block Total Packs: %u\n"
+		, *(lpFormat - 1));
+	OutputDiscLogA(
+		"\tMessage Authentication Code:");
+	for (INT i = 0; i < 10; i++) {
+		OutputDiscLogA(" %02x", lpFormat[i]);
 	}
-	OutputDiscLogA("\n");
+	OutputDiscLogA(
+		" -> it seems it's always random\n"
+		"\tMedia Key Block\n"
+	);
+	OutputCDMain(fileDisc, lpFormat + 16, 0, (INT)(wFormatLength  - 16));
 }
 
 VOID OutputDiscDefinitionStructure(
@@ -1066,7 +1111,7 @@ VOID OutputDiscDefinitionStructure(
 			, MAKEUINT(MAKEWORD(lpFormat[91], lpFormat[90]), MAKEWORD(lpFormat[89], lpFormat[88]))
 			, MAKEUINT(MAKEWORD(lpFormat[91], lpFormat[90]), MAKEWORD(lpFormat[89], lpFormat[88]))
 		);
-		for (WORD i = 256, j = 0; j < zonesNum; i += 4, j++) {
+		for (INT i = 256, j = 0; j < (INT)zonesNum; i += 4, j++) {
 			OutputDiscLogA("\t                Start LSN for the Zone: %7u (%#x)\n"
 				, MAKEUINT(MAKEWORD(lpFormat[i + 3], lpFormat[i + 2]), MAKEWORD(lpFormat[i + 1], lpFormat[i]))
 				, MAKEUINT(MAKEWORD(lpFormat[i + 3], lpFormat[i + 2]), MAKEWORD(lpFormat[i + 1], lpFormat[i]))
@@ -1141,25 +1186,28 @@ VOID OutputDVDRecordingManagementAreaData(
 ) {
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDRecordingManagementAreaData)
 		"\tLastRecordedRMASectorNumber: %u\n"
-		"\t                   RMDBytes: \n",
-		MAKEUINT(MAKEWORD(dvdRecordingMan->LastRecordedRMASectorNumber[3],
-		dvdRecordingMan->LastRecordedRMASectorNumber[2]),
-		MAKEWORD(dvdRecordingMan->LastRecordedRMASectorNumber[1],
-		dvdRecordingMan->LastRecordedRMASectorNumber[0])));
-	ULONG nRoop = (wFormatLength - sizeof(DVD_RECORDING_MANAGEMENT_AREA_DATA)) / DISC_RAW_READ_SIZE;
-	for (ULONG i = 0; i < nRoop; i++) {
-		OutputCDMain(fileDisc, dvdRecordingMan->RMDBytes + DISC_RAW_READ_SIZE * i, 0, DISC_RAW_READ_SIZE);
-	}
+		"\t                   RMDBytes: \n"
+		, MAKEUINT(MAKEWORD(dvdRecordingMan->LastRecordedRMASectorNumber[3]
+		, dvdRecordingMan->LastRecordedRMASectorNumber[2])
+		, MAKEWORD(dvdRecordingMan->LastRecordedRMASectorNumber[1]
+		, dvdRecordingMan->LastRecordedRMASectorNumber[0]))
+	);
+	OutputCDMain(fileDisc, dvdRecordingMan->RMDBytes, 0
+		, (INT)(wFormatLength - sizeof(DVD_RECORDING_MANAGEMENT_AREA_DATA)));
 }
 
 VOID OutputDVDPreRecordedInformation(
 	PDVD_PRERECORDED_INFORMATION dvdPreRecorded
 ) {
+	UINT addr = MAKEUINT(MAKEWORD(dvdPreRecorded->LastAddressOfDataRecordableArea[0]
+		, dvdPreRecorded->LastAddressOfDataRecordableArea[1])
+		, MAKEWORD(dvdPreRecorded->LastAddressOfDataRecordableArea[2], 0));
+
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDPreRecordedInformation)
 		"\t                      FieldID_1: %02x\n"
 		"\t            DiscApplicatiowCode: %02x\n"
 		"\t               DiscPhysicalCode: %02x\n"
-		"\tLastAddressOfDataRecordableArea: %u\n"
+		"\tLastAddressOfDataRecordableArea: %u (%#x)\n"
 		"\t                  ExtensiowCode: %02x\n"
 		"\t                    PartVers1on: %02x\n"
 		"\t                      FieldID_2: %02x\n"
@@ -1167,36 +1215,29 @@ VOID OutputDVDPreRecordedInformation(
 		"\t                 WavelengthCode: %02x\n"
 		"\t              WriteStrategyCode: %02x%02x%02x%02x\n"
 		"\t                      FieldID_3: %02x\n"
-		"\t               ManufacturerId_3: %02x%02x%02x%02x%02x%02x\n"
+		"\t               ManufacturerId_3: %.6s\n"
 		"\t                      FieldID_4: %02x\n"
-		"\t               ManufacturerId_4: %02x%02x%02x%02x%02x%02x\n"
+		"\t               ManufacturerId_4: %.6s\n"
 		"\t                      FieldID_5: %02x\n"
-		"\t               ManufacturerId_5: %02x%02x%02x%02x%02x%02x\n",
-		dvdPreRecorded->FieldID_1,
-		dvdPreRecorded->DiscApplicationCode,
-		dvdPreRecorded->DiscPhysicalCode,
-		MAKEUINT(MAKEWORD(dvdPreRecorded->LastAddressOfDataRecordableArea[0]
-			, dvdPreRecorded->LastAddressOfDataRecordableArea[1]),
-		MAKEWORD(dvdPreRecorded->LastAddressOfDataRecordableArea[2], 0)),
-		dvdPreRecorded->ExtensionCode,
-		dvdPreRecorded->PartVers1on,
-		dvdPreRecorded->FieldID_2,
-		dvdPreRecorded->OpcSuggestedCode,
-		dvdPreRecorded->WavelengthCode,
-		dvdPreRecorded->WriteStrategyCode[0], dvdPreRecorded->WriteStrategyCode[1],
-		dvdPreRecorded->WriteStrategyCode[2], dvdPreRecorded->WriteStrategyCode[3],
-		dvdPreRecorded->FieldID_3,
-		dvdPreRecorded->ManufacturerId_3[0], dvdPreRecorded->ManufacturerId_3[1],
-		dvdPreRecorded->ManufacturerId_3[2], dvdPreRecorded->ManufacturerId_3[3],
-		dvdPreRecorded->ManufacturerId_3[4], dvdPreRecorded->ManufacturerId_3[5],
-		dvdPreRecorded->FieldID_4,
-		dvdPreRecorded->ManufacturerId_4[0], dvdPreRecorded->ManufacturerId_4[1],
-		dvdPreRecorded->ManufacturerId_4[2], dvdPreRecorded->ManufacturerId_4[3],
-		dvdPreRecorded->ManufacturerId_4[4], dvdPreRecorded->ManufacturerId_4[5],
-		dvdPreRecorded->FieldID_5,
-		dvdPreRecorded->ManufacturerId_5[0], dvdPreRecorded->ManufacturerId_5[1],
-		dvdPreRecorded->ManufacturerId_5[2], dvdPreRecorded->ManufacturerId_5[3],
-		dvdPreRecorded->ManufacturerId_5[4], dvdPreRecorded->ManufacturerId_5[5]);
+		"\t               ManufacturerId_5: %.6s\n"
+		, dvdPreRecorded->FieldID_1
+		, dvdPreRecorded->DiscApplicationCode
+		, dvdPreRecorded->DiscPhysicalCode
+		, addr, addr
+		, dvdPreRecorded->ExtensionCode
+		, dvdPreRecorded->PartVers1on
+		, dvdPreRecorded->FieldID_2
+		, dvdPreRecorded->OpcSuggestedCode
+		, dvdPreRecorded->WavelengthCode
+		, dvdPreRecorded->WriteStrategyCode[0], dvdPreRecorded->WriteStrategyCode[1]
+		, dvdPreRecorded->WriteStrategyCode[2], dvdPreRecorded->WriteStrategyCode[3]
+		, dvdPreRecorded->FieldID_3
+		, (LPCH)&dvdPreRecorded->ManufacturerId_3[0]
+		, dvdPreRecorded->FieldID_4
+		, (LPCH)&dvdPreRecorded->ManufacturerId_4[0]
+		, dvdPreRecorded->FieldID_5
+		, (LPCH)&dvdPreRecorded->ManufacturerId_5[0]
+	);
 }
 
 VOID OutputDVDUniqueDiscIdentifer(
@@ -1448,13 +1489,13 @@ VOID OutputDVDStructureFormat(
 		OutputDVDDiskKeyDescriptor((PDVD_DISK_KEY_DESCRIPTOR)lpFormat);
 		break;
 	case DvdBCADescriptor:
-		OutputDiscBCADescriptor((PDVD_BCA_DESCRIPTOR)lpFormat, wFormatLength);
+		OutputDiscBCADescriptor(pDisc, (PDVD_BCA_DESCRIPTOR)lpFormat, wFormatLength);
 		break;
 	case DvdManufacturerDescriptor:
 		OutputDVDManufacturerDescriptor((PDVD_MANUFACTURER_DESCRIPTOR)lpFormat, &(pDisc->DVD.disc));
 		break;
 	case 0x06:
-		OutputDVDMediaId(lpFormat, wFormatLength);
+		OutputDVDMediaId(lpFormat);
 		break;
 	case 0x07:
 		OutputDVDMediaKeyBlock(lpFormat, wFormatLength);
@@ -1697,6 +1738,7 @@ VOID OutputBDPhysicalAddressControl(
 }
 
 VOID OutputBDStructureFormat(
+	PDISC pDisc,
 	BYTE byFormatCode,
 	WORD wFormatLength,
 	LPBYTE lpFormat,
@@ -1708,7 +1750,7 @@ VOID OutputBDStructureFormat(
 		break;
 		// format 0x01, 0x02 is reserved
 	case DvdBCADescriptor:
-		OutputDiscBCADescriptor((PDVD_BCA_DESCRIPTOR)lpFormat, wFormatLength);
+		OutputDiscBCADescriptor(pDisc, (PDVD_BCA_DESCRIPTOR)lpFormat, wFormatLength);
 		break;
 		// format 0x04 - 0x07 is reserved
 	case 0x08:

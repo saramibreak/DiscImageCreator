@@ -962,9 +962,24 @@ BOOL ReadDVDForCMI(
 }
 
 BOOL ExecReadingKey(
+	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
-	LPCTSTR pszPath
+	_PROTECT_TYPE_DVD protect,
+	LPCTSTR pszPath,
+	LPBYTE agid
 ) {
+	for (BYTE i = 0; i < 4; i++) {
+		SendKey(pExtArg, pDevice, i, DVD_INVALIDATE_AGID, NULL, 0);
+	}
+	BYTE reportKey[8] = {};
+	BYTE keyFormat = DVD_REPORT_AGID; // for css
+	if (protect == cprm) {
+		keyFormat = 0x11;
+	}
+	ReportKey(pExtArg, pDevice, 0, keyFormat, reportKey, sizeof(reportKey));
+	*agid = (BYTE)((reportKey[7] >> 6) & 0x03);
+	OutputDiscLogA("AGID: %d\n", *agid);
+
 	if (!CloseHandle(pDevice->hDevice)) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
@@ -973,7 +988,7 @@ BOOL ExecReadingKey(
 	try {
 		_TCHAR str[_MAX_PATH + 10] = {};
 		INT ret = 0;
-		if (GetCssCmd(pDevice, str, pszPath)) {
+		if (GetCssCmd(pDevice, str, protect, pszPath)) {
 			if ((ret = _tsystem(str)) == 1) {
 				throw FALSE;
 			}
@@ -1069,6 +1084,7 @@ BOOL ReadDiscStructure(
 	INT nPacCnt = 0; // BD, format 0x30
 	INT nPacNum = 0; // BD, format 0x30
 	BYTE pacIdList[256][4] = {}; // BD, format 0x30
+	BYTE agid = 0;
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DiscStructure));
 	for (WORD i = 0; i < wEntrySize; i++) {
 		PDVD_STRUCTURE_LIST_ENTRY pEntry = 
@@ -1078,10 +1094,12 @@ BOOL ReadDiscStructure(
 			"FormatCode: %02x, Sendable: %3s, Readable: %3s, FormatLength: %u\n", 
 			pEntry->FormatCode,	BOOLEAN_TO_STRING_YES_NO_A(pEntry->Sendable),
 			BOOLEAN_TO_STRING_YES_NO_A(pEntry->Readable), wFormatLen);
+#if 0
 		if (wFormatLen == 0) {
 			OutputDiscLogA("Skiped because length is 0\n\n");
 			continue;
 		}
+#endif
 		if (*pExecType == dvd || IsXbox(pExecType)) {
 			if (pEntry->FormatCode == 0xff) {
 				OutputDiscLogA("Skiped\n\n");
@@ -1089,7 +1107,7 @@ BOOL ReadDiscStructure(
 			}
 			else if (pEntry->FormatCode == 0x02) {
 				if (pDisc->DVD.protect == css) {
-					if (ExecReadingKey(pDevice, pszFullPath)) {
+					if (ExecReadingKey(pExtArg, pDevice, css, pszFullPath, &agid)) {
 						OutputDiscLogA("Outputted to _CSSKey.txt\n\n");
 					}
 					else {
@@ -1100,7 +1118,7 @@ BOOL ReadDiscStructure(
 				else {
 					OutputDiscLogA("Skiped because of DVD with CSS only\n\n");
 				}
-				continue;
+				continue; // skip output because disc key is random data
 			}
 			else if (pEntry->FormatCode == 0x03 && !pDisc->DVD.ucBca) {
 				OutputDiscLogA("Skiped because of no BCA data\n\n");
@@ -1111,7 +1129,14 @@ BOOL ReadDiscStructure(
 				continue;
 			}
 			else if (pEntry->FormatCode == 0x06 || pEntry->FormatCode == 0x07) {
-				if (pDisc->DVD.protect != cprm) {
+				if (pDisc->DVD.protect == cprm) {
+					if (pEntry->FormatCode == 0x06) {
+						if (ExecReadingKey(pExtArg, pDevice, cprm, pszFullPath, &agid)) {
+							cdb.AGID = (BYTE)(agid & 0x3);
+						}
+					}
+				}
+				else {
 					OutputDiscLogA("Skiped because of DVD with CPRM only\n\n");
 					continue;
 				}
@@ -1123,6 +1148,7 @@ BOOL ReadDiscStructure(
 			}
 			else if ((0x0c <= pEntry->FormatCode && pEntry->FormatCode <= 0x10) &&
 				(pDisc->SCSI.wCurrentMedia != ProfileDvdRecordable) &&
+				(pDisc->SCSI.wCurrentMedia != ProfileDvdRewritable) &&
 				(pDisc->SCSI.wCurrentMedia != ProfileDvdRWSequential)) {
 				OutputDiscLogA("Skiped because of DVD-R, RW only\n\n");
 				continue;
@@ -1133,8 +1159,7 @@ BOOL ReadDiscStructure(
 				OutputDiscLogA("Skiped because of DVD+R, RW only\n\n");
 				continue;
 			}
-			else if ((pEntry->FormatCode == 0x12 || pEntry->FormatCode == 0x15 ||
-				(0x80 <= pEntry->FormatCode && pEntry->FormatCode <= 0x86)) &&
+			else if ((pEntry->FormatCode == 0x12 || pEntry->FormatCode == 0x15) &&
 				(pDisc->SCSI.wCurrentMedia != ProfileHDDVDRom)) {
 				OutputDiscLogA("Skiped because of HD DVD only\n\n");
 				continue;
@@ -1159,9 +1184,15 @@ BOOL ReadDiscStructure(
 				OutputDiscLogA("Skiped because of BD-R, RW only\n\n");
 				continue;
 			}
-			if (pEntry->FormatCode == 0x30) {
-				wFormatLen = 65535;
+		}
+		if ((0x80 <= pEntry->FormatCode && pEntry->FormatCode <= 0x86)) {
+			if (pDisc->DVD.protect != aacs) {
+				OutputDiscLogA("Skiped because of AACS disc only\n\n");
 			}
+			continue;
+		}
+		if (wFormatLen <= 2 && pEntry->Readable) {
+			wFormatLen = 65535; // formatlen is obsolete for late drive
 		}
 		LPBYTE lpFormat = (LPBYTE)calloc(wFormatLen, sizeof(BYTE));
 		if (!lpFormat) {
@@ -1195,7 +1226,7 @@ BOOL ReadDiscStructure(
 				OutputDVDStructureFormat(pDisc, pEntry->FormatCode, (WORD)(wFormatLen - sizeof(DVD_DESCRIPTOR_HEADER))
 					, lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), &dwSectorLen, cdb.LayerNumber);
 
-				if (pEntry->FormatCode == DvdPhysicalDescriptor) {
+				if (pEntry->FormatCode == DvdPhysicalDescriptor || pEntry->FormatCode == 0x10) {
 					PDVD_FULL_LAYER_DESCRIPTOR dvdpd = (PDVD_FULL_LAYER_DESCRIPTOR)(lpFormat + sizeof(DVD_DESCRIPTOR_HEADER));
 					// Parallel Track Path and Dual Layer
 					if (dvdpd->commonHeader.TrackPath == 0 && dvdpd->commonHeader.NumberOfLayers == 1) {
@@ -1234,7 +1265,7 @@ BOOL ReadDiscStructure(
 						nPacNum = (MAKEWORD(lpFormat[1], lpFormat[0]) - 2) / 384;
 					}
 				}
-				OutputBDStructureFormat(pEntry->FormatCode,
+				OutputBDStructureFormat(pDisc, pEntry->FormatCode,
 					MAKEWORD(lpFormat[1], lpFormat[0]), lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), nPacCnt);
 				if (pEntry->FormatCode == 0x30) {
 					if (nPacCnt == 0) {

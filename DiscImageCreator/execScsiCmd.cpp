@@ -627,6 +627,63 @@ BOOL ReadBufferCapacity(
 	return TRUE;
 }
 
+BOOL SendKey(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	BYTE agid,
+	BYTE keyFormat,
+	LPBYTE key,
+	WORD keyLength
+) {
+	CDB::_SEND_KEY cdb = {};
+	cdb.OperationCode = SCSIOP_SEND_KEY;
+	REVERSE_BYTES_SHORT(&cdb.ParameterListLength, &keyLength);
+	cdb.KeyFormat = (BYTE)(keyFormat & 0x3f);
+	cdb.AGID = (BYTE)(agid & 0x3);
+
+#ifdef _WIN32
+	INT direction = SCSI_IOCTL_DATA_IN;
+#else
+	INT direction = SG_DXFER_TO_DEV;
+#endif
+	BYTE byScsiStatus = 0;
+	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH,
+		key, direction, keyLength, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+BOOL ReportKey(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	BYTE agid,
+	BYTE keyFormat,
+	LPBYTE key,
+	WORD keyLength
+) {
+	CDB::_REPORT_KEY cdb = {};
+	cdb.OperationCode = SCSIOP_REPORT_KEY;
+	REVERSE_BYTES_SHORT(&cdb.AllocationLength, &keyLength);
+	cdb.KeyFormat = (BYTE)(keyFormat & 0x3f);
+	cdb.AGID = (BYTE)(agid & 0x3);
+
+#ifdef _WIN32
+	INT direction = SCSI_IOCTL_DATA_IN;
+#else
+	INT direction = SG_DXFER_FROM_DEV;
+#endif
+	BYTE byScsiStatus = 0;
+	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH,
+		key, direction, keyLength, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+ 		return FALSE;
+	}
+	return TRUE;
+}
+
 BOOL SetDiscSpeed(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,

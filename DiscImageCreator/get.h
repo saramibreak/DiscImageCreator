@@ -97,5 +97,6 @@ BOOL GetUnscCmd(
 BOOL GetCssCmd(
 	PDEVICE pDevice,
 	LPTSTR pszStr,
+	_PROTECT_TYPE_DVD protect,
 	LPCTSTR pszPath
 );

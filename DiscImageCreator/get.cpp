@@ -390,6 +390,7 @@ BOOL GetUnscCmd(
 BOOL GetCssCmd(
 	PDEVICE pDevice,
 	LPTSTR pszStr,
+	_PROTECT_TYPE_DVD protect,
 	LPCTSTR pszPath
 ) {
 	_TCHAR szDrive[_MAX_DRIVE] = {};
@@ -413,14 +414,21 @@ BOOL GetCssCmd(
 #ifdef _WIN32
 	BOOL bRet = GetCmd(szPathForCss, _T("CSS"), _T("exe"));
 #else
+	UNREFERENCED_PARAMETER(protect);
 	BOOL bRet = GetCmd(szPathForCss, _T("./css-auth"), _T(".out"));
 #endif
 	OutputString("%s\n", szPathForCss);
 	if (bRet && PathFileExists(szPathForCss)) {
-		size_t size = _tcslen(szPathForCss) + _tcslen(szPathForKey) + 9;
+		size_t size = _tcslen(szPathForCss) + _tcslen(szPathForKey) + 9 + 4;
 #ifdef _WIN32
-		_sntprintf(pszStr, size,
-			_T("\"\"%s\" %c \"%s\"\""), szPathForCss, pDevice->byDriveLetter, szPathForKey);
+		if (protect == css) {
+			_sntprintf(pszStr, size,
+				_T("\"\"%s\" %c css \"%s\"\""), szPathForCss, pDevice->byDriveLetter, szPathForKey);
+		}
+		else if (protect == cprm) {
+			_sntprintf(pszStr, size,
+				_T("\"\"%s\" %c cprm \"%s\"\""), szPathForCss, pDevice->byDriveLetter, szPathForKey);
+		}
 #else
 		_sntprintf(pszStr, size,
 			_T("%s %s"), szPathForCss, pDevice->drivepath/*, szPathForKey*/);
