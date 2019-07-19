@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "struct.h"
+#include "check.h"
 #include "convert.h"
 #include "output.h"
 #include "outputScsiCmdLog.h"
@@ -2664,8 +2665,18 @@ VOID OutputModeSense(
 	INT ofs1 = 2;
 	size_t bufOfs = sizeof(MODE_PARAMETER_HEADER10) + pcLen + ofs1;
 
-	OutputModeParmeterHeader10((PMODE_PARAMETER_HEADER10)modesense);
+	if (*pExecType != drivespeed) {
+		OutputModeParmeterHeader10((PMODE_PARAMETER_HEADER10)modesense);
+	}
 	do {
+		if (*pExecType == drivespeed && pagecode != MODE_PAGE_CAPABILITIES) {
+			pagecode = (BYTE)(modesense[bufOfs] & 0x3f);
+			pcLen += modesense[bufOfs + 1];
+			pcOfs = bufOfs;
+			ofs1 += 2;
+			bufOfs = sizeof(MODE_PARAMETER_HEADER10) + pcLen + ofs1;
+			continue;
+		}
 		if (pagecode == MODE_PAGE_VENDOR_SPECIFIC) {
 			OutputPageUnknown(modesense, pcOfs, "VENDOR_SPECIFIC");
 		}
@@ -2758,10 +2769,10 @@ VOID OutputModeSense(
 			WORD rsm = MAKEWORD(capabilities->ReadSpeedMaximum[1],
 				capabilities->ReadSpeedMaximum[0]);
 			INT perKb = 176;
-			if (pDisc->SCSI.wCurrentMedia == ProfileDvdRom) {
+			if (IsDVDBasedDisc(pDisc)) {
 				perKb = 1385;
 			}
-			else if (pDisc->SCSI.wCurrentMedia == ProfileBDRom) {
+			else if (IsBDBasedDisc(pDisc)) {
 				perKb = 4496;
 			}
 			if (*pExecType == drivespeed) {

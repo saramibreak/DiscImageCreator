@@ -33,6 +33,64 @@ BOOL IsXbox(
 	return FALSE;
 }
 
+BOOL IsCDBasedDisc(
+	PEXEC_TYPE pExecType,
+	PDISC pDisc
+) {
+	if (pDisc->SCSI.wCurrentMedia == ProfileCdrom ||
+		pDisc->SCSI.wCurrentMedia == ProfileCdRecordable ||
+		pDisc->SCSI.wCurrentMedia == ProfileCdRewritable ||
+		(pDisc->SCSI.wCurrentMedia == ProfileInvalid && (*pExecType == gd)) ||
+		pDisc->SCSI.wCurrentMedia == ProfilePlaystationCdrom ||
+		pDisc->SCSI.wCurrentMedia == ProfilePlaystation2Cdrom) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
+BOOL IsDVDBasedDisc(
+	PDISC pDisc
+) {
+	if (pDisc->SCSI.wCurrentMedia == ProfileDvdRom ||
+		pDisc->SCSI.wCurrentMedia == ProfileDvdRecordable ||
+		pDisc->SCSI.wCurrentMedia == ProfileDvdRam ||
+		pDisc->SCSI.wCurrentMedia == ProfileDvdRewritable ||
+		pDisc->SCSI.wCurrentMedia == ProfileDvdRWSequential ||
+		pDisc->SCSI.wCurrentMedia == ProfileDvdDashRDualLayer ||
+		pDisc->SCSI.wCurrentMedia == ProfileDvdDashRLayerJump ||
+		pDisc->SCSI.wCurrentMedia == ProfileDvdPlusRW ||
+		pDisc->SCSI.wCurrentMedia == ProfileDvdPlusR ||
+		pDisc->SCSI.wCurrentMedia == ProfileDvdPlusRWDualLayer ||
+		pDisc->SCSI.wCurrentMedia == ProfileDvdPlusRDualLayer ||
+		pDisc->SCSI.wCurrentMedia == ProfileHDDVDRom ||
+		pDisc->SCSI.wCurrentMedia == ProfileHDDVDRecordable ||
+		pDisc->SCSI.wCurrentMedia == ProfileHDDVDRam ||
+		pDisc->SCSI.wCurrentMedia == ProfileHDDVDRewritable ||
+		pDisc->SCSI.wCurrentMedia == ProfileHDDVDRDualLayer ||
+		pDisc->SCSI.wCurrentMedia == ProfileHDDVDRWDualLayer ||
+		pDisc->SCSI.wCurrentMedia == ProfilePlaystation2DvdRom ||
+		pDisc->SCSI.wCurrentMedia == ProfilePlaystation3DvdRom
+		) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
+BOOL IsBDBasedDisc(
+	PDISC pDisc
+) {
+	if (pDisc->SCSI.wCurrentMedia == ProfileBDRom ||
+		pDisc->SCSI.wCurrentMedia == ProfileBDRSequentialWritable ||
+		pDisc->SCSI.wCurrentMedia == ProfileBDRRandomWritable ||
+		pDisc->SCSI.wCurrentMedia == ProfileBDRewritable ||
+		pDisc->SCSI.wCurrentMedia == ProfilePlaystation3BDRom ||
+		pDisc->SCSI.wCurrentMedia == ProfilePlaystation4BDRom
+		) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
 BOOL IsCDRDrive(
 	PDISC pDisc
 ) {

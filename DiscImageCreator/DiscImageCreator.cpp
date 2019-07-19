@@ -210,23 +210,17 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 				if (!ReadDriveInformation(pExecType, pExtArg, &device, pDisc, s_uiSpeed)) {
 					throw FALSE;
 				}
+				if (*pExecType == drivespeed) {
+					pExtArg->byQuiet = TRUE;
+					return TRUE;
+				}
 				make_crc_table();
 				if (*pExecType == fd || *pExecType == disk) {
 					bRet = ReadDisk(pExecType, &device, pszFullPath);
 				}
 				else {
-					if (*pExecType == drivespeed) {
-						pExtArg->byQuiet = TRUE;
-						throw TRUE;
-					}
 					if (*pExecType == cd || *pExecType == swap || *pExecType == gd || *pExecType == data || *pExecType == audio) {
-						if (discData.SCSI.wCurrentMedia == ProfileCdrom ||
-							discData.SCSI.wCurrentMedia == ProfileCdRecordable ||
-							discData.SCSI.wCurrentMedia == ProfileCdRewritable ||
-							(discData.SCSI.wCurrentMedia == ProfileInvalid && (*pExecType == gd)) ||
-							discData.SCSI.wCurrentMedia == ProfilePlaystationCdrom ||
-							discData.SCSI.wCurrentMedia == ProfilePlaystation2Cdrom
-							) {
+						if (IsCDBasedDisc(pExecType, pDisc)) {
 #ifdef _WIN32
 							_declspec(align(4)) CDROM_TOC_FULL_TOC_DATA fullToc = { 0 };
 #else
@@ -384,32 +378,14 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 						}
 					}
 					else if (*pExecType == dvd) {
-						if (discData.SCSI.wCurrentMedia == ProfileDvdRom ||
-							discData.SCSI.wCurrentMedia == ProfileDvdRecordable ||
-							discData.SCSI.wCurrentMedia == ProfileDvdRam ||
-							discData.SCSI.wCurrentMedia == ProfileDvdRewritable ||
-							discData.SCSI.wCurrentMedia == ProfileDvdRWSequential ||
-							discData.SCSI.wCurrentMedia == ProfileDvdDashRDualLayer ||
-							discData.SCSI.wCurrentMedia == ProfileDvdDashRLayerJump ||
-							discData.SCSI.wCurrentMedia == ProfileDvdPlusRW ||
-							discData.SCSI.wCurrentMedia == ProfileDvdPlusR ||
-							discData.SCSI.wCurrentMedia == ProfileDvdPlusRWDualLayer ||
-							discData.SCSI.wCurrentMedia == ProfileDvdPlusRDualLayer ||
-							discData.SCSI.wCurrentMedia == ProfileHDDVDRom ||
-							discData.SCSI.wCurrentMedia == ProfileHDDVDRecordable ||
-							discData.SCSI.wCurrentMedia == ProfileHDDVDRam ||
-							discData.SCSI.wCurrentMedia == ProfileHDDVDRewritable ||
-							discData.SCSI.wCurrentMedia == ProfileHDDVDRDualLayer ||
-							discData.SCSI.wCurrentMedia == ProfileHDDVDRWDualLayer ||
-							discData.SCSI.wCurrentMedia == ProfilePlaystation2DvdRom ||
-							discData.SCSI.wCurrentMedia == ProfilePlaystation3DvdRom
-							) {
+						if (IsDVDBasedDisc(pDisc)) {
 							if (pExtArg->byScanProtectViaFile) {
 								if (!InitProtectData(&pDisc)) {
 									throw FALSE;
 								}
 							}
-							if (discData.SCSI.wCurrentMedia == ProfileDvdRam || discData.SCSI.wCurrentMedia == ProfileHDDVDRam) {
+							if (discData.SCSI.wCurrentMedia == ProfileDvdRam ||
+								discData.SCSI.wCurrentMedia == ProfileHDDVDRam) {
 								ReadTOC(pExtArg, pExecType, &device, &discData);
 							}
 							bRet = ReadDiscStructure(pExecType, pExtArg, &device, &discData, pszFullPath);
@@ -451,13 +427,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 						bRet = ReadXboxDVDBySwap(pExecType, pExtArg, &device, pDisc, pszFullPath);
 					}
 					else if (*pExecType == bd) {
-						if (discData.SCSI.wCurrentMedia == ProfileBDRom ||
-							discData.SCSI.wCurrentMedia == ProfileBDRSequentialWritable ||
-							discData.SCSI.wCurrentMedia == ProfileBDRRandomWritable ||
-							discData.SCSI.wCurrentMedia == ProfileBDRewritable ||
-							discData.SCSI.wCurrentMedia == ProfilePlaystation3BDRom ||
-							discData.SCSI.wCurrentMedia == ProfilePlaystation4BDRom
-							) {
+						if (IsBDBasedDisc(pDisc)) {
 							if (!ReadTOC(pExtArg, pExecType, &device, &discData)) {
 								throw FALSE;
 							}

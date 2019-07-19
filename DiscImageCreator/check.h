@@ -19,6 +19,19 @@ BOOL IsXbox(
 	PEXEC_TYPE pExecType
 );
 
+BOOL IsCDBasedDisc(
+	PEXEC_TYPE pExecType,
+	PDISC pDisc
+);
+
+BOOL IsDVDBasedDisc(
+	PDISC pDisc
+);
+
+BOOL IsBDBasedDisc(
+	PDISC pDisc
+);
+
 BOOL IsCDRDrive(
 	PDISC pDisc
 );
