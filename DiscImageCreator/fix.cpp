@@ -970,7 +970,7 @@ VOID FixSubQ(
 		}
 	}
 
-	// pDiscPerSector->subcode.current has already fixed ramdom errors (= original crc)
+	// pDiscPerSector->subcode.current has already fixed random errors (= original crc)
 	WORD crc16 = (WORD)GetCrc16CCITT(10, &pDiscPerSector->subcode.current[12]);
 	if (pDiscPerSector->bLibCrypt || pDiscPerSector->bSecuRom) {
 		BOOL bExist = FALSE;
