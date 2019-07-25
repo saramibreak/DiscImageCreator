@@ -635,7 +635,74 @@ VOID OutputDVDRamLayerDescriptor(
 	LPBYTE lpBuf
 ) {
 	if ((lpBuf[0] & 0x0f) == 1) { // ECMA-272
-		// TODO
+		OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(PhysicalFormatInformation)
+			"\t                             Disk Category: %s\n"
+			"\t                            Version Number: %d\n"
+			"\t                                 Disk size: %s\n"
+			"\t                     Maximum transfer rate: %s\n"
+			"\t                Number of recording layers: %s\n"
+			"\t                  Type of recording layers: %s\n"
+			"\t                Average Channel bit length: %s\n"
+			"\t                       Average track pitch: %s\n"
+			"\tFirst Recorded Data Field of the Data Zone: %7u (%#x)\n"
+			"\t Last Recorded Data Field of the Data Zone: %7u (%#x)\n"
+			"\t                  Disk type identification: %s\n"
+			"\t                                  Velocity: %s\n"
+			"\t                    Read power at Velocity: %s\n"
+			"\t                on land tracks at Velocity\n"
+			"\t                                Peak power: %s\n"
+			"\t                              Bias power 1: %s\n"
+			"\t                 First pulse starting time: direction is the %s to the laser spot scanning, %s\n"
+			"\t                   First pulse ending time: %s\n"
+			"\t                   Multiple-pulse duration: %s\n"
+			"\t                  Last pulse starting time: direction is the %s to the laser spot scanning, %s\n"
+			"\t                    Last pulse ending time: %s\n"
+			"\t                              Bias power 2: %s\n"
+			"\t              on groove tracks at Velocity\n"
+			"\t                                Peak power: %s\n"
+			"\t                              Bias power 1: %s\n"
+			"\t                 First pulse starting time: direction is the %s to the laser spot scanning, %s\n"
+			"\t                   First pulse ending time: %s\n"
+			"\t                   Multiple-pulse duration: %s\n"
+			"\t                  Last pulse starting time: direction is the %s to the laser spot scanning, %s\n"
+			"\t                    Last pulse ending time: %s\n"
+			"\t                              Bias power 2: %s\n"
+			, (lpBuf[0] & 0x10) == 0x10 ? "rewritable disk" : "other"
+			, lpBuf[0] & 0x0f
+			, (lpBuf[1] & 0xf0) == 0 ? "120mm" : "80mm"
+			, (lpBuf[1] & 0x0f) == 0x02 ? "10,08 Mbits/s." : "other"
+			, (lpBuf[2] & 0x60) == 0 ? "single layer" : "other"
+			, (lpBuf[2] & 0x0f) == 0x04 ? "rewritable recording layer" : "other"
+			, (lpBuf[3] & 0xf0) == 0x20 ? "0,205 um to 0,218 um" : "other"
+			, (lpBuf[3] & 0x0f) == 0 ? "0,74 um" : "other"
+			, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], 0))
+			, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], 0))
+			, MAKEUINT(MAKEWORD(lpBuf[11], lpBuf[10]), MAKEWORD(lpBuf[9], 0))
+			, MAKEUINT(MAKEWORD(lpBuf[11], lpBuf[10]), MAKEWORD(lpBuf[9], 0))
+			, lpBuf[32] == 0 ? "disk shall not be recorded without a case" : "disk may be recorded with or without a case"
+			, lpBuf[48] == 0x3c ? "6,0 m/s" : "other"
+			, lpBuf[49] == 0x0a ? "1,0 mW" : "other"
+			, lpBuf[50] == 0x6e ? "11,0 mW" : "other"
+			, lpBuf[51] == 0x32 ? "5,0 mW" : "other"
+			, (lpBuf[52] & 0x80) == 0x80 ? "opposite" : "same"
+			, ((lpBuf[52] & 0x3f) == 0x11) ? "TSFP of 17 ns" : "other"
+			, lpBuf[53] == 0x33 ? "TEFP of 51 ns" : "other"
+			, lpBuf[54] == 0x11 ? "TMP of 17 ns" : "other"
+			, (lpBuf[55] & 0x80) == 0x80 ? "opposite" : "same"
+			, ((lpBuf[55] & 0x3f) == 0) ? "TSLP of 0 ns" : "other"
+			, lpBuf[56] == 0x22 ? "TELP of 34 ns" : "other"
+			, lpBuf[57] == 0x44 ? "TLE of 68 ns" : "other"
+			, lpBuf[58] == 0x6e ? "11,0 mW" : "other"
+			, lpBuf[59] == 0x32 ? "5,0 mW" : "other"
+			, (lpBuf[60] & 0x80) == 0x80 ? "opposite" : "same"
+			, ((lpBuf[60] & 0x3f) == 0x11) ? "TSFP of 17 ns" : "other"
+			, lpBuf[61] == 0x33 ? "TEFP of 51 ns" : "other"
+			, lpBuf[62] == 0x11 ? "TMP of 17 ns" : "other"
+			, (lpBuf[63] & 0x80) == 0x80 ? "opposite" : "same"
+			, ((lpBuf[63] & 0x3f) == 0) ? "TSLP of 0 ns" : "other"
+			, lpBuf[64] == 0x22 ? "TELP of 34 ns" : "other"
+			, lpBuf[65] == 0x44 ? "TLE of 68 ns" : "other"
+		);
 	}
 	else if ((lpBuf[0] & 0x0f) == 6) { // ECMA-330
 		OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(PhysicalFormatInformation)
@@ -668,51 +735,6 @@ VOID OutputDVDRamLayerDescriptor(
 			"\t                              Last pulse start time: %02x\n"
 			"\t                                Last pulse duration: %02x\n"
 			"\t Bias power 2 duration on land tracks at Velocity 1: %02x\n"
-			"\t  First pulse start time, Mark 3T, Leading Space 3T: direction is the %s to the laser spot scanning, %02x\n"
-			"\t  First pulse start time, Mark 4T, Leading Space 3T: direction is the %s to the laser spot scanning, %02x\n"
-			"\t  First pulse start time, Mark 5T, Leading Space 3T: direction is the %s to the laser spot scanning, %02x\n"
-			"\t First pulse start time, Mark >5T, Leading Space 3T: direction is the %s to the laser spot scanning, %02x\n"
-			"\t  First pulse start time, Mark 3T, Leading Space 4T: direction is the %s to the laser spot scanning, %02x\n"
-			"\t  First pulse start time, Mark 4T, Leading Space 4T: direction is the %s to the laser spot scanning, %02x\n"
-			"\t  First pulse start time, Mark 5T, Leading Space 4T: direction is the %s to the laser spot scanning, %02x\n"
-			"\t First pulse start time, Mark >5T, Leading Space 4T: direction is the %s to the laser spot scanning, %02x\n"
-			"\t  First pulse start time, Mark 3T, Leading Space 5T: direction is the %s to the laser spot scanning, %02x\n"
-			"\t  First pulse start time, Mark 4T, Leading Space 5T: direction is the %s to the laser spot scanning, %02x\n"
-			"\t  First pulse start time, Mark 5T, Leading Space 5T: direction is the %s to the laser spot scanning, %02x\n"
-			"\t First pulse start time, Mark >5T, Leading Space 5T: direction is the %s to the laser spot scanning, %02x\n"
-			"\t First pulse start time, Mark 3T, Leading Space >5T: direction is the %s to the laser spot scanning, %02x\n"
-			"\t First pulse start time, Mark 4T, Leading Space >5T: direction is the %s to the laser spot scanning, %02x\n"
-			"\t First pulse start time, Mark 5T, Leading Space >5T: direction is the %s to the laser spot scanning, %02x\n"
-			"\tFirst pulse start time, Mark >5T, Leading Space >5T: direction is the %s to the laser spot scanning, %02x\n"
-			"\t    Last pulse end time, Mark 3T, Trailing Space 3T: %02x\n"
-			"\t    Last pulse end time, Mark 4T, Trailing Space 3T: %02x\n"
-			"\t    Last pulse end time, Mark 5T, Trailing Space 3T: %02x\n"
-			"\t   Last pulse end time, Mark >5T, Trailing Space 3T: %02x\n"
-			"\t    Last pulse end time, Mark 3T, Trailing Space 4T: %02x\n"
-			"\t    Last pulse end time, Mark 4T, Trailing Space 4T: %02x\n"
-			"\t    Last pulse end time, Mark 5T, Trailing Space 4T: %02x\n"
-			"\t   Last pulse end time, Mark >5T, Trailing Space 4T: %02x\n"
-			"\t    Last pulse end time, Mark 3T, Trailing Space 5T: %02x\n"
-			"\t    Last pulse end time, Mark 4T, Trailing Space 5T: %02x\n"
-			"\t    Last pulse end time, Mark 5T, Trailing Space 5T: %02x\n"
-			"\t   Last pulse end time, Mark >5T, Trailing Space 5T: %02x\n"
-			"\t   Last pulse end time, Mark 3T, Trailing Space >5T: %02x\n"
-			"\t   Last pulse end time, Mark 4T, Trailing Space >5T: %02x\n"
-			"\t   Last pulse end time, Mark 5T, Trailing Space >5T: %02x\n"
-			"\t  Last pulse end time, Mark >5T, Trailing Space >5T: %02x\n"
-			"\t                           Disk manufacturer's name: %.48s\n"
-			"\t      Disk manufacturer's supplementary information: %.16s\n"
-			"\t                                                     Write power control parameters\n"
-			"\t                                                                         Identifier: %02x%02x\n"
-			"\t        Ratio of Peak power for land tracks to threshold peak power for land tracks: %02x\n"
-			"\t                                                             T     Target asymmetry: %s, %02x\n"
-			"\t                                                               Temporary Peak power: %02x\n"
-			"\t                                                             Temporary Bias power 1: %02x\n"
-			"\t                                                             Temporary Bias power 2: %02x\n"
-			"\t                                                             Temporary Bias power 3: %02x\n"
-			"\t   Ratio of Peak power for groove tracks to threshold peak power for groove tracks : %02x\n"
-			"\t     Ratio of Peak power for land tracks to threshold 6T peak power for land tracks: %02x\n"
-			"\tRatio of Peak power for groove tracks to threshold 6T peak power for groove tracks : %02x\n"
 			, (lpBuf[0] & 0x10) == 0x10 ? "rewritable disk" : "other"
 			, lpBuf[0] & 0x0f
 			, (lpBuf[1] & 0xf0) == 0 ? "120mm" : "80mm"
@@ -734,6 +756,42 @@ VOID OutputDVDRamLayerDescriptor(
 			, lpBuf[507], lpBuf[508], lpBuf[509], lpBuf[510]
 			, lpBuf[511], lpBuf[512], lpBuf[513], lpBuf[514]
 			, lpBuf[515], lpBuf[516]
+		);
+		OutputDiscLogA(
+			"\t      First pulse start time\n"
+			"\t   Mark 3T, Leading Space 3T: direction is the %s to the laser spot scanning, %02x\n"
+			"\t   Mark 4T, Leading Space 3T: direction is the %s to the laser spot scanning, %02x\n"
+			"\t   Mark 5T, Leading Space 3T: direction is the %s to the laser spot scanning, %02x\n"
+			"\t  Mark >5T, Leading Space 3T: direction is the %s to the laser spot scanning, %02x\n"
+			"\t   Mark 3T, Leading Space 4T: direction is the %s to the laser spot scanning, %02x\n"
+			"\t   Mark 4T, Leading Space 4T: direction is the %s to the laser spot scanning, %02x\n"
+			"\t   Mark 5T, Leading Space 4T: direction is the %s to the laser spot scanning, %02x\n"
+			"\t  Mark >5T, Leading Space 4T: direction is the %s to the laser spot scanning, %02x\n"
+			"\t   Mark 3T, Leading Space 5T: direction is the %s to the laser spot scanning, %02x\n"
+			"\t   Mark 4T, Leading Space 5T: direction is the %s to the laser spot scanning, %02x\n"
+			"\t   Mark 5T, Leading Space 5T: direction is the %s to the laser spot scanning, %02x\n"
+			"\t  Mark >5T, Leading Space 5T: direction is the %s to the laser spot scanning, %02x\n"
+			"\t  Mark 3T, Leading Space >5T: direction is the %s to the laser spot scanning, %02x\n"
+			"\t  Mark 4T, Leading Space >5T: direction is the %s to the laser spot scanning, %02x\n"
+			"\t  Mark 5T, Leading Space >5T: direction is the %s to the laser spot scanning, %02x\n"
+			"\t Mark >5T, Leading Space >5T: direction is the %s to the laser spot scanning, %02x\n"
+			"\t       Last pulse start time\n"
+			"\t  Mark 3T, Trailing Space 3T: %02x\n"
+			"\t  Mark 4T, Trailing Space 3T: %02x\n"
+			"\t  Mark 5T, Trailing Space 3T: %02x\n"
+			"\t Mark >5T, Trailing Space 3T: %02x\n"
+			"\t  Mark 3T, Trailing Space 4T: %02x\n"
+			"\t  Mark 4T, Trailing Space 4T: %02x\n"
+			"\t  Mark 5T, Trailing Space 4T: %02x\n"
+			"\t Mark >5T, Trailing Space 4T: %02x\n"
+			"\t  Mark 3T, Trailing Space 5T: %02x\n"
+			"\t  Mark 4T, Trailing Space 5T: %02x\n"
+			"\t  Mark 5T, Trailing Space 5T: %02x\n"
+			"\t Mark >5T, Trailing Space 5T: %02x\n"
+			"\t Mark 3T, Trailing Space >5T: %02x\n"
+			"\t Mark 4T, Trailing Space >5T: %02x\n"
+			"\t Mark 5T, Trailing Space >5T: %02x\n"
+			"\tMark >5T, Trailing Space >5T: %02x\n"
 			, (lpBuf[517] & 0x80) == 0x80 ? "opposite" : "same"
 			, lpBuf[517] & 0x3f
 			, (lpBuf[518] & 0x80) == 0x80 ? "opposite" : "same"
@@ -769,6 +827,21 @@ VOID OutputDVDRamLayerDescriptor(
 			, lpBuf[533], lpBuf[534], lpBuf[535], lpBuf[536], lpBuf[537], lpBuf[538]
 			, lpBuf[539], lpBuf[540], lpBuf[541], lpBuf[542], lpBuf[543], lpBuf[544]
 			, lpBuf[545], lpBuf[546], lpBuf[547], lpBuf[548]
+		);
+		OutputDiscLogA(
+			"\t                                                          Disk manufacturer's name: %.48s\n"
+			"\t                                     Disk manufacturer's supplementary information: %.16s\n"
+			"\t                                                    Write power control parameters\n"
+			"\t                                                                        Identifier: %02x%02x\n"
+			"\t       Ratio of Peak power for land tracks to threshold peak power for land tracks: %02x\n"
+			"\t                                                            T     Target asymmetry: %s, %02x\n"
+			"\t                                                              Temporary Peak power: %02x\n"
+			"\t                                                            Temporary Bias power 1: %02x\n"
+			"\t                                                            Temporary Bias power 2: %02x\n"
+			"\t                                                            Temporary Bias power 3: %02x\n"
+			"\t   Ratio of Peak power for groove tracks to threshold peak power for groove tracks: %02x\n"
+			"\t    Ratio of Peak power for land tracks to threshold 6T peak power for land tracks: %02x\n"
+			"\tRatio of Peak power for groove tracks to threshold 6T peak power for groove tracks: %02x\n"
 			, (LPCH)&lpBuf[549], (LPCH)&lpBuf[597]
 			, lpBuf[613], lpBuf[614]
 			, lpBuf[615]
@@ -1269,6 +1342,7 @@ VOID OutputDVDDualLayerRecordingInformation(
 		MAKEUINT(MAKEWORD(dvdDualLayer->Layer0Sectors[3], dvdDualLayer->Layer0Sectors[2]),
 		MAKEWORD(dvdDualLayer->Layer0Sectors[1], dvdDualLayer->Layer0Sectors[0])));
 }
+
 VOID OutputDVDDualLayerMiddleZone(
 	PDVD_DUAL_LAYER_MIDDLE_ZONE_START_ADDRESS dvdDualLayerMiddle
 ) {
