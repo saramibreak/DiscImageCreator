@@ -1196,10 +1196,10 @@ VOID OutputDiscDefinitionStructure(
 	}
 }
 
-VOID OutputDiscMediumStatus(
+VOID OutputDvdRamMediumStatus(
 	PDVD_RAM_MEDIUM_STATUS dvdRamMeium
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DiscMediumStatus)
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DvdRamMediumStatus)
 		"\t              PersistentWriteProtect: %s\n"
 		"\t               CartridgeWriteProtect: %s\n"
 		"\t           MediaSpecificWriteInhibit: %s\n"
@@ -1578,7 +1578,7 @@ VOID OutputDVDStructureFormat(
 		OutputDiscDefinitionStructure(pDisc->DVD.version, lpFormat);
 		break;
 	case 0x09:
-		OutputDiscMediumStatus((PDVD_RAM_MEDIUM_STATUS)lpFormat);
+		OutputDvdRamMediumStatus((PDVD_RAM_MEDIUM_STATUS)lpFormat);
 		break;
 	case 0x0a:
 		OutputDiscSpareAreaInformation((PDVD_RAM_SPARE_AREA_INFORMATION)lpFormat);
@@ -1736,6 +1736,19 @@ VOID OutputBDDiscInformation(
 	OutputDiscLogA("\n");
 }
 
+VOID OutputCartridgeStatus(
+	LPBYTE lpFormat
+) {
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(CartridgeStatus)
+		"\t               CartridgeWriteProtect: %s\n"
+		"\t                  CartridgeNotSealed: %s\n"
+		"\t                    MediaInCartridge: %s\n"
+		, BOOLEAN_TO_STRING_YES_NO_A((lpFormat[0] & 0x04) == 0x04)
+		, BOOLEAN_TO_STRING_YES_NO_A((lpFormat[0] & 0x40) == 0x40)
+		, BOOLEAN_TO_STRING_YES_NO_A((lpFormat[0] & 0x80) == 0x80)
+	);
+}
+
 VOID OutputBDRawDefectList(
 	LPBYTE lpFormat,
 	WORD wFormatLength
@@ -1818,6 +1831,7 @@ VOID OutputBDStructureFormat(
 	LPBYTE lpFormat,
 	INT nPacCnt
 ) {
+	OutputDiscLogA("Disc Structure Data Length: %d\n", wFormatLength);
 	switch (byFormatCode) {
 	case 0:
 		OutputBDDiscInformation(lpFormat, wFormatLength);
@@ -1831,7 +1845,7 @@ VOID OutputBDStructureFormat(
 		OutputDiscDefinitionStructure(0, lpFormat);
 		break;
 	case 0x09:
-		OutputDiscMediumStatus((PDVD_RAM_MEDIUM_STATUS)lpFormat);
+		OutputCartridgeStatus(lpFormat);
 		break;
 	case 0x0a:
 		OutputDiscSpareAreaInformation((PDVD_RAM_SPARE_AREA_INFORMATION)lpFormat);
@@ -1873,7 +1887,7 @@ VOID OutputBDStructureFormat(
 		break;
 		// formats 0xc1 through 0xfe are not yet defined
 	default:
-		OutputDiscLogA("\tUnknown: %02x\n", byFormatCode);
+		OutputDiscLogA("\tReserved\n");
 		break;
 	}
 }
