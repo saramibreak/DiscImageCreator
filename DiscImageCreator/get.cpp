@@ -400,7 +400,13 @@ BOOL GetCssCmd(
 	_tsplitpath(pszPath, szDrive, szDir, szFname, NULL);
 
 	_TCHAR keyPath[_MAX_FNAME] = {};
-	_TCHAR keyFile[] = _T("_CSSKey");
+	_TCHAR keyFile[10] = {}; 
+	if (protect == css) {
+		_tcsncpy(keyFile, _T("_CSSKey"), 8);
+	}
+	else if (protect == cprm) {
+		_tcsncpy(keyFile, _T("_CPRMKey"), 9);
+	}
 
 	if (_tcslen(szFname) + _tcslen(keyFile) > _MAX_FNAME) {
 		OutputErrorString(_T("Path too long\n"));
@@ -412,7 +418,7 @@ BOOL GetCssCmd(
 
 	_TCHAR szPathForCss[_MAX_PATH] = {};
 #ifdef _WIN32
-	BOOL bRet = GetCmd(szPathForCss, _T("CSS"), _T("exe"));
+	BOOL bRet = GetCmd(szPathForCss, _T("DVDAuth"), _T("exe"));
 #else
 	UNREFERENCED_PARAMETER(protect);
 	BOOL bRet = GetCmd(szPathForCss, _T("./css-auth"), _T(".out"));

@@ -962,24 +962,10 @@ BOOL ReadDVDForCMI(
 }
 
 BOOL ExecReadingKey(
-	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	_PROTECT_TYPE_DVD protect,
-	LPCTSTR pszPath,
-	LPBYTE agid
+	LPCTSTR pszPath
 ) {
-	for (BYTE i = 0; i < 4; i++) {
-		SendKey(pExtArg, pDevice, i, DVD_INVALIDATE_AGID, NULL, 0);
-	}
-	BYTE reportKey[8] = {};
-	BYTE keyFormat = DVD_REPORT_AGID; // for css
-	if (protect == cprm) {
-		keyFormat = 0x11;
-	}
-	ReportKey(pExtArg, pDevice, 0, keyFormat, reportKey, sizeof(reportKey));
-	*agid = (BYTE)((reportKey[7] >> 6) & 0x03);
-	OutputDiscLogA("AGID: %d\n", *agid);
-
 	if (!CloseHandle(pDevice->hDevice)) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
@@ -1084,7 +1070,7 @@ BOOL ReadDiscStructure(
 	INT nPacCnt = 0; // BD, format 0x30
 	INT nPacNum = 0; // BD, format 0x30
 	BYTE pacIdList[256][4] = {}; // BD, format 0x30
-	BYTE agid = 0;
+
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DiscStructure));
 	for (WORD i = 0; i < wEntrySize; i++) {
 		PDVD_STRUCTURE_LIST_ENTRY pEntry = 
@@ -1107,7 +1093,7 @@ BOOL ReadDiscStructure(
 			}
 			else if (pEntry->FormatCode == 0x02) {
 				if (pDisc->DVD.protect == css) {
-					if (ExecReadingKey(pExtArg, pDevice, css, pszFullPath, &agid)) {
+					if (ExecReadingKey(pDevice, css, pszFullPath)) {
 						OutputDiscLogA("Outputted to _CSSKey.txt\n\n");
 					}
 					else {
@@ -1131,9 +1117,12 @@ BOOL ReadDiscStructure(
 			else if (pEntry->FormatCode == 0x06 || pEntry->FormatCode == 0x07) {
 				if (pDisc->DVD.protect == cprm) {
 					if (pEntry->FormatCode == 0x06) {
-						if (ExecReadingKey(pExtArg, pDevice, cprm, pszFullPath, &agid)) {
-							cdb.AGID = (BYTE)(agid & 0x3);
+						if (ExecReadingKey(pDevice, cprm, pszFullPath)) {
+							OutputDiscLogA("Outputted to _CPRMKey.txt\n\n");
 						}
+					}
+					else if (pEntry->FormatCode == 0x07) {
+						continue;
 					}
 				}
 				else {
