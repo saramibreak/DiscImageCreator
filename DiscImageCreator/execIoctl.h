@@ -21,6 +21,10 @@ BOOL ReadDisk(
 	LPCTSTR pszPath
 );
 
+BOOL DVDGetRegion(
+	PDEVICE pDevice
+);
+
 BOOL ScsiGetAddress(
 	PDEVICE pDevice
 );

@@ -316,6 +316,23 @@ BOOL ReadDisk(
 	return bRet;
 }
 
+BOOL DVDGetRegion(
+	PDEVICE pDevice
+) {
+	DVD_REGION dvdRegion = {};
+	DWORD dwReturned = 0;
+	BOOL bRet = DeviceIoControl(pDevice->hDevice,
+		IOCTL_DVD_GET_REGION, &dvdRegion, sizeof(DVD_REGION),
+		&dvdRegion, sizeof(DVD_REGION), &dwReturned, NULL);
+	if (bRet) {
+		OutputDVDGetRegion(&dvdRegion);
+	}
+	else {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+	}
+	return bRet;
+}
+
 BOOL ScsiGetAddress(
 	PDEVICE pDevice
 ) {

@@ -49,3 +49,8 @@ VOID OutputFileAllocationTable(
 	LPBYTE lpBuf,
 	PFAT fat
 );
+
+VOID OutputDVDGetRegion(
+	PDVD_REGION dvdRegion
+);
+

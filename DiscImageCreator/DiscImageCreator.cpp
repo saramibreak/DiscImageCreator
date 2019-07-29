@@ -379,6 +379,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 					}
 					else if (*pExecType == dvd) {
 						if (IsDVDBasedDisc(pDisc)) {
+							DVDGetRegion(&device);
 							if (pExtArg->byScanProtectViaFile) {
 								if (!InitProtectData(&pDisc)) {
 									throw FALSE;

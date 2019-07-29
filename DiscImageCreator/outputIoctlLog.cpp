@@ -3558,3 +3558,15 @@ VOID OutputFileAllocationTable(
 		}
 	}
 }
+
+VOID OutputDVDGetRegion(
+	PDVD_REGION dvdRegion
+) {
+	OutputDriveLogA(
+		OUTPUT_DHYPHEN_PLUS_STR(DVD Region)
+		"\tSystemRegion: %d\n"
+		"\t  ResetCount: %d\n"
+		, dvdRegion->SystemRegion
+		, dvdRegion->ResetCount
+	);
+}
