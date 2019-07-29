@@ -320,10 +320,21 @@ BOOL DVDGetRegion(
 	PDEVICE pDevice
 ) {
 	DVD_REGION dvdRegion = {};
+#ifdef _WIN32
 	DWORD dwReturned = 0;
 	BOOL bRet = DeviceIoControl(pDevice->hDevice,
 		IOCTL_DVD_GET_REGION, &dvdRegion, sizeof(DVD_REGION),
 		&dvdRegion, sizeof(DVD_REGION), &dwReturned, NULL);
+#else
+	dvd_authinfo auth_info;
+
+	memset(&auth_info, 0, sizeof(auth_info));
+	auth_info.type = DVD_LU_SEND_RPC_STATE;
+
+	int bRet = ioctl(pDevice->hDevice, DVD_AUTH, &auth_info);
+	dvdRegion.SystemRegion = auth_info.lrpcs.region_mask;
+	dvdRegion.ResetCount = auth_info.lrpcs.type;
+#endif
 	if (bRet) {
 		OutputDVDGetRegion(&dvdRegion);
 	}
