@@ -44,7 +44,9 @@ BOOL ExecReadDisc(
 	INT nLBA,
 	LPBYTE lpBuf,
 	LPBYTE bufDec,
-	BYTE byTransferLen
+	BYTE byTransferLen,
+	LPCTSTR pszFuncName,
+	LONG lLineNum
 ) {
 	if (*pExecType == gd) {
 		if (!ExecReadGD(pExtArg, pDevice, pDisc, pCdb, nLBA, byTransferLen, lpBuf, bufDec)) {
@@ -57,7 +59,7 @@ BOOL ExecReadDisc(
 	}
 	else {
 		if (!ExecReadCD(pExtArg, pDevice, pCdb, nLBA, lpBuf,
-			(DWORD)(DISC_RAW_READ_SIZE * byTransferLen), _T(__FUNCTION__), __LINE__)) {
+			(DWORD)(DISC_RAW_READ_SIZE * byTransferLen), pszFuncName, lLineNum)) {
 			return FALSE;
 		}
 	}

@@ -127,7 +127,7 @@ BOOL ReadDirectoryRecordDetail(
 	PDIRECTORY_RECORD pDirRec
 ) {
 	if (!ExecReadDisc(pExecType, pExtArg, pDevice, pDisc
-		, pCdb, nLBA + nOffset, lpBuf, bufDec, byTransferLen)) {
+		, pCdb, nLBA + nOffset, lpBuf, bufDec, byTransferLen, _T(__FUNCTION__), __LINE__)) {
 		return FALSE;
 	}
 	BYTE byRoop = byTransferLen;
@@ -275,7 +275,7 @@ BOOL ReadDirectoryRecord(
 	// for CD-I
 	if (uiRootDataLen == 0) {
 		if (!ExecReadDisc(pExecType, pExtArg, pDevice, pDisc, pCdb
-			, (INT)pDirRec[0].uiPosOfDir + nSectorOfs, lpBuf, bufDec, byTransferLen)) {
+			, (INT)pDirRec[0].uiPosOfDir + nSectorOfs, lpBuf, bufDec, byTransferLen, _T(__FUNCTION__), __LINE__)) {
 			return FALSE;
 		}
 		uiRootDataLen =
@@ -385,7 +385,7 @@ BOOL ReadPathTableRecord(
 
 			for (DWORD n = 0; n < uiAdditionalTransferLen; n++) {
 				if (!ExecReadDisc(pExecType, pExtArg, pDevice, pDisc, pCdb
-					, (INT)uiPathTblPos + nSectorOfs, lpBuf + pDevice->dwMaxTransferLength * n, bufDec, byTransferLen)) {
+					, (INT)uiPathTblPos + nSectorOfs, lpBuf + pDevice->dwMaxTransferLength * n, bufDec, byTransferLen, _T(__FUNCTION__), __LINE__)) {
 					throw FALSE;
 				}
 				for (BYTE i = 0; i < byRoop; i++) {
@@ -400,7 +400,7 @@ BOOL ReadPathTableRecord(
 			OutputMainInfoLogA(
 				"uiPathTblSize: %lu, byTransferLen: %d [L:%d]\n", dwLastPathTblSize, byRoop, (INT)__LINE__);
 			if (!ExecReadDisc(pExecType, pExtArg, pDevice, pDisc, pCdb
-				, (INT)uiPathTblPos + nSectorOfs, lpBuf + dwBufOfs, bufDec, byTransferLen)) {
+				, (INT)uiPathTblPos + nSectorOfs, lpBuf + dwBufOfs, bufDec, byTransferLen, _T(__FUNCTION__), __LINE__)) {
 				throw FALSE;
 			}
 			for (BYTE i = 0; i < byRoop; i++) {
@@ -414,7 +414,7 @@ BOOL ReadPathTableRecord(
 			OutputMainInfoLogA(
 				"uiPathTblSize: %u, byTransferLen: %d [L:%d]\n", uiPathTblSize, byRoop, (INT)__LINE__);
 			if (!ExecReadDisc(pExecType, pExtArg, pDevice, pDisc, pCdb
-				, (INT)uiPathTblPos + nSectorOfs, lpBuf, bufDec, byTransferLen)) {
+				, (INT)uiPathTblPos + nSectorOfs, lpBuf, bufDec, byTransferLen, _T(__FUNCTION__), __LINE__)) {
 				throw FALSE;
 			}
 			for (BYTE i = 0; i < byRoop; i++) {
@@ -454,7 +454,7 @@ BOOL ReadVolumeDescriptor(
 	BYTE bufDec[CD_RAW_SECTOR_SIZE * 2] = {};
 	for (;;) {
 		if (!ExecReadDisc(pExecType, pExtArg, pDevice, pDisc
-			, pCdb, nTmpLBA + nSectorOfs, lpBuf, bufDec, byTransferLen)) {
+			, pCdb, nTmpLBA + nSectorOfs, lpBuf, bufDec, byTransferLen, _T(__FUNCTION__), __LINE__)) {
 			break;
 		}
 		if (!strncmp((LPCH)&lpBuf[1], "CD001", 5) ||

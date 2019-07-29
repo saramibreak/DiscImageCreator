@@ -24,7 +24,9 @@ BOOL ExecReadDisc(
 	INT nLBA,
 	LPBYTE lpBuf,
 	LPBYTE bufDec,
-	BYTE byTransferLen
+	BYTE byTransferLen,
+	LPCTSTR pszFuncName,
+	LONG lLineNum
 );
 
 BOOL ExecReadCD(
