@@ -217,11 +217,12 @@ BOOL ReadDVD(
 					(DWORD)nLBA <= pDisc->DVD.securitySectorRange[i][1] + 1)) {
 					if (++nRetryCnt <= 5) {
 						nLBA--;
-						OutputString(_T("This sector is out of the ss ranges. Read retry %d/5\n"), nRetryCnt);
+						OutputLog(standardOut | fileMainError,
+							_T("This sector is out of the ss ranges. Read retry %d/5\n"), nRetryCnt);
 						continue;
 					}
 					else {
-						OutputString(_T("Retry NG\n"));
+						OutputLog(standardOut | fileMainError, _T("Retry NG\n"));
 						throw FALSE;
 					}
 				}
