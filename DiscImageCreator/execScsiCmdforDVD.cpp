@@ -1075,11 +1075,13 @@ BOOL ReadDiscStructure(
 	for (WORD i = 0; i < wEntrySize; i++) {
 		PDVD_STRUCTURE_LIST_ENTRY pEntry = 
 			((PDVD_STRUCTURE_LIST_ENTRY)pDescHeader->Data + i);
-		WORD wFormatLen = MAKEWORD(pEntry->FormatLength[1], pEntry->FormatLength[0]);
+		// FormatLength is obsolete for late drive
+//		WORD wFormatLen = MAKEWORD(pEntry->FormatLength[1], pEntry->FormatLength[0]);
+		WORD wFormatLen = sizeof(DVD_DESCRIPTOR_HEADER);
 		OutputDiscLogA(
-			"FormatCode: %02x, Sendable: %3s, Readable: %3s, FormatLength: %u\n", 
+			"FormatCode: %02x, Sendable: %3s, Readable: %3s\n", 
 			pEntry->FormatCode,	BOOLEAN_TO_STRING_YES_NO_A(pEntry->Sendable),
-			BOOLEAN_TO_STRING_YES_NO_A(pEntry->Readable), wFormatLen);
+			BOOLEAN_TO_STRING_YES_NO_A(pEntry->Readable));
 #if 0
 		if (wFormatLen == 0) {
 			OutputDiscLogA("Skiped because length is 0\n\n");
@@ -1097,7 +1099,7 @@ BOOL ReadDiscStructure(
 						OutputDiscLogA("Outputted to _CSSKey.txt\n\n");
 					}
 					else {
-						OutputDiscLogA("Failed to run CSS.exe\n\n");
+						OutputDiscLogA("Failed to run DVDAuth.exe\n\n");
 						return FALSE;
 					}
 				}
@@ -1119,6 +1121,10 @@ BOOL ReadDiscStructure(
 					if (pEntry->FormatCode == 0x06) {
 						if (ExecReadingKey(pDevice, cprm, pszFullPath)) {
 							OutputDiscLogA("Outputted to _CPRMKey.txt\n\n");
+						}
+						else {
+							OutputDiscLogA("Failed to run DVDAuth.exe\n\n");
+							return FALSE;
 						}
 					}
 					else if (pEntry->FormatCode == 0x07) {
@@ -1180,10 +1186,8 @@ BOOL ReadDiscStructure(
 			}
 			continue;
 		}
-		if (wFormatLen <= 2 && pEntry->Readable) {
-			wFormatLen = 65535; // formatlen is obsolete for late drive
-		}
-		LPBYTE lpFormat = (LPBYTE)calloc(wFormatLen, sizeof(BYTE));
+
+		LPBYTE lpFormat = (LPBYTE)calloc(pDevice->dwMaxTransferLength, sizeof(BYTE));
 		if (!lpFormat) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
@@ -1193,6 +1197,16 @@ BOOL ReadDiscStructure(
 		REVERSE_BYTES_SHORT(&cdb.AllocationLength, &wFormatLen);
 
 		if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, 
+			lpFormat, direction, wFormatLen, &byScsiStatus, _T(__FUNCTION__), __LINE__) ||
+			byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+			OutputLogA(standardError | fileDisc, "FormatCode: %02x failed\n", pEntry->FormatCode);
+			continue;
+		}
+		wFormatLen = (WORD)(MAKEWORD(lpFormat[1], lpFormat[0]) + 2); // 2 is size of "DVD_DESCRIPTOR_HEADER::Length" itself
+		REVERSE_BYTES_SHORT(&cdb.AllocationLength, &wFormatLen);
+		OutputDiscLogA("FormatLength: %d\n", wFormatLen);
+
+		if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH,
 			lpFormat, direction, wFormatLen, &byScsiStatus, _T(__FUNCTION__), __LINE__) ||
 			byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 			OutputLogA(standardError | fileDisc, "FormatCode: %02x failed\n", pEntry->FormatCode);
