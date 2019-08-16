@@ -1914,85 +1914,114 @@ VOID OutputCDTextOther(
 			// detail in Page 56 of EN 60908:1999
 			OutputDiscLogA("\tSizeInfo\n");
 			if (nSizeInfoCnt == 0) {
+				BYTE ch = pDesc[wTocTextEntries - uiSizeInfoCnt].Text[0];
 				OutputDiscLogA(
-					"\t\t  Charactor Code for this BLOCK: %u\n"
-					"\t\t             First track Number: %u\n"
-					"\t\t              Last track Number: %u\n"
-					"\t\t  Mode2 & copy protection flags: %u\n"
-					"\t\tNumber of PACKS with ALBUM_NAME: %u\n"
-					"\t\t Number of PACKS with PERFORMER: %u\n"
-					"\t\tNumber of PACKS with SONGWRITER: %u\n"
-					"\t\t  Number of PACKS with COMPOSER: %u\n"
-					"\t\t  Number of PACKS with ARRANGER: %u\n"
-					"\t\t  Number of PACKS with MESSAGES: %u\n"
-					"\t\t   Number of PACKS with DISC_ID: %u\n"
-					"\t\t     Number of PACKS with GENRE: %u\n",
-					pDesc[wTocTextEntries - uiSizeInfoCnt].Text[0],
-					pDesc[wTocTextEntries - uiSizeInfoCnt].Text[1],
-					pDesc[wTocTextEntries - uiSizeInfoCnt].Text[2],
-					pDesc[wTocTextEntries - uiSizeInfoCnt].Text[3],
-					pDesc[wTocTextEntries - uiSizeInfoCnt].Text[4],
-					pDesc[wTocTextEntries - uiSizeInfoCnt].Text[5],
-					pDesc[wTocTextEntries - uiSizeInfoCnt].Text[6],
-					pDesc[wTocTextEntries - uiSizeInfoCnt].Text[7],
-					pDesc[wTocTextEntries - uiSizeInfoCnt].Text[8],
-					pDesc[wTocTextEntries - uiSizeInfoCnt].Text[9],
-					pDesc[wTocTextEntries - uiSizeInfoCnt].Text[10],
-					pDesc[wTocTextEntries - uiSizeInfoCnt].Text[11]);
+					"\t\t         Charactor Code for this BLOCK: 0x%02x ", ch);
+				switch (ch) {
+				case 0x00:
+					OutputDiscLogA("(ISO/IEC 8859-1 [Latin-1])\n");
+					break;
+				case 0x01:
+					OutputDiscLogA("(ISO/IEC 646 [ASCII])\n");
+					break;
+				case 0x80:
+					OutputDiscLogA("(Shift-JIS)\n");
+					break;
+				case 0x81:
+					OutputDiscLogA("(Korean character code)\n");
+					break;
+				case 0x82:
+					OutputDiscLogA("(Mandarin Chinese character code)\n");
+					break;
+				default:
+					OutputDiscLogA("(Reserved)\n");
+					break;
+				}
+				OutputDiscLogA(
+					"\t\t                    First track Number: %u\n"
+					"\t\t                     Last track Number: %u\n"
+					"\t\t                         Mode2 PACKETs: %s\n"
+					"\t\t          Program area copy protection: %s\n"
+					"\t\t            Copyright asserted for $85: %s\n"
+					"\t\t        Copyright asserted for $81-$84: %s\n"
+					"\t\t            Copyright asserted for $80: %s\n"
+					"\t\tNumber of PACKS with $80 (ALBUM_NAME) : %u\n"
+					"\t\tNumber of PACKS with $81 (PERFORMER)  : %u\n"
+					"\t\tNumber of PACKS with $82 (SONGWRITER) : %u\n"
+					"\t\tNumber of PACKS with $83 (COMPOSER)   : %u\n"
+					"\t\tNumber of PACKS with $84 (ARRANGER)   : %u\n"
+					"\t\tNumber of PACKS with $85 (MESSAGES)   : %u\n"
+					"\t\tNumber of PACKS with $86 (DISC_ID)    : %u\n"
+					"\t\tNumber of PACKS with $87 (GENRE)      : %u\n"
+					, pDesc[wTocTextEntries - uiSizeInfoCnt].Text[1]
+					, pDesc[wTocTextEntries - uiSizeInfoCnt].Text[2]
+					, BOOLEAN_TO_STRING_YES_NO_A(pDesc[wTocTextEntries - uiSizeInfoCnt].Text[3] & 0x80)
+					, BOOLEAN_TO_STRING_YES_NO_A(pDesc[wTocTextEntries - uiSizeInfoCnt].Text[3] & 0x40)
+					, BOOLEAN_TO_STRING_YES_NO_A(pDesc[wTocTextEntries - uiSizeInfoCnt].Text[3] & 0x04)
+					, BOOLEAN_TO_STRING_YES_NO_A(pDesc[wTocTextEntries - uiSizeInfoCnt].Text[3] & 0x02)
+					, BOOLEAN_TO_STRING_YES_NO_A(pDesc[wTocTextEntries - uiSizeInfoCnt].Text[3] & 0x01)
+					, pDesc[wTocTextEntries - uiSizeInfoCnt].Text[4]
+					, pDesc[wTocTextEntries - uiSizeInfoCnt].Text[5]
+					, pDesc[wTocTextEntries - uiSizeInfoCnt].Text[6]
+					, pDesc[wTocTextEntries - uiSizeInfoCnt].Text[7]
+					, pDesc[wTocTextEntries - uiSizeInfoCnt].Text[8]
+					, pDesc[wTocTextEntries - uiSizeInfoCnt].Text[9]
+					, pDesc[wTocTextEntries - uiSizeInfoCnt].Text[10]
+					, pDesc[wTocTextEntries - uiSizeInfoCnt].Text[11]);
 			}
 			else if (nSizeInfoCnt == 1) {
 				OutputDiscLogA(
-					"\t\t  Number of PACKS with TOC_INFO: %u\n"
-					"\t\t Number of PACKS with TOC_INFO2: %u\n"
-					"\t\t       Number of PACKS with $8a: %u\n"
-					"\t\t       Number of PACKS with $8b: %u\n"
-					"\t\t       Number of PACKS with $8c: %u\n"
-					"\t\t       Number of PACKS with $8d: %u\n"
-					"\t\t   Number of PACKS with UPC_EAN: %u\n"
-					"\t\t Number of PACKS with SIZE_INFO: %u\n"
-					"\t\tLast Sequence number of BLOCK 0: %u\n"
-					"\t\tLast Sequence number of BLOCK 1: %u\n"
-					"\t\tLast Sequence number of BLOCK 2: %u\n"
-					"\t\tLast Sequence number of BLOCK 3: %u\n",
-					pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[0],
-					pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[1],
-					pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[2],
-					pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[3],
-					pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[4],
-					pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[5],
-					pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[6],
-					pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[7],
-					pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[8],
-					pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[9],
-					pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[10],
-					pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[11]);
+					"\t\tNumber of PACKS with $88 (TOC_INFO)   : %u\n"
+					"\t\tNumber of PACKS with $89 (TOC_INFO2)  : %u\n"
+					"\t\tNumber of PACKS with $8b              : %u\n"
+					"\t\tNumber of PACKS with $8a              : %u\n"
+					"\t\tNumber of PACKS with $8c              : %u\n"
+					"\t\tNumber of PACKS with $8d (CLOSED_INFO): %u\n"
+					"\t\tNumber of PACKS with $8e (UPC_EAN)    : %u\n"
+					"\t\tNumber of PACKS with $8f (SIZE_INFO)  : %u\n"
+					"\t\t       Last Sequence number of BLOCK 0: %u\n"
+					"\t\t       Last Sequence number of BLOCK 1: %u\n"
+					"\t\t       Last Sequence number of BLOCK 2: %u\n"
+					"\t\t       Last Sequence number of BLOCK 3: %u\n"
+					, pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[0]
+					, pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[1]
+					, pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[2]
+					, pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[3]
+					, pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[4]
+					, pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[5]
+					, pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[6]
+					, pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[7]
+					, pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[8]
+					, pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[9]
+					, pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[10]
+					, pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[11]);
 			}
 			else if (nSizeInfoCnt == 2) {
 				OutputDiscLogA(
-					"\t\tLast Sequence number of BLOCK 4: %u\n"
-					"\t\tLast Sequence number of BLOCK 5: %u\n"
-					"\t\tLast Sequence number of BLOCK 6: %u\n"
-					"\t\tLast Sequence number of BLOCK 7: %u\n"
-					"\t\t          Language code BLOCK 0: %u\n"
-					"\t\t          Language code BLOCK 1: %u\n"
-					"\t\t          Language code BLOCK 2: %u\n"
-					"\t\t          Language code BLOCK 3: %u\n"
-					"\t\t          Language code BLOCK 4: %u\n"
-					"\t\t          Language code BLOCK 5: %u\n"
-					"\t\t          Language code BLOCK 6: %u\n"
-					"\t\t          Language code BLOCK 7: %u\n",
-					pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[0],
-					pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[1],
-					pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[2],
-					pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[3],
-					pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[4],
-					pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[5],
-					pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[6],
-					pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[7],
-					pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[8],
-					pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[9],
-					pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[10],
-					pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[11]);
+					"\t\t       Last Sequence number of BLOCK 4: %u\n"
+					"\t\t       Last Sequence number of BLOCK 5: %u\n"
+					"\t\t       Last Sequence number of BLOCK 6: %u\n"
+					"\t\t       Last Sequence number of BLOCK 7: %u\n"
+					"\t\t                 Language code BLOCK 0: 0x%02x\n"
+					"\t\t                 Language code BLOCK 1: 0x%02x\n"
+					"\t\t                 Language code BLOCK 2: 0x%02x\n"
+					"\t\t                 Language code BLOCK 3: 0x%02x\n"
+					"\t\t                 Language code BLOCK 4: 0x%02x\n"
+					"\t\t                 Language code BLOCK 5: 0x%02x\n"
+					"\t\t                 Language code BLOCK 6: 0x%02x\n"
+					"\t\t                 Language code BLOCK 7: 0x%02x\n"
+					, pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[0]
+					, pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[1]
+					, pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[2]
+					, pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[3]
+					, pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[4]
+					, pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[5]
+					, pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[6]
+					, pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[7]
+					, pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[8]
+					, pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[9]
+					, pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[10]
+					, pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[11]);
 			}
 			nSizeInfoCnt++;
 		}
