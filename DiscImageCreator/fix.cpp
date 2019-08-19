@@ -83,8 +83,8 @@ VOID FixMainHeader(
 	}
 	else {
 		if (pExtArg->byScanProtectViaFile && pDisc->PROTECT.byExist) {
-			if ((pDisc->SCSI.toc.TrackData[idx].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK &&
-				pDiscPerSector->subQ.current.byCtl == AUDIO_DATA_TRACK) {
+			if (((pDisc->SCSI.toc.TrackData[idx].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) &&
+				((pDiscPerSector->subQ.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK)) {
 				if (pDisc->PROTECT.byExist == protectCDVOB) {
 					if (pDisc->PROTECT.ERROR_SECTOR.nExtentPos == 0) {
 						// 1st error sector (via /sf)
@@ -956,7 +956,6 @@ VOID FixSubQ(
 		}
 	}
 
-//	if (!IsValidSubQCtl(&pDiscPerSector->subQ, pDisc->SUB.lpEndCtlList[pDiscPerSector->subQ.current.byTrackNum - 1])) {
 	if (!IsValidSubQCtl(&pDiscPerSector->subQ, pDisc->SUB.lpEndCtlList[pDiscPerSector->byTrackNum - 1])) {
 		OutputSubErrorWithLBALogA("Q[12]:Ctl[%u] -> [%u], L:[%ld]\n", nLBA, pDiscPerSector->byTrackNum
 			, pDiscPerSector->subQ.current.byCtl, pDiscPerSector->subQ.prev.byCtl, s_lineNum);
@@ -1345,10 +1344,11 @@ BOOL FixSubChannel(
 				}
 
 				if (pDiscPerSector->subcode.current[22] == 0 && pDiscPerSector->subcode.current[23] == 0) {
-					OutputSubErrorWithLBALogA("Failed to reread because crc16 of subQ is 0\n", nLBA, pDiscPerSector->byTrackNum);
-					return FALSE;
+					OutputSubErrorWithLBALogA("Q crc16 is 0. Main-channel may be corrupt\n", nLBA, pDiscPerSector->byTrackNum);
+					*bReread = FALSE;
+//					return FALSE;
 				}
-				else {
+//				else {
 					FixSubQ(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA);
 					if (pDiscPerSector->subQ.current.byAdr == ADR_ENCODES_MEDIA_CATALOG) {
 						UpdateTmpSubQDataForMCN(pExtArg, pDisc, pDiscPerSector, nLBA);
@@ -1359,7 +1359,7 @@ BOOL FixSubChannel(
 					else if (pDiscPerSector->subQ.current.byAdr == ADR_ENCODES_CDTV_SPECIFIC) {
 						UpdateTmpSubQDataForCDTV(pDisc, pDiscPerSector, nLBA);
 					}
-				}
+//				}
 			}
 		}
 		else {
@@ -1371,11 +1371,27 @@ BOOL FixSubChannel(
 		}
 	}
 	else {
+		// manually fix
+#if 0
 		if (pDiscPerSector->subQ.current.byTrackNum > pDisc->SCSI.toc.LastTrack && pDiscPerSector->subQ.current.byTrackNum != 110) {
 			OutputErrorString("pDiscPerSector->subQ.current.byTrackNum:%d, pDiscPerSector->subQ.prev.byTrackNum:%d\n"
 				, pDiscPerSector->subQ.current.byTrackNum, pDiscPerSector->subQ.prev.byTrackNum);
 			pDiscPerSector->subQ.current.byTrackNum = pDiscPerSector->subQ.prev.byTrackNum;
 		}
+		RecalcSubQCrc(pDisc, pDiscPerSector);
+		if (pDisc->SUB.nCorruptCrcH || pDisc->SUB.nCorruptCrcL) {
+			FixSubQ(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA);
+		}
+		if (pDiscPerSector->subQ.current.byAdr == ADR_ENCODES_MEDIA_CATALOG) {
+			UpdateTmpSubQDataForMCN(pExtArg, pDisc, pDiscPerSector, nLBA);
+		}
+		else if (pDiscPerSector->subQ.current.byAdr == ADR_ENCODES_ISRC) {
+			UpdateTmpSubQDataForISRC(&pDiscPerSector->subQ);
+		}
+		else if (pDiscPerSector->subQ.current.byAdr == ADR_ENCODES_CDTV_SPECIFIC) {
+			UpdateTmpSubQDataForCDTV(pDisc, pDiscPerSector, nLBA);
+		}
+#endif
 	}
 	if (!*bReread) {
 		if (!pExtArg->bySkipSubP) {
