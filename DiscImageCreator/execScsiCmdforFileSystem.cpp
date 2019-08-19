@@ -579,9 +579,9 @@ BOOL ReadCDForFileSystem(
 						OutputLogA(standardOut | fileDisc, "Detected a protected file [%s]. LBA %d to %d"
 							, pDisc->PROTECT.name, pDisc->PROTECT.ERROR_SECTOR.nExtentPos
 							, pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize);
-						if (pDisc->PROTECT.byExist == microids) {
-							OutputLogA(standardOut | fileDisc, ", %d to %d\n"
-								, pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd
+						if (pDisc->PROTECT.byExist == microids || pDisc->PROTECT.byExist == datelAlt) {
+							OutputLogA(standardOut | fileDisc, ",  [%s]. LBA %d to %d\n"
+								, pDisc->PROTECT.name2, pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd
 								, pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd + pDisc->PROTECT.ERROR_SECTOR.nSectorSize2nd);
 						}
 						else {

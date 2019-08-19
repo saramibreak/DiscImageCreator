@@ -637,7 +637,7 @@ INT ExecEccEdc(
 		OutputString(_T("Exec %s\n"), str);
 		ret = _tsystem(str);
 	}
-	if (protect.byExist == microids) {
+	if (protect.byExist == microids || protect.byExist == datelAlt) {
 		nStartLBA = errorSector.nExtentPos2nd;
 		nEndLBA = errorSector.nExtentPos2nd + errorSector.nSectorSize2nd;
 		if (GetEccEdcCmd(str, nStrSize, cmd, pszImgPath, nStartLBA, nEndLBA)) {
@@ -913,7 +913,7 @@ BOOL ReadCDAll(
 		BOOL bC2Error = FALSE;
 		BOOL bReread = FALSE;
 		INT nFirstErrLBA[12] = {};
-		INT nSecondSessionLBA = 0;
+		INT nSecondSessionLBA = pDisc->MAIN.nFixFirstLBAof2ndSession;
 		INT nRetryCnt = 0;
 
 		while (nFirstLBA < nLastLBA) {
@@ -996,8 +996,8 @@ BOOL ReadCDAll(
 						INT idx = pDisc->SCSI.byFirstMultiSessionTrackNum - 1;
 						if ((ctl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 							pDisc->SUB.lpLastLBAListOfDataTrackOnSub[idx - 1] = nLBA - 1;
+							pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[idx] = pDisc->SCSI.nFirstLBAof2ndSession;
 						}
-						pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[idx] = pDisc->SCSI.nFirstLBAof2ndSession;
 						pDisc->SUB.lpFirstLBAListOnSub[idx][0] = pDisc->SCSI.nFirstLBAof2ndSession - 150;
 						pDisc->SUB.lpFirstLBAListOnSub[idx][1] = pDisc->SCSI.nFirstLBAof2ndSession;
 
@@ -1831,9 +1831,9 @@ BOOL ReadCDPartial(
 			, pDisc->MAIN.nOffsetStart, pDisc->MAIN.nOffsetEnd, pDisc->MAIN.nFixStartLBA, pDisc->MAIN.nFixEndLBA);
 #endif
 		INT nFirstLBA = nStart + pDisc->MAIN.nOffsetStart - 1;
-		if (*pExecType == data) {
-			nFirstLBA++;
-		}
+//		if (*pExecType == data) {
+//			nFirstLBA++;
+//		}
 		INT nLastLBA = nEnd + pDisc->MAIN.nOffsetEnd;
 		if (*pExecType == gd) {
 			if (nFirstLBA < 0) {
@@ -2137,7 +2137,7 @@ BOOL ReadCDPartial(
 			}
 			OutputString(_T("Reversing _reverse%s to %s\n"), szExt, szExt);
 			BYTE rBuf[CD_RAW_SECTOR_SIZE] = {};
-			DWORD dwRoop = GetFileSize(0, fpBin_r) - CD_RAW_SECTOR_SIZE * 3;
+			DWORD dwRoop = GetFileSize(0, fpBin_r) - CD_RAW_SECTOR_SIZE/* * 3*/;
 			LONG lSeek = CD_RAW_SECTOR_SIZE - (LONG)pDisc->MAIN.uiMainDataSlideSize;
 			fseek(fpBin_r, -lSeek, SEEK_END);
 

@@ -482,7 +482,8 @@ BOOL IsValidProtectedSector(
 	BOOL bRet = FALSE;
 	if ((pDisc->PROTECT.byExist && pDisc->PROTECT.ERROR_SECTOR.nExtentPos <= nLBA &&
 		nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize) ||
-		(pDisc->PROTECT.byExist == microids && pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd <= nLBA &&
+		((pDisc->PROTECT.byExist == microids || pDisc->PROTECT.byExist == datelAlt)
+			&& pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd <= nLBA &&
 			nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd + pDisc->PROTECT.ERROR_SECTOR.nSectorSize2nd)) {
 		bRet = TRUE;
 	}
@@ -517,7 +518,9 @@ BOOL IsValidIntentionalC2error(
 	PDISC_PER_SECTOR pDiscPerSector
 ) {
 	BOOL bRet = FALSE;
-	if (pDisc->PROTECT.byExist == codelock || pDisc->PROTECT.byExist == datel ||
+	if (pDisc->PROTECT.byExist == codelock ||
+		pDisc->PROTECT.byExist == datel ||
+		pDisc->PROTECT.byExist == datelAlt ||
 		IsValidSafeDiscSector(pDisc, pDiscPerSector)) {
 		bRet = TRUE;
 	}

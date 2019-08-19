@@ -159,7 +159,14 @@ VOID OutputFsDirectoryRecord(
 				pDisc->PROTECT.byExist = datel;
 				strncpy(pDisc->PROTECT.name, fnameForProtect, 7);
 				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)uiExtentPos;
-				pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(uiDataLen / DISC_RAW_READ_SIZE - 1);
+				pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(uiDataLen / DISC_RAW_READ_SIZE);
+			}
+			else if (pDisc->PROTECT.byExist == datel && !strncmp(fnameForProtect, "DATA.DAT", 8)) {
+				// for "DVD Region X"
+				pDisc->PROTECT.byExist = datelAlt;
+				strncpy(pDisc->PROTECT.name2, fnameForProtect, 8);
+				pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd = (INT)uiExtentPos;
+				pDisc->PROTECT.ERROR_SECTOR.nSectorSize2nd = (INT)(uiDataLen / DISC_RAW_READ_SIZE);
 			}
 			else if (!strncmp(fnameForProtect, "LASERLOK.IN", 11)) {
 				pDisc->PROTECT.byExist = laserlock;
@@ -210,6 +217,7 @@ VOID OutputFsDirectoryRecord(
 				pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(uiDataLen / DISC_RAW_READ_SIZE - 1);
 			}
 			else if (pDisc->PROTECT.byExist == microids && !strncmp(fnameForProtect, "_SETUP.DLL", 10)) { // Der KorsaR (Germany)
+				strncpy(pDisc->PROTECT.name2, fnameForProtect, 10);
 				pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd = (INT)uiExtentPos;
 				pDisc->PROTECT.ERROR_SECTOR.nSectorSize2nd = (INT)(uiDataLen / DISC_RAW_READ_SIZE - 1);
 			}
