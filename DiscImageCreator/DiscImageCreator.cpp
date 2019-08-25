@@ -511,13 +511,73 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 	return bRet;
 }
 
+// custom _tsplitpath implementation to preserve dots in path
+void splitPath(const _TCHAR* path, _TCHAR* drive, _TCHAR* dir, _TCHAR* fname, _TCHAR* ext)
+{
+    if(path == NULL)
+        return;
+
+    const _TCHAR *dr, *dn, *bn, *ex;
+    dr = dn = bn = ex = path;
+
+    // drive
+    if(path[0] != TEXT('\0') && path[1] == TEXT(':'))
+        dn = path + 2;
+
+    // path
+    const _TCHAR *p = dn;
+    for(; *p != TEXT('\0'); ++p)
+    {
+        if(*p == TEXT('\\') || *p == TEXT('/'))
+            bn = ex = p + 1;
+        else if(*p == TEXT('.'))
+            ex = p;
+    }
+
+    if(drive != NULL)
+    {
+        size_t n = (size_t)(dn - dr);
+        if(n > _MAX_DRIVE)
+            n = _MAX_DRIVE - 1;
+        _tcsncpy(drive, dr, n);
+        drive[n] = TEXT('\0');
+    }
+
+    if(dir != NULL)
+    {
+        size_t n = (size_t)(bn - dn);
+        if(n > _MAX_DIR)
+            n = _MAX_DIR - 1;
+        _tcsncpy(dir, dn, n);
+        dir[n] = TEXT('\0');
+    }
+
+    if(fname != NULL)
+    {
+        size_t n = (size_t)(ex - bn);
+        if(n > _MAX_FNAME)
+            n = _MAX_FNAME - 1;
+        _tcsncpy(fname, bn, n);
+        fname[n] = TEXT('\0');
+    }
+
+    if(ext != NULL)
+    {
+        size_t n = (size_t)(p - ex);
+        if(n > _MAX_EXT)
+            n = _MAX_EXT - 1;
+        _tcsncpy(ext, ex, n);
+        ext[n] = TEXT('\0');
+    }
+}
+
 int printAndSetPath(_TCHAR* szPathFromArg, _TCHAR* pszFullPath)
 {
 	if (!GetCurrentDirectory(sizeof(s_szCurrentdir) / sizeof(s_szCurrentdir[0]), s_szCurrentdir)) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
-	_tsplitpath(szPathFromArg, s_szDrive, s_szDir, s_szFname, s_szExt);
+    splitPath(szPathFromArg, s_szDrive, s_szDir, s_szFname, s_szExt);
 
 	if (!s_szDrive[0] || !s_szDir[0]) {
 		_tcsncpy(pszFullPath, s_szCurrentdir, _MAX_PATH);
@@ -546,7 +606,7 @@ int printAndSetPath(_TCHAR* szPathFromArg, _TCHAR* pszFullPath)
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
 		}
-		_tsplitpath(pszFullPath, s_szDrive, s_szDir, s_szFname, NULL);
+        splitPath(pszFullPath, s_szDrive, s_szDir, NULL, NULL);
 		if (s_szExt[0] && _tcslen(pszFullPath) + _tcslen(s_szExt) < _MAX_PATH) {
 			_tcsncat(pszFullPath, s_szExt, _tcslen(s_szExt));
 		}
