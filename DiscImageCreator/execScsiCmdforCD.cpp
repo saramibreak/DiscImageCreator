@@ -1888,9 +1888,9 @@ BOOL ReadCDPartial(
 				nFirstLBA = nLBA;
 			}
 			else if (bProcessRet == RETURNED_CONTINUE) {
-				if (!bForceSkip || !bForceSkip2) {
+				if (pDisc->PROTECT.byExist != physicalErr && (!bForceSkip || !bForceSkip2)) {
 					if (pDisc->PROTECT.byExist == proring || pDisc->PROTECT.byExist == laserlock ||
-						pDisc->PROTECT.byExist == physicalErr || pDisc->PROTECT.byExist == microids) {
+						pDisc->PROTECT.byExist == microids) {
 						if (!bForceSkip) {
 							for (UINT i = 0; i < pExtArg->uiSkipSectors; i++) {
 								ProcessReturnedContinue(pExecType, pExtArg, pDevice, pDisc, pDiscPerSector
@@ -1913,15 +1913,18 @@ BOOL ReadCDPartial(
 					}
 				}
 				else {
-					if ((nRetryCnt < 3 && pDisc->PROTECT.byExist == proring) ||
-						(nRetryCnt < 10 && (pDisc->PROTECT.byExist == laserlock || pDisc->PROTECT.byExist == physicalErr))) {
-						FlushDriveCache(pExtArg, pDevice, nLBA + nRetryCnt * 100);
+					if ((nRetryCnt <= 2 && pDisc->PROTECT.byExist == proring) ||
+						(nRetryCnt <= 10 && (pDisc->PROTECT.byExist == laserlock || pDisc->PROTECT.byExist == physicalErr))) {
+						FlushDriveCache(pExtArg, pDevice, nLBA - 1);
+						Sleep(1000);
+						OutputLog(standardError | fileMainError, _T("Retry %d/10\n"), nRetryCnt);
 						nRetryCnt++;
 						continue;
 					}
 					ProcessReturnedContinue(pExecType, pExtArg, pDevice, pDisc, pDiscPerSector
 						, nLBA, nMainDataType, padByUsr55, fpBin, fpSub, fpC2);
 					nRetryCnt = 1;
+					OutputLogA(standardOut | fileMainError, "LBA[%06d, %#07x] Reread NG\n", nLBA, nLBA);
 				}
 			}
 			else if (bProcessRet == RETURNED_FALSE) {
@@ -1966,6 +1969,10 @@ BOOL ReadCDPartial(
 			}
 			if (bProcessRet != RETURNED_CONTINUE &&
 				bProcessRet != RETURNED_SKIP_LBA) {
+				if (nRetryCnt > 1) {
+					OutputLogA(standardOut | fileMainError, "LBA[%06d, %#07x] Reread OK\n", nLBA, nLBA);
+					nRetryCnt = 1;
+				}
 				if (pDisc->PROTECT.byExist == laserlock) {
 					if (pExtArg->uiSkipSectors != 0) {
 						bForceSkip = FALSE;
