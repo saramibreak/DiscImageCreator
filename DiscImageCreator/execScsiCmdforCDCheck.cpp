@@ -67,7 +67,7 @@ BOOL ReadCDForSubChannelOffset(
 				AlignRowSubcode(lpSubcode, lpBufTmp + CD_RAW_SECTOR_WITH_C2_SIZE);
 			}
 		}
-		OutputCDSub96Align(lpSubcode, nLBA);
+		OutputCDSub96Align(fileDisc, lpSubcode, nLBA);
 		BOOL bCheckSubQAllZero = TRUE;
 		for (INT j = 12; j < 24; j++) {
 			if (lpSubcode[j] != 0) {
@@ -205,7 +205,8 @@ BOOL ExecSearchingOffset(
 				}
 			}
 		}
-		else if (pDisc->SCSI.trackType == TRACK_TYPE::audioOnly && pExtArg->byVideoNow) {
+		else if (pDisc->SCSI.trackType == TRACK_TYPE::audioOnly &&
+			(pExtArg->byVideoNow || pExtArg->byVideoNowColor)) {
 			LPBYTE pBuf2 = NULL;
 			LPBYTE lpBuf2 = NULL;
 			if (!GetAlignedCallocatedBuffer(pDevice, &pBuf2,
@@ -232,7 +233,7 @@ BOOL ExecSearchingOffset(
 			};
 			INT nSector = 1;
 
-			for (INT i = 0; i < CD_RAW_SECTOR_SIZE * 10; i++) {
+			for (INT i = 0; i < CD_RAW_SECTOR_SIZE * 15; i++) {
 				for (size_t c = 0; c < sizeof(aVideoNowBytes); c++) {
 					if (lpBuf2[i + c] != aVideoNowBytes[c]) {
 						bRet = FALSE;
@@ -241,6 +242,62 @@ BOOL ExecSearchingOffset(
 					if (c == sizeof(aVideoNowBytes) - 1) {
 						OutputLogA(standardOut | fileDisc, "Detected VideoNow Color or Jr. or XP\n");
 						bRet = TRUE;
+
+						if (pExtArg->byVideoNowColor) {
+							OutputLogA(standardOut | fileDisc, "Search incomplete frame of track 01\n");
+							LPBYTE pBuf3 = NULL;
+							LPBYTE lpBuf3 = NULL;
+							if (!GetAlignedCallocatedBuffer(pDevice, &pBuf3,
+								CD_RAW_SECTOR_SIZE * 9, &lpBuf3, _T(__FUNCTION__), __LINE__)) {
+								return FALSE;
+							}
+							INT tmpLBA = 883;
+							nSector--;
+							for (INT j = nSector; j < 9 + nSector; j++) {
+								if (!ExecReadCD(pExtArg, pDevice, lpCmd, tmpLBA + j
+									, aBuf, uiBufSize, _T(__FUNCTION__), __LINE__)) {
+									return FALSE;
+								}
+								memcpy(lpBuf3 + CD_RAW_SECTOR_SIZE * (j - nSector), aBuf, CD_RAW_SECTOR_SIZE);
+								OutputCDMain(fileMainInfo, lpBuf3 + CD_RAW_SECTOR_SIZE * (j - nSector), tmpLBA + j, CD_RAW_SECTOR_SIZE);
+							}
+							INT n1stHeaderOfs = 0;
+							INT n2ndHeaderOfs = 0;
+							for (INT m = 0; m < CD_RAW_SECTOR_SIZE * 9; m++) {
+								for (size_t d = 0; d < sizeof(aVideoNowBytes); d++) {
+									if (lpBuf3[m + d] != aVideoNowBytes[d]) {
+										bRet = FALSE;
+										break;
+									}
+									if (d == sizeof(aVideoNowBytes) - 1) {
+										if (n1stHeaderOfs == 0) {
+											n1stHeaderOfs = m;
+											OutputLogA(standardOut | fileDisc, "1stHeaderOfs: %d (0x%x)\n"
+												, n1stHeaderOfs, n1stHeaderOfs);
+											m += 400;
+											break;
+										}
+										else {
+											n2ndHeaderOfs = m;
+											OutputLogA(standardOut | fileDisc, "2ndHeaderOfs: %d (0x%x)\n"
+												, n2ndHeaderOfs, n2ndHeaderOfs);
+											OutputLogA(standardOut | fileDisc
+												, "Empty bytes which are needed in this disc: %d [18032 - (%d - %d)]\n"
+												, 18032 - (n2ndHeaderOfs - n1stHeaderOfs)
+												, n2ndHeaderOfs, n1stHeaderOfs
+											);
+											pExtArg->nAudioCDOffsetNum = 18032 - (n2ndHeaderOfs - n1stHeaderOfs);
+											bRet = TRUE;
+											break;
+										}
+									}
+								}
+								if (bRet) {
+									break;
+								}
+							}
+							FreeAndNull(pBuf3);
+						}
 					}
 				}
 				if (!bRet) {
@@ -257,8 +314,10 @@ BOOL ExecSearchingOffset(
 				}
 				if (bRet) {
 					pDisc->MAIN.nCombinedOffset = i - pExtArg->nAudioCDOffsetNum;
-					nSector--;
-					OutputCDMain(fileDisc, lpBuf2 + CD_RAW_SECTOR_SIZE * nSector, nLBA + nSector, CD_RAW_SECTOR_SIZE);
+					if (!pExtArg->byVideoNowColor) {
+						nSector--;
+						OutputCDMain(fileDisc, lpBuf2 + CD_RAW_SECTOR_SIZE * nSector, nLBA + nSector, CD_RAW_SECTOR_SIZE);
+					}
 					break;
 				}
 				else if (i == CD_RAW_SECTOR_SIZE * nSector - 1) {
@@ -266,6 +325,59 @@ BOOL ExecSearchingOffset(
 				}
 			}
 			FreeAndNull(pBuf2);
+		}
+		else if (pDisc->SCSI.trackType == TRACK_TYPE::audioOnly && pExtArg->byAtari) {
+			// Atari Jaguar CD Header
+			//  00 00 54 41 49 52 54 41  49 52 54 41 49 52 54 41   ..TAIRTAIRTAIRTA
+			//  49 52 54 41 49 52 54 41  49 52 54 41 49 52 54 41   IRTAIRTAIRTAIRTA
+			//  49 52 54 41 49 52 54 41  49 52 54 41 49 52 54 41   IRTAIRTAIRTAIRTA
+			//  49 52 54 41 49 52 54 41  49 52 54 41 49 52 54 41   IRTAIRTAIRTAIRTA
+			//  49 52 54 41 52 41 20 49  50 41 52 50 56 4F 44 45   IRTARA IPARPVODE
+			//  44 20 54 41 20 41 45 48  44 41 52 45 41 20 52 54   D TA AEHDAREA RT
+			//  20 49                                               I
+			// => "ATRIATRI ... ATARI APPROVED DATA HEADER ATRI "
+
+			// Atari Jaguar CD Tailer
+			//       54 41 52 41 20 49  50 41 52 50 56 4F 44 45     TARA IPARPVODE
+			// 44 20 54 41 20 41 41 54  4C 49 52 45 41 20 52 54   D TA AATLIREA RT
+			// 20 49 54 41 49 52 54 41  49 52 54 41 49 52 54 41    ITAIRTAIRTAIRTA
+			// 49 52 54 41 49 52 54 41  49 52 54 41 49 52 54 41   IRTAIRTAIRTAIRTA
+			// 49 52 54 41 49 52 54 41  49 52 54 41 49 52 54 41   IRTAIRTAIRTAIRTA
+			// 49 52 54 41 49 52 54 41  49 52 54 41 49 52 54 41   IRTAIRTAIRTAIRTA
+			// 49 52                                              IR
+			// => "ATARI APPROVED DATA TAILER ATRI ATRIATRI ..."
+			CONST BYTE aAtariBytes[] = {
+				0x54, 0x41, 0x49, 0x52, 0x54, 0x41, 0x49, 0x52,
+			};
+			INT nSector = 0;
+			nLBA = pDisc->SCSI.nFirstLBAof2ndSession;
+			do {
+				if (!ExecReadCD(pExtArg, pDevice, lpCmd, nLBA
+					, lpBuf, uiBufSize, _T(__FUNCTION__), __LINE__)) {
+					return FALSE;
+				}
+				for (INT i = 0; i < CD_RAW_SECTOR_SIZE; i++) {
+					for (size_t c = 0; c < sizeof(aAtariBytes); c++) {
+						if (lpBuf[i + c] != aAtariBytes[c]) {
+							bRet = FALSE;
+							break;
+						}
+						if (c == sizeof(aAtariBytes) - 1) {
+							OutputLogA(standardOut | fileDisc, "Detected Atari Jaguar CD Header\n");
+							bRet = TRUE;
+						}
+					}
+					if (bRet) {
+						pDisc->MAIN.nCombinedOffset = i - 2 + CD_RAW_SECTOR_SIZE * nSector;
+						OutputCDMain(fileDisc, lpBuf, nLBA, CD_RAW_SECTOR_SIZE);
+						break;
+					}
+				}
+				if (!bRet) {
+					nSector--;
+					nLBA += nSector;
+				}
+			} while (!bRet);
 		}
 		OutputCDOffset(pExtArg, pDisc, bGetDriveOffset
 			, nDriveSampleOffset, nDriveOffset, pDisc->SUB.nSubChannelOffset);
@@ -562,15 +674,15 @@ BOOL ReadCDForCheckingSubQAdrFirst(
 	LPINT nOfs
 ) {
 	if (!GetAlignedCallocatedBuffer(pDevice, ppBuf,
-		CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE, lpBuf, _T(__FUNCTION__), __LINE__)) {
+		CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * 2, lpBuf, _T(__FUNCTION__), __LINE__)) {
 		return FALSE;
 	}
 	CDFLAG::_READ_CD::_ERROR_FLAGS c2 = CDFLAG::_READ_CD::NoC2;
 	if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
 		c2 = CDFLAG::_READ_CD::byte294;
-		*uiBufLen = CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE;
+		*uiBufLen = CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * 2;
 	}
-	SetReadDiscCommand(NULL, pExtArg, pDevice, 1, c2, CDFLAG::_READ_CD::Raw, lpCmd, FALSE);
+	SetReadDiscCommand(NULL, pExtArg, pDevice, 2, c2, CDFLAG::_READ_CD::Raw, lpCmd, FALSE);
 	*nOfs = pDisc->MAIN.nCombinedOffset % CD_RAW_SECTOR_SIZE;
 	if (pDisc->MAIN.nCombinedOffset < 0) {
 		*nOfs = CD_RAW_SECTOR_SIZE + *nOfs;
@@ -674,7 +786,7 @@ BOOL ReadCDForCheckingSubQAdr(
 					if (!strncmp(szTmpCatalog, szCatalog, sizeof(szTmpCatalog) / sizeof(szTmpCatalog[0]))) {
 						strncpy(pDisc->SUB.szCatalog, szCatalog, sizeof(pDisc->SUB.szCatalog) / sizeof(pDisc->SUB.szCatalog[0]));
 						pDisc->SUB.byCatalog = (BYTE)bMCN;
-						OutputCDSub96Align(pDiscPerSector->subcode.current, nLBA);
+						OutputCDSub96Align(fileDisc, pDiscPerSector->subcode.current, nLBA);
 						OutputDiscLogA("\tMCN: [%s]\n", szCatalog);
 						WriteCcdForDiscCatalog(pDisc, fpCcd);
 					}
@@ -703,7 +815,7 @@ BOOL ReadCDForCheckingSubQAdr(
 					if (!strncmp(szTmpISRC, szISRC, sizeof(szISRC) / sizeof(szISRC[0]))) {
 						strncpy(pDisc->SUB.pszISRC[byIdxOfTrack], szISRC, META_ISRC_SIZE);
 						pDisc->SUB.lpISRCList[byIdxOfTrack] = bISRC;
-						OutputCDSub96Align(pDiscPerSector->subcode.current, nLBA);
+						OutputCDSub96Align(fileDisc, pDiscPerSector->subcode.current, nLBA);
 						OutputDiscLogA("\tISRC: [%s]\n", szISRC);
 					}
 				}
@@ -764,7 +876,7 @@ BOOL ReadCDForCheckingSubRtoW(
 				AlignRowSubcode(lpSubcode, lpBuf + CD_RAW_SECTOR_SIZE);
 				memcpy(lpSubcodeOrg, lpBuf + CD_RAW_SECTOR_SIZE, CD_RAW_READ_SUBCODE_SIZE);
 			}
-			OutputCDSub96Align(lpSubcode, nTmpLBA);
+			OutputCDSub96Align(fileDisc, lpSubcode, nTmpLBA);
 
 			SUB_R_TO_W scRW[4] = {};
 			BYTE tmpCode[24] = {};
@@ -1502,6 +1614,12 @@ BOOL ReadCDCheck(
 			_T("[INFO] This disc isn't Multi-Session. /ms is ignored.\n"));
 		pExtArg->byMultiSession = FALSE;
 	}
+	else if (pDisc->SCSI.bMultiSession && !pExtArg->byMultiSession) {
+		OutputString(
+			_T("[INFO] This disc is Multi-Session. /ms is set.\n"));
+		pExtArg->byMultiSession = TRUE;
+	}
+
 	if (!pExtArg->byReverse) {
 		// Typically, CD+G data is included in audio only disc
 		// But exceptionally, WonderMega Collection (SCD)(mixed disc) exists CD+G data.

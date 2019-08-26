@@ -135,6 +135,7 @@ VOID OutputCDMain(
 );
 
 VOID OutputCDSub96Align(
+	LOG_TYPE type,
 	LPBYTE lpBuf,
 	INT nLBA
 );

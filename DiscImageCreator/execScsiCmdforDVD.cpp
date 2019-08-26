@@ -33,6 +33,86 @@
 #define XGD2_LAYER_BREAK	(1913760)
 #define XGD3_LAYER_BREAK	(2133520)
 
+BOOL ReadDVDReverse(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	LPCTSTR pszFullPath,
+	INT nStartLBA,
+	INT nLastLBA
+) {
+	FILE* fpRev = CreateOrOpenFile(
+		pszFullPath, _T("_reverse"), NULL, NULL, NULL, _T(".iso"), _T("wb"), 0, 0);
+	if (!fpRev) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		return FALSE;
+	}
+	BOOL bRet = TRUE;
+	LPBYTE pBuf = NULL;
+	try {
+		if (NULL == (pBuf = (LPBYTE)calloc(
+			DISC_RAW_READ_SIZE + pDevice->AlignmentMask, sizeof(BYTE)))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			throw FALSE;
+		}
+		LPBYTE lpBuf = (LPBYTE)ConvParagraphBoundary(pDevice, pBuf);
+
+		CDB::_READ12 cdb = {};
+		cdb.OperationCode = SCSIOP_READ12;
+		DWORD dwTransferLen = 1;
+		REVERSE_BYTES(&cdb.TransferLength, &dwTransferLen);
+		if (pExtArg->byFua) {
+			cdb.ForceUnitAccess = TRUE;
+		}
+#ifdef _WIN32
+		INT direction = SCSI_IOCTL_DATA_IN;
+#else
+		INT direction = SG_DXFER_FROM_DEV;
+#endif
+		BYTE byScsiStatus = 0;
+
+		for (INT nLBA = nLastLBA; nStartLBA <= nLBA; nLBA--) {
+			REVERSE_BYTES(&cdb.LogicalBlock, &nLBA);
+			if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, lpBuf,
+				direction, DISC_RAW_READ_SIZE, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+				throw FALSE;
+			}
+			fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_RAW_READ_SIZE, fpRev);
+			OutputString(_T("\rCreating iso(LBA) %8u/%8u"), nLBA, nLastLBA);
+		}
+		OutputString(_T("\n"));
+		FcloseAndNull(fpRev);
+
+		FILE* fp = CreateOrOpenFile(
+			pszFullPath, NULL, NULL, NULL, NULL, _T(".iso"), _T("wb"), 0, 0);
+		if (!fp) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			throw FALSE;
+		}
+		fpRev = CreateOrOpenFile(
+			pszFullPath, _T("_reverse"), NULL, NULL, NULL, _T(".iso"), _T("rb"), 0, 0);
+		if (!fpRev) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			return FALSE;
+		}
+		for (INT i = 1; i <= nLastLBA - nStartLBA + 1; i++) {
+			fseek(fpRev, -DISC_RAW_READ_SIZE * i, SEEK_END);
+			if (fread(lpBuf, sizeof(BYTE), DISC_RAW_READ_SIZE, fpRev) < DISC_RAW_READ_SIZE) {
+				OutputErrorString(_T("Failed to read [F:%s][L:%d]\n"), _T(__FUNCTION__), __LINE__);
+				return FALSE;
+			}
+			fwrite(lpBuf, sizeof(BYTE), DISC_RAW_READ_SIZE, fp);
+		}
+		FcloseAndNull(fp);
+	}
+	catch (BOOL ret) {
+		bRet = ret;
+	}
+	FreeAndNull(pBuf);
+	FcloseAndNull(fpRev);
+	return bRet;
+}
+
 BOOL ReadDVD(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,

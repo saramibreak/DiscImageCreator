@@ -412,6 +412,9 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 										}
 									}
 								}
+								else if (pExtArg->byReverse) {
+									bRet = ReadDVDReverse(pExtArg, &device, pszFullPath, (INT)s_nStartLBA, (INT)s_nEndLBA);
+								}
 								else {
 									bRet = ReadDVD(pExecType, pExtArg, &device, &discData, pszFullPath);
 								}
@@ -877,6 +880,12 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 						return FALSE;
 					}
 				}
+				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/vnc"), 4)) {
+					pExtArg->byVideoNowColor = TRUE;
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/aj"), 3)) {
+					pExtArg->byAtari = TRUE;
+				}
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/np"), 3)) {
 					pExtArg->bySkipSubP = TRUE;
 				}
@@ -1067,6 +1076,20 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					if (!SetOptionF(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
+				}
+				else if (argc >= 8 && cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/r"), 2)) {
+					pExtArg->byReverse = TRUE;
+					s_nStartLBA = _tcstol(argv[i], &endptr, 10);
+					if (*endptr) {
+						OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
+						return FALSE;
+					}
+					s_nEndLBA = _tcstol(argv[i + 1], &endptr, 10);
+					if (*endptr) {
+						OutputErrorString(_T("[%s] is invalid argument. Please input integer.\n"), endptr);
+						return FALSE;
+					}
+					i += 2;
 				}
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/sf"), 3)) {
 					if (!SetOptionSf(argc, argv, pExtArg, &i)) {
@@ -1315,9 +1338,9 @@ int printUsage(void)
 {
 	OutputString(
 		_T("Usage\n")
-		_T("\tcd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/a (val)]\n")
+		_T("\tcd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/a (val)] [/aj] [/p]\n")
 		_T("\t   [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4)] [/f (val)] [/m] [/ms]\n")
-		_T("\t   [/p] [/vn (val)] [/sf (val)] [/ss] [/np] [/nq] [/nr] [/nl] [/ns] [/s (val)]\n")
+		_T("\t   [/vn (val)] [/vnc] [/sf (val)] [/ss] [/np] [/nq] [/nr] [/nl] [/ns] [/s (val)]\n")
 		_T("\t\tDump a CD from A to Z\n")
 		_T("\t\tFor PLEXTOR or drive that can scramble Dumping\n")
 		_T("\tswap <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/a (val)]\n")
@@ -1342,6 +1365,7 @@ int printUsage(void)
 		_T("\t   [/c2 (val1) (val2) (val3) (val4)] [/np] [/nq] [/nr] [/s (val)]\n")
 		_T("\t\tDump a HD area of GD from A to Z\n")
 		_T("\tdvd <DriveLetter> <Filename> <DriveSpeed(0-16)> [/c] [/f (val)] [/raw] [/q]\n")
+		_T("\t    [/r (startLBA) (EndLBA)]\n")
 		_T("\t\tDump a DVD from A to Z\n")
 		_T("\txbox <DriveLetter> <Filename> <DriveSpeed(0-16)> [/f (val)] [/q]\n")
 		_T("\t\tDump a xbox disc from A to Z\n")
@@ -1362,10 +1386,10 @@ int printUsage(void)
 		_T("\tbd <DriveLetter> <Filename> <DriveSpeed(0-12)> [/f (val)] [/q]\n")
 		_T("\t\tDump a BD from A to Z\n")
 		_T("\tfd <DriveLetter> <Filename>\n")
-		_T("\t\tDump a floppy disk\n")
 	);
 	ret = stopMessage();
 	OutputString(
+		_T("\t\tDump a floppy disk\n")
 		_T("\tdisk <DriveLetter> <Filename>\n")
 		_T("\t\tDump a removable media other than floppy\n")
 		_T("\tstop <DriveLetter>\n")
@@ -1438,14 +1462,18 @@ int printUsage(void)
 		_T("\t/vn\tSearch specific bytes\n")
 		_T("\t\t\tFor VideoNow\n")
 		_T("\t\t\tval\tCombined offset is shifted for negative direction if positive value is set\n")
+		_T("\t/vnc\tSearch specific bytes\n")
+		_T("\t\t\tFor VideoNow Color\n")
+		_T("\t/aj\tSearch specific bytes\n")
+		_T("\t\t\tFor Atari Jaguar CD\n")
 		_T("Option (for CD SubChannel)\n")
+	);
+	ret = stopMessage();
+	OutputString(
 		_T("\t/np\tNot fix SubP\n")
 		_T("\t/nq\tNot fix SubQ\n")
 		_T("\t/nr\tNot fix SubRtoW\n")
 		_T("\t/nl\tNot fix SubQ (RMSF, AMSF, CRC) (LBA 10000 - 19999)\n")
-	);
-	ret = stopMessage();
-	OutputString(
 		_T("\t   \t                               (LBA 40000 - 49999)\n")
 		_T("\t\t\tFor PlayStation LibCrypt\n")
 		_T("\t/ns\tNot fix SubQ (RMSF, AMSF, CRC) (LBA 0 - 7, 5000 - 24999)\n")
@@ -1457,6 +1485,7 @@ int printUsage(void)
 		_T("\t\t\t   \t2: read next & next next sub (slow, precision)\n")
 		_T("Option (for DVD)\n")
 		_T("\t/c\tLog Copyright Management Information\n")
+		_T("\t/r\tRead DVD from the reverse\n")
 		_T("\t/raw\tDumping DVD by raw (2064 or 2384 bytes/sector)\n")
 		_T("\t\t\tComfirmed drive: Mediatec MT chip (Lite-on etc.), PLEXTOR\n")
 		_T("\t\t\t               Hitachi-LG GDR, GCC\n")

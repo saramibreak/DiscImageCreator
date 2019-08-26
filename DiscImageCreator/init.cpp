@@ -71,7 +71,8 @@ BOOL InitTocFullData(
 		return FALSE;
 	}
 	(*pDisc)->SCSI.nFirstLBAofLeadout = -1;
-	(*pDisc)->SCSI.nFirstLBAof2ndSession = -1;
+	// init this by ReadTOCFull
+//	(*pDisc)->SCSI.nFirstLBAof2ndSession = -1;
 	return TRUE;
 }
 

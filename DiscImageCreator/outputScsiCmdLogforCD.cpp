@@ -1275,14 +1275,18 @@ VOID OutputCDMain(
 }
 
 VOID OutputCDSub96Align(
+	LOG_TYPE type,
 	LPBYTE lpBuf,
 	INT nLBA
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Sub Channel)
+#ifdef _DEBUG
+	UNREFERENCED_PARAMETER(type);
+#endif
+	OutputLogA(type, OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Sub Channel)
 		"\t  +0 +1 +2 +3 +4 +5 +6 +7 +8 +9 +A +B\n", nLBA, nLBA);
 
 	for (INT i = 0, ch = 0x50; i < CD_RAW_READ_SUBCODE_SIZE; i += 12, ch++) {
-		OutputDiscLogA(
+		OutputLogA(type,
 			"\t%c %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n"
 			, ch, lpBuf[i], lpBuf[i + 1], lpBuf[i + 2], lpBuf[i + 3], lpBuf[i + 4], lpBuf[i + 5]
 			, lpBuf[i + 6], lpBuf[i + 7], lpBuf[i + 8], lpBuf[i + 9], lpBuf[i + 10], lpBuf[i + 11]);
@@ -1445,10 +1449,11 @@ VOID OutputCDSubToLog(
 					pDisc->SCSI.nLeadinLenOf2ndSession = nLBA - pDisc->SCSI.nFirstLBAofLeadin;
 					OutputLogA(standardOut | fileDisc, " Lead-in length of 2nd session: %d\n"
 						, pDisc->SCSI.nLeadinLenOf2ndSession);
+					pDisc->SCSI.nEndLBAOfLeadin = nLBA;
 				}
 				else if (BcdToDec(pDiscPerSector->subcode.current[13]) == pDisc->SCSI.byFirstMultiSessionTrackNum &&
 					pDiscPerSector->subcode.prev[14] == 0 && pDiscPerSector->subcode.current[14] == 1) {
-					pDisc->SCSI.nPregapLenOf1stTrkOf2ndSession = nLBA - (pDisc->SCSI.nFirstLBAof2ndSession - 150);
+					pDisc->SCSI.nPregapLenOf1stTrkOf2ndSession = nLBA - pDisc->SCSI.nEndLBAOfLeadin;
 					OutputLogA(standardOut | fileDisc, " Pregap length of 1st track of 2nd session: %d\n"
 						, pDisc->SCSI.nPregapLenOf1stTrkOf2ndSession);
 				}

@@ -191,8 +191,10 @@ typedef struct _EXT_ARG {
 	BYTE byIntentionalSub;
 	BYTE by74Min;
 	BYTE byVideoNow;
+	BYTE byVideoNowColor;
 	BYTE byNoSkipSS;
-	BYTE padding[1];
+	BYTE byAtari;
+	BYTE padding[3];
 	INT nAudioCDOffsetNum;
 	UINT uiMaxRereadNum;
 	INT nAllSectors;	// use for xbox360
@@ -278,6 +280,7 @@ typedef struct _DISC {
 		INT nFirstLBAofLeadin;
 		INT nLeadoutLenOf1stSession;
 		INT nLeadinLenOf2ndSession;
+		INT nEndLBAOfLeadin;
 		INT nPregapLenOf1stTrkOf2ndSession;
 		INT nFirstLBAof2ndSession;	// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
 		LPSTR* pszTitle;			// get at CDROM_READ_TOC_EX_FORMAT_CDTEXT
@@ -345,13 +348,14 @@ typedef struct _DISC {
 		BYTE byRestoreCounter; // for SecuROM
 		BYTE reserved;
 		CHAR name[MAX_FNAME_FOR_VOLUME];
+		CHAR name2[MAX_FNAME_FOR_VOLUME]; // for Der KorsaR, DVD Region X
 		// for skipping unreadable file
 		struct _ERROR_SECTOR {
 			INT nExtentPos;
 			INT nNextExtentPos; // for safedisc
 			INT nSectorSize;
-			INT nExtentPos2nd; // for Der KorsaR
-			INT nSectorSize2nd; // for Der KorsaR
+			INT nExtentPos2nd; // for Der KorsaR, DVD Region X
+			INT nSectorSize2nd; // for Der KorsaR, DVD Region X
 		} ERROR_SECTOR;
 		INT nPrevLBAOfPathTablePos; // for CodeLock
 		INT nNextLBAOfLastVolDesc; // for CodeLock

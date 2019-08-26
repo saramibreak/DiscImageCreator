@@ -389,7 +389,7 @@ BOOL WriteCcdFirst(
 		LPBYTE lpBuf = NULL;
 		BYTE lpCmd[CDB12GENERIC_LENGTH] = {};
 		INT nOfs = 0;
-		UINT uiBufLen = CD_RAW_SECTOR_SIZE + CD_RAW_READ_SUBCODE_SIZE;
+		UINT uiBufLen = (CD_RAW_SECTOR_SIZE + CD_RAW_READ_SUBCODE_SIZE) * 2;
 		if (!ReadCDForCheckingSubQAdrFirst(pExtArg
 			, pDevice, pDisc, &pBuf, &lpBuf, lpCmd, &uiBufLen, &nOfs)) {
 			FreeAndNull(pBuf);
@@ -944,10 +944,10 @@ VOID WriteErrorBuffer(
 		if (nLBA == pDisc->MAIN.nFixStartLBA) {
 			uiSize = CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize;
 			if (nPadType == padByUsr55 || nPadType == padByUsr0 || nPadType == padByPrevSector) {
-				if ((pDiscPerSector->subQ.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+//				if ((pDiscPerSector->subQ.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 					fwrite(pDiscPerSector->data.current + pDisc->MAIN.uiMainDataSlideSize,
 						sizeof(BYTE), uiSize, fpImg);
-				}
+//				}
 			}
 			else {
 				fwrite(zeroByte, sizeof(BYTE), uiSize, fpImg);
@@ -956,9 +956,9 @@ VOID WriteErrorBuffer(
 		else if (nLBA == pDisc->MAIN.nFixEndLBA - 1) {
 			uiSize = pDisc->MAIN.uiMainDataSlideSize;
 			if (nPadType == padByUsr55 || nPadType == padByUsr0 || nPadType == padByPrevSector) {
-				if ((pDiscPerSector->subQ.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+//				if ((pDiscPerSector->subQ.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 					fwrite(pDiscPerSector->data.current, sizeof(BYTE), uiSize, fpImg);
-				}
+//				}
 			}
 			else {
 				fwrite(zeroByte, sizeof(BYTE), uiSize, fpImg);
@@ -967,9 +967,9 @@ VOID WriteErrorBuffer(
 		else {
 			uiSize = CD_RAW_SECTOR_SIZE;
 			if (nPadType == padByUsr55 || nPadType == padByUsr0 || nPadType == padByPrevSector) {
-				if ((pDiscPerSector->subQ.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+//				if ((pDiscPerSector->subQ.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 					fwrite(pDiscPerSector->data.current, sizeof(BYTE), uiSize, fpImg);
-				}
+//				}
 			}
 			else {
 				fwrite(zeroByte, sizeof(BYTE), uiSize, fpImg);

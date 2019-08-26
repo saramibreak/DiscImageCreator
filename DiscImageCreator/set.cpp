@@ -69,7 +69,7 @@ VOID SetReadDiscCommand(
 	BOOL bOutputLog
 ) {
 	_TCHAR szSubCode[5] = {};
-	if ((pExtArg->byD8 || pDevice->byPlxtrDrive) && !pExtArg->byBe) {
+	if ((pExtArg->byD8 || pDevice->byPlxtrDrive) && !pExtArg->byBe && !pExtArg->byReverse) {
 		CDB::_PLXTR_READ_CDDA cdb = {};
 		if (tmpsub == CDFLAG::_READ_CD::NoSub) {
 			SetReadD8Command(pDevice, &cdb, byTransferLen, CDFLAG::_PLXTR_READ_CDDA::NoSub);
@@ -404,7 +404,8 @@ VOID SetAndOutputTocFull(
 				nTmpLBAExt, nTmpLBAExt,
 				pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2],
 				nTmpLBA, nTmpLBA, pTocData[a].Zero);
-			pDisc->SCSI.nFirstLBAof2ndSession = nTmpLBAExt + 150;
+			// set this by ReadTOCFull
+//			pDisc->SCSI.nFirstLBAof2ndSession = nTmpLBAExt + 150;
 			break;
 		case 0xb1: // (Audio only: This identifies the presence of skip intervals)
 			OutputDiscLogA(
@@ -721,7 +722,12 @@ VOID SetAndOutputTocCDText(
 		for (size_t t = uiIdxBegin; t < uiIdxEnd; t++, tEnt++) {
 			memcpy(pTmpText + 12 * t, (pDesc[tEnt].Text), 12);
 		}
-		OutputDiscLogA("\t      Genre: %s\n", pTmpText + uiTxtIdx);
+		OutputDiscLogA("\t  Genre code: 0x%02x%02x"
+			, *(pTmpText + uiTxtIdx), *(pTmpText + uiTxtIdx + 1));
+		if (*(pTmpText + uiTxtIdx + 1) != 0) {
+			OutputDiscLogA(" %s", pTmpText + uiTxtIdx + 2);
+		}
+		OutputDiscLogA("\n");
 	}
 	uiIdxBegin += uiPacksOfGenre;
 	uiIdxEnd += uiPacksOfUpcEan;

@@ -261,6 +261,7 @@ BOOL ReadTOCFull(
 	*wTocEntries = (WORD)(wTocEntriesAll / sizeof(CDROM_TOC_FULL_TOC_DATA_BLOCK));
 
 	pDisc->SCSI.bMultiSession = pFullTocData->LastCompleteSession > 1 ? TRUE : FALSE;
+	pDisc->SCSI.nFirstLBAof2ndSession = -1;
 
 	WORD wFullTocLenFix = (WORD)(wTocEntriesAll + sizeof(CDROM_TOC_FULL_TOC_DATA));
 	// 4 byte padding
@@ -282,11 +283,16 @@ BOOL ReadTOCFull(
 			throw FALSE;
 		}
 		*pTocData = ((PCDROM_TOC_FULL_TOC_DATA)(pFullToc))->Descriptors;
+		INT nTmpLBAExt = 0;
 		for (WORD a = 0; a < *wTocEntries; a++) {
 			switch ((*pTocData + a)->Point) {
 			case 0xa0:
 				pDisc->SCSI.byFormat = (*pTocData + a)->Msf[1];
 				break;
+			case 0xb0: // (multi-session disc)
+				nTmpLBAExt =
+					MSFtoLBA((*pTocData + a)->MsfExtra[0], (*pTocData + a)->MsfExtra[1], (*pTocData + a)->MsfExtra[2]) - 150;
+				pDisc->SCSI.nFirstLBAof2ndSession = nTmpLBAExt + 150;
 			default:
 				break;
 			}
