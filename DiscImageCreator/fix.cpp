@@ -1340,6 +1340,8 @@ BOOL FixSubChannel(
 				}
 				else {
 					OutputSubErrorLogA("NG. Fix manually\n");
+//					OutputCDC2Error296(fileSubError, pDiscPerSector->data.current + 2352, nLBA);
+					OutputCDSub96Align(fileSubError, pDiscPerSector->subcode.current, nLBA);
 					*bReread = FALSE;
 				}
 
