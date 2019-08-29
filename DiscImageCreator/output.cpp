@@ -425,6 +425,7 @@ BOOL WriteCcdFirst(
 			}
 		}
 		OutputString(_T("\n"));
+		FreeAndNull(pBuf);
 	}
 	return TRUE;
 };
@@ -1825,12 +1826,12 @@ VOID DescrambleMainChannelAll(
 					}
 					else if (aSrcBuf[0x0f] == 0x61) {
 						if (IsValidReservedByte(aSrcBuf)) {
-							OutputMainErrorWithLBALogA("A part of reverted sector. (Not be scrambled)\n", nFirstLBA, k + 1);
+							OutputMainErrorWithLBALogA("A part of reversed sector. (Not be scrambled)\n", nFirstLBA, k + 1);
 							OutputCDMain(fileMainError, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
 						}
 					}
 					else if (aSrcBuf[0x0f] == 0x00 || aSrcBuf[0x0f] == 0x01 || aSrcBuf[0x0f] == 0x02) {
-						OutputMainErrorWithLBALogA("Reverted sector. (Not be scrambled)\n", nFirstLBA, k + 1);
+						OutputMainErrorWithLBALogA("Reversed sector. (Not be scrambled)\n", nFirstLBA, k + 1);
 						OutputCDMain(fileMainError, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
 					}
 					else if (aSrcBuf[0x0f] != 0x60 && aSrcBuf[0x0f] != 0x61 && aSrcBuf[0x0f] != 0x62 &&
@@ -1839,7 +1840,7 @@ VOID DescrambleMainChannelAll(
 						BYTE m, s, f = 0;
 						LBAtoMSF(nFirstLBA + 150, &m, &s, &f);
 						if (aSrcBuf[0x0c] == m && aSrcBuf[0x0d] == s && aSrcBuf[0x0e] == f) {
-							OutputMainErrorLogA("Reverted sector. (Not be scrambled)\n");
+							OutputMainErrorLogA("Reversed sector. (Not be scrambled)\n");
 							if (!IsValidReservedByte(aSrcBuf)) {
 								OutputMainErrorLogA("Invalid reserved byte. Skip descrambling\n");
 								OutputString(
@@ -1849,7 +1850,7 @@ VOID DescrambleMainChannelAll(
 							}
 						}
 						else if (IsValidReservedByte(aSrcBuf)) {
-							OutputMainErrorLogA("A part of reverted sector. (Not be scrambled)\n");
+							OutputMainErrorLogA("A part of reversed sector. (Not be scrambled)\n");
 						}
 						else if (aSrcBuf[0x814] != 0x48 || aSrcBuf[0x815] != 0x64 || aSrcBuf[0x816] != 0x36 ||
 							aSrcBuf[0x817] != 0xab || aSrcBuf[0x818] != 0x56 || aSrcBuf[0x819] != 0xff ||
