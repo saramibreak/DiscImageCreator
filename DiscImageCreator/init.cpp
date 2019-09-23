@@ -329,6 +329,9 @@ BOOL InitLogFile(
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
+	if (setvbuf(g_LogFile.fpDisc, NULL, _IONBF, 0) != 0) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+	}
 	BOOL bRet = TRUE;
 	try {
 		if (NULL == (g_LogFile.fpDrive = CreateOrOpenFileA(
@@ -336,21 +339,33 @@ BOOL InitLogFile(
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
+		if (setvbuf(g_LogFile.fpDrive, NULL, _IONBF, 0) != 0) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		}
 		if (*pExecType != fd && * pExecType != disk) {
 			if (NULL == (g_LogFile.fpVolDesc = CreateOrOpenFileA(
 				path, "_volDesc", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
+			if (setvbuf(g_LogFile.fpVolDesc, NULL, _IONBF, 0) != 0) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			}
 			if (NULL == (g_LogFile.fpMainInfo = CreateOrOpenFileA(
 				path, "_mainInfo", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
+			if (setvbuf(g_LogFile.fpMainInfo, NULL, _IONBF, 0) != 0) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			}
 			if (NULL == (g_LogFile.fpMainError = CreateOrOpenFileA(
 				path, "_mainError", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
+			}
+			if (setvbuf(g_LogFile.fpMainError, NULL, _IONBF, 0) != 0) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			}
 			if (*pExecType != dvd && *pExecType != bd && *pExecType != sacd &&
 				*pExecType != xbox && *pExecType != xboxswap &&
@@ -359,6 +374,9 @@ BOOL InitLogFile(
 					path, "_subInfo", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 					throw FALSE;
+				}
+				if (setvbuf(g_LogFile.fpSubInfo, NULL, _IONBF, 0) != 0) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				}
 				if (NULL == (g_LogFile.fpSubError = CreateOrOpenFileA(
 					path, "_subError", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
@@ -382,6 +400,9 @@ BOOL InitLogFile(
 						path, "_subIntention", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
 						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 						throw FALSE;
+					}
+					if (setvbuf(g_LogFile.fpSubIntention, NULL, _IONBF, 0) != 0) {
+						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 					}
 				}
 			}
