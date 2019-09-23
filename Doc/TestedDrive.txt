@@ -1,5 +1,5 @@
 ========================= Drive information (I tested) ========================
-Vendor					Model(*1)				Firmware(*2)	Lead-in			Lead-out		Scrambled	GD-ROM(*4)			GC/Wii-ROM(*6)
+Vendor					Model(*1)				Firmware(*2)	MinusLBA		Lead-out		Scrambled	GD-ROM(*4)			GC/Wii-ROM(*6)
 ASUS					BC-12D2HT				3.01			Part(from -145)	No				Yes			No					No
 HITACHI-LG(HL-DT-ST)	GCC-4160N				0012			Part(from -145)	No				No			No					Yes
 HITACHI-LG(HL-DT-ST)	GCC-4240N				D110			Part(from -144)	No				No			No					Yes
