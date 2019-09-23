@@ -945,21 +945,17 @@ VOID WriteErrorBuffer(
 		if (nLBA == pDisc->MAIN.nFixStartLBA) {
 			uiSize = CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize;
 			if (nPadType == padByUsr55 || nPadType == padByUsr0 || nPadType == padByPrevSector) {
-//				if ((pDiscPerSector->subQ.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
-					fwrite(pDiscPerSector->data.current + pDisc->MAIN.uiMainDataSlideSize,
-						sizeof(BYTE), uiSize, fpImg);
-//				}
+				fwrite(pDiscPerSector->data.current + pDisc->MAIN.uiMainDataSlideSize,
+					sizeof(BYTE), uiSize, fpImg);
 			}
 			else {
 				fwrite(zeroByte, sizeof(BYTE), uiSize, fpImg);
 			}
 		}
-		else if (nLBA == pDisc->MAIN.nFixEndLBA - 1) {
+		else if (nLBA == pDisc->MAIN.nFixEndLBA - 1 || nLBA == pDisc->MAIN.nFixFirstLBAof2ndSession - 150) {
 			uiSize = pDisc->MAIN.uiMainDataSlideSize;
 			if (nPadType == padByUsr55 || nPadType == padByUsr0 || nPadType == padByPrevSector) {
-//				if ((pDiscPerSector->subQ.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
-					fwrite(pDiscPerSector->data.current, sizeof(BYTE), uiSize, fpImg);
-//				}
+				fwrite(pDiscPerSector->data.current, sizeof(BYTE), uiSize, fpImg);
 			}
 			else {
 				fwrite(zeroByte, sizeof(BYTE), uiSize, fpImg);
@@ -968,9 +964,7 @@ VOID WriteErrorBuffer(
 		else {
 			uiSize = CD_RAW_SECTOR_SIZE;
 			if (nPadType == padByUsr55 || nPadType == padByUsr0 || nPadType == padByPrevSector) {
-//				if ((pDiscPerSector->subQ.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
-					fwrite(pDiscPerSector->data.current, sizeof(BYTE), uiSize, fpImg);
-//				}
+				fwrite(pDiscPerSector->data.current, sizeof(BYTE), uiSize, fpImg);
 			}
 			else {
 				fwrite(zeroByte, sizeof(BYTE), uiSize, fpImg);
@@ -1785,7 +1779,7 @@ VOID DescrambleMainChannelAll(
 		INT nFirstLBA = pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[k];
 		if (nFirstLBA != -1) {
 			INT nLastLBA = pDisc->SUB.lpLastLBAListOfDataTrackOnSub[k];
-			OutputDiscLogA("\tTrack %2u Data Sector, LBA %6d - %6d (%#07x - %#07x)\n",
+			OutputDiscLogA("\tTrack %2u Data Sector: %6d - %6d (%#07x - %#07x)\n",
 				k + 1, nFirstLBA, nLastLBA, nFirstLBA, nLastLBA);
 			if (!pExtArg->byMultiSession && pDisc->SCSI.lpSessionNumList[k] >= 2) {
 				INT nSkipLBA = (SESSION_TO_SESSION_SKIP_LBA * (INT)(pDisc->SCSI.lpSessionNumList[k] - 1));
@@ -1818,7 +1812,7 @@ VOID DescrambleMainChannelAll(
 							if (aSrcBuf[n] != lpScrambledBuf[n]) {
 								OutputMainErrorWithLBALogA("Not all zero sector\n", nFirstLBA, k + 1);
 								OutputString(
-									_T("\rDescrambling data sector of img (LBA) %6d/%6d"), nFirstLBA, nLastLBA);
+									_T("\rDescrambling data sector of img: %6d/%6d"), nFirstLBA, nLastLBA);
 								OutputCDMain(fileMainError, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
 								continue;
 							}
@@ -1844,7 +1838,7 @@ VOID DescrambleMainChannelAll(
 							if (!IsValidReservedByte(aSrcBuf)) {
 								OutputMainErrorLogA("Invalid reserved byte. Skip descrambling\n");
 								OutputString(
-									_T("\rDescrambling data sector of img (LBA) %6d/%6d"), nFirstLBA, nLastLBA);
+									_T("\rDescrambling data sector of img: %6d/%6d"), nFirstLBA, nLastLBA);
 								OutputCDMain(fileMainError, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
 								continue;
 							}
@@ -1857,7 +1851,7 @@ VOID DescrambleMainChannelAll(
 							aSrcBuf[0x81a] != 0x7e || aSrcBuf[0x81b] != 0xc0) {
 							OutputMainErrorLogA("Invalid reserved byte. Skip descrambling\n");
 							OutputString(
-								_T("\rDescrambling data sector of img (LBA) %6d/%6d"), nFirstLBA, nLastLBA);
+								_T("\rDescrambling data sector of img: %6d/%6d"), nFirstLBA, nLastLBA);
 							OutputCDMain(fileMainError, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
 							continue;
 						}
@@ -1880,7 +1874,7 @@ VOID DescrambleMainChannelAll(
 					}
 				}
 				OutputString(
-					_T("\rDescrambling data sector of img (LBA) %6d/%6d"), nFirstLBA, nLastLBA);
+					_T("\rDescrambling data sector of img: %6d/%6d"), nFirstLBA, nLastLBA);
 			}
 			OutputString(_T("\n"));
 		}
@@ -1926,7 +1920,7 @@ VOID DescrambleMainChannelPartial(
 			OutputCDMain(fileMainError, aSrcBuf, nStartLBA, CD_RAW_SECTOR_SIZE);
 		}
 		OutputString(
-			_T("\rDescrambling data sector of img (LBA) %6d/%6d"), nStartLBA, nEndLBA);
+			_T("\rDescrambling data sector of img: %6d/%6d"), nStartLBA, nEndLBA);
 	}
 	OutputString(_T("\n"));
 }
