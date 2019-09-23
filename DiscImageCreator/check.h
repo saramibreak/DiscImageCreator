@@ -40,6 +40,10 @@ BOOL IsValidPS3Drive(
 	PDEVICE pDevice
 );
 
+BOOL IsValidAsusDrive(
+	PDEVICE pDevice
+);
+
 BOOL IsValidPlextorDrive(
 	PDEVICE pDevice
 );

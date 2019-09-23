@@ -226,15 +226,16 @@ typedef struct _DEVICE {
 	CHAR szProductId[16];
 	CHAR szProductRevisionLevel[4];
 	BYTE byPlxtrDrive;
-	BYTE bySuccessReadToc;
-	BYTE bySuccessReadTocFull;
+	BYTE byAsusDrive;
+	BYTE padding;
 #ifdef _WIN32
 	BYTE byDriveLetter;
 #else
 	CHAR drivepath[15];
 #endif
 	WORD wMaxReadSpeed;
-	BYTE padding[2];
+	BYTE bySuccessReadToc;
+	BYTE bySuccessReadTocFull;
 	_CDFLAG::_READ_CD::_ERROR_FLAGS supportedC2Type;
 	DWORD dwTimeOutValue;
 	DRIVE_DATA_ORDER driveOrder;
@@ -380,6 +381,7 @@ typedef struct _DISC {
 	struct _BD {
 		INT nLBAForParamSfo;
 	} BD;
+	LPBYTE lpCachedBuf; // for Asus 0xF1 opcode
 } DISC, *PDISC;
 
 typedef struct _VOLUME_DESCRIPTOR {
@@ -459,6 +461,7 @@ typedef struct _DISC_PER_SECTOR {
 	BOOL bLibCrypt;
 	BOOL bSecuRom;
 	BOOL b1stSectorMCN;
+	BOOL bReturnCode;
 } DISC_PER_SECTOR, *PDISC_PER_SECTOR;
 
 // This buffer stores the R to W channel (only use to check)

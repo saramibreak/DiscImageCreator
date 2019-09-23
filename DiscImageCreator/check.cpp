@@ -112,6 +112,20 @@ BOOL IsValidPS3Drive(
 	return FALSE;
 }
 
+BOOL IsValidAsusDrive(
+	PDEVICE pDevice
+) {
+	if (!strncmp(pDevice->szVendorId, "ASUS    ", DRIVE_VENDOR_ID_SIZE)) {
+		if (!strncmp(pDevice->szProductId, "BW-16D1HT       ", DRIVE_PRODUCT_ID_SIZE)) {
+			if (!strncmp(pDevice->szProductRevisionLevel, "3.02", DRIVE_VERSION_ID_SIZE)) {
+				pDevice->byAsusDrive = TRUE;
+				return TRUE;
+			}
+		}
+	}
+	return FALSE;
+}
+
 BOOL IsValidPlextorDrive(
 	PDEVICE pDevice
 ) {
@@ -1196,7 +1210,15 @@ BOOL ContainsC2Error(
 	BOOL bErr = FALSE;
 	for (WORD wC2ErrorPos = 0; wC2ErrorPos < CD_RAW_READ_C2_294_SIZE; wC2ErrorPos++) {
 		UINT uiPos = pDevice->TRANSFER.uiBufC2Offset + wC2ErrorPos;
-		if (lpBuf[uiPos] != 0) {
+		if (wC2ErrorPos < CD_RAW_READ_C2_294_SIZE - 10 &&
+			lpBuf[uiPos] == 0xf0 && lpBuf[uiPos + 1] == 0xf0 && lpBuf[uiPos + 2] == 0xf0 &&
+			lpBuf[uiPos + 3] == 0 && lpBuf[uiPos + 4] == 0 && lpBuf[uiPos + 5] == 0 &&
+			lpBuf[uiPos + 6] == 0x0f && lpBuf[uiPos + 7] == 0x0f && lpBuf[uiPos + 8] == 0x0f && lpBuf[uiPos + 9] == 0x0f) {
+			if (bOutputLog) {
+				OutputC2ErrorLogA("Detected F0 F0 F0 00 00 00 0F 0F 0F 0F\n");
+			}
+		}
+		else if (lpBuf[uiPos] != 0) {
 			// Ricoh based drives (+97 read offset, like the Aopen CD-RW CRW5232)
 			// use lsb points to 1st byte of main. 
 			// But almost drive is msb points to 1st byte of main.

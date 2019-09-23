@@ -497,7 +497,8 @@ VOID SetAndOutputTocCDText(
 	PCDROM_TOC_CD_TEXT_DATA_BLOCK pDesc,
 	LPCH pTmpText,
 	WORD wTocTextEntries,
-	UINT uiTocTextEntriesIdx
+	UINT uiTocTextEntriesIdx,
+	BOOL bUnicode
 ) {
 	UINT uiSizeInfoCnt = 0;
 	BYTE bySizeInfoIdx = 0;
@@ -529,7 +530,7 @@ VOID SetAndOutputTocCDText(
 		}
 		for (UINT i = 0; i < uiLastTrackNum + 1; i++) {
 			size_t len = strlen(pTmpText + uiTxtIdx);
-			if (uiTocTextEntriesIdx) {
+			if (bUnicode) {
 				strncpy(pDisc->SCSI.pszTitleW[i], pTmpText + uiTxtIdx, len);
 				if (i == 0) {
 					OutputDiscLogA("\tAlbum Name: %s\n", pDisc->SCSI.pszTitleW[i]);
@@ -561,7 +562,7 @@ VOID SetAndOutputTocCDText(
 		}
 		for (UINT i = 0; i < uiLastTrackNum + 1; i++) {
 			size_t len = strlen(pTmpText + uiTxtIdx);
-			if (uiTocTextEntriesIdx) {
+			if (bUnicode) {
 				strncpy(pDisc->SCSI.pszPerformerW[i], pTmpText + uiTxtIdx, len);
 				if (i == 0) {
 					OutputDiscLogA("\tAlbum Performer: %s\n", pDisc->SCSI.pszPerformerW[i]);
@@ -593,7 +594,7 @@ VOID SetAndOutputTocCDText(
 		}
 		for (UINT i = 0; i < uiLastTrackNum + 1; i++) {
 			size_t len = strlen(pTmpText + uiTxtIdx);
-			if (uiTocTextEntriesIdx) {
+			if (bUnicode) {
 				strncpy(pDisc->SCSI.pszSongWriterW[i], pTmpText + uiTxtIdx, len);
 				if (i == 0) {
 					OutputDiscLogA("\tAlbum SongWriter: %s\n", pDisc->SCSI.pszSongWriterW[i]);
@@ -625,7 +626,7 @@ VOID SetAndOutputTocCDText(
 		}
 		for (UINT i = 0; i < uiLastTrackNum + 1; i++) {
 			size_t len = strlen(pTmpText + uiTxtIdx);
-			if (uiTocTextEntriesIdx) {
+			if (bUnicode) {
 				if (i == 0) {
 					OutputDiscLogA("\tAlbum Composer: %s\n", pTmpText + uiTxtIdx);
 				}
@@ -655,7 +656,7 @@ VOID SetAndOutputTocCDText(
 		}
 		for (UINT i = 0; i < uiLastTrackNum + 1; i++) {
 			size_t len = strlen(pTmpText + uiTxtIdx);
-			if (uiTocTextEntriesIdx) {
+			if (bUnicode) {
 				if (i == 0) {
 					OutputDiscLogA("\tAlbum Arranger: %s\n", pTmpText + uiTxtIdx);
 				}
@@ -685,7 +686,7 @@ VOID SetAndOutputTocCDText(
 		}
 		for (UINT i = 0; i < uiLastTrackNum + 1; i++) {
 			size_t len = strlen(pTmpText + uiTxtIdx);
-			if (uiTocTextEntriesIdx) {
+			if (bUnicode) {
 				if (i == 0) {
 					OutputDiscLogA("\tAlbum Messages: %s\n", pTmpText + uiTxtIdx);
 				}
@@ -1039,8 +1040,10 @@ VOID SetTrackAttribution(
 	}
 	else if (*pExecType != swap && (pDiscPerSector->subQ.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK &&
 		(tmpCurrentTrackNum == 110 || // '110' is Lead-out, '100'&'101' is Lead-in
-		((tmpCurrentTrackNum == 0 && (tmpCurrentIndex == 100 || tmpCurrentIndex == 101))))) {
+		((tmpCurrentTrackNum == 0 && (tmpCurrentIndex == 100 || tmpCurrentIndex == 101 ||
+			(tmpCurrentIndex == 0 && pDiscPerSector->subQ.current.nAbsoluteTime == 0)))))) {
 		if (pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[pDiscPerSector->byTrackNum - 1] == -1) {
+			OutputSubInfoWithLBALogA("1st LBA of Lead-out or Lead-in\n", nLBA, tmpCurrentTrackNum);
 			pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[pDiscPerSector->byTrackNum - 1] = nLBA;
 			if (pDiscPerSector->byTrackNum < pDisc->SCSI.byFirstDataTrackNum) {
 				pDisc->SCSI.byFirstDataTrackNum = pDiscPerSector->byTrackNum;

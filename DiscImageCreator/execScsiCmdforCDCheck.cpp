@@ -116,7 +116,7 @@ BOOL ExecSearchingOffset(
 	if (!bRet) {
 		if (*pExecType == gd) {
 			OutputErrorString(
-				_T("Couldn't read a data sector at scrambled mode [OpCode: %#02x, C2flag: %x, SubCode: %x]\n")
+				_T("Couldn't read data sectors at scrambled state [OpCode: %#02x, C2flag: %x, SubCode: %x]\n")
 				, lpCmd[0], (lpCmd[9] & 0x6) >> 1, lpCmd[10]);
 		}
 		else {
@@ -126,7 +126,7 @@ BOOL ExecSearchingOffset(
 			}
 			else {
 				OutputErrorString(
-					_T("This drive can't read a data sector at scrambled mode [OpCode: %#02x, C2flag: %x, SubCode: %x]\n")
+					_T("This drive can't read data sectors at scrambled state [OpCode: %#02x, C2flag: %x, SubCode: %x]\n")
 					, lpCmd[0], (lpCmd[9] & 0x6) >> 1, lpCmd[10]);
 			}
 		}
@@ -140,7 +140,7 @@ BOOL ExecSearchingOffset(
 		else {
 			if (*pExecType != data) {
 				OutputLogA(standardOut | fileDrive,
-					"This drive can read a data sector at scrambled mode [OpCode: %#02x, C2flag: %x, SubCode: %x]\n"
+					"This drive can read data sectors at scrambled state [OpCode: %#02x, C2flag: %x, SubCode: %x]\n"
 					, lpCmd[0], (lpCmd[9] & 0x6) >> 1, lpCmd[10]);
 			}
 		}
@@ -625,7 +625,6 @@ BOOL ReadCDForCheckingReadInOut(
 	PDEVICE pDevice,
 	PDISC pDisc
 ) {
-	BOOL bRet = TRUE;
 	BYTE lpCmd[CDB12GENERIC_LENGTH] = {};
 	SetReadDiscCommand(pExecType, pExtArg, pDevice, 1, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::NoSub, lpCmd, FALSE);
 
@@ -649,6 +648,17 @@ BOOL ReadCDForCheckingReadInOut(
 		}
 		else if (0 < pDisc->MAIN.nCombinedOffset) {
 			OutputLogA(standardOut | fileDrive, "This drive can't read the lead-out\n");
+			if (IsValidAsusDrive(pDevice)) {
+				if (!ExecReadCD(pExtArg, pDevice, lpCmd, nLBA - 1, aBuf,
+					CD_RAW_SECTOR_SIZE, _T(__FUNCTION__), __LINE__)
+					|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+				}
+//				OutputCDMain(fileMainInfo, aBuf, nLBA - 1, CD_RAW_SECTOR_SIZE);
+				if (ReadCacheForLgAsus(pExtArg, pDevice, pDisc, 1)) {
+					OutputLogA(standardOut | fileDrive, "But 0xF1 is supported\n");
+					return TRUE;
+				}
+			}
 		}
 		return FALSE;
 	}
@@ -660,7 +670,7 @@ BOOL ReadCDForCheckingReadInOut(
 #if 0
 	OutputCDMain(fileMainInfo, aBuf, nLBA, CD_RAW_SECTOR_SIZE);
 #endif
-	return bRet;
+	return TRUE;
 }
 
 BOOL ReadCDForCheckingSubQAdrFirst(
@@ -1610,12 +1620,12 @@ BOOL ReadCDCheck(
 ) {
 	// needs to call ReadTOCFull
 	if (!pDisc->SCSI.bMultiSession && pExtArg->byMultiSession) {
-		OutputString(
+		OutputLogA(standardOut | fileDisc,
 			_T("[INFO] This disc isn't Multi-Session. /ms is ignored.\n"));
 		pExtArg->byMultiSession = FALSE;
 	}
 	else if (pDisc->SCSI.bMultiSession && !pExtArg->byMultiSession) {
-		OutputString(
+		OutputLogA(standardOut | fileDisc,
 			_T("[INFO] This disc is Multi-Session. /ms is set.\n"));
 		pExtArg->byMultiSession = TRUE;
 	}

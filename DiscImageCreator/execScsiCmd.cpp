@@ -428,24 +428,39 @@ BOOL ReadTOCText(
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
-		WORD wEntrySize = 0;
-		BOOL bUnicode = FALSE;
-		while (wEntrySize < wTocTextEntries) {
-			if (pDesc[wEntrySize].Unicode == 1) {
-				bUnicode = TRUE;
+
+		UINT uiLastSeqNumOfBlock[9] = {};
+		for (INT i = 1, j = 8; i <= 4; i++, j++) {
+			uiLastSeqNumOfBlock[i] = pDesc[wTocTextEntries - 2].Text[j];
+			if (1 < i && uiLastSeqNumOfBlock[i]) {
+				uiLastSeqNumOfBlock[i] += uiLastSeqNumOfBlock[i - 1];
+				uiLastSeqNumOfBlock[i]++;
+			}
+		}
+		if (uiLastSeqNumOfBlock[4]) {
+			for (INT k = 5, m = 0; k <= 8; k++, m++) {
+				uiLastSeqNumOfBlock[k] = pDesc[wTocTextEntries - 2].Text[m];
+				if (5 < k && uiLastSeqNumOfBlock[k]) {
+					uiLastSeqNumOfBlock[k] += uiLastSeqNumOfBlock[k - 1];
+					uiLastSeqNumOfBlock[k]++;
+				}
+			}
+		}
+
+		for (INT n = 0; n < 8; n++) {
+			if (uiLastSeqNumOfBlock[n + 1]) {
+				if (n == 0) {
+					SetAndOutputTocCDText(pDisc, pDesc, pTmpText, (WORD)(uiLastSeqNumOfBlock[n + 1] + 1)
+						, 0, pDesc[uiLastSeqNumOfBlock[n + 1]].Unicode);
+				}
+				else {
+					SetAndOutputTocCDText(pDisc, pDesc, pTmpText, (WORD)(uiLastSeqNumOfBlock[n + 1] + 1)
+						, uiLastSeqNumOfBlock[n] + 1, pDesc[uiLastSeqNumOfBlock[n + 1]].Unicode);
+				}
+			}
+			else {
 				break;
 			}
-			wEntrySize++;
-		}
-		SetAndOutputTocCDText(pDisc, pDesc, pTmpText, wEntrySize, 0);
-		if (bUnicode) {
-			PCHAR pTmpWText = NULL;
-			if (NULL == (pTmpWText = (PCHAR)calloc(wAllTextSize, sizeof(CHAR)))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				throw FALSE;
-			}
-			SetAndOutputTocCDText(pDisc, pDesc, pTmpWText, wTocTextEntries, wEntrySize);
-			FreeAndNull(pTmpWText);
 		}
 	}
 	catch (BOOL ret) {
@@ -896,6 +911,53 @@ BOOL ReadEeprom(
 	}
 	FreeAndNull(pPBuf);
 	return bRet;
+}
+
+BOOL ReadCacheForLgAsus(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	PDISC pDisc,
+	INT nLBA
+) {
+	DWORD dwSize = 0xb00;
+	LPBYTE lpBuf = NULL;
+	if (!GetAlignedCallocatedBuffer(pDevice, &pDisc->lpCachedBuf,
+		(UINT)dwSize, &lpBuf, _T(__FUNCTION__), __LINE__)) {
+		return FALSE;
+	}
+	// http://forum.redump.org/post/72629/#p72629
+	// F1 06 xx xx xx xx yy yy yy yy
+	// xx - address to read
+	// yy - length of data to return
+	//
+	// 0x000-0x92F - Main Channel (Scrambled)
+	// 0x930-0x98F - P-W Subchannel
+	// 0x990-0x99F - Q Subchannel
+	// 0x9A0-0x9A3 - (unknown)
+	// 0x9A4-0xAC9 - C2 Error Bits
+	// 0xACA-0xB00 - (unknown)
+	CDB::_CDB10 cdb = {};
+	cdb.OperationCode = 0xf1;
+	cdb.Reserved1 = 3;
+	cdb.LogicalBlockByte0 = BYTE((0xb00 * nLBA >> 24) & 0xff);
+	cdb.LogicalBlockByte1 = BYTE((0xb00 * nLBA >> 16) & 0xff);
+	cdb.LogicalBlockByte2 = BYTE((0xb00 * nLBA >> 8) & 0xff);
+	cdb.LogicalBlockByte3 = BYTE(0xb00 * nLBA & 0xff);
+	cdb.TransferBlocksLsb = 0x0b;
+	cdb.Control = 0x00;
+#ifdef _WIN32
+	INT direction = SCSI_IOCTL_DATA_IN;
+#else
+	INT direction = SG_DXFER_FROM_DEV;
+#endif
+	BYTE byScsiStatus = 0;
+	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB10GENERIC_LENGTH
+		, lpBuf, direction, dwSize, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+		return FALSE;
+	}
+//	OutputCDMain(fileMainInfo, lpBuf, nLBA, dwSize);
+	return TRUE;
 }
 
 BOOL ReadDriveInformation(

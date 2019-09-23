@@ -116,6 +116,13 @@ BOOL Reset(
 	PDEVICE pDevice
 );
 
+BOOL ReadCacheForLgAsus(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	PDISC pDisc,
+	INT nLBA
+);
+
 BOOL ReadDriveInformation(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
