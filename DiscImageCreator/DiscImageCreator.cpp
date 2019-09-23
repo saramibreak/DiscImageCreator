@@ -335,6 +335,9 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 										OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 										throw FALSE;
 									}
+									if (setvbuf(fpCcd, NULL, _IONBF, 0) != 0) {
+										OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+									}
 								}
 								if (*pExecType != swap) {
 									WriteCcdFirst(pExtArg, &device, pDisc, &discPerSector, &fullToc, pTocData, wTocEntries, fpCcd);
