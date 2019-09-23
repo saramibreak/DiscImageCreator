@@ -149,7 +149,7 @@
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <ForcedIncludeFiles>_linux/defineForLinux.h</ForcedIncludeFiles>
+      <ForcedIncludeFiles>../DiscImageCreator_linux/_linux/defineForLinux.h</ForcedIncludeFiles>
       <CAdditionalWarning>extra;no-unknown-pragmas;%(CAdditionalWarning)</CAdditionalWarning>
       <CppAdditionalWarning>extra;no-unknown-pragmas;aggregate-return;cast-align;cast-qual;conditionally-supported;disabled-optimization;double-promotion;float-equal;format=2;format-signedness;init-self;inline;invalid-pch;logical-op;missing-include-dirs;multichar;noexcept;overlength-strings;packed;pointer-arith;redundant-decls;shadow;stack-protector;strict-aliasing=2;strict-null-sentinel;switch-default;switch-enum;trampolines;variadic-macros;vector-operation-performance;write-strings;unused-macros;%(CppAdditionalWarning)</CppAdditionalWarning>
       <Optimization>MaxSpeed</Optimization>
