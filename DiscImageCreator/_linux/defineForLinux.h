@@ -133,6 +133,9 @@ typedef PZZSTR PZZTSTR, PUZZTSTR;
 typedef PCZZSTR PCZZTSTR, PCUZZTSTR;
 typedef PNZCH PNZTCH, PUNZTCH;
 typedef PCNZCH PCNZTCH, PCUNZTCH;
+#define __TEXT(quote) quote         // r_winnt
+
+#define TEXT(quote) __TEXT(quote)   // r_winnt
 
 typedef SHORT *PSHORT;
 typedef LONG *PLONG;
