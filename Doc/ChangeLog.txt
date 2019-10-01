@@ -566,3 +566,27 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - fixed: tracknum of SubQ manually if /nq is used
 - fixed: rawdump of lite-on
 - fixed: Subchannel & TOC desync flag was not set in some cases
+
+*2019-10-01
+- added: disk command
+- added: reverse reading in dvd command
+- added: /vnc in cd command
+- added: support multi-session disc for redump'org format
+- added: support Atari Jaguar CD
+- added: support DVD-RAM
+- added: PS4 BD detection for PS4 drive
+- added: output the region of DVD drive to log
+- added: 0xf1 opcode for Asus BW-16D1HT 3.02
+- added: detecting weird subQ of PS2 unlicensed disc
+- added: ignoring "F0 F0 F0 00 00 00 0F 0F 0F 0F" of C2 error
+- changed: protection handling (SmartE, CD.IDX, VOB ProtectCD, 3PLock etc.)
+- changed: CSS authentication tool (CSS.exe -> DVDAuth.exe)
+- changed: multi-session disc is auto-detected
+- fixed: CD-TEXT (buf size and sjis only disc)
+- fixed: ls command
+- fixed: detecting SafeDisc
+- fixed: PageMode 0x0d log
+- fixed: SilentMode log of plextor drive
+- fixed: cue file of some desync disc
+- fixed: formatLength of DVD_STRUCTURE
+- fixed: rereading for ring protection
