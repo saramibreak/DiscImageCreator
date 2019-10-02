@@ -57,7 +57,7 @@
      - GSA-4163B
 - HD-DVD: All supported drive
 - BD: All supported drive (PS3 is only supported by [some mediatek drive](https://rpcs3.net/quickstart) or PS3 drive)
-    - PS3 drive needs to [3k3y ripper](https://web.archive.org/web/20150212063714/http://www.3k3y.com/) if you want ot dump the data1/data2
+    - You need to get the [3k3y ripper](https://web.archive.org/web/20150212063714/http://www.3k3y.com/) if you want to dump the data1/data2
 - Floppy: All supported drive
 
 ### Not recommend
