@@ -203,9 +203,7 @@ BOOL ReadDVD(
 		BYTE byScsiStatus = 0;
 		INT i = 0;
 		INT nRetryCnt = 0;
-		INT nErrCnt = 0;
 		if (pDisc->PROTECT.byExist == ripGuard) {
-			nRetryCnt = 6;
 			dwTransferLen = 1;
 			REVERSE_BYTES(&cdb.TransferLength, &dwTransferLen);
 		}
@@ -285,7 +283,8 @@ BOOL ReadDVD(
 				REVERSE_BYTES(&cdb.TransferLength, &dwTransferLen);
 			}
 
-			if (pDisc->PROTECT.byExist == physicalErr && nFirstErrorLBA != 0 && nFirstErrorLBA <= nLBA && nLBA <= nLastErrorLBA) {
+			if ((pDisc->PROTECT.byExist == physicalErr || pDisc->PROTECT.byExist == ripGuard)
+				&& nFirstErrorLBA != 0 && nFirstErrorLBA <= nLBA && nLBA <= nLastErrorLBA) {
 				FillMemory(lpBuf, DISC_RAW_READ_SIZE * dwTransferLen, 0x00);
 				fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_RAW_READ_SIZE * dwTransferLen, fp);
 				if (nLBA == nLastErrorLBA) {
@@ -312,7 +311,7 @@ BOOL ReadDVD(
 						throw FALSE;
 					}
 				}
-				if (pDisc->PROTECT.byExist == physicalErr) {
+				if (pDisc->PROTECT.byExist == physicalErr || pDisc->PROTECT.byExist == ripGuard) {
 					if (IsXbox(pExecType) && bSetErrorSectorRange &&
 						nLastErrorLBA <= nLBA && nLBA <= (INT)pDisc->DVD.securitySectorRange[i][1]) {
 						if (++uiErrorForwardTimes <= pExtArg->uiMaxRereadNum) {
@@ -369,14 +368,8 @@ BOOL ReadDVD(
 					continue;
 				}
 				else {
-					if (pDisc->PROTECT.byExist == ripGuard) {
-						OutputMainErrorLogA(STR_LBA "Read error. 2048 bytes were padded by 0x00\n", nLBA, nLBA);
-						ZeroMemory(lpBuf, DISC_RAW_READ_SIZE);
-					}
-					else {
-						OutputString(_T("Retry NG\n"));
-						throw FALSE;
-					}
+					OutputString(_T("Retry NG\n"));
+					throw FALSE;
 				}
 			}
 
@@ -394,11 +387,7 @@ BOOL ReadDVD(
 				uiErrorBackTimes = 0;
 				continue;
 			}
-
-			if (pDisc->PROTECT.byExist == ripGuard) {
-				nErrCnt++;
-			}
-			else if (nRetryCnt) {
+			if (nRetryCnt) {
 				OutputString(_T("Retry OK\n"));
 				nRetryCnt = 0;
 			}
@@ -406,10 +395,7 @@ BOOL ReadDVD(
 			OutputString(_T("\rCreating iso(LBA) %8lu/%8u"), nLBA + dwTransferLen, nAllLength);
 		}
 
-		if (pDisc->PROTECT.byExist == ripGuard) {
-			OutputLogA(standardOut | fileDisc, "Error Count: %d\n", nErrCnt);
-		}
-		else if (*pExecType == xbox) {
+		if (*pExecType == xbox) {
 			if (!SetLockState(pExtArg, pDevice, 0)) {
 				throw FALSE;
 			}
