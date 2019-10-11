@@ -352,7 +352,7 @@ VOID OutputFsVolumeDescriptorSecond(
 		, &lpBuf[876], &lpBuf[878], (CHAR)lpBuf[880] / 4, abs((CHAR)lpBuf[880] % 4 * 15),
 		lpBuf[881]);
 	if (!strncmp((CONST PCHAR)&lpBuf[883], "MVSNRGFP", 8)) {
-		OutputLogA(standardOut | fileDisc, "Detected RipGuard\n");
+		strncpy(pDisc->PROTECT.name, (CONST PCHAR)&lpBuf[883], 8);
 		pDisc->PROTECT.byExist = ripGuard;
 	}
 	for (INT i = 883; i <= 1394; i++) {
