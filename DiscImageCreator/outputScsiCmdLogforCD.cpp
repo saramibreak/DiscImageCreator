@@ -335,11 +335,6 @@ VOID OutputFsVolumeDescriptorSecond(
 			"\t                Bibliographic File Identifier: %.37s\n"
 			, str128[0], str128[1], str128[2], str128[3], str37[0], str37[1], str37[2]);
 	}
-}
-
-VOID OutputFsVolumeDescriptorForTime(
-	LPBYTE lpBuf
-) {
 	OutputVolDescLogA(
 		"\t                Volume Creation Date and Time: %.4s-%.2s-%.2s %.2s:%.2s:%.2s.%.2s %+03d:%02d\n"
 		"\t            Volume Modification Date and Time: %.4s-%.2s-%.2s %.2s:%.2s:%.2s.%.2s %+03d:%02d\n"
@@ -356,6 +351,10 @@ VOID OutputFsVolumeDescriptorForTime(
 		&lpBuf[864], &lpBuf[868], &lpBuf[870], &lpBuf[872], &lpBuf[874]
 		, &lpBuf[876], &lpBuf[878], (CHAR)lpBuf[880] / 4, abs((CHAR)lpBuf[880] % 4 * 15),
 		lpBuf[881]);
+	if (!strncmp((CONST PCHAR)&lpBuf[883], "MVSNRGFP", 8)) {
+		OutputLogA(standardOut | fileDisc, "Detected RipGuard\n");
+		pDisc->PROTECT.byExist = ripGuard;
+	}
 	for (INT i = 883; i <= 1394; i++) {
 		OutputVolDescLogA("%x", lpBuf[i]);
 	}
@@ -386,7 +385,6 @@ VOID OutputFsVolumeDescriptorForISO9660(
 			"\t                             Escape Sequences: %.32s\n", str32[2]);
 	}
 	OutputFsVolumeDescriptorSecond(pExtArg, pDisc, lpBuf, str128, str37, FALSE);
-	OutputFsVolumeDescriptorForTime(lpBuf);
 }
 
 VOID OutputFsVolumeDescriptorForJoliet(
@@ -513,7 +511,6 @@ VOID OutputFsVolumeDescriptorForJoliet(
 	OutputVolDescLogA(
 		"\t                             Escape Sequences: %.32s\n", str32[2]);
 	OutputFsVolumeDescriptorSecond(pExtArg, pDisc, lpBuf, str128, str37, TRUE);
-	OutputFsVolumeDescriptorForTime(lpBuf);
 }
 
 VOID OutputFsVolumePartitionDescriptor(

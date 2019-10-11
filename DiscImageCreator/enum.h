@@ -94,6 +94,7 @@ typedef enum _PROTECT_TYPE_CD {
 	securomV3_2, // a.k.a SecuROM NEW ((8 shifted RMSF/AMSF + 1 error) * 11 times = 99 sector error) 
 	securomV4, // a.k.a SecuROM NEW (LBA -1 + 10 random error = 11 sector error)
 	smartE,
+	ripGuard,
 	physicalErr,
 	edcEccErr,
 	microids

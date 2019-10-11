@@ -202,8 +202,14 @@ BOOL ReadDVD(
 		REVERSE_BYTES(&cdb.TransferLength, &dwTransferLen);
 		BYTE byScsiStatus = 0;
 		INT i = 0;
-		DWORD dwTransferLenOrg = dwTransferLen;
 		INT nRetryCnt = 0;
+		INT nErrCnt = 0;
+		if (pDisc->PROTECT.byExist == ripGuard) {
+			nRetryCnt = 6;
+			dwTransferLen = 1;
+			REVERSE_BYTES(&cdb.TransferLength, &dwTransferLen);
+		}
+		DWORD dwTransferLenOrg = dwTransferLen;
 		INT nFirstErrorLBA = 0;
 		INT nLastErrorLBA = 0;
 		BOOL bErrorForward = FALSE;
@@ -363,8 +369,14 @@ BOOL ReadDVD(
 					continue;
 				}
 				else {
-					OutputString(_T("Retry NG\n"));
-					throw FALSE;
+					if (pDisc->PROTECT.byExist == ripGuard) {
+						OutputMainErrorLogA(STR_LBA "Read error. 2048 bytes were padded by 0x00\n", nLBA, nLBA);
+						ZeroMemory(lpBuf, DISC_RAW_READ_SIZE);
+					}
+					else {
+						OutputString(_T("Retry NG\n"));
+						throw FALSE;
+					}
 				}
 			}
 
@@ -382,14 +394,22 @@ BOOL ReadDVD(
 				uiErrorBackTimes = 0;
 				continue;
 			}
-			if (nRetryCnt) {
+
+			if (pDisc->PROTECT.byExist == ripGuard) {
+				nErrCnt++;
+			}
+			else if (nRetryCnt) {
 				OutputString(_T("Retry OK\n"));
 				nRetryCnt = 0;
 			}
 			fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_RAW_READ_SIZE * dwTransferLen, fp);
 			OutputString(_T("\rCreating iso(LBA) %8lu/%8u"), nLBA + dwTransferLen, nAllLength);
 		}
-		if (*pExecType == xbox) {
+
+		if (pDisc->PROTECT.byExist == ripGuard) {
+			OutputLogA(standardOut | fileDisc, "Error Count: %d\n", nErrCnt);
+		}
+		else if (*pExecType == xbox) {
 			if (!SetLockState(pExtArg, pDevice, 0)) {
 				throw FALSE;
 			}
