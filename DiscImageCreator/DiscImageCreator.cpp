@@ -428,6 +428,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 									if (bRet && uiDiscSize > 8547991552) {
 										OutputLogA(standardOut | fileDisc, "Detected disguised file size: %lld\n", uiDiscSize);
 									}
+									AnalyzeIfoFile(&device);
 									bRet = ReadDVD(pExecType, pExtArg, &device, &discData, pszFullPath);
 								}
 							}

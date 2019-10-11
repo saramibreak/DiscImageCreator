@@ -181,3 +181,7 @@ BOOL ContainsC2Error(
 	LPUINT lpuiC2errorNum,
 	BOOL bOutputLog
 );
+
+BOOL AnalyzeIfoFile(
+	PDEVICE pDevice
+);

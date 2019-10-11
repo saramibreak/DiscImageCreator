@@ -1249,3 +1249,94 @@ BOOL ContainsC2Error(
 	}
 	return bRet;
 }
+
+BOOL AnalyzeIfoFile(
+	PDEVICE pDevice
+) {
+	BOOL bRet = TRUE;
+	CONST size_t bufSize = 25;
+	_TCHAR szBuf[bufSize] = {};
+	_sntprintf(szBuf, bufSize, _T("%c:\\VIDEO_TS\\VIDEO_TS.IFO"), pDevice->byDriveLetter);
+
+	if (PathFileExists(szBuf)) {
+		_TCHAR szFnameAndExt[_MAX_FNAME] = {};
+		FILE* fp = CreateOrOpenFile(szBuf, NULL, NULL, szFnameAndExt, NULL, _T(".IFO"), _T("rb"), 0, 0);
+		if (!fp) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			return FALSE;
+		}
+		LPBYTE pSector = NULL;
+		try {
+			if (NULL == (pSector = (LPBYTE)calloc(pDevice->dwMaxTransferLength, sizeof(BYTE)))) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				throw FALSE;
+			}
+			if (fread(pSector, sizeof(BYTE), DISC_RAW_READ_SIZE, fp) != DISC_RAW_READ_SIZE) {
+				throw FALSE;
+			}
+			WORD wNumOfTitleSets = MAKEWORD(pSector[0x3f], pSector[0x3e]);
+			LONG lStartOfsOfPttSrpt = MAKELONG(MAKEWORD(pSector[0xc7], pSector[0xc6]), MAKEWORD(pSector[0xc5], pSector[0xc4]));
+			fseek(fp, DISC_RAW_READ_SIZE * lStartOfsOfPttSrpt, SEEK_SET);
+			if (fread(pSector, sizeof(BYTE), DISC_RAW_READ_SIZE, fp) != DISC_RAW_READ_SIZE) {
+				throw FALSE;
+			}
+			WORD wNumOfTitlePlayMaps = MAKEWORD(pSector[1], pSector[0]);
+			OutputLogA(fileDisc, "%s, NumberOfTitlePlayMaps: %d\n", szFnameAndExt, wNumOfTitlePlayMaps);
+
+			INT nPgcCnt = 0;
+			for (WORD w = 1; w <= wNumOfTitleSets; w++) {
+				_sntprintf(szBuf, bufSize, _T("%c:\\VIDEO_TS\\VTS_%02d_0.IFO"), pDevice->byDriveLetter, w);
+				if (PathFileExists(szBuf)) {
+					FILE* fpVts = CreateOrOpenFile(szBuf, NULL, NULL, szFnameAndExt, NULL, _T(".IFO"), _T("rb"), 0, 0);
+					if (!fpVts) {
+						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+						break;
+					}
+					if (fread(pSector, sizeof(BYTE), DISC_RAW_READ_SIZE, fpVts) != DISC_RAW_READ_SIZE) {
+						FcloseAndNull(fpVts);
+						break;
+					}
+					LONG lStartOfsOfPgci = MAKELONG(MAKEDWORD(pSector[0xcf], pSector[0xce]), MAKEDWORD(pSector[0xcd], pSector[0xcc]));
+					fseek(fpVts, DISC_RAW_READ_SIZE * lStartOfsOfPgci, SEEK_SET);
+
+					if (fread(pSector, sizeof(BYTE), 8, fpVts) != 8) {
+						FcloseAndNull(fpVts);
+						break;
+					}
+					fseek(fpVts, -8, SEEK_CUR);
+					WORD wNumOfPgciSrp = MAKEWORD(pSector[1], pSector[0]);
+					UINT wByteOfPgciSrpTbl = MAKEUINT(MAKEWORD(pSector[7], pSector[6]), MAKEWORD(pSector[5], pSector[4]));
+					if (fread(pSector, sizeof(BYTE), 8 + wByteOfPgciSrpTbl, fpVts) != 8 + wByteOfPgciSrpTbl) {
+						FcloseAndNull(fpVts);
+						break;
+					}
+					UINT uiPgciStartByte[100] = {};
+					for (WORD x = 0; x < wNumOfPgciSrp; x++) {
+						uiPgciStartByte[x] = MAKEUINT(MAKEWORD(pSector[0xf + 8 * x], pSector[0xe + 8 * x])
+							, MAKEWORD(pSector[0xd + 8 * x], pSector[0xc + 8 * x]));
+						INT nPlayBackTimeH = pSector[uiPgciStartByte[x] + 4];
+						INT nPlayBackTimeM = pSector[uiPgciStartByte[x] + 5];
+						INT nPlayBackTimeS = pSector[uiPgciStartByte[x] + 6];
+						OutputLogA(fileDisc, "%s, ProgramChain %2d, PlayBackTime -- %02x:%02x:%02x\n"
+							, szFnameAndExt, x + 1, nPlayBackTimeH, nPlayBackTimeM, nPlayBackTimeS);
+						nPgcCnt++;
+					}
+				}
+				else {
+					bRet = FALSE;
+					break;
+				}
+			}
+			OutputLogA(fileDisc, "NumberOfProgramChain: %d\n", nPgcCnt);
+		}
+		catch (BOOL bErr) {
+			bRet = bErr;
+		}
+		FcloseAndNull(fp);
+		FreeAndNull(pSector);
+	}
+	else {
+		bRet = FALSE;
+	}
+	return bRet;
+}
