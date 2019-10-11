@@ -419,6 +419,15 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 									bRet = ReadDVDReverse(pExtArg, &device, pszFullPath, (INT)s_nStartLBA, (INT)s_nEndLBA);
 								}
 								else {
+									CONST size_t bufSize = 5;
+									_TCHAR szBuf[bufSize] = {};
+									_sntprintf(szBuf, bufSize, _T("%c:\\*"), device.byDriveLetter);
+									szBuf[4] = 0;
+									UINT64 uiDiscSize = 0;
+									bRet = GetDiscSize(szBuf, &uiDiscSize);
+									if (bRet && uiDiscSize > 8547991552) {
+										OutputLogA(standardOut | fileDisc, "Detected disguised file size: %lld\n", uiDiscSize);
+									}
 									bRet = ReadDVD(pExecType, pExtArg, &device, &discData, pszFullPath);
 								}
 							}

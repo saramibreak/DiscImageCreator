@@ -55,6 +55,11 @@ UINT64 GetFileSize64(
 	FILE *fp
 );
 
+BOOL GetDiscSize(
+	LPTSTR path,
+	PUINT64 lpSize
+);
+
 WORD GetSizeOrWordForVolDesc(
 	LPBYTE lpBuf
 );

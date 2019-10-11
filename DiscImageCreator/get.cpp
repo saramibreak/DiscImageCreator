@@ -209,6 +209,44 @@ UINT64 GetFileSize64(
 	return ui64FileSize;
 }
 
+BOOL GetDiscSize(
+	LPTSTR path,
+	PUINT64 lpSize
+) {
+	BOOL bRet = TRUE;
+#ifdef _WIN32
+	WIN32_FIND_DATA FindData;
+	HANDLE hFind = FindFirstFile(path, &FindData);
+	size_t len = _tcslen(path) - 1;
+	path[len] = 0;
+	if (hFind != INVALID_HANDLE_VALUE) {
+		do {
+			UINT64 size = 0;
+			if (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+				if (!_tcscmp(_T("."), FindData.cFileName) || !_tcscmp(_T(".."), FindData.cFileName)) {
+					continue;
+				}
+				_TCHAR buf[MAX_PATH] = {};
+				_stprintf(buf, _T("%s%s\\*"), path, FindData.cFileName);
+				if (GetDiscSize(buf, &size) == FALSE) {
+					bRet = FALSE;
+					break;
+				}
+				*lpSize += size;
+			}
+			else {
+				*lpSize += MAKEDWORD64(FindData.nFileSizeLow, FindData.nFileSizeHigh);
+			}
+		} while (FindNextFile(hFind, &FindData));
+	}
+	else {
+		bRet = FALSE;
+	}
+	FindClose(hFind);
+#endif
+	return bRet;
+}
+
 WORD GetSizeOrWordForVolDesc(
 	LPBYTE lpBuf
 ) {
