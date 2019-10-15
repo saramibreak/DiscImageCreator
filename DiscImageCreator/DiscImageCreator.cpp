@@ -1090,6 +1090,11 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 						return FALSE;
 					}
 				}
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/f"), 2)) {
+					if (!SetOptionF(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
+				}
 				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/r"), 2)) {
 					pExtArg->byReverse = TRUE;
 				}
@@ -1422,12 +1427,12 @@ int printUsage(void)
 		_T("\t\tDump a CD from A to Z using swap trick\n")
 		_T("\t\tFor no PLEXTOR or drive that can't scramble dumping\n")
 		_T("\tdata <DriveLetter> <Filename> <DriveSpeed(0-72)> <StartLBA> <EndLBA+1>\n")
-		_T("\t     [/q] [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4)]\n")
+		_T("\t     [/q] [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4)] [/f (val)]\n")
 		_T("\t     [/sf (val)] [/sk (val1) (val2)] [/ss] [/r] [/np] [/nq] [/nr] [/s (val)]\n")
 		_T("\t\tDump a CD from start to end (using 'all' flag)\n")
 		_T("\t\tFor no PLEXTOR or drive that can't scramble dumping\n")
 		_T("\taudio <DriveLetter> <Filename> <DriveSpeed(0-72)> <StartLBA> <EndLBA+1>\n")
-		_T("\t      [/q] [/a (val)] [/c2 (val1) (val2) (val3) (val4)]\n")
+		_T("\t      [/q] [/a (val)] [/c2 (val1) (val2) (val3) (val4)] [/f (val)]\n")
 		_T("\t      [/be (str) or /d8] [/sf (val)] [/np] [/nq] [/nr] [/s (val)]\n")
 		_T("\t\tDump a CD from start to end (using 'cdda' flag)\n")
 		_T("\t\tFor dumping a lead-in, lead-out mainly\n")
