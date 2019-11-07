@@ -290,9 +290,24 @@ BOOL ReadTOCFull(
 				pDisc->SCSI.byFormat = (*pTocData + a)->Msf[1];
 				break;
 			case 0xb0: // (multi-session disc)
-				nTmpLBAExt =
-					MSFtoLBA((*pTocData + a)->MsfExtra[0], (*pTocData + a)->MsfExtra[1], (*pTocData + a)->MsfExtra[2]) - 150;
-				pDisc->SCSI.nFirstLBAof2ndSession = nTmpLBAExt + 150;
+				/* single-session disc, but 0xb0 exists
+				FirstCompleteSession: 1
+				 LastCompleteSession: 1
+				Session 1, Ctl 4, Adr 1, Point 0xa0, FirstTrack  1, Format: CD-DA or CD-ROM
+				Session 1, Ctl 4, Adr 1, Point 0xa1,  LastTrack  1
+				Session 1, Ctl 4, Adr 1, Point 0xa2,      Lead-out, AMSF 62:10:20 (LBA[279620, 0x44444])
+				Session 1, Ctl 4, Adr 1, Point 0x01,      Track  1, AMSF 00:02:00 (LBA[000000, 0000000])
+				Session 1, Ctl 4, Adr 5, Point 0xb0,   NextSession, AMSF 64:40:20 (LBA[290870, 0x47036])
+									Outermost Lead-out of the disc, AMSF 74:05:11 (LBA[333236, 0x515b4])
+										 Num of pointers in Mode 5, 02
+				Session 1, Ctl 4, Adr 5, Point 0xc0, Optimum recording power, 128
+										 First Lead-in of the disc, AMSF 97:27:56 (LBA[438431, 0x6b09f])
+				 */
+				if (pDisc->SCSI.bMultiSession) {
+					nTmpLBAExt =
+						MSFtoLBA((*pTocData + a)->MsfExtra[0], (*pTocData + a)->MsfExtra[1], (*pTocData + a)->MsfExtra[2]) - 150;
+					pDisc->SCSI.nFirstLBAof2ndSession = nTmpLBAExt + 150;
+				}
 			default:
 				break;
 			}
