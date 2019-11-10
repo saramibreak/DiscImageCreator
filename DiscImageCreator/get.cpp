@@ -142,8 +142,39 @@ BOOL GetDriveOffsetAuto(
 	return bGetOffset;
 }
 
+BOOL GetReadErrorFileName(
+	PEXT_ARG pExtArg,
+	CHAR protectFname[MAX_FNAME_FOR_VOLUME]
+) {
+	for (INT i = 0; i < MAX_READ_ERROR_FILE_COUNT; i++) {
+		if (strlen(pExtArg->FILE.readError[i]) > 0 &&
+			!strncmp(protectFname, pExtArg->FILE.readError[i], strlen(pExtArg->FILE.readError[i]) - 1)) {
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
+INT GetReadErrorFileIdx(
+	PEXT_ARG pExtArg,
+	PDISC pDisc,
+	INT nLBA
+) {
+	INT idx = 0;
+	if (pDisc->PROTECT.byExist == physicalErr) {
+		while (idx < pExtArg->FILE.readErrCnt) {
+			if (pDisc->PROTECT.ERROR_SECTOR.nExtentPos[idx] <= nLBA &&
+				nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos[idx] + pDisc->PROTECT.ERROR_SECTOR.nSectorSize[idx]) {
+				return idx;
+			}
+			idx++;
+		}
+	}
+	return idx;
+}
+
 BOOL GetFilenameToSkipError(
-	LPSTR szFilename
+	CHAR szFilename[][MAX_FNAME_FOR_VOLUME]
 ) {
 	FILE* fp = OpenProgrammabledFile(_T("ReadErrorProtect.txt"), _T("r"));
 	if (!fp) {
@@ -153,8 +184,11 @@ BOOL GetFilenameToSkipError(
 	}
 	CHAR comment[MAX_FNAME_FOR_VOLUME] = {};
 	if (fgets(comment, MAX_FNAME_FOR_VOLUME, fp)) {
-		if (!fgets(szFilename, MAX_FNAME_FOR_VOLUME, fp)) { // 2nd line is filename
-			return FALSE;
+		// 2nd, 3rd ... line is filename
+		for (INT i = 0; i < MAX_READ_ERROR_FILE_COUNT; i++) {
+			if (!fgets(szFilename[i], MAX_FNAME_FOR_VOLUME, fp)) {
+				break;
+			}
 		}
 	}
 	else {
@@ -163,18 +197,52 @@ BOOL GetFilenameToSkipError(
 	return TRUE;
 }
 
-BOOL GetFilenameToFixError(
-	LPSTR szFilename
+BOOL GetC2ErrorFileName(
+	PEXT_ARG pExtArg,
+	CHAR protectFname[MAX_FNAME_FOR_VOLUME]
 ) {
-	FILE* fp = OpenProgrammabledFile(_T("EdcEccErrorProtect.txt"), _T("r"));
+	for (INT i = 0; i < MAX_READ_ERROR_FILE_COUNT; i++) {
+		if (strlen(pExtArg->FILE.c2Error[i]) > 0 &&
+			!strncmp(protectFname, pExtArg->FILE.c2Error[i], strlen(pExtArg->FILE.c2Error[i]) - 1)) {
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
+INT GetC2ErrorFileIdx(
+	PEXT_ARG pExtArg,
+	PDISC pDisc,
+	INT nLBA
+) {
+	INT idx = 0;
+	if (pDisc->PROTECT.byExist == c2Err) {
+		while (idx < pExtArg->FILE.c2ErrCnt) {
+			if (pDisc->PROTECT.ERROR_SECTOR.nExtentPos[idx] <= nLBA &&
+				nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos[idx] + pDisc->PROTECT.ERROR_SECTOR.nSectorSize[idx]) {
+				return idx;
+			}
+			idx++;
+		}
+	}
+	return idx;
+}
+
+BOOL GetFilenameToFixError(
+	CHAR szFilename[][MAX_FNAME_FOR_VOLUME]
+) {
+	FILE* fp = OpenProgrammabledFile(_T("C2ErrorProtect.txt"), _T("r"));
 	if (!fp) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
 	CHAR comment[MAX_FNAME_FOR_VOLUME] = {};
 	if (fgets(comment, MAX_FNAME_FOR_VOLUME, fp)) {
-		if (!fgets(szFilename, MAX_FNAME_FOR_VOLUME, fp)) { // 2nd line is filename
-			return FALSE;
+		// 2nd, 3rd ... line is filename
+		for (INT i = 0; i < MAX_READ_ERROR_FILE_COUNT; i++) {
+			if (!fgets(szFilename[i], MAX_FNAME_FOR_VOLUME, fp)) {
+				break;
+			}
 		}
 	}
 	else {

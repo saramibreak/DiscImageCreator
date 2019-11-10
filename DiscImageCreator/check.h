@@ -92,7 +92,8 @@ BOOL IsValidSecuRomSector(
 
 BOOL IsValidProtectedSector(
 	PDISC pDisc,
-	INT nLBA
+	INT nLBA,
+	INT idx
 );
 
 BOOL IsValidSafeDiscSector(
@@ -102,7 +103,9 @@ BOOL IsValidSafeDiscSector(
 
 BOOL IsValidIntentionalC2error(
 	PDISC pDisc,
-	PDISC_PER_SECTOR pDiscPerSector
+	PDISC_PER_SECTOR pDiscPerSector,
+	INT nLBA,
+	INT idx
 );
 
 BOOL IsCheckingSubChannel(

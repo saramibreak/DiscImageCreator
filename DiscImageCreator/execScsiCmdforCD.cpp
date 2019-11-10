@@ -265,8 +265,8 @@ BOOL ProcessReadCD(
 	}
 
 	if (pExtArg->byFua || pDisc->SUB.nCorruptCrcH == 1 || pDisc->SUB.nCorruptCrcL == 1) {
-		if (!IsValidProtectedSector(pDisc, nLBA) &&
-			!IsValidIntentionalC2error(pDisc, pDiscPerSector) &&
+		if (!IsValidProtectedSector(pDisc, nLBA, GetReadErrorFileIdx(pExtArg, pDisc, nLBA)) &&
+			!IsValidIntentionalC2error(pDisc, pDiscPerSector, nLBA, GetC2ErrorFileIdx(pExtArg, pDisc, nLBA)) &&
 			!pDiscPerSector->bLibCrypt && !pDiscPerSector->bSecuRom) {
 			FlushDriveCache(pExtArg, pDevice, nLBA);
 //			SynchronizeCache(pExtArg, pDevice);
@@ -303,7 +303,7 @@ BOOL ProcessReadCD(
 			if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
 				bRet = ContainsC2Error(pDevice, pDiscPerSector->data.current, &pDiscPerSector->uiC2errorNum, TRUE);
 			}
-			if (!IsValidProtectedSector(pDisc, nLBA)) {
+			if (!IsValidProtectedSector(pDisc, nLBA, GetReadErrorFileIdx(pExtArg, pDisc, nLBA))) {
 				if (pDiscPerSector->data.next != NULL && 1 <= pExtArg->uiSubAddionalNum) {
 					if (!(pDevice->byAsusDrive && pDisc->SCSI.nAllLength - 1 <= nLBA)) {
 						ExecReadCDForC2(pExecType, pExtArg, pDevice, lpCmd,
@@ -620,7 +620,7 @@ BOOL ReadCDForRereadingSectorType2(
 }
 
 INT ExecEccEdc(
-	BYTE byScanProtectViaFile,
+	PEXT_ARG pExtArg,
 	_DISC::_PROTECT protect,
 	LPCTSTR pszImgPath,
 	_DISC::_PROTECT::_ERROR_SECTOR errorSector
@@ -629,12 +629,12 @@ INT ExecEccEdc(
 	CONST INT nStrSize = _MAX_PATH * 2 + nCmdSize;
 	_TCHAR str[nStrSize] = {};
 	_TCHAR cmd[nCmdSize] = { _T("check") };
-	INT nStartLBA = errorSector.nExtentPos;
-	INT nEndLBA = errorSector.nExtentPos + errorSector.nSectorSize;
-	if (byScanProtectViaFile) {
+	INT nStartLBA = errorSector.nExtentPos[0];
+	INT nEndLBA = errorSector.nExtentPos[0] + errorSector.nSectorSize[0];
+	if (pExtArg->byScanProtectViaFile) {
 		if (protect.byExist == safeDisc || protect.byExist == safeDiscLite ||
 			protect.byExist == codelock || protect.byExist == datel ||
-			protect.byExist == datelAlt) {
+			protect.byExist == datelAlt || protect.byExist == c2Err) {
 			_tcsncpy(cmd, _T("fix"), sizeof(cmd) / sizeof(cmd[0]));
 		}
 	}
@@ -643,7 +643,27 @@ INT ExecEccEdc(
 		OutputString(_T("Exec %s\n"), str);
 		ret = _tsystem(str);
 	}
-	if (protect.byExist == microids || protect.byExist == datelAlt) {
+	if (protect.byExist == physicalErr) {
+		for (INT i = 1; i < pExtArg->FILE.readErrCnt; i++) {
+			nStartLBA = errorSector.nExtentPos[i];
+			nEndLBA = errorSector.nExtentPos[i] + errorSector.nSectorSize[i];
+			if (GetEccEdcCmd(str, nStrSize, cmd, pszImgPath, nStartLBA, nEndLBA)) {
+				OutputString(_T("Exec %s\n"), str);
+				ret = _tsystem(str);
+			}
+		}
+	}
+	else if (protect.byExist == c2Err) {
+		for (INT i = 1; i < pExtArg->FILE.c2ErrCnt; i++) {
+			nStartLBA = errorSector.nExtentPos[i];
+			nEndLBA = errorSector.nExtentPos[i] + errorSector.nSectorSize[i];
+			if (GetEccEdcCmd(str, nStrSize, cmd, pszImgPath, nStartLBA, nEndLBA)) {
+				OutputString(_T("Exec %s\n"), str);
+				ret = _tsystem(str);
+			}
+		}
+	}
+	else if (protect.byExist == datelAlt) {
 		nStartLBA = errorSector.nExtentPos2nd;
 		nEndLBA = errorSector.nExtentPos2nd + errorSector.nSectorSize2nd;
 		if (GetEccEdcCmd(str, nStrSize, cmd, pszImgPath, nStartLBA, nEndLBA)) {
@@ -721,7 +741,7 @@ BOOL ProcessDescramble(
 			return FALSE;
 		}
 		if (pExtArg->byBe) {
-			ExecEccEdc(pExtArg->byScanProtectViaFile, pDisc->PROTECT, pszNewPath, pDisc->PROTECT.ERROR_SECTOR);
+			ExecEccEdc(pExtArg, pDisc->PROTECT, pszNewPath, pDisc->PROTECT.ERROR_SECTOR);
 		}
 	}
 	else {
@@ -739,7 +759,7 @@ BOOL ProcessDescramble(
 		}
 		DescrambleMainChannelAll(pExtArg, pDisc, scrambled_table, fpImg);
 		FcloseAndNull(fpImg);
-		ExecEccEdc(pExtArg->byScanProtectViaFile, pDisc->PROTECT, pszImgPath, pDisc->PROTECT.ERROR_SECTOR);
+		ExecEccEdc(pExtArg, pDisc->PROTECT, pszImgPath, pDisc->PROTECT.ERROR_SECTOR);
 	}
 	return TRUE;
 }
@@ -932,8 +952,8 @@ BOOL ReadCDAll(
 				}
 			}
 			else if (pDisc->PROTECT.byExist == laserlock || pDisc->PROTECT.byExist == proring ||
-				pDisc->PROTECT.byExist == physicalErr || pDisc->PROTECT.byExist == microids) {
-				if (IsValidProtectedSector(pDisc, nLBA - 1)) {
+				pDisc->PROTECT.byExist == physicalErr) {
+				if (IsValidProtectedSector(pDisc, nLBA - 1, GetReadErrorFileIdx(pExtArg, pDisc, nLBA))) {
 					ProcessReturnedContinue(pExecType, pExtArg, pDevice, pDisc
 						, pDiscPerSector, nLBA, nMainDataType, padByUsr55, fpImg, fpSub, fpC2);
 					nLBA++;
@@ -975,7 +995,7 @@ BOOL ReadCDAll(
 				OutputLogA(standardError | fileC2Error,
 					" LBA[%06d, %#07x] Detected C2 error %d bit\n", nLBA, nLBA, pDiscPerSector->uiC2errorNum);
 				if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
-					if (!(IsValidProtectedSector(pDisc, nLBA) && IsValidIntentionalC2error(pDisc, pDiscPerSector))) {
+					if (!(IsValidIntentionalC2error(pDisc, pDiscPerSector, nLBA, GetC2ErrorFileIdx(pExtArg, pDisc, nLBA)))) {
 						pDisc->MAIN.lpAllLBAOfC2Error[pDisc->MAIN.nC2ErrorCnt++] = nLBA;
 					}
 				}
@@ -1057,7 +1077,7 @@ BOOL ReadCDAll(
 						, pDiscPerSector->data.current, CD_RAW_SECTOR_SIZE);
 				}
 				if (pDisc->SUB.nSubChannelOffset) {
-					if (!IsValidProtectedSector(pDisc, nLBA)) {
+					if (!IsValidProtectedSector(pDisc, nLBA, GetReadErrorFileIdx(pExtArg, pDisc, nLBA))) {
 						if (2 <= pExtArg->uiSubAddionalNum) {
 							memcpy(pDiscPerSector->subcode.nextNext
 								, pDiscPerSector->subcode.next, CD_RAW_READ_SUBCODE_SIZE);
@@ -1400,8 +1420,7 @@ BOOL ReadCDForSwap(
 				OutputLogA(standardError | fileC2Error,
 					"\rLBA[%06d, %#07x] Detected C2 error %d bit\n", nLBA, nLBA, pDiscPerSector->uiC2errorNum);
 				if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
-					if (!(IsValidProtectedSector(pDisc, nLBA) && (pDisc->PROTECT.byExist == codelock
-						|| IsValidSafeDiscSector(pDisc, pDiscPerSector)))) {
+					if (!(IsValidIntentionalC2error(pDisc, pDiscPerSector, nLBA, GetC2ErrorFileIdx(pExtArg, pDisc, nLBA)))) {
 						pDisc->MAIN.lpAllLBAOfC2Error[pDisc->MAIN.nC2ErrorCnt++] = nLBA;
 					}
 				}
@@ -1905,8 +1924,7 @@ BOOL ReadCDPartial(
 				OutputLogA(standardError | fileC2Error,
 					" LBA[%06d, %#07x] Detected C2 error %d bit\n", nLBA, nLBA, pDiscPerSector->uiC2errorNum);
 				if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
-					if (!(IsValidProtectedSector(pDisc, nLBA) && (pDisc->PROTECT.byExist == codelock
-						|| IsValidSafeDiscSector(pDisc, pDiscPerSector)))) {
+					if (!(IsValidIntentionalC2error(pDisc, pDiscPerSector, nLBA, GetC2ErrorFileIdx(pExtArg, pDisc, nLBA)))) {
 						pDisc->MAIN.lpAllLBAOfC2Error[pDisc->MAIN.nC2ErrorCnt++] = nLBA;
 					}
 				}
@@ -1922,8 +1940,7 @@ BOOL ReadCDPartial(
 			}
 			else if (pDiscPerSector->bReturnCode == RETURNED_CONTINUE) {
 				if (pDisc->PROTECT.byExist != physicalErr && (!bForceSkip || !bForceSkip2)) {
-					if (pDisc->PROTECT.byExist == proring || pDisc->PROTECT.byExist == laserlock ||
-						pDisc->PROTECT.byExist == microids) {
+					if (pDisc->PROTECT.byExist == proring || pDisc->PROTECT.byExist == laserlock) {
 						if (!bForceSkip) {
 							for (UINT i = 0; i < pExtArg->uiSkipSectors; i++) {
 								ProcessReturnedContinue(pExecType, pExtArg, pDevice, pDisc, pDiscPerSector
@@ -2020,7 +2037,7 @@ BOOL ReadCDPartial(
 						, pDiscPerSector->data.current, CD_RAW_SECTOR_SIZE);
 				}
 				if (pDisc->SUB.nSubChannelOffset) {
-					if (!IsValidProtectedSector(pDisc, nLBA)) {
+					if (!IsValidProtectedSector(pDisc, nLBA, GetReadErrorFileIdx(pExtArg, pDisc, nLBA))) {
 						if (2 <= pExtArg->uiSubAddionalNum) {
 							memcpy(pDiscPerSector->subcode.nextNext, pDiscPerSector->subcode.next, CD_RAW_READ_SUBCODE_SIZE);
 						}
@@ -2219,17 +2236,17 @@ BOOL ReadCDPartial(
 				FcloseAndNull(fpBin);
 			}
 			if (pExtArg->byScanProtectViaFile) {
-				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = nStart;
-				pDisc->PROTECT.ERROR_SECTOR.nSectorSize = nEnd - nStart;
+				pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] = nStart;
+				pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0] = nEnd - nStart;
 			}
-			ExecEccEdc(pExtArg->byScanProtectViaFile, pDisc->PROTECT, pszPath, pDisc->PROTECT.ERROR_SECTOR);
+			ExecEccEdc(pExtArg, pDisc->PROTECT, pszPath, pDisc->PROTECT.ERROR_SECTOR);
 		}
 		else if (*pExecType == gd) {
 			_TCHAR pszImgPath[_MAX_PATH] = {};
 			if (!DescrambleMainChannelForGD(pszPath, pszImgPath)) {
 				throw FALSE;
 			}
-			ExecEccEdc(pExtArg->byScanProtectViaFile, pDisc->PROTECT, pszImgPath, pDisc->PROTECT.ERROR_SECTOR);
+			ExecEccEdc(pExtArg, pDisc->PROTECT, pszImgPath, pDisc->PROTECT.ERROR_SECTOR);
 			if (!CreateBinCueForGD(pDisc, pszPath)) {
 				throw FALSE;
 			}

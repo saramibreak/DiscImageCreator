@@ -855,6 +855,187 @@ VOID OutputDVDRamLayerDescriptor(
 	}
 }
 
+VOID OutputDVDMinusRLayerDescriptor(
+	LPBYTE lpBuf
+) {
+	if ((lpBuf[0] & 0x0f) == 1) { // ECMA-279
+		OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(PreRecordedPhysicalFormatInformation)
+			"\t                                      Version Number: %d\n"
+			"\t                                       Disk Category: %s\n"
+			"\t                               Maximum transfer rate: "
+			, lpBuf[0] & 0x0f
+			, (lpBuf[0] & 0xf0) == 0x10 ? "Recordable disk" : "other"
+		);
+		switch (lpBuf[1] & 0x0f) {
+		case 0:
+			OutputDiscLogA("2.52Mbits/s\n");
+			break;
+		case 1:
+			OutputDiscLogA("5.04Mbits/s\n");
+			break;
+		case 2:
+			OutputDiscLogA("10.08Mbits/s\n");
+			break;
+		default:
+			OutputDiscLogA("other\n");
+			break;
+		}
+		OutputDiscLogA(
+			"\t                                           Disk size: %s\n"
+			"\t                                          Layer type: %s\n"
+			"\t                                          Track path: %s\n"
+			"\t                                    Number of layers: %d\n"
+			"\t                                 Average track pitch: %s\n"
+			"\t                                  Channel bit length: %s\n"
+			"\t              First Physical Sector of the Data Zone: %d (0x%x)\n"
+			"\t       Sector of the last Rzone in the Bordered Area: %d (0x%x)\n"
+			"\tSector of the first sector of the current Border Out: %d (0x%x)\n"
+			"\t    Sector of the first sector of the next Border In: %d (0x%x)\n"
+			, (lpBuf[1] & 0xf0) == 0 ? "120mm" : "80mm"
+			, (lpBuf[2] & 0x0f) == 0x02 ? "disk contains Recordable user data Zone(s)" : "other"
+			, (lpBuf[2] & 0x10) == 0 ? "Parallel" : "other"
+			, (lpBuf[2] & 0x60) == 0 ? 1 : 2
+			, (lpBuf[3] & 0x0f) == 1 ? "0.80um" : "other"
+			, (lpBuf[3] & 0xf0) == 1 ? "0.147um" : "other"
+			, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], 0))
+			, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], 0))
+			, MAKEUINT(MAKEWORD(lpBuf[11], lpBuf[10]), MAKEWORD(lpBuf[9], 0))
+			, MAKEUINT(MAKEWORD(lpBuf[11], lpBuf[10]), MAKEWORD(lpBuf[9], 0))
+			, MAKEUINT(MAKEWORD(lpBuf[35], lpBuf[34]), MAKEWORD(lpBuf[33], lpBuf[32]))
+			, MAKEUINT(MAKEWORD(lpBuf[35], lpBuf[34]), MAKEWORD(lpBuf[33], lpBuf[32]))
+			, MAKEUINT(MAKEWORD(lpBuf[39], lpBuf[38]), MAKEWORD(lpBuf[37], lpBuf[36]))
+			, MAKEUINT(MAKEWORD(lpBuf[39], lpBuf[38]), MAKEWORD(lpBuf[37], lpBuf[36]))
+		);
+	}
+	else if ((lpBuf[0] & 0x0f) == 5) { // ECMA-359
+		OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(PreRecordedPhysicalFormatInformation)
+			"\t                                                         Version Number: %d\n"
+			"\t                                                          Disk Category: %s\n"
+			"\t                                                  Maximum transfer rate: %s\n"
+			"\t                                                              Disk size: %s\n"
+			"\t                                                             Layer type: %s\n"
+			"\t                                                             Track path: %s\n"
+			"\t                                                       Number of layers: %d\n"
+			"\t                                                    Average track pitch: %s\n"
+			"\t                                                     Channel bit length: %s\n"
+			"\t                                 First Physical Sector of the Data Zone: %d (0x%x)\n"
+			"\t                                    Outer limit of Data Recordable Zone: %d (0x%x)\n"
+			"\t                                                                   NBCA: %s\n"
+			"\t                       Start sector of Current RMD in Extra Border Zone: %d (0x%x)\n"
+			"\tStart sector of Physical format information blocks in Extra Border Zone: %d (0x%x)\n"
+			, lpBuf[0] & 0x0f
+			, (lpBuf[0] & 0xf0) == 0x10 ? "Recordable disk" : "other"
+			, (lpBuf[1] & 0x0f) == 0x0f ? "Not specified" : "other"
+			, (lpBuf[1] & 0xf0) == 0 ? "120mm" : "80mm"
+			, (lpBuf[2] & 0x0f) == 0x02 ? "disk contains Recordable user data Zone(s)" : "other"
+			, (lpBuf[2] & 0x10) == 0 ? "Parallel" : "other"
+			, (lpBuf[2] & 0x60) == 0 ? 1 : 2
+			, (lpBuf[3] & 0x0f) == 0 ? "0.74um" : "other"
+			, (lpBuf[3] & 0xf0) == 0 ? "0.133um" : "other"
+			, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], 0))
+			, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], 0))
+			, MAKEUINT(MAKEWORD(lpBuf[11], lpBuf[10]), MAKEWORD(lpBuf[9], 0))
+			, MAKEUINT(MAKEWORD(lpBuf[11], lpBuf[10]), MAKEWORD(lpBuf[9], 0))
+			, (lpBuf[16] & 0x80) == 0 ? "does not exist" : "exist"
+			, MAKEUINT(MAKEWORD(lpBuf[35], lpBuf[34]), MAKEWORD(lpBuf[33], lpBuf[32]))
+			, MAKEUINT(MAKEWORD(lpBuf[35], lpBuf[34]), MAKEWORD(lpBuf[33], lpBuf[32]))
+			, MAKEUINT(MAKEWORD(lpBuf[39], lpBuf[38]), MAKEWORD(lpBuf[37], lpBuf[36]))
+			, MAKEUINT(MAKEWORD(lpBuf[39], lpBuf[38]), MAKEWORD(lpBuf[37], lpBuf[36]))
+		);
+	}
+}
+
+VOID OutputDVDPlusRLayerDescriptor(
+	LPBYTE lpBuf
+) {
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(PhysicalFormatInformationInADIP) // ECMA-349
+		"\t                                                                 Disk Category: %s, %s, %s\n"
+		"\t                                                                Version Number: %d\n"
+		"\t                                                                     Disk size: %s\n"
+		"\t                                                         Maximum transfer rate: %s\n"
+		"\t                                                            Recording layer(s): %s\n"
+		"\t                                                            Channel bit length: %s\n"
+		"\t                                                           Average track pitch: %s\n"
+		"\t                                        First Physical Sector of the Data Zone: %d (0x%x)\n"
+		"\t                                Last possible Physical Sector of the Data Zone: %d (0x%x)\n"
+		"\t                                                             General Flag bits: %s\n"
+		"\t                                                         Disk Application Code: %s\n"
+		"\t                                                    Extended Information block: %d\n"
+		"\t                                                          Disk Manufacturer ID: %8s\n"
+		"\t                                                                 Media Type ID: %3s\n"
+		"\t                                                       Product revision number: %d\n"
+		"\t                    number of Physical format information bytes in use in ADIP: %d\n"
+		"\t                       Primary recording velocity for the basic write strategy: %d (0x%x)\n"
+		"\t                         Upper recording velocity for the basic write strategy: %d (0x%x)\n"
+		"\t                                                                    Wavelength: %d (0x%x)\n"
+		"\t                               Normalized Write power dependency on Wavelength: %d (0x%x)\n"
+		"\t                                    Maximum read power, Pr at Primary velocity: %d (0x%x)\n"
+		"\t                                                      PIND at Primary velocity: %d (0x%x)\n"
+		"\t                                                   Btarget at Primary velocity: %d (0x%x)\n"
+		"\t                                      Maximum read power, Pr at Upper velocity: %d (0x%x)\n"
+		"\t                                                        PIND at Upper velocity: %d (0x%x)\n"
+		"\t                                                     Btarget at Upper velocity: %d (0x%x)\n"
+		"\t    Ttop (>=4T) first pulse duration for current mark >=4T at Primary velocity: %d (0x%x)\n"
+		"\t      Ttop (=3T) first pulse duration for current mark =3T at Primary velocity: %d (0x%x)\n"
+		"\t                                  Tmp multi pulse duration at Primary velocity: %d (0x%x)\n"
+		"\t                                   Tlp last pulse duration at Primary velocity: %d (0x%x)\n"
+		"\t  dTtop (>=4T) first pulse lead time for current mark >=4T at Primary velocity: %d (0x%x)\n"
+		"\t    dTtop (=3T) first pulse lead time for current mark =3T at Primary velocity: %d (0x%x)\n"
+		"\tdTle first pulse leading edge shift for previous space =3T at Primary velocity: %d (0x%x)\n"
+		"\t      Ttop (>=4T) first pulse duration for current mark >=4T at Upper velocity: %d (0x%x)\n"
+		"\t         Ttop (3T) first pulse duration for current mark =3T at Upper velocity: %d (0x%x)\n"
+		"\t                                    Tmp multi pulse duration at Upper velocity: %d (0x%x)\n"
+		"\t                                     Tlp last pulse duration at Upper velocity: %d (0x%x)\n"
+		"\t    dTtop (>=4T) first pulse lead time for current mark >=4T at Upper velocity: %d (0x%x)\n"
+		"\t      dTtop (=3T) first pulse lead time for current mark =3T at Upper velocity: %d (0x%x)\n"
+		"\t  dTle first pulse leading edge shift for previous space =3T at Upper velocity: %d (0x%x)\n"
+		, (lpBuf[0] & 0x80) == 0x80 ? "+R/+RW Format" : "other"
+		, (lpBuf[0] & 0x20) == 0 ? "single layer" : "other"
+		, (lpBuf[0] & 0x10) == 0x10 ? "+R disk" : "other"
+		, lpBuf[0] & 0x0f
+		, (lpBuf[1] & 0xf0) == 0 ? "120mm" : "80mm"
+		, (lpBuf[1] & 0x0f) == 0x0f ? "not specified" : "other"
+		, (lpBuf[2] & 0x10) == 0x10 ? "write-once recording layer" : "other"
+		, (lpBuf[3] & 0xf0) == 0 ? "0.133um" : "other"
+		, (lpBuf[3] & 0x0f) == 0 ? "0.74um" : "other"
+		, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], 0))
+		, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], 0))
+		, MAKEUINT(MAKEWORD(lpBuf[11], lpBuf[10]), MAKEWORD(lpBuf[9], 0))
+		, MAKEUINT(MAKEWORD(lpBuf[11], lpBuf[10]), MAKEWORD(lpBuf[9], 0))
+		, (lpBuf[16] & 0x40) == 0 ? "no Extended format information for VCPS is present" : "Data Zone contains Extended format information for VCPS as defined"
+		, lpBuf[17] == 0 ? "disk for General Purpose use" : "other"
+		, lpBuf[18]
+		, (LPCH)&lpBuf[19]
+		, (LPCH)&lpBuf[27]
+		, lpBuf[30]
+		, lpBuf[31]
+		, lpBuf[32], lpBuf[32]
+		, lpBuf[33], lpBuf[33]
+		, lpBuf[34], lpBuf[34]
+		, lpBuf[35], lpBuf[35]
+		, lpBuf[36], lpBuf[36]
+		, lpBuf[37], lpBuf[37]
+		, lpBuf[38], lpBuf[38]
+		, lpBuf[39], lpBuf[39]
+		, lpBuf[40], lpBuf[40]
+		, lpBuf[41], lpBuf[41]
+		, lpBuf[42], lpBuf[42]
+		, lpBuf[43], lpBuf[43]
+		, lpBuf[44], lpBuf[44]
+		, lpBuf[45], lpBuf[45]
+		, lpBuf[46], lpBuf[46]
+		, lpBuf[47], lpBuf[47]
+		, lpBuf[48], lpBuf[48]
+		, lpBuf[49], lpBuf[49]
+		, lpBuf[50], lpBuf[50]
+		, lpBuf[51], lpBuf[51]
+		, lpBuf[52], lpBuf[52]
+		, lpBuf[53], lpBuf[53]
+		, lpBuf[54], lpBuf[54]
+		, lpBuf[55], lpBuf[55]
+	);
+}
+
 VOID OutputDVDLayerDescriptor(
 	PDISC pDisc,
 	PDVD_FULL_LAYER_DESCRIPTOR dvdLayer,
@@ -1196,10 +1377,10 @@ VOID OutputDiscDefinitionStructure(
 	}
 }
 
-VOID OutputDvdRamMediumStatus(
+VOID OutputDVDRamMediumStatus(
 	PDVD_RAM_MEDIUM_STATUS dvdRamMeium
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DvdRamMediumStatus)
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDRamMediumStatus)
 		"\t              PersistentWriteProtect: %s\n"
 		"\t               CartridgeWriteProtect: %s\n"
 		"\t           MediaSpecificWriteInhibit: %s\n"
@@ -1548,9 +1729,11 @@ VOID OutputDVDStructureFormat(
 ) {
 	switch (byFormatCode) {
 	case DvdPhysicalDescriptor:
-	case 0x10:
 		if (pDisc->SCSI.wCurrentMedia == ProfileDvdRam || pDisc->SCSI.wCurrentMedia == ProfileHDDVDRam) {
 			OutputDVDRamLayerDescriptor(pDisc, lpFormat);
+		}
+		else if (pDisc->SCSI.wCurrentMedia == ProfileDvdPlusR) {
+			OutputDVDPlusRLayerDescriptor(lpFormat);
 		}
 		else {
 			OutputDVDLayerDescriptor(pDisc, (PDVD_FULL_LAYER_DESCRIPTOR)lpFormat, lpdwSectorLength, layerNumber);
@@ -1578,7 +1761,7 @@ VOID OutputDVDStructureFormat(
 		OutputDiscDefinitionStructure(pDisc->DVD.version, lpFormat);
 		break;
 	case 0x09:
-		OutputDvdRamMediumStatus((PDVD_RAM_MEDIUM_STATUS)lpFormat);
+		OutputDVDRamMediumStatus((PDVD_RAM_MEDIUM_STATUS)lpFormat);
 		break;
 	case 0x0a:
 		OutputDiscSpareAreaInformation((PDVD_RAM_SPARE_AREA_INFORMATION)lpFormat);
@@ -1597,6 +1780,9 @@ VOID OutputDVDStructureFormat(
 		break;
 	case 0x0f:
 		OutputDVDUniqueDiscIdentifer((PDVD_UNIQUE_DISC_IDENTIFIER)lpFormat);
+		break;
+	case 0x10:
+		OutputDVDMinusRLayerDescriptor(lpFormat);
 		break;
 	case 0x11:
 		OutputDVDAdipInformation(lpFormat, wFormatLength);
@@ -1893,7 +2079,7 @@ VOID OutputBDStructureFormat(
 }
 
 // http://xboxdevwiki.net/Xbe#Title_ID
-VOID OutputPublisher(
+VOID OutputXboxPublisher(
 	LPBYTE buf
 ) {
 	if (!strncmp((LPCH)buf, "AC", 2)) {
@@ -2195,7 +2381,7 @@ VOID OutputPublisher(
 	}
 }
 
-VOID OutputRegion(
+VOID OutputXboxRegion(
 	BYTE buf
 ) {
 	if (buf == 'W') {
@@ -2224,7 +2410,7 @@ VOID OutputRegion(
 	}
 }
 
-VOID OutputManufacturingInfoForXbox(
+VOID OutputXboxManufacturingInfo(
 	LPBYTE buf
 ) {
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DiscManufacturingInformation)
@@ -2239,14 +2425,14 @@ VOID OutputManufacturingInfoForXbox(
 		OutputDiscLogA(
 			"\t     Publisher: "
 		);
-		OutputPublisher(&buf[8]);
+		OutputXboxPublisher(&buf[8]);
 		OutputDiscLogA(
 			"\t        Serial: %c%c%c\n"
 			"\t       Version: 1.%c%c\n"
 			"\t        Region: "
 			, buf[10], buf[11], buf[12], buf[13], buf[14]
 		);
-		OutputRegion(buf[15]);
+		OutputXboxRegion(buf[15]);
 		OutputDiscLogA(
 			"\t     Timestamp: %s\n"
 			"\t       Unknown: %02u\n"
@@ -2265,7 +2451,7 @@ VOID OutputManufacturingInfoForXbox(
 			"\n"
 			"\t     Publisher: "
 		);
-		OutputPublisher(&buf[64]);
+		OutputXboxPublisher(&buf[64]);
 
 		OutputDiscLogA(
 			"\t        Serial: %c%c%c%c\n"
@@ -2273,7 +2459,7 @@ VOID OutputManufacturingInfoForXbox(
 			"\t        Region: "
 			, buf[66], buf[67], buf[68], buf[69], buf[70], buf[71]
 		);
-		OutputRegion(buf[72]);
+		OutputXboxRegion(buf[72]);
 		if (buf[73] == '0' && buf[74] == 'X') {
 			OutputDiscLogA(
 				"\t       Unknown: %c%c\n"

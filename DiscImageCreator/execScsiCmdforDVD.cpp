@@ -274,7 +274,8 @@ BOOL ReadDVD(
 				dwTransferLen = (DWORD)(XGD3_LAYER_BREAK - nLBA);
 				REVERSE_BYTES(&cdb.TransferLength, &dwTransferLen);
 			}
-			else if (dwTransferLen != 1 && pDisc->PROTECT.byExist == physicalErr && IsValidProtectedSector(pDisc, nLBA - 1)) {
+			else if (dwTransferLen != 1 && pDisc->PROTECT.byExist == physicalErr &&
+				IsValidProtectedSector(pDisc, nLBA - 1, GetReadErrorFileIdx(pExtArg, pDisc, nLBA))) {
 				dwTransferLen = 1;
 				REVERSE_BYTES(&cdb.TransferLength, &dwTransferLen);
 			}
@@ -1316,7 +1317,7 @@ BOOL ReadDiscStructure(
 				OutputDVDStructureFormat(pDisc, pEntry->FormatCode, (WORD)(wFormatLen - sizeof(DVD_DESCRIPTOR_HEADER))
 					, lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), &dwSectorLen, cdb.LayerNumber);
 
-				if (pEntry->FormatCode == DvdPhysicalDescriptor || pEntry->FormatCode == 0x10) {
+				if (pEntry->FormatCode == DvdPhysicalDescriptor) {
 					PDVD_FULL_LAYER_DESCRIPTOR dvdpd = (PDVD_FULL_LAYER_DESCRIPTOR)(lpFormat + sizeof(DVD_DESCRIPTOR_HEADER));
 					// Parallel Track Path and Dual Layer
 					if (dvdpd->commonHeader.TrackPath == 0 && dvdpd->commonHeader.NumberOfLayers == 1) {
@@ -1341,7 +1342,7 @@ BOOL ReadDiscStructure(
 					pDisc->SCSI.nAllLength = (INT)dwSectorLen;
 				}
 				else if (pEntry->FormatCode == DvdManufacturerDescriptor && *pExecType == xbox) {
-					OutputManufacturingInfoForXbox(lpFormat + sizeof(DVD_DESCRIPTOR_HEADER));
+					OutputXboxManufacturingInfo(lpFormat + sizeof(DVD_DESCRIPTOR_HEADER));
 				}
 			}
 			else if (*pExecType == bd) {

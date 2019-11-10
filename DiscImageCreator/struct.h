@@ -208,8 +208,10 @@ typedef struct _EXT_ARG {
 	UINT uiSkipSectors;
 	UINT uiSkipSectors2; // for some LaserLock
 	struct _FILE {
-		CHAR readError[MAX_FNAME_FOR_VOLUME];
-		CHAR edceccError[MAX_FNAME_FOR_VOLUME];
+		CHAR readError[MAX_READ_ERROR_FILE_COUNT][MAX_FNAME_FOR_VOLUME];
+		INT readErrCnt;
+		CHAR c2Error[MAX_READ_ERROR_FILE_COUNT][MAX_FNAME_FOR_VOLUME];
+		INT c2ErrCnt;
 	} FILE;
 } EXT_ARG, *PEXT_ARG;
 
@@ -348,13 +350,13 @@ typedef struct _DISC {
 		BYTE byTmpForSafeDisc;
 		BYTE byRestoreCounter; // for SecuROM
 		BYTE reserved;
-		CHAR name[MAX_FNAME_FOR_VOLUME];
+		CHAR name[MAX_READ_ERROR_FILE_COUNT][MAX_FNAME_FOR_VOLUME];
 		CHAR name2[MAX_FNAME_FOR_VOLUME]; // for Der KorsaR, DVD Region X
 		// for skipping unreadable file
 		struct _ERROR_SECTOR {
-			INT nExtentPos;
+			INT nExtentPos[MAX_READ_ERROR_FILE_COUNT];
 			INT nNextExtentPos; // for safedisc
-			INT nSectorSize;
+			INT nSectorSize[MAX_READ_ERROR_FILE_COUNT];
 			INT nExtentPos2nd; // for Der KorsaR, DVD Region X
 			INT nSectorSize2nd; // for Der KorsaR, DVD Region X
 		} ERROR_SECTOR;

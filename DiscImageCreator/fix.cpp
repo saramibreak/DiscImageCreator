@@ -16,6 +16,7 @@
 #include "struct.h"
 #include "check.h"
 #include "convert.h"
+#include "get.h"
 #include "output.h"
 #include "outputScsiCmdLogforCD.h"
 #include "set.h"
@@ -52,7 +53,7 @@ VOID FixMainHeader(
 		if (pDisc->PROTECT.byExist == datel || pDisc->PROTECT.byExist == datelAlt || pDisc->PROTECT.byExist == codelock) {
 			if (((pDisc->SCSI.toc.TrackData[idx].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) &&
 				((pDiscPerSector->subQ.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK)) {
-				if (IsValidProtectedSector(pDisc, nLBA)) {
+				if (IsValidProtectedSector(pDisc, nLBA, GetReadErrorFileIdx(pExtArg, pDisc, nLBA))) {
 					OutputMainErrorWithLBALogA(
 						"This sector is data, but sync is invalid\n", nLBA, pDiscPerSector->byTrackNum);
 					OutputCDMain(fileMainError, lpWorkBuf, nLBA, MAINHEADER_MODE1_SIZE);
@@ -403,8 +404,14 @@ VOID FixSubQ(
 			pDiscPerSector->subcode.current[22] = pDiscPerSector->subcode.next[19];
 			pDiscPerSector->subcode.current[23] = pDiscPerSector->subcode.next[20];
 			SetTmpSubQDataFromBuffer(&pDiscPerSector->subQ.current, pDiscPerSector->subcode.current);
-			OutputSubErrorWithLBALogA("Q[12-23] all replaced\n"
-				, nLBA, pDiscPerSector->byTrackNum);
+			OutputSubErrorWithLBALogA("Q[12-23] all replaced\n", nLBA, pDiscPerSector->byTrackNum);
+		}
+	}
+	else if (IsValidIntentionalC2error(pDisc, pDiscPerSector, nLBA, GetC2ErrorFileIdx(pExtArg, pDisc, nLBA))) {
+		if (pDiscPerSector->bReturnCode == RETURNED_EXIST_C2_ERROR) {
+			memcpy(pDiscPerSector->subcode.current, pDiscPerSector->subcode.prev, sizeof(pDiscPerSector->subcode.current));
+			SetTmpSubQDataFromBuffer(&pDiscPerSector->subQ.current, pDiscPerSector->subcode.current);
+			OutputSubErrorWithLBALogA("Q[12-23] all replaced\n", nLBA, pDiscPerSector->byTrackNum);
 		}
 	}
 
@@ -1204,10 +1211,11 @@ BOOL FixSubChannel(
 	INT nLBA,
 	LPBOOL bReread
 ) {
-	if (pExtArg->byMultiSession && pDisc->MAIN.nFixFirstLBAofLeadout <= nLBA &&
-		nLBA < pDisc->MAIN.nFixFirstLBAofLeadout + 11400) {
+	if (pExtArg->byMultiSession && pDisc->SCSI.nFirstLBAofLeadout + 6750 <= nLBA &&
+		nLBA < pDisc->SCSI.nFirstLBAofLeadout + 11400) {
 		return TRUE;
 	}
+
 	if (pDisc->SUB.nSubChannelOffset) {
 		SetTmpSubQDataFromBuffer(&pDiscPerSector->subQ.next, pDiscPerSector->subcode.next);
 		if (1 <= pExtArg->uiSubAddionalNum) {

@@ -163,7 +163,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 		if (pExtArg->byScanProtectViaFile) {
 			device.dwTimeOutValue = pExtArg->dwTimeoutNum;
 			GetFilenameToSkipError(pExtArg->FILE.readError);
-			GetFilenameToFixError(pExtArg->FILE.edceccError);
+			GetFilenameToFixError(pExtArg->FILE.c2Error);
 		}
 		else {
 			device.dwTimeOutValue = DEFAULT_SPTD_TIMEOUT_VAL;
@@ -389,6 +389,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 								}
 							}
 							if (discData.SCSI.wCurrentMedia == ProfileDvdRam ||
+								discData.SCSI.wCurrentMedia == ProfileDvdPlusR ||
 								discData.SCSI.wCurrentMedia == ProfileHDDVDRam) {
 								ReadTOC(pExtArg, pExecType, &device, &discData);
 							}
@@ -421,7 +422,11 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 								else {
 									CONST size_t bufSize = 5;
 									_TCHAR szBuf[bufSize] = {};
+#ifdef _WIN32
 									_sntprintf(szBuf, bufSize, _T("%c:\\*"), device.byDriveLetter);
+#else
+									_sntprintf(szBuf, bufSize, _T("%s/*"), device.drivepath);
+#endif
 									szBuf[4] = 0;
 									UINT64 uiDiscSize = 0;
 									bRet = GetDiscSize(szBuf, &uiDiscSize);
@@ -528,6 +533,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 }
 
 // custom _tsplitpath implementation to preserve dots in path
+#if 0
 void splitPath(const _TCHAR* path, _TCHAR* drive, _TCHAR* dir, _TCHAR* fname, _TCHAR* ext)
 {
     if(path == NULL)
@@ -586,14 +592,18 @@ void splitPath(const _TCHAR* path, _TCHAR* drive, _TCHAR* dir, _TCHAR* fname, _T
         ext[n] = TEXT('\0');
     }
 }
-
+#endif
 int printAndSetPath(_TCHAR* szPathFromArg, _TCHAR* pszFullPath)
 {
 	if (!GetCurrentDirectory(sizeof(s_szCurrentdir) / sizeof(s_szCurrentdir[0]), s_szCurrentdir)) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
+#if 0
     splitPath(szPathFromArg, s_szDrive, s_szDir, s_szFname, s_szExt);
+#else
+	_tsplitpath(szPathFromArg, s_szDrive, s_szDir, s_szFname, s_szExt);
+#endif
 
 	if (!s_szDrive[0] || !s_szDir[0]) {
 		_tcsncpy(pszFullPath, s_szCurrentdir, _MAX_PATH);
@@ -622,7 +632,11 @@ int printAndSetPath(_TCHAR* szPathFromArg, _TCHAR* pszFullPath)
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
 		}
+#if 0
         splitPath(pszFullPath, s_szDrive, s_szDir, NULL, NULL);
+#else
+		_tsplitpath(pszFullPath, s_szDrive, s_szDir, s_szFname, NULL);
+#endif
 		if (s_szExt[0] && _tcslen(pszFullPath) + _tcslen(s_szExt) < _MAX_PATH) {
 			_tcsncat(pszFullPath, s_szExt, _tcslen(s_szExt));
 		}

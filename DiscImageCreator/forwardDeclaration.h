@@ -68,6 +68,8 @@
 #define MAX_FNAME_FOR_VOLUME (128)
 #define MIN_LEN_DR (34)
 
+#define MAX_READ_ERROR_FILE_COUNT (16)
+
 // PLEXTOR specified command
 #if 0
 #define SCSIOP_PLXTR_GET_AUTH		(0xD4)

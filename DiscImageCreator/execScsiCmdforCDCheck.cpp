@@ -1358,8 +1358,8 @@ BOOL ReadCDForScanningProtectViaSector(
 			aBuf[nOfs + 4] == 0 && aBuf[nOfs + 5] == 0xff && aBuf[nOfs + 6] == 0 && aBuf[nOfs + 7] == 0xff &&
 			aBuf[nOfs + 8] == 0 && aBuf[nOfs + 9] == 0xff && aBuf[nOfs + 10] == 0 && aBuf[nOfs + 11] == 0xff) {
 			OutputLogA(standardOut | fileDisc, "\nDetected ProtectCD VOB. It begins from %d sector", nLBA);
-			pDisc->PROTECT.ERROR_SECTOR.nExtentPos = nLBA;
-			pDisc->PROTECT.ERROR_SECTOR.nSectorSize = pDisc->SCSI.nAllLength - nLBA - 1;
+			pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] = nLBA;
+			pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0] = pDisc->SCSI.nAllLength - nLBA - 1;
 			pDisc->PROTECT.byExist = protectCDVOB;
 			pExtArg->byScanProtectViaFile = pExtArg->byScanProtectViaSector;
 			break;
@@ -1509,9 +1509,9 @@ BOOL ExecCheckingByteOrder(
 		return FALSE;
 	}
 	BYTE lpCmd[CDB12GENERIC_LENGTH] = {};
-	pExtArg->byBe = TRUE;
+//	pExtArg->byBe = TRUE;
 	SetReadDiscCommand(NULL, pExtArg, pDevice, 1, c2, sub, lpCmd, FALSE);
-	pExtArg->byBe = FALSE;
+//	pExtArg->byBe = FALSE;
 
 	BOOL bRet = TRUE;
 	if (!ExecReadCD(pExtArg, pDevice, lpCmd, 0, lpBuf

@@ -1,2 +1,0 @@
-# This is a file to fix the edc/ecc error sector. Please write the file name you want to fix the error
-CD.IDX

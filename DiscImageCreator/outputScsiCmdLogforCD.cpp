@@ -139,27 +139,27 @@ VOID OutputFsDirectoryRecord(
 	if (pExtArg->byScanProtectViaFile || pExtArg->byIntentionalSub) {
 		if (pExtArg->byScanProtectViaFile) {
 			if ((nFileFlag & 0x02) == 0 && pDisc->PROTECT.byExist) {
-				if (pDisc->PROTECT.ERROR_SECTOR.nExtentPos < (INT)uiExtentPos) {
+				if (pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] < (INT)uiExtentPos) {
 					if (pDisc->PROTECT.byTmpForSafeDisc) {
 						pDisc->PROTECT.ERROR_SECTOR.nNextExtentPos = (INT)uiExtentPos;
 						pDisc->PROTECT.byTmpForSafeDisc = FALSE;
 					}
 					if ((INT)uiExtentPos <= pDisc->PROTECT.ERROR_SECTOR.nNextExtentPos) {
 						// because the size of 00000001.TMP is 2048
-						pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)uiExtentPos - pDisc->PROTECT.ERROR_SECTOR.nExtentPos - 1;
+						pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0] = (INT)uiExtentPos - pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] - 1;
 						pDisc->PROTECT.ERROR_SECTOR.nNextExtentPos = (INT)uiExtentPos;
 					}
 				}
 			}
 			if (!strncmp(fnameForProtect, "__CDS.exe", 9)) {
 				pDisc->PROTECT.byExist = cds300;
-				strncpy(pDisc->PROTECT.name, fnameForProtect, 9);
+				strncpy(pDisc->PROTECT.name[0], fnameForProtect, 9);
 			}
 			else if (!strncmp(fnameForProtect, "BIG.DAT", 7)) {
 				pDisc->PROTECT.byExist = datel;
-				strncpy(pDisc->PROTECT.name, fnameForProtect, 7);
-				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)uiExtentPos;
-				pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(uiDataLen / DISC_RAW_READ_SIZE);
+				strncpy(pDisc->PROTECT.name[0], fnameForProtect, 7);
+				pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] = (INT)uiExtentPos;
+				pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0] = (INT)(uiDataLen / DISC_RAW_READ_SIZE);
 			}
 			else if (pDisc->PROTECT.byExist == datel && !strncmp(fnameForProtect, "DATA.DAT", 8)) {
 				// for "DVD Region X"
@@ -168,70 +168,67 @@ VOID OutputFsDirectoryRecord(
 				pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd = (INT)uiExtentPos;
 				pDisc->PROTECT.ERROR_SECTOR.nSectorSize2nd = (INT)(uiDataLen / DISC_RAW_READ_SIZE);
 			}
+			else if (!strncmp(fnameForProtect, "CD.IDX", 6)) {
+				pDisc->PROTECT.byExist = cdidx;
+				strncpy(pDisc->PROTECT.name[0], fnameForProtect, 6);
+				pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] = (INT)uiExtentPos;
+				pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0] = (INT)(uiDataLen / DISC_RAW_READ_SIZE);
+			}
 			else if (!strncmp(fnameForProtect, "LASERLOK.IN", 11)) {
 				pDisc->PROTECT.byExist = laserlock;
-				strncpy(pDisc->PROTECT.name, fnameForProtect, 11);
-				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)uiExtentPos;
-				pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(uiDataLen / DISC_RAW_READ_SIZE - 1);
+				strncpy(pDisc->PROTECT.name[0], fnameForProtect, 11);
+				pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] = (INT)uiExtentPos;
+				pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0] = (INT)(uiDataLen / DISC_RAW_READ_SIZE - 1);
 			}
 			else if (!_strnicmp(fnameForProtect, "PROTECT.PRO", 11)) {
 				pDisc->PROTECT.byExist = proring;
-				strncpy(pDisc->PROTECT.name, fnameForProtect, 11);
-				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)uiExtentPos;
-				pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(uiDataLen / DISC_RAW_READ_SIZE - 1);
+				strncpy(pDisc->PROTECT.name[0], fnameForProtect, 11);
+				pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] = (INT)uiExtentPos;
+				pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0] = (INT)(uiDataLen / DISC_RAW_READ_SIZE - 1);
 			}
 			else if (!strncmp(fnameForProtect, "00000001.LT1", 12)) {
 				pDisc->PROTECT.byExist = safeDiscLite;
-				strncpy(pDisc->PROTECT.name, fnameForProtect, 12);
+				strncpy(pDisc->PROTECT.name[0], fnameForProtect, 12);
 				pDisc->PROTECT.byTmpForSafeDisc = TRUE;
-				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)(uiExtentPos + uiDataLen / DISC_RAW_READ_SIZE);
+				pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] = (INT)(uiExtentPos + uiDataLen / DISC_RAW_READ_SIZE);
 			}
 			else if (!strncmp(fnameForProtect, "00000001.TMP", 12) && pDisc->PROTECT.byExist != safeDisc) {
 				pDisc->PROTECT.byExist = safeDisc;
-				strncpy(pDisc->PROTECT.name, fnameForProtect, 12);
+				strncpy(pDisc->PROTECT.name[0], fnameForProtect, 12);
 				pDisc->PROTECT.byTmpForSafeDisc = TRUE;
-				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)(uiExtentPos + uiDataLen / DISC_RAW_READ_SIZE);
+				pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] = (INT)(uiExtentPos + uiDataLen / DISC_RAW_READ_SIZE);
 			}
 			else if (!_strnicmp(fnameForProtect, "00002.TMP", 9)) {
 				pDisc->PROTECT.byExist = smartE;
-				strncpy(pDisc->PROTECT.name, fnameForProtect, 9);
-				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)uiExtentPos;
-				pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(uiDataLen / DISC_RAW_READ_SIZE - 1);
+				strncpy(pDisc->PROTECT.name[0], fnameForProtect, 9);
+				pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] = (INT)uiExtentPos;
+				pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0] = (INT)(uiDataLen / DISC_RAW_READ_SIZE - 1);
 			}
-			else if (!strncmp(fnameForProtect, pExtArg->FILE.readError, strlen(pExtArg->FILE.readError) - 1)) {
+			else if (GetReadErrorFileName(pExtArg, fnameForProtect)) {
 				pDisc->PROTECT.byExist = physicalErr;
-				strncpy(pDisc->PROTECT.name, fnameForProtect, strlen(pExtArg->FILE.readError) - 1);
-				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)uiExtentPos;
-				pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(uiDataLen / DISC_RAW_READ_SIZE - 1);
+				strncpy(pDisc->PROTECT.name[pExtArg->FILE.readErrCnt], fnameForProtect, strlen(fnameForProtect));
+				pDisc->PROTECT.ERROR_SECTOR.nExtentPos[pExtArg->FILE.readErrCnt] = (INT)uiExtentPos;
+				pDisc->PROTECT.ERROR_SECTOR.nSectorSize[pExtArg->FILE.readErrCnt] = (INT)(uiDataLen / DISC_RAW_READ_SIZE - 1);
+				pExtArg->FILE.readErrCnt++;
 			}
-			else if (!strncmp(fnameForProtect, pExtArg->FILE.edceccError, strlen(pExtArg->FILE.edceccError) - 1)) {
-				pDisc->PROTECT.byExist = edcEccErr;
-				strncpy(pDisc->PROTECT.name, fnameForProtect, strlen(pExtArg->FILE.edceccError) - 1);
-				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)uiExtentPos;
-				pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(uiDataLen / DISC_RAW_READ_SIZE - 1);
-			}
-			else if (!strncmp(fnameForProtect, "CORSAIRS.PRT", 12)) { // Der KorsaR (Germany)
-				pDisc->PROTECT.byExist = microids;
-				strncpy(pDisc->PROTECT.name, fnameForProtect, 12);
-				pDisc->PROTECT.ERROR_SECTOR.nExtentPos = (INT)uiExtentPos;
-				pDisc->PROTECT.ERROR_SECTOR.nSectorSize = (INT)(uiDataLen / DISC_RAW_READ_SIZE - 1);
-			}
-			else if (pDisc->PROTECT.byExist == microids && !strncmp(fnameForProtect, "_SETUP.DLL", 10)) { // Der KorsaR (Germany)
-				strncpy(pDisc->PROTECT.name2, fnameForProtect, 10);
-				pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd = (INT)uiExtentPos;
-				pDisc->PROTECT.ERROR_SECTOR.nSectorSize2nd = (INT)(uiDataLen / DISC_RAW_READ_SIZE - 1);
+			else if (GetC2ErrorFileName(pExtArg, fnameForProtect)) {
+				pDisc->PROTECT.byExist = c2Err;
+				strncpy(pDisc->PROTECT.name[pExtArg->FILE.c2ErrCnt], fnameForProtect, strlen(fnameForProtect));
+				pDisc->PROTECT.ERROR_SECTOR.nExtentPos[pExtArg->FILE.c2ErrCnt] = (INT)uiExtentPos;
+				pDisc->PROTECT.ERROR_SECTOR.nSectorSize[pExtArg->FILE.c2ErrCnt] = (INT)(uiDataLen / DISC_RAW_READ_SIZE - 1);
+				pExtArg->FILE.c2ErrCnt++;
 			}
 		}
 		
 		if (pExtArg->byIntentionalSub) {
 			if (!strncmp(fnameForProtect, "CMS16.DLL", 9) && pDisc->PROTECT.byExist == no) {
 				pDisc->PROTECT.byExist = securomV1;
-				strncpy(pDisc->PROTECT.name, fnameForProtect, 9);
+				strncpy(pDisc->PROTECT.name[0], fnameForProtect, 9);
 			}
 			else if ((!strncmp(fnameForProtect, "cms32_95.dll", 12) || !strncmp(fnameForProtect, "CMS32_NT.DLL", 12))
 				&& pDisc->PROTECT.byExist == no) {
 				pDisc->PROTECT.byExist = securomV1;
-				strncpy(pDisc->PROTECT.name, fnameForProtect, 12);
+				strncpy(pDisc->PROTECT.name[0], fnameForProtect, 12);
 			}
 		}
 
@@ -352,7 +349,7 @@ VOID OutputFsVolumeDescriptorSecond(
 		, &lpBuf[876], &lpBuf[878], (CHAR)lpBuf[880] / 4, abs((CHAR)lpBuf[880] % 4 * 15),
 		lpBuf[881]);
 	if (!strncmp((CONST PCHAR)&lpBuf[883], "MVSNRGFP", 8)) {
-		strncpy(pDisc->PROTECT.name, (CONST PCHAR)&lpBuf[883], 8);
+		strncpy(pDisc->PROTECT.name[0], (CONST PCHAR)&lpBuf[883], 8);
 		pDisc->PROTECT.byExist = ripGuard;
 	}
 	for (INT i = 883; i <= 1394; i++) {
@@ -1106,19 +1103,19 @@ VOID OutputFsImageSectionHeader(
 	);
 	if (!strncmp((LPCH)pIsh->Name, "icd1", 4)) {
 		pDisc->PROTECT.byExist = codelock;
-		strncpy(pDisc->PROTECT.name, (LPCH)pIsh->Name, sizeof(pIsh->Name));
-		pDisc->PROTECT.ERROR_SECTOR.nExtentPos = pDisc->PROTECT.nNextLBAOfLastVolDesc;
-		pDisc->PROTECT.ERROR_SECTOR.nSectorSize =
+		strncpy(pDisc->PROTECT.name[0], (LPCH)pIsh->Name, sizeof(pIsh->Name));
+		pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] = pDisc->PROTECT.nNextLBAOfLastVolDesc;
+		pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0] =
 			pDisc->PROTECT.nPrevLBAOfPathTablePos - pDisc->PROTECT.nNextLBAOfLastVolDesc;
 	}
 	else if (!strncmp((LPCH)pIsh->Name, ".vob.pcd", 8)) {
 		pDisc->PROTECT.byExist = protectCDVOB;
-		strncpy(pDisc->PROTECT.name, (LPCH)pIsh->Name, sizeof(pIsh->Name));
+		strncpy(pDisc->PROTECT.name[0], (LPCH)pIsh->Name, sizeof(pIsh->Name));
 	}
 	else if (!strncmp((LPCH)pIsh->Name, ".cms_t", 6) || !strncmp((LPCH)pIsh->Name, ".cms_d", 6)) {
 		// This string exists SecuROM OLD "Re-Volt (Europe)" and SecuROM NEW "Supreme Snowboarding (Europe) and "Beam Breakers (Europe) etc"
 		pDisc->PROTECT.byExist = securomTmp;
-		strncpy(pDisc->PROTECT.name, (LPCH)pIsh->Name, sizeof(pIsh->Name));
+		strncpy(pDisc->PROTECT.name[0], (LPCH)pIsh->Name, sizeof(pIsh->Name));
 	}
 }
 
@@ -1448,7 +1445,8 @@ VOID OutputCDSubToLog(
 						, pDisc->SCSI.nLeadinLenOf2ndSession);
 					pDisc->SCSI.nEndLBAOfLeadin = nLBA;
 				}
-				else if (BcdToDec(pDiscPerSector->subcode.current[13]) == pDisc->SCSI.byFirstMultiSessionTrackNum &&
+				else if (pDisc->SCSI.nPregapLenOf1stTrkOf2ndSession == 0 &&
+					BcdToDec(pDiscPerSector->subcode.current[13]) == pDisc->SCSI.byFirstMultiSessionTrackNum &&
 					pDiscPerSector->subcode.prev[14] == 0 && pDiscPerSector->subcode.current[14] == 1) {
 					pDisc->SCSI.nPregapLenOf1stTrkOf2ndSession = nLBA - pDisc->SCSI.nEndLBAOfLeadin;
 					OutputLogA(standardOut | fileDisc, " Pregap length of 1st track of 2nd session: %d\n"

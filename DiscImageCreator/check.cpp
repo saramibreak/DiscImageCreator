@@ -491,15 +491,18 @@ BOOL IsValidSecuRomSector(
 
 BOOL IsValidProtectedSector(
 	PDISC pDisc,
-	INT nLBA
+	INT nLBA,
+	INT idx
 ) {
 	BOOL bRet = FALSE;
-	if ((pDisc->PROTECT.byExist && pDisc->PROTECT.ERROR_SECTOR.nExtentPos <= nLBA &&
-		nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize) ||
-		((pDisc->PROTECT.byExist == microids || pDisc->PROTECT.byExist == datelAlt)
-			&& pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd <= nLBA &&
-			nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd + pDisc->PROTECT.ERROR_SECTOR.nSectorSize2nd)) {
-		bRet = TRUE;
+	if (pDisc->PROTECT.byExist != c2Err) {
+		if ((pDisc->PROTECT.byExist && pDisc->PROTECT.ERROR_SECTOR.nExtentPos[idx] <= nLBA &&
+			nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos[idx] + pDisc->PROTECT.ERROR_SECTOR.nSectorSize[idx]) ||
+			(pDisc->PROTECT.byExist == datelAlt
+				&& pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd <= nLBA &&
+				nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd + pDisc->PROTECT.ERROR_SECTOR.nSectorSize2nd)) {
+			bRet = TRUE;
+		}
 	}
 	return bRet;
 }
@@ -529,13 +532,19 @@ BOOL IsValidSafeDiscSector(
 
 BOOL IsValidIntentionalC2error(
 	PDISC pDisc,
-	PDISC_PER_SECTOR pDiscPerSector
+	PDISC_PER_SECTOR pDiscPerSector,
+	INT nLBA,
+	INT idx
 ) {
 	BOOL bRet = FALSE;
 	if (pDisc->PROTECT.byExist == codelock ||
 		pDisc->PROTECT.byExist == datel ||
 		pDisc->PROTECT.byExist == datelAlt ||
 		IsValidSafeDiscSector(pDisc, pDiscPerSector)) {
+		bRet = TRUE;
+	}
+	else if (pDisc->PROTECT.byExist == c2Err && pDisc->PROTECT.ERROR_SECTOR.nExtentPos[idx] <= nLBA &&
+		nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos[idx] + pDisc->PROTECT.ERROR_SECTOR.nSectorSize[idx]) {
 		bRet = TRUE;
 	}
 	return bRet;
@@ -1256,7 +1265,11 @@ BOOL AnalyzeIfoFile(
 	BOOL bRet = TRUE;
 	CONST size_t bufSize = 25;
 	_TCHAR szBuf[bufSize] = {};
+#ifdef _WIN32
 	_sntprintf(szBuf, bufSize, _T("%c:\\VIDEO_TS\\VIDEO_TS.IFO"), pDevice->byDriveLetter);
+#else
+	_sntprintf(szBuf, bufSize, _T("%s/VIDEO_TS/VIDEO_TS.IFO"), pDevice->drivepath);
+#endif
 
 	if (PathFileExists(szBuf)) {
 		_TCHAR szFnameAndExt[_MAX_FNAME] = {};
@@ -1293,7 +1306,11 @@ BOOL AnalyzeIfoFile(
 			}
 			INT nPgcCnt = 0;
 			for (WORD w = 1; w <= wNumOfTitleSets; w++) {
+#ifdef _WIN32
 				_sntprintf(szBuf, bufSize, _T("%c:\\VIDEO_TS\\VTS_%02d_0.IFO"), pDevice->byDriveLetter, w);
+#else
+				_sntprintf(szBuf, bufSize, _T("%s/VIDEO_TS/VTS_%02d_0.IFO"), pDevice->drivepath, w);
+#endif
 				if (PathFileExists(szBuf)) {
 					FILE* fpVts = CreateOrOpenFile(szBuf, NULL, NULL, szFnameAndExt, NULL, _T(".IFO"), _T("rb"), 0, 0);
 					if (!fpVts) {

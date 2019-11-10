@@ -37,12 +37,34 @@ BOOL GetDriveOffsetAuto(
 	LPINT lpDriveOffset
 );
 
+BOOL GetReadErrorFileName(
+	PEXT_ARG pExtArg,
+	CHAR protectFname[MAX_FNAME_FOR_VOLUME]
+);
+
+INT GetReadErrorFileIdx(
+	PEXT_ARG pExtArg,
+	PDISC pDisc,
+	INT nLBA
+);
+
 BOOL GetFilenameToSkipError(
-	LPSTR szFilename
+	CHAR szFilename[][MAX_FNAME_FOR_VOLUME]
+);
+
+BOOL GetC2ErrorFileName(
+	PEXT_ARG pExtArg,
+	CHAR protectFname[MAX_FNAME_FOR_VOLUME]
+);
+
+INT GetC2ErrorFileIdx(
+	PEXT_ARG pExtArg,
+	PDISC pDisc,
+	INT nLBA
 );
 
 BOOL GetFilenameToFixError(
-	LPSTR szFilename
+	CHAR szFilename[][MAX_FNAME_FOR_VOLUME]
 );
 
 DWORD GetFileSize(

@@ -78,6 +78,7 @@ typedef enum _TRACK_TYPE {
 // https://www.cdmediaworld.com/hardware/cdrom/cd_protections.shtml
 typedef enum _PROTECT_TYPE_CD {
 	no,
+	cdidx,
 	cds300,
 	codelock,
 	datel,
@@ -96,8 +97,7 @@ typedef enum _PROTECT_TYPE_CD {
 	smartE,
 	ripGuard,
 	physicalErr,
-	edcEccErr,
-	microids
+	c2Err
 } PROTECT_TYPE_CD, *PPROTECT_TYPE_CD;
 
 typedef enum _PROTECT_TYPE_DVD {

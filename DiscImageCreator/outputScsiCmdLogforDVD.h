@@ -47,7 +47,7 @@ VOID OutputBDStructureFormat(
 	INT nPacCnt
 );
 
-VOID OutputManufacturingInfoForXbox(
+VOID OutputXboxManufacturingInfo(
 	LPBYTE buf
 );
 

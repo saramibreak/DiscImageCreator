@@ -577,14 +577,29 @@ BOOL ReadCDForFileSystem(
 					}
 					if (pDisc->PROTECT.byExist) {
 						OutputLogA(standardOut | fileDisc, "Detected a protected file [%s]. LBA %d to %d"
-							, pDisc->PROTECT.name, pDisc->PROTECT.ERROR_SECTOR.nExtentPos
-							, pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize);
-						if (pDisc->PROTECT.byExist == microids || pDisc->PROTECT.byExist == datelAlt) {
+							, pDisc->PROTECT.name[0], pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0]
+							, pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] + pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0]);
+						if (pDisc->PROTECT.byExist == datelAlt) {
 							OutputLogA(standardOut | fileDisc, ",  [%s]. LBA %d to %d\n"
 								, pDisc->PROTECT.name2, pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd
 								, pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd + pDisc->PROTECT.ERROR_SECTOR.nSectorSize2nd);
 						}
 						else {
+							if (pDisc->PROTECT.byExist == physicalErr) {
+								for (INT j = 1; j < pExtArg->FILE.readErrCnt; j++) {
+									OutputLogA(standardOut | fileDisc, ", [%s]. LBA %d to %d"
+										, pDisc->PROTECT.name[j], pDisc->PROTECT.ERROR_SECTOR.nExtentPos[j]
+										, pDisc->PROTECT.ERROR_SECTOR.nExtentPos[j] + pDisc->PROTECT.ERROR_SECTOR.nSectorSize[j]);
+								}
+							}
+							else if (pDisc->PROTECT.byExist == c2Err) {
+								for (INT j = 1; j < pExtArg->FILE.c2ErrCnt; j++) {
+									OutputLogA(standardOut | fileDisc, ", [%s]. LBA %d to %d"
+										, pDisc->PROTECT.name[j], pDisc->PROTECT.ERROR_SECTOR.nExtentPos[j]
+										, pDisc->PROTECT.ERROR_SECTOR.nExtentPos[j] + pDisc->PROTECT.ERROR_SECTOR.nSectorSize[j]);
+								}
+							}
+
 							OutputLogA(standardOut | fileDisc, "\n");
 						}
 					}
@@ -768,8 +783,8 @@ BOOL ReadDVDForFileSystem(
 		FreeAndNull(pDirRec);
 		if (pDisc->PROTECT.byExist && !pExtArg->byNoSkipSS) {
 			OutputLogA(standardOut | fileDisc, "Detected protection [%s]. LBA %d to %d\n"
-				, pDisc->PROTECT.name, pDisc->PROTECT.ERROR_SECTOR.nExtentPos
-				, pDisc->PROTECT.ERROR_SECTOR.nExtentPos + pDisc->PROTECT.ERROR_SECTOR.nSectorSize);
+				, pDisc->PROTECT.name, pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0]
+				, pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] + pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0]);
 		}
 	}
 

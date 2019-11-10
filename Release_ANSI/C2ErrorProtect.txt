@@ -1,0 +1,11 @@
+# This is a file to fix the c2 error sector. Please write the file name you want to fix the error
+arcade.dll
+ds0.bl0
+datacab.dll
+sno.ext
+main.dll
+style2.css
+set2.dll
+setextra.ex
+setup.mp
+x-team_ss.ext
