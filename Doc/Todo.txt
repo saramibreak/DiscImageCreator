@@ -3,8 +3,6 @@
 . support cue file of sub-pchannel version
 
 [image]
-. support Atari Jaguar CD and PSX cheat disc (irregular data track)
-
 . support mdf/mds (for SecuROM v4.x or higher, StarForce, CD-Cops)
 
 . support twin sector disc (for ALPHA-ROM, ROOT, TAGES)

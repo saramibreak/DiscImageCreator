@@ -590,3 +590,13 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - fixed: cue file of some desync disc
 - fixed: formatLength of DVD_STRUCTURE
 - fixed: rereading for ring protection
+
+*2019-11-16
+- added: check disc size of DVD
+- added: detecting RipGuard
+- added: Analyze IfoFile of DVD
+- added: /f in data and audio command
+- added: support multiple files in C2ErrorProtect.txt (MAX 16 files)
+- fixed: fulltoc 0xb0
+- fixed: output PFI of DVD-R and DVD+R (ECMA-279, ECMA-359, ECMA-349)
+- fixed: checking lead-out of subQ channel
