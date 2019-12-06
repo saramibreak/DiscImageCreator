@@ -930,13 +930,15 @@ VOID SetTrackAttribution(
 		if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[tIdx]) {
 			pDisc->SUB.lpCtlList[tIdx] = pDiscPerSector->subQ.current.byCtl;
 			pDisc->MAIN.lpModeList[tIdx] = GetMode(pDiscPerSector, unscrambled);
+			OutputSubInfoWithLBALogA("Set Ctl: %d, Mode: %d\n"
+				, nLBA, tmpCurrentTrackNum, pDisc->SUB.lpCtlList[tIdx], pDisc->MAIN.lpModeList[tIdx]);
 		}
 		// preserve the 1st LBA of the changed index 
 		if (pDiscPerSector->byTrackNum >= 1 && tmpPrevIndex + 1 == tmpCurrentIndex) {
 			if (tmpCurrentIndex != 1 && tmpCurrentIndex < MAXIMUM_NUMBER_INDEXES) {
 				if (pDisc->SUB.lpFirstLBAListOnSub[tIdx][tmpCurrentIndex] == -1) {
-					OutputSubInfoWithLBALogA("Index is changed from [%02d] to [%02d] [L:%d]\n", nLBA
-						, tmpCurrentTrackNum, tmpPrevIndex, tmpCurrentIndex, (INT)__LINE__);
+					OutputSubInfoWithLBALogA("Index is changed from [%02d] to [%02d] [L:%d]\n"
+						, nLBA, tmpCurrentTrackNum, tmpPrevIndex, tmpCurrentIndex, (INT)__LINE__);
 					pDisc->SUB.lpFirstLBAListOnSub[tIdx][tmpCurrentIndex] = nLBA;
 					pDisc->SUB.lpFirstLBAListOnSubSync[tIdx][tmpCurrentIndex] = nLBA;
 				}
