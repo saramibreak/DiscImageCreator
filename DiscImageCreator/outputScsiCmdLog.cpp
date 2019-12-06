@@ -199,7 +199,7 @@ VOID OutputGetConfigurationFeatureProfileType(
 		OutputDriveLogA("BD-R Random Writable");
 		break;
 	case ProfileBDRewritable:
-		OutputDriveLogA("BD-R");
+		OutputDriveLogA("BD-RW");
 		break;
 	case ProfileHDDVDRom:
 		OutputDriveLogA("HD DVD-ROM");
