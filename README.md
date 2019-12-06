@@ -231,6 +231,9 @@ See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)
 - ECMA  
   https://www.ecma-international.org/publications/standards/Standard.htm
 
+- UDF  
+  http://www.osta.org/specs/index.htm
+
 - CSS  
   http://www.dvdcca.org/css
 
