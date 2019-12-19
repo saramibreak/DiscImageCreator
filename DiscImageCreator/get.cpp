@@ -311,6 +311,10 @@ BOOL GetDiscSize(
 		bRet = FALSE;
 	}
 	FindClose(hFind);
+#else
+	// TODO
+	UNREFERENCED_PARAMETER(path);
+	UNREFERENCED_PARAMETER(lpSize);
 #endif
 	return bRet;
 }
