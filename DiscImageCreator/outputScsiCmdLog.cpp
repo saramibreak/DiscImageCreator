@@ -2002,26 +2002,34 @@ VOID OutputCDTextOther(
 					"\t\t       Last Sequence number of BLOCK 5: %u\n"
 					"\t\t       Last Sequence number of BLOCK 6: %u\n"
 					"\t\t       Last Sequence number of BLOCK 7: %u\n"
-					"\t\t                 Language code BLOCK 0: 0x%02x\n"
-					"\t\t                 Language code BLOCK 1: 0x%02x\n"
-					"\t\t                 Language code BLOCK 2: 0x%02x\n"
-					"\t\t                 Language code BLOCK 3: 0x%02x\n"
-					"\t\t                 Language code BLOCK 4: 0x%02x\n"
-					"\t\t                 Language code BLOCK 5: 0x%02x\n"
-					"\t\t                 Language code BLOCK 6: 0x%02x\n"
-					"\t\t                 Language code BLOCK 7: 0x%02x\n"
 					, pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[0]
 					, pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[1]
 					, pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[2]
-					, pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[3]
-					, pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[4]
-					, pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[5]
-					, pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[6]
-					, pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[7]
-					, pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[8]
-					, pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[9]
-					, pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[10]
-					, pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[11]);
+					, pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[3]);
+				// https://tech.ebu.ch/docs/tech/tech3264.pdf
+				CHAR szLangCode[][15] = {
+					"not applicable", "Albanian", "Breton", "Catalan", "Croatian", "Welsh", "Czech", "Danish",
+					"German", "English", "Spanish", "Esperanto", "Estonian", "Basque", "Faroese", "French",
+					"Frisian", "Irish", "Gaelic", "Galician", "Icelandic", "Italian", "Lappish", "Latin",
+					"Latvian", "Luxembourgian", "Lithuanian", "Hungarian", "Maltese", "Dutch", "Norwegian", "Occitan",
+					"Polish", "Portugese", "Romanian", "Romansh", "Serbian", "Slovak", "Slovenian", "Finnish",
+					"Swedish", "Turkish", "Flemish", "Wallon", "", "", "", "",
+					"", "", "", "", "", "", "", "",
+					"", "", "", "", "", "", "", "",
+					"", "", "", "", "", "Zulu", "Vietnamese", "Uzbek",
+					"Urdu", "Ukrainian", "Thai", "Telugu", "Tatar", "Tamil", "Tadzhik", "Swahili",
+					"Sranan Tongo", "Somali", "Sinhalese", "Shona", "Serbo-croat", "Ruthenian", "Russian", "Quechua",
+					"Pushtu", "Punjabi", "Persian", "Papamiento", "Oriya", "Nepali", "Ndebele", "Marathi",
+					"Moldavian", "Malaysian", "Malagasay", "Macedonian", "Laotian", "Korean", "Khmer", "Kazakh",
+					"Kannada", "Japanese", "Indonesian", "Hindi", "Hebrew", "Hausa", "Gurani", "Gujurati",
+					"Greek", "Georgian", "Fulani", "Dari", "Churash", "Chinese", "Burmese", "Bulgarian",
+					"Bengali", "Bielorussian", "Bambora", "Azerbaijani", "Assamese", "Armenian", "Arabic", "Amharic"
+				};
+				for (INT i = 0, j = 4; i < 8; i++, j++) {
+					UCHAR lang = pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[j];
+					OutputDiscLogA(
+						"\t\t                 Language code BLOCK %d: 0x%02x (%s)\n", i, lang, szLangCode[lang]);
+				}
 			}
 			nSizeInfoCnt++;
 		}
