@@ -54,6 +54,7 @@
 #define META_CATALOG_SIZE		(13 + 1)
 #define META_ISRC_SIZE			(12 + 1)
 #define META_CDTEXT_SIZE		(160 + 1)
+#define MAX_CDTEXT_LANG         (8)
 
 #define EXELBA_STORE_SIZE (4096) // TODO
 #define EXENAME_STORE_SIZE (64) // TODO

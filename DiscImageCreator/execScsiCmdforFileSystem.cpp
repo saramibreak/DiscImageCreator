@@ -500,7 +500,7 @@ BOOL ReadVolumeDescriptor(
 				*lpReadVD = TRUE;
 			}
 			OutputCDMain(fileMainInfo, lpBuf, nTmpLBA, DISC_RAW_READ_SIZE);
-			OutputFsVolumeDescriptor(pExtArg, pDisc, lpBuf, nTmpLBA++);
+			OutputFsVolumeDescriptor(pExtArg, pDisc, lpBuf, pVolDesc, nTmpLBA++);
 		}
 		else {
 			break;
@@ -788,14 +788,10 @@ BOOL ReadDVDForFileSystem(
 		}
 	}
 
-	INT nLBA = 18;
-	dwTransferLen = 14;
+	dwTransferLen = 6;
+	INT nLBA = 16;
 	REVERSE_BYTES(&cdb->TransferLength, &dwTransferLen);
-	cdb->LogicalBlock[0] = 0;
-	cdb->LogicalBlock[1] = 0;
-	cdb->LogicalBlock[2] = 0;
-	cdb->LogicalBlock[3] = (UCHAR)nLBA;
-
+	REVERSE_BYTES(&cdb->LogicalBlock[0], &nLBA);
 #ifdef _WIN32
 	INT direction = SCSI_IOCTL_DATA_IN;
 #else
@@ -807,38 +803,147 @@ BOOL ReadDVDForFileSystem(
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		return FALSE;
 	}
-	for (INT i = 0; i < DISC_RAW_READ_SIZE * 14; i += DISC_RAW_READ_SIZE, nLBA++) {
-		OutputFsVolumeRecognitionSequence(lpBuf + i, nLBA);
+	BOOL bUDF = FALSE;
+	for (UINT i = 0; i < DISC_RAW_READ_SIZE * dwTransferLen; i += DISC_RAW_READ_SIZE, nLBA++) {
+		OutputFsVolumeRecognitionSequence(lpBuf + i, nLBA, &bUDF);
 	}
 
-	nLBA = 32;
-	dwTransferLen = pDevice->dwMaxTransferLength / DISC_RAW_READ_SIZE;
-	REVERSE_BYTES(&cdb->TransferLength, &dwTransferLen);
-	cdb->LogicalBlock[0] = 0;
-	cdb->LogicalBlock[1] = 0;
-	cdb->LogicalBlock[2] = 0;
-	cdb->LogicalBlock[3] = (UCHAR)nLBA;
+	if (bUDF) {
+		// for Anchor Volume Descriptor Pointer
+		dwTransferLen = 1;
+		nLBA = 256;
+		REVERSE_BYTES(&cdb->TransferLength, &dwTransferLen);
+		REVERSE_BYTES(&cdb->LogicalBlock[0], &nLBA);
+		if (!ScsiPassThroughDirect(pExtArg, pDevice, cdb, CDB12GENERIC_LENGTH, lpBuf,
+			direction, DISC_RAW_READ_SIZE * dwTransferLen, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+			return FALSE;
+		}
+		UDF udf = {};
+		OutputFsVolumeDescriptorSequence(lpBuf, nLBA, &udf);
 
-	if (!ScsiPassThroughDirect(pExtArg, pDevice, cdb, CDB12GENERIC_LENGTH, lpBuf,
-		direction, DISC_RAW_READ_SIZE * dwTransferLen, &byScsiStatus, _T(__FUNCTION__), __LINE__)
-		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-		return FALSE;
+		// for PVD, IUVD, PD, LVD etc.
+		dwTransferLen = udf.uiPVDLen / DISC_RAW_READ_SIZE;
+		nLBA = (INT)udf.uiPVDPos;
+		REVERSE_BYTES(&cdb->TransferLength, &dwTransferLen);
+		REVERSE_BYTES(&cdb->LogicalBlock[0], &nLBA);
+		if (!ScsiPassThroughDirect(pExtArg, pDevice, cdb, CDB12GENERIC_LENGTH, lpBuf,
+			direction, DISC_RAW_READ_SIZE * dwTransferLen, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+			return FALSE;
+		}
+
+		DWORD dwTransferLenBak = dwTransferLen;
+		INT nLBABak = 0;
+		for (UINT i = 0; i < DISC_RAW_READ_SIZE * dwTransferLen; i += DISC_RAW_READ_SIZE, nLBA++) {
+			OutputFsVolumeDescriptorSequence(lpBuf + i, nLBA, &udf);
+			WORD wTagId = MAKEWORD(lpBuf[i], lpBuf[i + 1]);
+			if (wTagId == 5) {
+				nLBABak = nLBA;
+				dwTransferLen = 1;
+				INT nCnt = 0;
+				REVERSE_BYTES(&cdb->TransferLength, &dwTransferLen);
+
+				for (INT j = 0; j < 512; j++) {
+					nLBA = (INT)(udf.uiPartitionPos + udf.uiPartitionLen + j);
+					if (nLBA >= pDisc->SCSI.nAllLength) {
+						break;
+					}
+					REVERSE_BYTES(&cdb->LogicalBlock[0], &nLBA);
+					if (!ScsiPassThroughDirect(pExtArg, pDevice, cdb, CDB12GENERIC_LENGTH, lpBuf,
+						direction, DISC_RAW_READ_SIZE * dwTransferLen, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+						|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+						break;
+					}
+					wTagId = MAKEWORD(lpBuf[0], lpBuf[1]);
+					if (wTagId == 2) {
+						// NOTE: An AnchorVolumeDescriptorPointer structure shall be recorded in at 
+						// least 2 of the following 3 locations on the media: 
+						//   Logical Sector 256. 
+						//   Logical Sector (N - 256). 
+						//   N
+						OutputDiscLogA("Detected Anchor Volume Descriptor Pointer: LBA %u\n", nLBA);
+						pDisc->SCSI.nAllLength = nLBA + 1;
+						if (++nCnt == 2) {
+							break;
+						}
+					}
+				}
+				dwTransferLen = dwTransferLenBak;
+				nLBA = nLBABak;
+			}
+		}
+
+		// for Integrity Sequence Extent
+		dwTransferLen = udf.uiLogicalVolumeIntegrityLen / DISC_RAW_READ_SIZE;
+		nLBA = (INT)udf.uiLogicalVolumeIntegrityPos;
+		REVERSE_BYTES(&cdb->TransferLength, &dwTransferLen);
+		REVERSE_BYTES(&cdb->LogicalBlock[0], &nLBA);
+		if (!ScsiPassThroughDirect(pExtArg, pDevice, cdb, CDB12GENERIC_LENGTH, lpBuf,
+			direction, DISC_RAW_READ_SIZE * dwTransferLen, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+			return FALSE;
+		}
+		for (UINT i = 0; i < DISC_RAW_READ_SIZE * dwTransferLen; i += DISC_RAW_READ_SIZE, nLBA++) {
+			OutputFsVolumeDescriptorSequence(lpBuf + i, nLBA, &udf);
+		}
+#if 1
+		// for File Set Descriptor
+		dwTransferLen = udf.uiFSDLen / DISC_RAW_READ_SIZE;
+		nLBA = (INT)(udf.uiPartitionPos + udf.uiFSDPos);
+		REVERSE_BYTES(&cdb->TransferLength, &dwTransferLen);
+		REVERSE_BYTES(&cdb->LogicalBlock[0], &nLBA);
+		if (!ScsiPassThroughDirect(pExtArg, pDevice, cdb, CDB12GENERIC_LENGTH, lpBuf,
+			direction, DISC_RAW_READ_SIZE * dwTransferLen, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+			return FALSE;
+		}
+		for (UINT i = 0; i < DISC_RAW_READ_SIZE * dwTransferLen; i += DISC_RAW_READ_SIZE, nLBA++) {
+			OutputFsVolumeDescriptorSequence(lpBuf + i, nLBA, &udf);
+		}
+
+		// for File Entry
+		dwTransferLen = udf.uiFileEntryLen / DISC_RAW_READ_SIZE;
+		nLBA = (INT)(udf.uiPartitionPos + udf.uiFileEntryPos);
+		REVERSE_BYTES(&cdb->TransferLength, &dwTransferLen);
+		REVERSE_BYTES(&cdb->LogicalBlock[0], &nLBA);
+		if (!ScsiPassThroughDirect(pExtArg, pDevice, cdb, CDB12GENERIC_LENGTH, lpBuf,
+			direction, DISC_RAW_READ_SIZE * dwTransferLen, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+			return FALSE;
+		}
+		for (UINT i = 0; i < DISC_RAW_READ_SIZE * dwTransferLen; i += DISC_RAW_READ_SIZE, nLBA++) {
+			OutputFsVolumeDescriptorSequence(lpBuf + i, nLBA, &udf);
+		}
+#if 0
+		// for File Identifier Descriptor
+		UINT FileLen = uiExtLen / DISC_RAW_READ_SIZE;
+		UINT FileLenMod = uiExtLen % DISC_RAW_READ_SIZE;
+		if (FileLenMod != 0) {
+			FileLen += 1;
+		}
+		dwTransferLen = FileLen;
+		nLBA = (INT)(udf.uiPartitionPos + udf.uiFSDPos);
+		REVERSE_BYTES(&cdb->TransferLength, &dwTransferLen);
+		REVERSE_BYTES(&cdb->LogicalBlock[0], &nLBA);
+		if (!ScsiPassThroughDirect(pExtArg, pDevice, cdb, CDB12GENERIC_LENGTH, lpBuf,
+			direction, DISC_RAW_READ_SIZE * dwTransferLen, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+			return FALSE;
+		}
+		for (UINT i = 0; i < DISC_RAW_READ_SIZE * dwTransferLen; i += DISC_RAW_READ_SIZE, nLBA++) {
+			OutputFsVolumeDescriptorSequence(lpBuf + i, nLBA, &udf);
+		}
+#endif
+#endif
 	}
-	if (lpBuf[20] == 0 && lpBuf[21] == 0 && lpBuf[22] == 0 && lpBuf[23] == 0) {
-		for (INT i = 0; i < DISC_RAW_READ_SIZE * 32; i += DISC_RAW_READ_SIZE, nLBA++) {
-			OutputFsVolumeDescriptorSequence(lpBuf + i, nLBA);
+	else {
+		if (pDisc->SCSI.wCurrentMedia == ProfileDvdRewritable ||
+			pDisc->SCSI.wCurrentMedia == ProfileBDRSequentialWritable ||
+			pDisc->SCSI.wCurrentMedia == ProfileBDRewritable) {
+			pDisc->SCSI.nAllLength = (INT)volDesc.uiVolumeSpaceSize;
 		}
 	}
-
-	cdb->LogicalBlock[2] = 1;
-	cdb->LogicalBlock[3] = 0;
-	if (!ScsiPassThroughDirect(pExtArg, pDevice, cdb, CDB12GENERIC_LENGTH, lpBuf,
-		direction, DISC_RAW_READ_SIZE * dwTransferLen, &byScsiStatus, _T(__FUNCTION__), __LINE__)
-		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-		return FALSE;
-	}
-	nLBA = 256;
-	OutputFsVolumeDescriptorSequence(lpBuf, nLBA);
 	return TRUE;
 }
 

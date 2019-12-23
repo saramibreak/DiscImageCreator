@@ -532,17 +532,18 @@ VOID WriteCcdForTrackIndex(
 
 VOID WriteCueForSongWriter(
 	PDISC pDisc,
+	BYTE n,
 	BYTE byIdx,
 	FILE* fpCue
 ) {
-	if (pDisc->SCSI.pszSongWriter[byIdx][0] != 0) {
+	if (pDisc->SCSI.CDTEXT[n].pszSongWriter[byIdx][0] != 0) {
 		_TCHAR szSongWriter[META_CDTEXT_SIZE] = {};
 #ifdef UNICODE
 		MultiByteToWideChar(CP_ACP, 0
-			, pDisc->SCSI.pszSongWriter[byIdx], META_CDTEXT_SIZE
+			, pDisc->SCSI.CDTEXT[n].pszSongWriter[byIdx], META_CDTEXT_SIZE
 			, szSongWriter, sizeof(szSongWriter) / sizeof(szSongWriter[0]));
 #else
-		strncpy(szSongWriter, pDisc->SCSI.pszSongWriter[byIdx], sizeof(szSongWriter) / sizeof(szSongWriter[0]));
+		strncpy(szSongWriter, pDisc->SCSI.CDTEXT[n].pszSongWriter[byIdx], sizeof(szSongWriter) / sizeof(szSongWriter[0]));
 #endif
 		if (byIdx == 0) {
 			_ftprintf(fpCue, _T("SONGWRITER \"%s\"\n"), szSongWriter);
@@ -555,17 +556,18 @@ VOID WriteCueForSongWriter(
 
 VOID WriteCueForPerformer(
 	PDISC pDisc,
+	BYTE n,
 	BYTE byIdx,
 	FILE* fpCue
 ) {
-	if (pDisc->SCSI.pszPerformer[byIdx][0] != 0) {
+	if (pDisc->SCSI.CDTEXT[n].pszPerformer[byIdx][0] != 0) {
 		_TCHAR szPerformer[META_CDTEXT_SIZE] = {};
 #ifdef UNICODE
 		MultiByteToWideChar(CP_ACP, 0
 			, pDisc->SCSI.pszPerformer[byIdx], META_CDTEXT_SIZE
 			, szPerformer, sizeof(szPerformer) / sizeof(szPerformer[0]));
 #else
-		strncpy(szPerformer, pDisc->SCSI.pszPerformer[byIdx], sizeof(szPerformer) / sizeof(szPerformer[0]));
+		strncpy(szPerformer, pDisc->SCSI.CDTEXT[n].pszPerformer[byIdx], sizeof(szPerformer) / sizeof(szPerformer[0]));
 #endif
 		if (byIdx == 0) {
 			_ftprintf(fpCue, _T("PERFORMER \"%s\"\n"), szPerformer);
@@ -578,17 +580,18 @@ VOID WriteCueForPerformer(
 
 VOID WriteCueForTitle(
 	PDISC pDisc,
+	BYTE n,
 	BYTE byIdx,
 	FILE* fpCue
 ) {
-	if (pDisc->SCSI.pszTitle[byIdx][0] != 0) {
+	if (pDisc->SCSI.CDTEXT[n].pszTitle[byIdx][0] != 0) {
 		_TCHAR szTitle[META_CDTEXT_SIZE] = {};
 #ifdef UNICODE
 		MultiByteToWideChar(CP_ACP, 0
 			, pDisc->SCSI.pszTitle[byIdx], META_CDTEXT_SIZE
 			, szTitle, sizeof(szTitle) / sizeof(szTitle[0]));
 #else
-		strncpy(szTitle, pDisc->SCSI.pszTitle[byIdx], sizeof(szTitle) / sizeof(szTitle[0]));
+		strncpy(szTitle, pDisc->SCSI.CDTEXT[n].pszTitle[byIdx], sizeof(szTitle) / sizeof(szTitle[0]));
 #endif
 		if(byIdx == 0) {
 			_ftprintf(fpCue, _T("TITLE \"%s\"\n"), szTitle);
@@ -602,6 +605,7 @@ VOID WriteCueForTitle(
 VOID WriteCueForFirst(
 	PDISC pDisc,
 	BOOL bCanCDText,
+	BYTE n,
 	FILE* fpCue
 ) {
 	if (pDisc->SUB.byCatalog) {
@@ -616,9 +620,9 @@ VOID WriteCueForFirst(
 		_ftprintf(fpCue, _T("CATALOG %s\n"), szCatalog);
 	}
 	if (bCanCDText) {
-		WriteCueForTitle(pDisc, 0, fpCue);
-		WriteCueForPerformer(pDisc, 0, fpCue);
-		WriteCueForSongWriter(pDisc, 0, fpCue);
+		WriteCueForTitle(pDisc, n, 0, fpCue);
+		WriteCueForPerformer(pDisc, n, 0, fpCue);
+		WriteCueForSongWriter(pDisc, n, 0, fpCue);
 	}
 }
 
@@ -691,17 +695,18 @@ VOID WriteCueForISRC(
 VOID WriteCueForUnderFileDirective(
 	PDISC pDisc,
 	BOOL bCanCDText,
+	BYTE byIdx,
 	BYTE byTrackNum,
 	FILE* fpCue
 ) {
 	if (pDisc->MAIN.lpModeList[byTrackNum - 1] == DATA_BLOCK_MODE0) {
 		_ftprintf(fpCue, _T("  TRACK %02u AUDIO\n"), byTrackNum);
-		WriteCueForISRC(pDisc, byTrackNum - 1, fpCue);
 		if (bCanCDText) {
-			WriteCueForTitle(pDisc, byTrackNum, fpCue);
-			WriteCueForPerformer(pDisc, byTrackNum, fpCue);
-			WriteCueForSongWriter(pDisc, byTrackNum, fpCue);
+			WriteCueForTitle(pDisc, byIdx, byTrackNum, fpCue);
+			WriteCueForPerformer(pDisc, byIdx, byTrackNum, fpCue);
+			WriteCueForSongWriter(pDisc, byIdx, byTrackNum, fpCue);
 		}
+		WriteCueForISRC(pDisc, byTrackNum - 1, fpCue);
 		switch (pDisc->SUB.lpCtlList[byTrackNum - 1] & ~AUDIO_DATA_TRACK) {
 		case AUDIO_WITH_PREEMPHASIS:
 			_ftprintf(fpCue, _T("    FLAGS PRE\n"));
@@ -1679,9 +1684,9 @@ BOOL CreateBinCueForGD(
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
-			WriteCueForUnderFileDirective(pDisc, FALSE, i, fpCueForImg);
+			WriteCueForUnderFileDirective(pDisc, FALSE, 0, i, fpCueForImg);
 			WriteCueForFileDirective(pszBinFname, fpCue);
-			WriteCueForUnderFileDirective(pDisc, FALSE, i, fpCue);
+			WriteCueForUnderFileDirective(pDisc, FALSE, 0, i, fpCue);
 
 			BYTE index = 0;
 			INT nLBAofFirstIdx = pDisc->SUB.lpFirstLBAListOnSub[i - 1][0] - FIRST_LBA_FOR_GD;
@@ -2017,202 +2022,271 @@ BOOL CreateBinCueCcd(
 	LPCTSTR pszImgName,
 	BOOL bCanCDText,
 	FILE* fpImg,
-	FILE* fpCue,
-	FILE* fpCueForImg,
 	FILE* fpCcd
 ) {
-	WriteCueForFirst(pDisc, bCanCDText, fpCueForImg);
-	WriteCueForFileDirective(pszImgName, fpCueForImg);
-	WriteCueForFirst(pDisc, bCanCDText, fpCue);
-
+	BOOL bRet = TRUE;
+	FILE* fpCue = NULL;
+	FILE* fpCueForImg = NULL;
 	FILE* fpCueSyncForImg = NULL;
 	FILE* fpCueSync = NULL;
-	if (pDisc->SUB.byDesync) {
-		if (NULL == (fpCueSyncForImg = CreateOrOpenFile(
-			pszPath, _T(" (Subs indexes)_img"), NULL, NULL, NULL, _T(".cue"), _T(WFLAG), 0, 0))) {
-			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-			return FALSE;
-		}
-		if (NULL == (fpCueSync = CreateOrOpenFile(
-			pszPath, _T(" (Subs indexes)"), NULL, NULL, NULL, _T(".cue"), _T(WFLAG), 0, 0))) {
-			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-			FcloseAndNull(fpCueSyncForImg);
-			return FALSE;
-		}
-		WriteCueForFirst(pDisc, bCanCDText, fpCueSyncForImg);
-		WriteCueForFileDirective(pszImgName, fpCueSyncForImg);
-		WriteCueForMultiSessionWholeBin(pDisc, 1, fpCueSyncForImg);
-		WriteCueForFirst(pDisc, bCanCDText, fpCueSync);
+
+	if (NULL == (fpCue = CreateOrOpenFile(
+		pszPath, NULL, NULL, NULL, NULL, _T(".cue"), _T(WFLAG), 0, 0))) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		return FALSE;
 	}
-
-	BOOL bRet = TRUE;
-	_TCHAR pszFname[_MAX_FNAME] = {};
-	FILE* fpBin = NULL;
-	FILE* fpBinSync = NULL;
-	for (BYTE i = pDisc->SCSI.toc.FirstTrack; i <= pDisc->SCSI.toc.LastTrack; i++) {
-		OutputString(
-			_T("\rCreating bin, cue and ccd (Track) %2u/%2u"), i, pDisc->SCSI.toc.LastTrack);
-		if (NULL == (fpBin = CreateOrOpenFile(pszPath, NULL, NULL, pszFname,
-			NULL, _T(".bin"), _T("wb"), i, pDisc->SCSI.toc.LastTrack))) {
+	try {
+		if (NULL == (fpCueForImg = CreateOrOpenFile(
+			pszPath, _T("_img"), NULL, NULL, NULL, _T(".cue"), _T(WFLAG), 0, 0))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-			bRet = FALSE;
-			break;
+			throw FALSE;
 		}
-		WriteCueForMultiSessionWholeBin(pDisc, i, fpCueForImg);
-		WriteCueForUnderFileDirective(pDisc, bCanCDText, i, fpCueForImg);
-		WriteCueForMultiSessionMultiBin(pDisc, i, fpCue);
-		WriteCueForFileDirective(pszFname, fpCue);
-		WriteCueForUnderFileDirective(pDisc, bCanCDText, i, fpCue);
-		WriteCcdForTrack(pDisc, i, fpCcd);
+		WriteCueForFirst(pDisc, bCanCDText, 0, fpCueForImg);
+		WriteCueForFileDirective(pszImgName, fpCueForImg);
+		WriteCueForFirst(pDisc, bCanCDText, 0, fpCue);
 
-		_TCHAR pszFnameSync[_MAX_FNAME] = {};
 		if (pDisc->SUB.byDesync) {
-			if (NULL == (fpBinSync = CreateOrOpenFile(pszPath, _T(" (Subs indexes)"), NULL,
-				pszFnameSync, NULL, _T(".bin"), _T("wb"), i, pDisc->SCSI.toc.LastTrack))) {
+			if (NULL == (fpCueSyncForImg = CreateOrOpenFile(
+				pszPath, _T(" (Subs indexes)_img"), NULL, NULL, NULL, _T(".cue"), _T(WFLAG), 0, 0))) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				throw FALSE;
+			}
+			if (NULL == (fpCueSync = CreateOrOpenFile(
+				pszPath, _T(" (Subs indexes)"), NULL, NULL, NULL, _T(".cue"), _T(WFLAG), 0, 0))) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				FcloseAndNull(fpCueSyncForImg);
+				throw FALSE;
+			}
+			WriteCueForFirst(pDisc, bCanCDText, 0, fpCueSyncForImg);
+			WriteCueForFileDirective(pszImgName, fpCueSyncForImg);
+			WriteCueForMultiSessionWholeBin(pDisc, 1, fpCueSyncForImg);
+			WriteCueForFirst(pDisc, bCanCDText, 0, fpCueSync);
+		}
+
+		_TCHAR pszFname[_MAX_FNAME] = {};
+		_TCHAR pszAltCueStr[][6] = {
+			_T(""), _T("_alt"), _T("_alt2"), _T("_alt3"), _T("_alt4"), _T("_alt5"), _T("_alt6"), _T("_alt7")
+		};
+		_TCHAR pszImgAltCueStr[][9] = {
+			_T("_img"), _T("_imgAlt"), _T("_imgAlt2"), _T("_imgAlt3"), _T("_imgAlt4"), _T("_imgAlt5"), _T("_imgAlt6"), _T("_imgAlt7")
+		};
+		FILE* fpBin = NULL;
+		FILE* fpBinSync = NULL;
+		for (BYTE j = 0; j < MAX_CDTEXT_LANG; j++) {
+			if (0 < j) {
+				if (pDisc->SCSI.CDTEXT[j].bExist) {
+					// This fpBin is dummy to get the AltCue filename
+					_TCHAR out[_MAX_PATH] = {};
+					if (NULL == (fpBin = CreateOrOpenFile(pszPath, pszAltCueStr[j], out, NULL,
+						NULL, _T(".bin"), _T("wb"), 0, 0))) {
+						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+						bRet = FALSE;
+						break;
+					}
+					FcloseAndNull(fpBin);
+					remove(out);
+					if (NULL == (fpCue = CreateOrOpenFile(
+						out, NULL, NULL, NULL, NULL, _T(".cue"), _T(WFLAG), 0, 0))) {
+						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+						throw FALSE;
+					}
+					if (NULL == (fpCueForImg = CreateOrOpenFile(
+						pszPath, pszImgAltCueStr[j], NULL, NULL, NULL, _T(".cue"), _T(WFLAG), 0, 0))) {
+						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+						throw FALSE;
+					}
+					WriteCueForFirst(pDisc, bCanCDText, j, fpCueForImg);
+					WriteCueForFileDirective(pszImgName, fpCueForImg);
+					WriteCueForFirst(pDisc, bCanCDText, j, fpCue);
+				}
+				else {
+					break;
+				}
+			}
+			for (BYTE i = pDisc->SCSI.toc.FirstTrack; i <= pDisc->SCSI.toc.LastTrack; i++) {
+				OutputString(
+					_T("\rCreating cue and ccd (Track) %2u/%2u"), i, pDisc->SCSI.toc.LastTrack);
+				// This fpBin is dummy to get filename and ext written in cue
+				_TCHAR out[_MAX_PATH] = {};
+				if (NULL == (fpBin = CreateOrOpenFile(pszPath, NULL, out, pszFname,
+					NULL, _T(".bin"), _T("wb"), i, pDisc->SCSI.toc.LastTrack))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					bRet = FALSE;
+					break;
+				}
+				WriteCueForMultiSessionWholeBin(pDisc, i, fpCueForImg);
+				WriteCueForUnderFileDirective(pDisc, bCanCDText, j, i, fpCueForImg);
+				WriteCueForMultiSessionMultiBin(pDisc, i, fpCue);
+				WriteCueForFileDirective(pszFname, fpCue);
+				WriteCueForUnderFileDirective(pDisc, bCanCDText, j, i, fpCue);
+				if (j == 0) {
+					WriteCcdForTrack(pDisc, i, fpCcd);
+				}
+
+				_TCHAR pszFnameSync[_MAX_FNAME] = {};
+				if (pDisc->SUB.byDesync) {
+					// This fpBin is dummy
+					if (NULL == (fpBinSync = CreateOrOpenFile(pszPath, _T(" (Subs indexes)"), out,
+						pszFnameSync, NULL, _T(".bin"), _T("wb"), i, pDisc->SCSI.toc.LastTrack))) {
+						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+						bRet = FALSE;
+						break;
+					}
+					FcloseAndNull(fpBinSync);
+					remove(out);
+					if (NULL == (fpCueSync = CreateOrOpenFile(
+						out, NULL, NULL, NULL, NULL, _T(".cue"), _T(WFLAG), 0, 0))) {
+						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+						throw FALSE;
+					}
+					if (j == 0) {
+						WriteCueForUnderFileDirective(pDisc, bCanCDText, j, i, fpCueSyncForImg);
+					}
+					WriteCueForFileDirective(pszFnameSync, fpCueSync);
+					WriteCueForUnderFileDirective(pDisc, bCanCDText, j, i, fpCueSync);
+				}
+
+				BYTE index = 0;
+				INT nLBAofFirstIdx = pDisc->SUB.lpFirstLBAListOnSub[i - 1][0];
+				// nothing or index 0 in track 1
+				if (nLBAofFirstIdx == -1 || nLBAofFirstIdx == -150 ||
+					(pDisc->SCSI.bMultiSession && i == pDisc->SCSI.byFirstMultiSessionTrackNum)) {
+					nLBAofFirstIdx = pDisc->SUB.lpFirstLBAListOnSub[i - 1][1];
+					index++;
+				}
+
+				BYTE indexSync = 0;
+				INT nLBAofFirstIdxSync = pDisc->SUB.lpFirstLBAListOnSubSync[i - 1][0];
+				if (nLBAofFirstIdxSync == -1 || nLBAofFirstIdxSync == -150) {
+					nLBAofFirstIdxSync = pDisc->SUB.lpFirstLBAListOnSubSync[i - 1][1];
+					indexSync++;
+				}
+
+				BYTE byFrame = 0, bySecond = 0, byMinute = 0;
+				if (i == pDisc->SCSI.toc.FirstTrack ||
+					(pDisc->SCSI.bMultiSession && i == pDisc->SCSI.byFirstMultiSessionTrackNum)) {
+					if (0 == nLBAofFirstIdx || (i == pDisc->SCSI.byFirstMultiSessionTrackNum &&
+						pDisc->SCSI.trackType != TRACK_TYPE::pregapAudioIn1stTrack &&
+						pDisc->SCSI.trackType != TRACK_TYPE::pregapDataIn1stTrack)) {
+
+						WriteCueForIndexDirective(index, 0, 0, 0, fpCue);
+						if (pDisc->SCSI.bMultiSession && i == pDisc->SCSI.byFirstMultiSessionTrackNum) {
+							LBAtoMSF(nLBAofFirstIdx, &byMinute, &bySecond, &byFrame);
+							WriteCueForIndexDirective(index, byMinute, bySecond, byFrame, fpCueForImg);
+							if (j == 0) {
+								WriteCcdForTrackIndex(index, nLBAofFirstIdx, fpCcd);
+							}
+						}
+						else {
+							WriteCueForIndexDirective(index, 0, 0, 0, fpCueForImg);
+							if (j == 0) {
+								WriteCcdForTrackIndex(index, 0, fpCcd);
+							}
+						}
+					}
+					else if (0 < nLBAofFirstIdx) {
+						// index 0 in track 1
+						//  Crow, The - Original Motion Picture Soundtrack (82519-2)
+						//  Now on Never (Nick Carter) (ZJCI-10118)
+						//  SaGa Frontier Original Sound Track (Disc 3)
+						//  etc..
+						WriteCueForIndexDirective(0, 0, 0, 0, fpCueForImg);
+						WriteCueForIndexDirective(0, 0, 0, 0, fpCue);
+						if (j == 0) {
+							WriteCcdForTrackIndex(0, 0, fpCcd);
+						}
+
+						LBAtoMSF(nLBAofFirstIdx, &byMinute, &bySecond, &byFrame);
+						WriteCueForIndexDirective(index, byMinute, bySecond, byFrame, fpCueForImg);
+						WriteCueForIndexDirective(index, byMinute, bySecond, byFrame, fpCue);
+						if (j == 0) {
+							WriteCcdForTrackIndex(index, nLBAofFirstIdx, fpCcd);
+						}
+					}
+					index++;
+
+					if (pDisc->SUB.byDesync) {
+						if (0 == nLBAofFirstIdxSync || (i == pDisc->SCSI.byFirstMultiSessionTrackNum &&
+							pDisc->SCSI.trackType != TRACK_TYPE::pregapAudioIn1stTrack &&
+							pDisc->SCSI.trackType != TRACK_TYPE::pregapDataIn1stTrack)) {
+
+							WriteCueForIndexDirective(indexSync, 0, 0, 0, fpCueSyncForImg);
+							WriteCueForIndexDirective(indexSync, 0, 0, 0, fpCueSync);
+						}
+						else if (0 < nLBAofFirstIdxSync) {
+							WriteCueForIndexDirective(0, 0, 0, 0, fpCueSyncForImg);
+							WriteCueForIndexDirective(0, 0, 0, 0, fpCueSync);
+
+							LBAtoMSF(nLBAofFirstIdxSync, &byMinute, &bySecond, &byFrame);
+							WriteCueForIndexDirective(indexSync, byMinute, bySecond, byFrame, fpCueSyncForImg);
+							WriteCueForIndexDirective(indexSync, byMinute, bySecond, byFrame, fpCueSync);
+						}
+						indexSync++;
+					}
+				}
+
+				for (; index < MAXIMUM_NUMBER_INDEXES; index++) {
+					INT nLBAofNextIdx = pDisc->SUB.lpFirstLBAListOnSub[i - 1][index];
+					if (nLBAofNextIdx != -1) {
+						LBAtoMSF(nLBAofNextIdx, &byMinute, &bySecond, &byFrame);
+						WriteCueForIndexDirective(index, byMinute, bySecond, byFrame, fpCueForImg);
+
+						LBAtoMSF(nLBAofNextIdx - nLBAofFirstIdx, &byMinute, &bySecond, &byFrame);
+						WriteCueForIndexDirective(index, byMinute, bySecond, byFrame, fpCue);
+
+						if (j == 0) {
+							WriteCcdForTrackIndex(index, nLBAofNextIdx, fpCcd);
+						}
+					}
+					else {
+						if (index >= 2) {
+							break;
+						}
+					}
+				}
+				if (pDisc->SUB.byDesync) {
+					for (; indexSync < MAXIMUM_NUMBER_INDEXES; indexSync++) {
+						INT nLBAofNextIdxSync = pDisc->SUB.lpFirstLBAListOnSubSync[i - 1][indexSync];
+						if (nLBAofNextIdxSync != -1) {
+							LBAtoMSF(nLBAofNextIdxSync, &byMinute, &bySecond, &byFrame);
+							WriteCueForIndexDirective(indexSync, byMinute, bySecond, byFrame, fpCueSyncForImg);
+
+							LBAtoMSF(nLBAofNextIdxSync - nLBAofFirstIdxSync, &byMinute, &bySecond, &byFrame);
+							WriteCueForIndexDirective(indexSync, byMinute, bySecond, byFrame, fpCueSync);
+						}
+						else {
+							if (indexSync >= 2) {
+								break;
+							}
+						}
+					}
+				}
+			}
+			FcloseAndNull(fpCueForImg);
+			FcloseAndNull(fpCue);
+			FcloseAndNull(fpCueSyncForImg);
+			FcloseAndNull(fpCueSync);
+		}
+		OutputString(_T("\n"));
+		for (BYTE i = pDisc->SCSI.toc.FirstTrack; i <= pDisc->SCSI.toc.LastTrack; i++) {
+			OutputString(
+				_T("\rCreating bin (Track) %2u/%2u"), i, pDisc->SCSI.toc.LastTrack);
+			if (NULL == (fpBin = CreateOrOpenFile(pszPath, NULL, NULL, NULL,
+				NULL, _T(".bin"), _T("wb"), i, pDisc->SCSI.toc.LastTrack))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				bRet = FALSE;
 				break;
 			}
-			WriteCueForUnderFileDirective(pDisc, bCanCDText, i, fpCueSyncForImg);
-			WriteCueForFileDirective(pszFnameSync, fpCueSync);
-			WriteCueForUnderFileDirective(pDisc, bCanCDText, i, fpCueSync);
-		}
-
-		BYTE index = 0;
-		INT nLBAofFirstIdx = pDisc->SUB.lpFirstLBAListOnSub[i - 1][0];
-		// nothing or index 0 in track 1
-		if (nLBAofFirstIdx == -1 || nLBAofFirstIdx == -150 ||
-			(pDisc->SCSI.bMultiSession && i == pDisc->SCSI.byFirstMultiSessionTrackNum)) {
-			nLBAofFirstIdx = pDisc->SUB.lpFirstLBAListOnSub[i - 1][1];
-			index++;
-		}
-
-		BYTE indexSync = 0;
-		INT nLBAofFirstIdxSync = pDisc->SUB.lpFirstLBAListOnSubSync[i - 1][0];
-		if (nLBAofFirstIdxSync == -1 || nLBAofFirstIdxSync == -150) {
-			nLBAofFirstIdxSync = pDisc->SUB.lpFirstLBAListOnSubSync[i - 1][1];
-			indexSync++;
-		}
-
-		BYTE byFrame = 0, bySecond = 0, byMinute = 0;
-		if (i == pDisc->SCSI.toc.FirstTrack ||
-			(pDisc->SCSI.bMultiSession && i == pDisc->SCSI.byFirstMultiSessionTrackNum)) {
-			if (0 == nLBAofFirstIdx || (i == pDisc->SCSI.byFirstMultiSessionTrackNum &&
-				pDisc->SCSI.trackType != TRACK_TYPE::pregapAudioIn1stTrack &&
-				pDisc->SCSI.trackType != TRACK_TYPE::pregapDataIn1stTrack)) {
-
-				WriteCueForIndexDirective(index, 0, 0, 0, fpCue);
-				if (pDisc->SCSI.bMultiSession && i == pDisc->SCSI.byFirstMultiSessionTrackNum) {
-					LBAtoMSF(nLBAofFirstIdx, &byMinute, &bySecond, &byFrame);
-					WriteCueForIndexDirective(index, byMinute, bySecond, byFrame, fpCueForImg);
-					WriteCcdForTrackIndex(index, nLBAofFirstIdx, fpCcd);
-				}
-				else {
-					WriteCueForIndexDirective(index, 0, 0, 0, fpCueForImg);
-					WriteCcdForTrackIndex(index, 0, fpCcd);
-				}
-			}
-			else if (0 < nLBAofFirstIdx) {
-				// index 0 in track 1
-				//  Crow, The - Original Motion Picture Soundtrack (82519-2)
-				//  Now on Never (Nick Carter) (ZJCI-10118)
-				//  SaGa Frontier Original Sound Track (Disc 3)
-				//  etc..
-				WriteCueForIndexDirective(0, 0, 0, 0, fpCueForImg);
-				WriteCueForIndexDirective(0, 0, 0, 0, fpCue);
-				WriteCcdForTrackIndex(0, 0, fpCcd);
-
-				LBAtoMSF(nLBAofFirstIdx, &byMinute, &bySecond, &byFrame);
-				WriteCueForIndexDirective(index, byMinute, bySecond, byFrame, fpCueForImg);
-				WriteCueForIndexDirective(index, byMinute, bySecond, byFrame, fpCue);
-				WriteCcdForTrackIndex(index, nLBAofFirstIdx, fpCcd);
-			}
-			index++;
-
 			if (pDisc->SUB.byDesync) {
-				if (0 == nLBAofFirstIdxSync || (i == pDisc->SCSI.byFirstMultiSessionTrackNum &&
-					pDisc->SCSI.trackType != TRACK_TYPE::pregapAudioIn1stTrack &&
-					pDisc->SCSI.trackType != TRACK_TYPE::pregapDataIn1stTrack)) {
-
-					WriteCueForIndexDirective(indexSync, 0, 0, 0, fpCueSyncForImg);
-					WriteCueForIndexDirective(indexSync, 0, 0, 0, fpCueSync);
-				}
-				else if (0 < nLBAofFirstIdxSync) {
-					WriteCueForIndexDirective(0, 0, 0, 0, fpCueSyncForImg);
-					WriteCueForIndexDirective(0, 0, 0, 0, fpCueSync);
-
-					LBAtoMSF(nLBAofFirstIdxSync, &byMinute, &bySecond, &byFrame);
-					WriteCueForIndexDirective(indexSync, byMinute, bySecond, byFrame, fpCueSyncForImg);
-					WriteCueForIndexDirective(indexSync, byMinute, bySecond, byFrame, fpCueSync);
-				}
-				indexSync++;
-			}
-		}
-
-		for (; index < MAXIMUM_NUMBER_INDEXES; index++) {
-			INT nLBAofNextIdx = pDisc->SUB.lpFirstLBAListOnSub[i - 1][index];
-			if (nLBAofNextIdx != -1) {
-				LBAtoMSF(nLBAofNextIdx,	&byMinute, &bySecond, &byFrame);
-				WriteCueForIndexDirective(index, byMinute, bySecond, byFrame, fpCueForImg);
-
-				LBAtoMSF(nLBAofNextIdx - nLBAofFirstIdx, &byMinute, &bySecond, &byFrame);
-				WriteCueForIndexDirective(index, byMinute, bySecond, byFrame, fpCue);
-
-				WriteCcdForTrackIndex(index, nLBAofNextIdx, fpCcd);
-			}
-			else {
-				if (index >= 2) {
+				if (NULL == (fpBinSync = CreateOrOpenFile(pszPath, _T(" (Subs indexes)"), NULL,
+					NULL, NULL, _T(".bin"), _T("wb"), i, pDisc->SCSI.toc.LastTrack))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					bRet = FALSE;
 					break;
 				}
 			}
-		}
-		if (pDisc->SUB.byDesync) {
-			for (; indexSync < MAXIMUM_NUMBER_INDEXES; indexSync++) {
-				INT nLBAofNextIdxSync = pDisc->SUB.lpFirstLBAListOnSubSync[i - 1][indexSync];
-				if (nLBAofNextIdxSync != -1) {
-					LBAtoMSF(nLBAofNextIdxSync, &byMinute, &bySecond, &byFrame);
-					WriteCueForIndexDirective(indexSync, byMinute, bySecond, byFrame, fpCueSyncForImg);
-
-					LBAtoMSF(nLBAofNextIdxSync - nLBAofFirstIdxSync, &byMinute, &bySecond, &byFrame);
-					WriteCueForIndexDirective(indexSync, byMinute, bySecond, byFrame, fpCueSync);
-				}
-				else {
-					if (indexSync >= 2) {
-						break;
-					}
-				}
-			}
-		}
-		// write each track
-		INT nLBA = pDisc->SUB.lpFirstLBAListOnSub[i - 1][0] == -1 ?
-			pDisc->SUB.lpFirstLBAListOnSub[i - 1][1] : pDisc->SUB.lpFirstLBAListOnSub[i - 1][0];
-		if (pExtArg->byPre) {
-			if (i == pDisc->SCSI.toc.FirstTrack) {
-				nLBA += 150 - abs(pDisc->MAIN.nAdjustSectorNum);
-			}
-			else {
-				nLBA += 150;
-			}
-			if (i == pDisc->SCSI.toc.LastTrack) {
-				pDisc->SCSI.nAllLength += 150;
-			}
-		}
-		INT nNextLBA = pDisc->SUB.lpFirstLBAListOnSub[i][0] == -1 ?
-			pDisc->SUB.lpFirstLBAListOnSub[i][1] : pDisc->SUB.lpFirstLBAListOnSub[i][0];
-		if (pExtArg->byPre) {
-			nNextLBA += 150;
-		}
-#ifdef _DEBUG
-		OutputDebugStringExA(" nNextLBA(%d) - nLBA(%d) = %d\n", nNextLBA, nLBA, nNextLBA - nLBA);
-#endif
-		bRet = CreateBin(pExtArg, pDisc, i, nNextLBA, nLBA, fpImg, fpBin);
-		FcloseAndNull(fpBin);
-		if (!bRet) {
-			break;
-		}
-		if (pDisc->SUB.byDesync) {
-			nLBA = pDisc->SUB.lpFirstLBAListOnSubSync[i - 1][0] == -1 ?
-				pDisc->SUB.lpFirstLBAListOnSubSync[i - 1][1] : pDisc->SUB.lpFirstLBAListOnSubSync[i - 1][0];
+			INT nLBA = pDisc->SUB.lpFirstLBAListOnSub[i - 1][0] == -1 ?
+				pDisc->SUB.lpFirstLBAListOnSub[i - 1][1] : pDisc->SUB.lpFirstLBAListOnSub[i - 1][0];
 			if (pExtArg->byPre) {
 				if (i == pDisc->SCSI.toc.FirstTrack) {
 					nLBA += 150 - abs(pDisc->MAIN.nAdjustSectorNum);
@@ -2224,21 +2298,54 @@ BOOL CreateBinCueCcd(
 					pDisc->SCSI.nAllLength += 150;
 				}
 			}
-			nNextLBA = pDisc->SUB.lpFirstLBAListOnSubSync[i][0] == -1 ?
-				pDisc->SUB.lpFirstLBAListOnSubSync[i][1] : pDisc->SUB.lpFirstLBAListOnSubSync[i][0];
+			INT nNextLBA = pDisc->SUB.lpFirstLBAListOnSub[i][0] == -1 ?
+				pDisc->SUB.lpFirstLBAListOnSub[i][1] : pDisc->SUB.lpFirstLBAListOnSub[i][0];
 			if (pExtArg->byPre) {
 				nNextLBA += 150;
 			}
-			bRet = CreateBin(pExtArg, pDisc, i, nNextLBA, nLBA, fpImg, fpBinSync);
-			FcloseAndNull(fpBinSync);
+#ifdef _DEBUG
+			OutputDebugStringExA(" nNextLBA(%d) - nLBA(%d) = %d\n", nNextLBA, nLBA, nNextLBA - nLBA);
+#endif
+			bRet = CreateBin(pExtArg, pDisc, i, nNextLBA, nLBA, fpImg, fpBin);
+			FcloseAndNull(fpBin);
 			if (!bRet) {
 				break;
 			}
+			if (pDisc->SUB.byDesync) {
+				nLBA = pDisc->SUB.lpFirstLBAListOnSubSync[i - 1][0] == -1 ?
+					pDisc->SUB.lpFirstLBAListOnSubSync[i - 1][1] : pDisc->SUB.lpFirstLBAListOnSubSync[i - 1][0];
+				if (pExtArg->byPre) {
+					if (i == pDisc->SCSI.toc.FirstTrack) {
+						nLBA += 150 - abs(pDisc->MAIN.nAdjustSectorNum);
+					}
+					else {
+						nLBA += 150;
+					}
+					if (i == pDisc->SCSI.toc.LastTrack) {
+						pDisc->SCSI.nAllLength += 150;
+					}
+				}
+				nNextLBA = pDisc->SUB.lpFirstLBAListOnSubSync[i][0] == -1 ?
+					pDisc->SUB.lpFirstLBAListOnSubSync[i][1] : pDisc->SUB.lpFirstLBAListOnSubSync[i][0];
+				if (pExtArg->byPre) {
+					nNextLBA += 150;
+				}
+				bRet = CreateBin(pExtArg, pDisc, i, nNextLBA, nLBA, fpImg, fpBinSync);
+				FcloseAndNull(fpBinSync);
+				if (!bRet) {
+					break;
+				}
+			}
 		}
+		OutputString(_T("\n"));
+		FcloseAndNull(fpBinSync);
+		FcloseAndNull(fpBin);
 	}
-	OutputString(_T("\n"));
-	FcloseAndNull(fpBinSync);
-	FcloseAndNull(fpBin);
+	catch (BOOL ret) {
+		bRet = ret;
+	}
+	FcloseAndNull(fpCueForImg);
+	FcloseAndNull(fpCue);
 	FcloseAndNull(fpCueSyncForImg);
 	FcloseAndNull(fpCueSync);
 	return bRet;

@@ -91,74 +91,47 @@ BOOL InitTocTextData(
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
-			if (NULL == ((*pDisc)->SCSI.pszTitle = 
-				(LPSTR*)calloc(dwTrackAllocSize * 2, sizeof(INT_PTR)))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				throw FALSE;
+			for (INT i = 0; i < MAX_CDTEXT_LANG; i++) {
+				if (NULL == ((*pDisc)->SCSI.CDTEXT[i].pszTitle =
+					(LPSTR*)calloc(dwTrackAllocSize * 2, sizeof(INT_PTR)))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					throw FALSE;
+				}
+				if (NULL == ((*pDisc)->SCSI.CDTEXT[i].pszPerformer =
+					(LPSTR*)calloc(dwTrackAllocSize * 2, sizeof(INT_PTR)))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					throw FALSE;
+				}
+				if (NULL == ((*pDisc)->SCSI.CDTEXT[i].pszSongWriter =
+					(LPSTR*)calloc(dwTrackAllocSize * 2, sizeof(INT_PTR)))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					throw FALSE;
+				}
 			}
-			if (NULL == ((*pDisc)->SCSI.pszPerformer = 
-				(LPSTR*)calloc(dwTrackAllocSize * 2, sizeof(INT_PTR)))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				throw FALSE;
-			}
-			if (NULL == ((*pDisc)->SCSI.pszSongWriter = 
-				(LPSTR*)calloc(dwTrackAllocSize * 2, sizeof(INT_PTR)))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				throw FALSE;
-			}
-			if (NULL == ((*pDisc)->SCSI.pszTitleW =
-				(LPSTR*)calloc(dwTrackAllocSize * 2, sizeof(INT_PTR)))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				throw FALSE;
-			}
-			if (NULL == ((*pDisc)->SCSI.pszPerformerW =
-				(LPSTR*)calloc(dwTrackAllocSize * 2, sizeof(INT_PTR)))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				throw FALSE;
-			}
-			if (NULL == ((*pDisc)->SCSI.pszSongWriterW =
-				(LPSTR*)calloc(dwTrackAllocSize * 2, sizeof(INT_PTR)))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				throw FALSE;
-			}
-
-			size_t isrcSize = META_ISRC_SIZE;
-			size_t textSize = META_CDTEXT_SIZE;
 			for (size_t h = 0; h < dwTrackAllocSize; h++) {
-				if (NULL == ((*pDisc)->SUB.pszISRC[h] = 
-					(LPSTR)calloc(isrcSize, sizeof(CHAR)))) {
+				if (NULL == ((*pDisc)->SUB.pszISRC[h] =
+					(LPSTR)calloc(META_ISRC_SIZE, sizeof(CHAR)))) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 					throw FALSE;
 				}
-				if (NULL == ((*pDisc)->SCSI.pszTitle[h] = 
-					(LPSTR)calloc(textSize, sizeof(CHAR)))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					throw FALSE;
-				}
-				if (NULL == ((*pDisc)->SCSI.pszPerformer[h] = 
-					(LPSTR)calloc(textSize, sizeof(CHAR)))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					throw FALSE;
-				}
-				if (NULL == ((*pDisc)->SCSI.pszSongWriter[h] = 
-					(LPSTR)calloc(textSize, sizeof(CHAR)))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					throw FALSE;
-				}
-				if (NULL == ((*pDisc)->SCSI.pszTitleW[h] =
-					(LPSTR)calloc(textSize, sizeof(CHAR)))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					throw FALSE;
-				}
-				if (NULL == ((*pDisc)->SCSI.pszPerformerW[h] =
-					(LPSTR)calloc(textSize, sizeof(CHAR)))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					throw FALSE;
-				}
-				if (NULL == ((*pDisc)->SCSI.pszSongWriterW[h] =
-					(LPSTR)calloc(textSize, sizeof(CHAR)))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					throw FALSE;
+			}
+			for (INT i = 0; i < MAX_CDTEXT_LANG; i++) {
+				for (size_t h = 0; h < dwTrackAllocSize; h++) {
+					if (NULL == ((*pDisc)->SCSI.CDTEXT[i].pszTitle[h] =
+						(LPSTR)calloc(META_CDTEXT_SIZE, sizeof(CHAR)))) {
+						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+						throw FALSE;
+					}
+					if (NULL == ((*pDisc)->SCSI.CDTEXT[i].pszPerformer[h] =
+						(LPSTR)calloc(META_CDTEXT_SIZE, sizeof(CHAR)))) {
+						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+						throw FALSE;
+					}
+					if (NULL == ((*pDisc)->SCSI.CDTEXT[i].pszSongWriter[h] =
+						(LPSTR)calloc(META_CDTEXT_SIZE, sizeof(CHAR)))) {
+						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+						throw FALSE;
+					}
 				}
 			}
 		}
@@ -445,20 +418,20 @@ VOID TerminateTocTextData(
 	if (pDevice->FEATURE.byCanCDText) {
 		for (size_t i = 0; i < dwTrackAllocSize; i++) {
 			FreeAndNull((*pDisc)->SUB.pszISRC[i]);
-			FreeAndNull((*pDisc)->SCSI.pszTitle[i]);
-			FreeAndNull((*pDisc)->SCSI.pszPerformer[i]);
-			FreeAndNull((*pDisc)->SCSI.pszSongWriter[i]);
-			FreeAndNull((*pDisc)->SCSI.pszTitleW[i]);
-			FreeAndNull((*pDisc)->SCSI.pszPerformerW[i]);
-			FreeAndNull((*pDisc)->SCSI.pszSongWriterW[i]);
+		}
+		for (INT j = 0; j < MAX_CDTEXT_LANG; j++) {
+			for (size_t i = 0; i < dwTrackAllocSize; i++) {
+				FreeAndNull((*pDisc)->SCSI.CDTEXT[j].pszTitle[i]);
+				FreeAndNull((*pDisc)->SCSI.CDTEXT[j].pszPerformer[i]);
+				FreeAndNull((*pDisc)->SCSI.CDTEXT[j].pszSongWriter[i]);
+			}
 		}
 		FreeAndNull((*pDisc)->SUB.pszISRC);
-		FreeAndNull((*pDisc)->SCSI.pszTitle);
-		FreeAndNull((*pDisc)->SCSI.pszPerformer);
-		FreeAndNull((*pDisc)->SCSI.pszSongWriter);
-		FreeAndNull((*pDisc)->SCSI.pszTitleW);
-		FreeAndNull((*pDisc)->SCSI.pszPerformerW);
-		FreeAndNull((*pDisc)->SCSI.pszSongWriterW);
+		for (INT j = 0; j < MAX_CDTEXT_LANG; j++) {
+			FreeAndNull((*pDisc)->SCSI.CDTEXT[j].pszTitle);
+			FreeAndNull((*pDisc)->SCSI.CDTEXT[j].pszPerformer);
+			FreeAndNull((*pDisc)->SCSI.CDTEXT[j].pszSongWriter);
+		}
 	}
 }
 

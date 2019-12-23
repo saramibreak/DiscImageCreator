@@ -90,7 +90,8 @@ VOID SetAndOutputTocCDText(
 	LPCH pTmpText,
 	WORD wTocTextEntries,
 	UINT uiTocTextEntriesIdx,
-	BOOL bUnicode
+	BOOL bUnicode,
+	INT nIdx
 );
 
 VOID SetCDOffset(

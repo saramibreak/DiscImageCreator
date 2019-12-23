@@ -39,7 +39,8 @@ VOID OutputFsBootRecord(
 VOID OutputFsVolumeDescriptorFirst(
 	PDISC pDisc,
 	LPBYTE lpBuf,
-	CHAR str32[][32]
+	CHAR str32[][32],
+	PVOLUME_DESCRIPTOR pVolDesc
 ) {
 	UINT vss = GetSizeOrUintForVolDesc(lpBuf + 80, UINT(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
 	OutputVolDescLogA(
@@ -47,6 +48,7 @@ VOID OutputFsVolumeDescriptorFirst(
 		"\t                            Volume Identifier: %.32s\n"
 		"\t                            Volume Space Size: %u\n"
 		, str32[0], str32[1], vss);
+	pVolDesc->uiVolumeSpaceSize = vss;
 }
 
 VOID OutputFsDirectoryRecord(
@@ -361,7 +363,8 @@ VOID OutputFsVolumeDescriptorSecond(
 VOID OutputFsVolumeDescriptorForISO9660(
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
-	LPBYTE lpBuf
+	LPBYTE lpBuf,
+	PVOLUME_DESCRIPTOR pVolDesc
 ) {
 	CHAR str32[3][32] = { {} };
 	CHAR str128[4][128] = { {} };
@@ -375,7 +378,7 @@ VOID OutputFsVolumeDescriptorForISO9660(
 	strncpy(str37[0], (LPCH)&lpBuf[702], sizeof(str37[0]));
 	strncpy(str37[1], (LPCH)&lpBuf[739], sizeof(str37[1]));
 	strncpy(str37[2], (LPCH)&lpBuf[776], sizeof(str37[2]));
-	OutputFsVolumeDescriptorFirst(pDisc, lpBuf, str32);
+	OutputFsVolumeDescriptorFirst(pDisc, lpBuf, str32, pVolDesc);
 	if (lpBuf[0] == 2) {
 		strncpy(str32[2], (LPCH)&lpBuf[88], sizeof(str32[2]));
 		OutputVolDescLogA(
@@ -387,7 +390,8 @@ VOID OutputFsVolumeDescriptorForISO9660(
 VOID OutputFsVolumeDescriptorForJoliet(
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
-	LPBYTE lpBuf
+	LPBYTE lpBuf,
+	PVOLUME_DESCRIPTOR pVolDesc
 ) {
 	CHAR str32[3][32] = {};
 	CHAR str128[4][128] = {};
@@ -502,7 +506,7 @@ VOID OutputFsVolumeDescriptorForJoliet(
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 	}
 
-	OutputFsVolumeDescriptorFirst(pDisc, lpBuf, str32);
+	OutputFsVolumeDescriptorFirst(pDisc, lpBuf, str32, pVolDesc);
 
 	strncpy(str32[2], (LPCH)&lpBuf[88], sizeof(str32[2]));
 	OutputVolDescLogA(
@@ -536,6 +540,7 @@ VOID OutputFsVolumeDescriptor(
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
 	LPBYTE lpBuf,
+	PVOLUME_DESCRIPTOR pVolDesc,
 	INT nLBA
 ) {
 	// 0 is Boot Record.
@@ -554,10 +559,10 @@ VOID OutputFsVolumeDescriptor(
 		OutputFsBootRecord(lpBuf);
 	}
 	else if (lpBuf[0] == 1) {
-		OutputFsVolumeDescriptorForISO9660(pExtArg, pDisc, lpBuf);
+		OutputFsVolumeDescriptorForISO9660(pExtArg, pDisc, lpBuf, pVolDesc);
 	}
 	else if (lpBuf[0] == 2) {
-		OutputFsVolumeDescriptorForJoliet(pExtArg, pDisc, lpBuf);
+		OutputFsVolumeDescriptorForJoliet(pExtArg, pDisc, lpBuf, pVolDesc);
 	}
 	else if (lpBuf[0] == 3) {
 		OutputFsVolumePartitionDescriptor(lpBuf);

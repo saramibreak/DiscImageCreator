@@ -487,8 +487,6 @@ BOOL CreateBinCueCcd(
 	LPCTSTR pszImgName,
 	BOOL bCanCDText,
 	FILE* fpImg,
-	FILE* fpCue,
-	FILE* fpCueForImg,
 	FILE* fpCcd
 );
 

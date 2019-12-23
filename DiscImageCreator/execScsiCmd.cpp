@@ -462,15 +462,16 @@ BOOL ReadTOCText(
 			}
 		}
 
-		for (INT n = 0; n < 8; n++) {
+		for (INT n = 0; n < MAX_CDTEXT_LANG; n++) {
 			if (uiLastSeqNumOfBlock[n + 1]) {
+				pDisc->SCSI.CDTEXT[n].bExist = TRUE;
 				if (n == 0) {
 					SetAndOutputTocCDText(pDisc, pDesc, pTmpText, (WORD)(uiLastSeqNumOfBlock[n + 1] + 1)
-						, 0, pDesc[uiLastSeqNumOfBlock[n + 1]].Unicode);
+						, 0, pDesc[uiLastSeqNumOfBlock[n + 1]].Unicode, n);
 				}
 				else {
 					SetAndOutputTocCDText(pDisc, pDesc, pTmpText, (WORD)(uiLastSeqNumOfBlock[n + 1] + 1)
-						, uiLastSeqNumOfBlock[n] + 1, pDesc[uiLastSeqNumOfBlock[n + 1]].Unicode);
+						, uiLastSeqNumOfBlock[n] + 1, pDesc[uiLastSeqNumOfBlock[n + 1]].Unicode, n);
 				}
 			}
 			else {

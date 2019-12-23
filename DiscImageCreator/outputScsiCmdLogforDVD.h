@@ -17,12 +17,14 @@
 
 VOID OutputFsVolumeDescriptorSequence(
 	LPBYTE lpBuf,
-	INT nLBA
+	INT nLBA,
+	PUDF pUdf 
 );
 
 VOID OutputFsVolumeRecognitionSequence(
 	LPBYTE lpBuf,
-	INT nLBA
+	INT nLBA,
+	LPBOOL pUDF
 );
 
 VOID OutputDVDStructureFormat(

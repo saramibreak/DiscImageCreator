@@ -185,6 +185,11 @@ BOOL ReadDVD(
 		if (!ReadDVDForFileSystem(pExecType, pExtArg, pDevice, pDisc, &cdb, lpBuf)) {
 			throw FALSE;
 		}
+		if (pDisc->SCSI.wCurrentMedia == ProfileDvdRewritable ||
+			pDisc->SCSI.wCurrentMedia == ProfileBDRSequentialWritable ||
+			pDisc->SCSI.wCurrentMedia == ProfileBDRewritable) {
+			nAllLength = pDisc->SCSI.nAllLength;
+		}
 
 		if (*pExecType == xbox) {
 			if (!ReadXBOXFileSystem(pExtArg, pDevice, pDisc->DVD.dwXboxStartPsn - pDisc->DVD.dwDVDStartPsn)) {

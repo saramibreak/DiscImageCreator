@@ -20,19 +20,22 @@ VOID OutputFsVolumeDescriptor(
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
 	LPBYTE lpBuf,
+	PVOLUME_DESCRIPTOR pVolDesc,
 	INT nLBA
 );
 
 VOID OutputFsVolumeDescriptorForISO9660(
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
-	LPBYTE lpBuf
+	LPBYTE lpBuf,
+	PVOLUME_DESCRIPTOR pVolDesc
 );
 
 VOID OutputFsVolumeDescriptorForJoliet(
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
-	LPBYTE lpBuf
+	LPBYTE lpBuf,
+	PVOLUME_DESCRIPTOR pVolDesc
 );
 
 VOID OutputFsDirectoryRecord(

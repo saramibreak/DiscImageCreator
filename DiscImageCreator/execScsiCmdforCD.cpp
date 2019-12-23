@@ -769,8 +769,6 @@ BOOL ProcessCreateBin(
 	PDEVICE pDevice,
 	PDISC pDisc,
 	LPCTSTR pszPath,
-	FILE* fpCue,
-	FILE* fpCueForImg,
 	FILE* fpCcd
 ) {
 	FILE* fpImg = NULL;
@@ -781,7 +779,7 @@ BOOL ProcessCreateBin(
 		return FALSE;
 	}
 	if (!CreateBinCueCcd(pExtArg, pDisc, pszPath, pszImgName,
-		pDevice->FEATURE.byCanCDText, fpImg, fpCue, fpCueForImg, fpCcd)) {
+		pDevice->FEATURE.byCanCDText, fpImg, fpCcd)) {
 		FcloseAndNull(fpImg);
 		return FALSE;
 	}
@@ -808,8 +806,6 @@ BOOL ReadCDAll(
 		return FALSE;
 	}
 	BOOL bRet = TRUE;
-	FILE* fpCue = NULL;
-	FILE* fpCueForImg = NULL;
 	FILE* fpSub = NULL;
 	LPBYTE pBuf = NULL;
 	LPBYTE pNextBuf = NULL;
@@ -821,16 +817,6 @@ BOOL ReadCDAll(
 
 	try {
 		// init start
-		if (NULL == (fpCue = CreateOrOpenFile(
-			pszPath, NULL, NULL, NULL, NULL, _T(".cue"), _T(WFLAG), 0, 0))) {
-			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-			throw FALSE;
-		}
-		if (NULL == (fpCueForImg = CreateOrOpenFile(
-			pszPath, _T("_img"), NULL, NULL, NULL, _T(".cue"), _T(WFLAG), 0, 0))) {
-			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-			throw FALSE;
-		}
 		if (NULL == (fpSub = CreateOrOpenFile(
 			pszPath, NULL, NULL, NULL, NULL, _T(".sub"), _T("wb"), 0, 0))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -1297,7 +1283,7 @@ BOOL ReadCDAll(
 		if (!ProcessDescramble(pExtArg, pDisc, pszPath, pszOutScmFile)) {
 			throw FALSE;
 		}
-		if (!ProcessCreateBin(pExtArg, pDevice, pDisc, pszPath, fpCue, fpCueForImg, fpCcd)) {
+		if (!ProcessCreateBin(pExtArg, pDevice, pDisc, pszPath, fpCcd)) {
 			throw FALSE;
 		}
 	}
@@ -1305,8 +1291,6 @@ BOOL ReadCDAll(
 		bRet = ret;
 	}
 	FcloseAndNull(fpImg);
-	FcloseAndNull(fpCueForImg);
-	FcloseAndNull(fpCue);
 	FcloseAndNull(fpSub);
 	if (pDevice->byAsusDrive) {
 		FreeAndNull(pDisc->lpCachedBuf);
@@ -1346,8 +1330,6 @@ BOOL ReadCDForSwap(
 		return FALSE;
 	}
 	BOOL bRet = TRUE;
-	FILE* fpCue = NULL;
-	FILE* fpCueForImg = NULL;
 	FILE* fpSub = NULL;
 	FILE* fpLeadout = NULL;
 	LPBYTE pBuf = NULL;
@@ -1358,16 +1340,6 @@ BOOL ReadCDForSwap(
 
 	try {
 		// init start
-		if (NULL == (fpCue = CreateOrOpenFile(
-			pszPath, NULL, NULL, NULL, NULL, _T(".cue"), _T(WFLAG), 0, 0))) {
-			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-			throw FALSE;
-		}
-		if (NULL == (fpCueForImg = CreateOrOpenFile(
-			pszPath, _T("_img"), NULL, NULL, NULL, _T(".cue"), _T(WFLAG), 0, 0))) {
-			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-			throw FALSE;
-		}
 #ifndef __DEBUG
 		if (NULL == (fpSub = CreateOrOpenFile(
 			pszPath, NULL, NULL, NULL, NULL, _T(".sub"), _T("wb"), 0, 0))) {
@@ -1650,7 +1622,7 @@ BOOL ReadCDForSwap(
 		if (!ProcessDescramble(pExtArg, pDisc, pszPath, pszScmPath)) {
 			throw FALSE;
 		}
-		if (!ProcessCreateBin(pExtArg, pDevice, pDisc, pszPath, fpCue, fpCueForImg, fpCcd)) {
+		if (!ProcessCreateBin(pExtArg, pDevice, pDisc, pszPath, fpCcd)) {
 			throw FALSE;
 		}
 		if (pExtArg->by74Min) {
@@ -1707,8 +1679,6 @@ BOOL ReadCDForSwap(
 	}
 	FcloseAndNull(fpLeadout);
 	FcloseAndNull(fpScm);
-	FcloseAndNull(fpCueForImg);
-	FcloseAndNull(fpCue);
 	FcloseAndNull(fpSub);
 	FreeAndNull(pBuf);
 

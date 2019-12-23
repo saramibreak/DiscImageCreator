@@ -498,7 +498,8 @@ VOID SetAndOutputTocCDText(
 	LPCH pTmpText,
 	WORD wTocTextEntries,
 	UINT uiTocTextEntriesIdx,
-	BOOL bUnicode
+	BOOL bUnicode,
+	INT nIdx
 ) {
 	UINT uiSizeInfoCnt = 0;
 	BYTE bySizeInfoIdx = 0;
@@ -530,24 +531,17 @@ VOID SetAndOutputTocCDText(
 		}
 		for (UINT i = 0; i < uiLastTrackNum + 1; i++) {
 			size_t len = strlen(pTmpText + uiTxtIdx);
+			strncpy(pDisc->SCSI.CDTEXT[nIdx].pszTitle[i], pTmpText + uiTxtIdx, len);
+			if (i == 0) {
+				OutputDiscLogA("\tAlbum Name: %s\n", pDisc->SCSI.CDTEXT[nIdx].pszTitle[i]);
+			}
+			else {
+				OutputDiscLogA("\t Song Name[%d]: %s\n", i, pDisc->SCSI.CDTEXT[nIdx].pszTitle[i]);
+			}
 			if (bUnicode) {
-				strncpy(pDisc->SCSI.pszTitleW[i], pTmpText + uiTxtIdx, len);
-				if (i == 0) {
-					OutputDiscLogA("\tAlbum Name: %s\n", pDisc->SCSI.pszTitleW[i]);
-				}
-				else {
-					OutputDiscLogA("\t Song Name[%d]: %s\n", i, pDisc->SCSI.pszTitleW[i]);
-				}
 				uiTxtIdx += 2;
 			}
 			else {
-				strncpy(pDisc->SCSI.pszTitle[i], pTmpText + uiTxtIdx, len);
-				if (i == 0) {
-					OutputDiscLogA("\tAlbum Name: %s\n", pDisc->SCSI.pszTitle[i]);
-				}
-				else {
-					OutputDiscLogA("\t Song Name[%d]: %s\n", i, pDisc->SCSI.pszTitle[i]);
-				}
 				uiTxtIdx++;
 			}
 			uiTxtIdx += len;
@@ -562,24 +556,17 @@ VOID SetAndOutputTocCDText(
 		}
 		for (UINT i = 0; i < uiLastTrackNum + 1; i++) {
 			size_t len = strlen(pTmpText + uiTxtIdx);
+			strncpy(pDisc->SCSI.CDTEXT[nIdx].pszPerformer[i], pTmpText + uiTxtIdx, len);
+			if (i == 0) {
+				OutputDiscLogA("\tAlbum Performer: %s\n", pDisc->SCSI.CDTEXT[nIdx].pszPerformer[i]);
+			}
+			else {
+				OutputDiscLogA("\t Song Performer[%d]: %s\n", i, pDisc->SCSI.CDTEXT[nIdx].pszPerformer[i]);
+			}
 			if (bUnicode) {
-				strncpy(pDisc->SCSI.pszPerformerW[i], pTmpText + uiTxtIdx, len);
-				if (i == 0) {
-					OutputDiscLogA("\tAlbum Performer: %s\n", pDisc->SCSI.pszPerformerW[i]);
-				}
-				else {
-					OutputDiscLogA("\t Song Performer[%d]: %s\n", i, pDisc->SCSI.pszPerformerW[i]);
-				}
 				uiTxtIdx += 2;
 			}
 			else {
-				strncpy(pDisc->SCSI.pszPerformer[i], pTmpText + uiTxtIdx, len);
-				if (i == 0) {
-					OutputDiscLogA("\tAlbum Performer: %s\n", pDisc->SCSI.pszPerformer[i]);
-				}
-				else {
-					OutputDiscLogA("\t Song Performer[%d]: %s\n", i, pDisc->SCSI.pszPerformer[i]);
-				}
 				uiTxtIdx++;
 			}
 			uiTxtIdx += len;
@@ -594,24 +581,17 @@ VOID SetAndOutputTocCDText(
 		}
 		for (UINT i = 0; i < uiLastTrackNum + 1; i++) {
 			size_t len = strlen(pTmpText + uiTxtIdx);
+			strncpy(pDisc->SCSI.CDTEXT[nIdx].pszSongWriter[i], pTmpText + uiTxtIdx, len);
+			if (i == 0) {
+				OutputDiscLogA("\tAlbum SongWriter: %s\n", pDisc->SCSI.CDTEXT[nIdx].pszSongWriter[i]);
+			}
+			else {
+				OutputDiscLogA("\t      SongWriter[%d]: %s\n", i, pDisc->SCSI.CDTEXT[nIdx].pszSongWriter[i]);
+			}
 			if (bUnicode) {
-				strncpy(pDisc->SCSI.pszSongWriterW[i], pTmpText + uiTxtIdx, len);
-				if (i == 0) {
-					OutputDiscLogA("\tAlbum SongWriter: %s\n", pDisc->SCSI.pszSongWriterW[i]);
-				}
-				else {
-					OutputDiscLogA("\t      SongWriter[%d]: %s\n", i, pDisc->SCSI.pszSongWriterW[i]);
-				}
 				uiTxtIdx += 2;
 			}
 			else {
-				strncpy(pDisc->SCSI.pszSongWriter[i], pTmpText + uiTxtIdx, len);
-				if (i == 0) {
-					OutputDiscLogA("\tAlbum SongWriter: %s\n", pDisc->SCSI.pszSongWriter[i]);
-				}
-				else {
-					OutputDiscLogA("\t      SongWriter[%d]: %s\n", i, pDisc->SCSI.pszSongWriter[i]);
-				}
 				uiTxtIdx++;
 			}
 			uiTxtIdx += len;
@@ -626,22 +606,16 @@ VOID SetAndOutputTocCDText(
 		}
 		for (UINT i = 0; i < uiLastTrackNum + 1; i++) {
 			size_t len = strlen(pTmpText + uiTxtIdx);
+			if (i == 0) {
+				OutputDiscLogA("\tAlbum Composer: %s\n", pTmpText + uiTxtIdx);
+			}
+			else {
+				OutputDiscLogA("\t      Composer[%d]: %s\n", i, pTmpText + uiTxtIdx);
+			}
 			if (bUnicode) {
-				if (i == 0) {
-					OutputDiscLogA("\tAlbum Composer: %s\n", pTmpText + uiTxtIdx);
-				}
-				else {
-					OutputDiscLogA("\t      Composer[%d]: %s\n", i, pTmpText + uiTxtIdx);
-				}
 				uiTxtIdx += 2;
 			}
 			else {
-				if (i == 0) {
-					OutputDiscLogA("\tAlbum Composer: %s\n", pTmpText + uiTxtIdx);
-				}
-				else {
-					OutputDiscLogA("\t      Composer[%d]: %s\n", i, pTmpText + uiTxtIdx);
-				}
 				uiTxtIdx++;
 			}
 			uiTxtIdx += len;
@@ -656,22 +630,16 @@ VOID SetAndOutputTocCDText(
 		}
 		for (UINT i = 0; i < uiLastTrackNum + 1; i++) {
 			size_t len = strlen(pTmpText + uiTxtIdx);
+			if (i == 0) {
+				OutputDiscLogA("\tAlbum Arranger: %s\n", pTmpText + uiTxtIdx);
+			}
+			else {
+				OutputDiscLogA("\t      Arranger[%d]: %s\n", i, pTmpText + uiTxtIdx);
+			}
 			if (bUnicode) {
-				if (i == 0) {
-					OutputDiscLogA("\tAlbum Arranger: %s\n", pTmpText + uiTxtIdx);
-				}
-				else {
-					OutputDiscLogA("\t      Arranger[%d]: %s\n", i, pTmpText + uiTxtIdx);
-				}
 				uiTxtIdx += 2;
 			}
 			else {
-				if (i == 0) {
-					OutputDiscLogA("\tAlbum Arranger: %s\n", pTmpText + uiTxtIdx);
-				}
-				else {
-					OutputDiscLogA("\t      Arranger[%d]: %s\n", i, pTmpText + uiTxtIdx);
-				}
 				uiTxtIdx++;
 			}
 			uiTxtIdx += len;
@@ -686,22 +654,16 @@ VOID SetAndOutputTocCDText(
 		}
 		for (UINT i = 0; i < uiLastTrackNum + 1; i++) {
 			size_t len = strlen(pTmpText + uiTxtIdx);
+			if (i == 0) {
+				OutputDiscLogA("\tAlbum Messages: %s\n", pTmpText + uiTxtIdx);
+			}
+			else {
+				OutputDiscLogA("\t      Messages[%d]: %s\n", i, pTmpText + uiTxtIdx);
+			}
 			if (bUnicode) {
-				if (i == 0) {
-					OutputDiscLogA("\tAlbum Messages: %s\n", pTmpText + uiTxtIdx);
-				}
-				else {
-					OutputDiscLogA("\t      Messages[%d]: %s\n", i, pTmpText + uiTxtIdx);
-				}
 				uiTxtIdx += 2;
 			}
 			else {
-				if (i == 0) {
-					OutputDiscLogA("\tAlbum Messages: %s\n", pTmpText + uiTxtIdx);
-				}
-				else {
-					OutputDiscLogA("\t      Messages[%d]: %s\n", i, pTmpText + uiTxtIdx);
-				}
 				uiTxtIdx++;
 			}
 			uiTxtIdx += len;

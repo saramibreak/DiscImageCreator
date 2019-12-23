@@ -286,12 +286,12 @@ typedef struct _DISC {
 		INT nEndLBAOfLeadin;
 		INT nPregapLenOf1stTrkOf2ndSession;
 		INT nFirstLBAof2ndSession;	// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
-		LPSTR* pszTitle;			// get at CDROM_READ_TOC_EX_FORMAT_CDTEXT
-		LPSTR* pszPerformer;		// get at CDROM_READ_TOC_EX_FORMAT_CDTEXT
-		LPSTR* pszSongWriter;		// get at CDROM_READ_TOC_EX_FORMAT_CDTEXT
-		LPSTR* pszTitleW;			// get at CDROM_READ_TOC_EX_FORMAT_CDTEXT
-		LPSTR* pszPerformerW;		// get at CDROM_READ_TOC_EX_FORMAT_CDTEXT
-		LPSTR* pszSongWriterW;		// get at CDROM_READ_TOC_EX_FORMAT_CDTEXT
+		struct _CDTEXT {
+			LPSTR* pszTitle;			// get at CDROM_READ_TOC_EX_FORMAT_CDTEXT
+			LPSTR* pszPerformer;		// get at CDROM_READ_TOC_EX_FORMAT_CDTEXT
+			LPSTR* pszSongWriter;		// get at CDROM_READ_TOC_EX_FORMAT_CDTEXT
+			BOOL bExist;
+		} CDTEXT[MAX_CDTEXT_LANG];
 		WORD wCurrentMedia;			// get at SCSIOP_GET_CONFIGURATION
 		BYTE padding2[2];
 	} SCSI;
@@ -400,6 +400,7 @@ typedef struct _VOLUME_DESCRIPTOR {
 		UINT uiRootDataLen;
 	} JOLIET;
 	BOOL bPathType; // use path table record
+	UINT uiVolumeSpaceSize;
 } VOLUME_DESCRIPTOR, *PVOLUME_DESCRIPTOR;
 
 typedef struct _DIRECTORY_RECORD {
@@ -409,6 +410,19 @@ typedef struct _DIRECTORY_RECORD {
 	CHAR szDirName[MAX_FNAME_FOR_VOLUME];
 	UINT uiDirSize;
 } DIRECTORY_RECORD, *PDIRECTORY_RECORD;
+
+typedef struct _UDF {
+	UINT uiPVDPos;	// from Anchor Volume Descriptor Pointer
+	UINT uiPVDLen;	// from Anchor Volume Descriptor Pointer
+	UINT uiFSDPos;	// from Logical Volume Descriptor
+	UINT uiFSDLen;	// from Logical Volume Descriptor
+	UINT uiLogicalVolumeIntegrityPos;	// from Logical Volume Descriptor
+	UINT uiLogicalVolumeIntegrityLen;	// from Logical Volume Descriptor
+	UINT uiPartitionPos;	// from Partition Descriptor
+	UINT uiPartitionLen;	// from Partition Descriptor
+	UINT uiFileEntryPos;	
+	UINT uiFileEntryLen;
+} UDF, *PUDF;
 
 // This buffer stores all CD data (main + c2 + sub) obtained from SCSI read command
 // Depending on the situation, this may store main, main + sub.
