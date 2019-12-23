@@ -32,12 +32,14 @@ VOID FixMainHeader(
 	INT nLBA,
 	INT nMainDataType
 ) {
-	LPBYTE lpWorkBuf = NULL;
+	BYTE lpWorkBuf[CD_RAW_SECTOR_SIZE] = {};
 	if (nMainDataType == scrambled) {
-		lpWorkBuf = pDiscPerSector->data.current + pDisc->MAIN.uiMainDataSlideSize;
+		size_t ofs = CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize;
+		memcpy(lpWorkBuf, pDiscPerSector->data.current + pDisc->MAIN.uiMainDataSlideSize, ofs);
+		memcpy(lpWorkBuf + ofs, pDiscPerSector->data.next, pDisc->MAIN.uiMainDataSlideSize);
 	}
 	else {
-		lpWorkBuf = pDiscPerSector->data.current;
+		memcpy(lpWorkBuf, pDiscPerSector->data.current, CD_RAW_SECTOR_SIZE);
 	}
 
 	if (pDisc->PROTECT.byExist == datel || pDisc->PROTECT.byExist == datelAlt) {
