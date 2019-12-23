@@ -600,3 +600,9 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - fixed: fulltoc 0xb0
 - fixed: output PFI of DVD-R and DVD+R (ECMA-279, ECMA-359, ECMA-349)
 - fixed: checking lead-out of subQ channel
+
+*2019-12-23
+- added: output cue file if 2nd language code of CDTEXT exists
+- fixed: fail to XBOX/XBOX 360 dumping from 2019-11-16
+- fixed: main channel buffering (ROM^2 Karaoke Volume 5 [PCE])
+- improved: UDF logging => support detecting the size of DVD-RE, BD-R, BD-RE
