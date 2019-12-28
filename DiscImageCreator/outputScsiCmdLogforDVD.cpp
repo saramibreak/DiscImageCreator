@@ -2032,7 +2032,7 @@ VOID OutputDVDStructureFormat(
 		else if (pDisc->SCSI.wCurrentMedia == ProfileDvdPlusR) {
 			OutputDVDPlusRLayerDescriptor(lpFormat);
 		}
-		else if (pDisc->SCSI.wCurrentMedia != ProfileDvdRewritable) {
+		else {
 			OutputDVDLayerDescriptor(pDisc, (PDVD_FULL_LAYER_DESCRIPTOR)lpFormat, lpdwSectorLength, layerNumber);
 		}
 		break;

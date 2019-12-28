@@ -842,6 +842,7 @@ BOOL ReadDVDForFileSystem(
 				nLBABak = nLBA;
 				dwTransferLen = 1;
 				INT nCnt = 0;
+				INT nLastLBAOfAVDP = 0;
 				REVERSE_BYTES(&cdb->TransferLength, &dwTransferLen);
 
 				for (INT j = 0; j < 512; j++) {
@@ -863,10 +864,19 @@ BOOL ReadDVDForFileSystem(
 						//   Logical Sector (N - 256). 
 						//   N
 						OutputDiscLogA("Detected Anchor Volume Descriptor Pointer: LBA %u\n", nLBA);
-						pDisc->SCSI.nAllLength = nLBA + 1;
+						nLastLBAOfAVDP = nLBA;
 						if (++nCnt == 2) {
 							break;
 						}
+					}
+				}
+				if (nCnt) {
+					if (pDisc->SCSI.wCurrentMedia == ProfileDvdRewritable ||
+						pDisc->SCSI.wCurrentMedia == ProfileBDRSequentialWritable ||
+						pDisc->SCSI.wCurrentMedia == ProfileBDRewritable) {
+						// Because TOC length of -R, -RW disc is used as the full disc size
+						OutputDiscLogA(" => Updated TOC length to this value\n");
+						pDisc->SCSI.nAllLength = nLastLBAOfAVDP + 1;
 					}
 				}
 				dwTransferLen = dwTransferLenBak;
