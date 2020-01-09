@@ -393,7 +393,7 @@ BOOL ReadCDForSearchingOffset(
 ) {
 	BOOL bRet = TRUE;
 	INT nDriveSampleOffset = 0;
-	BOOL bGetDriveOffset = GetDriveOffsetAuto(pDevice->szProductId, &nDriveSampleOffset);
+	BOOL bGetDriveOffset = GetDriveOffsetAuto(pDevice, &nDriveSampleOffset);
 #ifdef _DEBUG
 	if (pDevice->byPlxtrDrive == PLXTR_DRIVE_TYPE::PX760A ||
 		pDevice->byPlxtrDrive == PLXTR_DRIVE_TYPE::PX755A ||

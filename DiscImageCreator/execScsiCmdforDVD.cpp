@@ -600,7 +600,7 @@ BOOL ReadDVDRaw(
 		// for dumping from memory
 		BYTE lpCmd[CDB12GENERIC_LENGTH] = {};
 		INT nDriveSampleOffset = 0;
-		if (!GetDriveOffsetAuto(pDevice->szProductId, &nDriveSampleOffset)) {
+		if (!GetDriveOffsetAuto(pDevice, &nDriveSampleOffset)) {
 			GetDriveOffsetManually(&nDriveSampleOffset);
 		}
 		// Panasonic MN103S chip

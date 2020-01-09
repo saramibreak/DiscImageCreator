@@ -76,7 +76,7 @@ BOOL GetDriveOffsetManually(
 }
 
 BOOL GetDriveOffsetAuto(
-	LPCSTR szProductId,
+	PDEVICE pDevice,
 	LPINT lpDriveOffset
 ) {
 	BOOL bGetOffset = FALSE;
@@ -86,56 +86,35 @@ BOOL GetDriveOffsetAuto(
 		return FALSE;
 	}
 
-	CHAR szProduct[DRIVE_PRODUCT_ID_SIZE + 1] = {};
-	for (size_t src = 0, dst = 0; dst < sizeof(szProduct) - 1; dst++) {
-		if (szProductId[dst] == ' ' && (szProductId[dst + 1] == ' ' ||
-			szProductId[dst + 1] == '\0')) {
+	CHAR szTmpProduct[DRIVE_PRODUCT_ID_SIZE] = {};
+	for (size_t src = 0, dst = 0; dst < DRIVE_PRODUCT_ID_SIZE; dst++) {
+		// remove multiple or last space
+		if (pDevice->szProductId[dst] == ' ') {
+			if (dst < DRIVE_PRODUCT_ID_SIZE - 1 &&
+				(pDevice->szProductId[dst + 1] == ' ' || pDevice->szProductId[dst + 1] == '\0')) {
+				continue;
+			}
+			else if (dst == DRIVE_PRODUCT_ID_SIZE - 1) {
+				continue;
+			}
+		}
+		szTmpProduct[src++] = pDevice->szProductId[dst];
+	}
+	LPCH pTrimBuf[4] = {};
+	CHAR lpBuf[1024] = {};
+
+	while ((fgets(lpBuf, sizeof(lpBuf), fpDrive))) {
+		pTrimBuf[0] = strtok(lpBuf, "	"); // tab
+		for (INT nRoop = 1; nRoop < 4; nRoop++) {
+			pTrimBuf[nRoop] = strtok(NULL, "	"); // tab
+		}
+		if (pTrimBuf[0] == NULL || pTrimBuf[1] == NULL || pTrimBuf[2] == NULL || *pTrimBuf[0] == '\n') {
 			continue;
 		}
-		szProduct[src++] = szProductId[dst];
-	}
-
-	LPCH pTrimId[5] = {};
-	LPCH pId = NULL;
-	pTrimId[0] = strtok(szProduct, " ");
-	// get model string (ex. PX-755A)
-	for (INT nRoop = 1; nRoop < 5; nRoop++) {
-		pTrimId[nRoop] = strtok(NULL, " ");
-		if (pTrimId[nRoop] != NULL) {
-			pId = pTrimId[nRoop];
-		}
-		else {
-			if (pTrimId[1] == NULL) {
-				pId = pTrimId[0];
-			}
+		if (strstr(pTrimBuf[0], szTmpProduct) != NULL) {
+			*lpDriveOffset = atoi(pTrimBuf[1]);
+			bGetOffset = TRUE;
 			break;
-		}
-	}
-	if (pId) {
-		LPCH pTrimBuf[10] = {};
-		CHAR lpBuf[1024] = {};
-
-		while ((fgets(lpBuf, sizeof(lpBuf), fpDrive))) {
-			pTrimBuf[0] = strtok(lpBuf, " 	"); // space & tab
-			for (INT nRoop = 1; nRoop < 10; nRoop++) {
-				pTrimBuf[nRoop] = strtok(NULL, " 	"); // space & tab
-			}
-			if (pTrimBuf[0] == NULL || pTrimBuf[1] == NULL || pTrimBuf[2] == NULL) {
-				continue;
-			}
-			else if (*pTrimBuf[0] == '\n' || (*pTrimBuf[1] != '-' && *pTrimBuf[2] != '-')) {
-				continue;
-			}
-			for (INT nRoop = 0; nRoop < 10 && pTrimBuf[nRoop] != NULL; nRoop++) {
-				if (strstr(pTrimBuf[nRoop], pId) != NULL) {
-					*lpDriveOffset = atoi(pTrimBuf[nRoop + 1]);
-					bGetOffset = TRUE;
-					break;
-				}
-			}
-			if (bGetOffset) {
-				break;
-			}
 		}
 	}
 	fclose(fpDrive);

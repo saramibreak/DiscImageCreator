@@ -33,7 +33,7 @@ BOOL GetDriveOffsetManually(
 );
 
 BOOL GetDriveOffsetAuto(
-	LPCSTR szProductId,
+	PDEVICE pDevice,
 	LPINT lpDriveOffset
 );
 
