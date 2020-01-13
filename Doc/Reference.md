@@ -2,6 +2,12 @@
 - ECMA  
   https://www.ecma-international.org/publications/standards/Standard.htm
 
+- ISO (International Organization for Standardization)  
+  https://standards.iso.org/ittf/PubliclyAvailableStandards/
+
+- IEC (International Electrotechnical Commission)  
+  https://webstore.iec.ch/home
+
 - UDF  
   http://www.osta.org/specs/index.htm
 
