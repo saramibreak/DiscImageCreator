@@ -8,6 +8,14 @@
   
   [DICUI](https://github.com/SabreTools/DICUI) can work this program with GUI.
 
+## Bug report
+ To: http://forum.redump.org/topic/10483/discimagecreator/  
+  or  
+ To: https://github.com/saramibreak/DiscImageCreator/issues
+
+ if you report a bug, try to use the latest test version. http://www.mediafire.com/file/eq80y20l9cwf48f/DiscImageCreator_test.7z.  
+ Nevertheless a bug exists, please upload all .txt file the app created.
+
 ## Requirement
 ### Package
  Download and install Visual C++ Redistributable Packages. (for Windows PC)  
@@ -18,7 +26,7 @@
    - PLEXTOR (No OEM Drive)
      - PX-760, PX-755, PX-716, PX-714, PX-712, PX-708, PX-704, 
        Premium2, Premium, PX-W5224, PX-4824, PX-4012 (PX-714, PX-704 can't test it enough.)
-       - [Firmware of a plextor drive](http://www.skcj.co.jp/discon/download/index.html)
+       - [Firmware of a plextor drive](http://www.skcj.co.jp/discon/download/index.html)  
          Without a reason, you should update the latest firmware.
        - Various Tools for Plextor
          - [PleXTools Professional XL](https://web.archive.org/web/20140910033037/http://www.plextor-digital.com/index.php/component/option,com_jdownloads/Itemid,55/catid,86/cid,470/task,finish/)
@@ -276,13 +284,6 @@ See LICENSE
 ## Disclaimer
  Use this tool at own your risk.
  Trouble in regard to the use of this tool, I can not guarantee any.
-
-## Bug report
- To: http://forum.redump.org/topic/10483/discimagecreator/  
-  or  
- To: https://github.com/saramibreak/DiscImageCreator/issues
-
- if you report, please upload all .txt file app created.
 
 ## Gratitude
  Thank's redump.org users.
