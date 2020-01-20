@@ -6,7 +6,8 @@
   https://standards.iso.org/ittf/PubliclyAvailableStandards/
 
 - IEC (International Electrotechnical Commission)  
-  https://webstore.iec.ch/home
+  https://www.iec.ch/dyn/www/f?p=103:22:990006348562::::FSP_ORG_ID,FSP_LANG_ID:3397,25
+  https://www.iec.ch/dyn/www/f?p=103:22:0::::FSP_ORG_ID:1297
 
 - UDF  
   http://www.osta.org/specs/index.htm
