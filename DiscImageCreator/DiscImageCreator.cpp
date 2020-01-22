@@ -29,6 +29,8 @@
 #include "xml.h"
 #include "_external/prngcd.h"
 
+#define SPLITPATH_DOT_FIX
+
 #define DEFAULT_REREAD_VAL			(4000)
 #define DEFAULT_CACHE_DELETE_VAL	(1)
 #define DEFAULT_SPTD_TIMEOUT_VAL	(60)
@@ -533,14 +535,15 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 }
 
 // custom _tsplitpath implementation to preserve dots in path
-#if 0
+#ifdef SPLITPATH_DOT_FIX
 void splitPath(const _TCHAR* path, _TCHAR* drive, _TCHAR* dir, _TCHAR* fname, _TCHAR* ext)
 {
     if(path == NULL)
         return;
 
-    const _TCHAR *dr, *dn, *bn, *ex;
-    dr = dn = bn = ex = path;
+    const _TCHAR *dr, *dn, *bn;
+    dr = dn = bn = path;
+    const _TCHAR *ex = NULL;
 
     // drive
     if(path[0] != TEXT('\0') && path[1] == TEXT(':'))
@@ -551,10 +554,12 @@ void splitPath(const _TCHAR* path, _TCHAR* drive, _TCHAR* dir, _TCHAR* fname, _T
     for(; *p != TEXT('\0'); ++p)
     {
         if(*p == TEXT('\\') || *p == TEXT('/'))
-            bn = ex = p + 1;
+            bn = p + 1;
         else if(*p == TEXT('.'))
             ex = p;
     }
+    if(ex == NULL)
+        ex = p;
 
     if(drive != NULL)
     {
@@ -599,7 +604,7 @@ int printAndSetPath(_TCHAR* szPathFromArg, _TCHAR* pszFullPath)
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
-#if 0
+#ifdef SPLITPATH_DOT_FIX
     splitPath(szPathFromArg, s_szDrive, s_szDir, s_szFname, s_szExt);
 #else
 	_tsplitpath(szPathFromArg, s_szDrive, s_szDir, s_szFname, s_szExt);
@@ -632,7 +637,7 @@ int printAndSetPath(_TCHAR* szPathFromArg, _TCHAR* pszFullPath)
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
 		}
-#if 0
+#ifdef SPLITPATH_DOT_FIX
         splitPath(pszFullPath, s_szDrive, s_szDir, NULL, NULL);
 #else
 		_tsplitpath(pszFullPath, s_szDrive, s_szDir, s_szFname, NULL);
