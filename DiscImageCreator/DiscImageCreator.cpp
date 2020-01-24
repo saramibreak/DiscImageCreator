@@ -558,7 +558,7 @@ void splitPath(const _TCHAR* path, _TCHAR* drive, _TCHAR* dir, _TCHAR* fname, _T
         else if(*p == TEXT('.'))
             ex = p;
     }
-    if(ex == NULL)
+    if(ex == NULL || ex < bn)
         ex = p;
 
     if(drive != NULL)
