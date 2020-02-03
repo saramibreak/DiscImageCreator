@@ -320,6 +320,71 @@ BOOL ReadTOCFull(
 	return bRet;
 }
 
+BOOL ReadTOCPma(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice
+) {
+	CDB::_READ_TOC cdb = {};
+	cdb.OperationCode = SCSIOP_READ_TOC;
+	cdb.Format2 = CDROM_READ_TOC_EX_FORMAT_PMA;
+	WORD wSize = sizeof(CDROM_TOC_PMA_DATA);
+	REVERSE_BYTES_SHORT(&cdb.AllocationLength, &wSize);
+
+#ifdef _WIN32
+	_declspec(align(4)) CDROM_TOC_PMA_DATA pma = { 0 };
+	INT direction = SCSI_IOCTL_DATA_IN;
+#else
+	__attribute__((aligned(4))) CDROM_TOC_PMA_DATA atip = {};
+	INT direction = SG_DXFER_FROM_DEV;
+#endif
+	BYTE byScsiStatus = 0;
+	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB10GENERIC_LENGTH
+		, &pma, direction, wSize, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+		OutputDriveNoSupportLogA(READ_TOC_PMA);
+		return TRUE;
+	}
+	WORD wTocPmaLen = MAKEWORD(pma.Length[1], pma.Length[0]);
+	WORD wTocPmaAll = (WORD)(wTocPmaLen - sizeof(pma.Length));
+
+	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(TOC PMA));
+	if (wTocPmaAll) {
+		LPBYTE pPTocPma = NULL;
+		LPBYTE pTocPma = NULL;
+		if (!GetAlignedCallocatedBuffer(pDevice, &pPTocPma,
+			wTocPmaAll, &pTocPma, _T(__FUNCTION__), __LINE__)) {
+			OutputDriveNoSupportLogA(READ_TOC_PMA);
+			return TRUE;
+		}
+		REVERSE_BYTES_SHORT(&cdb.AllocationLength, &wTocPmaAll);
+		if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB10GENERIC_LENGTH
+			, pTocPma, direction, wTocPmaAll, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+			OutputDriveNoSupportLogA(READ_TOC_ATIP);
+			return TRUE;
+		}
+		PCDROM_TOC_FULL_TOC_DATA_BLOCK pDesc =
+			((PCDROM_TOC_PMA_DATA)pTocPma)->Descriptors;
+		for (UINT i = 0; i < wTocPmaAll / sizeof(CDROM_TOC_FULL_TOC_DATA_BLOCK); i++) {
+			OutputDiscLogA(
+				"\tAdr: %u, Control: %u\n"
+				"\t          Point: %u\n"
+				"\t            Msf: %02u:%02u:%02u\n"
+				"\t            Msf: %02u:%02u:%02u\n"
+				, pDesc[i].Adr, pDesc[i].Control
+				, pDesc[i].Point
+				, pDesc[i].MsfExtra[0], pDesc[i].MsfExtra[1], pDesc[i].MsfExtra[2]
+				, pDesc[i].Msf[0], pDesc[i].Msf[1], pDesc[i].Msf[2]
+			);
+		}
+		FreeAndNull(pPTocPma);
+	}
+	else {
+		OutputDiscLogA("\tNothing\n");
+	}
+	return TRUE;
+}
+
 BOOL ReadTOCAtip(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice

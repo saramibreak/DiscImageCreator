@@ -282,12 +282,15 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 									_T("[WARNING] /c2 isn't set. The result of dumping may be incorrect if c2 error exists.\n"));
 							}
 
-							if (discData.SCSI.wCurrentMedia == ProfileCdrom) {
-								ReadDiscInformation(pExtArg, &device);
-							}
-							else if (discData.SCSI.wCurrentMedia == ProfileCdRecordable ||
+							if (discData.SCSI.wCurrentMedia == ProfileCdrom ||
+								discData.SCSI.wCurrentMedia == ProfileCdRecordable ||
 								discData.SCSI.wCurrentMedia == ProfileCdRewritable) {
-								ReadTOCAtip(pExtArg, &device);
+								ReadDiscInformation(pExtArg, &device);
+								if (discData.SCSI.wCurrentMedia == ProfileCdRecordable ||
+									discData.SCSI.wCurrentMedia == ProfileCdRewritable) {
+									ReadTOCPma(pExtArg, &device);
+									ReadTOCAtip(pExtArg, &device);
+								}
 							}
 
 							// This func needs the TOC
@@ -593,16 +596,40 @@ void splitPath(const _TCHAR* path, _TCHAR* drive, _TCHAR* dir, _TCHAR* fname, _T
     }
 }
 #endif
+int appendExtIfNotExt(_TCHAR* szPathFromArg, size_t pathLen, _TCHAR* szTmpPath)
+{
+	_TCHAR ext[4] = {};
+	_tcsncpy(ext, &szPathFromArg[pathLen - 4], sizeof(ext));
+	if (_tcsncmp(ext, _T(".bin"), sizeof(ext)) != 0 && _tcsncmp(ext, _T(".iso"), sizeof(ext)) != 0) {
+		OutputString(_T("valid extension was omitted. -> "));
+		size_t len = _tcslen(szTmpPath);
+		if (len + sizeof(ext) > _MAX_PATH) {
+			OutputString(_T("can't set extension because PATH too long\n"));
+			return FALSE;
+		}
+		else {
+			OutputString(_T("set .bin\n"));
+			_tcsncat(szTmpPath, _T(".bin"), sizeof(ext));
+		}
+	}
+	return TRUE;
+}
+
 int printAndSetPath(_TCHAR* szPathFromArg, _TCHAR* pszFullPath)
 {
+	_TCHAR szTmpPath[_MAX_PATH + 1] = {};
+	size_t len = _tcslen(szPathFromArg);
+	_tcsncpy(szTmpPath, szPathFromArg, len);
+	appendExtIfNotExt(szPathFromArg, len, szTmpPath);
+
 	if (!GetCurrentDirectory(sizeof(s_szCurrentdir) / sizeof(s_szCurrentdir[0]), s_szCurrentdir)) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
 #if 0
-    splitPath(szPathFromArg, s_szDrive, s_szDir, s_szFname, s_szExt);
+    splitPath(szTmpPath, s_szDrive, s_szDir, s_szFname, s_szExt);
 #else
-	_tsplitpath(szPathFromArg, s_szDrive, s_szDir, s_szFname, s_szExt);
+	_tsplitpath(szTmpPath, s_szDrive, s_szDir, s_szFname, s_szExt);
 #endif
 
 	if (!s_szDrive[0] || !s_szDir[0]) {
@@ -635,7 +662,7 @@ int printAndSetPath(_TCHAR* szPathFromArg, _TCHAR* pszFullPath)
 #if 0
         splitPath(pszFullPath, s_szDrive, s_szDir, NULL, NULL);
 #else
-		_tsplitpath(pszFullPath, s_szDrive, s_szDir, s_szFname, NULL);
+		_tsplitpath(pszFullPath, s_szDrive, s_szDir, NULL, NULL);
 #endif
 		if (s_szExt[0] && _tcslen(pszFullPath) + _tcslen(s_szExt) < _MAX_PATH) {
 			_tcsncat(pszFullPath, s_szExt, _tcslen(s_szExt));
@@ -658,7 +685,7 @@ int printAndSetPath(_TCHAR* szPathFromArg, _TCHAR* pszFullPath)
 			}
 #endif
 		}
-		_tcsncpy(pszFullPath, szPathFromArg, _MAX_PATH);
+		_tcsncpy(pszFullPath, szTmpPath, _MAX_PATH);
 	}
 	OutputString(
 		_T("CurrentDirectory\n")
@@ -670,7 +697,7 @@ int printAndSetPath(_TCHAR* szPathFromArg, _TCHAR* pszFullPath)
 		_T("\tDirectory: %s\n")
 		_T("\t Filename: %s\n")
 		_T("\tExtension: %s\n"),
-		s_szCurrentdir, szPathFromArg, pszFullPath, s_szDrive, s_szDir, s_szFname, s_szExt);
+		s_szCurrentdir, szTmpPath, pszFullPath, s_szDrive, s_szDir, s_szFname, s_szExt);
 
 	return TRUE;
 }
@@ -688,7 +715,7 @@ int SetOptionNss(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	}
 	else {
 		pExtArg->uiMaxRereadNum = 100;
-		OutputString(_T("/nss val is omitted. set [%d]\n"), pExtArg->uiMaxRereadNum);
+		OutputString(_T("/nss val was omitted. set [%d]\n"), pExtArg->uiMaxRereadNum);
 	}
 	return TRUE;
 }
@@ -706,7 +733,7 @@ int SetOptionVn(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	}
 	else {
 		pExtArg->nAudioCDOffsetNum = 0;
-		OutputString(_T("/vn val is omitted. set [%d]\n"), pExtArg->nAudioCDOffsetNum);
+		OutputString(_T("/vn val was omitted. set [%d]\n"), pExtArg->nAudioCDOffsetNum);
 	}
 	return TRUE;
 }
@@ -730,7 +757,7 @@ int SetOptionSk(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	}
 	else {
 		pExtArg->uiSkipSectors = 0;
-		OutputString(_T("/sk val is omitted. set [%d]\n"), pExtArg->uiSkipSectors);
+		OutputString(_T("/sk val was omitted. set [%d]\n"), pExtArg->uiSkipSectors);
 	}
 	return TRUE;
 }
@@ -747,7 +774,7 @@ int SetOptionS(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	}
 	else {
 		pExtArg->uiSubAddionalNum = 1;
-		OutputString(_T("/s val is omitted. set [%d]\n"), pExtArg->uiSubAddionalNum);
+		OutputString(_T("/s val was omitted. set [%d]\n"), pExtArg->uiSubAddionalNum);
 	}
 	return TRUE;
 }
@@ -766,7 +793,7 @@ int SetOptionSf(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	else {
 		pExtArg->dwTimeoutNum = DEFAULT_SPTD_TIMEOUT_VAL;
 		OutputString(
-			_T("/sf val is omitted. set [%d]\n"), DEFAULT_SPTD_TIMEOUT_VAL);
+			_T("/sf val was omitted. set [%d]\n"), DEFAULT_SPTD_TIMEOUT_VAL);
 	}
 	return TRUE;
 }
@@ -785,7 +812,7 @@ int SetOptionF(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	else {
 		pExtArg->uiCacheDelNum = DEFAULT_CACHE_DELETE_VAL;
 		OutputString(
-			_T("/f val is omitted. set [%d]\n"), DEFAULT_CACHE_DELETE_VAL);
+			_T("/f val was omitted. set [%d]\n"), DEFAULT_CACHE_DELETE_VAL);
 	}
 	return TRUE;
 }
@@ -822,27 +849,27 @@ int SetOptionC2(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 					}
 					else {
 						pExtArg->nEndLBAForC2 = 0;
-						OutputString(_T("/c2 val4 is omitted. set [%d]\n"), 0);
+						OutputString(_T("/c2 val4 was omitted. set [%d]\n"), 0);
 					}
 				}
 				else {
 					pExtArg->nStartLBAForC2 = 0;
-					OutputString(_T("/c2 val3 is omitted. set [%d]\n"), 0);
+					OutputString(_T("/c2 val3 was omitted. set [%d]\n"), 0);
 					pExtArg->nEndLBAForC2 = 0;
-					OutputString(_T("/c2 val4 is omitted. set [%d]\n"), 0);
+					OutputString(_T("/c2 val4 was omitted. set [%d]\n"), 0);
 				}
 			}
 		}
 		else {
 			pExtArg->nC2RereadingType = 0;
-			OutputString(_T("/c2 val2 is omitted. set [%d]\n"), 0);
+			OutputString(_T("/c2 val2 was omitted. set [%d]\n"), 0);
 		}
 	}
 	else {
 		pExtArg->uiMaxRereadNum = DEFAULT_REREAD_VAL;
-		OutputString(_T("/c2 val1 is omitted. set [%d]\n"), DEFAULT_REREAD_VAL);
+		OutputString(_T("/c2 val1 was omitted. set [%d]\n"), DEFAULT_REREAD_VAL);
 		pExtArg->nC2RereadingType = 0;
-		OutputString(_T("/c2 val2 is omitted. set [%d]\n"), 0);
+		OutputString(_T("/c2 val2 was omitted. set [%d]\n"), 0);
 	}
 	return TRUE;
 }
@@ -867,7 +894,7 @@ int SetOptionBe(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	}
 	else {
 		pExtArg->byRaw = TRUE;
-		OutputString(_T("submode of /be is omitted. set [raw]\n"));
+		OutputString(_T("submode of /be was omitted. set [raw]\n"));
 	}
 	return TRUE;
 }
@@ -885,7 +912,7 @@ int SetOptionA(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	}
 	else {
 		pExtArg->nAudioCDOffsetNum = 0;
-		OutputString(_T("/a val is omitted. set [%d]\n"), 0);
+		OutputString(_T("/a val was omitted. set [%d]\n"), 0);
 	}
 	return TRUE;
 }
@@ -941,9 +968,6 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					if (!SetOptionF(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
-				}
-				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/m"), 2)) {
-					pExtArg->byMCN = TRUE;
 				}
 				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/p"), 2)) {
 					pExtArg->byPre = TRUE;
@@ -1431,12 +1455,12 @@ int printUsage(void)
 	OutputString(
 		_T("Usage\n")
 		_T("\tcd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/a (val)] [/aj] [/p]\n")
-		_T("\t   [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4)] [/f (val)] [/m] [/ms]\n")
+		_T("\t   [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4)] [/f (val)] [/ms]\n")
 		_T("\t   [/vn (val)] [/vnc] [/sf (val)] [/ss] [/np] [/nq] [/nr] [/nl] [/ns] [/s (val)]\n")
 		_T("\t\tDump a CD from A to Z\n")
 		_T("\t\tFor PLEXTOR or drive that can scramble Dumping\n")
 		_T("\tswap <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/a (val)]\n")
-		_T("\t   [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4)] [/f (val)] [/m]\n")
+		_T("\t   [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4)] [/f (val)]\n")
 		_T("\t   [/p] [/ms] [/sf (val)] [/ss] [/np] [/nq] [/nr] [/nl] [/ns] [/s (val)] [/74]\n")
 		_T("\t\tDump a CD from A to Z using swap trick\n")
 		_T("\t\tFor no PLEXTOR or drive that can't scramble dumping\n")
@@ -1523,8 +1547,6 @@ int printUsage(void)
 		_T("\t\t\tval3\tfirst LBA to reread (default: 0)\n")
 		_T("\t\t\tval4\tlast LBA to reread (default: end-of-sector)\n")
 		_T("\t\t\t    \tval3, 4 is used when val2 is 1\n")
-		_T("\t/m\tUse if MCN exists in the first pregap sector of the track\n")
-		_T("\t\t\tFor some PC-Engine\n")
 		_T("\t/p\tDumping the AMSF from 00:00:00 to 00:01:74\n")
 		_T("\t\t\tFor SagaFrontier Original Sound Track (Disc 3) etc.\n")
 		_T("\t\t\tSupport drive: PLEXTOR PX-W5224, PREMIUM, PREMIUM2\n")
@@ -1533,11 +1555,11 @@ int printUsage(void)
 		_T("\t\t\tFor Alpha-Disc, Tages (very slow)\n")
 		_T("\t/ms\tRead the lead-out of 1st session and the lead-in of 2nd session\n")
 		_T("\t\t\tFor Multi-session\n")
+		_T("\t/74\tRead the lead-out about 74:00:00\n")
+		_T("\t\t\tFor ring data (a.k.a Saturn Ring) of Sega Saturn\n")
 	);
 	ret = stopMessage();
 	OutputString(
-		_T("\t/74\tRead the lead-out about 74:00:00\n")
-		_T("\t\t\tFor ring data (a.k.a Saturn Ring) of Sega Saturn\n")
 		_T("\t/sf\tScan file to detect protect. If reading error exists,\n")
 		_T("\t   \tcontinue reading and ignore c2 error on specific sector\n")
 		_T("\t\t\tFor CodeLock, LaserLock, RingProtect, RingPROTECH\n")
@@ -1559,11 +1581,11 @@ int printUsage(void)
 		_T("\t/aj\tSearch specific bytes\n")
 		_T("\t\t\tFor Atari Jaguar CD\n")
 		_T("Option (for CD SubChannel)\n")
+		_T("\t/np\tNot fix SubP\n")
+		_T("\t/nq\tNot fix SubQ\n")
 	);
 	ret = stopMessage();
 	OutputString(
-		_T("\t/np\tNot fix SubP\n")
-		_T("\t/nq\tNot fix SubQ\n")
 		_T("\t/nr\tNot fix SubRtoW\n")
 		_T("\t/nl\tNot fix SubQ (RMSF, AMSF, CRC) (LBA 10000 - 19999)\n")
 		_T("\t   \t                               (LBA 40000 - 49999)\n")

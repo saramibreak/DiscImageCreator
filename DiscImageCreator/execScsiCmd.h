@@ -56,6 +56,11 @@ BOOL ReadTOCFull(
 	LPBYTE* pPFullToc
 );
 
+BOOL ReadTOCPma(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice
+);
+
 BOOL ReadTOCAtip(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice
