@@ -89,26 +89,58 @@ BOOL ReadCDFor3DODirectory(
 VOID ManageEndOfDirectoryRecord(
 	LPINT nSectorNum,
 	BYTE byTransferLen,
-	UINT uiZeroPaddingNum,
-	LPBYTE lpDirRec,
+	UINT uiPaddingLen,
 	LPUINT nOfs
 ) {
 	if (*nSectorNum < byTransferLen) {
-		UINT j = 0;
-		for (; j < uiZeroPaddingNum; j++) {
-			if (lpDirRec[j] != 0) {
+		*nOfs += uiPaddingLen;
+		(*nSectorNum)++;
+		return;
+	}
+}
+
+BOOL IsValidMonthDay(
+	LPBYTE lpDirRec
+) {
+	return 1 <= lpDirRec[19] && lpDirRec[19] <= 12 && // month
+		1 <= lpDirRec[20] && lpDirRec[20] <= 31; // day
+}
+
+VOID AdjustOfs(
+	LPBYTE lpBuf,
+	PUINT puiOfs
+) {
+	if (!IsValidMonthDay(lpBuf + *puiOfs)) {
+		OutputVolDescLogA("Detected corrupt directory record. Skipped it.\n");
+		for (UINT i = 1; i < 256; i++) {
+			if (85 <= *(lpBuf + 18 + i) && IsValidMonthDay(lpBuf + i)) {
+				// [PSX] Tokimeki Memorial - forever with you (Japan) (Rev 4) or (Rev 2) or (PlayStation the Best)
+				// [PSX] Aitakute... - Your Smiles in My Heart (Japan)
+				// [PSX] Aitakute... - Your Smiles in My Heart - Oroshitate no Diary - Introduction Disc (Japan)
+				// 8 bytes are missing in the 1st directory record
+				// ========== LBA[014515, 0x038b3]: Main Channel ==========
+				//        +0 +1 +2 +3 +4 +5 +6 +7  +8 +9 +A +B +C +D +E +F
+				// 0000 : 38 B3 00 08 00 00 00 00  08 00 5F 08 12 0A 32 1C   8........._...2.
+				// 0010 : 24 02 00 00 01 00 00 01  01 00 3D 02 3D 02 88 00   $.........=.=...
+				// 0020 : 58 41 01 00 00 00 00 00  30 00 16 00 00 00 00 00   XA......0.......
+				// 0030 : 00 16 00 08 00 00 00 00  08 00 60 03 1F 00 00 00   ..........`.....
+				// 0040 : 24 02 00 00 01 00 00 01  01 01 00 00 00 00 88 00   $...............
+				// 0050 : 58 41 00 00 00 00 00 00
+				*puiOfs = i;
 				break;
 			}
 		}
-		if (j == uiZeroPaddingNum) {
-			*nOfs += uiZeroPaddingNum;
-			(*nSectorNum)++;
-			return;
-		}
 	}
-	else {
-		return;
-	}
+}
+
+BOOL IsValidPositionAndDataLength(
+	LPBYTE lpDirRec
+) {
+	// check if stored LSB data is the same as MSB data
+	return lpDirRec[2] == lpDirRec[9] && lpDirRec[3] == lpDirRec[8] &&
+		lpDirRec[4] == lpDirRec[7] && lpDirRec[5] == lpDirRec[6] && // offset
+		lpDirRec[10] == lpDirRec[17] && lpDirRec[11] == lpDirRec[16] &&
+		lpDirRec[12] == lpDirRec[15] && lpDirRec[13] == lpDirRec[14];   // data length
 }
 
 BOOL ReadDirectoryRecordDetail(
@@ -139,6 +171,7 @@ BOOL ReadDirectoryRecordDetail(
 	}
 
 	UINT uiOfs = 0;
+	AdjustOfs(lpBuf, &uiOfs);
 	for (INT nSectorNum = 0; nSectorNum < byRoop;) {
 		if (*(lpBuf + uiOfs) == 0) {
 			break;
@@ -148,20 +181,26 @@ BOOL ReadDirectoryRecordDetail(
 		for (;;) {
 			CHAR szCurDirName[MAX_FNAME_FOR_VOLUME] = {};
 			LPBYTE lpDirRec = lpBuf + uiOfs;
-			if (lpDirRec[0] >= MIN_LEN_DR) {
+			BOOL bValidDay = IsValidMonthDay(lpDirRec);
+			if (lpDirRec[0] >= MIN_LEN_DR && bValidDay) {
 				if (lpDirRec[0] == MIN_LEN_DR && uiOfs > 0 && uiOfs % DISC_RAW_READ_SIZE == 0) {
-					// SimCity 3000 (USA)
+					// [PC] SimCity 3000 (USA)
+					// Data Length should be 2048 because LBA 200205 is joliet
+					// ========== LBA[200204, 0x30e0c]: Directory Record ==========
+					// 		      Length of Directory Record: 34
+					// 		Extended Attribute Record Length: 0
+					// 		              Location of Extent: 200204
+					// 		                     Data Length: 4096
 					OutputVolDescLogA(
-						"Direcory record size of the %d sector maybe incorrect. Skip the reading of this sector\n", nLBA);
+						"LBA %d, ofs %d: Data length is incorrect. Skip this sector\n", nLBA, uiOfs);
 					nSectorNum++;
 					break;
 				}
 				// a DVD "DTM Race Driver 3"
 				// Path table is irregular. (L type and M type is perhaps the reverse.)
 				// ========== LBA[000019, 0x00013]: Main Channel ==========
-				//	:
-				//	:
-				//	                                2C 00 AB 3D 0C 00 00 0C   A1.HDR; 1, .. = ....
+				//	     :
+				//	     :                          2C 00 AB 3D 0C 00 00 0C   A1.HDR; 1, .. = ....
 				//	0100 : 3D AB 00 60 8B 52 52 8B  60 00 6A 01 19 10 00 0A = ..`.RR.`.j.....
 				//	0110 : 00 00 00 00 01 00 00 01  0B 44 41 54 41 32 2E 43   .........DATA2.C
 				//	0120 : 41 42 3B
@@ -172,26 +211,27 @@ BOOL ReadDirectoryRecordDetail(
 				UINT uiExtentPos = GetSizeOrUintForVolDesc(lpDirRec + 2, uiMaxByte) / uiLogicalBlkCoef;
 				UINT uiDataLen = GetSizeOrUintForVolDesc(lpDirRec + 10, uiMaxByte);
 				if (uiDataLen >= uiMaxByte) {
-					OutputVolDescLogA(
-						"Data length is incorrect.\n");
 					// Apple Mac DL DVD
-					//										:
-					//		                     Data Length: 4294967295
-					//										:
-					//		                 File Identifier: ARCHIVEPAX.GZ
-					//										:
+					// ========== LBA[000070, 0x00046]: Main Channel ==========
+					//      :
+					// 00C0 :                                      8A 00 3E 02   .;8.n....3....>.
+					// 00D0 : 00 00 00 00 02 3E FF FF  FF FF FF FF FF FF 6E 01   .....>........n.
+					// 00E0 : 06 04 3B 38 00 00 00 00  01 00 00 01 0D 41 52 43   ..;8.........ARC
+					// 00F0 : 48 49 56 45 50 41 58 2E  47 5A 41 41 0E 02 00 00   HIVEPAX.GZAA....
+					// 0100 : 00 00 00 00 00 00 00 00  50 58 2C 01 24 81 00 00   ........PX,.$...
+					// 0110 : 00 00 81 24 01 00 00 00  00 00 00 01 F6 01 00 00   ...$............
+					// 0120 : 00 00 01 F6 14 00 00 00  00 00 00 14 1B 00 00 00   ................
+					// 0130 : 00 00 00 1B 54 46 21 01  0F 6E 01 06 04 3B 38 00   ....TF!..n...;8.
+					// 0140 : 6E 01 06 04 3B 38 00 6E  01 06 05 04 0D 00 6E 01   n...;8.n......n.
+					// 0150 : 06 13 1B 31 00 00
 
-					// Pier Solar And The Great Architects
+					// [DC] Pier Solar And The Great Architects (Unlicensed)
+					// ========== LBA[012317, 0x0301d]: Main Channel ==========
+					//      :
 					// 0040 :             2A 00 1E FF  FF FF 00 FF FF FF FF FF   ....*...........
 					// 0050 : FF FF FF FF 30 00 73 03  1F 16 23 29 08 00 00 00   ....0.s...#)....
 					// 0060 : 01 00 00 01 08 31 38 2E  44 41 54 3B 31 00
-#if 0
-					if (*pExecType != dvd) {
-						OutputVolDescLogA("Skip the reading of this sector\n");
-						nSectorNum++;
-						break;
-					}
-#endif
+					OutputVolDescLogA("LBA %d, ofs %d: Data length is incorrect\n", nLBA, uiOfs);
 				}
 				OutputFsDirectoryRecord(
 					pExtArg, pDisc, lpDirRec, uiExtentPos, uiDataLen, szCurDirName);
@@ -216,11 +256,14 @@ BOOL ReadDirectoryRecordDetail(
 				}
 			}
 			else {
-				UINT uiZeroPaddingNum = DISC_RAW_READ_SIZE * (nSectorNum + 1) - uiOfs;
-				if (uiZeroPaddingNum > MIN_LEN_DR) {
+				UINT uiPaddingLen = DISC_RAW_READ_SIZE * (nSectorNum + 1) - uiOfs;
+				if (uiPaddingLen > MIN_LEN_DR) {
 					BYTE byNextLenDR = lpDirRec[MIN_LEN_DR];
-					if (byNextLenDR >= MIN_LEN_DR) {
-						// Amiga Tools 4 : The second of Direcory Record (0x22 - 0x43) is corrupt...
+					BOOL bValidPos = IsValidPositionAndDataLength(lpDirRec + MIN_LEN_DR);
+					bValidDay = IsValidMonthDay(lpDirRec + MIN_LEN_DR);
+					if (byNextLenDR >= MIN_LEN_DR && bValidPos && bValidDay) {
+						// Amiga Tools 4
+						// The second of Direcory Record (0x22 - 0x43) is corrupt
 						// ========== LBA[040915, 0x09fd3]: Main Channel ==========
 						//        +0 +1 +2 +3 +4 +5 +6 +7  +8 +9 +A +B +C +D +E +F
 						// 0000 : 22 00 D3 9F 00 00 00 00  9F D3 00 08 00 00 00 00   "...............
@@ -228,19 +271,22 @@ BOOL ReadDirectoryRecordDetail(
 						// 0020 : 01 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00   ................
 						// 0030 : 00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00   ................
 						// 0040 : 00 00 01 01 2E 00 09 A0  00 00 00 00 A0 09 D8 01   ................
-						OutputMainErrorWithLBALogA(
-							"Direcory Record is corrupt. Skip reading from %d to %d byte. See _mainInfo.txt\n"
-							, nLBA, 0, uiOfs, uiOfs + MIN_LEN_DR - 1);
+						// 0050 : 00 00 00 00 01 D8 60 02  1D 01 1D 29 00 02 00 00   ......`....)....
+						// 0060 : 01 00 00 01 0D 41 52 65  78 78 2D 53 63 72 69 70   .....ARexx-Scrip
+						// 0070 : 74 73                                              ts
+						OutputVolDescLogA(
+							"LBA %d: Direcory Record is corrupt. Skip reading from %d to %d byte\n"
+							, nLBA, uiOfs, uiOfs + MIN_LEN_DR - 1);
 						uiOfs += MIN_LEN_DR;
 						break;
 					}
 					else {
-						ManageEndOfDirectoryRecord(&nSectorNum, byRoop, uiZeroPaddingNum, lpDirRec, &uiOfs);
+						ManageEndOfDirectoryRecord(&nSectorNum, byRoop, uiPaddingLen, &uiOfs);
 						break;
 					}
 				}
 				else {
-					ManageEndOfDirectoryRecord(&nSectorNum, byRoop, uiZeroPaddingNum, lpDirRec, &uiOfs);
+					ManageEndOfDirectoryRecord(&nSectorNum, byRoop, uiPaddingLen, &uiOfs);
 					break;
 				}
 			}
@@ -318,7 +364,7 @@ BOOL ReadDirectoryRecord(
 		}
 		else {
 			if (pDirRec[nDirRecIdx].uiDirSize == 0 || byTransferLen == 0) {
-				OutputMainErrorLogA("Directory Record is invalid\n");
+				OutputMainErrorLogA("nLBA %d, Directory Record is invalid\n", nLBA);
 				return FALSE;
 			}
 			SetCommandForTransferLength(pExecType, pDevice, pCdb, pDirRec[nDirRecIdx].uiDirSize, &byTransferLen, &byRoop);
