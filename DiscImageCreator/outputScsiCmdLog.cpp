@@ -1859,19 +1859,19 @@ VOID OutputCDAtip(
 	if (s == 21 && 40 <= f && f <= 49) {
 		OutputDiscLogA("Optical Disc Manufacturing Equipment\n");
 	}
-	else if (s == 22 && 0 <= f && f <= 9) {
+	else if (s == 22 && f <= 9) {
 		OutputDiscLogA("Woongjin Media corp.\n");
 	}
 	else if ((s == 22 || s == 45) && 40 <= f && f <= 49) {
 		OutputDiscLogA("CIS Technology Inc.\n");
 	}
-	else if ((s == 23 && 0 <= f && f <= 9) || (s == 49 && 60 <= f && f <= 69)) {
+	else if ((s == 23 && f <= 9) || (s == 49 && 60 <= f && f <= 69)) {
 		OutputDiscLogA("Matsushita Electric Industrial Co., Ltd.\n");
 	}
 	else if (s == 23 && 10 <= f && f <= 19) {
 		OutputDiscLogA("Doremi Media Co., Ltd.\n");
 	}
-	else if ((s == 24 || s == 46) && 0 <= f && f <= 9) {
+	else if ((s == 24 || s == 46) && f <= 9) {
 		OutputDiscLogA("Taiyo Yuden Company Limited\n");
 	}
 	else if ((s == 24 || s == 46) && 10 <= f && f <= 19) {
@@ -1895,7 +1895,7 @@ VOID OutputCDAtip(
 	else if ((s == 25 || s == 45) && 60 <= f && f <= 69) {
 		OutputDiscLogA("Xcitek Inc.\n");
 	}
-	else if ((s == 26 || s == 45) && 0 <= f && f <= 9) {
+	else if ((s == 26 || s == 45) && f <= 9) {
 		OutputDiscLogA("FORNET INTERNATIONAL PTE LTD.\n");
 	}
 	else if ((s == 26 && 10 <= f && f <= 19) || (s == 47 && 40 <= f && f <= 49)) {
@@ -1934,7 +1934,7 @@ VOID OutputCDAtip(
 	else if ((s == 27 || s == 48) && 50 <= f && f <= 59) {
 		OutputDiscLogA("Mitsui Chemicals, Inc.\n");
 	}
-	else if ((s == 27 && 60 <= f && f <= 69) || (s == 48 && 0 <= f && f <= 9)) {
+	else if ((s == 27 && 60 <= f && f <= 69) || (s == 48 && f <= 9)) {
 		OutputDiscLogA("Ricoh Company Limited\n");
 	}
 	else if ((s == 28 || s == 49) && 10 <= f && f <= 19) {
@@ -1949,7 +1949,7 @@ VOID OutputCDAtip(
 	else if ((s == 28 && 40 <= f && f <= 49) || (s == 48 && 20 <= f && f <= 29)) {
 		OutputDiscLogA("King Pro Mediatek Inc.\n");
 	}
-	else if (s == 29 && 0 <= f && f <= 9) {
+	else if (s == 29 && f <= 9) {
 		OutputDiscLogA("Taeil Media Co., Ltd.\n");
 	}
 	else if ((s == 29 || s == 50) && 10 <= f && f <= 19) {
@@ -1958,13 +1958,13 @@ VOID OutputCDAtip(
 	else if ((s == 30 && 10 <= f && f <= 19) || (s == 50 && 30 <= f && f <= 39)) {
 		OutputDiscLogA("CDA Datentrager Albrechts GmbH\n");
 	}
-	else if ((s == 31 && 0 <= f && f <= 9) || (s == 47 && 50 <= f && f <= 59)) {
+	else if ((s == 31 && f <= 9) || (s == 47 && 50 <= f && f <= 59)) {
 		OutputDiscLogA("Ritek Co.\n");
 	}
 	else if ((s == 31 && 30 <= f && f <= 39) || (s == 51 && 10 <= f && f <= 19)) {
 		OutputDiscLogA("Grand Advance Technology Ltd.\n");
 	}
-	else if ((s == 32 || s == 49) && 0 <= f && f <= 9) {
+	else if ((s == 32 || s == 49) && f <= 9) {
 		OutputDiscLogA("TDK Corporation\n");
 	}
 	else if ((s == 32 && 10 <= f && f <= 19) || (s == 47 && 60 <= f && f <= 69)) {
