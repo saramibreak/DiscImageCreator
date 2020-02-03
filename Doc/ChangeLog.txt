@@ -610,3 +610,13 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 *2020-01-20
 - fixed: detecting 2nd Anchor Volume Descriptor Pointer
 - fixed: parse driveOffset.txt
+
+*2020-02-03
+- added: call ReadDiscInformation for CD-R/RW
+- added: ReadTOCPma for CD-R/RW
+- added: If valid extension was omitted, ".bin" is set to path automatically.
+- added: stores subP channel because first sector is EAN/ISRC
+- deleted: /m flag
+- fixed: splitted the subs indexes CUE
+- improved: TOCATIP logs
+- improved: Reading erroneous directory record (support [PSX] Tokimeki Memorial - forever with you, [PSX] Aitakute... - Your Smiles in My Heart)

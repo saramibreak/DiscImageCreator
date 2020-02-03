@@ -13,22 +13,6 @@
   PLEXTOR PX-W2410TA: +686(subch is 0x02), +98(subch is 0x00)
   PLEXTOR PX-320A   : +686(subch is 0x02), +98(subch is 0x00)
 
-. extension (Windows specification)
-  with extension
-  Input File Name
-         path: C:\toshinden V1.1.bin
-        drive: C:
-          dir: \
-        fname: toshinden V1.1
-          ext: .bin
-  without extension? No, generally, it is interpreted that ".1" is extension.
-  Input File Name
-         path: C:\toshinden V1.1
-        drive: C:
-          dir: \
-        fname: toshinden V1
-          ext: .1
-
 . semaphore time out occurs when use a IDE to USB adapter and exec "SetCDSpeed" function.
 
 . can't get a drive name when use a part of IDE to USB adapter.
