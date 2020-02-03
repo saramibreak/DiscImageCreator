@@ -77,22 +77,22 @@ VOID OutputFsDirectoryRecord(
 		strncat(str, "Associated, ", 12);
 	}
 	else {
-		strncat(str, "Disassociated, ", 15);
+		strncat(str, "No Associated, ", 15);
 	}
 	if (nFileFlag & 0x08) {
-		strncat(str, "File has record format, ", 24);
+		strncat(str, "Record Format, ", 15);
 	}
 	else {
-		strncat(str, "File hasn't record format, ", 26);
+		strncat(str, "No Record Format, ", 18);
 	}
 	if (nFileFlag & 0x10) {
-		strncat(str, "Owner/Group ID has, ", 20);
+		strncat(str, "Owner/Group ID, ", 16);
 	}
 	else {
-		strncat(str, "Owner/Group ID hasn't, ", 22);
+		strncat(str, "No Owner/Group ID, ", 19);
 	}
 	if (nFileFlag & 0x80) {
-		strncat(str, "Next Directory Record has", 25);
+		strncat(str, "No Final Directory Record", 25);
 	}
 	else {
 		strncat(str, "Final Directory Record", 22);
