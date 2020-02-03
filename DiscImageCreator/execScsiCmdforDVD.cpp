@@ -513,7 +513,7 @@ BOOL IsSupported0xE7Type4(
 		!strncmp(pDevice->szProductId, "DVD-ROM GDR-D20N", DRIVE_PRODUCT_ID_SIZE) ||
 		!strncmp(pDevice->szProductId, "DVD-ROM GDR-M10N", DRIVE_PRODUCT_ID_SIZE) ||
 		!strncmp(pDevice->szProductId, "DVD-ROM GDR-R10N", DRIVE_PRODUCT_ID_SIZE) ||
-		!strncmp(pDevice->szProductId, "DVD-ROM GDR-T20N", DRIVE_PRODUCT_ID_SIZE) ||	
+		!strncmp(pDevice->szProductId, "DVD-ROM GDR-T20N", DRIVE_PRODUCT_ID_SIZE) ||
 		!strncmp(pDevice->szProductId, "DVD-ROM GDR3120L", DRIVE_PRODUCT_ID_SIZE) ||
 		!strncmp(pDevice->szProductId, "DVD-ROM GDR8083N", DRIVE_PRODUCT_ID_SIZE) ||
 		!strncmp(pDevice->szProductId, "DVD-ROM GDR8085N", DRIVE_PRODUCT_ID_SIZE) ||
@@ -628,7 +628,7 @@ BOOL ReadDVDRaw(
 					memBlkSize = 5;
 					nCmdType = 1;
 				}
-				// https://web.archive.org/web/20080618095014/http://www.kev.nu/360/
+				// https://web.archive.org/web/20080629151440/http://www.xboxhacker.net/index.php?option=com_smf&Itemid=33&topic=76.msg1656;topicseen#msg1656
 				lpCmd[0] = 0xE7; // vendor specific command
 				lpCmd[1] = 0x48; // H
 				lpCmd[2] = 0x49; // I
@@ -1450,7 +1450,7 @@ BOOL ReadCapacity(
 }
 
 /*
-AD 00 FF 02 FD FF FE 00 08 00 xx C0		, This is the well known SS extract commands from the xtreme FW.				  
+AD 00 FF 02 FD FF FE 00 08 00 xx C0		, This is the well known SS extract commands from the xtreme FW.
 */
 BOOL ExtractSecuritySector(
 	PEXT_ARG pExtArg,
@@ -1535,7 +1535,7 @@ BOOL ExtractSecuritySector(
 		buf[582] = 0x00;
 		buf[583] = 0x00;
 	}
-	else if (pDisc->SCSI.nAllLength == 4246304)	{
+	else if (pDisc->SCSI.nAllLength == 4246304) {
 		// http://redump.org/download/ss_sector_range_1.0e.rar
 		for (INT j = 32; j < 104; j++) {
 			if (buf[j] != 0) {
@@ -1595,12 +1595,6 @@ BOOL ExtractSecuritySector(
 	}
 	return TRUE;
 }
-
-/*
-FF 08 01 01				, 'Enable Unlock 1 (xtreme) state' as we already know it from the 360 xtreme modded drives. 
-						  This command is supported for legacy reasons only. Custom applications should use the new
-						  'Set lock state' instead.
-*/
 
 /*
 FF 08 01 10				, 'Get Feature List' 
@@ -1682,7 +1676,7 @@ BOOL GetFeatureListForXBox(
 	return TRUE;
 }
 
-/*																				
+/*
 FF 08 01 11 xx			, 'Set Lock State'
 						  xx=00 - Drive locked (no unlock state)
 						  xx=01 - Unlock State 1 (xtreme) enabled
