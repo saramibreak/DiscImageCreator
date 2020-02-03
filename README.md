@@ -34,6 +34,7 @@
          - [SecuViewer](https://web.archive.org/web/20060921233459/http://www.plextools.com/downloadfiles/secuviewer105.zip)
          - [PX-Info Utility](https://web.archive.org/web/20061210233147/http://www.plextor.be:80/download/ftp1/PXInfo.zip)
          - [CDVD Info](https://web.archive.org/web/20061210233351/http://www.plextor.be/download/ftp1/CDVDInfo.zip)
+         - [AS-Striker](http://www.skcj.co.jp/discon/download/software.html)
          - [PxScan, PxView](http://www.alexander-noe.com/cdvd/px/index.php)
          - [QPxTool](http://qpxtool.sourceforge.net/qpxtool.html)
    - ASUS
