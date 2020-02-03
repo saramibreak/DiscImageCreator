@@ -38,7 +38,9 @@
   
 ## Technical Documentation
 - XBOX  
-  https://xboxdevwiki.net/Xbox_Game_Disc
+  https://xboxdevwiki.net/Xbox_Game_Disc  
+  http://web.archive.org/web/20151026074806/http://home.comcast.net/~admiral_powerslave/dvddrives.html  
+  https://beta.ivc.no/wiki/index.php/Xbox_360_Hacks#Save_security-sector
 
 - PS3  
   https://www.psdevwiki.com/ps3/Bluray_disc
