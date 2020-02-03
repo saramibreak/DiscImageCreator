@@ -890,14 +890,14 @@ VOID WriteErrorBuffer(
 	if (*pExecType == data || pExtArg->byBe) {
 		uiSize = CD_RAW_SECTOR_SIZE;
 		if (nPadType == padByUsr55 || nPadType == padByUsr0) {
-			if ((pDiscPerSector->subQ.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+			if ((pDiscPerSector->subch.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 				fwrite(pDiscPerSector->mainHeader.current, sizeof(BYTE), MAINHEADER_MODE1_SIZE, fpImg);
 			}
 			if (nPadType == padByUsr55) {
 				for (UINT i = MAINHEADER_MODE1_SIZE; i < uiSize; i++) {
 					pDiscPerSector->data.current[i] = 0x55;
 				}
-				if ((pDiscPerSector->subQ.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+				if ((pDiscPerSector->subch.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 					fwrite(pDiscPerSector->data.current + MAINHEADER_MODE1_SIZE,
 						sizeof(BYTE), uiSize - MAINHEADER_MODE1_SIZE, fpImg);
 				}
@@ -981,14 +981,14 @@ VOID WriteErrorBuffer(
 
 	if (*pExecType != swap || (*pExecType == swap && nLBA < SECOND_ERROR_OF_LEADOUT)) {
 		BYTE lpSubcodeRaw[CD_RAW_READ_SUBCODE_SIZE] = {};
-		if (pDiscPerSector->subQ.current.byIndex == 0) {
-			pDiscPerSector->subQ.current.nRelativeTime--;
+		if (pDiscPerSector->subch.current.byIndex == 0) {
+			pDiscPerSector->subch.current.nRelativeTime--;
 		}
 		else {
-			pDiscPerSector->subQ.current.nRelativeTime++;
+			pDiscPerSector->subch.current.nRelativeTime++;
 		}
-		pDiscPerSector->subQ.current.nAbsoluteTime++;
-		SetBufferFromTmpSubQData(pDiscPerSector->subcode.current, pDiscPerSector->subQ.current, TRUE, TRUE);
+		pDiscPerSector->subch.current.nAbsoluteTime++;
+		SetBufferFromTmpSubch(pDiscPerSector->subcode.current, pDiscPerSector->subch.current, TRUE, TRUE);
 		AlignColumnSubcode(lpSubcodeRaw, pDiscPerSector->subcode.current);
 		WriteSubChannel(pDisc, pDiscPerSector, lpSubcodeRaw, nLBA, fpSub);
 
@@ -2134,11 +2134,6 @@ BOOL CreateBinCueCcd(
 					}
 					FcloseAndNull(fpBinSync);
 					remove(out);
-					if (NULL == (fpCueSync = CreateOrOpenFile(
-						out, NULL, NULL, NULL, NULL, _T(".cue"), _T(WFLAG), 0, 0))) {
-						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-						throw FALSE;
-					}
 					if (j == 0) {
 						WriteCueForUnderFileDirective(pDisc, bCanCDText, j, i, fpCueSyncForImg);
 					}

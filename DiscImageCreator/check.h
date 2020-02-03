@@ -75,7 +75,7 @@ BOOL IsValidPcfxSector(
 
 BOOL IsValidPregapSector(
 	PDISC pDisc,
-	PSUB_Q pSubQ,
+	PSUBCH pSubch,
 	INT nLBA
 );
 
@@ -124,7 +124,7 @@ BOOL IsValidSubQAdrISRC(
 
 BOOL IsValidSubQAdrSector(
 	UINT uiSubAdditionalNum,
-	PSUB_Q pSubQ,
+	PSUBCH pSubch,
 	INT nRangeLBA,
 	INT nFirstLBA,
 	INT nPrevAdrSector,
@@ -132,7 +132,7 @@ BOOL IsValidSubQAdrSector(
 );
 
 BOOL IsValidSubQCtl(
-	PSUB_Q pSubQ,
+	PSUBCH pSubch,
 	BYTE byEndCtl
 );
 

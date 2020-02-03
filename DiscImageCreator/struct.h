@@ -174,7 +174,6 @@ typedef struct _EXT_ARG {
 	BYTE byC2;
 	BYTE byCmi;
 	BYTE byFua;
-	BYTE byMCN;
 	BYTE byPre;
 	BYTE byMultiSession;
 	BYTE byRawDump;
@@ -194,7 +193,6 @@ typedef struct _EXT_ARG {
 	BYTE byVideoNowColor;
 	BYTE byNoSkipSS;
 	BYTE byAtari;
-	BYTE padding[3];
 	INT nAudioCDOffsetNum;
 	UINT uiMaxRereadNum;
 	INT nAllSectors;	// use for xbox360
@@ -447,36 +445,35 @@ typedef struct _SUBCODE {
 	BYTE nextNext[CD_RAW_READ_SUBCODE_SIZE];
 } SUBCODE, *PSUBCODE;
 
-// This buffer stores the Q channel of SUBCODE structure
-typedef struct _SUB_Q_PER_SECTOR {
-	BYTE reserved;
+// This buffer stores the PQ channel of SUBCODE structure
+typedef struct _SUBCH_PER_SECTOR {
+	BYTE byP;
 	BYTE byCtl : 4;		// 13th byte
 	BYTE byAdr : 4;		// 13th byte
 	BYTE byTrackNum;	// 14th byte
 	BYTE byIndex;		// 15th byte
 	INT nRelativeTime;	// 16th - 18th byte
 	INT nAbsoluteTime;	// 20th - 22nd byte
-} SUB_Q_PER_SECTOR, *PSUB_Q_PER_SECTOR;
+} SUBCH_PER_SECTOR, *PSUBCH_PER_SECTOR;
 
-typedef struct _SUB_Q {
-	SUB_Q_PER_SECTOR prevPrev;
-	SUB_Q_PER_SECTOR prev;
-	SUB_Q_PER_SECTOR current;
-	SUB_Q_PER_SECTOR next;
-	SUB_Q_PER_SECTOR nextNext;
-} SUB_Q, *PSUB_Q;
+typedef struct _SUBCH {
+	SUBCH_PER_SECTOR prevPrev;
+	SUBCH_PER_SECTOR prev;
+	SUBCH_PER_SECTOR current;
+	SUBCH_PER_SECTOR next;
+	SUBCH_PER_SECTOR nextNext;
+} SUBCH, *PSUBCH;
 
 typedef struct _DISC_PER_SECTOR {
 	DATA_IN_CD data;
 	MAIN_HEADER mainHeader;
 	SUBCODE subcode;
-	SUB_Q subQ;
+	SUBCH subch;
 	UINT uiC2errorNum;
 	BYTE byTrackNum;
 	BYTE padding[3];
 	BOOL bLibCrypt;
 	BOOL bSecuRom;
-	BOOL b1stSectorMCN;
 	BOOL bReturnCode;
 } DISC_PER_SECTOR, *PDISC_PER_SECTOR;
 

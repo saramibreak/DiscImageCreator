@@ -161,6 +161,5 @@ struct _DISC_PER_SECTOR;
 typedef struct _DISC_PER_SECTOR *PDISC_PER_SECTOR;
 struct _MAIN_HEADER;
 typedef struct _MAIN_HEADER *PMAIN_HEADER;
-struct _SUB_Q;
-typedef struct _SUB_Q *PSUB_Q;
-
+struct _SUBCH;
+typedef struct _SUBCH *PSUBCH;

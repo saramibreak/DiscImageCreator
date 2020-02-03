@@ -756,8 +756,8 @@ BOOL ReadCDForCheckingSubQAdr(
 		if (nLBA == nTmpLBA) {
 			memcpy(pDiscPerSector->mainHeader.current, lpBuf + nOfs, MAINHEADER_MODE1_SIZE);
 			// this func is used to get a SubChannel Offset
-			SetTmpSubQDataFromBuffer(&pDiscPerSector->subQ.current, pDiscPerSector->subcode.current);
-			pDiscPerSector->subQ.current.byCtl = (BYTE)((BYTE)(pDiscPerSector->subcode.current[12] >> 4) & 0x0f);
+			SetTmpSubchFromBuffer(&pDiscPerSector->subch.current, pDiscPerSector->subcode.current);
+			pDiscPerSector->subch.current.byCtl = (BYTE)((BYTE)(pDiscPerSector->subcode.current[12] >> 4) & 0x0f);
 			*byMode = GetMode(pDiscPerSector, unscrambled);
 		}
 		BOOL bCRC = FALSE;
@@ -1408,8 +1408,8 @@ BOOL ReadCDForCheckingSecuROM(
 			OutputLogA(standardOut | fileDisc, "Detected intentional subchannel in LBA -1 => SecuROM Type 4 (a.k.a. NEW)\n");
 			OutputIntentionalSubchannel(-1, &pDiscPerSector->subcode.current[12]);
 			pDisc->PROTECT.byExist = securomV4;
-			pDiscPerSector->subQ.prev.nRelativeTime = -1;
-			pDiscPerSector->subQ.prev.nAbsoluteTime = 149;
+			pDiscPerSector->subch.prev.nRelativeTime = -1;
+			pDiscPerSector->subch.prev.nAbsoluteTime = 149;
 		}
 		else if ((nRLBA == 167295 || nRLBA == 0) && nALBA == 150) { // 167295(37:10:45), 150(00:02:00)
 			OutputSubInfoWithLBALogA(
@@ -1431,8 +1431,8 @@ BOOL ReadCDForCheckingSecuROM(
 			if (pDisc->SUB.nSubChannelOffset) {
 				pDisc->SUB.nSubChannelOffset -= 1;
 			}
-			pDiscPerSector->subQ.prev.nRelativeTime = -1;
-			pDiscPerSector->subQ.prev.nAbsoluteTime = 149;
+			pDiscPerSector->subch.prev.nRelativeTime = -1;
+			pDiscPerSector->subch.prev.nAbsoluteTime = 149;
 		}
 		else if (pDisc->SCSI.nAllLength > 5000) {
 			BYTE byTransferLen = 2;

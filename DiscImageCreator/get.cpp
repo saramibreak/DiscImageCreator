@@ -326,7 +326,7 @@ BYTE GetMode(
 	INT nType
 ) {
 	BYTE byMode = 0;
-	if ((pDiscPerSector->subQ.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+	if ((pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 		if (IsValidMainDataHeader(pDiscPerSector->mainHeader.current)) {
 			if ((pDiscPerSector->mainHeader.current[15] & 0x60) == 0x60 && nType == unscrambled) {
 				byMode = BcdToDec((BYTE)(pDiscPerSector->mainHeader.current[15] ^ 0x60));
@@ -344,7 +344,7 @@ BYTE GetMode(
 			}
 		}
 	}
-	else if ((pDiscPerSector->subQ.current.byCtl & AUDIO_DATA_TRACK) == 0) {
+	else if ((pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == 0) {
 		byMode = DATA_BLOCK_MODE0;
 	}
 	else {

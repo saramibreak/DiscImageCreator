@@ -134,9 +134,9 @@ VOID SetLBAForFirstAdr(
 	BYTE byPlxtrDrive
 );
 
-VOID SetBufferFromTmpSubQData(
+VOID SetBufferFromTmpSubch(
 	LPBYTE lpSubcode,
-	SUB_Q_PER_SECTOR pSubQ,
+	SUBCH_PER_SECTOR subch,
 	BOOL bCurrent,
 	BOOL bUpdateCrc
 );
@@ -146,29 +146,28 @@ VOID SetBufferFromMCN(
 	LPBYTE lpSubcode
 );
 
-VOID SetTmpSubQDataFromBuffer(
-	PSUB_Q_PER_SECTOR pSubQ,
+VOID SetTmpSubchFromBuffer(
+	PSUBCH_PER_SECTOR pSubch,
 	LPBYTE lpSubcode
 );
 
-VOID UpdateTmpSubQDataForMCN(
-	PEXT_ARG pExtArg,
+VOID UpdateTmpSubchForMCN(
 	PDISC pDisc,
 	PDISC_PER_SECTOR pDiscPerSector,
 	INT nLBA
 );
 
-VOID UpdateTmpSubQDataForISRC(
-	PSUB_Q pSubQ
+VOID UpdateTmpSubchForISRC(
+	PSUBCH pSubch
 );
 
-VOID UpdateTmpSubQDataForCDTV(
+VOID UpdateTmpSubchForCDTV(
 	PDISC pDisc,
 	PDISC_PER_SECTOR pDiscPerSector,
 	INT nLBA
 );
 
-VOID UpdateTmpSubQData(
+VOID UpdateTmpSubch(
 	PDISC_PER_SECTOR pDiscPerSector
 );
 
