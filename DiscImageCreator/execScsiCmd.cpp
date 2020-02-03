@@ -334,7 +334,7 @@ BOOL ReadTOCPma(
 	_declspec(align(4)) CDROM_TOC_PMA_DATA pma = { 0 };
 	INT direction = SCSI_IOCTL_DATA_IN;
 #else
-	__attribute__((aligned(4))) CDROM_TOC_PMA_DATA atip = {};
+	__attribute__((aligned(4))) CDROM_TOC_PMA_DATA pma = {};
 	INT direction = SG_DXFER_FROM_DEV;
 #endif
 	BYTE byScsiStatus = 0;
