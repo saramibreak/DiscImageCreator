@@ -1816,52 +1816,195 @@ VOID OutputCDAtip(
 	PCDROM_TOC_ATIP_DATA_BLOCK pAtip
 ) {
 	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(TOC ATIP)
-		"\tCdrwReferenceSpeed: %u\n"
 		"\t        WritePower: %u\n"
+		"\tCdrwReferenceSpeed: %u\n"
 		"\t   UnrestrictedUse: %s\n"
-		, pAtip->CdrwReferenceSpeed
 		, pAtip->WritePower
+		, pAtip->CdrwReferenceSpeed
 		, BOOLEAN_TO_STRING_YES_NO_A(pAtip->UnrestrictedUse)
 	);
 	switch (pAtip->IsCdrw)
 	{
-	case 0:	OutputDiscLogA("\t          DiscType: CD-R, DiscSubType: %u\n", pAtip->DiscSubType);
+	case 0:
+		OutputDiscLogA("\t          DiscType: CD-R, DiscSubType: %u\n", pAtip->DiscSubType);
 		break;
-	case 1:	OutputDiscLogA("\t          DiscType: CD-RW, ");
+	case 1:
+		OutputDiscLogA("\t          DiscType: CD-RW, ");
 		switch (pAtip->DiscSubType)
 		{
-		case 0: OutputDiscLogA("DiscSubType: Standard Speed\n");
+		case 0:
+			OutputDiscLogA("DiscSubType: Standard Speed\n");
 			break;
-		case 1: OutputDiscLogA("DiscSubType: High Speed\n");
+		case 1:
+			OutputDiscLogA("DiscSubType: High Speed\n");
 			break;
-		default: OutputDiscLogA("DiscSubType: Unknown\n");
+		default:
+			OutputDiscLogA("DiscSubType: Unknown\n");
 			break;
 		}
 		break;
-	default: OutputDiscLogA("          DiscType: Unknown\n");
+	default:
+		OutputDiscLogA("          DiscType: Unknown\n");
 		break;
 	}
+
 	OutputDiscLogA(
 		"\t         LeadInMsf: %02u:%02u:%02u\n"
-		"\t        LeadOutMsf: %02u:%02u:%02u\n"
+		"\t          => Manufacturer: "
 		, pAtip->LeadInMsf[0], pAtip->LeadInMsf[1], pAtip->LeadInMsf[2]
+	);
+	// http://web.archive.org/web/20061027043819/www.cdr-forum.de/download/cdr.pdf
+	BYTE s = pAtip->LeadInMsf[1];
+	BYTE f = pAtip->LeadInMsf[2];
+	if (s == 21 && 40 <= f && f <= 49) {
+		OutputDiscLogA("Optical Disc Manufacturing Equipment\n");
+	}
+	else if (s == 22 && 0 <= f && f <= 9) {
+		OutputDiscLogA("Woongjin Media corp.\n");
+	}
+	else if ((s == 22 || s == 45) && 40 <= f && f <= 49) {
+		OutputDiscLogA("CIS Technology Inc.\n");
+	}
+	else if ((s == 23 && 0 <= f && f <= 9) || (s == 49 && 60 <= f && f <= 69)) {
+		OutputDiscLogA("Matsushita Electric Industrial Co., Ltd.\n");
+	}
+	else if (s == 23 && 10 <= f && f <= 19) {
+		OutputDiscLogA("Doremi Media Co., Ltd.\n");
+	}
+	else if ((s == 24 || s == 46) && 0 <= f && f <= 9) {
+		OutputDiscLogA("Taiyo Yuden Company Limited\n");
+	}
+	else if ((s == 24 || s == 46) && 10 <= f && f <= 19) {
+		OutputDiscLogA("SONY Corporation\n");
+	}
+	else if ((s == 24 && 20 <= f && f <= 29) || (s == 46 && 30 <= f && f <= 39)) {
+		OutputDiscLogA("Computer Support Italy s.r.l.\n");
+	}
+	else if ((s == 24 && 30 <= f && f <= 39) || (s == 45 && 10 <= f && f <= 19)) {
+		OutputDiscLogA("UNITECH JAPAN INC.\n");
+	}
+	else if ((s == 25 && 20 <= f && f <= 29) || (s == 47 && 10 <= f && f <= 19)) {
+		OutputDiscLogA("Hitachi Maxell, Ltd.\n");
+	}
+	else if ((s == 25 && 30 <= f && f <= 39) || (s == 51 && 20 <= f && f <= 29)) {
+		OutputDiscLogA("INFODISC Technology Co., Ltd.\n");
+	}
+	else if (s == 25 && 50 <= f && f <= 59) {
+		OutputDiscLogA("AMS Technology Inc.\n");
+	}
+	else if ((s == 25 || s == 45) && 60 <= f && f <= 69) {
+		OutputDiscLogA("Xcitek Inc.\n");
+	}
+	else if ((s == 26 || s == 45) && 0 <= f && f <= 9) {
+		OutputDiscLogA("FORNET INTERNATIONAL PTE LTD.\n");
+	}
+	else if ((s == 26 && 10 <= f && f <= 19) || (s == 47 && 40 <= f && f <= 49)) {
+		OutputDiscLogA("POSTECH Corporation\n");
+	}
+	else if (s == 26 && 20 <= f && f <= 29) {
+		OutputDiscLogA("SKC Co., Ltd.n");
+	}
+	else if (s == 26 && 30 <= f && f <= 39) {
+		OutputDiscLogA("OPTICAL DISC CORPRATION\n");
+	}
+	else if ((s == 26 || s == 46) && 40 <= f && f <= 49) {
+		OutputDiscLogA("FUJI Photo Film Co., Ltd\n");
+	}
+	else if ((s == 26 && 50 <= f && f <= 59) || (s == 48 && 60 <= f && f <= 69)) {
+		OutputDiscLogA("POSTECH Corporation\n");
+	}
+	else if ((s == 26 || s == 46) && 60 <= f && f <= 69) {
+		OutputDiscLogA("CMC Magnetics Corporation\n");
+	}
+	else if ((s == 27 && 1 <= f && f <= 9) || (s == 48 && 40 <= f && f <= 49)) {
+		OutputDiscLogA("DIGITAL STORAGE TECHNOLOGY CO., LTD\n");
+	}
+	else if ((s == 27 && 10 <= f && f <= 19) || (s == 48 && 20 <= f && f <= 29)) {
+		OutputDiscLogA("Kodak Japan Limited\n");
+	}
+	else if ((s == 27 || s == 47) && 20 <= f && f <= 29) {
+		OutputDiscLogA("Princo Corporation\n");
+	}
+	else if ((s == 27 || s == 48) && 30 <= f && f <= 39) {
+		OutputDiscLogA("Pioneer Video Corporation\n");
+	}
+	else if ((s == 27 && 40 <= f && f <= 49) || (s == 48 && 10 <= f && f <= 19)) {
+		OutputDiscLogA("Kodak Japan Limited\n");
+	}
+	else if ((s == 27 || s == 48) && 50 <= f && f <= 59) {
+		OutputDiscLogA("Mitsui Chemicals, Inc.\n");
+	}
+	else if ((s == 27 && 60 <= f && f <= 69) || (s == 48 && 0 <= f && f <= 9)) {
+		OutputDiscLogA("Ricoh Company Limited\n");
+	}
+	else if ((s == 28 || s == 49) && 10 <= f && f <= 19) {
+		OutputDiscLogA("GIGASTORAGE CORPORATION\n");
+	}
+	else if ((s == 28 || s == 46) && 20 <= f && f <= 29) {
+		OutputDiscLogA("Multi Media Masters & Machinary SA\n");
+	}
+	else if ((s == 28 && 30 <= f && f <= 39) || (s == 46 && 50 <= f && f <= 59)) {
+		OutputDiscLogA("Auvistar Industry Co., Ltd.\n");
+	}
+	else if ((s == 28 && 40 <= f && f <= 49) || (s == 48 && 20 <= f && f <= 29)) {
+		OutputDiscLogA("King Pro Mediatek Inc.\n");
+	}
+	else if (s == 29 && 0 <= f && f <= 9) {
+		OutputDiscLogA("Taeil Media Co., Ltd.\n");
+	}
+	else if ((s == 29 || s == 50) && 10 <= f && f <= 19) {
+		OutputDiscLogA("Vanguard Disc Inc.\n");
+	}
+	else if ((s == 30 && 10 <= f && f <= 19) || (s == 50 && 30 <= f && f <= 39)) {
+		OutputDiscLogA("CDA Datentrager Albrechts GmbH\n");
+	}
+	else if ((s == 31 && 0 <= f && f <= 9) || (s == 47 && 50 <= f && f <= 59)) {
+		OutputDiscLogA("Ritek Co.\n");
+	}
+	else if ((s == 31 && 30 <= f && f <= 39) || (s == 51 && 10 <= f && f <= 19)) {
+		OutputDiscLogA("Grand Advance Technology Ltd.\n");
+	}
+	else if ((s == 32 || s == 49) && 0 <= f && f <= 9) {
+		OutputDiscLogA("TDK Corporation\n");
+	}
+	else if ((s == 32 && 10 <= f && f <= 19) || (s == 47 && 60 <= f && f <= 69)) {
+		OutputDiscLogA("Grand Advance Technology Ltd.\n");
+	}
+	else if ((s == 34 || s == 50) && 20 <= f && f <= 29) {
+		OutputDiscLogA("Mitsubishi Chemical Corporation\n");
+	}
+	else {
+		OutputDiscLogA("Unknown\n");
+	}
+
+	INT rc = pAtip->LeadInMsf[2] % 10;
+	OutputDiscLogA("              => Recording characteristics: ");
+	if (0 <= rc && rc <= 4) {
+		OutputDiscLogA("Long Strategy Type (ex. Cyanine type media)\n");
+	}
+	else if (5 <= rc && rc <= 9) {
+		OutputDiscLogA("Short Strategy Type (ex. Phthalocyanine type media)\n");
+	}
+
+	OutputDiscLogA(
+		"\t        LeadOutMsf: %02u:%02u:%02u\n"
 		, pAtip->LeadOutMsf[0], pAtip->LeadOutMsf[1], pAtip->LeadOutMsf[2]
 	);
 	if (pAtip->A1Valid) {
 		OutputDiscLogA(
-			"\t A1Values: %02u:%02u:%02u\n"
+			"\t          A1Values: %02u:%02u:%02u\n"
 			, pAtip->A1Values[0], pAtip->A1Values[1], pAtip->A1Values[2]
 		);
 	}
 	if (pAtip->A2Valid) {
 		OutputDiscLogA(
-			"\t A2Values: %02u:%02u:%02u\n"
+			"\t          A2Values: %02u:%02u:%02u\n"
 			, pAtip->A2Values[0], pAtip->A2Values[1], pAtip->A2Values[2]
 		);
 	}
 	if (pAtip->A3Valid) {
 		OutputDiscLogA(
-			"\t A3Values: %02u:%02u:%02u\n"
+			"\t          A3Values: %02u:%02u:%02u\n"
 			, pAtip->A3Values[0], pAtip->A3Values[1], pAtip->A3Values[2]
 		);
 	}
