@@ -812,20 +812,28 @@ VOID SetTrackAttribution(
 		if ((pDiscPerSector->subch.current.byP == 0x00 && pDiscPerSector->subch.next.byP == 0xff &&
 			pDiscPerSector->subch.prev.byTrackNum + 1 == pDiscPerSector->subch.next.byTrackNum) ||
 			nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->byTrackNum - 1]) {
-			// Cosmic Fantasy 3 (PCE)
+			// [PCE] Cosmic Fantasy 3 - Bouken Shounen Rei (Japan)
 			// LBA[261585, 0x3fdd1]: P[00], Q[01950100136900580960087c]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[95], Idx[01], RMSF[00:13:69], AMSF[58:09:60]}, RtoW[0, 0, 0, 0]
 			// LBA[261586, 0x3fdd2]: P[00], Q[020000000000000000615df2]{Audio, 2ch, Copy NG, Pre-emphasis No, MediaCatalogNumber [0000000000000], AMSF[     :61]}, RtoW[0, 0, 0, 0]
 			// LBA[261587, 0x3fdd3]: P[ff], Q[019600000273005809625f79]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[96], Idx[00], RMSF[00:02:73], AMSF[58:09:62]}, RtoW[0, 0, 0, 0]
 			tmpCurrentTrackNum = pDiscPerSector->subch.next.byTrackNum;
 			tmpCurrentIndex = pDiscPerSector->subch.next.byIndex;
 		}
-		else if ((pDiscPerSector->subch.current.byP == 0xff && pDiscPerSector->subch.next.byP == 0x00 &&
-			pDiscPerSector->subch.prev.byIndex + 1 == pDiscPerSector->subch.next.byIndex)) {
-			// Cosmic Fantasy 3 (PCE)
-			// LBA[142873, 0x22e19]: P[ff], Q[41370000000000314673bc02]{ Data,      Copy NG,                  Track[37], Idx[00], RMSF[00:00:00], AMSF[31:46:73]}, RtoW[0, 0, 0, 0]
-			// LBA[142874, 0x22e1a]: P[ff], Q[420000000000000000746d7c]{ Data,      Copy NG,                  MediaCatalogNumber [0000000000000], AMSF[     :74]}, RtoW[0, 0, 0, 0]
-			// LBA[142875, 0x22e1b]: P[00], Q[413701000001003147002c45]{ Data,      Copy NG,                  Track[37], Idx[01], RMSF[00:00:01], AMSF[31:47:00]}, RtoW[0, 0, 0, 0]
-			tmpCurrentIndex = pDiscPerSector->subch.next.byIndex;
+		else if (pDiscPerSector->subch.current.byP == 0xff && pDiscPerSector->subch.next.byP == 0x00) {
+			if (pDiscPerSector->subch.prev.byTrackNum + 1 == pDiscPerSector->subch.next.byTrackNum) {
+				// [PCE] Madou Monogatari I - Honoo no Sotsuenji (Japan)
+				// LBA[183031, 0x2caf7]: P[ff], Q[01210100317000404231bc6d]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[21], Idx[01], RMSF[00:31:70], AMSF[40:42:31]}, RtoW[0, 0, 0, 0]
+				// LBA[183032, 0x2caf8]: P[ff], Q[020000000000000000323764]{Audio, 2ch, Copy NG, Pre-emphasis No, MediaCatalogNumber [0000000000000], AMSF[     :32]}, RtoW[0, 0, 0, 0]
+				// LBA[183033, 0x2caf9]: P[00], Q[012201000001004042336c90]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[22], Idx[01], RMSF[00:00:01], AMSF[40:42:33]}, RtoW[0, 0, 0, 0]
+				tmpCurrentTrackNum = pDiscPerSector->subch.next.byTrackNum;
+			}
+			else if (pDiscPerSector->subch.prev.byIndex + 1 == pDiscPerSector->subch.next.byIndex) {
+				// [PCE] Cosmic Fantasy 3 - Bouken Shounen Rei (Japan)
+				// LBA[142873, 0x22e19]: P[ff], Q[41370000000000314673bc02]{ Data,      Copy NG,                  Track[37], Idx[00], RMSF[00:00:00], AMSF[31:46:73]}, RtoW[0, 0, 0, 0]
+				// LBA[142874, 0x22e1a]: P[ff], Q[420000000000000000746d7c]{ Data,      Copy NG,                  MediaCatalogNumber [0000000000000], AMSF[     :74]}, RtoW[0, 0, 0, 0]
+				// LBA[142875, 0x22e1b]: P[00], Q[413701000001003147002c45]{ Data,      Copy NG,                  Track[37], Idx[01], RMSF[00:00:01], AMSF[31:47:00]}, RtoW[0, 0, 0, 0]
+				tmpCurrentIndex = pDiscPerSector->subch.next.byIndex;
+			}
 		}
 		else {
 			tmpCurrentTrackNum = pDiscPerSector->subch.prev.byTrackNum;
@@ -1492,10 +1500,10 @@ VOID UpdateTmpSubchForMCN(
 				// 1st sector of tracks
 				if (pDiscPerSector->subch.prev.byTrackNum > 0 &&
 					nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum]) {
-					// Madou Monogatari I - Honoo no Sotsuenji (Japan)
-					// LBA[183031, 0x2CAF7], Audio, 2ch, Copy NG, Pre-emphasis No, Track[21], Idx[01], RMSF[00:31:70], AMSF[40:42:31], RtoW[0, 0, 0, 0]
-					// LBA[183032, 0x2CAF8], Audio, 2ch, Copy NG, Pre-emphasis No, MediaCatalogNumber [0000000000000], AMSF[     :32], RtoW[0, 0, 0, 0]
-					// LBA[183033, 0x2CAF9], Audio, 2ch, Copy NG, Pre-emphasis No, Track[22], Idx[01], RMSF[00:00:01], AMSF[40:42:33], RtoW[0, 0, 0, 0]
+					// [PCE] Madou Monogatari I - Honoo no Sotsuenji (Japan)
+					// LBA[183031, 0x2caf7]: P[ff], Q[01210100317000404231bc6d]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[21], Idx[01], RMSF[00:31:70], AMSF[40:42:31]}, RtoW[0, 0, 0, 0]
+					// LBA[183032, 0x2caf8]: P[ff], Q[020000000000000000323764]{Audio, 2ch, Copy NG, Pre-emphasis No, MediaCatalogNumber [0000000000000], AMSF[     :32]}, RtoW[0, 0, 0, 0]
+					// LBA[183033, 0x2caf9]: P[00], Q[012201000001004042336c90]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[22], Idx[01], RMSF[00:00:01], AMSF[40:42:33]}, RtoW[0, 0, 0, 0]
 					pDiscPerSector->subch.current.nRelativeTime = 0;
 					// pattern 2-1-1-1: change track.
 					pDiscPerSector->subch.current.byTrackNum = (BYTE)(pDiscPerSector->subch.prev.byTrackNum + 1);
