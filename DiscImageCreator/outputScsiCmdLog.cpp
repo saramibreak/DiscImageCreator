@@ -2116,8 +2116,8 @@ VOID OutputCDTextOther(
 				OutputDiscLogA(
 					"\t\tNumber of PACKS with $88 (TOC_INFO)   : %u\n"
 					"\t\tNumber of PACKS with $89 (TOC_INFO2)  : %u\n"
-					"\t\tNumber of PACKS with $8b              : %u\n"
 					"\t\tNumber of PACKS with $8a              : %u\n"
+					"\t\tNumber of PACKS with $8b              : %u\n"
 					"\t\tNumber of PACKS with $8c              : %u\n"
 					"\t\tNumber of PACKS with $8d (CLOSED_INFO): %u\n"
 					"\t\tNumber of PACKS with $8e (UPC_EAN)    : %u\n"
