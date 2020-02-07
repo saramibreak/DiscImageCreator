@@ -228,13 +228,13 @@ BOOL ProcessReadCD(
 ) {
 	BOOL bRet = RETURNED_NO_C2_ERROR_1ST;
 	if (*pExecType != gd && !pExtArg->byMultiSession && pDevice->bySuccessReadTocFull) {
-		if (pDisc->SCSI.nFirstLBAof2ndSession != -1) {
+		if (pDisc->SCSI.n1stLBAof2ndSession != -1) {
 			if (pExtArg->byReverse) {
-				if (pDisc->SCSI.nFirstLBAof2ndSession == nLBA + 1) {
+				if (pDisc->SCSI.n1stLBAof2ndSession == nLBA + 1) {
 					OutputMainInfoLogA(
 						"Skip from Leadout of Session 1 [%d, %#x] to Leadin of Session 2 [%d, %#x]\n",
-						pDisc->SCSI.nFirstLBAofLeadout, pDisc->SCSI.nFirstLBAofLeadout,
-						pDisc->SCSI.nFirstLBAof2ndSession - 1, pDisc->SCSI.nFirstLBAof2ndSession - 1);
+						pDisc->SCSI.n1stLBAofLeadout, pDisc->SCSI.n1stLBAofLeadout,
+						pDisc->SCSI.n1stLBAof2ndSession - 1, pDisc->SCSI.n1stLBAof2ndSession - 1);
 					pDiscPerSector->subch.prev.nAbsoluteTime = nLBA - SESSION_TO_SESSION_SKIP_LBA - 150;
 					return RETURNED_SKIP_LBA;
 				}
@@ -243,8 +243,8 @@ BOOL ProcessReadCD(
 				if (pDisc->MAIN.nFixFirstLBAofLeadout == nLBA) {
 					OutputMainInfoLogA(
 						"Skip from Leadout of Session 1 [%d, %#x] to Leadin of Session 2 [%d, %#x]\n",
-						pDisc->SCSI.nFirstLBAofLeadout, pDisc->SCSI.nFirstLBAofLeadout,
-						pDisc->SCSI.nFirstLBAof2ndSession - 1, pDisc->SCSI.nFirstLBAof2ndSession - 1);
+						pDisc->SCSI.n1stLBAofLeadout, pDisc->SCSI.n1stLBAofLeadout,
+						pDisc->SCSI.n1stLBAof2ndSession - 1, pDisc->SCSI.n1stLBAof2ndSession - 1);
 					if (pDisc->MAIN.nCombinedOffset > 0) {
 						pDiscPerSector->subch.prev.nAbsoluteTime =
 							nLBA + SESSION_TO_SESSION_SKIP_LBA + 150 - pDisc->MAIN.nAdjustSectorNum - 1;
@@ -734,7 +734,7 @@ BOOL ProcessDescramble(
 		return FALSE;
 	}
 	// audio only -> from .scm to .img. other descramble img.
-	if (pExtArg->byBe || (pDisc->SCSI.trackType != TRACK_TYPE::dataExist && pDisc->SCSI.trackType != TRACK_TYPE::pregapDataIn1stTrack)) {
+	if (pExtArg->byBe || (pDisc->SCSI.trkType != TRACK_TYPE::dataExist && pDisc->SCSI.trkType != TRACK_TYPE::pregapDataIn1stTrack)) {
 		OutputString(_T("Moving .scm to .img\n"));
 		if (!MoveFileEx(pszOutScmFile, pszNewPath, MOVEFILE_REPLACE_EXISTING)) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -895,7 +895,7 @@ BOOL ReadCDAll(
 		// special fix end
 
 		for (UINT p = 0; p < pDisc->SCSI.toc.LastTrack; p++) {
-			if (!ExecReadCD(pExtArg, pDevice, lpCmd, pDisc->SCSI.lpFirstLBAListOnToc[p]
+			if (!ExecReadCD(pExtArg, pDevice, lpCmd, pDisc->SCSI.lp1stLBAListOnToc[p]
 				, pDiscPerSector->data.current, pDevice->TRANSFER.uiBufLen * byTransferLen, _T(__FUNCTION__), __LINE__)) {
 				throw FALSE;
 			}
@@ -932,7 +932,7 @@ BOOL ReadCDAll(
 			if (pExtArg->byMultiSession) {
 				if (lpCmd[0] == 0xbe && pDisc->MAIN.nFixFirstLBAof2ndSession <= nLBA) {
 					nMainDataType = scrambled;
-					pDisc->MAIN.lpModeList[pDisc->SCSI.byFirstMultiSessionTrackNum - 1] = pDiscPerSector->mainHeader.current[15];
+					pDisc->MAIN.lpModeList[pDisc->SCSI.by1stMultiSessionTrkNum - 1] = pDiscPerSector->mainHeader.current[15];
 					nSecondSessionLBA = nLBA;
 					SetReadDiscCommand(pExecType, pExtArg, pDevice, byTransferLen, c2, CDFLAG::_READ_CD::Raw, lpCmd, FALSE);
 				}
@@ -1019,16 +1019,16 @@ BOOL ReadCDAll(
 								nFirstLBA++;
 							}
 						}
-						INT idx = pDisc->SCSI.byFirstMultiSessionTrackNum - 1;
+						INT idx = pDisc->SCSI.by1stMultiSessionTrkNum - 1;
 						if ((ctl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 							pDisc->SUB.lpLastLBAListOfDataTrackOnSub[idx - 1] = nLBA - 1;
-							pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[idx] = pDisc->SCSI.nFirstLBAof2ndSession;
+							pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[idx] = pDisc->SCSI.n1stLBAof2ndSession;
 						}
-						pDisc->SUB.lpFirstLBAListOnSub[idx][0] = pDisc->SCSI.nFirstLBAof2ndSession - 150;
-						pDisc->SUB.lpFirstLBAListOnSub[idx][1] = pDisc->SCSI.nFirstLBAof2ndSession;
+						pDisc->SUB.lpFirstLBAListOnSub[idx][0] = pDisc->SCSI.n1stLBAof2ndSession - 150;
+						pDisc->SUB.lpFirstLBAListOnSub[idx][1] = pDisc->SCSI.n1stLBAof2ndSession;
 
 						pDiscPerSector->subch.prev.byIndex = 0;
-						pDiscPerSector->byTrackNum = pDisc->SCSI.byFirstMultiSessionTrackNum;
+						pDiscPerSector->byTrackNum = pDisc->SCSI.by1stMultiSessionTrkNum;
 
 						// because unless using 0xbe, it can't get the pregap perfectly
 						CDB::_READ_CD cdb = {};
@@ -1620,15 +1620,15 @@ BOOL ReadCDForSwap(
 			if (nLBA < nFirstLeadErrLBA) {
 				FixSubChannel(pExecType, pExtArg, pDevice, pDisc, pDiscPerSector, nLBA, &bReread);
 			}
-			if (pDiscPerSector->subch.current.nAbsoluteTime == pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->byTrackNum - 1] + 150) {
+			if (pDiscPerSector->subch.current.nAbsoluteTime == pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->byTrackNum - 1] + 150) {
 				if (fread(pDiscPerSector->mainHeader.current, sizeof(BYTE), MAINHEADER_MODE1_SIZE, fpScm) < MAINHEADER_MODE1_SIZE) {
 					OutputErrorString(_T("Failed to read [F:%s][L:%d]\n"), _T(__FUNCTION__), __LINE__);
 					break;
 				}
-				fseek(fpScm, CD_RAW_SECTOR_SIZE * pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->byTrackNum], SEEK_SET);
+				fseek(fpScm, CD_RAW_SECTOR_SIZE * pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->byTrackNum], SEEK_SET);
 #if 0
 				OutputCDMain(fileDisc, pDiscPerSector->mainHeader.current
-					, pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->byTrackNum - 1], MAINHEADER_MODE1_SIZE);
+					, pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->byTrackNum - 1], MAINHEADER_MODE1_SIZE);
 #endif
 			}
 			SetTrackAttribution(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA);
@@ -1742,11 +1742,11 @@ BOOL ReadCDPartial(
 	LPBYTE pNextBuf = NULL;
 	LPBYTE pNextNextBuf = NULL;
 	INT nMainDataType = scrambled;
-	if (*pExecType == data || pExtArg->byBe || pDisc->SCSI.trackType == TRACK_TYPE::audioOnly) {
+	if (*pExecType == data || pExtArg->byBe || pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
 		nMainDataType = unscrambled;
 	}
 	INT nPadType = padByUsr55;
-	if (pDisc->SCSI.trackType == TRACK_TYPE::audioOnly) {
+	if (pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
 		nPadType = padByAll0;
 	}
 
@@ -1839,7 +1839,7 @@ BOOL ReadCDPartial(
 		}
 		else {
 			for (UINT p = 0; p < pDisc->SCSI.toc.LastTrack; p++) {
-				if (!ExecReadCD(pExtArg, pDevice, lpCmd, pDisc->SCSI.lpFirstLBAListOnToc[p]
+				if (!ExecReadCD(pExtArg, pDevice, lpCmd, pDisc->SCSI.lp1stLBAListOnToc[p]
 					, pDiscPerSector->data.current, pDevice->TRANSFER.uiBufLen * byTransferLen, _T(__FUNCTION__), __LINE__)) {
 					throw FALSE;
 				}
@@ -1868,7 +1868,7 @@ BOOL ReadCDPartial(
 			, pDisc->MAIN.nOffsetStart, pDisc->MAIN.nOffsetEnd, pDisc->MAIN.nFixStartLBA, pDisc->MAIN.nFixEndLBA);
 #endif
 		INT nFirstLBA = nStart + pDisc->MAIN.nOffsetStart - 1;
-		if (pDisc->SCSI.trackType == audioOnly) {
+		if (pDisc->SCSI.trkType == audioOnly) {
 			nFirstLBA = nStart;
 		}
 //		if (*pExecType == data) {
@@ -1919,7 +1919,7 @@ BOOL ReadCDPartial(
 			}
 			else if (pDiscPerSector->bReturnCode == RETURNED_SKIP_LBA) {
 				if (pExtArg->byReverse) {
-					nLBA = pDisc->SCSI.nFirstLBAof2ndSession - SESSION_TO_SESSION_SKIP_LBA;
+					nLBA = pDisc->SCSI.n1stLBAof2ndSession - SESSION_TO_SESSION_SKIP_LBA;
 				}
 				else {
 					nLBA = pDisc->MAIN.nFixFirstLBAof2ndSession - 1;

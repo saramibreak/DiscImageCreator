@@ -266,24 +266,24 @@ typedef struct _DISC {
 		__attribute__ ((aligned(4))) CDROM_TOC toc; // get at CDROM_READ_TOC_EX_FORMAT_TOC
 #endif
 		INT nAllLength;				// get at CDROM_READ_TOC_EX_FORMAT_TOC
-		LPINT lpFirstLBAListOnToc;	// get at CDROM_READ_TOC_EX_FORMAT_TOC
+		LPINT lp1stLBAListOnToc;	// get at CDROM_READ_TOC_EX_FORMAT_TOC
 		LPINT lpLastLBAListOnToc;	// get at CDROM_READ_TOC_EX_FORMAT_TOC
-		INT nFirstLBAofDataTrack;	// get at CDROM_READ_TOC_EX_FORMAT_TOC
-		INT nLastLBAofDataTrack;	// get at CDROM_READ_TOC_EX_FORMAT_TOC
-		TRACK_TYPE trackType;		// get at CDROM_READ_TOC_EX_FORMAT_TOC
-		BYTE byFirstDataTrackNum;	// get at CDROM_READ_TOC_EX_FORMAT_TOC
-		BYTE byLastDataTrackNum;	// get at CDROM_READ_TOC_EX_FORMAT_TOC
+		INT n1stLBAofDataTrk;		// get at CDROM_READ_TOC_EX_FORMAT_TOC
+		INT nLastLBAofDataTrk;		// get at CDROM_READ_TOC_EX_FORMAT_TOC
+		TRACK_TYPE trkType;			// get at CDROM_READ_TOC_EX_FORMAT_TOC
+		BYTE by1stDataTrkNum;		// get at CDROM_READ_TOC_EX_FORMAT_TOC
+		BYTE byLastDataTrkNum;		// get at CDROM_READ_TOC_EX_FORMAT_TOC
 		BYTE byFormat;				// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
-		BYTE byFirstMultiSessionTrackNum;	// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
+		BYTE by1stMultiSessionTrkNum;	// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
 		BOOL bMultiSession;			// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
 		LPBYTE lpSessionNumList;	// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
-		INT nFirstLBAofLeadout;		// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
-		INT nFirstLBAofLeadin;
+		INT n1stLBAofLeadout;		// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
+		INT n1stLBAofLeadin;
 		INT nLeadoutLenOf1stSession;
 		INT nLeadinLenOf2ndSession;
 		INT nEndLBAOfLeadin;
 		INT nPregapLenOf1stTrkOf2ndSession;
-		INT nFirstLBAof2ndSession;	// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
+		INT n1stLBAof2ndSession;	// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
 		struct _CDTEXT {
 			LPSTR* pszTitle;			// get at CDROM_READ_TOC_EX_FORMAT_CDTEXT
 			LPSTR* pszPerformer;		// get at CDROM_READ_TOC_EX_FORMAT_CDTEXT

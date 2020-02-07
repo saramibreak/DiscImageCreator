@@ -632,15 +632,15 @@ VOID WriteCueForMultiSessionMultiBin(
 	FILE* fpCue
 ) {
 	if (pDisc->SCSI.bMultiSession) {
-		if (byTrackNum == pDisc->SCSI.byFirstMultiSessionTrackNum) {
+		if (byTrackNum == pDisc->SCSI.by1stMultiSessionTrkNum) {
 			BYTE m, s, f;
 			LBAtoMSF(pDisc->SCSI.nLeadoutLenOf1stSession, &m, &s, &f);
 			_ftprintf(fpCue, _T("REM LEAD-OUT %02d:%02d:%02d\n"), m, s, f); // always 01:30:00
 		}
-		if (byTrackNum == pDisc->SCSI.toc.FirstTrack || byTrackNum == pDisc->SCSI.byFirstMultiSessionTrackNum) {
+		if (byTrackNum == pDisc->SCSI.toc.FirstTrack || byTrackNum == pDisc->SCSI.by1stMultiSessionTrkNum) {
 			_ftprintf(fpCue, _T("REM SESSION %02d\n"), pDisc->SCSI.lpSessionNumList[byTrackNum - 1]);
 		}
-		if (byTrackNum == pDisc->SCSI.byFirstMultiSessionTrackNum) {
+		if (byTrackNum == pDisc->SCSI.by1stMultiSessionTrkNum) {
 			BYTE m, s, f;
 			LBAtoMSF(pDisc->SCSI.nLeadinLenOf2ndSession, &m, &s, &f);
 			_ftprintf(fpCue, _T("REM LEAD-IN %02d:%02d:%02d\n"), m, s, f); // always 01:00:00
@@ -656,12 +656,12 @@ VOID WriteCueForMultiSessionWholeBin(
 	FILE* fpCue
 ) {
 	if (pDisc->SCSI.bMultiSession) {
-		if (byTrackNum == pDisc->SCSI.byFirstMultiSessionTrackNum) {
+		if (byTrackNum == pDisc->SCSI.by1stMultiSessionTrkNum) {
 			BYTE m, s, f;
-			LBAtoMSF(pDisc->SCSI.nFirstLBAof2ndSession - SESSION_TO_SESSION_SKIP_LBA, &m, &s, &f);
+			LBAtoMSF(pDisc->SCSI.n1stLBAof2ndSession - SESSION_TO_SESSION_SKIP_LBA, &m, &s, &f);
 			_ftprintf(fpCue, _T("  REM LEAD-OUT %02d:%02d:%02d\n"), m, s, f);
 		}
-		if (byTrackNum == pDisc->SCSI.toc.FirstTrack || byTrackNum == pDisc->SCSI.byFirstMultiSessionTrackNum) {
+		if (byTrackNum == pDisc->SCSI.toc.FirstTrack || byTrackNum == pDisc->SCSI.by1stMultiSessionTrkNum) {
 			_ftprintf(fpCue, _T("  REM SESSION %02d\n"), pDisc->SCSI.lpSessionNumList[byTrackNum - 1]);
 		}
 	}
@@ -791,12 +791,12 @@ VOID WriteMainChannel(
 			}
 		}
 		// last sector in 1st session (when session 2 exists)
-		else if (!pExtArg->byMultiSession && pDisc->SCSI.nFirstLBAof2ndSession != -1 &&
+		else if (!pExtArg->byMultiSession && pDisc->SCSI.n1stLBAof2ndSession != -1 &&
 			nLBA == pDisc->MAIN.nFixFirstLBAofLeadout - 1) {
 			fwrite(lpBuf, sizeof(BYTE), pDisc->MAIN.uiMainDataSlideSize, fpImg);
 		}
 		// first sector in 2nd Session
-		else if (!pExtArg->byMultiSession && pDisc->SCSI.nFirstLBAof2ndSession != -1 &&
+		else if (!pExtArg->byMultiSession && pDisc->SCSI.n1stLBAof2ndSession != -1 &&
 			nLBA == pDisc->MAIN.nFixFirstLBAof2ndSession) {
 			fwrite(lpBuf + pDisc->MAIN.uiMainDataSlideSize, sizeof(BYTE),
 				CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize, fpImg);
@@ -833,12 +833,12 @@ VOID WriteC2(
 				CD_RAW_READ_C2_294_SIZE - nC2SlideSize, fpC2);
 		}
 		// last sector in 1st session (when exists session 2)
-		else if (!pExtArg->byMultiSession && pDisc->SCSI.nFirstLBAof2ndSession != -1 &&
+		else if (!pExtArg->byMultiSession && pDisc->SCSI.n1stLBAof2ndSession != -1 &&
 			nLBA == pDisc->MAIN.nFixFirstLBAofLeadout - 1) {
 			fwrite(lpBuf, sizeof(BYTE), nC2SlideSize, fpC2);
 		}
 		// first sector in 2nd Session
-		else if (!pExtArg->byMultiSession && pDisc->SCSI.nFirstLBAof2ndSession != -1 &&
+		else if (!pExtArg->byMultiSession && pDisc->SCSI.n1stLBAof2ndSession != -1 &&
 			nLBA == pDisc->MAIN.nFixFirstLBAof2ndSession) {
 			fwrite(lpBuf + nC2SlideSize, sizeof(BYTE),
 				CD_RAW_READ_C2_294_SIZE - nC2SlideSize, fpC2);
@@ -1780,7 +1780,7 @@ VOID DescrambleMainChannelAll(
 	BYTE aSrcBuf[CD_RAW_SECTOR_SIZE] = {};
 	LONG lSeekPtr = 0;
 
-	for (INT k = pDisc->SCSI.byFirstDataTrackNum - 1; k < pDisc->SCSI.byLastDataTrackNum; k++) {
+	for (INT k = pDisc->SCSI.by1stDataTrkNum - 1; k < pDisc->SCSI.byLastDataTrkNum; k++) {
 		INT nFirstLBA = pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[k];
 		if (nFirstLBA != -1) {
 			INT nLastLBA = pDisc->SUB.lpLastLBAListOfDataTrackOnSub[k];
@@ -1872,8 +1872,8 @@ VOID DescrambleMainChannelAll(
 					fwrite(aSrcBuf, sizeof(BYTE), sizeof(aSrcBuf), fpImg);
 				}
 				else {
-					if (pDisc->SCSI.trackType != TRACK_TYPE::pregapAudioIn1stTrack &&
-						pDisc->SCSI.trackType != TRACK_TYPE::pregapDataIn1stTrack) {
+					if (pDisc->SCSI.trkType != TRACK_TYPE::pregapAudioIn1stTrack &&
+						pDisc->SCSI.trkType != TRACK_TYPE::pregapDataIn1stTrack) {
 						OutputMainErrorWithLBALogA("Invalid sync. Skip descrambling\n", nFirstLBA, k + 1);
 						OutputCDMain(fileMainError, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
 					}
@@ -2145,7 +2145,7 @@ BOOL CreateBinCueCcd(
 				INT nLBAofFirstIdx = pDisc->SUB.lpFirstLBAListOnSub[i - 1][0];
 				// nothing or index 0 in track 1
 				if (nLBAofFirstIdx == -1 || nLBAofFirstIdx == -150 ||
-					(pDisc->SCSI.bMultiSession && i == pDisc->SCSI.byFirstMultiSessionTrackNum)) {
+					(pDisc->SCSI.bMultiSession && i == pDisc->SCSI.by1stMultiSessionTrkNum)) {
 					nLBAofFirstIdx = pDisc->SUB.lpFirstLBAListOnSub[i - 1][1];
 					index++;
 				}
@@ -2159,13 +2159,13 @@ BOOL CreateBinCueCcd(
 
 				BYTE byFrame = 0, bySecond = 0, byMinute = 0;
 				if (i == pDisc->SCSI.toc.FirstTrack ||
-					(pDisc->SCSI.bMultiSession && i == pDisc->SCSI.byFirstMultiSessionTrackNum)) {
-					if (0 == nLBAofFirstIdx || (i == pDisc->SCSI.byFirstMultiSessionTrackNum &&
-						pDisc->SCSI.trackType != TRACK_TYPE::pregapAudioIn1stTrack &&
-						pDisc->SCSI.trackType != TRACK_TYPE::pregapDataIn1stTrack)) {
+					(pDisc->SCSI.bMultiSession && i == pDisc->SCSI.by1stMultiSessionTrkNum)) {
+					if (0 == nLBAofFirstIdx || (i == pDisc->SCSI.by1stMultiSessionTrkNum &&
+						pDisc->SCSI.trkType != TRACK_TYPE::pregapAudioIn1stTrack &&
+						pDisc->SCSI.trkType != TRACK_TYPE::pregapDataIn1stTrack)) {
 
 						WriteCueForIndexDirective(index, 0, 0, 0, fpCue);
-						if (pDisc->SCSI.bMultiSession && i == pDisc->SCSI.byFirstMultiSessionTrackNum) {
+						if (pDisc->SCSI.bMultiSession && i == pDisc->SCSI.by1stMultiSessionTrkNum) {
 							LBAtoMSF(nLBAofFirstIdx, &byMinute, &bySecond, &byFrame);
 							WriteCueForIndexDirective(index, byMinute, bySecond, byFrame, fpCueForImg);
 							if (j == 0) {
@@ -2201,9 +2201,9 @@ BOOL CreateBinCueCcd(
 					index++;
 
 					if (pDisc->SUB.byDesync) {
-						if (0 == nLBAofFirstIdxSync || (i == pDisc->SCSI.byFirstMultiSessionTrackNum &&
-							pDisc->SCSI.trackType != TRACK_TYPE::pregapAudioIn1stTrack &&
-							pDisc->SCSI.trackType != TRACK_TYPE::pregapDataIn1stTrack)) {
+						if (0 == nLBAofFirstIdxSync || (i == pDisc->SCSI.by1stMultiSessionTrkNum &&
+							pDisc->SCSI.trkType != TRACK_TYPE::pregapAudioIn1stTrack &&
+							pDisc->SCSI.trkType != TRACK_TYPE::pregapDataIn1stTrack)) {
 
 							WriteCueForIndexDirective(indexSync, 0, 0, 0, fpCueSyncForImg);
 							WriteCueForIndexDirective(indexSync, 0, 0, 0, fpCueSync);

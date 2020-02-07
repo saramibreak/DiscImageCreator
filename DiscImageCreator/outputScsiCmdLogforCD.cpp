@@ -1175,7 +1175,7 @@ VOID OutputCDOffset(
 	}
 	OutputDiscLogA(STR_DOUBLE_HYPHEN_E);
 
-	if (pExtArg->byAdd && pDisc->SCSI.trackType == TRACK_TYPE::audioOnly) {
+	if (pExtArg->byAdd && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
 		pDisc->MAIN.nCombinedOffset += (INT)(pExtArg->nAudioCDOffsetNum * 4);
 		pExtArg->nAudioCDOffsetNum = 0; // If it is possible, I want to repair it by a better method...
 		OutputDiscLogA(
@@ -1417,10 +1417,10 @@ VOID OutputCDSubToLog(
 					, pDiscPerSector->subcode.current[21]);
 			}
 			if (pDiscPerSector->subcode.prev[13] == 0xaa) {
-				pDisc->SCSI.nLeadoutLenOf1stSession = nLBA - pDisc->SCSI.nFirstLBAofLeadout;
+				pDisc->SCSI.nLeadoutLenOf1stSession = nLBA - pDisc->SCSI.n1stLBAofLeadout;
 				OutputLogA(standardOut | fileDisc, " Lead-out length of 1st session: %d\n"
 					, pDisc->SCSI.nLeadoutLenOf1stSession);
-				pDisc->SCSI.nFirstLBAofLeadin = nLBA;
+				pDisc->SCSI.n1stLBAofLeadin = nLBA;
 			}
 		}
 		else if (pDiscPerSector->subcode.current[13] == 0xaa) {
@@ -1445,13 +1445,13 @@ VOID OutputCDSubToLog(
 					pDiscPerSector->subcode.prev[14] == 0xa1 ||
 					pDiscPerSector->subcode.prev[14] == 0xa2)
 					) {
-					pDisc->SCSI.nLeadinLenOf2ndSession = nLBA - pDisc->SCSI.nFirstLBAofLeadin;
+					pDisc->SCSI.nLeadinLenOf2ndSession = nLBA - pDisc->SCSI.n1stLBAofLeadin;
 					OutputLogA(standardOut | fileDisc, " Lead-in length of 2nd session: %d\n"
 						, pDisc->SCSI.nLeadinLenOf2ndSession);
 					pDisc->SCSI.nEndLBAOfLeadin = nLBA;
 				}
 				else if (pDisc->SCSI.nPregapLenOf1stTrkOf2ndSession == 0 &&
-					BcdToDec(pDiscPerSector->subcode.current[13]) == pDisc->SCSI.byFirstMultiSessionTrackNum &&
+					BcdToDec(pDiscPerSector->subcode.current[13]) == pDisc->SCSI.by1stMultiSessionTrkNum &&
 					pDiscPerSector->subcode.prev[14] == 0 && pDiscPerSector->subcode.current[14] == 1) {
 					pDisc->SCSI.nPregapLenOf1stTrkOf2ndSession = nLBA - pDisc->SCSI.nEndLBAOfLeadin;
 					OutputLogA(standardOut | fileDisc, " Pregap length of 1st track of 2nd session: %d\n"

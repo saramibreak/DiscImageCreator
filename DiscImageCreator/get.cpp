@@ -373,7 +373,7 @@ BOOL GetWriteOffset(
 			}
 			INT tmpLBA = MSFtoLBA(sm, ss, sf) - 150;
 			pDisc->MAIN.nCombinedOffset =
-				CD_RAW_SECTOR_SIZE * -(tmpLBA - pDisc->SCSI.nFirstLBAofDataTrack) + i;
+				CD_RAW_SECTOR_SIZE * -(tmpLBA - pDisc->SCSI.n1stLBAofDataTrk) + i;
 			bRet = TRUE;
 			break;
 		}

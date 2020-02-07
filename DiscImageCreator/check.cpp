@@ -434,9 +434,9 @@ BOOL IsValidPregapSector(
 	if ((pSubch->current.byCtl & AUDIO_DATA_TRACK) == 0 &&
 		(pSubch->next.byCtl & AUDIO_DATA_TRACK) == 0 &&
 		pSubch->next.byIndex == 0) {
-		if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pSubch->prev.byTrackNum] - 225 ||
-			nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pSubch->prev.byTrackNum] - 150 ||
-			nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pSubch->prev.byTrackNum] - 149) {
+		if (nLBA == pDisc->SCSI.lp1stLBAListOnToc[pSubch->prev.byTrackNum] - 225 ||
+			nLBA == pDisc->SCSI.lp1stLBAListOnToc[pSubch->prev.byTrackNum] - 150 ||
+			nLBA == pDisc->SCSI.lp1stLBAListOnToc[pSubch->prev.byTrackNum] - 149) {
 			bRet = TRUE;
 		}
 	}
@@ -557,8 +557,8 @@ BOOL IsCheckingSubChannel(
 ) {
 	BOOL bCheckSub = TRUE;
 	if (!pExtArg->byMultiSession &&
-		(pDisc->SCSI.nFirstLBAofLeadout <= nLBA &&
-			nLBA < pDisc->SCSI.nFirstLBAof2ndSession)) {
+		(pDisc->SCSI.n1stLBAofLeadout <= nLBA &&
+			nLBA < pDisc->SCSI.n1stLBAof2ndSession)) {
 		bCheckSub = FALSE;
 	}
 	return bCheckSub;
@@ -781,7 +781,7 @@ BOOL IsValidSubQIdx(
 	}
 	BOOL bRet = TRUE;
 	if (pDiscPerSector->subch.prev.byIndex != pDiscPerSector->subch.current.byIndex) {
-		if (nLBA != pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->byTrackNum]) {
+		if (nLBA != pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->byTrackNum]) {
 			if (pDiscPerSector->subch.prev.byIndex + 1 < pDiscPerSector->subch.current.byIndex) {
 				s_lineNum = __LINE__;
 				bRet = FALSE;
@@ -900,7 +900,7 @@ BOOL IsValidSubQTrack(
 		}
 		else {
 			if (pDiscPerSector->subch.prev.byTrackNum + 1 == pDiscPerSector->subch.current.byTrackNum) {
-				if (*pExecType != swap && nLBA != pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->byTrackNum]) {
+				if (*pExecType != swap && nLBA != pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->byTrackNum]) {
 					// Super CD-ROM^2 Taiken Soft Shuu (Japan)
 					// LBA[139289, 0x22019], Audio, 2ch, Copy NG, Pre-emphasis No, Track[16], Idx[01], RMSF[01:19:00], AMSF[30:59:14], RtoW[0, 0, 0, 0]
 					// LBA[139290, 0x2201a], Audio, 2ch, Copy NG, Pre-emphasis No, Track[16], Idx[01], RMSF[01:19:01], AMSF[30:59:15], RtoW[0, 0, 0, 0]
@@ -921,7 +921,7 @@ BOOL IsValidSubQTrack(
 					// LBA[361285, 0x58345]: P[ff], Q[0122000000000080191061a1]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[22], Idx[00], RMSF[00:00:00], AMSF[80:19:10]}, RtoW[0, 0, 0, 0]
 					// LBA[361286, 0x58346]: P[ff], Q[012201000000008019113653]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[22], Idx[01], RMSF[00:00:00], AMSF[80:19:11]}, RtoW[0, 0, 0, 0]
 					// LBA[361287, 0x58347]: P[00], Q[01220100000100801912ac61]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[22], Idx[01], RMSF[00:00:01], AMSF[80:19:12]}, RtoW[0, 0, 0, 0]
-					else if (nLBA < pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] &&
+					else if (nLBA < pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] &&
 						(pDiscPerSector->subch.prev.nRelativeTime - 1 == pDiscPerSector->subch.current.nRelativeTime)) {
 						s_lineNum = __LINE__;
 						bRet = FALSE;

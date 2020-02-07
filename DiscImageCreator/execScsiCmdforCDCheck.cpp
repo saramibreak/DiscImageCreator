@@ -163,7 +163,7 @@ BOOL ExecSearchingOffset(
 			OUTPUT_DHYPHEN_PLUS_STR_WITH_C2_SUBCH_F(Check Drive + CD offset), lpCmd[0], (lpCmd[9] & 0x6) >> 1, lpCmd[10]);
 	}
 
-	if (pDisc->SCSI.trackType != TRACK_TYPE::audioOnly || *pExecType == swap) {
+	if (pDisc->SCSI.trkType != TRACK_TYPE::audioOnly || *pExecType == swap) {
 		if (*pExecType != data) {
 			OutputCDMain(fileDisc, lpBuf, nLBA, CD_RAW_SECTOR_SIZE);
 		}
@@ -181,7 +181,7 @@ BOOL ExecSearchingOffset(
 		}
 	}
 	else {
-		if (pDisc->SCSI.trackType != TRACK_TYPE::audioOnly || *pExecType == swap) {
+		if (pDisc->SCSI.trkType != TRACK_TYPE::audioOnly || *pExecType == swap) {
 			BYTE aBuf[CD_RAW_SECTOR_SIZE * 2] = {};
 			memcpy(aBuf, lpBuf, CD_RAW_SECTOR_SIZE);
 
@@ -192,20 +192,20 @@ BOOL ExecSearchingOffset(
 			OutputCDMain(fileDisc, lpBuf, nLBA + 1, CD_RAW_SECTOR_SIZE);
 
 			memcpy(aBuf + CD_RAW_SECTOR_SIZE, lpBuf, CD_RAW_SECTOR_SIZE);
-			if (pDisc->SCSI.trackType != TRACK_TYPE::audioOnly || *pExecType == swap) {
+			if (pDisc->SCSI.trkType != TRACK_TYPE::audioOnly || *pExecType == swap) {
 				if (!GetWriteOffset(pDisc, aBuf)) {
-					if (pDisc->SCSI.trackType == TRACK_TYPE::dataExist ||
-						pDisc->SCSI.trackType == TRACK_TYPE::pregapDataIn1stTrack) {
+					if (pDisc->SCSI.trkType == TRACK_TYPE::dataExist ||
+						pDisc->SCSI.trkType == TRACK_TYPE::pregapDataIn1stTrack) {
 						OutputLogA(standardError | fileDisc, _T("Failed to get write-offset\n"));
 						return FALSE;
 					}
 					OutputLogA(standardOut | fileDisc,
 						"There isn't data sector in pregap sector of track 1\n");
-					pDisc->SCSI.trackType = TRACK_TYPE::audioOnly;
+					pDisc->SCSI.trkType = TRACK_TYPE::audioOnly;
 				}
 			}
 		}
-		else if (pDisc->SCSI.trackType == TRACK_TYPE::audioOnly &&
+		else if (pDisc->SCSI.trkType == TRACK_TYPE::audioOnly &&
 			(pExtArg->byVideoNow || pExtArg->byVideoNowColor)) {
 			LPBYTE pBuf2 = NULL;
 			LPBYTE lpBuf2 = NULL;
@@ -326,7 +326,7 @@ BOOL ExecSearchingOffset(
 			}
 			FreeAndNull(pBuf2);
 		}
-		else if (pDisc->SCSI.trackType == TRACK_TYPE::audioOnly && pExtArg->byAtari) {
+		else if (pDisc->SCSI.trkType == TRACK_TYPE::audioOnly && pExtArg->byAtari) {
 			// Atari Jaguar CD Header
 			//  00 00 54 41 49 52 54 41  49 52 54 41 49 52 54 41   ..TAIRTAIRTAIRTA
 			//  49 52 54 41 49 52 54 41  49 52 54 41 49 52 54 41   IRTAIRTAIRTAIRTA
@@ -350,7 +350,7 @@ BOOL ExecSearchingOffset(
 				0x54, 0x41, 0x49, 0x52, 0x54, 0x41, 0x49, 0x52,
 			};
 			INT nSector = 0;
-			nLBA = pDisc->SCSI.nFirstLBAof2ndSession;
+			nLBA = pDisc->SCSI.n1stLBAof2ndSession;
 			do {
 				if (!ExecReadCD(pExtArg, pDevice, lpCmd, nLBA
 					, lpBuf, uiBufSize, _T(__FUNCTION__), __LINE__)) {
@@ -429,8 +429,8 @@ BOOL ReadCDForSearchingOffset(
 	}
 
 	INT nDriveOffset = nDriveSampleOffset * 4; // byte size * 4 = sample size
-	if (pDisc->SCSI.trackType != TRACK_TYPE::dataExist &&
-		pDisc->SCSI.trackType != TRACK_TYPE::pregapDataIn1stTrack) {
+	if (pDisc->SCSI.trkType != TRACK_TYPE::dataExist &&
+		pDisc->SCSI.trkType != TRACK_TYPE::pregapDataIn1stTrack) {
 		pDisc->MAIN.nCombinedOffset = nDriveOffset;
 	}
 	LPBYTE pBuf = NULL;
@@ -440,7 +440,7 @@ BOOL ReadCDForSearchingOffset(
 		return FALSE;
 	}
 	if (*pExecType == gd) {
-		pDisc->SCSI.nFirstLBAofDataTrack = FIRST_LBA_FOR_GD;
+		pDisc->SCSI.n1stLBAofDataTrk = FIRST_LBA_FOR_GD;
 	}
 	FlushLog();
 	BYTE lpCmd[CDB12GENERIC_LENGTH] = {};
@@ -449,10 +449,10 @@ BOOL ReadCDForSearchingOffset(
 		SetReadD8Command(pDevice, &cdb, 1, CDFLAG::_PLXTR_READ_CDDA::NoSub);
 		memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
 
-		INT nLBA = pDisc->SCSI.nFirstLBAofDataTrack;
+		INT nLBA = pDisc->SCSI.n1stLBAofDataTrk;
 		ZeroMemory(lpBuf, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE);
 
-		if (pDisc->SCSI.trackType != TRACK_TYPE::audioOnly) {
+		if (pDisc->SCSI.trkType != TRACK_TYPE::audioOnly) {
 			if (!ExecSearchingOffset(pExecType, pExtArg, pDevice, pDisc, lpCmd, nLBA, lpBuf
 				, CD_RAW_SECTOR_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset)) {
 				bRet = FALSE;
@@ -506,14 +506,14 @@ BOOL ReadCDForSearchingOffset(
 			, 1, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::Raw);
 		memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
 
-		INT nLBA = pDisc->SCSI.nFirstLBAofDataTrack;
+		INT nLBA = pDisc->SCSI.n1stLBAofDataTrk;
 		ZeroMemory(lpBuf, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE);
 
 		if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
 			SetReadCDCommand(pDevice, &cdb, flg
 				, 1, CDFLAG::_READ_CD::byte294, CDFLAG::_READ_CD::NoSub);
 			memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
-			if (pDisc->SCSI.trackType != TRACK_TYPE::audioOnly) {
+			if (pDisc->SCSI.trkType != TRACK_TYPE::audioOnly) {
 				// Audio only disc doesn't call this because of NoSub mode 
 				if (!ExecSearchingOffset(pExecType, pExtArg, pDevice, pDisc, lpCmd, nLBA, lpBuf
 					, CD_RAW_SECTOR_WITH_C2_294_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset)) {
@@ -544,7 +544,7 @@ BOOL ReadCDForSearchingOffset(
 				SetReadCDCommand(pDevice, &cdb, flg
 					, 1, CDFLAG::_READ_CD::byte296, CDFLAG::_READ_CD::NoSub);
 				memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
-				if (pDisc->SCSI.trackType != TRACK_TYPE::audioOnly) {
+				if (pDisc->SCSI.trkType != TRACK_TYPE::audioOnly) {
 					if (!ExecSearchingOffset(pExecType, pExtArg, pDevice, pDisc, lpCmd, nLBA, lpBuf
 						, CD_RAW_SECTOR_WITH_C2_SIZE, bGetDriveOffset, nDriveSampleOffset, nDriveOffset)) {
 						// not return FALSE
@@ -577,7 +577,7 @@ BOOL ReadCDForSearchingOffset(
 			}
 		}
 		else {
-			if (*pExecType != data && pDisc->SCSI.trackType != TRACK_TYPE::audioOnly) {
+			if (*pExecType != data && pDisc->SCSI.trkType != TRACK_TYPE::audioOnly) {
 				lpCmd[10] = (BYTE)CDFLAG::_READ_CD::NoSub;
 				// Audio only disc doesn't call this because of NoSub mode 
 				if (!ExecSearchingOffset(pExecType, pExtArg, pDevice, pDisc, lpCmd, nLBA, lpBuf
@@ -722,10 +722,10 @@ BOOL ReadCDForCheckingSubQAdr(
 	INT nISRCIdx = 0;
 	INT nTmpMCNLBAList[25] = { -1 };
 	INT nTmpISRCLBAList[25] = { -1 };
-	INT nTmpLBA = pDisc->SCSI.lpFirstLBAListOnToc[byIdxOfTrack];
+	INT nTmpLBA = pDisc->SCSI.lp1stLBAListOnToc[byIdxOfTrack];
 	INT nTmpNextLBA = 0;
-	if (byIdxOfTrack + 1 < pDisc->SCSI.byLastDataTrackNum) {
-		nTmpNextLBA = pDisc->SCSI.lpFirstLBAListOnToc[byIdxOfTrack + 1] - nTmpLBA;
+	if (byIdxOfTrack + 1 < pDisc->SCSI.byLastDataTrkNum) {
+		nTmpNextLBA = pDisc->SCSI.lp1stLBAListOnToc[byIdxOfTrack + 1] - nTmpLBA;
 	}
 	else {
 		nTmpNextLBA = pDisc->SCSI.nAllLength - nTmpLBA;
@@ -870,7 +870,7 @@ BOOL ReadCDForCheckingSubRtoW(
 	for (BYTE i = (BYTE)(pDisc->SCSI.toc.FirstTrack - 1); i < pDisc->SCSI.toc.LastTrack; i++) {
 		try {
 			OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR_WITH_TRACK_F(Check CD + G), lpCmd[0], lpCmd[10], i + 1);
-			INT nTmpLBA = pDisc->SCSI.lpFirstLBAListOnToc[i] + 100;
+			INT nTmpLBA = pDisc->SCSI.lp1stLBAListOnToc[i] + 100;
 			if (!ExecReadCD(pExtArg, pDevice, lpCmd, nTmpLBA, lpBuf,
 				uiBufLen, _T(__FUNCTION__), __LINE__)) {
 				// skip checking
@@ -1292,7 +1292,7 @@ VOID ReadCDForScanningPsxAntiMod(
 	cdb.OperationCode = SCSIOP_READ12;
 	cdb.TransferLength[3] = 1;
 
-	for (INT nLBA = 18; nLBA < pDisc->SCSI.nLastLBAofDataTrack - 150; nLBA++) {
+	for (INT nLBA = 18; nLBA < pDisc->SCSI.nLastLBAofDataTrk - 150; nLBA++) {
 		if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, buf,
 			DISC_RAW_READ_SIZE, _T(__FUNCTION__), __LINE__)) {
 			return;
@@ -1317,7 +1317,7 @@ VOID ReadCDForScanningPsxAntiMod(
 		if (bRet == 2) {
 			break;
 		}
-		OutputString(_T("\rScanning sector for anti-mod string (LBA) %6d/%6d"), nLBA, pDisc->SCSI.nLastLBAofDataTrack - 150 - 1);
+		OutputString(_T("\rScanning sector for anti-mod string (LBA) %6d/%6d"), nLBA, pDisc->SCSI.nLastLBAofDataTrk - 150 - 1);
 	}
 	if (!bRet) {
 		OutputLogA(fileDisc | standardOut, "\nNo anti-mod string\n");
@@ -1636,14 +1636,14 @@ BOOL ReadCDCheck(
 		if (!ReadCDForCheckingSubRtoW(pExtArg, pDevice, pDisc)) {
 			return FALSE;
 		}
-		if (pDisc->SCSI.trackType != TRACK_TYPE::audioOnly) {
+		if (pDisc->SCSI.trkType != TRACK_TYPE::audioOnly) {
 			if (*pExecType == gd) {
 				if (!ReadGDForFileSystem(pExecType, pExtArg, pDevice, pDisc)) {
 					return FALSE;
 				}
 			}
 			else {
-				if (pDisc->SCSI.byFirstDataTrackNum == 1) {
+				if (pDisc->SCSI.by1stDataTrkNum == 1) {
 					ReadCDForSegaDisc(pExtArg, pDevice);
 				}
 				if (pExtArg->byLibCrypt) {

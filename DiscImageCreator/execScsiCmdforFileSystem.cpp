@@ -493,8 +493,8 @@ BOOL ReadVolumeDescriptor(
 	PVOLUME_DESCRIPTOR pVolDesc,
 	BYTE byTransferLen
 ) {
-	if (pDisc->SCSI.lpFirstLBAListOnToc) {
-		nPVD += pDisc->SCSI.lpFirstLBAListOnToc[byIdx];
+	if (pDisc->SCSI.lp1stLBAListOnToc) {
+		nPVD += pDisc->SCSI.lp1stLBAListOnToc[byIdx];
 	}
 	INT nTmpLBA = nPVD;
 	BYTE bufDec[CD_RAW_SECTOR_SIZE * 2] = {};
@@ -565,11 +565,11 @@ BOOL ReadCDForFileSystem(
 	for (BYTE i = 0; i < pDisc->SCSI.toc.LastTrack; i++) {
 		if ((pDisc->SCSI.toc.TrackData[i].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 			// for Label Gate CD, XCP
-			if (i > 1 && pDisc->SCSI.lpLastLBAListOnToc[i] - pDisc->SCSI.lpFirstLBAListOnToc[i] + 1 <= 750) {
+			if (i > 1 && pDisc->SCSI.lpLastLBAListOnToc[i] - pDisc->SCSI.lp1stLBAListOnToc[i] + 1 <= 750) {
 				return TRUE;
 			}
 			// for Anno 1602 - Im Namen des Konigs
-			else if (i == 1 && pDisc->SCSI.lpLastLBAListOnToc[i] - pDisc->SCSI.lpFirstLBAListOnToc[i] + 1 <= 200) {
+			else if (i == 1 && pDisc->SCSI.lpLastLBAListOnToc[i] - pDisc->SCSI.lp1stLBAListOnToc[i] + 1 <= 200) {
 				return TRUE;
 			}
 			LPBYTE pBuf = NULL;
@@ -653,14 +653,14 @@ BOOL ReadCDForFileSystem(
 				else {
 					BOOL bOtherHeader = FALSE;
 					// for pce, pc-fx
-					INT nLBA = pDisc->SCSI.nFirstLBAofDataTrack;
+					INT nLBA = pDisc->SCSI.n1stLBAofDataTrk;
 					if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, lpBuf,
 						DISC_RAW_READ_SIZE, _T(__FUNCTION__), __LINE__)) {
 						throw FALSE;
 					}
 					if (IsValidPceSector(lpBuf)) {
 						OutputFsPceStuff(lpBuf, nLBA);
-						nLBA = pDisc->SCSI.nFirstLBAofDataTrack + 1;
+						nLBA = pDisc->SCSI.n1stLBAofDataTrk + 1;
 						if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, lpBuf,
 							DISC_RAW_READ_SIZE, _T(__FUNCTION__), __LINE__)) {
 							throw FALSE;
@@ -670,7 +670,7 @@ BOOL ReadCDForFileSystem(
 					}
 					else if (IsValidPcfxSector(lpBuf)) {
 						OutputFsPcfxHeader(lpBuf, nLBA);
-						nLBA = pDisc->SCSI.nFirstLBAofDataTrack + 1;
+						nLBA = pDisc->SCSI.n1stLBAofDataTrk + 1;
 						if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, lpBuf,
 							DISC_RAW_READ_SIZE, _T(__FUNCTION__), __LINE__)) {
 							throw FALSE;

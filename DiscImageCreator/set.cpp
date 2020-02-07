@@ -205,16 +205,16 @@ VOID SetAndOutputToc(
 			}
 		}
 		// for swap command
-		pDisc->SCSI.lpFirstLBAListOnToc[tIdx] = 0;
+		pDisc->SCSI.lp1stLBAListOnToc[tIdx] = 0;
 		pDisc->SCSI.lpLastLBAListOnToc[tIdx] = 0;
 
 		for (INT j = 0, k = 24; j < 4; j++, k -= 8) {
-			pDisc->SCSI.lpFirstLBAListOnToc[tIdx] |= pDisc->SCSI.toc.TrackData[i - 1].Address[j] << k;
+			pDisc->SCSI.lp1stLBAListOnToc[tIdx] |= pDisc->SCSI.toc.TrackData[i - 1].Address[j] << k;
 			pDisc->SCSI.lpLastLBAListOnToc[tIdx] |= pDisc->SCSI.toc.TrackData[i].Address[j] << k;
 		}
 		pDisc->SCSI.lpLastLBAListOnToc[tIdx] -= 1;
 		pDisc->SCSI.nAllLength += 
-			pDisc->SCSI.lpLastLBAListOnToc[tIdx] - pDisc->SCSI.lpFirstLBAListOnToc[tIdx] + 1;
+			pDisc->SCSI.lpLastLBAListOnToc[tIdx] - pDisc->SCSI.lp1stLBAListOnToc[tIdx] + 1;
 
 		if ((pDisc->SCSI.toc.TrackData[tIdx].Control & AUDIO_DATA_TRACK) == 0) {
 			strncpy(strType, " Audio", typeSize);
@@ -222,20 +222,20 @@ VOID SetAndOutputToc(
 		else if ((pDisc->SCSI.toc.TrackData[tIdx].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 			strncpy(strType, "  Data", typeSize);
 			if (bFirstData) {
-				pDisc->SCSI.nFirstLBAofDataTrack = pDisc->SCSI.lpFirstLBAListOnToc[tIdx];
-				pDisc->SCSI.byFirstDataTrackNum = i;
+				pDisc->SCSI.n1stLBAofDataTrk = pDisc->SCSI.lp1stLBAListOnToc[tIdx];
+				pDisc->SCSI.by1stDataTrkNum = i;
 				bFirstData = FALSE;
 				trkType = TRACK_TYPE::dataExist;
 			}
-			pDisc->SCSI.nLastLBAofDataTrack = pDisc->SCSI.lpLastLBAListOnToc[tIdx];
-			pDisc->SCSI.byLastDataTrackNum = i;
+			pDisc->SCSI.nLastLBAofDataTrk = pDisc->SCSI.lpLastLBAListOnToc[tIdx];
+			pDisc->SCSI.byLastDataTrkNum = i;
 		}
 
-		if (i == pDisc->SCSI.toc.FirstTrack && pDisc->SCSI.lpFirstLBAListOnToc[tIdx] > 0) {
+		if (i == pDisc->SCSI.toc.FirstTrack && pDisc->SCSI.lp1stLBAListOnToc[tIdx] > 0) {
 			if (pDisc->SCSI.byFormat != DISK_TYPE_CDI) {
-				pDisc->SCSI.nAllLength += pDisc->SCSI.lpFirstLBAListOnToc[tIdx];
+				pDisc->SCSI.nAllLength += pDisc->SCSI.lp1stLBAListOnToc[tIdx];
 				OutputDiscLogA("\tPregap Track   , LBA %8u - %8u, Length %8u\n",
-					0, pDisc->SCSI.lpFirstLBAListOnToc[tIdx] - 1, pDisc->SCSI.lpFirstLBAListOnToc[tIdx]);
+					0, pDisc->SCSI.lp1stLBAListOnToc[tIdx] - 1, pDisc->SCSI.lp1stLBAListOnToc[tIdx]);
 				if (trkType == TRACK_TYPE::dataExist) {
 					trkType = TRACK_TYPE::pregapDataIn1stTrack;
 				}
@@ -249,25 +249,25 @@ VOID SetAndOutputToc(
 			if (i == pDisc->SCSI.toc.FirstTrack) {
 				OutputDiscLogA(
 					"\t Audio Track %2u, LBA %8u - \n", i,	0);
-				pDisc->SCSI.nFirstLBAofDataTrack = 0;
-				pDisc->SCSI.byFirstDataTrackNum = 1;
-				pDisc->SCSI.byLastDataTrackNum = 1;
+				pDisc->SCSI.n1stLBAofDataTrk = 0;
+				pDisc->SCSI.by1stDataTrkNum = 1;
+				pDisc->SCSI.byLastDataTrkNum = 1;
 				trkType = TRACK_TYPE::pregapDataIn1stTrack;
 			}
 			idx = i + 1;
 		}
 		OutputDiscLogA(
 			"\t%s Track %2u, LBA %8u - %8u, Length %8u\n", strType, idx,
-			pDisc->SCSI.lpFirstLBAListOnToc[tIdx], pDisc->SCSI.lpLastLBAListOnToc[tIdx],
-			pDisc->SCSI.lpLastLBAListOnToc[tIdx] - pDisc->SCSI.lpFirstLBAListOnToc[tIdx] + 1);
+			pDisc->SCSI.lp1stLBAListOnToc[tIdx], pDisc->SCSI.lpLastLBAListOnToc[tIdx],
+			pDisc->SCSI.lpLastLBAListOnToc[tIdx] - pDisc->SCSI.lp1stLBAListOnToc[tIdx] + 1);
 	}
 	if (pDisc->SCSI.byFormat == DISK_TYPE_CDI && pDisc->SCSI.toc.LastTrack > 1) {
-		pDisc->SCSI.lpLastLBAListOnToc[0] = pDisc->SCSI.lpFirstLBAListOnToc[1] - 1;
-		pDisc->SCSI.nAllLength += pDisc->SCSI.lpFirstLBAListOnToc[1];
+		pDisc->SCSI.lpLastLBAListOnToc[0] = pDisc->SCSI.lp1stLBAListOnToc[1] - 1;
+		pDisc->SCSI.nAllLength += pDisc->SCSI.lp1stLBAListOnToc[1];
 	}
 	OutputDiscLogA(
 		"\t                                          Total  %8u\n", pDisc->SCSI.nAllLength);
-	pDisc->SCSI.trackType = trkType;
+	pDisc->SCSI.trkType = trkType;
 }
 
 VOID SetAndOutputTocForGD(
@@ -290,7 +290,7 @@ VOID SetAndOutputTocForGD(
 	for (BYTE i = pDisc->SCSI.toc.FirstTrack; i <= pDisc->SCSI.toc.LastTrack; i++, j += 4) {
 		INT tIdx = i - 1;
 		// update the toc of audio trap disc to the toc of gd-rom
-		pDisc->SCSI.lpFirstLBAListOnToc[tIdx] = (INT)(MAKELONG(
+		pDisc->SCSI.lp1stLBAListOnToc[tIdx] = (INT)(MAKELONG(
 			MAKEWORD(bufDec[0x114 + j], bufDec[0x115 + j]), MAKEWORD(bufDec[0x116 + j], 0)) - 150);
 		if (i == pDisc->SCSI.toc.LastTrack) {
 			pDisc->SCSI.lpLastLBAListOnToc[tIdx] = pDisc->SCSI.nAllLength - 1;
@@ -309,22 +309,22 @@ VOID SetAndOutputTocForGD(
 		else if ((pDisc->SCSI.toc.TrackData[tIdx].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 			strncpy(strType, "  Data", typeSize);
 			if (bFirstData) {
-				pDisc->SCSI.nFirstLBAofDataTrack = pDisc->SCSI.lpFirstLBAListOnToc[tIdx];
-				pDisc->SCSI.byFirstDataTrackNum = i;
+				pDisc->SCSI.n1stLBAofDataTrk = pDisc->SCSI.lp1stLBAListOnToc[tIdx];
+				pDisc->SCSI.by1stDataTrkNum = i;
 				bFirstData = FALSE;
 				trkType = TRACK_TYPE::dataExist;
 			}
-			pDisc->SCSI.nLastLBAofDataTrack = pDisc->SCSI.lpLastLBAListOnToc[tIdx];
-			pDisc->SCSI.byLastDataTrackNum = i;
+			pDisc->SCSI.nLastLBAofDataTrk = pDisc->SCSI.lpLastLBAListOnToc[tIdx];
+			pDisc->SCSI.byLastDataTrkNum = i;
 		}
 		OutputDiscLogA(
 			"\t%s Track %2u, LBA %6u - %6u, Length %6u\n", strType, i,
-			pDisc->SCSI.lpFirstLBAListOnToc[tIdx], pDisc->SCSI.lpLastLBAListOnToc[tIdx],
-			pDisc->SCSI.lpLastLBAListOnToc[tIdx] - pDisc->SCSI.lpFirstLBAListOnToc[tIdx] + 1);
+			pDisc->SCSI.lp1stLBAListOnToc[tIdx], pDisc->SCSI.lpLastLBAListOnToc[tIdx],
+			pDisc->SCSI.lpLastLBAListOnToc[tIdx] - pDisc->SCSI.lp1stLBAListOnToc[tIdx] + 1);
 	}
 	OutputDiscLogA("                                           Total %6d\n"
 		, pDisc->SCSI.nAllLength - FIRST_LBA_FOR_GD);
-	pDisc->SCSI.trackType = trkType;
+	pDisc->SCSI.trkType = trkType;
 }
 
 VOID SetAndOutputTocFull(
@@ -369,7 +369,7 @@ VOID SetAndOutputTocFull(
 			// set this by ReadTOCFull
 //			pDisc->SCSI.byFormat = pTocData[a].Msf[1];
 			if (fullToc->LastCompleteSession > 1 && pTocData[a].Msf[0] > 1) {
-				pDisc->SCSI.byFirstMultiSessionTrackNum = pTocData[a].Msf[0];
+				pDisc->SCSI.by1stMultiSessionTrkNum = pTocData[a].Msf[0];
 			}
 			break;
 		case 0xa1:
@@ -388,7 +388,7 @@ VOID SetAndOutputTocFull(
 				pDisc->SCSI.lpLastLBAListOnToc[ucTmpLastTrack - 1] = nTmpLBA - 1;
 			}
 			if (pTocData[a].SessionNumber == 1) {
-				pDisc->SCSI.nFirstLBAofLeadout = nTmpLBA;
+				pDisc->SCSI.n1stLBAofLeadout = nTmpLBA;
 			}
 			break;
 		case 0xb0: // (multi-session disc)
@@ -405,7 +405,7 @@ VOID SetAndOutputTocFull(
 				pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2],
 				nTmpLBA, nTmpLBA, pTocData[a].Zero);
 			// set this by ReadTOCFull
-//			pDisc->SCSI.nFirstLBAof2ndSession = nTmpLBAExt + 150;
+//			pDisc->SCSI.n1stLBAof2ndSession = nTmpLBAExt + 150;
 			break;
 		case 0xb1: // (Audio only: This identifies the presence of skip intervals)
 			OutputDiscLogA(
@@ -450,11 +450,11 @@ VOID SetAndOutputTocFull(
 					// Rayman (USA) [SS], Wolfchild (Europe) [MCD]
 					// Last LBA is corrupt, so this doesn't use in single session disc.
 					if (pTocData[a].Point == 1) {
-						pDisc->SCSI.lpFirstLBAListOnToc[pTocData[a].Point - 1] = nTmpLBA - 150;
+						pDisc->SCSI.lp1stLBAListOnToc[pTocData[a].Point - 1] = nTmpLBA - 150;
 					}
 					else if (pTocData[a].Point >= 2 && pTocData[a].Point <= 100) {
 						pDisc->SCSI.lpLastLBAListOnToc[pTocData[a].Point - 2] = nTmpLBA - 150 - 1;
-						pDisc->SCSI.lpFirstLBAListOnToc[pTocData[a].Point - 1] = nTmpLBA - 150;
+						pDisc->SCSI.lp1stLBAListOnToc[pTocData[a].Point - 1] = nTmpLBA - 150;
 					}
 					// Track 2 is incorrect...
 					//	Session 1, Ctl 0, Adr 5, Point 0xb0,   NextSession, AMSF 02:36:02 (LBA[011702, 0x02db6])
@@ -467,7 +467,7 @@ VOID SetAndOutputTocFull(
 					//	Session 2, Ctl 4, Adr 1, Point 0xa2,      Lead-out, AMSF 16:19:71 (LBA[073496, 0x11f18])
 					//	Session 2, Ctl 4, Adr 1, Point 0x02,      Track  2, AMSF 02:00:00 (LBA[009000, 0x02328])
 					if (pTocData[a].SessionNumber == 2 && bFirst2ndSession) {
-						pDisc->SCSI.nFirstLBAof2ndSession = nTmpLBA - 150;
+						pDisc->SCSI.n1stLBAof2ndSession = nTmpLBA - 150;
 						bFirst2ndSession = FALSE;
 					}
 #endif
@@ -723,7 +723,7 @@ VOID SetCDOffset(
 	INT nEndLBA
 ) {
 	if (pDisc->MAIN.nCombinedOffset > 0) {
-		if (*pExecType != gd && byBe && pDisc->SCSI.trackType != TRACK_TYPE::audioOnly) {
+		if (*pExecType != gd && byBe && pDisc->SCSI.trkType != TRACK_TYPE::audioOnly) {
 			pDisc->MAIN.uiMainDataSlideSize = 0;
 			pDisc->MAIN.nOffsetStart = 0;
 			pDisc->MAIN.nOffsetEnd = 0;
@@ -738,15 +738,15 @@ VOID SetCDOffset(
 			pDisc->MAIN.nFixStartLBA = nStartLBA + pDisc->MAIN.nAdjustSectorNum - 1;
 			pDisc->MAIN.nFixEndLBA = nEndLBA + pDisc->MAIN.nAdjustSectorNum;
 		}
-		if (pDisc->SCSI.nFirstLBAof2ndSession != -1) {
+		if (pDisc->SCSI.n1stLBAof2ndSession != -1) {
 			pDisc->MAIN.nFixFirstLBAofLeadout =
-				pDisc->SCSI.nFirstLBAofLeadout + pDisc->MAIN.nAdjustSectorNum;
+				pDisc->SCSI.n1stLBAofLeadout + pDisc->MAIN.nAdjustSectorNum;
 			pDisc->MAIN.nFixFirstLBAof2ndSession = 
-				pDisc->SCSI.nFirstLBAof2ndSession + pDisc->MAIN.nAdjustSectorNum - 1;
+				pDisc->SCSI.n1stLBAof2ndSession + pDisc->MAIN.nAdjustSectorNum - 1;
 		}
 	}
 	else if (pDisc->MAIN.nCombinedOffset < 0) {
-		if (*pExecType != gd && byBe && pDisc->SCSI.trackType != TRACK_TYPE::audioOnly) {
+		if (*pExecType != gd && byBe && pDisc->SCSI.trkType != TRACK_TYPE::audioOnly) {
 			pDisc->MAIN.uiMainDataSlideSize = 0;
 			pDisc->MAIN.nOffsetStart = 0;
 			pDisc->MAIN.nOffsetEnd = 0;
@@ -766,11 +766,11 @@ VOID SetCDOffset(
 			pDisc->MAIN.nFixStartLBA = nStartLBA + pDisc->MAIN.nAdjustSectorNum;
 			pDisc->MAIN.nFixEndLBA = nEndLBA + pDisc->MAIN.nAdjustSectorNum + 1;
 		}
-		if (pDisc->SCSI.nFirstLBAof2ndSession != -1) {
+		if (pDisc->SCSI.n1stLBAof2ndSession != -1) {
 			pDisc->MAIN.nFixFirstLBAofLeadout = 
-				pDisc->SCSI.nFirstLBAofLeadout + pDisc->MAIN.nAdjustSectorNum + 1;
+				pDisc->SCSI.n1stLBAofLeadout + pDisc->MAIN.nAdjustSectorNum + 1;
 			pDisc->MAIN.nFixFirstLBAof2ndSession =
-				pDisc->SCSI.nFirstLBAof2ndSession + pDisc->MAIN.nAdjustSectorNum;
+				pDisc->SCSI.n1stLBAof2ndSession + pDisc->MAIN.nAdjustSectorNum;
 		}
 	}
 	else {
@@ -779,9 +779,9 @@ VOID SetCDOffset(
 		pDisc->MAIN.nOffsetEnd = 0;
 		pDisc->MAIN.nFixStartLBA = nStartLBA;
 		pDisc->MAIN.nFixEndLBA = nEndLBA;
-		if (pDisc->SCSI.nFirstLBAof2ndSession != -1) {
-			pDisc->MAIN.nFixFirstLBAofLeadout =	pDisc->SCSI.nFirstLBAofLeadout;
-			pDisc->MAIN.nFixFirstLBAof2ndSession = pDisc->SCSI.nFirstLBAof2ndSession;
+		if (pDisc->SCSI.n1stLBAof2ndSession != -1) {
+			pDisc->MAIN.nFixFirstLBAofLeadout =	pDisc->SCSI.n1stLBAofLeadout;
+			pDisc->MAIN.nFixFirstLBAof2ndSession = pDisc->SCSI.n1stLBAof2ndSession;
 		}
 	}
 	UNREFERENCED_PARAMETER(byPlxtrDrive);
@@ -789,7 +789,7 @@ VOID SetCDOffset(
 	if (*pExecType == data &&
 		((byBe && byPlxtrDrive) || !byPlxtrDrive) &&
 		pDisc->SCSI.toc.FirstTrack == pDisc->SCSI.toc.LastTrack &&
-		pDisc->SCSI.toc.FirstTrack == pDisc->SCSI.byFirstDataTrackNum) {
+		pDisc->SCSI.toc.FirstTrack == pDisc->SCSI.by1stDataTrkNum) {
 		pDisc->MAIN.uiMainDataSlideSize = 0;
 		pDisc->MAIN.nOffsetStart = 0;
 		pDisc->MAIN.nOffsetEnd = 0;
@@ -811,7 +811,7 @@ VOID SetTrackAttribution(
 	if (pDiscPerSector->subch.current.byAdr != ADR_ENCODES_CURRENT_POSITION) {
 		if ((pDiscPerSector->subch.current.byP == 0x00 && pDiscPerSector->subch.next.byP == 0xff &&
 			pDiscPerSector->subch.prev.byTrackNum + 1 == pDiscPerSector->subch.next.byTrackNum) ||
-			nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->byTrackNum - 1]) {
+			nLBA == pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->byTrackNum - 1]) {
 			// [PCE] Cosmic Fantasy 3 - Bouken Shounen Rei (Japan)
 			// LBA[261585, 0x3fdd1]: P[00], Q[01950100136900580960087c]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[95], Idx[01], RMSF[00:13:69], AMSF[58:09:60]}, RtoW[0, 0, 0, 0]
 			// LBA[261586, 0x3fdd2]: P[00], Q[020000000000000000615df2]{Audio, 2ch, Copy NG, Pre-emphasis No, MediaCatalogNumber [0000000000000], AMSF[     :61]}, RtoW[0, 0, 0, 0]
@@ -846,7 +846,7 @@ VOID SetTrackAttribution(
 		BYTE tmpPrevTrackNum = pDiscPerSector->subch.prev.byTrackNum;
 		BYTE tmpPrevIndex = pDiscPerSector->subch.prev.byIndex;
 		if (pDiscPerSector->subch.prev.byAdr != ADR_ENCODES_CURRENT_POSITION &&
-			nLBA - 1 != pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->byTrackNum - 1]) {
+			nLBA - 1 != pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->byTrackNum - 1]) {
 			tmpPrevTrackNum = pDiscPerSector->subch.prevPrev.byTrackNum;
 			tmpPrevIndex = pDiscPerSector->subch.prevPrev.byIndex;
 		}
@@ -856,15 +856,15 @@ VOID SetTrackAttribution(
 			tIdx = pDiscPerSector->byTrackNum - 1;
 
 			if (0 < tmpCurrentIndex && tmpCurrentIndex < MAXIMUM_NUMBER_INDEXES) {
-				if (pDisc->SCSI.nFirstLBAof2ndSession == -1 &&
+				if (pDisc->SCSI.n1stLBAof2ndSession == -1 &&
 					tmpCurrentIndex == 1 &&
-					nLBA != pDisc->SCSI.lpFirstLBAListOnToc[tIdx]) {
+					nLBA != pDisc->SCSI.lp1stLBAListOnToc[tIdx]) {
 					OutputSubInfoWithLBALogA(
 						"Subchannel & TOC doesn't sync. LBA on TOC[%d, %#x], index[%02u]\n",
-						nLBA, tmpCurrentTrackNum, pDisc->SCSI.lpFirstLBAListOnToc[tIdx],
-						pDisc->SCSI.lpFirstLBAListOnToc[tIdx], tmpCurrentIndex);
+						nLBA, tmpCurrentTrackNum, pDisc->SCSI.lp1stLBAListOnToc[tIdx],
+						pDisc->SCSI.lp1stLBAListOnToc[tIdx], tmpCurrentIndex);
 
-					pDisc->SUB.lpFirstLBAListOnSub[tIdx][1] = pDisc->SCSI.lpFirstLBAListOnToc[tIdx];
+					pDisc->SUB.lpFirstLBAListOnSub[tIdx][1] = pDisc->SCSI.lp1stLBAListOnToc[tIdx];
 					if (pDisc->SUB.lpFirstLBAListOnSub[tIdx][0] == pDisc->SUB.lpFirstLBAListOnSub[tIdx][1]) {
 						pDisc->SUB.lpFirstLBAListOnSub[tIdx][0] = -1;
 					}
@@ -908,7 +908,7 @@ VOID SetTrackAttribution(
 			}
 		}
 		// preserve mode, ctl
-		if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[tIdx]) {
+		if (nLBA == pDisc->SCSI.lp1stLBAListOnToc[tIdx]) {
 			pDisc->SUB.lpCtlList[tIdx] = pDiscPerSector->subch.current.byCtl;
 			pDisc->MAIN.lpModeList[tIdx] = GetMode(pDiscPerSector, unscrambled);
 			OutputSubInfoWithLBALogA("Set Ctl: %d, Mode: %d\n"
@@ -925,17 +925,17 @@ VOID SetTrackAttribution(
 				}
 			}
 			else {
-				if (nLBA != pDisc->SCSI.lpFirstLBAListOnToc[tIdx]) {
+				if (nLBA != pDisc->SCSI.lp1stLBAListOnToc[tIdx]) {
 					if (pDisc->SCSI.byFormat == DISK_TYPE_CDI && pDisc->SCSI.toc.LastTrack > 1) {
-						pDisc->SCSI.lpFirstLBAListOnToc[tIdx] = nLBA;
+						pDisc->SCSI.lp1stLBAListOnToc[tIdx] = nLBA;
 						pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[tIdx] = 0;
 						pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tIdx] = nLBA - 1;
 					}
 					else {
 						OutputSubInfoWithLBALogA(
 							"Subchannel & TOC doesn't sync. LBA on TOC[%d, %#x], prevIndex[%02u]\n",
-							nLBA, tmpCurrentTrackNum, pDisc->SCSI.lpFirstLBAListOnToc[tIdx],
-							pDisc->SCSI.lpFirstLBAListOnToc[tIdx], tmpPrevIndex);
+							nLBA, tmpCurrentTrackNum, pDisc->SCSI.lp1stLBAListOnToc[tIdx],
+							pDisc->SCSI.lp1stLBAListOnToc[tIdx], tmpPrevIndex);
 					}
 					if (*pExecType != gd && *pExecType != swap) {
 						pDisc->SUB.byDesync = TRUE;
@@ -944,7 +944,7 @@ VOID SetTrackAttribution(
 				OutputSubInfoWithLBALogA("Index is changed from [%02d] to [%02d] [L:%d]\n", nLBA
 					, tmpCurrentTrackNum, tmpPrevIndex, tmpCurrentIndex, (INT)__LINE__);
 
-				pDisc->SUB.lpFirstLBAListOnSub[tIdx][1] = pDisc->SCSI.lpFirstLBAListOnToc[tIdx];
+				pDisc->SUB.lpFirstLBAListOnSub[tIdx][1] = pDisc->SCSI.lp1stLBAListOnToc[tIdx];
 				if (pDisc->SUB.lpFirstLBAListOnSub[tIdx][0] == pDisc->SUB.lpFirstLBAListOnSub[tIdx][1]) {
 					// Crow, The - Original Motion Picture Soundtrack (82519-2)
 					// LBA 108975, Track[06], Subchannel & TOC isn't sync. LBA on TOC: 108972, prevIndex[00]
@@ -991,10 +991,10 @@ VOID SetTrackAttribution(
 
 		if (pExtArg->byReverse) {
 			// preserve last LBA per data track
-			if (nLBA == pDisc->SCSI.nLastLBAofDataTrack) {
+			if (nLBA == pDisc->SCSI.nLastLBAofDataTrk) {
 				if (pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tIdx] == -1 &&
 					(pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
-					pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tIdx] = pDisc->SCSI.nLastLBAofDataTrack;
+					pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tIdx] = pDisc->SCSI.nLastLBAofDataTrk;
 				}
 			}
 			else if ((pDisc->SCSI.toc.TrackData[tIdx].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
@@ -1028,8 +1028,8 @@ VOID SetTrackAttribution(
 		if (pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[pDiscPerSector->byTrackNum - 1] == -1) {
 			OutputSubInfoWithLBALogA("1st LBA of Lead-out or Lead-in\n", nLBA, tmpCurrentTrackNum);
 			pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[pDiscPerSector->byTrackNum - 1] = nLBA;
-			if (pDiscPerSector->byTrackNum < pDisc->SCSI.byFirstDataTrackNum) {
-				pDisc->SCSI.byFirstDataTrackNum = pDiscPerSector->byTrackNum;
+			if (pDiscPerSector->byTrackNum < pDisc->SCSI.by1stDataTrkNum) {
+				pDisc->SCSI.by1stDataTrkNum = pDiscPerSector->byTrackNum;
 			}
 		}
 		else {
@@ -1345,7 +1345,7 @@ VOID UpdateTmpSubchForMCN(
 			// pattern 1-1-1: current sector is audio.
 			if ((pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == 0) {
 				if (pDiscPerSector->subch.prev.byTrackNum > 0) {
-					if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] - 225) {
+					if (nLBA == pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] - 225) {
 						// Atlas, The - Renaissance Voyager (Japan)
 						// LBA[003364, 0x00d24], Audio, 2ch, Copy NG, Pre-emphasis No, Track[01], Idx[01], RMSF[00:44:64], AMSF[00:46:64], RtoW[0, 0, 0, 0]
 						// LBA[003365, 0x00d25], Audio, 2ch, Copy NG, Pre-emphasis No, MediaCatalogNumber [0000000000000], AMSF[     :65], RtoW[0, 0, 0, 0]
@@ -1357,11 +1357,11 @@ VOID UpdateTmpSubchForMCN(
 						pDiscPerSector->subch.current.nRelativeTime = 224;
 						bValidPre = TRUE;
 					}
-					else if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] - 150) {
+					else if (nLBA == pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] - 150) {
 						pDiscPerSector->subch.current.nRelativeTime = 149;
 						bValidPre = TRUE;
 					}
-					else if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] - 149) {
+					else if (nLBA == pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] - 149) {
 						pDiscPerSector->subch.current.nRelativeTime = 148;
 						bValidPre = TRUE;
 					}
@@ -1385,15 +1385,15 @@ VOID UpdateTmpSubchForMCN(
 			// pattern 1-1-2: current sector is data.
 			else if ((pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 				if (pDiscPerSector->subch.prev.byTrackNum > 0) {
-					if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] - 225) {
+					if (nLBA == pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] - 225) {
 						pDiscPerSector->subch.current.nRelativeTime = 224;
 						bValidPre = TRUE;
 					}
-					else if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] - 150) {
+					else if (nLBA == pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] - 150) {
 						pDiscPerSector->subch.current.nRelativeTime = 149;
 						bValidPre = TRUE;
 					}
-					else if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] - 149) {
+					else if (nLBA == pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] - 149) {
 						pDiscPerSector->subch.current.nRelativeTime = 148;
 						bValidPre = TRUE;
 					}
@@ -1420,11 +1420,11 @@ VOID UpdateTmpSubchForMCN(
 			// pattern 1-2-1: current sector is audio.
 			if ((pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == 0) {
 				if (pDiscPerSector->subch.prev.byTrackNum > 0) {
-					if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] - 225) {
+					if (nLBA == pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] - 225) {
 						pDiscPerSector->subch.current.nRelativeTime = 224;
 						bValidPre = TRUE;
 					}
-					else if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] - 150) {
+					else if (nLBA == pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] - 150) {
 						// Valis IV (Japan)
 						// LBA[157830, 0x26886],  Data,      Copy NG,                  Track[44], Idx[01], RMSF[00:06:27], AMSF[35:06:30], RtoW[0, 0, 0, 0]
 						// LBA[157831, 0x26887], Audio, 2ch, Copy NG, Pre-emphasis No, MediaCatalogNumber [0000000000000], AMSF[     :31], RtoW[0, 0, 0, 0]
@@ -1436,7 +1436,7 @@ VOID UpdateTmpSubchForMCN(
 						pDiscPerSector->subch.current.nRelativeTime = 149;
 						bValidPre = TRUE;
 					}
-					else if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] - 149) {
+					else if (nLBA == pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] - 149) {
 						pDiscPerSector->subch.current.nRelativeTime = 148;
 						bValidPre = TRUE;
 					}
@@ -1460,15 +1460,15 @@ VOID UpdateTmpSubchForMCN(
 			// pattern 1-2-2: current sector is data.
 			else if ((pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 				if (pDiscPerSector->subch.prev.byTrackNum > 0) {
-					if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] - 225) {
+					if (nLBA == pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] - 225) {
 						pDiscPerSector->subch.current.nRelativeTime = 224;
 						bValidPre = TRUE;
 					}
-					else if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] - 150) {
+					else if (nLBA == pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] - 150) {
 						pDiscPerSector->subch.current.nRelativeTime = 149;
 						bValidPre = TRUE;
 					}
-					else if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] - 149) {
+					else if (nLBA == pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] - 149) {
 						pDiscPerSector->subch.current.nRelativeTime = 148;
 						bValidPre = TRUE;
 					}
@@ -1499,7 +1499,7 @@ VOID UpdateTmpSubchForMCN(
 			if ((pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == 0) {
 				// 1st sector of tracks
 				if (pDiscPerSector->subch.prev.byTrackNum > 0 &&
-					nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum]) {
+					nLBA == pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum]) {
 					// [PCE] Madou Monogatari I - Honoo no Sotsuenji (Japan)
 					// LBA[183031, 0x2caf7]: P[ff], Q[01210100317000404231bc6d]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[21], Idx[01], RMSF[00:31:70], AMSF[40:42:31]}, RtoW[0, 0, 0, 0]
 					// LBA[183032, 0x2caf8]: P[ff], Q[020000000000000000323764]{Audio, 2ch, Copy NG, Pre-emphasis No, MediaCatalogNumber [0000000000000], AMSF[     :32]}, RtoW[0, 0, 0, 0]
@@ -1569,7 +1569,7 @@ VOID UpdateTmpSubchForMCN(
 			else if ((pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 				// 1st sector of tracks
 				if (pDiscPerSector->subch.prev.byTrackNum > 0 &&
-					nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum]) {
+					nLBA == pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum]) {
 					pDiscPerSector->subch.current.nRelativeTime = 0;
 					// pattern 2-1-2-1: change track.
 					pDiscPerSector->subch.current.byTrackNum = (BYTE)(pDiscPerSector->subch.prev.byTrackNum + 1);
@@ -1608,7 +1608,7 @@ VOID UpdateTmpSubchForMCN(
 			if ((pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == 0) {
 				// 1st sector of tracks
 				if (pDiscPerSector->subch.prev.byTrackNum > 0 &&
-					nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum]) {
+					nLBA == pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum]) {
 					pDiscPerSector->subch.current.nRelativeTime = 0;
 					// pattern 2-2-1-1: change track.
 					pDiscPerSector->subch.current.byTrackNum = (BYTE)(pDiscPerSector->subch.prev.byTrackNum + 1);
@@ -1648,7 +1648,7 @@ VOID UpdateTmpSubchForMCN(
 			else if ((pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 				// 1st sector of tracks
 				if (pDiscPerSector->subch.prev.byTrackNum > 0 &&
-					nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum]) {
+					nLBA == pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum]) {
 					pDiscPerSector->subch.current.nRelativeTime = 0;
 					// pattern 2-2-2-1: change track.
 					pDiscPerSector->subch.current.byTrackNum = (BYTE)(pDiscPerSector->subch.prev.byTrackNum + 1);
@@ -1713,17 +1713,17 @@ VOID UpdateTmpSubchForCDTV(
 	if (IsValidPregapSector(pDisc, &pDiscPerSector->subch, nLBA)) {
 		pDiscPerSector->subch.current.byTrackNum = (BYTE)(pDiscPerSector->subch.prev.byTrackNum + 1);
 		pDiscPerSector->subch.current.byIndex = 0;
-		if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] - 225) {
+		if (nLBA == pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] - 225) {
 			pDiscPerSector->subch.current.nRelativeTime = 224;
 		}
-		else if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] - 150) {
+		else if (nLBA == pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] - 150) {
 			pDiscPerSector->subch.current.nRelativeTime = 149;
 		}
-		else if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] - 149) {
+		else if (nLBA == pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] - 149) {
 			pDiscPerSector->subch.current.nRelativeTime = 148;
 		}
 	}
-	else if (pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->byTrackNum] == nLBA) {
+	else if (pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->byTrackNum] == nLBA) {
 		pDiscPerSector->subch.current.byTrackNum = (BYTE)(pDiscPerSector->subch.prev.byTrackNum + 1);
 		pDiscPerSector->subch.current.byIndex = 1;
 		pDiscPerSector->subch.current.nRelativeTime = pDiscPerSector->subch.prev.nRelativeTime;

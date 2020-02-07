@@ -623,7 +623,7 @@ VOID FixSubQ(
 						OutputSubErrorLogA("[%02u], L:[%d]\n", pDisc->SCSI.toc.LastTrack, (INT)__LINE__);
 						bFix = TRUE;
 					}
-					else if (pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->byTrackNum] < nLBA) {
+					else if (pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->byTrackNum] < nLBA) {
 						pDiscPerSector->subch.current.byTrackNum = (BYTE)(pDiscPerSector->subch.prev.byTrackNum + 1);
 						OutputSubErrorLogA("[%02u], L:[%d]\n", pDiscPerSector->subch.prev.byTrackNum + 1, (INT)__LINE__);
 						bFix = TRUE;
@@ -695,7 +695,7 @@ VOID FixSubQ(
 				tmpIdx = pDiscPerSector->subch.prevPrev.byIndex;
 			}
 
-			if (nLBA == pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->byTrackNum - 1]) {
+			if (nLBA == pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->byTrackNum - 1]) {
 				tmpIdx = 1;
 			}
 			else if (IsValidPregapSector(pDisc, &pDiscPerSector->subch, nLBA)) {
@@ -749,7 +749,7 @@ VOID FixSubQ(
 					!(pDiscPerSector->subch.prev.byIndex >= 1 && pDiscPerSector->subch.current.byIndex == 0)) ||
 					(nLBA == 0 && (pDisc->PROTECT.byExist == securomV3_1 || pDisc->PROTECT.byExist == securomV3_2))) {
 					if (pDiscPerSector->subch.current.byIndex > 0) {
-						if (pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->byTrackNum] != nLBA) {
+						if (pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->byTrackNum] != nLBA) {
 							tmpRel = pDiscPerSector->subch.prev.nRelativeTime + 1;
 						}
 					}
@@ -806,7 +806,7 @@ VOID FixSubQ(
 				if (!(pDiscPerSector->subch.prevPrev.byIndex == 0 && pDiscPerSector->subch.current.byIndex == 1) &&
 					!(pDiscPerSector->subch.prevPrev.byIndex >= 1 && pDiscPerSector->subch.current.byIndex == 0)) {
 					if (pDiscPerSector->subch.current.byIndex > 0) {
-						if (pDisc->SCSI.lpFirstLBAListOnToc[pDiscPerSector->byTrackNum] != nLBA) {
+						if (pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->byTrackNum] != nLBA) {
 							tmpRel = pDiscPerSector->subch.prevPrev.nRelativeTime + 2;
 						}
 					}
@@ -1198,8 +1198,8 @@ BOOL FixSubChannel(
 	INT nLBA,
 	LPBOOL bReread
 ) {
-	if (pExtArg->byMultiSession && pDisc->SCSI.nFirstLBAofLeadout + 6750 <= nLBA &&
-		nLBA < pDisc->SCSI.nFirstLBAofLeadout + 11400) {
+	if (pExtArg->byMultiSession && pDisc->SCSI.n1stLBAofLeadout + 6750 <= nLBA &&
+		nLBA < pDisc->SCSI.n1stLBAofLeadout + 11400) {
 		return TRUE;
 	}
 

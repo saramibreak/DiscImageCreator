@@ -42,8 +42,8 @@ BOOL InitLBAPerTrack(
 ) {
 	size_t dwTrackAllocSize =
 		(*pExecType == gd || *pExecType == swap) ? MAXIMUM_NUMBER_TRACKS : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
-	if (NULL == (*pDisc)->SCSI.lpFirstLBAListOnToc) {
-		if (NULL == ((*pDisc)->SCSI.lpFirstLBAListOnToc =
+	if (NULL == (*pDisc)->SCSI.lp1stLBAListOnToc) {
+		if (NULL == ((*pDisc)->SCSI.lp1stLBAListOnToc =
 			(LPINT)calloc(dwTrackAllocSize, sizeof(UINT_PTR)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
@@ -70,9 +70,9 @@ BOOL InitTocFullData(
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
-	(*pDisc)->SCSI.nFirstLBAofLeadout = -1;
+	(*pDisc)->SCSI.n1stLBAofLeadout = -1;
 	// init this by ReadTOCFull
-//	(*pDisc)->SCSI.nFirstLBAof2ndSession = -1;
+//	(*pDisc)->SCSI.n1stLBAof2ndSession = -1;
 	return TRUE;
 }
 
@@ -398,7 +398,7 @@ VOID TerminateC2(
 VOID TerminateLBAPerTrack(
 	PDISC* pDisc
 ) {
-	FreeAndNull((*pDisc)->SCSI.lpFirstLBAListOnToc);
+	FreeAndNull((*pDisc)->SCSI.lp1stLBAListOnToc);
 	FreeAndNull((*pDisc)->SCSI.lpLastLBAListOnToc);
 }
 

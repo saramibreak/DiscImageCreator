@@ -201,7 +201,7 @@ BOOL ReadTOC(
 		pDevice->bySuccessReadToc = TRUE;
 		SetAndOutputToc(pDisc);
 		if (*pExecType == gd) {
-			pDisc->SCSI.trackType = TRACK_TYPE::dataExist;
+			pDisc->SCSI.trkType = TRACK_TYPE::dataExist;
 			OutputDiscLogA("This is the TOC of audio trap disc\n");
 		}
 	}
@@ -261,7 +261,7 @@ BOOL ReadTOCFull(
 	*wTocEntries = (WORD)(wTocEntriesAll / sizeof(CDROM_TOC_FULL_TOC_DATA_BLOCK));
 
 	pDisc->SCSI.bMultiSession = pFullTocData->LastCompleteSession > 1 ? TRUE : FALSE;
-	pDisc->SCSI.nFirstLBAof2ndSession = -1;
+	pDisc->SCSI.n1stLBAof2ndSession = -1;
 
 	WORD wFullTocLenFix = (WORD)(wTocEntriesAll + sizeof(CDROM_TOC_FULL_TOC_DATA));
 	// 4 byte padding
@@ -306,7 +306,7 @@ BOOL ReadTOCFull(
 				if (pDisc->SCSI.bMultiSession) {
 					nTmpLBAExt =
 						MSFtoLBA((*pTocData + a)->MsfExtra[0], (*pTocData + a)->MsfExtra[1], (*pTocData + a)->MsfExtra[2]) - 150;
-					pDisc->SCSI.nFirstLBAof2ndSession = nTmpLBAExt + 150;
+					pDisc->SCSI.n1stLBAof2ndSession = nTmpLBAExt + 150;
 				}
 			default:
 				break;
