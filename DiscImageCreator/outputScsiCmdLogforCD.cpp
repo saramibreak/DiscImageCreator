@@ -1133,8 +1133,8 @@ VOID OutputTocWithPregap(
 			pDisc->SUB.lpCtlList[i], pDisc->MAIN.lpModeList[i]);
 
 		for (UINT j = 0; j < MAXIMUM_NUMBER_INDEXES; j++) {
-			if (pDisc->SUB.lpFirstLBAListOnSub[i][j] != -1) {
-				OutputDiscLogA(", Index%u %6d", j, pDisc->SUB.lpFirstLBAListOnSub[i][j]);
+			if (pDisc->SUB.lp1stLBAListOnSub[i][j] != -1) {
+				OutputDiscLogA(", Index%u %6d", j, pDisc->SUB.lp1stLBAListOnSub[i][j]);
 			}
 			else if (j == 0) {
 				OutputDiscLogA(",              ");
@@ -1149,8 +1149,8 @@ VOID OutputTocWithPregap(
 				pDisc->SUB.lpCtlList[i], pDisc->MAIN.lpModeList[i]);
 
 			for (UINT j = 0; j < MAXIMUM_NUMBER_INDEXES; j++) {
-				if (pDisc->SUB.lpFirstLBAListOnSubSync[i][j] != -1) {
-					OutputDiscLogA(", Index%u %6d", j, pDisc->SUB.lpFirstLBAListOnSubSync[i][j]);
+				if (pDisc->SUB.lp1stLBAListOnSubSync[i][j] != -1) {
+					OutputDiscLogA(", Index%u %6d", j, pDisc->SUB.lp1stLBAListOnSubSync[i][j]);
 				}
 				else if (j == 0) {
 					OutputDiscLogA(",              ");

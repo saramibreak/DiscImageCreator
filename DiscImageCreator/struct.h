@@ -324,12 +324,12 @@ typedef struct _DISC {
 		LPSTR* pszISRC;
 		// 0 origin, max is last track num.
 		// toc indexes in priority. single ptr: LBA per track. double ptr: LBA per index
-		LPINT* lpFirstLBAListOnSub;
+		LPINT* lp1stLBAListOnSub;
 		// 0 origin, max is last track num.
 		// sub indexes in priority. single ptr: LBA per track. double ptr: LBA per index
-		LPINT* lpFirstLBAListOnSubSync;
+		LPINT* lp1stLBAListOnSubSync;
 		// 0 origin, max is last track num.
-		LPINT lpFirstLBAListOfDataTrackOnSub;
+		LPINT lp1stLBAListOfDataTrackOnSub;
 		// 0 origin, max is last track num.
 		LPINT lpLastLBAListOfDataTrackOnSub;
 		// 0 origin, max is last track num.

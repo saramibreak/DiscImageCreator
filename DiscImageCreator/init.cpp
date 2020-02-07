@@ -204,17 +204,17 @@ BOOL InitSubData(
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
-		if (NULL == ((*pDisc)->SUB.lpFirstLBAListOnSub =
+		if (NULL == ((*pDisc)->SUB.lp1stLBAListOnSub =
 			(LPINT*)calloc(dwTrackAllocSize * 2, sizeof(INT_PTR)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
-		if (NULL == ((*pDisc)->SUB.lpFirstLBAListOnSubSync = 
+		if (NULL == ((*pDisc)->SUB.lp1stLBAListOnSubSync = 
 			(LPINT*)calloc(dwTrackAllocSize * 2, sizeof(INT_PTR)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
-		if (NULL == ((*pDisc)->SUB.lpFirstLBAListOfDataTrackOnSub = 
+		if (NULL == ((*pDisc)->SUB.lp1stLBAListOfDataTrackOnSub = 
 			(LPINT)calloc(dwTrackAllocSize, sizeof(INT)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
@@ -247,23 +247,23 @@ BOOL InitSubData(
 
 		size_t dwIndexAllocSize = (size_t)MAXIMUM_NUMBER_INDEXES * sizeof(INT);
 		for (size_t h = 0; h < dwTrackAllocSize; h++) {
-			if (NULL == ((*pDisc)->SUB.lpFirstLBAListOnSub[h] = (LPINT)malloc(dwIndexAllocSize))) {
+			if (NULL == ((*pDisc)->SUB.lp1stLBAListOnSub[h] = (LPINT)malloc(dwIndexAllocSize))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
-			FillMemory((*pDisc)->SUB.lpFirstLBAListOnSub[h], dwIndexAllocSize, -1);
+			FillMemory((*pDisc)->SUB.lp1stLBAListOnSub[h], dwIndexAllocSize, -1);
 #if 0
 			for (INT j = 0; j < 2; j++) {
-				OutputString(_T("lpFirstLBAListOnSub[%zd][%zd]: %d, %p\n")
-					, h, j, (*pDisc)->SUB.lpFirstLBAListOnSub[h][j], &(*pDisc)->SUB.lpFirstLBAListOnSub[h][j]);
+				OutputString(_T("lp1stLBAListOnSub[%zd][%zd]: %d, %p\n")
+					, h, j, (*pDisc)->SUB.lp1stLBAListOnSub[h][j], &(*pDisc)->SUB.lp1stLBAListOnSub[h][j]);
 			}
 #endif
-			if (NULL == ((*pDisc)->SUB.lpFirstLBAListOnSubSync[h] = (LPINT)malloc(dwIndexAllocSize))) {
+			if (NULL == ((*pDisc)->SUB.lp1stLBAListOnSubSync[h] = (LPINT)malloc(dwIndexAllocSize))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
-			FillMemory((*pDisc)->SUB.lpFirstLBAListOnSubSync[h], dwIndexAllocSize, -1);
-			(*pDisc)->SUB.lpFirstLBAListOfDataTrackOnSub[h] = -1;
+			FillMemory((*pDisc)->SUB.lp1stLBAListOnSubSync[h], dwIndexAllocSize, -1);
+			(*pDisc)->SUB.lp1stLBAListOfDataTrackOnSub[h] = -1;
 			(*pDisc)->SUB.lpLastLBAListOfDataTrackOnSub[h] = -1;
 		}
 		(*pDisc)->SUB.byCatalog = FALSE;
@@ -451,16 +451,16 @@ VOID TerminateSubData(
 ) {
 	size_t dwTrackAllocSize =
 		(*pExecType == gd || *pExecType == swap) ? MAXIMUM_NUMBER_TRACKS : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
-	if ((*pDisc)->SUB.lpFirstLBAListOnSub && (*pDisc)->SUB.lpFirstLBAListOnSubSync) {
+	if ((*pDisc)->SUB.lp1stLBAListOnSub && (*pDisc)->SUB.lp1stLBAListOnSubSync) {
 		for (size_t h = 0; h < dwTrackAllocSize; h++) {
-			FreeAndNull((*pDisc)->SUB.lpFirstLBAListOnSub[h]);
-			FreeAndNull((*pDisc)->SUB.lpFirstLBAListOnSubSync[h]);
+			FreeAndNull((*pDisc)->SUB.lp1stLBAListOnSub[h]);
+			FreeAndNull((*pDisc)->SUB.lp1stLBAListOnSubSync[h]);
 		}
 	}
 	FreeAndNull((*pDisc)->SUB.lpRtoWList);
-	FreeAndNull((*pDisc)->SUB.lpFirstLBAListOnSub);
-	FreeAndNull((*pDisc)->SUB.lpFirstLBAListOnSubSync);
-	FreeAndNull((*pDisc)->SUB.lpFirstLBAListOfDataTrackOnSub);
+	FreeAndNull((*pDisc)->SUB.lp1stLBAListOnSub);
+	FreeAndNull((*pDisc)->SUB.lp1stLBAListOnSubSync);
+	FreeAndNull((*pDisc)->SUB.lp1stLBAListOfDataTrackOnSub);
 	FreeAndNull((*pDisc)->SUB.lpLastLBAListOfDataTrackOnSub);
 	FreeAndNull((*pDisc)->SUB.lpCtlList);
 	FreeAndNull((*pDisc)->SUB.lpEndCtlList);

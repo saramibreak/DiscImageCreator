@@ -1022,10 +1022,10 @@ BOOL ReadCDAll(
 						INT idx = pDisc->SCSI.by1stMultiSessionTrkNum - 1;
 						if ((ctl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 							pDisc->SUB.lpLastLBAListOfDataTrackOnSub[idx - 1] = nLBA - 1;
-							pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[idx] = pDisc->SCSI.n1stLBAof2ndSession;
+							pDisc->SUB.lp1stLBAListOfDataTrackOnSub[idx] = pDisc->SCSI.n1stLBAof2ndSession;
 						}
-						pDisc->SUB.lpFirstLBAListOnSub[idx][0] = pDisc->SCSI.n1stLBAof2ndSession - 150;
-						pDisc->SUB.lpFirstLBAListOnSub[idx][1] = pDisc->SCSI.n1stLBAof2ndSession;
+						pDisc->SUB.lp1stLBAListOnSub[idx][0] = pDisc->SCSI.n1stLBAof2ndSession - 150;
+						pDisc->SUB.lp1stLBAListOnSub[idx][1] = pDisc->SCSI.n1stLBAof2ndSession;
 
 						pDiscPerSector->subch.prev.byIndex = 0;
 						pDiscPerSector->byTrackNum = pDisc->SCSI.by1stMultiSessionTrkNum;
@@ -1228,17 +1228,17 @@ BOOL ReadCDAll(
 				break;
 			}
 #if 0
-			OutputString("lpFirstLBAListOnSub[%d][0]: %d, [%d][1]: %d\n"
-				, i, pDisc->SUB.lpFirstLBAListOnSub[i][0], i, pDisc->SUB.lpFirstLBAListOnSub[i][1]);
+			OutputString("lp1stLBAListOnSub[%d][0]: %d, [%d][1]: %d\n"
+				, i, pDisc->SUB.lp1stLBAListOnSub[i][0], i, pDisc->SUB.lp1stLBAListOnSub[i][1]);
 #endif
 			BOOL bErr = FALSE;
 			LONG lLine = 0;
-			if (pDisc->SUB.lpFirstLBAListOnSub[i][1] == -1) {
+			if (pDisc->SUB.lp1stLBAListOnSub[i][1] == -1) {
 				bErr = TRUE;
 				lLine = __LINE__;
 			}
 			else if ((pDisc->SCSI.toc.TrackData[i].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
-				if (pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[i] == -1) {
+				if (pDisc->SUB.lp1stLBAListOfDataTrackOnSub[i] == -1) {
 					bErr = TRUE;
 					lLine = __LINE__;
 				}
@@ -2119,12 +2119,12 @@ BOOL ReadCDPartial(
 			for (INT i = pDisc->SCSI.toc.FirstTrack - 1; i < pDisc->SCSI.toc.LastTrack; i++) {
 				BOOL bErr = FALSE;
 				LONG lLine = 0;
-				if (pDisc->SUB.lpFirstLBAListOnSub[i][1] == -1) {
+				if (pDisc->SUB.lp1stLBAListOnSub[i][1] == -1) {
 					bErr = TRUE;
 					lLine = __LINE__;
 				}
 				else if ((pDisc->SCSI.toc.TrackData[i].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
-					if (pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[i] == -1) {
+					if (pDisc->SUB.lp1stLBAListOfDataTrackOnSub[i] == -1) {
 						bErr = TRUE;
 						lLine = __LINE__;
 					}

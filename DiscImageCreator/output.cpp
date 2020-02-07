@@ -779,15 +779,15 @@ VOID WriteMainChannel(
 			fwrite(lpBuf + pDisc->MAIN.uiMainDataSlideSize, sizeof(BYTE),
 				CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize, fpImg);
 			if (*pExecType != gd) {
-				if (pDisc->SUB.lpFirstLBAListOnSub) {
-					pDisc->SUB.lpFirstLBAListOnSub[0][0] = -150;
+				if (pDisc->SUB.lp1stLBAListOnSub) {
+					pDisc->SUB.lp1stLBAListOnSub[0][0] = -150;
 				}
-				if (pDisc->SUB.lpFirstLBAListOnSubSync) {
-					pDisc->SUB.lpFirstLBAListOnSubSync[0][0] = -150;
+				if (pDisc->SUB.lp1stLBAListOnSubSync) {
+					pDisc->SUB.lp1stLBAListOnSubSync[0][0] = -150;
 				}
 			}
 			else {
-				pDisc->SUB.lpFirstLBAListOnSub[2][0] = 44850;
+				pDisc->SUB.lp1stLBAListOnSub[2][0] = 44850;
 			}
 		}
 		// last sector in 1st session (when session 2 exists)
@@ -1689,10 +1689,10 @@ BOOL CreateBinCueForGD(
 			WriteCueForUnderFileDirective(pDisc, FALSE, 0, i, fpCue);
 
 			BYTE index = 0;
-			INT nLBAofFirstIdx = pDisc->SUB.lpFirstLBAListOnSub[i - 1][0] - FIRST_LBA_FOR_GD;
+			INT nLBAofFirstIdx = pDisc->SUB.lp1stLBAListOnSub[i - 1][0] - FIRST_LBA_FOR_GD;
 			// nothing or index 0 in track 1
 			if (nLBAofFirstIdx == -1 || nLBAofFirstIdx == -150) {
-				nLBAofFirstIdx = pDisc->SUB.lpFirstLBAListOnSub[i - 1][1] - FIRST_LBA_FOR_GD;
+				nLBAofFirstIdx = pDisc->SUB.lp1stLBAListOnSub[i - 1][1] - FIRST_LBA_FOR_GD;
 				index++;
 			}
 
@@ -1719,7 +1719,7 @@ BOOL CreateBinCueForGD(
 			}
 
 			for (; index < MAXIMUM_NUMBER_INDEXES; index++) {
-				INT nLBAofNextIdx = pDisc->SUB.lpFirstLBAListOnSub[i - 1][index] - FIRST_LBA_FOR_GD;
+				INT nLBAofNextIdx = pDisc->SUB.lp1stLBAListOnSub[i - 1][index] - FIRST_LBA_FOR_GD;
 				if (nLBAofNextIdx != -1 - FIRST_LBA_FOR_GD) {
 					LBAtoMSF(nLBAofNextIdx, &byMinute, &bySecond, &byFrame);
 					WriteCueForIndexDirective(index, byMinute, bySecond, byFrame, fpCueForImg);
@@ -1781,7 +1781,7 @@ VOID DescrambleMainChannelAll(
 	LONG lSeekPtr = 0;
 
 	for (INT k = pDisc->SCSI.by1stDataTrkNum - 1; k < pDisc->SCSI.byLastDataTrkNum; k++) {
-		INT nFirstLBA = pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[k];
+		INT nFirstLBA = pDisc->SUB.lp1stLBAListOfDataTrackOnSub[k];
 		if (nFirstLBA != -1) {
 			INT nLastLBA = pDisc->SUB.lpLastLBAListOfDataTrackOnSub[k];
 			OutputDiscLogA("\tTrack %2u Data Sector: %6d - %6d (%#07x - %#07x)\n",
@@ -2142,18 +2142,18 @@ BOOL CreateBinCueCcd(
 				}
 
 				BYTE index = 0;
-				INT nLBAofFirstIdx = pDisc->SUB.lpFirstLBAListOnSub[i - 1][0];
+				INT nLBAofFirstIdx = pDisc->SUB.lp1stLBAListOnSub[i - 1][0];
 				// nothing or index 0 in track 1
 				if (nLBAofFirstIdx == -1 || nLBAofFirstIdx == -150 ||
 					(pDisc->SCSI.bMultiSession && i == pDisc->SCSI.by1stMultiSessionTrkNum)) {
-					nLBAofFirstIdx = pDisc->SUB.lpFirstLBAListOnSub[i - 1][1];
+					nLBAofFirstIdx = pDisc->SUB.lp1stLBAListOnSub[i - 1][1];
 					index++;
 				}
 
 				BYTE indexSync = 0;
-				INT nLBAofFirstIdxSync = pDisc->SUB.lpFirstLBAListOnSubSync[i - 1][0];
+				INT nLBAofFirstIdxSync = pDisc->SUB.lp1stLBAListOnSubSync[i - 1][0];
 				if (nLBAofFirstIdxSync == -1 || nLBAofFirstIdxSync == -150) {
-					nLBAofFirstIdxSync = pDisc->SUB.lpFirstLBAListOnSubSync[i - 1][1];
+					nLBAofFirstIdxSync = pDisc->SUB.lp1stLBAListOnSubSync[i - 1][1];
 					indexSync++;
 				}
 
@@ -2221,7 +2221,7 @@ BOOL CreateBinCueCcd(
 				}
 
 				for (; index < MAXIMUM_NUMBER_INDEXES; index++) {
-					INT nLBAofNextIdx = pDisc->SUB.lpFirstLBAListOnSub[i - 1][index];
+					INT nLBAofNextIdx = pDisc->SUB.lp1stLBAListOnSub[i - 1][index];
 					if (nLBAofNextIdx != -1) {
 						LBAtoMSF(nLBAofNextIdx, &byMinute, &bySecond, &byFrame);
 						WriteCueForIndexDirective(index, byMinute, bySecond, byFrame, fpCueForImg);
@@ -2241,7 +2241,7 @@ BOOL CreateBinCueCcd(
 				}
 				if (pDisc->SUB.byDesync) {
 					for (; indexSync < MAXIMUM_NUMBER_INDEXES; indexSync++) {
-						INT nLBAofNextIdxSync = pDisc->SUB.lpFirstLBAListOnSubSync[i - 1][indexSync];
+						INT nLBAofNextIdxSync = pDisc->SUB.lp1stLBAListOnSubSync[i - 1][indexSync];
 						if (nLBAofNextIdxSync != -1) {
 							LBAtoMSF(nLBAofNextIdxSync, &byMinute, &bySecond, &byFrame);
 							WriteCueForIndexDirective(indexSync, byMinute, bySecond, byFrame, fpCueSyncForImg);
@@ -2280,8 +2280,8 @@ BOOL CreateBinCueCcd(
 					break;
 				}
 			}
-			INT nLBA = pDisc->SUB.lpFirstLBAListOnSub[i - 1][0] == -1 ?
-				pDisc->SUB.lpFirstLBAListOnSub[i - 1][1] : pDisc->SUB.lpFirstLBAListOnSub[i - 1][0];
+			INT nLBA = pDisc->SUB.lp1stLBAListOnSub[i - 1][0] == -1 ?
+				pDisc->SUB.lp1stLBAListOnSub[i - 1][1] : pDisc->SUB.lp1stLBAListOnSub[i - 1][0];
 			if (pExtArg->byPre) {
 				if (i == pDisc->SCSI.toc.FirstTrack) {
 					nLBA += 150 - abs(pDisc->MAIN.nAdjustSectorNum);
@@ -2293,8 +2293,8 @@ BOOL CreateBinCueCcd(
 					pDisc->SCSI.nAllLength += 150;
 				}
 			}
-			INT nNextLBA = pDisc->SUB.lpFirstLBAListOnSub[i][0] == -1 ?
-				pDisc->SUB.lpFirstLBAListOnSub[i][1] : pDisc->SUB.lpFirstLBAListOnSub[i][0];
+			INT nNextLBA = pDisc->SUB.lp1stLBAListOnSub[i][0] == -1 ?
+				pDisc->SUB.lp1stLBAListOnSub[i][1] : pDisc->SUB.lp1stLBAListOnSub[i][0];
 			if (pExtArg->byPre) {
 				nNextLBA += 150;
 			}
@@ -2307,8 +2307,8 @@ BOOL CreateBinCueCcd(
 				break;
 			}
 			if (pDisc->SUB.byDesync) {
-				nLBA = pDisc->SUB.lpFirstLBAListOnSubSync[i - 1][0] == -1 ?
-					pDisc->SUB.lpFirstLBAListOnSubSync[i - 1][1] : pDisc->SUB.lpFirstLBAListOnSubSync[i - 1][0];
+				nLBA = pDisc->SUB.lp1stLBAListOnSubSync[i - 1][0] == -1 ?
+					pDisc->SUB.lp1stLBAListOnSubSync[i - 1][1] : pDisc->SUB.lp1stLBAListOnSubSync[i - 1][0];
 				if (pExtArg->byPre) {
 					if (i == pDisc->SCSI.toc.FirstTrack) {
 						nLBA += 150 - abs(pDisc->MAIN.nAdjustSectorNum);
@@ -2320,8 +2320,8 @@ BOOL CreateBinCueCcd(
 						pDisc->SCSI.nAllLength += 150;
 					}
 				}
-				nNextLBA = pDisc->SUB.lpFirstLBAListOnSubSync[i][0] == -1 ?
-					pDisc->SUB.lpFirstLBAListOnSubSync[i][1] : pDisc->SUB.lpFirstLBAListOnSubSync[i][0];
+				nNextLBA = pDisc->SUB.lp1stLBAListOnSubSync[i][0] == -1 ?
+					pDisc->SUB.lp1stLBAListOnSubSync[i][1] : pDisc->SUB.lp1stLBAListOnSubSync[i][0];
 				if (pExtArg->byPre) {
 					nNextLBA += 150;
 				}

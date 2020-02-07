@@ -678,9 +678,9 @@ VOID FixSubQ(
 				0 < pDiscPerSector->subch.prev.byTrackNum && pDiscPerSector->subch.prev.byTrackNum <= pDisc->SCSI.toc.LastTrack) {
 				OutputSubErrorWithLBALogA("Q[13]:PrevTrackNum[%02u] -> [%02u]\n", nLBA, pDiscPerSector->byTrackNum
 					, pDiscPerSector->subch.prev.byTrackNum, pDiscPerSector->subch.prevPrev.byTrackNum);
-				pDisc->SUB.lpFirstLBAListOnSub[pDiscPerSector->subch.prev.byTrackNum - 1][pDiscPerSector->subch.prev.byIndex] = -1;
-				pDisc->SUB.lpFirstLBAListOnSubSync[pDiscPerSector->subch.prev.byTrackNum - 1][pDiscPerSector->subch.prev.byIndex] = -1;
-				pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[pDiscPerSector->subch.prev.byTrackNum - 1] = -1;
+				pDisc->SUB.lp1stLBAListOnSub[pDiscPerSector->subch.prev.byTrackNum - 1][pDiscPerSector->subch.prev.byIndex] = -1;
+				pDisc->SUB.lp1stLBAListOnSubSync[pDiscPerSector->subch.prev.byTrackNum - 1][pDiscPerSector->subch.prev.byIndex] = -1;
+				pDisc->SUB.lp1stLBAListOfDataTrackOnSub[pDiscPerSector->subch.prev.byTrackNum - 1] = -1;
 			}
 			pDiscPerSector->subch.prev.byTrackNum = pDiscPerSector->subch.prevPrev.byTrackNum;
 			pDiscPerSector->subch.prev.byIndex = pDiscPerSector->subch.prevPrev.byIndex;
@@ -718,8 +718,8 @@ VOID FixSubQ(
 				0 < pDiscPerSector->subch.prev.byTrackNum && pDiscPerSector->subch.prev.byTrackNum <= pDisc->SCSI.toc.LastTrack) {
 				OutputSubErrorWithLBALogA("Q[14]:PrevIdx[%02u] -> [%02u]\n"
 					, nLBA - 1, pDiscPerSector->byTrackNum, pDiscPerSector->subch.prev.byIndex, pDiscPerSector->subch.prevPrev.byIndex);
-				pDisc->SUB.lpFirstLBAListOnSub[pDiscPerSector->subch.prev.byTrackNum - 1][pDiscPerSector->subch.prev.byIndex] = -1;
-				pDisc->SUB.lpFirstLBAListOnSubSync[pDiscPerSector->subch.prev.byTrackNum - 1][pDiscPerSector->subch.prev.byIndex] = -1;
+				pDisc->SUB.lp1stLBAListOnSub[pDiscPerSector->subch.prev.byTrackNum - 1][pDiscPerSector->subch.prev.byIndex] = -1;
+				pDisc->SUB.lp1stLBAListOnSubSync[pDiscPerSector->subch.prev.byTrackNum - 1][pDiscPerSector->subch.prev.byIndex] = -1;
 			}
 			pDiscPerSector->subch.prev.byTrackNum = pDiscPerSector->subch.prevPrev.byTrackNum;
 			pDiscPerSector->subch.prev.byIndex = pDiscPerSector->subch.prevPrev.byIndex;
@@ -729,8 +729,8 @@ VOID FixSubQ(
 				0 < pDiscPerSector->subch.prev.byTrackNum && pDiscPerSector->subch.prev.byTrackNum <= pDisc->SCSI.toc.LastTrack) {
 				OutputSubErrorWithLBALogA("Q[14]:PrevPrevIdx[%02u] -> [%02u]\n"
 					, nLBA - 1, pDiscPerSector->byTrackNum, pDiscPerSector->subch.prevPrev.byIndex, pDiscPerSector->subch.prev.byIndex);
-				pDisc->SUB.lpFirstLBAListOnSub[pDiscPerSector->subch.prevPrev.byTrackNum - 1][pDiscPerSector->subch.prevPrev.byIndex] = -1;
-				pDisc->SUB.lpFirstLBAListOnSubSync[pDiscPerSector->subch.prevPrev.byTrackNum - 1][pDiscPerSector->subch.prevPrev.byIndex] = -1;
+				pDisc->SUB.lp1stLBAListOnSub[pDiscPerSector->subch.prevPrev.byTrackNum - 1][pDiscPerSector->subch.prevPrev.byIndex] = -1;
+				pDisc->SUB.lp1stLBAListOnSubSync[pDiscPerSector->subch.prevPrev.byTrackNum - 1][pDiscPerSector->subch.prevPrev.byIndex] = -1;
 			}
 			pDiscPerSector->subch.prevPrev.byTrackNum = pDiscPerSector->subch.prev.byTrackNum;
 			pDiscPerSector->subch.prevPrev.byIndex = pDiscPerSector->subch.prev.byIndex;

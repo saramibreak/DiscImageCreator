@@ -864,13 +864,13 @@ VOID SetTrackAttribution(
 						nLBA, tmpCurrentTrackNum, pDisc->SCSI.lp1stLBAListOnToc[tIdx],
 						pDisc->SCSI.lp1stLBAListOnToc[tIdx], tmpCurrentIndex);
 
-					pDisc->SUB.lpFirstLBAListOnSub[tIdx][1] = pDisc->SCSI.lp1stLBAListOnToc[tIdx];
-					if (pDisc->SUB.lpFirstLBAListOnSub[tIdx][0] == pDisc->SUB.lpFirstLBAListOnSub[tIdx][1]) {
-						pDisc->SUB.lpFirstLBAListOnSub[tIdx][0] = -1;
+					pDisc->SUB.lp1stLBAListOnSub[tIdx][1] = pDisc->SCSI.lp1stLBAListOnToc[tIdx];
+					if (pDisc->SUB.lp1stLBAListOnSub[tIdx][0] == pDisc->SUB.lp1stLBAListOnSub[tIdx][1]) {
+						pDisc->SUB.lp1stLBAListOnSub[tIdx][0] = -1;
 					}
-					pDisc->SUB.lpFirstLBAListOnSubSync[tIdx][1] = nLBA;
-					if (pDisc->SUB.lpFirstLBAListOnSubSync[tIdx][0] == pDisc->SUB.lpFirstLBAListOnSubSync[tIdx][1]) {
-						pDisc->SUB.lpFirstLBAListOnSubSync[tIdx][0] = -1;
+					pDisc->SUB.lp1stLBAListOnSubSync[tIdx][1] = nLBA;
+					if (pDisc->SUB.lp1stLBAListOnSubSync[tIdx][0] == pDisc->SUB.lp1stLBAListOnSubSync[tIdx][1]) {
+						pDisc->SUB.lp1stLBAListOnSubSync[tIdx][0] = -1;
 					}
 					if (*pExecType != gd && *pExecType != swap) {
 						pDisc->SUB.byDesync = TRUE;
@@ -879,13 +879,13 @@ VOID SetTrackAttribution(
 				else {
 					OutputSubInfoWithLBALogA(
 						"There isn't the pregap on this track\n", nLBA, tmpCurrentTrackNum);
-					pDisc->SUB.lpFirstLBAListOnSub[tIdx][tmpCurrentIndex] = nLBA;
-					pDisc->SUB.lpFirstLBAListOnSubSync[tIdx][tmpCurrentIndex] = nLBA;
+					pDisc->SUB.lp1stLBAListOnSub[tIdx][tmpCurrentIndex] = nLBA;
+					pDisc->SUB.lp1stLBAListOnSubSync[tIdx][tmpCurrentIndex] = nLBA;
 				}
 			}
 			// preserve last LBA per data track
 			if (0 < tmpPrevTrackNum && tmpPrevTrackNum <= tmpCurrentTrackNum + 1) {
-				if (pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[tmpPrevTrackNum - 1] != -1 &&
+				if (pDisc->SUB.lp1stLBAListOfDataTrackOnSub[tmpPrevTrackNum - 1] != -1 &&
 					pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tmpPrevTrackNum - 1] == -1 &&
 					(pDiscPerSector->subch.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 
@@ -917,18 +917,18 @@ VOID SetTrackAttribution(
 		// preserve the 1st LBA of the changed index 
 		if (pDiscPerSector->byTrackNum >= 1 && tmpPrevIndex + 1 == tmpCurrentIndex) {
 			if (tmpCurrentIndex != 1 && tmpCurrentIndex < MAXIMUM_NUMBER_INDEXES) {
-				if (pDisc->SUB.lpFirstLBAListOnSub[tIdx][tmpCurrentIndex] == -1) {
+				if (pDisc->SUB.lp1stLBAListOnSub[tIdx][tmpCurrentIndex] == -1) {
 					OutputSubInfoWithLBALogA("Index is changed from [%02d] to [%02d] [L:%d]\n"
 						, nLBA, tmpCurrentTrackNum, tmpPrevIndex, tmpCurrentIndex, (INT)__LINE__);
-					pDisc->SUB.lpFirstLBAListOnSub[tIdx][tmpCurrentIndex] = nLBA;
-					pDisc->SUB.lpFirstLBAListOnSubSync[tIdx][tmpCurrentIndex] = nLBA;
+					pDisc->SUB.lp1stLBAListOnSub[tIdx][tmpCurrentIndex] = nLBA;
+					pDisc->SUB.lp1stLBAListOnSubSync[tIdx][tmpCurrentIndex] = nLBA;
 				}
 			}
 			else {
 				if (nLBA != pDisc->SCSI.lp1stLBAListOnToc[tIdx]) {
 					if (pDisc->SCSI.byFormat == DISK_TYPE_CDI && pDisc->SCSI.toc.LastTrack > 1) {
 						pDisc->SCSI.lp1stLBAListOnToc[tIdx] = nLBA;
-						pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[tIdx] = 0;
+						pDisc->SUB.lp1stLBAListOfDataTrackOnSub[tIdx] = 0;
 						pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tIdx] = nLBA - 1;
 					}
 					else {
@@ -944,36 +944,36 @@ VOID SetTrackAttribution(
 				OutputSubInfoWithLBALogA("Index is changed from [%02d] to [%02d] [L:%d]\n", nLBA
 					, tmpCurrentTrackNum, tmpPrevIndex, tmpCurrentIndex, (INT)__LINE__);
 
-				pDisc->SUB.lpFirstLBAListOnSub[tIdx][1] = pDisc->SCSI.lp1stLBAListOnToc[tIdx];
-				if (pDisc->SUB.lpFirstLBAListOnSub[tIdx][0] == pDisc->SUB.lpFirstLBAListOnSub[tIdx][1]) {
+				pDisc->SUB.lp1stLBAListOnSub[tIdx][1] = pDisc->SCSI.lp1stLBAListOnToc[tIdx];
+				if (pDisc->SUB.lp1stLBAListOnSub[tIdx][0] == pDisc->SUB.lp1stLBAListOnSub[tIdx][1]) {
 					// Crow, The - Original Motion Picture Soundtrack (82519-2)
 					// LBA 108975, Track[06], Subchannel & TOC isn't sync. LBA on TOC: 108972, prevIndex[00]
-					pDisc->SUB.lpFirstLBAListOnSub[tIdx][0] = -1;
+					pDisc->SUB.lp1stLBAListOnSub[tIdx][0] = -1;
 				}
 
-				pDisc->SUB.lpFirstLBAListOnSubSync[tIdx][1] = nLBA;
-				if (pDisc->SUB.lpFirstLBAListOnSubSync[tIdx][0] == pDisc->SUB.lpFirstLBAListOnSubSync[tIdx][1]) {
-					pDisc->SUB.lpFirstLBAListOnSubSync[tIdx][0] = -1;
+				pDisc->SUB.lp1stLBAListOnSubSync[tIdx][1] = nLBA;
+				if (pDisc->SUB.lp1stLBAListOnSubSync[tIdx][0] == pDisc->SUB.lp1stLBAListOnSubSync[tIdx][1]) {
+					pDisc->SUB.lp1stLBAListOnSubSync[tIdx][0] = -1;
 				}
 			}
 		}
 		else if (tmpPrevIndex >= 1 && tmpCurrentIndex == 0) {
 #if 0
 			for (INT i = pDisc->SCSI.toc.FirstTrack - 1; i < pDisc->SCSI.toc.LastTrack; i++) {
-				OutputString(_T("pDisc->SUB.lpFirstLBAListOnSub[%d][%d]: %d, %p, LBA: %d\n")
-					, i, tmpCurrentIndex, pDisc->SUB.lpFirstLBAListOnSub[i][tmpCurrentIndex], &pDisc->SUB.lpFirstLBAListOnSub[i][tmpCurrentIndex], nLBA);
+				OutputString(_T("pDisc->SUB.lp1stLBAListOnSub[%d][%d]: %d, %p, LBA: %d\n")
+					, i, tmpCurrentIndex, pDisc->SUB.lp1stLBAListOnSub[i][tmpCurrentIndex], &pDisc->SUB.lp1stLBAListOnSub[i][tmpCurrentIndex], nLBA);
 			}
 #endif
-			if (pDisc->SUB.lpFirstLBAListOnSub[tIdx][tmpCurrentIndex] == -1) {
+			if (pDisc->SUB.lp1stLBAListOnSub[tIdx][tmpCurrentIndex] == -1) {
 				OutputSubInfoWithLBALogA("Index is changed from [%02d] to [%02d] [L:%d]\n", nLBA
 					, tmpCurrentTrackNum, tmpPrevIndex, tmpCurrentIndex, (INT)__LINE__);
-				pDisc->SUB.lpFirstLBAListOnSub[tIdx][tmpCurrentIndex] = nLBA;
-				pDisc->SUB.lpFirstLBAListOnSubSync[tIdx][tmpCurrentIndex] = nLBA;
+				pDisc->SUB.lp1stLBAListOnSub[tIdx][tmpCurrentIndex] = nLBA;
+				pDisc->SUB.lp1stLBAListOnSubSync[tIdx][tmpCurrentIndex] = nLBA;
 			}
 #if 0
 			for (INT i = pDisc->SCSI.toc.FirstTrack - 1; i < pDisc->SCSI.toc.LastTrack; i++) {
-				OutputString(_T("pDisc->SUB.lpFirstLBAListOnSub[%d][%d]: %d, %p, LBA: %d\n")
-					, i, tmpCurrentIndex, pDisc->SUB.lpFirstLBAListOnSub[i][tmpCurrentIndex], &pDisc->SUB.lpFirstLBAListOnSub[i][tmpCurrentIndex], nLBA);
+				OutputString(_T("pDisc->SUB.lp1stLBAListOnSub[%d][%d]: %d, %p, LBA: %d\n")
+					, i, tmpCurrentIndex, pDisc->SUB.lp1stLBAListOnSub[i][tmpCurrentIndex], &pDisc->SUB.lp1stLBAListOnSub[i][tmpCurrentIndex], nLBA);
 			}
 #endif
 		}
@@ -998,15 +998,15 @@ VOID SetTrackAttribution(
 				}
 			}
 			else if ((pDisc->SCSI.toc.TrackData[tIdx].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
-				pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[tIdx] = nLBA;
+				pDisc->SUB.lp1stLBAListOfDataTrackOnSub[tIdx] = nLBA;
 			}
 		}
 		else {
 			// preserve first LBA per data track
-			if (pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[tIdx] == -1 &&
+			if (pDisc->SUB.lp1stLBAListOfDataTrackOnSub[tIdx] == -1 &&
 				(pDisc->SCSI.toc.TrackData[tIdx].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 				OutputSubInfoWithLBALogA("1st LBA of this data track\n", nLBA, tmpCurrentTrackNum);
-				pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[tIdx] = nLBA;
+				pDisc->SUB.lp1stLBAListOfDataTrackOnSub[tIdx] = nLBA;
 			}
 			else if (nLBA == pDisc->SCSI.nAllLength - 1) {
 				if (pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tIdx] == -1) {
@@ -1025,9 +1025,9 @@ VOID SetTrackAttribution(
 		(tmpCurrentTrackNum == 110 || // '110' is Lead-out, '100'&'101' is Lead-in
 		((tmpCurrentTrackNum == 0 && (tmpCurrentIndex == 100 || tmpCurrentIndex == 101 ||
 			(tmpCurrentIndex == 0 && pDiscPerSector->subch.current.nAbsoluteTime == 0)))))) {
-		if (pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[pDiscPerSector->byTrackNum - 1] == -1) {
+		if (pDisc->SUB.lp1stLBAListOfDataTrackOnSub[pDiscPerSector->byTrackNum - 1] == -1) {
 			OutputSubInfoWithLBALogA("1st LBA of Lead-out or Lead-in\n", nLBA, tmpCurrentTrackNum);
-			pDisc->SUB.lpFirstLBAListOfDataTrackOnSub[pDiscPerSector->byTrackNum - 1] = nLBA;
+			pDisc->SUB.lp1stLBAListOfDataTrackOnSub[pDiscPerSector->byTrackNum - 1] = nLBA;
 			if (pDiscPerSector->byTrackNum < pDisc->SCSI.by1stDataTrkNum) {
 				pDisc->SCSI.by1stDataTrkNum = pDiscPerSector->byTrackNum;
 			}
