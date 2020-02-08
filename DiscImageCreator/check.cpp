@@ -321,9 +321,11 @@ VOID SupportIndex0InTrack1(
 		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PX704A &&
 		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PREMIUM2 &&
 		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PREMIUM &&
-		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PXW5224A) {
+		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PXW5224A &&
+		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PXW4012A
+		) {
 		OutputString(
-			_T("This drive doesn't support to rip from 00:00:00 to 00:01:74 AMSF. /p option is ignored\n"));
+			_T("This drive doesn't support to rip from 00:00:00 to 00:01:74 AMSF. /p option was ignored\n"));
 		pExtArg->byPre = FALSE;
 	}
 }

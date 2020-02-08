@@ -963,6 +963,10 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					if (!SetOptionC2(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
+					if (pExtArg->byPre) {
+						OutputErrorStringA("/c2 can't use with /p. /c2 was disabled");
+						pExtArg->byC2 = FALSE;
+					}
 				}
 				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/f"), 2)) {
 					if (!SetOptionF(argc, argv, pExtArg, &i)) {
@@ -971,6 +975,10 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				}
 				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/p"), 2)) {
 					pExtArg->byPre = TRUE;
+					if (pExtArg->byC2) {
+						OutputErrorStringA("/p can't use with /c2. /p was disabled");
+						pExtArg->byPre = FALSE;
+					}
 				}
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/sf"), 3)) {
 					if (!SetOptionSf(argc, argv, pExtArg, &i)) {
@@ -1549,7 +1557,7 @@ int printUsage(void)
 		_T("\t\t\t    \tval3, 4 is used when val2 is 1\n")
 		_T("\t/p\tDumping the AMSF from 00:00:00 to 00:01:74\n")
 		_T("\t\t\tFor SagaFrontier Original Sound Track (Disc 3) etc.\n")
-		_T("\t\t\tSupport drive: PLEXTOR PX-W5224, PREMIUM, PREMIUM2\n")
+		_T("\t\t\tSupport drive: PLEXTOR PX-W4012, 5224, PREMIUM, PREMIUM2\n")
 		_T("\t\t\t               PX-704, 708, 712, 714, 716, 755, 760\n")
 		_T("\t/r\tRead CD from the reverse\n")
 		_T("\t\t\tFor Alpha-Disc, Tages (very slow)\n")
