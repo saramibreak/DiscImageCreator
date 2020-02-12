@@ -1439,7 +1439,7 @@ VOID OutputCDSubToLog(
 				, pDiscPerSector->subcode.current[15], pDiscPerSector->subcode.current[16],
 				pDiscPerSector->subcode.current[17], pDiscPerSector->subcode.current[19]
 				, pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
-			if (pDiscPerSector->subcode.current[13] > 1) {
+			if (pDisc->SCSI.bMultiSession && pDiscPerSector->subcode.current[13] > 1) {
 				if (pDiscPerSector->subcode.prev[13] == 0 &&
 					(pDiscPerSector->subcode.prev[14] == 0xa0 ||
 					pDiscPerSector->subcode.prev[14] == 0xa1 ||
