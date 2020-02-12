@@ -85,12 +85,19 @@ BOOL InitTocTextData(
 	size_t dwTrackAllocSize =
 		(*pExecType == gd || *pExecType == swap) ? MAXIMUM_NUMBER_TRACKS : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
 	try {
-		if (pDevice->FEATURE.byCanCDText || *pExecType == gd || *pExecType == swap) {
-			if (NULL == ((*pDisc)->SUB.pszISRC = 
-				(LPSTR*)calloc(dwTrackAllocSize * 2, sizeof(INT_PTR)))) {
+		if (NULL == ((*pDisc)->SUB.pszISRC =
+			(LPSTR*)calloc(dwTrackAllocSize * 2, sizeof(INT_PTR)))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			throw FALSE;
+		}
+		for (size_t h = 0; h < dwTrackAllocSize; h++) {
+			if (NULL == ((*pDisc)->SUB.pszISRC[h] =
+				(LPSTR)calloc(META_ISRC_SIZE, sizeof(CHAR)))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
+		}
+		if (pDevice->FEATURE.byCanCDText || *pExecType == gd || *pExecType == swap) {
 			for (INT i = 0; i < MAX_CDTEXT_LANG; i++) {
 				if (NULL == ((*pDisc)->SCSI.CDTEXT[i].pszTitle =
 					(LPSTR*)calloc(dwTrackAllocSize * 2, sizeof(INT_PTR)))) {
@@ -104,13 +111,6 @@ BOOL InitTocTextData(
 				}
 				if (NULL == ((*pDisc)->SCSI.CDTEXT[i].pszSongWriter =
 					(LPSTR*)calloc(dwTrackAllocSize * 2, sizeof(INT_PTR)))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					throw FALSE;
-				}
-			}
-			for (size_t h = 0; h < dwTrackAllocSize; h++) {
-				if (NULL == ((*pDisc)->SUB.pszISRC[h] =
-					(LPSTR)calloc(META_ISRC_SIZE, sizeof(CHAR)))) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 					throw FALSE;
 				}
@@ -415,10 +415,11 @@ VOID TerminateTocTextData(
 ) {
 	size_t dwTrackAllocSize =
 		(*pExecType == gd || *pExecType == swap) ? MAXIMUM_NUMBER_TRACKS : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
-	if (pDevice->FEATURE.byCanCDText) {
-		for (size_t i = 0; i < dwTrackAllocSize; i++) {
-			FreeAndNull((*pDisc)->SUB.pszISRC[i]);
-		}
+	for (size_t i = 0; i < dwTrackAllocSize; i++) {
+		FreeAndNull((*pDisc)->SUB.pszISRC[i]);
+	}
+	FreeAndNull((*pDisc)->SUB.pszISRC);
+	if (pDevice->FEATURE.byCanCDText || *pExecType == gd || *pExecType == swap) {
 		for (INT j = 0; j < MAX_CDTEXT_LANG; j++) {
 			for (size_t i = 0; i < dwTrackAllocSize; i++) {
 				FreeAndNull((*pDisc)->SCSI.CDTEXT[j].pszTitle[i]);
@@ -426,7 +427,6 @@ VOID TerminateTocTextData(
 				FreeAndNull((*pDisc)->SCSI.CDTEXT[j].pszSongWriter[i]);
 			}
 		}
-		FreeAndNull((*pDisc)->SUB.pszISRC);
 		for (INT j = 0; j < MAX_CDTEXT_LANG; j++) {
 			FreeAndNull((*pDisc)->SCSI.CDTEXT[j].pszTitle);
 			FreeAndNull((*pDisc)->SCSI.CDTEXT[j].pszPerformer);
