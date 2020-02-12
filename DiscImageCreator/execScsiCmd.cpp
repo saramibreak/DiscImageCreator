@@ -578,7 +578,9 @@ BOOL GetConfiguration(
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		pDisc->SCSI.wCurrentMedia = ProfileCdrom;
 		// not false. because undefined mmc1..
-		if (pDevice->byPlxtrDrive == PLXTR_DRIVE_TYPE::PX40TS) {
+		if (pDevice->byPlxtrDrive == PLXTR_DRIVE_TYPE::PX40TS ||
+			pDevice->byPlxtrDrive == PLXTR_DRIVE_TYPE::PX20TS
+			) {
 			pDevice->FEATURE.byCanCDText = TRUE;
 			pDevice->FEATURE.byC2ErrorData = TRUE;
 		}

@@ -401,7 +401,9 @@ BOOL WriteCcdFirst(
 			if (pDevice->byPlxtrDrive == PLXTR_DRIVE_TYPE::PX40TS) {
 				// Somehow Ultraplex seems to get the fulltoc data as "hexadecimal"
 				pTocData[i].Msf[0] = BcdToDec(pTocData[i].Msf[0]);
-				pTocData[i].Msf[1] = BcdToDec(pTocData[i].Msf[1]);
+				if (pTocData[i].Point != 0xa0) {
+					pTocData[i].Msf[1] = BcdToDec(pTocData[i].Msf[1]);
+				}
 				pTocData[i].Msf[2] = BcdToDec(pTocData[i].Msf[2]);
 				pTocData[i].MsfExtra[0] = BcdToDec(pTocData[i].MsfExtra[0]);
 				pTocData[i].MsfExtra[1] = BcdToDec(pTocData[i].MsfExtra[1]);
