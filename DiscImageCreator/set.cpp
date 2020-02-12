@@ -363,7 +363,7 @@ VOID SetAndOutputTocFull(
 				OutputDiscLogA("Format: CD-ROM-XA\n");
 				break;
 			default:
-				OutputDiscLogA("Format: Other\n");
+				OutputDiscLogA("Format: Other [0x%02x]\n", pTocData[a].Msf[1]);
 				break;
 			}
 			// set this by ReadTOCFull
@@ -685,7 +685,7 @@ VOID SetAndOutputTocCDText(
 		for (size_t t = uiIdxBegin; t < uiIdxEnd; t++, tEnt++) {
 			memcpy(pTmpText + 12 * t, (pDesc[tEnt].Text), 12);
 		}
-		OutputDiscLogA("\t  Genre code: 0x%02x%02x"
+		OutputDiscLogA("\tGenre code: 0x%02x%02x"
 			, *(pTmpText + uiTxtIdx), *(pTmpText + uiTxtIdx + 1));
 		if (*(pTmpText + uiTxtIdx + 1) != 0) {
 			OutputDiscLogA(" %s", pTmpText + uiTxtIdx + 2);
@@ -1032,7 +1032,10 @@ VOID SetTrackAttribution(
 				pDisc->SCSI.by1stDataTrkNum = pDiscPerSector->byTrackNum;
 			}
 		}
-		else {
+		else if (nLBA != pDisc->SCSI.n1stLBAof2ndSession - 150){
+			OutputSubInfoWithLBALogA(
+				"Set the last LBA of data track [%d]->[%d] [L:%d]\n", nLBA, tmpCurrentTrackNum,
+				pDisc->SUB.lpLastLBAListOfDataTrackOnSub[pDiscPerSector->byTrackNum - 1], nLBA, (INT)__LINE__);
 			pDisc->SUB.lpLastLBAListOfDataTrackOnSub[pDiscPerSector->byTrackNum - 1] = nLBA;
 		}
 	}
