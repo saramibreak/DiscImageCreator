@@ -177,7 +177,8 @@ BOOL IsValidPlextorDrive(
 			pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PX708A2;
 		}
 		else if (!strncmp(pDevice->szProductId, "DVDR   PX-708A  ", DRIVE_PRODUCT_ID_SIZE)) {
-			if (strncmp(pDevice->szProductRevisionLevel, "1.12", DRIVE_VERSION_ID_SIZE)) {
+			if (strncmp(pDevice->szProductRevisionLevel, "1.12", DRIVE_VERSION_ID_SIZE) &&
+				strncmp(pDevice->szProductRevisionLevel, "1.04", DRIVE_VERSION_ID_SIZE)) {
 				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::NotLatest;
 			}
 			else {
