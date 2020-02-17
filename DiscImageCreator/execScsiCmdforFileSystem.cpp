@@ -99,6 +99,16 @@ VOID ManageEndOfDirectoryRecord(
 	}
 }
 
+BOOL IsValidPositionAndDataLength(
+	LPBYTE lpDirRec
+) {
+	// check if stored LSB data is the same as MSB data
+	return lpDirRec[2] == lpDirRec[9] && lpDirRec[3] == lpDirRec[8] &&
+		lpDirRec[4] == lpDirRec[7] && lpDirRec[5] == lpDirRec[6] && // offset
+		lpDirRec[10] == lpDirRec[17] && lpDirRec[11] == lpDirRec[16] &&
+		lpDirRec[12] == lpDirRec[15] && lpDirRec[13] == lpDirRec[14];   // data length
+}
+
 BOOL IsValidMonthDay(
 	LPBYTE lpDirRec
 ) {
@@ -110,7 +120,7 @@ VOID AdjustOfs(
 	LPBYTE lpBuf,
 	PUINT puiOfs
 ) {
-	if (!IsValidMonthDay(lpBuf + *puiOfs)) {
+	if (!IsValidPositionAndDataLength(lpBuf + *puiOfs) && !IsValidMonthDay(lpBuf + *puiOfs)) {
 		OutputVolDescLogA("Detected corrupt directory record. Skipped it.\n");
 		for (UINT i = 1; i < 256; i++) {
 			if (85 <= *(lpBuf + 18 + i) && IsValidMonthDay(lpBuf + i)) {
@@ -131,16 +141,6 @@ VOID AdjustOfs(
 			}
 		}
 	}
-}
-
-BOOL IsValidPositionAndDataLength(
-	LPBYTE lpDirRec
-) {
-	// check if stored LSB data is the same as MSB data
-	return lpDirRec[2] == lpDirRec[9] && lpDirRec[3] == lpDirRec[8] &&
-		lpDirRec[4] == lpDirRec[7] && lpDirRec[5] == lpDirRec[6] && // offset
-		lpDirRec[10] == lpDirRec[17] && lpDirRec[11] == lpDirRec[16] &&
-		lpDirRec[12] == lpDirRec[15] && lpDirRec[13] == lpDirRec[14];   // data length
 }
 
 BOOL ReadDirectoryRecordDetail(
@@ -181,8 +181,7 @@ BOOL ReadDirectoryRecordDetail(
 		for (;;) {
 			CHAR szCurDirName[MAX_FNAME_FOR_VOLUME] = {};
 			LPBYTE lpDirRec = lpBuf + uiOfs;
-			BOOL bValidDay = IsValidMonthDay(lpDirRec);
-			if (lpDirRec[0] >= MIN_LEN_DR && bValidDay) {
+			if (lpDirRec[0] >= MIN_LEN_DR) {
 				if (lpDirRec[0] == MIN_LEN_DR && uiOfs > 0 && uiOfs % DISC_RAW_READ_SIZE == 0) {
 					// [PC] SimCity 3000 (USA)
 					// Data Length should be 2048 because LBA 200205 is joliet
@@ -260,7 +259,7 @@ BOOL ReadDirectoryRecordDetail(
 				if (uiPaddingLen > MIN_LEN_DR) {
 					BYTE byNextLenDR = lpDirRec[MIN_LEN_DR];
 					BOOL bValidPos = IsValidPositionAndDataLength(lpDirRec + MIN_LEN_DR);
-					bValidDay = IsValidMonthDay(lpDirRec + MIN_LEN_DR);
+					BOOL bValidDay = IsValidMonthDay(lpDirRec + MIN_LEN_DR);
 					if (byNextLenDR >= MIN_LEN_DR && bValidPos && bValidDay) {
 						// Amiga Tools 4
 						// The second of Direcory Record (0x22 - 0x43) is corrupt
