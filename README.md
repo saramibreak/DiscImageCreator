@@ -27,7 +27,8 @@
      - PX-760, PX-755, PX-716, PX-714, PX-712, PX-708, PX-704, 
        Premium2, Premium, PX-W5224, PX-4824, PX-4012 (PX-714, PX-704 can't test it enough.)
        - [Firmware of a plextor drive](http://www.skcj.co.jp/discon/download/index.html)  
-         Without a reason, you should update the latest firmware.
+         This app needs the latest firmware except PX-708. (PX-708 can use latest and 1.04)  
+         - PX-704 and PX-714 is [here](https://web.archive.org/web/*/http://www.plextor.com.cn/down/*)  
        - Various Tools for Plextor
          - [PleXTools Professional XL](https://web.archive.org/web/20140910033037/http://www.plextor-digital.com/index.php/component/option,com_jdownloads/Itemid,55/catid,86/cid,470/task,finish/)
          - [PlexTools Professional LE](https://web.archive.org/web/20070608230432/http://www.plextools.com/download/download.asp)
@@ -230,7 +231,7 @@ See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)
 
   - Linux build on Windows  
     - Windows Subsystem for Linux (WSL)  
-      https://blogs.msdn.microsoft.com/vcblog/2017/02/08/targeting-windows-subsystem-for-linux-from-visual-studio/  
+      https://devblogs.microsoft.com/cppblog/targeting-windows-subsystem-for-linux-from-visual-studio/  
       https://docs.microsoft.com/en-us/windows/wsl/install-win10
 
 - Linux
