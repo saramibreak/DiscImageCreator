@@ -315,15 +315,15 @@ BOOL InitLogFile(
 		if (setvbuf(g_LogFile.fpDrive, NULL, _IONBF, 0) != 0) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		}
+		if (NULL == (g_LogFile.fpVolDesc = CreateOrOpenFileA(
+			path, "_volDesc", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			throw FALSE;
+		}
+		if (setvbuf(g_LogFile.fpVolDesc, NULL, _IONBF, 0) != 0) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		}
 		if (*pExecType != fd && * pExecType != disk) {
-			if (NULL == (g_LogFile.fpVolDesc = CreateOrOpenFileA(
-				path, "_volDesc", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				throw FALSE;
-			}
-			if (setvbuf(g_LogFile.fpVolDesc, NULL, _IONBF, 0) != 0) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-			}
 			if (NULL == (g_LogFile.fpMainInfo = CreateOrOpenFileA(
 				path, "_mainInfo", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -475,8 +475,8 @@ VOID TerminateLogFile(
 ) {
 	FcloseAndNull(g_LogFile.fpDisc);
 	FcloseAndNull(g_LogFile.fpDrive);
+	FcloseAndNull(g_LogFile.fpVolDesc);
 	if (*pExecType != fd && *pExecType != disk) {
-		FcloseAndNull(g_LogFile.fpVolDesc);
 		FcloseAndNull(g_LogFile.fpMainInfo);
 		FcloseAndNull(g_LogFile.fpMainError);
 		if (*pExecType != dvd && *pExecType != bd &&

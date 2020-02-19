@@ -45,11 +45,6 @@ VOID OutputRemovableDiskInfo(
 	PGET_MEDIA_TYPES pMedia
 );
 
-VOID OutputFileAllocationTable(
-	LPBYTE lpBuf,
-	PFAT fat
-);
-
 VOID OutputDVDGetRegion(
 	PDVD_REGION dvdRegion
 );

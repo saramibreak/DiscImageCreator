@@ -15,18 +15,6 @@
  */
 #pragma once
 
-VOID OutputFsVolumeDescriptorSequence(
-	LPBYTE lpBuf,
-	INT nLBA,
-	PUDF pUdf 
-);
-
-VOID OutputFsVolumeRecognitionSequence(
-	LPBYTE lpBuf,
-	INT nLBA,
-	LPBOOL pUDF
-);
-
 VOID OutputDVDStructureFormat(
 	PDISC pDisc,
 	BYTE byFormatCode,

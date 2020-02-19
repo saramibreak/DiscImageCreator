@@ -22,6 +22,7 @@
 #include "execIoctl.h"
 #include "get.h"
 #include "output.h"
+#include "outputFileSystem.h"
 #include "outputScsiCmdLogforCD.h"
 #include "outputScsiCmdLogforDVD.h"
 #include "set.h"
@@ -696,28 +697,42 @@ BOOL ReadCDForFileSystem(
 					}
 					if (!bOtherHeader) {
 						// for MAC pattern 1
-						nLBA = 1;
-						if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, lpBuf,
-							DISC_RAW_READ_SIZE, _T(__FUNCTION__), __LINE__)) {
-							throw FALSE;
-						}
-						if (IsValidMacDataHeader(lpBuf + 1024)) {
-							OutputFsMasterDirectoryBlocks(lpBuf + 1024, nLBA);
-							bOtherHeader = TRUE;
-						}
-						else if (IsValidMacDataHeader(lpBuf + 512)) {
-							OutputFsMasterDirectoryBlocks(lpBuf + 512, nLBA);
-							bOtherHeader = TRUE;
-						}
-						// for MAC pattern 2
-						nLBA = 16;
-						if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, lpBuf,
-							DISC_RAW_READ_SIZE, _T(__FUNCTION__), __LINE__)) {
-							throw FALSE;
-						}
-						if (IsValidMacDataHeader(lpBuf + 1024)) {
-							OutputFsMasterDirectoryBlocks(lpBuf + 1024, nLBA);
-							bOtherHeader = TRUE;
+						if (IsDriverDescriptorRecord(lpBuf)) {
+							OutputDriveDescriptorRecord(lpBuf);
+							if (IsApplePartionMap(lpBuf + 512)) {
+								BOOL bHfs = FALSE;
+								LONG firstPartition = 0;
+								UINT numOfPartion = MAKEUINT(MAKEWORD(lpBuf[519], lpBuf[518]), MAKEWORD(lpBuf[517], lpBuf[516]));
+								for (UINT j = 1; j <= numOfPartion; j++) {
+									OutputPartitionMap(lpBuf + 512 * j, &bHfs);
+									if (bHfs && firstPartition == 0) {
+										firstPartition = MAKELONG(MAKEWORD(lpBuf[523], lpBuf[522]), MAKEWORD(lpBuf[521], lpBuf[520]));
+									}
+								}
+								nLBA = 1;
+								if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, lpBuf,
+									DISC_RAW_READ_SIZE, _T(__FUNCTION__), __LINE__)) {
+									throw FALSE;
+								}
+								if (IsValidMacDataHeader(lpBuf + 1024)) {
+									OutputFsMasterDirectoryBlocks(lpBuf + 1024, nLBA);
+									bOtherHeader = TRUE;
+								}
+								else if (IsValidMacDataHeader(lpBuf + 512)) {
+									OutputFsMasterDirectoryBlocks(lpBuf + 512, nLBA);
+									bOtherHeader = TRUE;
+								}
+								// for MAC pattern 2
+								nLBA = 16;
+								if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, lpBuf,
+									DISC_RAW_READ_SIZE, _T(__FUNCTION__), __LINE__)) {
+									throw FALSE;
+								}
+								if (IsValidMacDataHeader(lpBuf + 1024)) {
+									OutputFsMasterDirectoryBlocks(lpBuf + 1024, nLBA);
+									bOtherHeader = TRUE;
+								}
+							}
 						}
 					}
 					if (bOtherHeader) {

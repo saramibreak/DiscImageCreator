@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 #include "struct.h"
+#include "check.h"
 #include "execIoctl.h"
 #include "output.h"
 #include "outputIoctlLog.h"
+#include "outputFileSystem.h"
 
 // ref: http://www.ioctls.net/
 BOOL DiskGetMediaTypes(
@@ -105,11 +107,11 @@ BOOL ReadDirectoryRecord(
 						break;
 					}
 					else if (lpBuf[i] == 0xe5) {
-						OutputDiscLogA("%sDeteled Entry\n", (LPCH)&pTab[0]);
+						OutputVolDescLogA("%sDeteled Entry\n", (LPCH)&pTab[0]);
 					}
 					else if ((lpBuf[11 + i] & 0x0f) == 0x0f) {
 						WCHAR fname[_MAX_FNAME] = {};
-						OutputDiscLogA(
+						OutputVolDescLogA(
 							"%s        LDIR_Ord: ", (LPCH)&pTab[0]);
 						if ((lpBuf[i] & 0x40) == 0x40) {
 							INT nCnt = (lpBuf[i] & 0x1f) - 1;
@@ -117,15 +119,15 @@ BOOL ReadDirectoryRecord(
 								memcpy(fname + k, (LPWCH)&lpBuf[1 + i + j], 10);
 								memcpy(fname + 5 + k, (LPWCH)&lpBuf[14 + i + j], 12);
 								memcpy(fname + 11 + k, (LPWCH)&lpBuf[28 + i + j], 4);
-								OutputDiscLogA("0x%02x ", lpBuf[i + j]);
+								OutputVolDescLogA("0x%02x ", lpBuf[i + j]);
 							}
-							OutputDiscLogA("\n");
+							OutputVolDescLogA("\n");
 							i += 32 * ((lpBuf[i] & 0x0f) - 1);
 						}
 						else {
-							OutputDiscLogA("%#02x\n", lpBuf[i]);
+							OutputVolDescLogA("%#02x\n", lpBuf[i]);
 						}
-						OutputDiscLogA(
+						OutputVolDescLogA(
 							"%s       LDIR_Name: %ls\n"
 							"%s       LDIR_Attr: 0x%02x\n"
 							"%s       LDIR_Type: 0x%02x\n"
@@ -140,7 +142,7 @@ BOOL ReadDirectoryRecord(
 					}
 					else {
 						WORD FstClusLO = MAKEWORD(lpBuf[26 + i], lpBuf[27 + i]);
-						OutputDiscLogA(
+						OutputVolDescLogA(
 							"%s        DIR_Name: %.11s\n"
 							"%s        DIR_Attr: 0x%02x\n"
 							"%s       DIR_NTRes: %d\n"
@@ -170,7 +172,7 @@ BOOL ReadDirectoryRecord(
 							LONG seekPosNext = (LONG)((pFat->DataStartSector + (FstClusLO - 2) * pFat->SecPerClus) * dwBytesPerSector);
 							size_t idx = strlen((LPCH)&pTab[0]);
 							pTab[idx] = '\t';
-							OutputDiscLogA("%s" OUTPUT_DHYPHEN_PLUS_STR(DirectoryEntry), (LPCH)&pTab[0]);
+							OutputVolDescLogA("%s" OUTPUT_DHYPHEN_PLUS_STR(DirectoryEntry), (LPCH)&pTab[0]);
 							ReadDirectoryRecord(handle, (LONG)seekPosNext, dwBytesPerSector, pFat, pTab);
 							pTab[idx] = 0;
 						}
@@ -191,7 +193,7 @@ BOOL ReadDirectoryRecord(
 	return bRet;
 }
 
-BOOL ReadFileAllocationTable(
+BOOL ReadFileSystem(
 #ifdef _WIN32
 	HANDLE handle,
 #else
@@ -202,10 +204,41 @@ BOOL ReadFileAllocationTable(
 ) {
 	DWORD dwBytesRead = 0;
 	FAT fat = {};
+	BOOL bHfs = FALSE;
+	LONG firstPartition = 0;
 	BOOL bRet = ReadFile(handle, lpBuf, dwBytesPerSector, &dwBytesRead, 0);
 	if (bRet) {
 		if (dwBytesPerSector == dwBytesRead) {
-			OutputFileAllocationTable(lpBuf, &fat);
+			if (IsFat(lpBuf)) {
+				OutputFileAllocationTable(lpBuf, &fat);
+				BYTE szTab[256] = {};
+				szTab[0] = '\t';
+				OutputVolDescLogA("%s" OUTPUT_DHYPHEN_PLUS_STR(DirectoryEntry), szTab);
+				ReadDirectoryRecord(handle, (LONG)(fat.RootDirStartSector * dwBytesPerSector), dwBytesPerSector, &fat, szTab);
+			}
+			else if (IsDriverDescriptorRecord(lpBuf)) {
+				OutputDriveDescriptorRecord(lpBuf);
+				while (ReadFile(handle, lpBuf, dwBytesPerSector, &dwBytesRead, 0)) {
+					if (dwBytesPerSector == dwBytesRead) {
+						if (IsApplePartionMap(lpBuf)) {
+							OutputPartitionMap(lpBuf, &bHfs);
+							if (bHfs && firstPartition == 0) {
+								firstPartition = MAKELONG(MAKEWORD(lpBuf[11], lpBuf[10]), MAKEWORD(lpBuf[9], lpBuf[8]));
+							}
+						}
+						else if (IsValidMacDataHeader(lpBuf)) {
+							OutputFsMasterDirectoryBlocks(lpBuf, firstPartition);
+							break;
+						}
+						else {
+							if (bHfs) {
+								SetFilePointer(handle, firstPartition * (LONG)dwBytesPerSector, NULL, FILE_BEGIN);
+								bHfs = FALSE;
+							}
+						}
+					}
+				}
+			}
 		}
 		else {
 			OutputErrorString(
@@ -216,10 +249,6 @@ BOOL ReadFileAllocationTable(
 	else {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 	}
-	BYTE szTab[256] = {};
-	szTab[0] = '\t';
-	OutputDiscLogA("%s" OUTPUT_DHYPHEN_PLUS_STR(DirectoryEntry), szTab);
-	ReadDirectoryRecord(handle, (LONG)(fat.RootDirStartSector * dwBytesPerSector), dwBytesPerSector, &fat, szTab);
 	SetFilePointer(handle, 0, NULL, FILE_BEGIN);
 	return bRet;
 }
@@ -263,7 +292,7 @@ BOOL ReadDisk(
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
 		}
-		ReadFileAllocationTable(pDevice->hDevice, lpBuf, dwBytesPerSector);
+		ReadFileSystem(pDevice->hDevice, lpBuf, dwBytesPerSector);
 		FlushLog();
 
 		DWORD dwBytesRead = 0;

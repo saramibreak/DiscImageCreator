@@ -385,6 +385,33 @@ BOOL IsValid3doDataHeader(
 	return bRet;
 }
 
+BOOL IsFat(
+	LPBYTE lpBuf
+) {
+	if ((lpBuf[0] == 0xeb && lpBuf[2] == 0x90) || lpBuf[0] == 0xe9) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
+BOOL IsDriverDescriptorRecord(
+	LPBYTE lpBuf
+) {
+	if (lpBuf[0] == 0x45 && lpBuf[1] == 0x52) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
+BOOL IsApplePartionMap(
+	LPBYTE lpBuf
+) {
+	if (lpBuf[0] == 0x50 && lpBuf[1] == 0x4d) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
 // http://d.hatena.ne.jp/zariganitosh/20130501/hfs_plus_struct
 // http://www.opensource.apple.com/source/xnu/xnu-2050.18.24/bsd/hfs/hfs_format.h	
 BOOL IsValidMacDataHeader(

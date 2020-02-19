@@ -141,6 +141,9 @@
     <ClInclude Include="_external\mbedtls\platform_time.h">
       <Filter>_external\mbedtls</Filter>
     </ClInclude>
+    <ClInclude Include="outputFileSystem.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="_external\crc16ccitt.cpp">
@@ -232,6 +235,9 @@
     </ClCompile>
     <ClCompile Include="_external\platform_util.cpp">
       <Filter>_external</Filter>
+    </ClCompile>
+    <ClCompile Include="outputFileSystem.cpp">
+      <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

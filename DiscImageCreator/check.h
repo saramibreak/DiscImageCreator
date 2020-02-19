@@ -61,6 +61,18 @@ BOOL IsValid3doDataHeader(
 	LPBYTE lpBuf
 );
 
+BOOL IsFat(
+	LPBYTE lpBuf
+);
+
+BOOL IsDriverDescriptorRecord(
+	LPBYTE lpBuf
+);
+
+BOOL IsApplePartionMap(
+	LPBYTE lpBuf
+);
+
 BOOL IsValidMacDataHeader(
 	LPBYTE lpBuf
 );
