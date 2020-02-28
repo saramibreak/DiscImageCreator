@@ -114,6 +114,9 @@
     <ClCompile Include="_external\aesni.cpp">
       <Filter>_external</Filter>
     </ClCompile>
+    <ClCompile Include="outputFileSystem.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="calcHash.h">
@@ -249,6 +252,9 @@
       <Filter>_external\mbedtls</Filter>
     </ClInclude>
     <ClInclude Include="buildDateTime.h">
+      <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="outputFileSystem.h">
       <Filter>header</Filter>
     </ClInclude>
   </ItemGroup>

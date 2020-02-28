@@ -75,6 +75,7 @@
     <ClCompile Include="get.cpp" />
     <ClCompile Include="init.cpp" />
     <ClCompile Include="output.cpp" />
+    <ClCompile Include="outputFileSystem.cpp" />
     <ClCompile Include="outputIoctlLog.cpp" />
     <ClCompile Include="outputScsiCmdLog.cpp" />
     <ClCompile Include="outputScsiCmdLogforCD.cpp" />
@@ -114,6 +115,7 @@
     <ClInclude Include="get.h" />
     <ClInclude Include="init.h" />
     <ClInclude Include="output.h" />
+    <ClInclude Include="outputFileSystem.h" />
     <ClInclude Include="outputIoctlLog.h" />
     <ClInclude Include="outputScsiCmdLog.h" />
     <ClInclude Include="outputScsiCmdLogforCD.h" />
