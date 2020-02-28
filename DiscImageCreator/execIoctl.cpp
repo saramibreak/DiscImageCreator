@@ -227,7 +227,7 @@ BOOL ReadFileSystem(
 							}
 						}
 						else if (IsValidMacDataHeader(lpBuf)) {
-							OutputFsMasterDirectoryBlocks(lpBuf, firstPartition);
+							OutputFsMasterDirectoryBlocks(lpBuf, (INT)firstPartition);
 							break;
 						}
 						else {
