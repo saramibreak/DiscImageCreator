@@ -32,11 +32,13 @@ SOURCES_CXX := \
   get.o \
   init.o \
   output.o \
+  outputFileSystem.o \
   outputIoctlLog.o \
   outputScsiCmdLog.o \
   outputScsiCmdLogforCD.o \
   outputScsiCmdLogforDVD.o \
   set.o \
+  xml.o \
   _external/abgx360.o \
   _external/aesni.o \
   _external/aes.o \
@@ -48,7 +50,6 @@ SOURCES_CXX := \
   _external/rijndael-alg-fst.o \
   _external/tinyxml2.o \
   _external/sha1.o \
-  xml.o \
   _linux/defineForLinux.o
 
 OBJECTS := $(SOURCES_C:.c=.o) $(SOURCES_CXX:.cpp=.o)
