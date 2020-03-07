@@ -24,20 +24,10 @@
 ### Recommend drive
 - CD: (Drives must be able to dump by scrambled mode and read lead-out and read lead-in).
    - PLEXTOR (No OEM Drive)
-     - PX-760, PX-755, PX-716, PX-714, PX-712, PX-708, PX-704, 
-       Premium2, Premium, PX-W5224, PX-4824, PX-4012 (PX-714, PX-704 can't test it enough.)
-       - [Firmware of a plextor drive](http://www.skcj.co.jp/discon/download/index.html)  
-         This app needs the latest firmware except PX-708. (PX-708 can use latest and 1.04)  
-         - PX-704 and PX-714 is [here](https://web.archive.org/web/*/http://www.plextor.com.cn/down/*)  
-       - Various Tools for Plextor
-         - [PleXTools Professional XL](https://web.archive.org/web/20140910033037/http://www.plextor-digital.com/index.php/component/option,com_jdownloads/Itemid,55/catid,86/cid,470/task,finish/)
-         - [PlexTools Professional LE](https://web.archive.org/web/20070608230432/http://www.plextools.com/download/download.asp)
-         - [SecuViewer](https://web.archive.org/web/20060921233459/http://www.plextools.com/downloadfiles/secuviewer105.zip)
-         - [PX-Info Utility](https://web.archive.org/web/20061210233147/http://www.plextor.be:80/download/ftp1/PXInfo.zip)
-         - [CDVD Info](https://web.archive.org/web/20061210233351/http://www.plextor.be/download/ftp1/CDVDInfo.zip)
-         - [AS-Striker](http://www.skcj.co.jp/discon/download/software.html)
-         - [PxScan, PxView](http://www.alexander-noe.com/cdvd/px/index.php)
-         - [QPxTool](http://qpxtool.sourceforge.net/qpxtool.html)
+     - DVD model: PX-760, PX-755, PX-716, PX-714, PX-712, PX-708, PX-704
+     - CD model: Premium2, Premium, PX-W5224, PX-4824, PX-4012
+       - This app needs the latest firmware except PX-708. (PX-708 can use latest and 1.04)  
+         See Doc/Firmware&Tool.md if you want to download above firmware or useful tool
    - ASUS
      - BC-12D2HT (Combined offset minus disc only), BW-16D1HT (ditto)
        - BW-16D1HT Firmware 3.02 supports the combined offset plus disc
