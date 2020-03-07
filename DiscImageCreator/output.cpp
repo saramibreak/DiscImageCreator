@@ -566,7 +566,7 @@ VOID WriteCueForPerformer(
 		_TCHAR szPerformer[META_CDTEXT_SIZE] = {};
 #ifdef UNICODE
 		MultiByteToWideChar(CP_ACP, 0
-			, pDisc->SCSI.pszPerformer[byIdx], META_CDTEXT_SIZE
+			, pDisc->SCSI.CDTEXT[n].pszPerformer[byIdx], META_CDTEXT_SIZE
 			, szPerformer, sizeof(szPerformer) / sizeof(szPerformer[0]));
 #else
 		strncpy(szPerformer, pDisc->SCSI.CDTEXT[n].pszPerformer[byIdx], sizeof(szPerformer) / sizeof(szPerformer[0]));
@@ -590,7 +590,7 @@ VOID WriteCueForTitle(
 		_TCHAR szTitle[META_CDTEXT_SIZE] = {};
 #ifdef UNICODE
 		MultiByteToWideChar(CP_ACP, 0
-			, pDisc->SCSI.pszTitle[byIdx], META_CDTEXT_SIZE
+			, pDisc->SCSI.CDTEXT[n].pszTitle[byIdx], META_CDTEXT_SIZE
 			, szTitle, sizeof(szTitle) / sizeof(szTitle[0]));
 #else
 		strncpy(szTitle, pDisc->SCSI.CDTEXT[n].pszTitle[byIdx], sizeof(szTitle) / sizeof(szTitle[0]));
@@ -2003,7 +2003,7 @@ BOOL CreateBin(
 	if (!lpBuf) {
 		OutputString(_T("\n"));
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString("bufSize: %zd", stBufSize);
+		OutputErrorString(_T("bufSize: %zd"), stBufSize);
 		return FALSE;
 	}
 	if (fread(lpBuf, sizeof(BYTE), stBufSize, fpImg) < stBufSize) {
@@ -2086,7 +2086,7 @@ BOOL CreateBinCueCcd(
 						break;
 					}
 					FcloseAndNull(fpBin);
-					remove(out);
+					_tremove(out);
 					if (NULL == (fpCue = CreateOrOpenFile(
 						out, NULL, NULL, NULL, NULL, _T(".cue"), _T(WFLAG), 0, 0))) {
 						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -2135,7 +2135,7 @@ BOOL CreateBinCueCcd(
 						break;
 					}
 					FcloseAndNull(fpBinSync);
-					remove(out);
+					_tremove(out);
 					if (j == 0) {
 						WriteCueForUnderFileDirective(pDisc, bCanCDText, j, i, fpCueSyncForImg);
 					}
@@ -2841,21 +2841,21 @@ BOOL OutputMergedFile(
 	LPCTSTR pszFullPath2
 ) {
 	FILE* fpSrc1 = NULL;
-	if (NULL == (fpSrc1 = CreateOrOpenFileA(
-		pszFullPath, NULL, NULL, NULL, NULL, ".bin", "rb", 0, 0))) {
+	if (NULL == (fpSrc1 = CreateOrOpenFile(
+		pszFullPath, NULL, NULL, NULL, NULL, _T(".bin"), _T("rb"), 0, 0))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
 	FILE* fpSrc2 = NULL;
-	if (NULL == (fpSrc2 = CreateOrOpenFileA(
-		pszFullPath2, NULL, NULL, NULL, NULL, ".bin", "rb", 0, 0))) {
+	if (NULL == (fpSrc2 = CreateOrOpenFile(
+		pszFullPath2, NULL, NULL, NULL, NULL, _T(".bin"), _T("rb"), 0, 0))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		FcloseAndNull(fpSrc1);
 		return FALSE;
 	}
 	FILE* fpDst = NULL;
-	if (NULL == (fpDst = CreateOrOpenFileA(
-		pszFullPath, "_merge", NULL, NULL, NULL, ".bin", "wb", 0, 0))) {
+	if (NULL == (fpDst = CreateOrOpenFile(
+		pszFullPath, _T("_merge"), NULL, NULL, NULL, _T(".bin"), _T("wb"), 0, 0))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		FcloseAndNull(fpSrc1);
 		FcloseAndNull(fpSrc2);

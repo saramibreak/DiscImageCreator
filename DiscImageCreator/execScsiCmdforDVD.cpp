@@ -876,7 +876,7 @@ BOOL ReadDVDRaw(
 			}
 			else {
 				if (++nRereadNum == 40) {
-					OutputString("Max Reread %d. LBA: %7d\n", nRereadNum, nLBA);
+					OutputString(_T("Max Reread %d. LBA: %7d\n"), nRereadNum, nLBA);
 					if (!bRetry && IsSupported0xE7Type2(pDevice)) {
 						transferLen = 1;
 						transferAndMemSize = transferLen * memBlkSize;
@@ -897,7 +897,7 @@ BOOL ReadDVDRaw(
 						break;
 					}
 				}
-				OutputString("Reread %d. LBA: %7d\n", nRereadNum, nLBA);
+				OutputString(_T("Reread %d. LBA: %7d\n"), nRereadNum, nLBA);
 			}
 			if (nRereadNum || IsNintendoDisc(pDisc)) {
 				if (IsSupported0xE7Type1(pDevice) ||
@@ -999,7 +999,7 @@ BOOL ReadDVDRaw(
 			// 4 == no seed found for recording frame xx
 			// 6 == can't write to .iso
 			// frame num == error unscrambling recording frame xx
-			OutputString("ret = %d\n", bRet);
+			OutputString(_T("ret = %d\n"), bRet);
 			if (bRet == 0) {
 				if (pDisc->DVD.disc == gamecube) {
 					ReadNintendoFileSystem(pDevice, pszFullPath, gamecube);
@@ -1131,21 +1131,21 @@ BOOL ReadDiscStructure(
 	FILE* fpDmi = NULL;
 	FILE* fpPic = NULL;
 #ifdef _WIN32
-	CONST CHAR PFI[] = "\\PFI";
-	CONST CHAR DMI[] = "\\DMI";
-	CONST CHAR PIC[] = "\\PIC";
+	CONST _TCHAR PFI[] = _T("\\PFI");
+	CONST _TCHAR DMI[] = _T("\\DMI");
+	CONST _TCHAR PIC[] = _T("\\PIC");
 #else
-	CONST CHAR PFI[] = "/PFI";
-	CONST CHAR DMI[] = "/DMI";
-	CONST CHAR PIC[] = "/PIC";
+	CONST _TCHAR PFI[] = "/PFI";
+	CONST _TCHAR DMI[] = "/DMI";
+	CONST _TCHAR PIC[] = "/PIC";
 #endif
 	if (*pExecType == dvd || *pExecType == xbox) {
-		fpPfi = CreateOrOpenFileA(szPath, PFI, NULL, NULL, NULL, ".bin", "wb", 0, 0);
+		fpPfi = CreateOrOpenFile(szPath, PFI, NULL, NULL, NULL, _T(".bin"), _T("wb"), 0, 0);
 		if (!fpPfi) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
 		}
-		fpDmi = CreateOrOpenFileA(szPath, DMI, NULL, NULL, NULL, ".bin", "wb", 0, 0);
+		fpDmi = CreateOrOpenFile(szPath, DMI, NULL, NULL, NULL, _T(".bin"), _T("wb"), 0, 0);
 		if (!fpDmi) {
 			FcloseAndNull(fpPfi);
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -1153,7 +1153,7 @@ BOOL ReadDiscStructure(
 		}
 	}
 	else if (*pExecType == bd) {
-		fpPic = CreateOrOpenFileA(szPath, PIC, NULL, NULL, NULL, ".bin", "wb", 0, 0);
+		fpPic = CreateOrOpenFile(szPath, PIC, NULL, NULL, NULL, _T(".bin"), _T("wb"), 0, 0);
 		if (!fpPic) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
@@ -1465,7 +1465,7 @@ BOOL ExtractSecuritySector(
 		return FALSE;
 	}
 #ifdef _WIN32
-	CONST _TCHAR SS[] = "\\SS";
+	CONST _TCHAR SS[] = _T("\\SS");
 #else
 	CONST CHAR SS[] = "/SS";
 #endif
@@ -1512,7 +1512,7 @@ BOOL ExtractSecuritySector(
 
 	BOOL filled = FALSE;
 	if (pDisc->SCSI.nAllLength == 3697696) {
-		OutputString("Output SSv1 to SS.bin\n");
+		OutputString(_T("Output SSv1 to SS.bin\n"));
 		// http://redump.org/download/ss_sector_range_1.0e.rar
 		//Fix standard SSv1 ss.bin
 		buf[552] = 0x01;
@@ -1544,7 +1544,7 @@ BOOL ExtractSecuritySector(
 			}
 		}
 		if (filled == FALSE) {
-			OutputString("Not Output XGD3 SSv1 to SS.bin\n");
+			OutputString(_T("Not Output XGD3 SSv1 to SS.bin\n"));
 			//Fix XGD3 SSv1 ss.bin
 			buf[552] = 0x01;
 			buf[553] = 0x00;
@@ -1559,7 +1559,7 @@ BOOL ExtractSecuritySector(
 			buf[580] = 0x01;
 		}
 		else {
-			OutputString("Output XGD3 AP25 to SS.bin\n");
+			OutputString(_T("Output XGD3 AP25 to SS.bin\n"));
 			//Fix XGD3 AP25 ss.bin
 			buf[72] = 0x01;
 			buf[73] = 0x00;
@@ -1672,7 +1672,7 @@ BOOL GetFeatureListForXBox(
 			break;
 		}
 	}
-	OutputString("\n");
+	OutputString(_T("\n"));
 	return TRUE;
 }
 

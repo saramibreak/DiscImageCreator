@@ -571,7 +571,7 @@ VOID OutputCDSubToLog(
 			_TCHAR szISRC[META_ISRC_SIZE] = {};
 #ifdef UNICODE
 			MultiByteToWideChar(CP_ACP, 0,
-				pDisc->SUB.pszISRC[byTrackNum - 1], META_ISRC_SIZE, szISRC, sizeof(szISRC));
+				pDisc->SUB.pszISRC[pDiscPerSector->byTrackNum - 1], META_ISRC_SIZE, szISRC, sizeof(szISRC));
 #else
 			strncpy(szISRC, pDisc->SUB.pszISRC[pDiscPerSector->byTrackNum - 1], sizeof(szISRC) / sizeof(szISRC[0]));
 #endif
@@ -712,6 +712,6 @@ VOID OutputCDSubToLog(
 #ifndef _DEBUG
 	_ftprintf(g_LogFile.fpSubReadable, _T("%s%s%s%s"), szSub0, szSub, szSub2, szSub3);
 #else
-	OutputDebugStringExA(_T("%s%s%s%s"), szSub0, szSub, szSub2, szSub3);
+	OutputDebugStringExA("%s%s%s%s", szSub0, szSub, szSub2, szSub3);
 #endif
 }

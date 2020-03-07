@@ -1229,11 +1229,11 @@ BOOL ReadXBOXFileSystem(
 // http://hitmen.c02.at/files/yagcd/yagcd/chap13.html#sec13
 // https://wiibrew.org/wiki/Wii_Disc
 BOOL ReadNintendoSystemHeader(
-	LPCSTR pszFullPath,
+	LPCTSTR pszFullPath,
 	FILE** fp,
 	LPBYTE buf
 ) {
-	*fp = CreateOrOpenFileA(pszFullPath, NULL, NULL, NULL, NULL, ".iso", "rb", 0, 0);
+	*fp = CreateOrOpenFile(pszFullPath, NULL, NULL, NULL, NULL, _T(".iso"), _T("rb"), 0, 0);
 	if (!*fp) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
@@ -1806,9 +1806,9 @@ BOOL ReadWiiPartition(
 			}
 
 			if (bDecOK) {
-				CHAR decPath[_MAX_PATH] = {};
-				FILE* fpDec = CreateOrOpenFileA(pszFullPath, "_dec"
-					, decPath, NULL, NULL, ".iso", "wb", (BYTE)idx2, (BYTE)numOfPartition[idx]);
+				_TCHAR decPath[_MAX_PATH] = {};
+				FILE* fpDec = CreateOrOpenFile(pszFullPath, _T("_dec")
+					, decPath, NULL, NULL, _T(".iso"), _T("wb"), (BYTE)idx2, (BYTE)numOfPartition[idx]);
 				if (!fpDec) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 					return FALSE;
@@ -1826,7 +1826,7 @@ BOOL ReadWiiPartition(
 					fwrite(decBuf, sizeof(BYTE), 0x7c00, fpDec);
 					OutputString(_T("\rDecrypting iso %7u/%7u"), i, dataSize);
 				}
-				OutputString("\n");
+				OutputString(_T("\n"));
 				FcloseAndNull(fpDec);
 				ReadNintendoFileSystem(pDevice, decPath, wii);
 			}

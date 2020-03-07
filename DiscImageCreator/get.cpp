@@ -512,7 +512,7 @@ BOOL GetCssCmd(
 	UNREFERENCED_PARAMETER(protect);
 	BOOL bRet = GetCmd(szPathForCss, _T("./css-auth"), _T(".out"));
 #endif
-	OutputString("%s\n", szPathForCss);
+	OutputString(_T("%s\n"), szPathForCss);
 	if (bRet && PathFileExists(szPathForCss)) {
 		size_t size = _tcslen(szPathForCss) + _tcslen(szPathForKey) + 9 + 4;
 #ifdef _WIN32

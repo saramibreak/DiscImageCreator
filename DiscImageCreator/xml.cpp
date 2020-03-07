@@ -182,7 +182,7 @@ BOOL ReadWriteDat(
 		return FALSE;
 	}
 #else
-	size = sizeof(wszPathForDat) / sizeof(wszPathForDat[0]);
+	size_t size = sizeof(wszPathForDat) / sizeof(wszPathForDat[0]);
 	wcsncpy(wszPathForDat, szTmpPath, size);
 	wszPathForDat[size - 1] = 0;
 #endif
@@ -229,7 +229,7 @@ BOOL ReadWriteDat(
 		return FALSE;
 	}
 #else
-	size_t size = sizeof(wszDir) / sizeof(wszDir[0]);
+	size = sizeof(wszDir) / sizeof(wszDir[0]);
 	wcsncpy(wszDir, szDir, size);
 	wszDir[size - 1] = 0;
 #endif
