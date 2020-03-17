@@ -19,7 +19,7 @@
 ## Requirement
 ### Package
  Download and install Visual C++ Redistributable Packages. (for Windows PC)  
-  https://go.microsoft.com/fwlink/?LinkId=746571
+  https://aka.ms/vs/16/release/VC_redist.x86.exe
 
 ### Recommend drive
 - CD: (Drives must be able to dump by scrambled mode and read lead-out and read lead-in).
