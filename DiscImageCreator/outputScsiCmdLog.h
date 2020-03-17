@@ -33,6 +33,18 @@ VOID OutputGetConfigurationFeatureNumber(
 	DWORD dwAllLen
 );
 
+VOID OutputCDAtipSI1(
+	PCDROM_TOC_ATIP_DATA_BLOCK pAtip
+);
+
+VOID OutputCDAtipSI2(
+	PCDROM_TOC_ATIP_DATA_BLOCK pAtip
+);
+
+VOID OutputCDAtipAI1(
+	PCDROM_TOC_ATIP_DATA_BLOCK pAtip
+);
+
 VOID OutputCDAtip(
 	PCDROM_TOC_ATIP_DATA_BLOCK pAtip
 );

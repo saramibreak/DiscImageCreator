@@ -254,7 +254,7 @@ BOOL InitSubData(
 			FillMemory((*pDisc)->SUB.lp1stLBAListOnSub[h], dwIndexAllocSize, -1);
 #if 0
 			for (INT j = 0; j < 2; j++) {
-				OutputString(_T("lp1stLBAListOnSub[%zd][%zd]: %d, %p\n")
+				OutputString("lp1stLBAListOnSub[%zd][%zd]: %d, %p\n")
 					, h, j, (*pDisc)->SUB.lp1stLBAListOnSub[h][j], &(*pDisc)->SUB.lp1stLBAListOnSub[h][j]);
 			}
 #endif
@@ -291,14 +291,8 @@ BOOL InitLogFile(
 	PEXT_ARG pExtArg,
 	_TCHAR* szFullPath
 ) {
-	CHAR path[_MAX_PATH] = {};
-#ifdef UNICODE
-	WideCharToMultiByte(CP_ACP, 0, szFullPath, _MAX_PATH, path, sizeof(path), NULL, NULL);
-#else
-	strncpy(path, szFullPath, sizeof(path));
-#endif
-	if (NULL == (g_LogFile.fpDisc = CreateOrOpenFileA(
-		path, "_disc", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
+	if (NULL == (g_LogFile.fpDisc = CreateOrOpenFile(
+		szFullPath, _T("_disc"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
@@ -307,16 +301,16 @@ BOOL InitLogFile(
 	}
 	BOOL bRet = TRUE;
 	try {
-		if (NULL == (g_LogFile.fpDrive = CreateOrOpenFileA(
-			path, "_drive", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
+		if (NULL == (g_LogFile.fpDrive = CreateOrOpenFile(
+			szFullPath, _T("_drive"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
 		if (setvbuf(g_LogFile.fpDrive, NULL, _IONBF, 0) != 0) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		}
-		if (NULL == (g_LogFile.fpVolDesc = CreateOrOpenFileA(
-			path, "_volDesc", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
+		if (NULL == (g_LogFile.fpVolDesc = CreateOrOpenFile(
+			szFullPath, _T("_volDesc"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
@@ -324,16 +318,16 @@ BOOL InitLogFile(
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		}
 		if (*pExecType != fd && * pExecType != disk) {
-			if (NULL == (g_LogFile.fpMainInfo = CreateOrOpenFileA(
-				path, "_mainInfo", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
+			if (NULL == (g_LogFile.fpMainInfo = CreateOrOpenFile(
+				szFullPath, _T("_mainInfo"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
 			if (setvbuf(g_LogFile.fpMainInfo, NULL, _IONBF, 0) != 0) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			}
-			if (NULL == (g_LogFile.fpMainError = CreateOrOpenFileA(
-				path, "_mainError", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
+			if (NULL == (g_LogFile.fpMainError = CreateOrOpenFile(
+				szFullPath, _T("_mainError"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
@@ -343,34 +337,34 @@ BOOL InitLogFile(
 			if (*pExecType != dvd && *pExecType != bd && *pExecType != sacd &&
 				*pExecType != xbox && *pExecType != xboxswap &&
 				*pExecType != xgd2swap && *pExecType != xgd3swap) {
-				if (NULL == (g_LogFile.fpSubInfo = CreateOrOpenFileA(
-					path, "_subInfo", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
+				if (NULL == (g_LogFile.fpSubInfo = CreateOrOpenFile(
+					szFullPath, _T("_subInfo"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 					throw FALSE;
 				}
 				if (setvbuf(g_LogFile.fpSubInfo, NULL, _IONBF, 0) != 0) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				}
-				if (NULL == (g_LogFile.fpSubError = CreateOrOpenFileA(
-					path, "_subError", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
+				if (NULL == (g_LogFile.fpSubError = CreateOrOpenFile(
+					szFullPath, _T("_subError"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 					throw FALSE;
 				}
-				if (NULL == (g_LogFile.fpSubReadable = CreateOrOpenFileA(
-					path, "_subReadable", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
+				if (NULL == (g_LogFile.fpSubReadable = CreateOrOpenFile(
+					szFullPath, _T("_subReadable"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 					throw FALSE;
 				}
 				if (pExtArg->byC2) {
-					if (NULL == (g_LogFile.fpC2Error = CreateOrOpenFileA(
-						path, "_c2Error", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
+					if (NULL == (g_LogFile.fpC2Error = CreateOrOpenFile(
+						szFullPath, _T("_c2Error"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
 						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 						throw FALSE;
 					}
 				}
 				if (pExtArg->byIntentionalSub || pExtArg->byLibCrypt) {
-					if (NULL == (g_LogFile.fpSubIntention = CreateOrOpenFileA(
-						path, "_subIntention", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
+					if (NULL == (g_LogFile.fpSubIntention = CreateOrOpenFile(
+						szFullPath, _T("_subIntention"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
 						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 						throw FALSE;
 					}

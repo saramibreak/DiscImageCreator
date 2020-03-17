@@ -122,7 +122,7 @@ VOID AdjustOfs(
 	PUINT puiOfs
 ) {
 	if (!IsValidPositionAndDataLength(lpBuf + *puiOfs) && !IsValidMonthDay(lpBuf + *puiOfs)) {
-		OutputVolDescLogA("Detected corrupt directory record. Skipped it.\n");
+		OutputVolDescLog("Detected corrupt directory record. Skipped it.\n");
 		for (UINT i = 1; i < 256; i++) {
 			if (85 <= *(lpBuf + 18 + i) && IsValidMonthDay(lpBuf + i)) {
 				// [PSX] Tokimeki Memorial - forever with you (Japan) (Rev 4) or (Rev 2) or (PlayStation the Best)
@@ -177,8 +177,7 @@ BOOL ReadDirectoryRecordDetail(
 		if (*(lpBuf + uiOfs) == 0) {
 			break;
 		}
-		OutputVolDescLogA(
-			OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Directory Record), nLBA + nSectorNum, nLBA + nSectorNum);
+		OutputVolDescWithLBALog1("Directory Record", nLBA + nSectorNum);
 		for (;;) {
 			CHAR szCurDirName[MAX_FNAME_FOR_VOLUME] = {};
 			LPBYTE lpDirRec = lpBuf + uiOfs;
@@ -191,7 +190,7 @@ BOOL ReadDirectoryRecordDetail(
 					// 		Extended Attribute Record Length: 0
 					// 		              Location of Extent: 200204
 					// 		                     Data Length: 4096
-					OutputVolDescLogA(
+					OutputVolDescLog(
 						"LBA %d, ofs %d: Data length is incorrect. Skip this sector\n", nLBA, uiOfs);
 					nSectorNum++;
 					break;
@@ -231,11 +230,11 @@ BOOL ReadDirectoryRecordDetail(
 					// 0040 :             2A 00 1E FF  FF FF 00 FF FF FF FF FF   ....*...........
 					// 0050 : FF FF FF FF 30 00 73 03  1F 16 23 29 08 00 00 00   ....0.s...#)....
 					// 0060 : 01 00 00 01 08 31 38 2E  44 41 54 3B 31 00
-					OutputVolDescLogA("LBA %d, ofs %d: Data length is incorrect\n", nLBA, uiOfs);
+					OutputVolDescLog("LBA %d, ofs %d: Data length is incorrect\n", nLBA, uiOfs);
 				}
 				OutputFsDirectoryRecord(
 					pExtArg, pDisc, lpDirRec, uiExtentPos, uiDataLen, szCurDirName);
-				OutputVolDescLogA("\n");
+				OutputVolDescLog("\n");
 				uiOfs += lpDirRec[0];
 
 				if ((lpDirRec[25] & 0x02 || (pDisc->SCSI.byFormat == DISK_TYPE_CDI && lpDirRec[25] == 0))
@@ -274,7 +273,7 @@ BOOL ReadDirectoryRecordDetail(
 						// 0050 : 00 00 00 00 01 D8 60 02  1D 01 1D 29 00 02 00 00   ......`....)....
 						// 0060 : 01 00 00 01 0D 41 52 65  78 78 2D 53 63 72 69 70   .....ARexx-Scrip
 						// 0070 : 74 73                                              ts
-						OutputVolDescLogA(
+						OutputVolDescLog(
 							"LBA %d: Direcory Record is corrupt. Skip reading from %d to %d byte\n"
 							, nLBA, uiOfs, uiOfs + MIN_LEN_DR - 1);
 						uiOfs += MIN_LEN_DR;
@@ -340,8 +339,8 @@ BOOL ReadDirectoryRecord(
 			// and more
 			DWORD additionalTransferLen = pDirRec[nDirRecIdx].uiDirSize / pDevice->dwMaxTransferLength;
 			SetCommandForTransferLength(pExecType, pDevice, pCdb, pDevice->dwMaxTransferLength, &byTransferLen, &byRoop);
-			OutputMainInfoLogA("nLBA %d, uiDirSize: %lu*%lu, byTransferLen: %d*%lu [L:%d]\n"
-				, nLBA, pDevice->dwMaxTransferLength, additionalTransferLen, byRoop, additionalTransferLen, (INT)__LINE__);
+			OutputMainInfoLog("nLBA %d, uiDirSize: %lu*%lu, byTransferLen: %d*%lu [L:%d]\n"
+				, nLBA, pDevice->dwMaxTransferLength, additionalTransferLen, byRoop, additionalTransferLen, __LINE__);
 
 			for (DWORD n = 0; n < additionalTransferLen; n++) {
 				if (!ReadDirectoryRecordDetail(pExecType, pExtArg, pDevice, pDisc, pCdb, nLBA
@@ -353,8 +352,8 @@ BOOL ReadDirectoryRecord(
 			DWORD dwLastTblSize = pDirRec[nDirRecIdx].uiDirSize % pDevice->dwMaxTransferLength;
 			if (dwLastTblSize != 0) {
 				SetCommandForTransferLength(pExecType, pDevice, pCdb, dwLastTblSize, &byTransferLen, &byRoop);
-				OutputMainInfoLogA("nLBA %d, uiDirSize: %lu, byTransferLen: %d [L:%d]\n"
-					, nLBA, dwLastTblSize, byRoop, (INT)__LINE__);
+				OutputMainInfoLog("nLBA %d, uiDirSize: %lu, byTransferLen: %d [L:%d]\n"
+					, nLBA, dwLastTblSize, byRoop, __LINE__);
 
 				if (!ReadDirectoryRecordDetail(pExecType, pExtArg, pDevice, pDisc, pCdb, nLBA
 					, lpBuf, bufDec, byTransferLen, nDirPosNum, uiLogicalBlkCoef, nSectorOfs, pDirRec)) {
@@ -364,21 +363,21 @@ BOOL ReadDirectoryRecord(
 		}
 		else {
 			if (pDirRec[nDirRecIdx].uiDirSize == 0 || byTransferLen == 0) {
-				OutputMainErrorLogA("nLBA %d, Directory Record is invalid\n", nLBA);
+				OutputMainErrorLog("nLBA %d, Directory Record is invalid\n", nLBA);
 				return FALSE;
 			}
 			SetCommandForTransferLength(pExecType, pDevice, pCdb, pDirRec[nDirRecIdx].uiDirSize, &byTransferLen, &byRoop);
-			OutputMainInfoLogA("nLBA %d, uiDirSize: %u, byTransferLen: %d [L:%d]\n"
-				, nLBA, pDirRec[nDirRecIdx].uiDirSize, byRoop, (INT)__LINE__);
+			OutputMainInfoLog("nLBA %d, uiDirSize: %u, byTransferLen: %d [L:%d]\n"
+				, nLBA, pDirRec[nDirRecIdx].uiDirSize, byRoop, __LINE__);
 
 			if (!ReadDirectoryRecordDetail(pExecType, pExtArg, pDevice, pDisc, pCdb, nLBA
 				, lpBuf, bufDec, byTransferLen, nDirPosNum, uiLogicalBlkCoef, nSectorOfs, pDirRec)) {
 				continue;
 			}
 		}
-		OutputString(_T("\rReading DirectoryRecord %4d/%4d"), nDirRecIdx + 1, nDirPosNum);
+		OutputString("\rReading DirectoryRecord %4d/%4d", nDirRecIdx + 1, nDirPosNum);
 	}
-	OutputString(_T("\n"));
+	OutputString("\n");
 	return TRUE;
 }
 
@@ -426,8 +425,8 @@ BOOL ReadPathTableRecord(
 		if (uiPathTblSize > pDevice->dwMaxTransferLength) {
 			DWORD uiAdditionalTransferLen = uiPathTblSize / pDevice->dwMaxTransferLength;
 			SetCommandForTransferLength(pExecType, pDevice, pCdb, pDevice->dwMaxTransferLength, &byTransferLen, &byRoop);
-			OutputMainInfoLogA("uiPathTblSize: %lu, byTransferLen: %d [L:%d]\n"
-				, pDevice->dwMaxTransferLength, byRoop, (INT)__LINE__);
+			OutputMainInfoLog("uiPathTblSize: %lu, byTransferLen: %d [L:%d]\n"
+				, pDevice->dwMaxTransferLength, byRoop, __LINE__);
 
 			for (DWORD n = 0; n < uiAdditionalTransferLen; n++) {
 				if (!ExecReadDisc(pExecType, pExtArg, pDevice, pDisc, pCdb
@@ -443,8 +442,8 @@ BOOL ReadPathTableRecord(
 			SetCommandForTransferLength(pExecType, pDevice, pCdb, dwLastPathTblSize, &byTransferLen, &byRoop);
 			DWORD dwBufOfs = pDevice->dwMaxTransferLength * uiAdditionalTransferLen;
 
-			OutputMainInfoLogA(
-				"uiPathTblSize: %lu, byTransferLen: %d [L:%d]\n", dwLastPathTblSize, byRoop, (INT)__LINE__);
+			OutputMainInfoLog(
+				"uiPathTblSize: %lu, byTransferLen: %d [L:%d]\n", dwLastPathTblSize, byRoop, __LINE__);
 			if (!ExecReadDisc(pExecType, pExtArg, pDevice, pDisc, pCdb
 				, (INT)uiPathTblPos + nSectorOfs, lpBuf + dwBufOfs, bufDec, byTransferLen, _T(__FUNCTION__), __LINE__)) {
 				throw FALSE;
@@ -457,8 +456,8 @@ BOOL ReadPathTableRecord(
 			}
 		}
 		else {
-			OutputMainInfoLogA(
-				"uiPathTblSize: %u, byTransferLen: %d [L:%d]\n", uiPathTblSize, byRoop, (INT)__LINE__);
+			OutputMainInfoLog(
+				"uiPathTblSize: %u, byTransferLen: %d [L:%d]\n", uiPathTblSize, byRoop, __LINE__);
 			if (!ExecReadDisc(pExecType, pExtArg, pDevice, pDisc, pCdb
 				, (INT)uiPathTblPos + nSectorOfs, lpBuf, bufDec, byTransferLen, _T(__FUNCTION__), __LINE__)) {
 				throw FALSE;
@@ -470,7 +469,7 @@ BOOL ReadPathTableRecord(
 				throw FALSE;
 			}
 		}
-		OutputVolDescLogA("Directory Num: %u\n", *nDirPosNum);
+		OutputVolDescLog("Directory Num: %u\n", *nDirPosNum);
 	}
 	catch (BOOL ret) {
 		bRet = ret;
@@ -604,7 +603,7 @@ BOOL ReadCDForFileSystem(
 					}
 					if (!ReadDirectoryRecord(pExecType, pExtArg, pDevice, pDisc, (LPBYTE)&cdb, lpBuf
 						, volDesc.ISO_9660.uiLogicalBlkCoef, volDesc.ISO_9660.uiRootDataLen, 0, pDirRec, nDirPosNum)) {
-						OutputVolDescLogA("Failed to read ISO9660\n");
+						OutputVolDescLog("Failed to read ISO9660\n");
 						nDirPosNum = 0;
 						if (!ReadPathTableRecord(pExecType, pExtArg, pDevice, pDisc, (LPBYTE)&cdb
 							, volDesc.JOLIET.uiLogicalBlkCoef, volDesc.JOLIET.uiPathTblSize
@@ -622,31 +621,31 @@ BOOL ReadCDForFileSystem(
 						}
 					}
 					if (pDisc->PROTECT.byExist) {
-						OutputLogA(standardOut | fileDisc, "Detected a protected file [%s]. LBA %d to %d"
+						OutputLog(standardOut | fileDisc, "Detected a protected file [%" CHARWIDTH "s]. LBA %d to %d"
 							, pDisc->PROTECT.name[0], pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0]
 							, pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] + pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0]);
 						if (pDisc->PROTECT.byExist == datelAlt) {
-							OutputLogA(standardOut | fileDisc, ",  [%s]. LBA %d to %d\n"
+							OutputLog(standardOut | fileDisc, ",  [%" CHARWIDTH "s]. LBA %d to %d\n"
 								, pDisc->PROTECT.name2, pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd
 								, pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd + pDisc->PROTECT.ERROR_SECTOR.nSectorSize2nd);
 						}
 						else {
 							if (pDisc->PROTECT.byExist == physicalErr) {
 								for (INT j = 1; j < pExtArg->FILE.readErrCnt; j++) {
-									OutputLogA(standardOut | fileDisc, ", [%s]. LBA %d to %d"
+									OutputLog(standardOut | fileDisc, ", [%" CHARWIDTH "s]. LBA %d to %d"
 										, pDisc->PROTECT.name[j], pDisc->PROTECT.ERROR_SECTOR.nExtentPos[j]
 										, pDisc->PROTECT.ERROR_SECTOR.nExtentPos[j] + pDisc->PROTECT.ERROR_SECTOR.nSectorSize[j]);
 								}
 							}
 							else if (pDisc->PROTECT.byExist == c2Err) {
 								for (INT j = 1; j < pExtArg->FILE.c2ErrCnt; j++) {
-									OutputLogA(standardOut | fileDisc, ", [%s]. LBA %d to %d"
+									OutputLog(standardOut | fileDisc, ", [%" CHARWIDTH "s]. LBA %d to %d"
 										, pDisc->PROTECT.name[j], pDisc->PROTECT.ERROR_SECTOR.nExtentPos[j]
 										, pDisc->PROTECT.ERROR_SECTOR.nExtentPos[j] + pDisc->PROTECT.ERROR_SECTOR.nSectorSize[j]);
 								}
 							}
 
-							OutputLogA(standardOut | fileDisc, "\n");
+							OutputLog(standardOut | fileDisc, "\n");
 						}
 					}
 				}
@@ -842,7 +841,7 @@ BOOL ReadDVDForFileSystem(
 		}
 		FreeAndNull(pDirRec);
 		if (pDisc->PROTECT.byExist && !pExtArg->byNoSkipSS) {
-			OutputLogA(standardOut | fileDisc, "Detected protection [%s]. LBA %d to %d\n"
+			OutputLog(standardOut | fileDisc, "Detected protection [%" CHARWIDTH "s]. LBA %d to %d\n"
 				, pDisc->PROTECT.name, pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0]
 				, pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] + pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0]);
 		}
@@ -923,7 +922,7 @@ BOOL ReadDVDForFileSystem(
 						//   Logical Sector 256. 
 						//   Logical Sector (N - 256). 
 						//   N
-						OutputDiscLogA("Detected Anchor Volume Descriptor Pointer: LBA %u\n", nLBA);
+						OutputDiscLog("Detected Anchor Volume Descriptor Pointer: LBA %u\n", nLBA);
 						nLastLBAOfAVDP = nLBA;
 						if (++nCnt == 2) {
 							break;
@@ -935,7 +934,7 @@ BOOL ReadDVDForFileSystem(
 						pDisc->SCSI.wCurrentMedia == ProfileBDRSequentialWritable ||
 						pDisc->SCSI.wCurrentMedia == ProfileBDRewritable) {
 						// Because TOC length of -R, -RW disc is used as the full disc size
-						OutputDiscLogA(" => Updated TOC length to this value\n");
+						OutputDiscLog(" => Updated TOC length to this value\n");
 						pDisc->SCSI.nAllLength = nLastLBAOfAVDP + 1;
 					}
 				}
@@ -1025,7 +1024,7 @@ BOOL OutputXDVDFsDirectoryRecord(
 	LPBYTE lpBuf,
 	LPUINT lpOfs,
 	UINT uiStartLBA,
-	LPBYTE pTab,
+	_TCHAR* pTab,
 	LPBOOL pEnd
 ) {
 	WORD ofsLeft = MAKEWORD(lpBuf[0], lpBuf[1]);
@@ -1036,52 +1035,52 @@ BOOL OutputXDVDFsDirectoryRecord(
 	WORD ofsRight = MAKEWORD(lpBuf[2], lpBuf[3]);
 	UINT startSector = MAKEUINT(MAKEWORD(lpBuf[4], lpBuf[5]), MAKEWORD(lpBuf[6], lpBuf[7]));
 	UINT fileSize = MAKEUINT(MAKEWORD(lpBuf[8], lpBuf[9]), MAKEWORD(lpBuf[10], lpBuf[11]));
-	OutputVolDescLogA(
+	OutputVolDescLog(
 		"%s Offset to left sub-tree entry: %d(0x%x)\n"
 		"%sOffset to right sub-tree entry: %d(0x%x)\n"
 		"%s       Starting sector of file: %d(0x%x)\n"
 		"%s               Total file size: %d(0x%x)\n"
 		"%s               File attributes: "
-		, (LPCH)&pTab[0], ofsLeft, ofsLeft
-		, (LPCH)&pTab[0], ofsRight, ofsRight
-		, (LPCH)&pTab[0], startSector, startSector
-		, (LPCH)&pTab[0], fileSize, fileSize
-		, (LPCH)&pTab[0]
+		, &pTab[0], ofsLeft, ofsLeft
+		, &pTab[0], ofsRight, ofsRight
+		, &pTab[0], startSector, startSector
+		, &pTab[0], fileSize, fileSize
+		, &pTab[0]
 	);
 
 	BYTE attribute = lpBuf[12];
 	if (attribute == 0x01) {
-		OutputVolDescLogA("read only\n");
+		OutputVolDescLog("read only\n");
 	}
 	else if (attribute == 0x02) {
-		OutputVolDescLogA("hidden\n");
+		OutputVolDescLog("hidden\n");
 	}
 	else if (attribute == 0x04) {
-		OutputVolDescLogA("system file\n");
+		OutputVolDescLog("system file\n");
 	}
 	else if (attribute == 0x10) {
-		OutputVolDescLogA("directory\n");
+		OutputVolDescLog("directory\n");
 	}
 	else if (attribute == 0x20) {
-		OutputVolDescLogA("archive\n");
+		OutputVolDescLog("archive\n");
 	}
 	else if (attribute == 0x80) {
-		OutputVolDescLogA("normal\n");
+		OutputVolDescLog("normal\n");
 	}
 	else {
-		OutputVolDescLogA("other\n");
+		OutputVolDescLog("other\n");
 	}
 	BYTE lenOfFile = lpBuf[13];
-	OutputVolDescLogA(
+	OutputVolDescLog(
 		"%s            Length of filename: %d\n"
 		"%s                      Filename: "
-		, (LPCH)&pTab[0], lenOfFile
-		, (LPCH)&pTab[0]
+		, &pTab[0], lenOfFile
+		, &pTab[0]
 	);
 	for (BYTE i = 0; i < lenOfFile; i++) {
-		OutputVolDescLogA("%c", lpBuf[14 + i]);
+		OutputVolDescLog("%c", lpBuf[14 + i]);
 	}
-	OutputVolDescLogA("\n\n");
+	OutputVolDescLog("\n\n");
 	UINT mod = (14 + lenOfFile) % sizeof(UINT);
 	if (mod != 0) {
 		*lpOfs = (UINT)(14 + lenOfFile + sizeof(UINT) - mod);
@@ -1091,8 +1090,8 @@ BOOL OutputXDVDFsDirectoryRecord(
 	}
 
 	if (attribute == 0x10) {
-		size_t idx = strlen((LPCH)&pTab[0]);
-		pTab[idx] = '\t';
+		size_t idx = _tcslen(&pTab[0]);
+		pTab[idx] = _T('\t');
 		if (!ReadXBOXDirectoryRecord(pExtArg, pDevice, pCdb
 			, startSector + uiStartLBA, fileSize, uiStartLBA, pTab)) {
 			return FALSE;
@@ -1109,7 +1108,7 @@ BOOL ReadXBOXDirectoryRecord(
 	UINT uiDirPos,
 	UINT uiDirTblSize,
 	UINT uiStartLBA,
-	LPBYTE pTab
+	_TCHAR* pTab
 ) {
 	LPBYTE pBuf = NULL;
 	LPBYTE lpBuf = NULL;
@@ -1135,9 +1134,9 @@ BOOL ReadXBOXDirectoryRecord(
 	for (UCHAR c = 0; c < pCdb->TransferLength[3]; c++) {
 		OutputCDMain(fileMainInfo, lpBuf + DISC_RAW_READ_SIZE * c, (INT)uiDirPos + c, DISC_RAW_READ_SIZE);
 	}
-	OutputVolDescLogA("%s"
-		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(DIRECTORY ENTRY)
-		, (LPCH)&pTab[0], (INT)uiDirPos, (INT)uiDirPos
+	OutputVolDescLog("%s"
+		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("DIRECTORY ENTRY")
+		, &pTab[0], (INT)uiDirPos, (INT)uiDirPos
 	);
 	BOOL bEnd = FALSE;
 	UINT uiSize = 0;
@@ -1198,14 +1197,14 @@ BOOL ReadXBOXFileSystem(
 	CHAR date[20] = {};
 	printwin32filetime(MAKEUINT64(MAKELONG(MAKEWORD(lpBuf[28], lpBuf[29]), MAKEWORD(lpBuf[30], lpBuf[31]))
 		, MAKELONG(MAKEWORD(lpBuf[32], lpBuf[33]), MAKEWORD(lpBuf[34], lpBuf[35]))), date);
-	OutputVolDescLogA(
-		OUTPUT_DHYPHEN_PLUS_STR(XDVDFS)
-		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(VOLUME DESCRIPTOR)
-		"\t                        Header: %.20s\n"
+	OutputVolDescLog(
+		OUTPUT_DHYPHEN_PLUS_STR("XDVDFS")
+		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("VOLUME DESCRIPTOR")
+		"\t                        Header: %.20" CHARWIDTH "s\n"
 		"\tSector of root directory table: %d(%#x)\n"
 		"\t  Size of root directory table: %d(%#x)\n"
-		"\t           Image creation time: %.20s\n"
-		"\t                        Footer: %.20s\n"
+		"\t           Image creation time: %.20" CHARWIDTH "s\n"
+		"\t                        Footer: %.20" CHARWIDTH "s\n"
 		, nLBA, nLBA
 		, (LPCH)&lpBuf[0]
 		, uiDirPos, uiDirPos
@@ -1215,8 +1214,8 @@ BOOL ReadXBOXFileSystem(
 	if (uiDirTblSize % DISC_RAW_READ_SIZE != 0) {
 		uiDirTblSize += DISC_RAW_READ_SIZE * (uiDirTblSize / DISC_RAW_READ_SIZE + 1) - uiDirTblSize;
 	}
-	BYTE szTab[256] = {};
-	szTab[0] = '\t';
+	_TCHAR szTab[256] = {};
+	szTab[0] = _T('\t');
 	if (!ReadXBOXDirectoryRecord(
 		pExtArg, pDevice, &cdb, uiDirPos + (UINT)dwStartLBA, uiDirTblSize, (UINT)dwStartLBA, szTab)) {
 		FreeAndNull(pBuf);
@@ -1244,17 +1243,17 @@ BOOL ReadNintendoSystemHeader(
 		return FALSE;
 	};
 	OutputCDMain(fileMainInfo, buf, 0, 1024);
-	OutputVolDescLogA(
-		OUTPUT_DHYPHEN_PLUS_STR(Disc Header)
-		"\t                                 Disc ID: %.1s\n"
-		"\t                               Game Code: %.2s\n"
-		"\t                             Region Code: %.1s\n"
-		"\t                              Maker Code: %.2s\n"
+	OutputVolDescLog(
+		OUTPUT_DHYPHEN_PLUS_STR("Disc Header")
+		"\t                                 Disc ID: %.1" CHARWIDTH "s\n"
+		"\t                               Game Code: %.2" CHARWIDTH "s\n"
+		"\t                             Region Code: %.1" CHARWIDTH "s\n"
+		"\t                              Maker Code: %.2" CHARWIDTH "s\n"
 		"\t                             Disc Number: %d\n"
 		"\t                                 Version: %d\n"
 		"\t                         Audio Streaming: %d\n"
 		"\t                      Stream Buffer Size: %d\n"
-		"\t                               Game Name: %s\n"
+		"\t                               Game Name: %" CHARWIDTH "s\n"
 		, (LPCH)&buf[0], (LPCH)&buf[1], (LPCH)&buf[3], (LPCH)&buf[4]
 		, buf[6], buf[7], buf[8], buf[9], (LPCH)&buf[32]
 	);
@@ -1268,7 +1267,7 @@ BOOL ReadNintendoFileSystem(
 ) {
 	FILE* fp = NULL;
 	BYTE buf[1024] = {};
-	OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR(NintendoOpticalDiscFS));
+	OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR("NintendoOpticalDiscFS"));
 	if (!ReadNintendoSystemHeader(pszFullPath, &fp, buf)) {
 		return FALSE;
 	};
@@ -1280,7 +1279,7 @@ BOOL ReadNintendoFileSystem(
 	OutputCDMain(fileMainInfo, buf, 0, 64);
 	UINT ofsOfFst = MAKEUINT(MAKEWORD(buf[39], buf[38]), MAKEWORD(buf[37], buf[36]));
 	UINT sizeOfFst = MAKEUINT(MAKEWORD(buf[43], buf[42]), MAKEWORD(buf[41], buf[40]));
-	OutputVolDescLogA(
+	OutputVolDescLog(
 		"\t      offset of debug monitor (dh.bin) ?: %d(%#x)\n"
 		"\t        addr (?) to load debug monitor ?: %#x\n"
 		"\toffset of main executable DOL (bootfile): %d(%#x)\n"
@@ -1315,9 +1314,9 @@ BOOL ReadNintendoFileSystem(
 		return FALSE;
 	};
 	OutputCDMain(fileMainInfo, buf, 0x2440 / 0x800, 0x20);
-	OutputVolDescLogA(
-		OUTPUT_DHYPHEN_PLUS_STR(Apploader)
-		"\tdate (version) of the apploader: %s\n"
+	OutputVolDescLog(
+		OUTPUT_DHYPHEN_PLUS_STR("Apploader")
+		"\tdate (version) of the apploader: %" CHARWIDTH "s\n"
 		"\t           apploader entrypoint: %#x\n"
 		"\t          size of the apploader: %d(%#x)\n"
 		"\t                   trailer size: %d(%#x)\n"
@@ -1343,8 +1342,8 @@ BOOL ReadNintendoFileSystem(
 	};
 	OutputCDMain(fileMainInfo, lpBuf, (INT)ofsOfFst / 0x800, (INT)sizeOfFst);
 	UINT numOfEntries = MAKEUINT(MAKEWORD(lpBuf[11], lpBuf[10]), MAKEWORD(lpBuf[9], lpBuf[8]));
-	OutputVolDescLogA(
-		OUTPUT_DHYPHEN_PLUS_STR(Root Directory Entry)
+	OutputVolDescLog(
+		OUTPUT_DHYPHEN_PLUS_STR("Root Directory Entry")
 		"\t                   flags: %d\n"
 		"\toffset into string table: %d(%#x)\n"
 		"\t           parent_offset: %d(%#x)\n"
@@ -1358,19 +1357,19 @@ BOOL ReadNintendoFileSystem(
 	);
 	
 	UINT posOfString = numOfEntries * 12;
-	OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR(Directory Entry));
+	OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR("Directory Entry"));
 
 	for (UINT i = 12; i < posOfString; i += 12) {
 		if (lpBuf[0 + i] == 0 || lpBuf[0 + i] == 1) {
 			UINT ofsString = MAKEUINT(MAKEWORD(lpBuf[3 + i], lpBuf[2 + i]), MAKEWORD(lpBuf[1 + i], 0));
-			OutputVolDescLogA(
+			OutputVolDescLog(
 				"\t                   flags: %d\n"
 				"\toffset into string table: %d(%#x)\n"
 				, lpBuf[0 + i], ofsString, ofsString
 			);
 			if (lpBuf[0 + i] == 0) {
-				OutputVolDescLogA(
-					"\t               file_name: %s\n"
+				OutputVolDescLog(
+					"\t               file_name: %" CHARWIDTH "s\n"
 					"\t             file_offset: %d(%#x)\n"
 					"\t             file_length: %d(%#x)\n\n"
 					, (LPCH)&lpBuf[posOfString + ofsString]
@@ -1381,8 +1380,8 @@ BOOL ReadNintendoFileSystem(
 				);
 			}
 			else if (lpBuf[0 + i] == 1) {
-				OutputVolDescLogA(
-					"\t                dir_name: %s\n"
+				OutputVolDescLog(
+					"\t                dir_name: %" CHARWIDTH "s\n"
 					"\t           parent_offset: %d(%#x)\n"
 					"\t             next_offset: %d(%#x)\n\n"
 					, (LPCH)&lpBuf[posOfString + ofsString]
@@ -1418,8 +1417,8 @@ BOOL ReadPartitionTblEntry(
 			return FALSE;
 		};
 		ofsOfPartion[idx][i] = MAKEUINT(MAKEWORD(buf[3], buf[2]), MAKEWORD(buf[1], buf[0]));
-		OutputVolDescLogA(
-			OUTPUT_DHYPHEN_PLUS_STR(Partition table entry)
+		OutputVolDescLog(
+			OUTPUT_DHYPHEN_PLUS_STR("Partition table entry")
 			"\t           Partition offset: %#x\n"
 			"\t                       Type: %d\n"
 			, ofsOfPartion[idx][i], MAKEUINT(MAKEWORD(buf[7], buf[6]), MAKEWORD(buf[5], buf[4]))
@@ -1434,7 +1433,7 @@ BOOL ReadWiiPartition(
 ) {
 	FILE* fp = NULL;
 	BYTE buf[0x8000] = {};
-	OutputVolDescLogA(OUTPUT_DHYPHEN_PLUS_STR(WiiFS));
+	OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR("WiiFS"));
 	if (!ReadNintendoSystemHeader(pszFullPath, &fp, buf)) {
 		return FALSE;
 	};
@@ -1455,8 +1454,9 @@ BOOL ReadWiiPartition(
 	UINT ofsOfPart3 = MAKEUINT(MAKEWORD(buf[23], buf[22]), MAKEWORD(buf[21], buf[20]));
 	numOfPartition[3] = MAKEUINT(MAKEWORD(buf[27], buf[26]), MAKEWORD(buf[25], buf[24]));
 	UINT ofsOfPart4 = MAKEUINT(MAKEWORD(buf[31], buf[30]), MAKEWORD(buf[29], buf[28]));
-	OutputVolDescLogA(
-		OUTPUT_DHYPHEN_PLUS_STR(Partitions information)
+
+	OutputVolDescLog(
+		OUTPUT_DHYPHEN_PLUS_STR("Partitions information")
 		"\t       Total 1st partitions: %d\n"
 		"\tPartition info table offset: %#x\n"
 		"\t       Total 2nd partitions: %d\n"
@@ -1487,8 +1487,8 @@ BOOL ReadWiiPartition(
 		return FALSE;
 	};
 	OutputCDMain(fileMainInfo, buf, 0x4e000 / 0x800, 0x20);
-	OutputVolDescLogA(
-		OUTPUT_DHYPHEN_PLUS_STR(Region setting)
+	OutputVolDescLog(
+		OUTPUT_DHYPHEN_PLUS_STR("Region setting")
 		"\t                     Region byte: %d\n"
 		"\tAge Rating byte for Japan/Taiwan: %d(%#x)\n"
 		"\tAge Rating byte for USA         : %d(%#x)\n"
@@ -1518,7 +1518,7 @@ BOOL ReadWiiPartition(
 	FILE* fpKey = OpenProgrammabledFile(_T("key.bin"), _T("rb"));
 	if (!fpKey) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(_T("You can't decrypt iso because there isn't a key.bin\n"));
+		OutputErrorString("You can't decrypt iso because there isn't a key.bin\n");
 	}
 	else {
 		if (fread(commonKey, sizeof(BYTE), sizeof(commonKey), fpKey) != sizeof(commonKey)) {
@@ -1538,8 +1538,8 @@ BOOL ReadWiiPartition(
 			};
 			OutputCDMain(fileMainInfo, buf, (INT)realOfsOfPartion / 0x800, 0x2C0);
 			UINT sigType = MAKEUINT(MAKEWORD(buf[3], buf[2]), MAKEWORD(buf[1], buf[0]));
-			OutputVolDescLogA(
-				OUTPUT_DHYPHEN_PLUS_STR(Partition)
+			OutputVolDescLog(
+				OUTPUT_DHYPHEN_PLUS_STR("Partition")
 				"\t                  Signature type: %#x\n"
 				"\tSignature by a certificate's key: "
 				, sigType
@@ -1549,23 +1549,23 @@ BOOL ReadWiiPartition(
 				size = 512;
 			}
 			for (INT i = 0; i < size; i++) {
-				OutputVolDescLogA("%02x", buf[4 + i]);
+				OutputVolDescLog("%02x", buf[4 + i]);
 			}
-			OutputVolDescLogA(
+			OutputVolDescLog(
 				"\n"
-				"\t                Signature issuer: %s\n"
+				"\t                Signature issuer: %" CHARWIDTH "s\n"
 				"\t                       ECDH data: "
 				, (LPCH)&buf[0x140]
 			);
 			for (INT i = 0; i < 0x3c; i++) {
-				OutputVolDescLogA("%02x", buf[0x0180 + i]);
+				OutputVolDescLog("%02x", buf[0x0180 + i]);
 			}
-			OutputVolDescLogA(
+			OutputVolDescLog(
 				"\n"
 				"\t             Encrypted title key: "
 			);
 			for (INT i = 0; i < 0x10; i++) {
-				OutputVolDescLogA("%02x", buf[0x01BF + i]);
+				OutputVolDescLog("%02x", buf[0x01BF + i]);
 			}
 
 			// https://wiibrew.org/wiki/Wii_Security
@@ -1581,7 +1581,7 @@ BOOL ReadWiiPartition(
 				mbedtls_aes_crypt_cbc(&context, MBEDTLS_AES_DECRYPT, 16, iv, encTitleKey, decTitleKey);
 				mbedtls_aes_setkey_dec(&context, decTitleKey, 128);
 			}
-			OutputVolDescLogA(
+			OutputVolDescLog(
 				"\n"
 				"\t                         Unknown: %#02x\n"
 				"\t                       ticket_id: %#llx\n"
@@ -1607,20 +1607,20 @@ BOOL ReadWiiPartition(
 				, buf[0x01F0], buf[0x01F1]
 			);
 			for (INT i = 0; i < 0x30; i++) {
-				OutputVolDescLogA("%02x", buf[0x01F2 + i]);
+				OutputVolDescLog("%02x", buf[0x01F2 + i]);
 			}
-			OutputVolDescLogA(
+			OutputVolDescLog(
 				"\n"
 				"\t      Content access permissions: "
 			);
 			for (INT i = 0; i < 0x40; i++) {
-				OutputVolDescLogA("%02x", buf[0x0222 + i]);
+				OutputVolDescLog("%02x", buf[0x0222 + i]);
 			}
-			OutputVolDescLogA("\n");
+			OutputVolDescLog("\n");
 			for (INT i = 0; i < 7 * 8; i += 8) {
 				UINT enable = MAKEUINT(MAKEWORD(buf[0x0267 + i], buf[0x0266 + i]), MAKEWORD(buf[0x0265 + i], buf[0x0264 + i]));
 				if (enable) {
-					OutputVolDescLogA(
+					OutputVolDescLog(
 						"\t               Enable time limit: %d\n"
 						"\t            Time limit (Seconds): %d\n"
 						, enable
@@ -1629,7 +1629,7 @@ BOOL ReadWiiPartition(
 				}
 			}
 			UINT dataSize = MAKEUINT(MAKEWORD(buf[0x02BF], buf[0x02BE]), MAKEWORD(buf[0x02BD], buf[0x02BC]));
-			OutputVolDescLogA(
+			OutputVolDescLog(
 				"\t                        TMD size: %d(%#x)\n"
 				"\t                      TMD offset: %#x\n"
 				"\t                 Cert chain size: %d(%#x)\n"
@@ -1655,8 +1655,8 @@ BOOL ReadWiiPartition(
 			};
 			OutputCDMain(fileMainInfo, buf, (INT)realOfsOfPartion / 0x800, 0x1E0);
 			sigType = MAKEUINT(MAKEWORD(buf[3], buf[2]), MAKEWORD(buf[1], buf[0]));
-			OutputVolDescLogA(
-				OUTPUT_DHYPHEN_PLUS_STR(Partition)
+			OutputVolDescLog(
+				OUTPUT_DHYPHEN_PLUS_STR("Partition")
 				"\t                  Signature type: %#x\n"
 				"\t                       Signature: "
 				, sigType
@@ -1666,18 +1666,18 @@ BOOL ReadWiiPartition(
 				size = 512;
 			}
 			for (INT i = 0; i < size; i++) {
-				OutputVolDescLogA("%02x", buf[4 + i]);
+				OutputVolDescLog("%02x", buf[4 + i]);
 			}
-			OutputVolDescLogA(
+			OutputVolDescLog(
 				"\n"
 				"\t               Padding modulo 64: "
 			);
 			for (INT i = 0; i < 60; i++) {
-				OutputVolDescLogA("%02x", buf[0x104 + i]);
+				OutputVolDescLog("%02x", buf[0x104 + i]);
 			}
-			OutputVolDescLogA(
+			OutputVolDescLog(
 				"\n"
-				"\t                          Issuer: %s\n"
+				"\t                          Issuer: %" CHARWIDTH "s\n"
 				"\t                         Version: %x\n"
 				"\t                  ca_crl_version: %x\n"
 				"\t              signer_crl_version: %x\n"
@@ -1698,17 +1698,17 @@ BOOL ReadWiiPartition(
 				, MAKEWORD(buf[0x19D], buf[0x19C])
 			);
 			for (INT i = 0; i < 16; i++) {
-				OutputVolDescLogA("%02x", buf[0x19E + i]);
+				OutputVolDescLog("%02x", buf[0x19E + i]);
 			}
-			OutputVolDescLogA(
+			OutputVolDescLog(
 				"\n"
 				"\t                        IPC Mask: "
 			);
 			for (INT i = 0; i < 12; i++) {
-				OutputVolDescLogA("%02x", buf[0x1BA + i]);
+				OutputVolDescLog("%02x", buf[0x1BA + i]);
 			}
 			WORD numOfContents = MAKEWORD(buf[0x1DF], buf[0x1DE]);
-			OutputVolDescLogA(
+			OutputVolDescLog(
 				"\n"
 				"\t                   Access rights: %x\n"
 				"\t                   Title version: %x\n"
@@ -1722,7 +1722,7 @@ BOOL ReadWiiPartition(
 				return FALSE;
 			};
 			OutputCDMain(fileMainInfo, buf, (INT)realOfsOfPartion / 0x800, 4);
-			OutputVolDescLogA(
+			OutputVolDescLog(
 				"\t                      boot index: %d\n"
 				"\t               Padding modulo 64: %d\n"
 				, MAKEWORD(buf[1], buf[0]), MAKEWORD(buf[3], buf[2])
@@ -1735,7 +1735,7 @@ BOOL ReadWiiPartition(
 			};
 			OutputCDMain(fileMainInfo, buf, (INT)realOfsOfPartion / 0x800, 36 * numOfContents);
 			for (size_t i = 0; i < contentsSize; i += 36) {
-				OutputVolDescLogA(
+				OutputVolDescLog(
 					"\t                      Content ID: %d\n"
 					"\t                           Index: %d\n"
 					"\t                            Type: %d\n"
@@ -1750,10 +1750,10 @@ BOOL ReadWiiPartition(
 						, MAKEUINT(MAKEWORD(buf[11], buf[10]), MAKEWORD(buf[9], buf[8])))
 				);
 				for (INT j = 0; j < 20; j++) {
-					OutputVolDescLogA("%02x", buf[16 + j + i]);
+					OutputVolDescLog("%02x", buf[16 + j + i]);
 				}
 			}
-			OutputVolDescLogA("\n");
+			OutputVolDescLog("\n");
 
 			fseek(fp, 24, SEEK_CUR);
 			for (INT k = 0; k < 3; k++) {
@@ -1779,30 +1779,30 @@ BOOL ReadWiiPartition(
 						return FALSE;
 					};
 				}
-				OutputVolDescLogA(
-					OUTPUT_DHYPHEN_PLUS_STR(Certificates)
+				OutputVolDescLog(
+					OUTPUT_DHYPHEN_PLUS_STR("Certificates")
 					"\t                  Signature type: %#x\n"
 					"\t                       Signature: "
 					, sigType
 				);
 				for (INT i = 0; i < size; i++) {
-					OutputVolDescLogA("%02x", buf[4 + i]);
+					OutputVolDescLog("%02x", buf[4 + i]);
 				}
 				INT ofs = 4 + size + 60;
-				OutputVolDescLogA(
+				OutputVolDescLog(
 					"\n"
-					"\t                          Issuer: %s\n"
+					"\t                          Issuer: %" CHARWIDTH "s\n"
 					"\t                             Tag: %x\n"
-					"\t                            Name: %s\n"
+					"\t                            Name: %" CHARWIDTH "s\n"
 					"\t                             Key: "
 					, (LPCH)&buf[ofs]
 					, MAKEUINT(MAKEWORD(buf[ofs + 67], buf[ofs + 66]), MAKEWORD(buf[ofs + 65], buf[ofs + 64]))
 					, (LPCH)&buf[ofs + 68]
 				);
 				for (INT i = 0; i < 316; i++) {
-					OutputVolDescLogA("%02x", buf[ofs + 132 + i]);
+					OutputVolDescLog("%02x", buf[ofs + 132 + i]);
 				}
-				OutputVolDescLogA("\n");
+				OutputVolDescLog("\n");
 			}
 
 			if (bDecOK) {
@@ -1824,9 +1824,9 @@ BOOL ReadWiiPartition(
 					};
 					mbedtls_aes_crypt_cbc(&context, MBEDTLS_AES_DECRYPT, 0x7c00, &buf[0x3D0], &buf[0x400], decBuf);
 					fwrite(decBuf, sizeof(BYTE), 0x7c00, fpDec);
-					OutputString(_T("\rDecrypting iso %7u/%7u"), i, dataSize);
+					OutputString("\rDecrypting iso %7u/%7u", i, dataSize);
 				}
-				OutputString(_T("\n"));
+				OutputString("\n");
 				FcloseAndNull(fpDec);
 				ReadNintendoFileSystem(pDevice, decPath, wii);
 			}
@@ -1875,8 +1875,8 @@ BOOL ReadBDForParamSfo(
 	} sfo_index_table_entry, *psfo_index_table_entry;
 
 	psfo_header header = (psfo_header)lpBuf;
-	OutputDiscLogA(
-		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(PARAM.SFO)
+	OutputDiscLog(
+		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("PARAM.SFO")
 		"\tmagic: %c%c%c\n"
 		"\tversion: %d.%02d\n"
 		, pDisc->BD.nLBAForParamSfo, pDisc->BD.nLBAForParamSfo
@@ -1891,7 +1891,7 @@ BOOL ReadBDForParamSfo(
 		psfo_index_table_entry entry =
 			(psfo_index_table_entry)(lpBuf + sizeof(sfo_header) + sizeof(sfo_index_table_entry) * i);
 #if 0
-		OutputDiscLogA(
+		OutputDiscLog(
 			"\tkey_offset[%d]: %d\n"
 			"\tdata_fmt[%d]: %d\n"
 			"\tdata_len[%d]: %d\n"
@@ -1902,14 +1902,14 @@ BOOL ReadBDForParamSfo(
 		);
 #endif
 		if (entry->data_fmt == 516) {
-			OutputDiscLogA(
-				"\t%s: %s\n", keytable + entry->key_offset, datatable + entry->data_offset);
+			OutputDiscLog(
+				"\t%" CHARWIDTH "s: %" CHARWIDTH "s\n", keytable + entry->key_offset, datatable + entry->data_offset);
 		}
 		else if (entry->data_fmt == 1028) {
 			LPBYTE ofs = datatable + entry->data_offset;
 			UINT data = MAKEUINT(MAKEWORD(ofs[0], ofs[1]), MAKEWORD(ofs[2], ofs[3]));
-			OutputDiscLogA(
-				"\t%s: %x\n", keytable + entry->key_offset, data);
+			OutputDiscLog(
+				"\t%" CHARWIDTH "s: %x\n", keytable + entry->key_offset, data);
 		}
 	}
 	return TRUE;
@@ -1994,13 +1994,14 @@ BOOL ReadSACDFileSystem(
 	REVERSE_BYTES_SHORT(&mToc.TWOCH_TOC_Len, &lpBuf[0x54]);
 	REVERSE_BYTES_SHORT(&mToc.MC_TOC_Len, &lpBuf[0x56]);
 	REVERSE_BYTES_SHORT(&mToc.Disc_Date_Y, &lpBuf[0x78]);
-	OutputVolDescLogA(
-		OUTPUT_DHYPHEN_PLUS_STR(Master_TOC)
-		"\t Master_TOC_Signature: %.8s\n"
+
+	OutputVolDescLog(
+		OUTPUT_DHYPHEN_PLUS_STR("Master_TOC")
+		"\t Master_TOC_Signature: %.8" CHARWIDTH "s\n"
 		"\t         Spec_Version: %d.%02d\n"
 		"\t       Album_Set_Size: %d\n"
 		"\tAlbum_Sequence_Number: %d\n"
-		"\t Album_Catalog_Number: %.16s\n"
+		"\t Album_Catalog_Number: %.16" CHARWIDTH "s\n"
 		"\t         Album_Genre1: %02x %02x %02x %02x\n"
 		"\t         Album_Genre2: %02x %02x %02x %02x\n"
 		"\t         Album_Genre3: %02x %02x %02x %02x\n"
@@ -2012,7 +2013,7 @@ BOOL ReadSACDFileSystem(
 		"\t    Disc_Flags_Hybrid: %d\n"
 		"\t        TWOCH_TOC_Len: %d (%#x)\n"
 		"\t           MC_TOC_Len: %d (%#x)\n"
-		"\t  Disc_Catalog_Number: %.16s\n"
+		"\t  Disc_Catalog_Number: %.16" CHARWIDTH "s\n"
 		"\t          Disc_Genre1: %02x %02x %02x %02x\n"
 		"\t          Disc_Genre2: %02x %02x %02x %02x\n"
 		"\t          Disc_Genre3: %02x %02x %02x %02x\n"
@@ -2043,15 +2044,16 @@ BOOL ReadSACDFileSystem(
 		, mToc.Disc_Date_Y, mToc.Disc_Date_M, mToc.Disc_Date_D
 		, mToc.Txt_Ch.Max_Text_Channels
 	);
-	CHAR Lang[][14] {
-		"UNKNOWN", "ISO646", "ISO8859_1", "RIS506", "KSC5601", "GB2312", "BIG5", "ISO8859_1_ESC"
+	_TCHAR Lang[][14] {
+		_T("UNKNOWN"), _T("ISO646"), _T("ISO8859_1"), _T("RIS506")
+		, _T("KSC5601"), _T("GB2312"), _T("BIG5"), _T("ISO8859_1_ESC")
 	};
 	for (INT i = 0; i < mToc.Txt_Ch.Max_Text_Channels; i++) {
-		OutputVolDescLogA(
-			"\t     Language_Code[%d]: %.2s\n"
+		OutputVolDescLog(
+			"\t     Language_Code[%d]: %.2" CHARWIDTH "s\n"
 			"\tCharacter_Set_Code[%d]: %s\n"
 			, i + 1, (LPCH)&mToc.Txt_Ch.locale[i].Language_Code[0]
-			, i + 1, (LPCH)&Lang[mToc.Txt_Ch.locale[i].Character_Set_Code]
+			, i + 1, &Lang[mToc.Txt_Ch.locale[i].Character_Set_Code]
 		);
 	}
 
@@ -2104,107 +2106,108 @@ BOOL ReadSACDFileSystem(
 		REVERSE_BYTES_SHORT(&mText.Disc_Artist_Phonetic_Ptr, &lpBuf[0x2a]);
 		REVERSE_BYTES_SHORT(&mText.Disc_Publisher_Phonetic_Ptr, &lpBuf[0x2c]);
 		REVERSE_BYTES_SHORT(&mText.Disc_Copyright_Phonetic_Ptr, &lpBuf[0x2e]);
-		OutputVolDescLogA(
-			OUTPUT_DHYPHEN_PLUS_STR(Master_Text)
-			"\t   Master_Text_Signature: %8s\n", (LPCH)&lpBuf[0]
+
+		OutputVolDescLog(
+			OUTPUT_DHYPHEN_PLUS_STR("Master_Text")
+			"\t   Master_Text_Signature: %8" CHARWIDTH "s\n", (LPCH)&lpBuf[0]
 		);
-		OutputVolDescLogA("\t             Album_Title: ");
+		OutputVolDescLog("\t             Album_Title: ");
 		if (mText.Album_Title_Ptr) {
 			for (INT i = 0; lpBuf[mText.Album_Title_Ptr + i] != 0; i++) {
-				OutputVolDescLogA("%c", lpBuf[mText.Album_Title_Ptr + i]);
+				OutputVolDescLog("%c", lpBuf[mText.Album_Title_Ptr + i]);
 			}
 		}
-		OutputVolDescLogA("\n\t            Album_Artist: ");
+		OutputVolDescLog("\n\t            Album_Artist: ");
 		if (mText.Album_Artist_Ptr) {
 			for (INT i = 0; lpBuf[mText.Album_Artist_Ptr + i] != 0; i++) {
-				OutputVolDescLogA("%c", lpBuf[mText.Album_Artist_Ptr + i]);
+				OutputVolDescLog("%c", lpBuf[mText.Album_Artist_Ptr + i]);
 			}
 		}
-		OutputVolDescLogA("\n\t         Album_Publisher: ");
+		OutputVolDescLog("\n\t         Album_Publisher: ");
 		if (mText.Album_Publisher_Ptr) {
 			for (INT i = 0; lpBuf[mText.Album_Publisher_Ptr + i] != 0; i++) {
-				OutputVolDescLogA("%c", lpBuf[mText.Album_Publisher_Ptr + i]);
+				OutputVolDescLog("%c", lpBuf[mText.Album_Publisher_Ptr + i]);
 			}
 		}
-		OutputVolDescLogA("\n\t         Album_Copyright: ");
+		OutputVolDescLog("\n\t         Album_Copyright: ");
 		if (mText.Album_Copyright_Ptr) {
 			for (INT i = 0; lpBuf[mText.Album_Copyright_Ptr + i] != 0; i++) {
-				OutputVolDescLogA("%c", lpBuf[mText.Album_Copyright_Ptr + i]);
+				OutputVolDescLog("%c", lpBuf[mText.Album_Copyright_Ptr + i]);
 			}
 		}
-		OutputVolDescLogA("\n\t    Album_Title_Phonetic: ");
+		OutputVolDescLog("\n\t    Album_Title_Phonetic: ");
 		if (mText.Album_Title_Phonetic_Ptr) {
 			for (INT i = 0; lpBuf[mText.Album_Title_Phonetic_Ptr + i] != 0; i++) {
-				OutputVolDescLogA("%c", lpBuf[mText.Album_Title_Phonetic_Ptr + i]);
+				OutputVolDescLog("%c", lpBuf[mText.Album_Title_Phonetic_Ptr + i]);
 			}
 		}
-		OutputVolDescLogA("\n\t   Album_Artist_Phonetic: ");
+		OutputVolDescLog("\n\t   Album_Artist_Phonetic: ");
 		if (mText.Album_Artist_Phonetic_Ptr) {
 			for (INT i = 0; lpBuf[mText.Album_Artist_Phonetic_Ptr + i] != 0; i++) {
-				OutputVolDescLogA("%c", lpBuf[mText.Album_Artist_Phonetic_Ptr + i]);
+				OutputVolDescLog("%c", lpBuf[mText.Album_Artist_Phonetic_Ptr + i]);
 			}
 		}
-		OutputVolDescLogA("\n\tAlbum_Publisher_Phonetic: ");
+		OutputVolDescLog("\n\tAlbum_Publisher_Phonetic: ");
 		if (mText.Album_Publisher_Phonetic_Ptr) {
 			for (INT i = 0; lpBuf[mText.Album_Publisher_Phonetic_Ptr + i] != 0; i++) {
-				OutputVolDescLogA("%c", lpBuf[mText.Album_Publisher_Phonetic_Ptr + i]);
+				OutputVolDescLog("%c", lpBuf[mText.Album_Publisher_Phonetic_Ptr + i]);
 			}
 		}
-		OutputVolDescLogA("\n\tAlbum_Copyright_Phonetic: ");
+		OutputVolDescLog("\n\tAlbum_Copyright_Phonetic: ");
 		if (mText.Album_Copyright_Phonetic_Ptr) {
 			for (INT i = 0; lpBuf[mText.Album_Copyright_Phonetic_Ptr + i] != 0; i++) {
-				OutputVolDescLogA("%c", lpBuf[mText.Album_Copyright_Phonetic_Ptr + i]);
+				OutputVolDescLog("%c", lpBuf[mText.Album_Copyright_Phonetic_Ptr + i]);
 			}
 		}
-		OutputVolDescLogA("\n\t              Disc_Title: ");
+		OutputVolDescLog("\n\t              Disc_Title: ");
 		if (mText.Disc_Title_Ptr) {
 			for (INT i = 0; lpBuf[mText.Disc_Title_Ptr + i] != 0; i++) {
-				OutputVolDescLogA("%c", lpBuf[mText.Disc_Title_Ptr + i]);
+				OutputVolDescLog("%c", lpBuf[mText.Disc_Title_Ptr + i]);
 			}
 		}
-		OutputVolDescLogA("\n\t             Disc_Artist: ");
+		OutputVolDescLog("\n\t             Disc_Artist: ");
 		if (mText.Disc_Artist_Ptr) {
 			for (INT i = 0; lpBuf[mText.Disc_Artist_Ptr + i] != 0; i++) {
-				OutputVolDescLogA("%c", lpBuf[mText.Disc_Artist_Ptr + i]);
+				OutputVolDescLog("%c", lpBuf[mText.Disc_Artist_Ptr + i]);
 			}
 		}
-		OutputVolDescLogA("\n\t          Disc_Publisher: ");
+		OutputVolDescLog("\n\t          Disc_Publisher: ");
 		if (mText.Disc_Publisher_Ptr) {
 			for (INT i = 0; lpBuf[mText.Disc_Publisher_Ptr + i] != 0; i++) {
-				OutputVolDescLogA("%c", lpBuf[mText.Disc_Publisher_Ptr + i]);
+				OutputVolDescLog("%c", lpBuf[mText.Disc_Publisher_Ptr + i]);
 			}
 		}
-		OutputVolDescLogA("\n\t          Disc_Copyright: ");
+		OutputVolDescLog("\n\t          Disc_Copyright: ");
 		if (mText.Disc_Copyright_Ptr) {
 			for (INT i = 0; lpBuf[mText.Disc_Copyright_Ptr + i] != 0; i++) {
-				OutputVolDescLogA("%c", lpBuf[mText.Disc_Copyright_Ptr + i]);
+				OutputVolDescLog("%c", lpBuf[mText.Disc_Copyright_Ptr + i]);
 			}
 		}
-		OutputVolDescLogA("\n\t     Disc_Title_Phonetic: ");
+		OutputVolDescLog("\n\t     Disc_Title_Phonetic: ");
 		if (mText.Disc_Title_Phonetic_Ptr) {
 			for (INT i = 0; lpBuf[mText.Disc_Title_Phonetic_Ptr + i] != 0; i++) {
-				OutputVolDescLogA("%c", lpBuf[mText.Disc_Title_Phonetic_Ptr + i]);
+				OutputVolDescLog("%c", lpBuf[mText.Disc_Title_Phonetic_Ptr + i]);
 			}
 		}
-		OutputVolDescLogA("\n\t    Disc_Artist_Phonetic: ");
+		OutputVolDescLog("\n\t    Disc_Artist_Phonetic: ");
 		if (mText.Disc_Artist_Phonetic_Ptr) {
 			for (INT i = 0; lpBuf[mText.Disc_Artist_Phonetic_Ptr + i] != 0; i++) {
-				OutputVolDescLogA("%c", lpBuf[mText.Disc_Artist_Phonetic_Ptr + i]);
+				OutputVolDescLog("%c", lpBuf[mText.Disc_Artist_Phonetic_Ptr + i]);
 			}
 		}
-		OutputVolDescLogA("\n\t Disc_Publisher_Phonetic: ");
+		OutputVolDescLog("\n\t Disc_Publisher_Phonetic: ");
 		if (mText.Disc_Publisher_Phonetic_Ptr) {
 			for (INT i = 0; lpBuf[mText.Disc_Publisher_Phonetic_Ptr + i] != 0; i++) {
-				OutputVolDescLogA("%c", lpBuf[mText.Disc_Publisher_Phonetic_Ptr + i]);
+				OutputVolDescLog("%c", lpBuf[mText.Disc_Publisher_Phonetic_Ptr + i]);
 			}
 		}
-		OutputVolDescLogA("\n\t Disc_Copyright_Phonetic: ");
+		OutputVolDescLog("\n\t Disc_Copyright_Phonetic: ");
 		if (mText.Disc_Copyright_Phonetic_Ptr) {
 			for (INT i = 0; lpBuf[mText.Disc_Copyright_Phonetic_Ptr + i] != 0; i++) {
-				OutputVolDescLogA("%c", lpBuf[mText.Disc_Copyright_Phonetic_Ptr + i]);
+				OutputVolDescLog("%c", lpBuf[mText.Disc_Copyright_Phonetic_Ptr + i]);
 			}
 		}
-		OutputVolDescLogA("\n");
+		OutputVolDescLog("\n");
 	}
 	nLBA = 519;
 	REVERSE_BYTES(&cdb.LogicalBlock, &nLBA);
@@ -2216,9 +2219,9 @@ BOOL ReadSACDFileSystem(
 		return FALSE;
 	}
 	OutputCDMain(fileMainInfo, lpBuf, nLBA, DISC_RAW_READ_SIZE);
-	OutputVolDescLogA(
-		OUTPUT_DHYPHEN_PLUS_STR(Manufacture)
-		"\tManuf_Info_Signature: %.8s\n", (LPCH)&lpBuf[0]);
+	OutputVolDescLog(
+		OUTPUT_DHYPHEN_PLUS_STR("Manufacture")
+		"\tManuf_Info_Signature: %.8" CHARWIDTH "s\n", (LPCH)&lpBuf[0]);
 
 	INT nChToc[] = { (INT)mToc.TWOCH_TOC_1_Address , (INT)mToc.MC_TOC_1_Address, 0 };
 	for (INT c = 0; nChToc[c] != 0; c++) {
@@ -2269,9 +2272,10 @@ BOOL ReadSACDFileSystem(
 		REVERSE_BYTES_SHORT(&aToc.Area_TOC_Length, &lpBuf[0xa]);
 		REVERSE_BYTES(&aToc.Audio_Start_Address, &lpBuf[0x48]);
 		REVERSE_BYTES(&aToc.Audio_End_Address, &lpBuf[0x4c]);
-		OutputVolDescLogA(
-			OUTPUT_DHYPHEN_PLUS_STR(Area_TOC)
-			"\t    Area_TOC_Signature: %.8s\n"
+
+		OutputVolDescLog(
+			OUTPUT_DHYPHEN_PLUS_STR("Area_TOC")
+			"\t    Area_TOC_Signature: %.8" CHARWIDTH "s\n"
 			"\t          Spec_Version: %d.%02d\n"
 			"\t       Area_TOC_Length: %d (%#02x)\n"
 			"\t               Unknown: %d (%#02x)\n"
@@ -2298,18 +2302,18 @@ BOOL ReadSACDFileSystem(
 			, aToc.Txt_Ch.Max_Text_Channels
 		);
 		for (INT i = 0; i < aToc.Txt_Ch.Max_Text_Channels; i++) {
-			OutputVolDescLogA(
-				"\t      Language_Code[%d]: %.2s\n"
+			OutputVolDescLog(
+				"\t      Language_Code[%d]: %.2" CHARWIDTH "s\n"
 				"\t Character_Set_Code[%d]: %s\n"
 				, i + 1, (LPCH)&aToc.Txt_Ch.locale[i].Language_Code[0]
-				, i + 1, (LPCH)&Lang[aToc.Txt_Ch.locale[i].Character_Set_Code]
+				, i + 1, &Lang[aToc.Txt_Ch.locale[i].Character_Set_Code]
 			);
 		}
 		REVERSE_BYTES_SHORT(&aToc.Track_Text_Ptr, &lpBuf[0x80]);
 		REVERSE_BYTES_SHORT(&aToc.Index_List_Ptr, &lpBuf[0x82]);
 		REVERSE_BYTES_SHORT(&aToc.Access_List_Ptr, &lpBuf[0x84]);
 		REVERSE_BYTES_SHORT(&aToc.Track_WebLink_List_Ptr, &lpBuf[0x88]);
-		OutputVolDescLogA(
+		OutputVolDescLog(
 			"\t        Track_Text_Ptr: %d (%#02x)\n"
 			"\t        Index_List_Ptr: %d (%#02x)\n"
 			"\t       Access_List_Ptr: %d (%#02x)\n"
@@ -2337,21 +2341,22 @@ BOOL ReadSACDFileSystem(
 				UINT Track_Length[255];
 			} Track_List;
 			Track_List tList = {};
-			OutputVolDescLogA(
-				OUTPUT_DHYPHEN_PLUS_STR(Track_List)
-				"\t Track_List_1_Signature: %.8s\n"
+
+			OutputVolDescLog(
+				OUTPUT_DHYPHEN_PLUS_STR("Track_List")
+				"\t Track_List_1_Signature: %.8" CHARWIDTH "s\n"
 				, (LPCH)&lpBuf[0]
 			);
 			for (INT i = 0; i < aToc.Last_Track_Number; i++) {
 				REVERSE_BYTES(&tList.Track_Start_Address[i], &lpBuf[0x8 + sizeof(UINT) * i]);
-				OutputVolDescLogA(
+				OutputVolDescLog(
 					"\tTrack_Start_Address[%02d]: %9d (%#02x)\n"
 					, i + 1, tList.Track_Start_Address[i], tList.Track_Start_Address[i]
 				);
 			}
 			for (INT i = 0; i < aToc.Last_Track_Number; i++) {
 				REVERSE_BYTES(&tList.Track_Length[i], &lpBuf[0x404 + sizeof(UINT) * i]);
-				OutputVolDescLogA(
+				OutputVolDescLog(
 					"\t       Track_Length[%02d]: %9d (%#02x)\n"
 					, i + 1, tList.Track_Length[i], tList.Track_Length[i]
 				);
@@ -2370,14 +2375,14 @@ BOOL ReadSACDFileSystem(
 		}
 		OutputCDMain(fileMainInfo, lpBuf, nLBA, DISC_RAW_READ_SIZE * 2);
 
-		OutputVolDescLogA(
-			OUTPUT_DHYPHEN_PLUS_STR(ISRC_and_Genre_List)
-			"\tISRC_and_Genre_List_Signature: %.8s\n"
+		OutputVolDescLog(
+			OUTPUT_DHYPHEN_PLUS_STR("ISRC_and_Genre_List")
+			"\tISRC_and_Genre_List_Signature: %.8" CHARWIDTH "s\n"
 			, (LPCH)&lpBuf[0]
 		);
 		for (INT i = 0; i < aToc.Last_Track_Number; i++) {
-			OutputVolDescLogA(
-				"\t           ISRC_and_Genre[%02d]: %.12s\n"
+			OutputVolDescLog(
+				"\t           ISRC_and_Genre[%02d]: %.12" CHARWIDTH "s\n"
 				, i + 1, (LPCH)&lpBuf[0x8 + 12 * i]
 			);
 		}
@@ -2415,9 +2420,9 @@ BOOL ReadSACDFileSystem(
 			memcpy(&alist, lpBuf, sizeof(Access_List));
 			REVERSE_BYTES_SHORT(&alist.N_Entries, &lpBuf[0x8]);
 
-			OutputVolDescLogA(
-				OUTPUT_DHYPHEN_PLUS_STR(Access_List)
-				"\tAccess_List_Signature: %.8s\n"
+			OutputVolDescLog(
+				OUTPUT_DHYPHEN_PLUS_STR("Access_List")
+				"\tAccess_List_Signature: %.8" CHARWIDTH "s\n"
 				"\t            N_Entries: %d\n"
 				"\t       Main_Step_Size: %d\n"
 				, (LPCH)&lpBuf[0]
@@ -2428,7 +2433,7 @@ BOOL ReadSACDFileSystem(
 				REVERSE_BYTES_SHORT(&alist.mAList[i].Access_Flags, &lpBuf[0x10 + 5 * i]);
 				if (alist.mAList[i].Access_Flags != 0 || alist.mAList[i].Entrys[0] != 0 ||
 					alist.mAList[i].Entrys[1] != 0 || alist.mAList[i].Entrys[2] != 0) {
-					OutputVolDescLogA(
+					OutputVolDescLog(
 						"\t   Access_Flags[%04d]: %d\n"
 						"\t         Entrys[%04d]: %02x %02x %02x\n"
 						, i + 1, alist.mAList[i].Access_Flags
@@ -2437,7 +2442,7 @@ BOOL ReadSACDFileSystem(
 				}
 				if (alist.dAccess[i].Sub_Entrys[0] != 0 ||
 					alist.dAccess[i].Sub_Entrys[1] != 0 || alist.dAccess[i].Sub_Entrys[2] != 0) {
-					OutputVolDescLogA(
+					OutputVolDescLog(
 						"\t     Sub_Entrys[%04d]: %02x %02x %02x\n"
 						, i + 1, alist.dAccess[i].Sub_Entrys[0], alist.dAccess[i].Sub_Entrys[1], alist.dAccess[i].Sub_Entrys[2]
 					);
@@ -2464,14 +2469,14 @@ BOOL ReadSACDFileSystem(
 			} Track_Text;
 
 			Track_Text TTxt = {};
-			OutputVolDescLogA(
-				OUTPUT_DHYPHEN_PLUS_STR(Track_Text)
-				"\tTrack_Text_Signature: %.8s\n"
+			OutputVolDescLog(
+				OUTPUT_DHYPHEN_PLUS_STR("Track_Text")
+				"\tTrack_Text_Signature: %.8" CHARWIDTH "s\n"
 				, (LPCH)&lpBuf[0]
 			);
 			for (INT i = 0; i < aToc.Last_Track_Number; i++) {
 				REVERSE_BYTES_SHORT(&TTxt.Track_Text_Pos[i], &lpBuf[0x8 + sizeof(USHORT) * i]);
-				OutputVolDescLogA(
+				OutputVolDescLog(
 					"\t  Track_Text_Pos[%02d]: %d (%#x)\n"
 					, i + 1, TTxt.Track_Text_Pos[i], TTxt.Track_Text_Pos[i]
 				);
@@ -2492,12 +2497,12 @@ BOOL ReadSACDFileSystem(
 			for (INT i = 0; i < aToc.Last_Track_Number; i++) {
 				nOfs = TTxt.Track_Text_Pos[i] - TTxt.Track_Text_Pos[0];
 				if (lpBuf[nOfs + 0x04] == 0x01) {
-					OutputVolDescLogA("\t           Title[%02d]:", i + 1);
+					OutputVolDescLog("\t           Title[%02d]:", i + 1);
 				}
 				for (INT j = 0; lpBuf[nOfs + 0x05 + j] != 0; j++) {
-					OutputVolDescLogA("%c", lpBuf[nOfs + 0x05 + j]);
+					OutputVolDescLog("%c", lpBuf[nOfs + 0x05 + j]);
 				}
-				OutputVolDescLogA("\n");
+				OutputVolDescLog("\n");
 			}
 		}
 	}

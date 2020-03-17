@@ -78,9 +78,9 @@ BOOL ReadDVDReverse(
 				throw FALSE;
 			}
 			fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_RAW_READ_SIZE, fpRev);
-			OutputString(_T("\rCreating iso(LBA) %8u/%8u"), nLBA, nLastLBA);
+			OutputString("\rCreating iso(LBA) %8u/%8u", nLBA, nLastLBA);
 		}
-		OutputString(_T("\n"));
+		OutputString("\n");
 		FcloseAndNull(fpRev);
 
 		FILE* fp = CreateOrOpenFile(
@@ -98,7 +98,7 @@ BOOL ReadDVDReverse(
 		for (INT i = 1; i <= nLastLBA - nStartLBA + 1; i++) {
 			fseek(fpRev, -DISC_RAW_READ_SIZE * i, SEEK_END);
 			if (fread(lpBuf, sizeof(BYTE), DISC_RAW_READ_SIZE, fpRev) < DISC_RAW_READ_SIZE) {
-				OutputErrorString(_T("Failed to read [F:%s][L:%d]\n"), _T(__FUNCTION__), __LINE__);
+				OutputErrorString("Failed to read [F:%s][L:%d]\n", _T(__FUNCTION__), __LINE__);
 				return FALSE;
 			}
 			fwrite(lpBuf, sizeof(BYTE), DISC_RAW_READ_SIZE, fp);
@@ -149,7 +149,7 @@ BOOL ReadDVD(
 			pDisc->DVD.dwXboxStartPsn - pDisc->DVD.dwDVDStartPsn - pDisc->DVD.dwLayer0SectorLength;
 		INT nAllLength = pDisc->SCSI.nAllLength;
 		if (*pExecType == xbox) {
-			OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(TotalLength)
+			OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("TotalLength")
 				"\t    L0 + L1 data: %7d (%#x)\n"
 				"\t+      L1 Middle: %7lu (%#lx)\n"
 				"\t+       L1 Video: %7lu (%#lx)\n"
@@ -158,13 +158,13 @@ BOOL ReadDVD(
 				, dwLayer1MiddleZone, dwLayer1MiddleZone
 				, pDisc->DVD.dwLayer1SectorLength, pDisc->DVD.dwLayer1SectorLength);
 			nAllLength += (INT)(dwLayer1MiddleZone + pDisc->DVD.dwLayer1SectorLength);
-			OutputDiscLogA(
+			OutputDiscLog(
 				"\t                  %7u (%#x)\n", nAllLength, nAllLength);
 #if 1
 			if (nAllLength > 4000000) {
 				INT nAdditional = 4096;
 				nAllLength += nAdditional;
-				OutputDiscLogA(
+				OutputDiscLog(
 						"\t+     Additional: %7u (%#x)\n"
 						"\t------------------------------------\n"
 						"\t                  %7u (%#x)\n"
@@ -295,7 +295,7 @@ BOOL ReadDVD(
 				fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_RAW_READ_SIZE * dwTransferLen, fp);
 				if (nLBA == nLastErrorLBA) {
 					nFirstErrorLBA = 0;
-					OutputLog(standardOut | fileMainError, _T("Reset 1st error LBA\n"));
+					OutputLog(standardOut | fileMainError, "Reset 1st error LBA\n");
 				}
 				continue;
 			}
@@ -309,11 +309,11 @@ BOOL ReadDVD(
 					if (++nRetryCnt <= 5) {
 						nLBA--;
 						OutputLog(standardOut | fileMainError,
-							_T("This sector is out of the ss ranges. Read retry %d/5\n"), nRetryCnt);
+							"This sector is out of the ss ranges. Read retry %d/5\n", nRetryCnt);
 						continue;
 					}
 					else {
-						OutputLog(standardOut | fileMainError, _T("Retry NG\n"));
+						OutputLog(standardOut | fileMainError, "Retry NG\n");
 						throw FALSE;
 					}
 				}
@@ -322,7 +322,7 @@ BOOL ReadDVD(
 						nLastErrorLBA <= nLBA && nLBA <= (INT)pDisc->DVD.securitySectorRange[i][1]) {
 						if (++uiErrorForwardTimes <= pExtArg->uiMaxRereadNum) {
 							OutputLog(standardOut | fileMainError
-								, _T("Reread this sector: %d/%d\n")
+								, "Reread this sector: %d/%d\n"
 								, uiErrorForwardTimes, pExtArg->uiMaxRereadNum);
 							nLBA--;
 							continue;
@@ -330,7 +330,7 @@ BOOL ReadDVD(
 						else {
 							uiErrorForwardTimes = 0;
 							bSetErrorSectorRange = FALSE;
-							OutputLog(standardOut | fileMainError, _T("Reread NG -> Filled with 0x00\n"));
+							OutputLog(standardOut | fileMainError, "Reread NG -> Filled with 0x00\n");
 							FillMemory(lpBuf, DISC_RAW_READ_SIZE * dwTransferLen, 0x00);
 							fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_RAW_READ_SIZE * dwTransferLen, fp);
 							continue;
@@ -340,13 +340,13 @@ BOOL ReadDVD(
 						if (nFirstErrorLBA == 0) {
 							if (++uiErrorForwardTimes <= pExtArg->uiMaxRereadNum) {
 								OutputLog(standardOut | fileMainError
-									, _T("Reread this 1st error sector: %d/%d\n")
+									, "Reread this 1st error sector: %d/%d\n"
 									, uiErrorForwardTimes, pExtArg->uiMaxRereadNum);
 								nLBA--;
 								continue;
 							}
 							uiErrorForwardTimes = 0;
-							OutputLog(standardOut | fileMainError, _T("Set 1st error LBA\n"));
+							OutputLog(standardOut | fileMainError, "Set 1st error LBA\n");
 							nFirstErrorLBA = nLBA;
 							bErrorForward = TRUE;
 						}
@@ -360,7 +360,7 @@ BOOL ReadDVD(
 						}
 						nLastErrorLBA = nLBA;
 						nLBA = nFirstErrorLBA - 1;
-						OutputLog(standardOut | fileDisc, _T("Error sectors range: LBA %d to %d = %d -> Filled with 0x00\n")
+						OutputLog(standardOut | fileDisc, "Error sectors range: LBA %d to %d = %d -> Filled with 0x00\n"
 							, nFirstErrorLBA, nLastErrorLBA, nLastErrorLBA - nFirstErrorLBA + 1);
 						FlushLog();
 						bErrorBack = FALSE;
@@ -370,11 +370,11 @@ BOOL ReadDVD(
 				}
 				else if (++nRetryCnt <= 5) {
 					nLBA -= (INT)dwTransferLen;
-					OutputString(_T("Read retry %d/5\n"), nRetryCnt);
+					OutputString("Read retry %d/5\n", nRetryCnt);
 					continue;
 				}
 				else {
-					OutputString(_T("Retry NG\n"));
+					OutputString("Retry NG\n");
 					throw FALSE;
 				}
 			}
@@ -383,22 +383,22 @@ BOOL ReadDVD(
 				bErrorForward = FALSE;
 				bErrorBack = TRUE;
 				if (uiErrorForwardTimes) {
-					OutputLog(standardOut | fileMainError, _T("Reread OK\n"));
+					OutputLog(standardOut | fileMainError, "Reread OK\n");
 				}
 				uiErrorForwardTimes = 0;
 			}
 			if (bErrorBack) {
-				OutputLog(standardOut | fileMainError, _T(STR_LBA "Read back a sector\n"), nLBA, nLBA);
+				OutputLog(standardOut | fileMainError, STR_LBA "Read back a sector\n", nLBA, nLBA);
 				nLBA -= 2;
 				uiErrorBackTimes = 0;
 				continue;
 			}
 			if (nRetryCnt) {
-				OutputString(_T("Retry OK\n"));
+				OutputString("Retry OK\n");
 				nRetryCnt = 0;
 			}
 			fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_RAW_READ_SIZE * dwTransferLen, fp);
-			OutputString(_T("\rCreating iso(LBA) %8lu/%8u"), nLBA + dwTransferLen, nAllLength);
+			OutputString("\rCreating iso(LBA) %8lu/%8u", nLBA + dwTransferLen, nAllLength);
 		}
 
 		if (*pExecType == xbox) {
@@ -418,7 +418,7 @@ BOOL ReadDVD(
 					dwTransferLen = dwEndOfMiddle - j;
 				}
 				fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_RAW_READ_SIZE * dwTransferLen, fp);
-				OutputString(_T("\rCreating iso(LBA) %8lu/%8u"), j + dwTransferLen, nAllLength);
+				OutputString("\rCreating iso(LBA) %8lu/%8u", j + dwTransferLen, nAllLength);
 			}
 
 			dwTransferLen = dwTransferLenOrg;
@@ -437,11 +437,11 @@ BOOL ReadDVD(
 					throw FALSE;
 				}
 				fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_RAW_READ_SIZE * dwTransferLen, fp);
-				OutputString(_T("\rCreating iso(LBA) %8lu/%8u")
+				OutputString("\rCreating iso(LBA) %8lu/%8u"
 					, dwEndOfMiddle + pDisc->DVD.dwLayer1SectorLength, nAllLength);
 			}
 		}
-		OutputString(_T("\n"));
+		OutputString("\n");
 	}
 	catch (BOOL ret) {
 		bRet = ret;
@@ -701,7 +701,7 @@ BOOL ReadDVDRaw(
 			lpCmd[8] = LOBYTE(LOWORD(dwSectorSize * transferLen));
 		}
 #endif
-		OutputString(_T("Rawdump command [0]:%#04x [1]:%#04x [2]:%#04x\n"), lpCmd[0], lpCmd[1], lpCmd[2]);
+		OutputString("Rawdump command [0]:%#04x [1]:%#04x [2]:%#04x\n", lpCmd[0], lpCmd[1], lpCmd[2]);
 
 		INT nLBA = 0;
 		UINT sectorNum = 0x30000;
@@ -747,7 +747,7 @@ BOOL ReadDVDRaw(
 			INT64 size = (INT64)GetFileSize64(0, fp);
 			_fseeki64(fp, size - dwSectorSize, SEEK_SET);
 			if (fread(lpBuf, sizeof(BYTE), dwSectorSize, fp) < dwSectorSize) {
-				OutputErrorString(_T("Failed to read [F:%s][L:%d]\n"), _T(__FUNCTION__), __LINE__);
+				OutputErrorString("Failed to read [F:%s][L:%d]\n", _T(__FUNCTION__), __LINE__);
 				return FALSE;
 			}
 			_fseeki64(fp, size, SEEK_SET);
@@ -838,7 +838,7 @@ BOOL ReadDVDRaw(
 					throw FALSE;
 #else
 					lpCmd[2] += 1;
-					OutputString(_T("Rawdump command [0]:%#04x [1]:%#04x [2]:%#04x\n"), lpCmd[0], lpCmd[1], lpCmd[2]);
+					OutputString("Rawdump command [0]:%#04x [1]:%#04x [2]:%#04x\n", lpCmd[0], lpCmd[1], lpCmd[2]);
 					continue;
 #endif
 				}
@@ -849,14 +849,14 @@ BOOL ReadDVDRaw(
 						, lpBuf[2 + dwOfs3]), MAKEWORD(lpBuf[1 + dwOfs3], 0));
 					id = lpBuf[dwOfs3];
 					if ((id & 0x11) == 1 && (prevId & 0x11) == 0) {
-						OutputString(_T("\nLayer is changed: %02x -> %02x\n"), prevId, id);
+						OutputString("\nLayer is changed: %02x -> %02x\n", prevId, id);
 						sectorNum = gotSectorNum - j - i * transferLen;
 					}
 					else if (sectorNum != gotSectorNum - j - i * transferLen) {
-						OutputLogA(standardError | fileMainError
+						OutputLog(standardError | fileMainError
 							, " Expected sector num: %6x, Got sector num: %6x "
 							, sectorNum, gotSectorNum - j - i * transferLen);
-						OutputMainErrorLogA("\n");
+						OutputMainErrorLog("\n");
 						bCheckSectorNum = FALSE;
 						break;
 					}
@@ -876,7 +876,7 @@ BOOL ReadDVDRaw(
 			}
 			else {
 				if (++nRereadNum == 40) {
-					OutputString(_T("Max Reread %d. LBA: %7d\n"), nRereadNum, nLBA);
+					OutputString("Max Reread %d. LBA: %7d\n", nRereadNum, nLBA);
 					if (!bRetry && IsSupported0xE7Type2(pDevice)) {
 						transferLen = 1;
 						transferAndMemSize = transferLen * memBlkSize;
@@ -897,7 +897,7 @@ BOOL ReadDVDRaw(
 						break;
 					}
 				}
-				OutputString(_T("Reread %d. LBA: %7d\n"), nRereadNum, nLBA);
+				OutputString("Reread %d. LBA: %7d\n", nRereadNum, nLBA);
 			}
 			if (nRereadNum || IsNintendoDisc(pDisc)) {
 				if (IsSupported0xE7Type1(pDevice) ||
@@ -971,7 +971,7 @@ BOOL ReadDVDRaw(
 					}
 				}
 			}
-			OutputString(_T("\rCreating raw(LBA) %7u/%7u")
+			OutputString("\rCreating raw(LBA) %7u/%7u"
 				, nLBA + (INT)transferAndMemSize, pDisc->SCSI.nAllLength);
 			if (pExtArg->byFix) {
 				if (nLBA == (INT)pDisc->DVD.fixNum * 16 + 16) {
@@ -979,7 +979,7 @@ BOOL ReadDVDRaw(
 				}
 			}
 		}
-		OutputString(_T("\n"));
+		OutputString("\n");
 	}
 	catch (BOOL bErr) {
 		bRet = bErr;
@@ -999,7 +999,7 @@ BOOL ReadDVDRaw(
 			// 4 == no seed found for recording frame xx
 			// 6 == can't write to .iso
 			// frame num == error unscrambling recording frame xx
-			OutputString(_T("ret = %d\n"), bRet);
+			OutputString("ret = %d\n", bRet);
 			if (bRet == 0) {
 				if (pDisc->DVD.disc == gamecube) {
 					ReadNintendoFileSystem(pDevice, pszFullPath, gamecube);
@@ -1032,7 +1032,7 @@ BOOL ReadDVDForCMI(
 	cdb.OperationCode = SCSIOP_READ_DVD_STRUCTURE;
 	cdb.Format = DvdMaxDescriptor;
 	REVERSE_BYTES_SHORT(&cdb.AllocationLength, &wSize);
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(CopyrightManagementInformation));
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("CopyrightManagementInformation"));
 
 	BOOL bRet = TRUE;
 	BYTE byScsiStatus = 0;
@@ -1041,16 +1041,16 @@ BOOL ReadDVDForCMI(
 		if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, pBuf, 
 			direction, wSize, &byScsiStatus, _T(__FUNCTION__), __LINE__)
 			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-			OutputDiscWithLBALogA("Read error\n", nLBA);
+			OutputDiscWithLBALog("Read error\n", nLBA);
 		}
 		else {
 			OutputDVDCopyrightManagementInformation(
 				(PDVD_COPYRIGHT_MANAGEMENT_DESCRIPTOR)(pBuf + sizeof(DVD_DESCRIPTOR_HEADER)), nLBA);
 		}
 		OutputString(
-			_T("\rWriting CMI log(LBA) %8u/%8u"), nLBA, pDisc->SCSI.nAllLength - 1);
+			"\rWriting CMI log(LBA) %8u/%8u", nLBA, pDisc->SCSI.nAllLength - 1);
 	}
-	OutputString(_T("\n"));
+	OutputString("\n");
 	return bRet;
 }
 
@@ -1164,59 +1164,59 @@ BOOL ReadDiscStructure(
 	INT nPacNum = 0; // BD, format 0x30
 	BYTE pacIdList[256][4] = {}; // BD, format 0x30
 
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DiscStructure));
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("DiscStructure"));
 	for (WORD i = 0; i < wEntrySize; i++) {
 		PDVD_STRUCTURE_LIST_ENTRY pEntry = 
 			((PDVD_STRUCTURE_LIST_ENTRY)pDescHeader->Data + i);
 		// FormatLength is obsolete for late drive
 //		WORD wFormatLen = MAKEWORD(pEntry->FormatLength[1], pEntry->FormatLength[0]);
 		WORD wFormatLen = sizeof(DVD_DESCRIPTOR_HEADER);
-		OutputDiscLogA(
+		OutputDiscLog(
 			"FormatCode: %02x, Sendable: %3s, Readable: %3s\n", 
-			pEntry->FormatCode,	BOOLEAN_TO_STRING_YES_NO_A(pEntry->Sendable),
-			BOOLEAN_TO_STRING_YES_NO_A(pEntry->Readable));
+			pEntry->FormatCode,	BOOLEAN_TO_STRING_YES_NO(pEntry->Sendable),
+			BOOLEAN_TO_STRING_YES_NO(pEntry->Readable));
 #if 0
 		if (wFormatLen == 0) {
-			OutputDiscLogA("Skiped because length is 0\n\n");
+			OutputDiscLog("Skiped because length is 0\n\n");
 			continue;
 		}
 #endif
 		if (*pExecType == dvd || IsXbox(pExecType)) {
 			if (pEntry->FormatCode == 0xff) {
-				OutputDiscLogA("Skiped\n\n");
+				OutputDiscLog("Skiped\n\n");
 				break;
 			}
 			else if (pEntry->FormatCode == 0x02) {
 				if (pDisc->DVD.protect == css) {
 					if (ExecReadingKey(pDevice, css, pszFullPath)) {
-						OutputDiscLogA("Outputted to _CSSKey.txt\n\n");
+						OutputDiscLog("Outputted to _CSSKey.txt\n\n");
 					}
 					else {
-						OutputDiscLogA("Failed to run DVDAuth.exe\n\n");
+						OutputDiscLog("Failed to run DVDAuth.exe\n\n");
 						return FALSE;
 					}
 				}
 				else {
-					OutputDiscLogA("Skiped because of DVD with CSS only\n\n");
+					OutputDiscLog("Skiped because of DVD with CSS only\n\n");
 				}
 				continue; // skip output because disc key is random data
 			}
 			else if (pEntry->FormatCode == 0x03 && !pDisc->DVD.ucBca) {
-				OutputDiscLogA("Skiped because of no BCA data\n\n");
+				OutputDiscLog("Skiped because of no BCA data\n\n");
 				continue;
 			}
 			else if (pEntry->FormatCode == 0x05) {
-				OutputDiscLogA("Skiped. If you see the detailed, use /c option\n\n");
+				OutputDiscLog("Skiped. If you see the detailed, use /c option\n\n");
 				continue;
 			}
 			else if (pEntry->FormatCode == 0x06 || pEntry->FormatCode == 0x07) {
 				if (pDisc->DVD.protect == cprm) {
 					if (pEntry->FormatCode == 0x06) {
 						if (ExecReadingKey(pDevice, cprm, pszFullPath)) {
-							OutputDiscLogA("Outputted to _CPRMKey.txt\n\n");
+							OutputDiscLog("Outputted to _CPRMKey.txt\n\n");
 						}
 						else {
-							OutputDiscLogA("Failed to run DVDAuth.exe\n\n");
+							OutputDiscLog("Failed to run DVDAuth.exe\n\n");
 							return FALSE;
 						}
 					}
@@ -1225,41 +1225,41 @@ BOOL ReadDiscStructure(
 					}
 				}
 				else {
-					OutputDiscLogA("Skiped because of DVD with CPRM only\n\n");
+					OutputDiscLog("Skiped because of DVD with CPRM only\n\n");
 					continue;
 				}
 			}
 			else if ((0x08 <= pEntry->FormatCode && pEntry->FormatCode <= 0x0b) &&
 				pDisc->SCSI.wCurrentMedia != ProfileDvdRam) {
-				OutputDiscLogA("Skiped because of DVD-RAM only\n\n");
+				OutputDiscLog("Skiped because of DVD-RAM only\n\n");
 				continue;
 			}
 			else if ((0x0c <= pEntry->FormatCode && pEntry->FormatCode <= 0x10) &&
 				(pDisc->SCSI.wCurrentMedia != ProfileDvdRecordable) &&
 				(pDisc->SCSI.wCurrentMedia != ProfileDvdRewritable) &&
 				(pDisc->SCSI.wCurrentMedia != ProfileDvdRWSequential)) {
-				OutputDiscLogA("Skiped because of DVD-R, RW only\n\n");
+				OutputDiscLog("Skiped because of DVD-R, RW only\n\n");
 				continue;
 			}
 			else if ((pEntry->FormatCode == 0x11 || pEntry->FormatCode == 0x30) &&
 				(pDisc->SCSI.wCurrentMedia != ProfileDvdPlusRW) &&
 				(pDisc->SCSI.wCurrentMedia != ProfileDvdPlusR)) {
-				OutputDiscLogA("Skiped because of DVD+R, RW only\n\n");
+				OutputDiscLog("Skiped because of DVD+R, RW only\n\n");
 				continue;
 			}
 			else if ((pEntry->FormatCode == 0x12 || pEntry->FormatCode == 0x15) &&
 				(pDisc->SCSI.wCurrentMedia != ProfileHDDVDRom)) {
-				OutputDiscLogA("Skiped because of HD DVD only\n\n");
+				OutputDiscLog("Skiped because of HD DVD only\n\n");
 				continue;
 			}
 			else if ((0x20 <= pEntry->FormatCode && pEntry->FormatCode <= 0x24) &&
 				pDisc->SCSI.wCurrentMedia != ProfileDvdDashRDualLayer) {
-				OutputDiscLogA("Skiped because of DVD-R DL only\n\n");
+				OutputDiscLog("Skiped because of DVD-R DL only\n\n");
 				continue;
 			}
 			else if ((pEntry->FormatCode == 0xc0) &&
 				pDisc->SCSI.wCurrentMedia != ProfileDvdRewritable) {
-				OutputDiscLogA("Skiped because of DVD-R Rewritable only\n\n");
+				OutputDiscLog("Skiped because of DVD-R Rewritable only\n\n");
 				continue;
 			}
 		}
@@ -1269,13 +1269,13 @@ BOOL ReadDiscStructure(
 				pDisc->SCSI.wCurrentMedia != ProfileBDRSequentialWritable &&
 				pDisc->SCSI.wCurrentMedia != ProfileBDRRandomWritable &&
 				pDisc->SCSI.wCurrentMedia != ProfileBDRewritable) {
-				OutputDiscLogA("Skiped because of BD-R, RW only\n\n");
+				OutputDiscLog("Skiped because of BD-R, RW only\n\n");
 				continue;
 			}
 		}
 		if ((0x80 <= pEntry->FormatCode && pEntry->FormatCode <= 0x86)) {
 			if (pDisc->DVD.protect != aacs) {
-				OutputDiscLogA("Skiped because of AACS disc only\n\n");
+				OutputDiscLog("Skiped because of AACS disc only\n\n");
 			}
 			continue;
 		}
@@ -1292,17 +1292,17 @@ BOOL ReadDiscStructure(
 		if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, 
 			lpFormat, direction, wFormatLen, &byScsiStatus, _T(__FUNCTION__), __LINE__) ||
 			byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-			OutputLogA(standardError | fileDisc, "FormatCode: %02x failed\n", pEntry->FormatCode);
+			OutputLog(standardError | fileDisc, "FormatCode: %02x failed\n", pEntry->FormatCode);
 			continue;
 		}
 		wFormatLen = (WORD)(MAKEWORD(lpFormat[1], lpFormat[0]) + 2); // 2 is size of "DVD_DESCRIPTOR_HEADER::Length" itself
 		REVERSE_BYTES_SHORT(&cdb.AllocationLength, &wFormatLen);
-		OutputDiscLogA("FormatLength: %d\n", wFormatLen);
+		OutputDiscLog("FormatLength: %d\n", wFormatLen);
 
 		if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH,
 			lpFormat, direction, wFormatLen, &byScsiStatus, _T(__FUNCTION__), __LINE__) ||
 			byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-			OutputLogA(standardError | fileDisc, "FormatCode: %02x failed\n", pEntry->FormatCode);
+			OutputLog(standardError | fileDisc, "FormatCode: %02x failed\n", pEntry->FormatCode);
 		}
 		else {
 			if (*pExecType == dvd || IsXbox(pExecType)) {
@@ -1331,7 +1331,7 @@ BOOL ReadDiscStructure(
 						if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH,
 							lpFormat, direction, wFormatLen, &byScsiStatus, _T(__FUNCTION__), __LINE__) ||
 							byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-							OutputLogA(standardError | fileDisc, "FormatCode: %02x failed\n", pEntry->FormatCode);
+							OutputLog(standardError | fileDisc, "FormatCode: %02x failed\n", pEntry->FormatCode);
 							if (pEntry->FormatCode == DvdPhysicalDescriptor) {
 								ReadTOC(pExtArg, pExecType, pDevice, pDisc);
 							}
@@ -1340,11 +1340,15 @@ BOOL ReadDiscStructure(
 							DWORD dwSectorLen2 = 0;
 							OutputDVDStructureFormat(pDisc, pEntry->FormatCode, (WORD)(wFormatLen - sizeof(DVD_DESCRIPTOR_HEADER))
 								, lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), &dwSectorLen2, cdb.LayerNumber);
-							OutputDiscLogA("\tLayerAllSector: %7lu (%#lx)\n", dwSectorLen + dwSectorLen2, dwSectorLen + dwSectorLen2);
+							OutputDiscLog("\tLayerAllSector: %7lu (%#lx)\n", dwSectorLen + dwSectorLen2, dwSectorLen + dwSectorLen2);
 							dwSectorLen += dwSectorLen2;
 						}
 					}
-					pDisc->SCSI.nAllLength = (INT)dwSectorLen;
+					if (pDisc->SCSI.wCurrentMedia != ProfileDvdRam &&
+						pDisc->SCSI.wCurrentMedia != ProfileDvdPlusR &&
+						pDisc->SCSI.wCurrentMedia != ProfileHDDVDRam) {
+						pDisc->SCSI.nAllLength = (INT)dwSectorLen;
+					}
 				}
 				else if (pEntry->FormatCode == DvdManufacturerDescriptor && *pExecType == xbox) {
 					OutputXboxManufacturingInfo(lpFormat + sizeof(DVD_DESCRIPTOR_HEADER));
@@ -1401,7 +1405,7 @@ BOOL ReadDiscStructure(
 				}
 			}
 		}
-		OutputDiscLogA("\n");
+		OutputDiscLog("\n");
 		FreeAndNull(lpFormat);
 	}
 	// FormatCode: 00 failed (for gamecube. wii disc does success)
@@ -1444,8 +1448,9 @@ BOOL ReadCapacity(
 		return FALSE;
 	}
 	UINT len = MAKEUINT(MAKEWORD(buf[3], buf[2]), MAKEWORD(buf[1], buf[0]));
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(ReadCapacity));
-	OutputDiscLogA("\tMax LBA + 1: %d (0x%x)\n", len + 1, len + 1);
+	OutputDiscLog(
+		OUTPUT_DHYPHEN_PLUS_STR("ReadCapacity")
+		"\tMax LBA + 1: %d (0x%x)\n", len + 1, len + 1);
 	return TRUE;
 }
 
@@ -1512,7 +1517,7 @@ BOOL ExtractSecuritySector(
 
 	BOOL filled = FALSE;
 	if (pDisc->SCSI.nAllLength == 3697696) {
-		OutputString(_T("Output SSv1 to SS.bin\n"));
+		OutputString("Output SSv1 to SS.bin\n");
 		// http://redump.org/download/ss_sector_range_1.0e.rar
 		//Fix standard SSv1 ss.bin
 		buf[552] = 0x01;
@@ -1544,7 +1549,7 @@ BOOL ExtractSecuritySector(
 			}
 		}
 		if (filled == FALSE) {
-			OutputString(_T("Not Output XGD3 SSv1 to SS.bin\n"));
+			OutputString("Not Output XGD3 SSv1 to SS.bin\n");
 			//Fix XGD3 SSv1 ss.bin
 			buf[552] = 0x01;
 			buf[553] = 0x00;
@@ -1559,7 +1564,7 @@ BOOL ExtractSecuritySector(
 			buf[580] = 0x01;
 		}
 		else {
-			OutputString(_T("Output XGD3 AP25 to SS.bin\n"));
+			OutputString("Output XGD3 AP25 to SS.bin\n");
 			//Fix XGD3 AP25 ss.bin
 			buf[72] = 0x01;
 			buf[73] = 0x00;
@@ -1632,47 +1637,47 @@ BOOL GetFeatureListForXBox(
 		|| scsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		return FALSE;
 	}
-	OutputDriveLogA(OUTPUT_DHYPHEN_PLUS_STR(FeatureList));
+	OutputDriveLog(OUTPUT_DHYPHEN_PLUS_STR("FeatureList"));
 	for (INT i = 0; i < 26; i += 2) {
 		WORD list = MAKEWORD(buf[i + 1], buf[i]);
 		switch (list) {
 		case 0:
 			break;
 		case 0x100:
-			OutputDriveLogA("0x%04x : The drive supports the unlock 1 state (xtreme) for XBOX 360\n", list);
+			OutputDriveLog("0x%04x : The drive supports the unlock 1 state (xtreme) for XBOX 360\n", list);
 			break;
 		case 0x101:
-			OutputDriveLogA("0x%04x : The drive supports the unlock 2 state (wxripper) for XBOX 360\n", list);
+			OutputDriveLog("0x%04x : The drive supports the unlock 2 state (wxripper) for XBOX 360\n", list);
 			break;
 		case 0x120:
-			OutputDriveLogA("0x%04x : The drive supports the unlock 1 state (xtreme) for XBOX 360\n", list);
+			OutputDriveLog("0x%04x : The drive supports the unlock 1 state (xtreme) for XBOX 360\n", list);
 			break;
 		case 0x121:
-			OutputDriveLogA("0x%04x : The drive has full challenge response functionality for XBOX 360\n", list);
+			OutputDriveLog("0x%04x : The drive has full challenge response functionality for XBOX 360\n", list);
 			break;
 		case 0x200:
-			OutputDriveLogA("0x%04x : The drive supports the unlock 1 state (xtreme) for XBOX\n", list);
+			OutputDriveLog("0x%04x : The drive supports the unlock 1 state (xtreme) for XBOX\n", list);
 			break;
 		case 0x201:
-			OutputDriveLogA("0x%04x : The drive supports the unlock 2 state (wxripper) for XBOX\n", list);
+			OutputDriveLog("0x%04x : The drive supports the unlock 2 state (wxripper) for XBOX\n", list);
 			break;
 		case 0x220:
-			OutputDriveLogA("0x%04x : The drive supports the unlock 1 state (xtreme) for XBOX\n", list);
+			OutputDriveLog("0x%04x : The drive supports the unlock 1 state (xtreme) for XBOX\n", list);
 			break;
 		case 0x221:
-			OutputDriveLogA("0x%04x : The drive has full challenge response functionality for XBOX\n", list);
+			OutputDriveLog("0x%04x : The drive has full challenge response functionality for XBOX\n", list);
 			break;
 		case 0xF000:
-			OutputDriveLogA("0x%04x : The drive supports the lock (cancel any unlock state) command\n", list);
+			OutputDriveLog("0x%04x : The drive supports the lock (cancel any unlock state) command\n", list);
 			break;
 		case 0xF001:
-			OutputDriveLogA("0x%04x : The drive supports error skipping\n", list);
+			OutputDriveLog("0x%04x : The drive supports error skipping\n", list);
 			break;
 		default:
 			break;
 		}
 	}
-	OutputString(_T("\n"));
+	OutputString("\n");
 	return TRUE;
 }
 
@@ -1753,7 +1758,7 @@ BOOL ReadXboxDVD(
 	if (!SetLockState(pExtArg, pDevice, 0)) {
 		return FALSE;
 	}
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(Lock state));
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("Lock state"));
 	if (!ReadCapacity(pExtArg, pDevice)) {
 		return FALSE;
 	}
@@ -1767,7 +1772,7 @@ BOOL ReadXboxDVD(
 	if (!SetLockState(pExtArg, pDevice, 1)) {
 		return FALSE;
 	}
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(Unlock 1 state(xtreme)));
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("Unlock 1 state(xtreme)"));
 	if (!ReadCapacity(pExtArg, pDevice)) {
 		return FALSE;
 	}
@@ -1782,7 +1787,7 @@ BOOL ReadXboxDVD(
 	if (!SetLockState(pExtArg, pDevice, 2)) {
 		return FALSE;
 	}
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(Unlock 2 state(wxripper)));
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("Unlock 2 state(wxripper)"));
 	if (!ReadCapacity(pExtArg, pDevice)) {
 		return FALSE;
 	}
@@ -1828,9 +1833,9 @@ BOOL ReadXboxDVDBySwap(
 	if (*pExecType == xboxswap) {
 		if (pDisc->DVD.dwLayer0SectorLength < XBOX_LAYER_BREAK) {
 			OutputErrorString(
-				_T("Short of length of DVD\n")
-				_T("\tYour DVD length: %ld\n")
-				_T("\tXbox LayerBreak: %d\n")
+				"Short of length of DVD\n"
+				"\tYour DVD length: %ld\n"
+				"\tXbox LayerBreak: %d\n"
 				, dwDvdAllLen, XBOX_LAYER_BREAK);
 			return FALSE;
 		}
@@ -1838,9 +1843,9 @@ BOOL ReadXboxDVDBySwap(
 		DWORD dwXboxAllLen = XBOX_SIZE + pDisc->DVD.dwXboxSwapOfs;
 		if (dwXboxAllLen > dwDvdAllLen) {
 			OutputErrorString(
-				_T("Short of length of DVD\n")
-				_T("\t  Your DVD length: %ld\n")
-				_T("\tNeeded DVD length: (DVD L0[%ld] - Xbox LayerBreak[%d]) * 2 + Xbox Length[%d] = %ld\n")
+				"Short of length of DVD\n"
+				"\t  Your DVD length: %ld\n"
+				"\tNeeded DVD length: (DVD L0[%ld] - Xbox LayerBreak[%d]) * 2 + Xbox Length[%d] = %ld\n"
 				, dwDvdAllLen, pDisc->DVD.dwLayer0SectorLength, XBOX_LAYER_BREAK, XBOX_SIZE, dwXboxAllLen);
 			return FALSE;
 		}
@@ -1848,9 +1853,9 @@ BOOL ReadXboxDVDBySwap(
 	else if (*pExecType == xgd2swap) {
 		if (pDisc->DVD.dwLayer0SectorLength < XGD2_LAYER_BREAK) {
 			OutputErrorString(
-				_T("Short of length of DVD\n")
-				_T("\tYour DVD length: %ld\n")
-				_T("\tXGD2 LayerBreak: %d\n")
+				"Short of length of DVD\n"
+				"\tYour DVD length: %ld\n"
+				"\tXGD2 LayerBreak: %d\n"
 				, dwDvdAllLen, XGD2_LAYER_BREAK);
 			return FALSE;
 		}
@@ -1858,9 +1863,9 @@ BOOL ReadXboxDVDBySwap(
 		DWORD dwXboxAllLen = pExtArg->nAllSectors + pDisc->DVD.dwXboxSwapOfs;
 		if (dwXboxAllLen > dwDvdAllLen) {
 			OutputErrorString(
-				_T("Short of length of DVD\n")
-				_T("\t  Your DVD length: %ld\n")
-				_T("\tNeeded DVD length: (DVD L0[%ld] - XGD2 LayerBreak[%d]) * 2 + XGD2 Length[%d] = %ld\n")
+				"Short of length of DVD\n"
+				"\t  Your DVD length: %ld\n"
+				"\tNeeded DVD length: (DVD L0[%ld] - XGD2 LayerBreak[%d]) * 2 + XGD2 Length[%d] = %ld\n"
 				, dwDvdAllLen, pDisc->DVD.dwLayer0SectorLength, XGD2_LAYER_BREAK, pExtArg->nAllSectors, dwXboxAllLen);
 			return FALSE;
 		}
@@ -1868,9 +1873,9 @@ BOOL ReadXboxDVDBySwap(
 	else if (*pExecType == xgd3swap) {
 		if (pDisc->DVD.dwLayer0SectorLength < XGD3_LAYER_BREAK) {
 			OutputErrorString(
-				_T("Short of length of DVD\n")
-				_T("\tYour DVD length: %ld\n")
-				_T("\tXGD3 LayerBreak: %d\n")
+				"Short of length of DVD\n"
+				"\tYour DVD length: %ld\n"
+				"\tXGD3 LayerBreak: %d\n"
 				, dwDvdAllLen, XGD3_LAYER_BREAK);
 			return FALSE;
 		}
@@ -1878,9 +1883,9 @@ BOOL ReadXboxDVDBySwap(
 		DWORD dwXboxAllLen = pExtArg->nAllSectors + pDisc->DVD.dwXboxSwapOfs;
 		if (dwXboxAllLen > dwDvdAllLen) {
 			OutputErrorString(
-				_T("Short of length of DVD\n")
-				_T("\t  Your DVD length: %ld\n")
-				_T("\tNeeded DVD length: (DVD L0[%ld] - XGD3 LayerBreak[%d]) * 2 + XGD3 Length[%d] = %ld\n")
+				"Short of length of DVD\n"
+				"\t  Your DVD length: %ld\n"
+				"\tNeeded DVD length: (DVD L0[%ld] - XGD3 LayerBreak[%d]) * 2 + XGD3 Length[%d] = %ld\n"
 				, dwDvdAllLen, pDisc->DVD.dwLayer0SectorLength, XGD3_LAYER_BREAK, pExtArg->nAllSectors, dwXboxAllLen);
 			return FALSE;
 		}
@@ -1960,9 +1965,9 @@ BOOL ReadSACD(
 			}
 
 			fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_RAW_READ_SIZE * dwTransferLen, fp);
-			OutputString(_T("\rCreating iso(LBA) %8lu/%8u"), nLBA + dwTransferLen, pDisc->SCSI.nAllLength);
+			OutputString("\rCreating iso(LBA) %8lu/%8u", nLBA + dwTransferLen, pDisc->SCSI.nAllLength);
 		}
-		OutputString(_T("\n"));
+		OutputString("\n");
 	}
 	catch (BOOL ret) {
 		bRet = ret;

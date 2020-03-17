@@ -332,7 +332,7 @@ VOID SupportIndex0InTrack1(
 		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PXR820T
 		) {
 		OutputString(
-			_T("This drive doesn't support to rip from 00:00:00 to 00:01:74 AMSF. /p option was ignored\n"));
+			"This drive doesn't support to rip from 00:00:00 to 00:01:74 AMSF. /p option was ignored\n");
 		pExtArg->byPre = FALSE;
 	}
 }
@@ -980,7 +980,7 @@ BOOL IsValidSubQTrack(
 										bRet = FALSE;
 									}
 									else {
-										OutputSubInfoWithLBALogA(
+										OutputSubInfoWithLBALog(
 											"This track num is maybe incorrect. Could you try /s 2 option [L:%d]\n", nLBA, pDiscPerSector->byTrackNum, (INT)__LINE__);
 									}
 								}
@@ -998,7 +998,7 @@ BOOL IsValidSubQTrack(
 										bRet = FALSE;
 									}
 									else {
-										OutputSubInfoWithLBALogA(
+										OutputSubInfoWithLBALog(
 											"This track num is maybe incorrect. Could you try /s 2 option [L:%d]\n", nLBA, pDiscPerSector->byTrackNum, (INT)__LINE__);
 									}
 								}
@@ -1260,7 +1260,7 @@ BOOL ContainsC2Error(
 			lpBuf[uiPos + 3] == 0 && lpBuf[uiPos + 4] == 0 && lpBuf[uiPos + 5] == 0 &&
 			lpBuf[uiPos + 6] == 0x0f && lpBuf[uiPos + 7] == 0x0f && lpBuf[uiPos + 8] == 0x0f && lpBuf[uiPos + 9] == 0x0f) {
 			if (bOutputLog) {
-				OutputC2ErrorLogA("Detected F0 F0 F0 00 00 00 0F 0F 0F 0F\n");
+				OutputC2ErrorLog("Detected F0 F0 F0 00 00 00 0F 0F 0F 0F\n");
 			}
 		}
 		else if (lpBuf[uiPos] != 0) {
@@ -1270,7 +1270,7 @@ BOOL ContainsC2Error(
 //			INT nBit = 0x01;
 			INT nBit = 0x80;
 			if (bOutputLog && !bErr) {
-				OutputC2ErrorLogA("                 ofs: ");
+				OutputC2ErrorLog("                 ofs: ");
 			}
 			for (INT n = 0; n < CHAR_BIT; n++) {
 				// exist C2 error
@@ -1280,7 +1280,7 @@ BOOL ContainsC2Error(
 					bRet = RETURNED_EXIST_C2_ERROR;
 					(*lpuiC2errorNum)++;
 					if (bOutputLog) {
-						OutputC2ErrorLogA("%x, ", wC2ErrorPos * 8 + n);
+						OutputC2ErrorLog("%x, ", wC2ErrorPos * 8 + n);
 						bErr = TRUE;
 					}
 				}
@@ -1290,7 +1290,7 @@ BOOL ContainsC2Error(
 		}
 	}
 	if (bOutputLog && bErr) {
-		OutputC2ErrorLogA("\n");
+		OutputC2ErrorLog("\n");
 	}
 	return bRet;
 }
@@ -1330,14 +1330,14 @@ BOOL AnalyzeIfoFile(
 				throw FALSE;
 			}
 			WORD wNumOfTitlePlayMaps = MAKEWORD(pSector[1], pSector[0]);
-			OutputLogA(fileDisc, "%s, NumberOfTitlePlayMaps: %d\n", szFnameAndExt, wNumOfTitlePlayMaps);
+			OutputDiscLog("%s, NumberOfTitlePlayMaps: %d\n", szFnameAndExt, wNumOfTitlePlayMaps);
 			for (WORD v = 0; v < wNumOfTitlePlayMaps; v++) {
 				WORD wNumOfChapters = MAKEWORD(pSector[0xb + 12 * v], pSector[0xa + 12 * v]);
 				BYTE byNumOfTitleSet = pSector[0xe + 12 * v];
 				BYTE byNumOfTitleSetTitleNumber = pSector[0xf + 12 * v];
 				UINT uiStartSector = MAKEUINT(MAKEWORD(pSector[0x13 + 12 * v], pSector[0x12 + 12 * v])
 					, MAKEWORD(pSector[0x11 + 12 * v], pSector[0x10 + 12 * v]));
-				OutputLogA(fileDisc, "\tTitle %2d, VTS_%02d, TitleNumber %2d, NumberOfChapters: %2d, StartSector: %d\n"
+				OutputDiscLog("\tTitle %2d, VTS_%02d, TitleNumber %2d, NumberOfChapters: %2d, StartSector: %d\n"
 					, v + 1, byNumOfTitleSet, byNumOfTitleSetTitleNumber, wNumOfChapters, uiStartSector);
 			}
 			INT nPgcCnt = 0;
@@ -1380,7 +1380,7 @@ BOOL AnalyzeIfoFile(
 						INT nPlayBackTimeH = pSector[uiPgciStartByte[x] + 4];
 						INT nPlayBackTimeM = pSector[uiPgciStartByte[x] + 5];
 						INT nPlayBackTimeS = pSector[uiPgciStartByte[x] + 6];
-						OutputLogA(fileDisc, "%s, ProgramChain %2d, NumberOfPrograms %2d, NumberOfCells %2d, PlayBackTime -- %02x:%02x:%02x\n"
+						OutputDiscLog("%s, ProgramChain %2d, NumberOfPrograms %2d, NumberOfCells %2d, PlayBackTime -- %02x:%02x:%02x\n"
 							, szFnameAndExt, x + 1, nNumOfPrograms, nNumOfCells, nPlayBackTimeH, nPlayBackTimeM, nPlayBackTimeS);
 						nPgcCnt++;
 					}
@@ -1390,9 +1390,9 @@ BOOL AnalyzeIfoFile(
 					break;
 				}
 			}
-			OutputLogA(fileDisc, "NumberOfProgramChain: %d\n", nPgcCnt);
+			OutputDiscLog("NumberOfProgramChain: %d\n", nPgcCnt);
 			if (wNumOfTitlePlayMaps != nPgcCnt) {
-				OutputLogA(standardOut | fileDisc, "Detected irregular title number\n");
+				OutputLog(standardOut | fileDisc, "Detected irregular title number\n");
 			}
 		}
 		catch (BOOL bErr) {

@@ -82,7 +82,7 @@ BOOL ReadDirectoryRecord(
 	LONG seekPos,
 	DWORD dwBytesPerSector,
 	PFAT pFat,
-	LPBYTE pTab
+	_TCHAR* pTab
 ) {
 	LPBYTE lpBuf = (LPBYTE)calloc(dwBytesPerSector, sizeof(BYTE));
 	if (!lpBuf) {
@@ -107,43 +107,42 @@ BOOL ReadDirectoryRecord(
 						break;
 					}
 					else if (lpBuf[i] == 0xe5) {
-						OutputVolDescLogA("%sDeteled Entry\n", (LPCH)&pTab[0]);
+						OutputVolDescLog("%sDeteled Entry\n", &pTab[0]);
 					}
 					else if ((lpBuf[11 + i] & 0x0f) == 0x0f) {
 						WCHAR fname[_MAX_FNAME] = {};
-						OutputVolDescLogA(
-							"%s        LDIR_Ord: ", (LPCH)&pTab[0]);
+						OutputVolDescLog("%s        LDIR_Ord: ", &pTab[0]);
 						if ((lpBuf[i] & 0x40) == 0x40) {
 							INT nCnt = (lpBuf[i] & 0x1f) - 1;
 							for (INT h = 0, j = 32 * nCnt, k = 0; h <= nCnt; h++, j -= 32, k += 13) {
 								memcpy(fname + k, (LPWCH)&lpBuf[1 + i + j], 10);
 								memcpy(fname + 5 + k, (LPWCH)&lpBuf[14 + i + j], 12);
 								memcpy(fname + 11 + k, (LPWCH)&lpBuf[28 + i + j], 4);
-								OutputVolDescLogA("0x%02x ", lpBuf[i + j]);
+								OutputVolDescLog("0x%02x ", lpBuf[i + j]);
 							}
-							OutputVolDescLogA("\n");
+							OutputVolDescLog("\n");
 							i += 32 * ((lpBuf[i] & 0x0f) - 1);
 						}
 						else {
-							OutputVolDescLogA("%#02x\n", lpBuf[i]);
+							OutputVolDescLog("%#02x\n", lpBuf[i]);
 						}
-						OutputVolDescLogA(
+						OutputVolDescLog(
 							"%s       LDIR_Name: %ls\n"
 							"%s       LDIR_Attr: 0x%02x\n"
 							"%s       LDIR_Type: 0x%02x\n"
 							"%s     LDIR_Chksum: 0x%02x\n"
 							"%s  LDIR_FstClusLO: %d\n\n" 
-							, (LPCH)&pTab[0], fname
-							, (LPCH)&pTab[0], lpBuf[11 + i]
-							, (LPCH)&pTab[0], lpBuf[12 + i]
-							, (LPCH)&pTab[0], lpBuf[13 + i]
-							, (LPCH)&pTab[0], lpBuf[26 + i]
+							, &pTab[0], fname
+							, &pTab[0], lpBuf[11 + i]
+							, &pTab[0], lpBuf[12 + i]
+							, &pTab[0], lpBuf[13 + i]
+							, &pTab[0], lpBuf[26 + i]
 						);
 					}
 					else {
 						WORD FstClusLO = MAKEWORD(lpBuf[26 + i], lpBuf[27 + i]);
-						OutputVolDescLogA(
-							"%s        DIR_Name: %.11s\n"
+						OutputVolDescLog(
+							"%s        DIR_Name: %.11" CHARWIDTH "s\n"
 							"%s        DIR_Attr: 0x%02x\n"
 							"%s       DIR_NTRes: %d\n"
 							"%sDIR_CrtTimeTenth: %d\n"
@@ -155,24 +154,24 @@ BOOL ReadDirectoryRecord(
 							"%s     DIR_WrtDate: %04d/%02d/%02d\n"
 							"%s   DIR_FstClusLO: %d\n"
 							"%s    DIR_FileSize: %d\n\n"
-							, (LPCH)&pTab[0], (LPCH)&lpBuf[i]
-							, (LPCH)&pTab[0], lpBuf[11 + i]
-							, (LPCH)&pTab[0], lpBuf[12 + i]
-							, (LPCH)&pTab[0], lpBuf[13 + i]
-							, (LPCH)&pTab[0], ((lpBuf[15 + i] >> 3) & 0x1f), ((lpBuf[15 + i] << 3) & 0x38) | ((lpBuf[14 + i] >> 5) & 0x07), (lpBuf[14 + i] & 0x1f) / 2
-							, (LPCH)&pTab[0], ((lpBuf[17 + i] >> 1) & 0x7f) + 1980, ((lpBuf[17 + i] << 3) & 0x08) | ((lpBuf[16 + i] >> 5) & 0x07), lpBuf[16 + i] & 0x1f
-							, (LPCH)&pTab[0], ((lpBuf[19 + i] >> 1) & 0x7f) + 1980, ((lpBuf[19 + i] << 3) & 0x08) | ((lpBuf[18 + i] >> 5) & 0x07), lpBuf[18 + i] & 0x1f
-							, (LPCH)&pTab[0], MAKEWORD(lpBuf[20 + i], lpBuf[21 + i])
-							, (LPCH)&pTab[0], ((lpBuf[23 + i] >> 3) & 0x1f), ((lpBuf[23 + i] << 3) & 0x38) | ((lpBuf[22 + i] >> 5) & 0x07), (lpBuf[22 + i] & 0x1f) / 2
-							, (LPCH)&pTab[0], ((lpBuf[25 + i] >> 1) & 0x7f) + 1980, ((lpBuf[25 + i] << 3) & 0x08) | ((lpBuf[24 + i] >> 5) & 0x07), lpBuf[24 + i] & 0x1f
-							, (LPCH)&pTab[0], FstClusLO
-							, (LPCH)&pTab[0], MAKEUINT(MAKEWORD(lpBuf[28 + i], lpBuf[29 + i]), MAKEWORD(lpBuf[30 + i], lpBuf[31 + i]))
+							, &pTab[0], (LPCH)&lpBuf[i]
+							, &pTab[0], lpBuf[11 + i]
+							, &pTab[0], lpBuf[12 + i]
+							, &pTab[0], lpBuf[13 + i]
+							, &pTab[0], ((lpBuf[15 + i] >> 3) & 0x1f), ((lpBuf[15 + i] << 3) & 0x38) | ((lpBuf[14 + i] >> 5) & 0x07), (lpBuf[14 + i] & 0x1f) / 2
+							, &pTab[0], ((lpBuf[17 + i] >> 1) & 0x7f) + 1980, ((lpBuf[17 + i] << 3) & 0x08) | ((lpBuf[16 + i] >> 5) & 0x07), lpBuf[16 + i] & 0x1f
+							, &pTab[0], ((lpBuf[19 + i] >> 1) & 0x7f) + 1980, ((lpBuf[19 + i] << 3) & 0x08) | ((lpBuf[18 + i] >> 5) & 0x07), lpBuf[18 + i] & 0x1f
+							, &pTab[0], MAKEWORD(lpBuf[20 + i], lpBuf[21 + i])
+							, &pTab[0], ((lpBuf[23 + i] >> 3) & 0x1f), ((lpBuf[23 + i] << 3) & 0x38) | ((lpBuf[22 + i] >> 5) & 0x07), (lpBuf[22 + i] & 0x1f) / 2
+							, &pTab[0], ((lpBuf[25 + i] >> 1) & 0x7f) + 1980, ((lpBuf[25 + i] << 3) & 0x08) | ((lpBuf[24 + i] >> 5) & 0x07), lpBuf[24 + i] & 0x1f
+							, &pTab[0], FstClusLO
+							, &pTab[0], MAKEUINT(MAKEWORD(lpBuf[28 + i], lpBuf[29 + i]), MAKEWORD(lpBuf[30 + i], lpBuf[31 + i]))
 						);
 						if (FstClusLO != 0 && (lpBuf[11 + i] & 0x10) == 0x10 && lpBuf[i] != '.') {
 							LONG seekPosNext = (LONG)((pFat->DataStartSector + (FstClusLO - 2) * pFat->SecPerClus) * dwBytesPerSector);
-							size_t idx = strlen((LPCH)&pTab[0]);
+							size_t idx = _tcslen((CONST _TCHAR*)pTab[0]);
 							pTab[idx] = '\t';
-							OutputVolDescLogA("%s" OUTPUT_DHYPHEN_PLUS_STR(DirectoryEntry), (LPCH)&pTab[0]);
+							OutputVolDescLog("%s" OUTPUT_DHYPHEN_PLUS_STR("DirectoryEntry"), &pTab[0]);
 							ReadDirectoryRecord(handle, (LONG)seekPosNext, dwBytesPerSector, pFat, pTab);
 							pTab[idx] = 0;
 						}
@@ -181,7 +180,7 @@ BOOL ReadDirectoryRecord(
 			}
 			else {
 				OutputErrorString(
-					_T("Read size is different. NumberOfBytesToRead: %ld, NumberOfBytesRead: %ld\n")
+					"Read size is different. NumberOfBytesToRead: %ld, NumberOfBytesRead: %ld\n"
 					, dwBytesPerSector, dwBytesRead);
 			}
 		}
@@ -211,9 +210,9 @@ BOOL ReadFileSystem(
 		if (dwBytesPerSector == dwBytesRead) {
 			if (IsFat(lpBuf)) {
 				OutputFileAllocationTable(lpBuf, &fat);
-				BYTE szTab[256] = {};
-				szTab[0] = '\t';
-				OutputVolDescLogA("%s" OUTPUT_DHYPHEN_PLUS_STR(DirectoryEntry), szTab);
+				_TCHAR szTab[256] = {};
+				szTab[0] = _T('\t');
+				OutputVolDescLog("%s" OUTPUT_DHYPHEN_PLUS_STR("DirectoryEntry"), szTab);
 				ReadDirectoryRecord(handle, (LONG)(fat.RootDirStartSector * dwBytesPerSector), dwBytesPerSector, &fat, szTab);
 			}
 			else if (IsDriverDescriptorRecord(lpBuf)) {
@@ -242,7 +241,7 @@ BOOL ReadFileSystem(
 		}
 		else {
 			OutputErrorString(
-				_T("Read size is different. NumberOfBytesToRead: %ld, NumberOfBytesRead: %ld\n")
+				"Read size is different. NumberOfBytesToRead: %ld, NumberOfBytesRead: %ld\n"
 				, dwBytesPerSector, dwBytesRead);
 		}
 	}
@@ -280,7 +279,7 @@ BOOL ReadDisk(
 		DWORD dwRoopCntPlus = 0;
 		DWORD coef = pDevice->dwMaxTransferLength / dwBytesPerSector;
 		OutputString(
-			_T("DiskSize: %lld bytes, BytesPerSector: %ld, BlockSize: %ld\n"), dwDiskSize, dwBytesPerSector, dwBlkSize);
+			"DiskSize: %lld bytes, BytesPerSector: %ld, BlockSize: %ld\n", dwDiskSize, dwBytesPerSector, dwBlkSize);
 		if (*pExecType == disk) {
 			dwReadSize = dwBytesPerSector * coef;
 			dwRoopCnt = dwBlkSize / coef;
@@ -305,7 +304,7 @@ BOOL ReadDisk(
 				}
 				else {
 					OutputErrorString(
-						_T("[%ld] Read size is different. NumberOfBytesToRead: %ld, NumberOfBytesRead: %ld\n")
+						"[%ld] Read size is different. NumberOfBytesToRead: %ld, NumberOfBytesRead: %ld\n"
 						, dwRoopCnt * coef + i, dwReadSize, dwBytesRead);
 				}
 			}
@@ -314,7 +313,7 @@ BOOL ReadDisk(
 				break;
 			}
 			if (*pExecType == disk) {
-				OutputString(_T("\rCreating .bin (Blocks) %6ld/%6ld"), (i + 1) * coef, dwBlkSize);
+				OutputString("\rCreating .bin (Blocks) %6ld/%6ld", (i + 1) * coef, dwBlkSize);
 			}
 		}
 		for (DWORD i = 0; i < dwRoopCntPlus; i++) {
@@ -325,7 +324,7 @@ BOOL ReadDisk(
 				}
 				else {
 					OutputErrorString(
-						_T("[%ld] Read size is different. NumberOfBytesToRead: %ld, NumberOfBytesRead: %ld\n")
+						"[%ld] Read size is different. NumberOfBytesToRead: %ld, NumberOfBytesRead: %ld\n"
 						, dwRoopCnt * coef + i, dwBytesPerSector, dwBytesRead);
 				}
 			}
@@ -333,9 +332,9 @@ BOOL ReadDisk(
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				break;
 			}
-			OutputString(_T("\rCreating .bin (Blocks) %6ld/%6ld"), dwRoopCnt * coef + i + 1, dwBlkSize);
+			OutputString("\rCreating .bin (Blocks) %6ld/%6ld", dwRoopCnt * coef + i + 1, dwBlkSize);
 		}
-		OutputString(_T("\n"));
+		OutputString("\n");
 		FreeAndNull(lpBuf);
 	}
 	else {
@@ -444,7 +443,7 @@ BOOL ScsiPassThroughDirect(
 			// UNIT_ATTENSION errors occurs next ScsiPassThroughDirect executing.
 			UINT milliseconds = 25000;
 			OutputErrorString(
-				_T("Please wait for %u milliseconds until the device is returned\n"), milliseconds);
+				"Please wait for %u milliseconds until the device is returned\n", milliseconds);
 			Sleep(milliseconds);
 			pDevice->FEATURE.bySetCDSpeed = FALSE;
 		}
@@ -468,7 +467,7 @@ BOOL ScsiPassThroughDirect(
 					+ swb.ScsiPassThroughDirect.Cdb[5];
 			}
 			OutputLog(standardError | fileMainError
-				, _T("\rLBA[%06d, %#07x]: [F:%s][L:%ld]\n\tOpcode: %#02x\n")
+				, "\rLBA[%06d, %#07x]: [F:%s][L:%ld]\n\tOpcode: %#02x\n"
 				, nLBA, nLBA, pszFuncName, lLineNum, swb.ScsiPassThroughDirect.Cdb[0]);
 			OutputScsiStatus(swb.ScsiPassThroughDirect.ScsiStatus);
 #else
@@ -484,7 +483,7 @@ BOOL ScsiPassThroughDirect(
 					+ swb.io_hdr.cmdp[5];
 			}
 			OutputLog(standardError | fileMainError
-				, _T("\rLBA[%06d, %#07x]: [F:%s][L:%ld]\n\tOpcode: %#02x\n")
+				, "\rLBA[%06d, %#07x]: [F:%s][L:%ld]\n\tOpcode: %#02x\n"
 				, nLBA, nLBA, pszFuncName, lLineNum, swb.io_hdr.cmdp[0]);
 			OutputScsiStatus(swb.io_hdr.status);
 #endif
@@ -492,7 +491,7 @@ BOOL ScsiPassThroughDirect(
 			if (swb.SenseData.SenseKey == SCSI_SENSE_UNIT_ATTENTION) {
 				UINT milliseconds = 40000;
 				OutputErrorString(
-					_T("Please wait for %u milliseconds until the device is returned\n"), milliseconds);
+					"Please wait for %u milliseconds until the device is returned\n", milliseconds);
 				Sleep(milliseconds);
 			}
 		}
@@ -539,7 +538,7 @@ BOOL StorageQueryProperty(
 		OutputStorageAdaptorDescriptor(adapterDescriptor, lpBusTypeUSB);
 		if (adapterDescriptor->MaximumTransferLength > 65536) {
 			pDevice->dwMaxTransferLength = 65536;
-			OutputDriveLogA("dwMaxTransferLength changed [%lu] -> [%lu]\n"
+			OutputDriveLog("dwMaxTransferLength changed [%lu] -> [%lu]\n"
 				, adapterDescriptor->MaximumTransferLength, pDevice->dwMaxTransferLength);
 		}
 		else {
@@ -609,8 +608,8 @@ BOOL SetStreaming(
 		return FALSE;
 	}
 	else {
-		OutputString(_T("Set the drive speed: %luKB/sec\n"), setstreaming.ReadSize);
-		OutputString(_T("dwReturned: %lu\n"), dwReturned);
+		OutputString("Set the drive speed: %luKB/sec\n"), setstreaming.ReadSize);
+		OutputString("dwReturned: %lu\n"), dwReturned);
 	}
 	return TRUE;
 }

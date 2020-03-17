@@ -23,7 +23,8 @@ VOID OutputDVDRamLayerDescriptor(
 	LPBYTE lpBuf
 ) {
 	if ((lpBuf[0] & 0x0f) == 1) { // ECMA-272
-		OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(PhysicalFormatInformation)
+		OutputDiscLog(
+			OUTPUT_DHYPHEN_PLUS_STR("PhysicalFormatInformation")
 			"\t                             Disk Category: %s\n"
 			"\t                            Version Number: %d\n"
 			"\t                                 Disk size: %s\n"
@@ -55,45 +56,46 @@ VOID OutputDVDRamLayerDescriptor(
 			"\t                  Last pulse starting time: direction is the %s to the laser spot scanning, %s\n"
 			"\t                    Last pulse ending time: %s\n"
 			"\t                              Bias power 2: %s\n"
-			, (lpBuf[0] & 0x10) == 0x10 ? "rewritable disk" : "other"
+			, (lpBuf[0] & 0x10) == 0x10 ? _T("rewritable disk") : _T("other")
 			, lpBuf[0] & 0x0f
-			, (lpBuf[1] & 0xf0) == 0 ? "120mm" : "80mm"
-			, (lpBuf[1] & 0x0f) == 0x02 ? "10,08 Mbits/s." : "other"
-			, (lpBuf[2] & 0x60) == 0 ? "single layer" : "other"
-			, (lpBuf[2] & 0x0f) == 0x04 ? "rewritable recording layer" : "other"
-			, (lpBuf[3] & 0xf0) == 0x20 ? "0,205 um to 0,218 um" : "other"
-			, (lpBuf[3] & 0x0f) == 0 ? "0,74 um" : "other"
+			, (lpBuf[1] & 0xf0) == 0 ? _T("120mm") : _T("80mm")
+			, (lpBuf[1] & 0x0f) == 0x02 ? _T("10,08 Mbits/s.") : _T("other")
+			, (lpBuf[2] & 0x60) == 0 ? _T("single layer") : _T("other")
+			, (lpBuf[2] & 0x0f) == 0x04 ? _T("rewritable recording layer") : _T("other")
+			, (lpBuf[3] & 0xf0) == 0x20 ? _T("0,205 um to 0,218 um") : _T("other")
+			, (lpBuf[3] & 0x0f) == 0 ? _T("0,74 um") : _T("other")
 			, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], 0))
 			, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], 0))
 			, MAKEUINT(MAKEWORD(lpBuf[11], lpBuf[10]), MAKEWORD(lpBuf[9], 0))
 			, MAKEUINT(MAKEWORD(lpBuf[11], lpBuf[10]), MAKEWORD(lpBuf[9], 0))
-			, lpBuf[32] == 0 ? "disk shall not be recorded without a case" : "disk may be recorded with or without a case"
-			, lpBuf[48] == 0x3c ? "6,0 m/s" : "other"
-			, lpBuf[49] == 0x0a ? "1,0 mW" : "other"
-			, lpBuf[50] == 0x6e ? "11,0 mW" : "other"
-			, lpBuf[51] == 0x32 ? "5,0 mW" : "other"
-			, (lpBuf[52] & 0x80) == 0x80 ? "opposite" : "same"
-			, ((lpBuf[52] & 0x3f) == 0x11) ? "TSFP of 17 ns" : "other"
-			, lpBuf[53] == 0x33 ? "TEFP of 51 ns" : "other"
-			, lpBuf[54] == 0x11 ? "TMP of 17 ns" : "other"
-			, (lpBuf[55] & 0x80) == 0x80 ? "opposite" : "same"
-			, ((lpBuf[55] & 0x3f) == 0) ? "TSLP of 0 ns" : "other"
-			, lpBuf[56] == 0x22 ? "TELP of 34 ns" : "other"
-			, lpBuf[57] == 0x44 ? "TLE of 68 ns" : "other"
-			, lpBuf[58] == 0x6e ? "11,0 mW" : "other"
-			, lpBuf[59] == 0x32 ? "5,0 mW" : "other"
-			, (lpBuf[60] & 0x80) == 0x80 ? "opposite" : "same"
-			, ((lpBuf[60] & 0x3f) == 0x11) ? "TSFP of 17 ns" : "other"
-			, lpBuf[61] == 0x33 ? "TEFP of 51 ns" : "other"
-			, lpBuf[62] == 0x11 ? "TMP of 17 ns" : "other"
-			, (lpBuf[63] & 0x80) == 0x80 ? "opposite" : "same"
-			, ((lpBuf[63] & 0x3f) == 0) ? "TSLP of 0 ns" : "other"
-			, lpBuf[64] == 0x22 ? "TELP of 34 ns" : "other"
-			, lpBuf[65] == 0x44 ? "TLE of 68 ns" : "other"
+			, lpBuf[32] == 0 ? _T("disk shall not be recorded without a case") : _T("disk may be recorded with or without a case")
+			, lpBuf[48] == 0x3c ? _T("6,0 m/s") : _T("other")
+			, lpBuf[49] == 0x0a ? _T("1,0 mW") : _T("other")
+			, lpBuf[50] == 0x6e ? _T("11,0 mW") : _T("other")
+			, lpBuf[51] == 0x32 ? _T("5,0 mW") : _T("other")
+			, (lpBuf[52] & 0x80) == 0x80 ? _T("opposite") : _T("same")
+			, ((lpBuf[52] & 0x3f) == 0x11) ? _T("TSFP of 17 ns") : _T("other")
+			, lpBuf[53] == 0x33 ? _T("TEFP of 51 ns") : _T("other")
+			, lpBuf[54] == 0x11 ? _T("TMP of 17 ns") : _T("other")
+			, (lpBuf[55] & 0x80) == 0x80 ? _T("opposite") : _T("same")
+			, ((lpBuf[55] & 0x3f) == 0) ? _T("TSLP of 0 ns") : _T("other")
+			, lpBuf[56] == 0x22 ? _T("TELP of 34 ns") : _T("other")
+			, lpBuf[57] == 0x44 ? _T("TLE of 68 ns") : _T("other")
+			, lpBuf[58] == 0x6e ? _T("11,0 mW") : _T("other")
+			, lpBuf[59] == 0x32 ? _T("5,0 mW") : _T("other")
+			, (lpBuf[60] & 0x80) == 0x80 ? _T("opposite") : _T("same")
+			, ((lpBuf[60] & 0x3f) == 0x11) ? _T("TSFP of 17 ns") : _T("other")
+			, lpBuf[61] == 0x33 ? _T("TEFP of 51 ns") : _T("other")
+			, lpBuf[62] == 0x11 ? _T("TMP of 17 ns") : _T("other")
+			, (lpBuf[63] & 0x80) == 0x80 ? _T("opposite") : _T("same")
+			, ((lpBuf[63] & 0x3f) == 0) ? _T("TSLP of 0 ns") : _T("other")
+			, lpBuf[64] == 0x22 ? _T("TELP of 34 ns") : _T("other")
+			, lpBuf[65] == 0x44 ? _T("TLE of 68 ns") : _T("other")
 		);
 	}
 	else if ((lpBuf[0] & 0x0f) == 6) { // ECMA-330
-		OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(PhysicalFormatInformation)
+		OutputDiscLog(
+			OUTPUT_DHYPHEN_PLUS_STR("PhysicalFormatInformation")
 			"\t                                      Disk Category: %s\n"
 			"\t                                     Version Number: %d\n"
 			"\t                                          Disk size: %s\n"
@@ -123,29 +125,29 @@ VOID OutputDVDRamLayerDescriptor(
 			"\t                              Last pulse start time: %02x\n"
 			"\t                                Last pulse duration: %02x\n"
 			"\t Bias power 2 duration on land tracks at Velocity 1: %02x\n"
-			, (lpBuf[0] & 0x10) == 0x10 ? "rewritable disk" : "other"
+			, (lpBuf[0] & 0x10) == 0x10 ? _T("rewritable disk") : _T("other")
 			, lpBuf[0] & 0x0f
-			, (lpBuf[1] & 0xf0) == 0 ? "120mm" : "80mm"
-			, (lpBuf[1] & 0x0f) == 0x0f ? "not specified" : "other"
-			, (lpBuf[2] & 0x60) == 0 ? "single layer" : "other"
-			, (lpBuf[2] & 0x0f) == 0x04 ? "rewritable recording layer" : "other"
-			, (lpBuf[3] & 0xf0) == 0x40 ? "0,140 um to 0,148 um" : "other"
-			, (lpBuf[3] & 0x0f) == 0x02 ? "0,615 um" : "other"
+			, (lpBuf[1] & 0xf0) == 0 ? _T("120mm") : _T("80mm")
+			, (lpBuf[1] & 0x0f) == 0x0f ? _T("not specified") : _T("other")
+			, (lpBuf[2] & 0x60) == 0 ? _T("single layer") : _T("other")
+			, (lpBuf[2] & 0x0f) == 0x04 ? _T("rewritable recording layer") : _T("other")
+			, (lpBuf[3] & 0xf0) == 0x40 ? _T("0,140 um to 0,148 um") : _T("other")
+			, (lpBuf[3] & 0x0f) == 0x02 ? _T("0,615 um") : _T("other")
 			, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], 0))
 			, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], 0))
 			, MAKEUINT(MAKEWORD(lpBuf[11], lpBuf[10]), MAKEWORD(lpBuf[9], 0))
 			, MAKEUINT(MAKEWORD(lpBuf[11], lpBuf[10]), MAKEWORD(lpBuf[9], 0))
-			, (lpBuf[16] & 0x80) == 0x80 ? "Exist" : "No"
-			, lpBuf[32] == 0 ? "disk shall not be recorded without a case" : "disk may be recorded with or without a case"
-			, lpBuf[500] == 0x52 ? "8,2 m/s" : "other"
-			, lpBuf[501] == 0x0a ? "1,0 mW" : "other"
-			, (lpBuf[502] & 0x80) == 0x80 ? "2" : "1"
+			, (lpBuf[16] & 0x80) == 0x80 ? _T("Exist") : _T("No")
+			, lpBuf[32] == 0 ? _T("disk shall not be recorded without a case") : _T("disk may be recorded with or without a case")
+			, lpBuf[500] == 0x52 ? _T("8,2 m/s") : _T("other")
+			, lpBuf[501] == 0x0a ? _T("1,0 mW") : _T("other")
+			, (lpBuf[502] & 0x80) == 0x80 ? _T("2") : _T("1")
 			, lpBuf[503], lpBuf[504], lpBuf[505], lpBuf[506]
 			, lpBuf[507], lpBuf[508], lpBuf[509], lpBuf[510]
 			, lpBuf[511], lpBuf[512], lpBuf[513], lpBuf[514]
 			, lpBuf[515], lpBuf[516]
 		);
-		OutputDiscLogA(
+		OutputDiscLog(
 			"\t      First pulse start time\n"
 			"\t   Mark 3T, Leading Space 3T: direction is the %s to the laser spot scanning, %02x\n"
 			"\t   Mark 4T, Leading Space 3T: direction is the %s to the laser spot scanning, %02x\n"
@@ -180,45 +182,45 @@ VOID OutputDVDRamLayerDescriptor(
 			"\t Mark 4T, Trailing Space >5T: %02x\n"
 			"\t Mark 5T, Trailing Space >5T: %02x\n"
 			"\tMark >5T, Trailing Space >5T: %02x\n"
-			, (lpBuf[517] & 0x80) == 0x80 ? "opposite" : "same"
+			, (lpBuf[517] & 0x80) == 0x80 ? _T("opposite") : _T("same")
 			, lpBuf[517] & 0x3f
-			, (lpBuf[518] & 0x80) == 0x80 ? "opposite" : "same"
+			, (lpBuf[518] & 0x80) == 0x80 ? _T("opposite") : _T("same")
 			, lpBuf[518] & 0x3f
-			, (lpBuf[519] & 0x80) == 0x80 ? "opposite" : "same"
+			, (lpBuf[519] & 0x80) == 0x80 ? _T("opposite") : _T("same")
 			, lpBuf[519] & 0x3f
-			, (lpBuf[520] & 0x80) == 0x80 ? "opposite" : "same"
+			, (lpBuf[520] & 0x80) == 0x80 ? _T("opposite") : _T("same")
 			, lpBuf[520] & 0x3f
-			, (lpBuf[521] & 0x80) == 0x80 ? "opposite" : "same"
+			, (lpBuf[521] & 0x80) == 0x80 ? _T("opposite") : _T("same")
 			, lpBuf[521] & 0x3f
-			, (lpBuf[522] & 0x80) == 0x80 ? "opposite" : "same"
+			, (lpBuf[522] & 0x80) == 0x80 ? _T("opposite") : _T("same")
 			, lpBuf[522] & 0x3f
-			, (lpBuf[523] & 0x80) == 0x80 ? "opposite" : "same"
+			, (lpBuf[523] & 0x80) == 0x80 ? _T("opposite") : _T("same")
 			, lpBuf[523] & 0x3f
-			, (lpBuf[524] & 0x80) == 0x80 ? "opposite" : "same"
+			, (lpBuf[524] & 0x80) == 0x80 ? _T("opposite") : _T("same")
 			, lpBuf[524] & 0x3f
-			, (lpBuf[525] & 0x80) == 0x80 ? "opposite" : "same"
+			, (lpBuf[525] & 0x80) == 0x80 ? _T("opposite") : _T("same")
 			, lpBuf[525] & 0x3f
-			, (lpBuf[526] & 0x80) == 0x80 ? "opposite" : "same"
+			, (lpBuf[526] & 0x80) == 0x80 ? _T("opposite") : _T("same")
 			, lpBuf[526] & 0x3f
-			, (lpBuf[527] & 0x80) == 0x80 ? "opposite" : "same"
+			, (lpBuf[527] & 0x80) == 0x80 ? _T("opposite") : _T("same")
 			, lpBuf[527] & 0x3f
-			, (lpBuf[528] & 0x80) == 0x80 ? "opposite" : "same"
+			, (lpBuf[528] & 0x80) == 0x80 ? _T("opposite") : _T("same")
 			, lpBuf[528] & 0x3f
-			, (lpBuf[529] & 0x80) == 0x80 ? "opposite" : "same"
+			, (lpBuf[529] & 0x80) == 0x80 ? _T("opposite") : _T("same")
 			, lpBuf[529] & 0x3f
-			, (lpBuf[530] & 0x80) == 0x80 ? "opposite" : "same"
+			, (lpBuf[530] & 0x80) == 0x80 ? _T("opposite") : _T("same")
 			, lpBuf[530] & 0x3f
-			, (lpBuf[531] & 0x80) == 0x80 ? "opposite" : "same"
+			, (lpBuf[531] & 0x80) == 0x80 ? _T("opposite") : _T("same")
 			, lpBuf[531] & 0x3f
-			, (lpBuf[532] & 0x80) == 0x80 ? "opposite" : "same"
+			, (lpBuf[532] & 0x80) == 0x80 ? _T("opposite") : _T("same")
 			, lpBuf[532] & 0x3f
 			, lpBuf[533], lpBuf[534], lpBuf[535], lpBuf[536], lpBuf[537], lpBuf[538]
 			, lpBuf[539], lpBuf[540], lpBuf[541], lpBuf[542], lpBuf[543], lpBuf[544]
 			, lpBuf[545], lpBuf[546], lpBuf[547], lpBuf[548]
 		);
-		OutputDiscLogA(
-			"\t                                                          Disk manufacturer's name: %.48s\n"
-			"\t                                     Disk manufacturer's supplementary information: %.16s\n"
+		OutputDiscLog(
+			"\t                                                          Disk manufacturer's name: %.48" CHARWIDTH "s\n"
+			"\t                                     Disk manufacturer's supplementary information: %.16" CHARWIDTH "s\n"
 			"\t                                                    Write power control parameters\n"
 			"\t                                                                        Identifier: %02x%02x\n"
 			"\t       Ratio of Peak power for land tracks to threshold peak power for land tracks: %02x\n"
@@ -233,7 +235,7 @@ VOID OutputDVDRamLayerDescriptor(
 			, (LPCH)&lpBuf[549], (LPCH)&lpBuf[597]
 			, lpBuf[613], lpBuf[614]
 			, lpBuf[615]
-			, (lpBuf[616] & 0x80) == 0x80 ? "in case of minus sign" : "in case of 0 or plus sign"
+			, (lpBuf[616] & 0x80) == 0x80 ? _T("in case of minus sign") : _T("in case of 0 or plus sign")
 			, lpBuf[616] & 0x3f
 			, lpBuf[617]
 			, lpBuf[618], lpBuf[619], lpBuf[620], lpBuf[621], lpBuf[622], lpBuf[623]
@@ -247,28 +249,29 @@ VOID OutputDVDMinusRLayerDescriptor(
 	LPBYTE lpBuf
 ) {
 	if ((lpBuf[0] & 0x0f) == 1 || (lpBuf[0] & 0x0f) == 2) { // ECMA-279, ECMA-338
-		OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(PreRecordedPhysicalFormatInformation)
+		OutputDiscLog(
+			OUTPUT_DHYPHEN_PLUS_STR("PreRecordedPhysicalFormatInformation")
 			"\t                                      Version Number: %d\n"
 			"\t                                       Disk Category: %s\n"
 			"\t                               Maximum transfer rate: "
 			, lpBuf[0] & 0x0f
-			, (lpBuf[0] & 0xf0) == 0x10 ? "Recordable disk" : "other"
+			, (lpBuf[0] & 0xf0) == 0x10 ? _T("Recordable disk") : _T("other")
 		);
 		switch (lpBuf[1] & 0x0f) {
 		case 0:
-			OutputDiscLogA("2.52Mbits/s\n");
+			OutputDiscLog("2.52Mbits/s\n");
 			break;
 		case 1:
-			OutputDiscLogA("5.04Mbits/s\n");
+			OutputDiscLog("5.04Mbits/s\n");
 			break;
 		case 2:
-			OutputDiscLogA("10.08Mbits/s\n");
+			OutputDiscLog("10.08Mbits/s\n");
 			break;
 		default:
-			OutputDiscLogA("other\n");
+			OutputDiscLog("other\n");
 			break;
 		}
-		OutputDiscLogA(
+		OutputDiscLog(
 			"\t                                           Disk size: %s\n"
 			"\t                                          Layer type: %s\n"
 			"\t                                          Track path: %s\n"
@@ -279,12 +282,12 @@ VOID OutputDVDMinusRLayerDescriptor(
 			"\t       Sector of the last Rzone in the Bordered Area: %d (0x%x)\n"
 			"\tSector of the first sector of the current Border Out: %d (0x%x)\n"
 			"\t    Sector of the first sector of the next Border In: %d (0x%x)\n"
-			, (lpBuf[1] & 0xf0) == 0 ? "120mm" : "80mm"
-			, (lpBuf[2] & 0x0f) == 0x02 ? "disk contains Recordable user data Zone(s)" : "other"
-			, (lpBuf[2] & 0x10) == 0 ? "Parallel" : "other"
+			, (lpBuf[1] & 0xf0) == 0 ? _T("120mm") : _T("80mm")
+			, (lpBuf[2] & 0x0f) == 0x02 ? _T("disk contains Recordable user data Zone(s)") : _T("other")
+			, (lpBuf[2] & 0x10) == 0 ? _T("Parallel") : _T("other")
 			, (lpBuf[2] & 0x60) == 0 ? 1 : 2
-			, (lpBuf[3] & 0x0f) == 1 ? "0.80um" : "other"
-			, (lpBuf[3] & 0xf0) == 1 ? "0.147um" : "other"
+			, (lpBuf[3] & 0x0f) == 1 ? _T("0.80um") : _T("other")
+			, (lpBuf[3] & 0xf0) == 1 ? _T("0.147um") : _T("other")
 			, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], 0))
 			, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], 0))
 			, MAKEUINT(MAKEWORD(lpBuf[11], lpBuf[10]), MAKEWORD(lpBuf[9], 0))
@@ -296,7 +299,8 @@ VOID OutputDVDMinusRLayerDescriptor(
 		);
 	}
 	else if ((lpBuf[0] & 0x0f) == 5) { // ECMA-359
-		OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(PreRecordedPhysicalFormatInformation)
+		OutputDiscLog(
+			OUTPUT_DHYPHEN_PLUS_STR("PreRecordedPhysicalFormatInformation")
 			"\t                                                         Version Number: %d\n"
 			"\t                                                          Disk Category: %s\n"
 			"\t                                                  Maximum transfer rate: %s\n"
@@ -312,19 +316,19 @@ VOID OutputDVDMinusRLayerDescriptor(
 			"\t                       Start sector of Current RMD in Extra Border Zone: %d (0x%x)\n"
 			"\tStart sector of Physical format information blocks in Extra Border Zone: %d (0x%x)\n"
 			, lpBuf[0] & 0x0f
-			, (lpBuf[0] & 0xf0) == 0x10 ? "Recordable disk" : "other"
-			, (lpBuf[1] & 0x0f) == 0x0f ? "Not specified" : "other"
-			, (lpBuf[1] & 0xf0) == 0 ? "120mm" : "80mm"
-			, (lpBuf[2] & 0x0f) == 0x02 ? "disk contains Recordable user data Zone(s)" : "other"
-			, (lpBuf[2] & 0x10) == 0 ? "Parallel" : "other"
+			, (lpBuf[0] & 0xf0) == 0x10 ? _T("Recordable disk") : _T("other")
+			, (lpBuf[1] & 0x0f) == 0x0f ? _T("Not specified") : _T("other")
+			, (lpBuf[1] & 0xf0) == 0 ? _T("120mm") : _T("80mm")
+			, (lpBuf[2] & 0x0f) == 0x02 ? _T("disk contains Recordable user data Zone(s)") : _T("other")
+			, (lpBuf[2] & 0x10) == 0 ? _T("Parallel") : _T("other")
 			, (lpBuf[2] & 0x60) == 0 ? 1 : 2
-			, (lpBuf[3] & 0x0f) == 0 ? "0.74um" : "other"
-			, (lpBuf[3] & 0xf0) == 0 ? "0.133um" : "other"
+			, (lpBuf[3] & 0x0f) == 0 ? _T("0.74um") : _T("other")
+			, (lpBuf[3] & 0xf0) == 0 ? _T("0.133um") : _T("other")
 			, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], 0))
 			, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], 0))
 			, MAKEUINT(MAKEWORD(lpBuf[11], lpBuf[10]), MAKEWORD(lpBuf[9], 0))
 			, MAKEUINT(MAKEWORD(lpBuf[11], lpBuf[10]), MAKEWORD(lpBuf[9], 0))
-			, (lpBuf[16] & 0x80) == 0 ? "does not exist" : "exist"
+			, (lpBuf[16] & 0x80) == 0 ? _T("does not exist") : _T("exist")
 			, MAKEUINT(MAKEWORD(lpBuf[35], lpBuf[34]), MAKEWORD(lpBuf[33], lpBuf[32]))
 			, MAKEUINT(MAKEWORD(lpBuf[35], lpBuf[34]), MAKEWORD(lpBuf[33], lpBuf[32]))
 			, MAKEUINT(MAKEWORD(lpBuf[39], lpBuf[38]), MAKEWORD(lpBuf[37], lpBuf[36]))
@@ -336,7 +340,9 @@ VOID OutputDVDMinusRLayerDescriptor(
 VOID OutputDVDPlusRLayerDescriptor(
 	LPBYTE lpBuf
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(PhysicalFormatInformationInADIP) // ECMA-349
+	// ECMA-349
+	OutputDiscLog(
+		OUTPUT_DHYPHEN_PLUS_STR("PhysicalFormatInformationInADIP")
 		"\t                                                                 Disk Category: %s, %s, %s\n"
 		"\t                                                                Version Number: %d\n"
 		"\t                                                                     Disk size: %s\n"
@@ -349,8 +355,8 @@ VOID OutputDVDPlusRLayerDescriptor(
 		"\t                                                             General Flag bits: %s\n"
 		"\t                                                         Disk Application Code: %s\n"
 		"\t                                                    Extended Information block: %d\n"
-		"\t                                                          Disk Manufacturer ID: %8s\n"
-		"\t                                                                 Media Type ID: %3s\n"
+		"\t                                                          Disk Manufacturer ID: %8" CHARWIDTH "s\n"
+		"\t                                                                 Media Type ID: %3" CHARWIDTH "s\n"
 		"\t                                                       Product revision number: %d\n"
 		"\t                    number of Physical format information bytes in use in ADIP: %d\n"
 		"\t                       Primary recording velocity for the basic write strategy: %d (0x%x)\n"
@@ -377,21 +383,21 @@ VOID OutputDVDPlusRLayerDescriptor(
 		"\t    dTtop (>=4T) first pulse lead time for current mark >=4T at Upper velocity: %d (0x%x)\n"
 		"\t      dTtop (=3T) first pulse lead time for current mark =3T at Upper velocity: %d (0x%x)\n"
 		"\t  dTle first pulse leading edge shift for previous space =3T at Upper velocity: %d (0x%x)\n"
-		, (lpBuf[0] & 0x80) == 0x80 ? "+R/+RW Format" : "other"
-		, (lpBuf[0] & 0x20) == 0 ? "single layer" : "other"
-		, (lpBuf[0] & 0x10) == 0x10 ? "+R disk" : "other"
+		, (lpBuf[0] & 0x80) == 0x80 ? _T("+R/+RW Format") : _T("other")
+		, (lpBuf[0] & 0x40) == 0 ? _T("single layer") : _T("other")
+		, (lpBuf[0] & 0x20) == 0x20 ? _T("+R disk") : _T("other")
 		, lpBuf[0] & 0x0f
-		, (lpBuf[1] & 0xf0) == 0 ? "120mm" : "80mm"
-		, (lpBuf[1] & 0x0f) == 0x0f ? "not specified" : "other"
-		, (lpBuf[2] & 0x10) == 0x10 ? "write-once recording layer" : "other"
-		, (lpBuf[3] & 0xf0) == 0 ? "0.133um" : "other"
-		, (lpBuf[3] & 0x0f) == 0 ? "0.74um" : "other"
+		, (lpBuf[1] & 0xf0) == 0 ? _T("120mm") : _T("80mm")
+		, (lpBuf[1] & 0x0f) == 0x0f ? _T("not specified") : _T("other")
+		, (lpBuf[2] & 0x02) == 0x02 ? _T("write-once recording layer") : _T("other")
+		, (lpBuf[3] & 0xf0) == 0 ? _T("0.133um") : _T("other")
+		, (lpBuf[3] & 0x0f) == 0 ? _T("0.74um") : _T("other")
 		, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], 0))
 		, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], 0))
 		, MAKEUINT(MAKEWORD(lpBuf[11], lpBuf[10]), MAKEWORD(lpBuf[9], 0))
 		, MAKEUINT(MAKEWORD(lpBuf[11], lpBuf[10]), MAKEWORD(lpBuf[9], 0))
-		, (lpBuf[16] & 0x40) == 0 ? "no Extended format information for VCPS is present" : "Data Zone contains Extended format information for VCPS as defined"
-		, lpBuf[17] == 0 ? "disk for General Purpose use" : "other"
+		, (lpBuf[16] & 0x40) == 0 ? _T("no Extended format information for VCPS is present") : _T("Data Zone contains Extended format information for VCPS as defined")
+		, lpBuf[17] == 0 ? _T("disk for General Purpose use") : _T("other")
 		, lpBuf[18]
 		, (LPCH)&lpBuf[19]
 		, (LPCH)&lpBuf[27]
@@ -431,39 +437,39 @@ VOID OutputDVDLayerDescriptor(
 	UCHAR layerNumber
 ) {
 	// Nintendo optical discs output "Reserved5"
-	LPCSTR lpBookType[] = {
-		"DVD-ROM", "DVD-RAM", "DVD-R", "DVD-RW",
-		"HD DVD-ROM", "HD DVD-RAM", "HD DVD-R", "Reserved1",
-		"Reserved2", "DVD+RW", "DVD+R", "Reserved3",
-		"Reserved4", "DVD+RW DL", "DVD+R DL", "Reserved5"
+	LPCTSTR lpBookType[] = {
+		_T("DVD-ROM"), _T("DVD-RAM"), _T("DVD-R"), _T("DVD-RW"),
+		_T("HD DVD-ROM"), _T("HD DVD-RAM"), _T("HD DVD-R"), _T("Reserved1"),
+		_T("Reserved2"), _T("DVD+RW"), _T("DVD+R"), _T("Reserved3"),
+		_T("Reserved4"), _T("DVD+RW DL"), _T("DVD+R DL"), _T("Reserved5")
 	};
 
-	LPCSTR lpMaximumRate[] = {
-		"2.52 Mbps", "5.04 Mbps", "10.08 Mbps", "20.16 Mbps",
-		"30.24 Mbps", "Reserved", "Reserved", "Reserved",
-		"Reserved", "Reserved", "Reserved", "Reserved",
-		"Reserved", "Reserved", "Reserved", "Not Specified"
+	LPCTSTR lpMaximumRate[] = {
+		_T("2.52 Mbps"), _T("5.04 Mbps"), _T("10.08 Mbps"), _T("20.16 Mbps"),
+		_T("30.24 Mbps"), _T("Reserved"), _T("Reserved"), _T("Reserved"),
+		_T("Reserved"), _T("Reserved"), _T("Reserved"), _T("Reserved"),
+		_T("Reserved"), _T("Reserved"), _T("Reserved"), _T("Not Specified")
 	};
 
-	LPCSTR lpLayerType[] = {
-		"Unknown", "Layer contains embossed data", "Layer contains recordable data", "Unknown",
-		"Layer contains rewritable data", "Unknown", "Unknown", "Unknown",
-		"Reserved", "Unknown", "Unknown", "Unknown",
-		"Unknown", "Unknown", "Unknown", "Unknown"
+	LPCTSTR lpLayerType[] = {
+		_T("Unknown"), _T("Layer contains embossed data"), _T("Layer contains recordable data"), _T("Unknown"),
+		_T("Layer contains rewritable data"), _T("Unknown"), _T("Unknown"), _T("Unknown"),
+		_T("Reserved"), _T("Unknown"), _T("Unknown"), _T("Unknown"),
+		_T("Unknown"), _T("Unknown"), _T("Unknown"), _T("Unknown")
 	};
 
-	LPCSTR lpTrackDensity[] = {
-		"0.74um/track", "0.80um/track", "0.615um/track", "0.40um/track",
-		"0.34um/track", "Reserved", "Reserved", "Reserved",
-		"Reserved", "Reserved", "Reserved", "Reserved",
-		"Reserved", "Reserved", "Reserved", "Reserved"
+	LPCTSTR lpTrackDensity[] = {
+		_T("0.74um/track"), _T("0.80um/track"), _T("0.615um/track"), _T("0.40um/track"),
+		_T("0.34um/track"), _T("Reserved"), _T("Reserved"), _T("Reserved"),
+		_T("Reserved"), _T("Reserved"), _T("Reserved"), _T("Reserved"),
+		_T("Reserved"), _T("Reserved"), _T("Reserved"), _T("Reserved")
 	};
 
-	LPCSTR lpLinearDensity[] = {
-		"0.267um/bit", "0.293um/bit", "0.409 to 0.435um/bit", "Reserved",
-		"0.280 to 0.291um/bit", "0.153um/bit", "0.130 to 0.140um/bit", "Reserved",
-		"0.353um/bit", "Reserved", "Reserved", "Reserved",
-		"Reserved", "Reserved", "Reserved", "Reserved"
+	LPCTSTR lpLinearDensity[] = {
+		_T("0.267um/bit"), _T("0.293um/bit"), _T("0.409 to 0.435um/bit"), _T("Reserved"),
+		_T("0.280 to 0.291um/bit"), _T("0.153um/bit"), _T("0.130 to 0.140um/bit"), _T("Reserved"),
+		_T("0.353um/bit"), _T("Reserved"), _T("Reserved"), _T("Reserved"),
+		_T("Reserved"), _T("Reserved"), _T("Reserved"), _T("Reserved")
 	};
 #ifdef _WIN32
 	DWORD dwStartingDataSector = dvdLayer->commonHeader.StartingDataSector;
@@ -485,7 +491,8 @@ VOID OutputDVDLayerDescriptor(
 		pDisc->DVD.dwXboxStartPsn = dwStartingDataSector;
 	}
 
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(PhysicalFormatInformation)
+	OutputDiscLog(
+		OUTPUT_DHYPHEN_PLUS_STR("PhysicalFormatInformation")
 		"\t       BookVersion: %u\n"
 		"\t          BookType: %s\n"
 		"\t       MinimumRate: %s\n"
@@ -499,20 +506,21 @@ VOID OutputDVDLayerDescriptor(
 		"\t     EndDataSector: %7lu (%#lx)\n"
 		"\tEndLayerZeroSector: %7lu (%#lx)\n"
 		"\t           BCAFlag: %s\n"
-		"\t     MediaSpecific: \n",
-		dvdLayer->commonHeader.BookVersion,
-		lpBookType[dvdLayer->commonHeader.BookType],
-		lpMaximumRate[dvdLayer->commonHeader.MinimumRate],
-		dvdLayer->commonHeader.DiskSize == 0 ? "120mm" : "80mm",
-		lpLayerType[dvdLayer->commonHeader.LayerType],
-		dvdLayer->commonHeader.TrackPath == 0 ? "Parallel Track Path" : "Opposite Track Path",
-		dvdLayer->commonHeader.NumberOfLayers == 0 ? "Single Layer" : "Double Layer",
-		lpTrackDensity[dvdLayer->commonHeader.TrackDensity],
-		lpLinearDensity[dvdLayer->commonHeader.LinearDensity],
-		dwStartingDataSector, dwStartingDataSector,
-		dwEndDataSector, dwEndDataSector,
-		dwEndLayerZeroSector, dwEndLayerZeroSector,
-		dvdLayer->commonHeader.BCAFlag == 0 ? "No" : "Exist");
+		"\t     MediaSpecific: \n"
+		, dvdLayer->commonHeader.BookVersion
+		, lpBookType[dvdLayer->commonHeader.BookType]
+		, lpMaximumRate[dvdLayer->commonHeader.MinimumRate]
+		, dvdLayer->commonHeader.DiskSize == 0 ? _T("120mm") : _T("80mm")
+		, lpLayerType[dvdLayer->commonHeader.LayerType]
+		, dvdLayer->commonHeader.TrackPath == 0 ? _T("Parallel Track Path") : _T("Opposite Track Path")
+		, dvdLayer->commonHeader.NumberOfLayers == 0 ? _T("Single Layer") : _T("Double Layer")
+		, lpTrackDensity[dvdLayer->commonHeader.TrackDensity]
+		, lpLinearDensity[dvdLayer->commonHeader.LinearDensity]
+		, dwStartingDataSector, dwStartingDataSector
+		, dwEndDataSector, dwEndDataSector
+		, dwEndLayerZeroSector, dwEndLayerZeroSector
+		, dvdLayer->commonHeader.BCAFlag == 0 ? _T("No") : _T("Exist")
+	);
 	pDisc->DVD.ucBca = dvdLayer->commonHeader.BCAFlag;
 
 	OutputCDMain(fileDisc, dvdLayer->MediaSpecific, 0, sizeof(dvdLayer->MediaSpecific));
@@ -521,7 +529,7 @@ VOID OutputDVDLayerDescriptor(
 		DWORD dwEndLayerZeroSectorLen = dwEndLayerZeroSector - dwStartingDataSector + 1;
 		DWORD dwEndLayerOneSectorLen = dwEndLayerZeroSector - (~dwEndDataSector & 0xffffff) + 1;
 		*lpdwSectorLength = dwEndLayerZeroSectorLen + dwEndLayerOneSectorLen;
-		OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(SectorLength)
+		OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("SectorLength")
 			"\t LayerZeroSector: %7lu (%#lx)\n"
 			"\t+ LayerOneSector: %7lu (%#lx)\n"
 			"\t------------------------------------\n"
@@ -540,13 +548,17 @@ VOID OutputDVDLayerDescriptor(
 	else {
 		if (layerNumber == 0) {
 			*lpdwSectorLength = dwEndDataSector - dwStartingDataSector + 1;
-			OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(SectorLength)
-				"\tLayerZeroSector: %7lu (%#lx)\n", *lpdwSectorLength, *lpdwSectorLength);
+			OutputDiscLog(
+				OUTPUT_DHYPHEN_PLUS_STR("SectorLength")
+				"\tLayerZeroSector: %7lu (%#lx)\n"
+				, *lpdwSectorLength, *lpdwSectorLength);
 		}
 		else if (layerNumber == 1) {
 			*lpdwSectorLength = dwEndDataSector - dwStartingDataSector + 1;
-			OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(SectorLength)
-				"\tLayerOneSector: %7lu (%#lx)\n", *lpdwSectorLength, *lpdwSectorLength);
+			OutputDiscLog(
+				OUTPUT_DHYPHEN_PLUS_STR("SectorLength")
+				"\tLayerOneSector: %7lu (%#lx)\n"
+				, *lpdwSectorLength, *lpdwSectorLength);
 		}
 	}
 }
@@ -554,10 +566,10 @@ VOID OutputDVDLayerDescriptor(
 VOID OutputDVDRegion(
 	UCHAR ucRMI,
 	UCHAR ucFlag,
-	CONST CHAR* region
+	CONST _TCHAR* region
 ) {
 	if ((ucRMI & ucFlag) == 0) {
-		OutputDiscLogA("%s", region);
+		OutputDiscLog("%s", region);
 	}
 }
 
@@ -565,45 +577,46 @@ VOID OutputDVDCopyrightDescriptor(
 	PDVD_COPYRIGHT_DESCRIPTOR dvdCopyright,
 	PPROTECT_TYPE_DVD pProtect
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(CopyrightInformation)
+	OutputDiscLog(
+		OUTPUT_DHYPHEN_PLUS_STR("CopyrightInformation")
 		"\t    CopyrightProtectionType: ");
 	switch (dvdCopyright->CopyrightProtectionType) {
 	case 0:
-		OutputDiscLogA("No\n");
+		OutputDiscLog("No\n");
 		*pProtect = noProtect;
 		break;
 	case 1:
-		OutputDiscLogA("CSS/CPPM\n");
+		OutputDiscLog("CSS/CPPM\n");
 		*pProtect = css;
 		break;
 	case 2:
-		OutputDiscLogA("CPRM\n");
+		OutputDiscLog("CPRM\n");
 		*pProtect = cprm;
 		break;
 	case 3:
-		OutputDiscLogA("AACS with HD DVD content\n");
+		OutputDiscLog("AACS with HD DVD content\n");
 		*pProtect = aacs;
 		break;
 	case 10:
-		OutputDiscLogA("AACS with BD content\n");
+		OutputDiscLog("AACS with BD content\n");
 		*pProtect = aacs;
 		break;
 	default:
 		// Nintendo optical discs output 0xfd
-		OutputDiscLogA("Unknown (%#02x)\n", dvdCopyright->CopyrightProtectionType);
+		OutputDiscLog("Unknown (%#02x)\n", dvdCopyright->CopyrightProtectionType);
 		*pProtect = noProtect;
 		break;
 	}
-	OutputDiscLogA("\tRegionManagementInformation:");
-	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x01, " 1");
-	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x02, " 2");
-	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x04, " 3");
-	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x08, " 4");
-	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x10, " 5");
-	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x20, " 6");
-	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x40, " 7");
-	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x80, " 8");
-	OutputDiscLogA("\n");
+	OutputDiscLog("\tRegionManagementInformation:");
+	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x01, _T(" 1"));
+	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x02, _T(" 2"));
+	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x04, _T(" 3"));
+	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x08, _T(" 4"));
+	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x10, _T(" 5"));
+	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x20, _T(" 6"));
+	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x40, _T(" 7"));
+	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x80, _T(" 8"));
+	OutputDiscLog("\n");
 }
 
 VOID OutputDVDCommonInfo(
@@ -611,16 +624,16 @@ VOID OutputDVDCommonInfo(
 	WORD wFormatLength
 ) {
 	for (WORD k = 0; k < wFormatLength; k++) {
-		OutputDiscLogA("%02x", lpFormat[k]);
+		OutputDiscLog("%02x", lpFormat[k]);
 	}
-	OutputDiscLogA("\n");
+	OutputDiscLog("\n");
 
 }
 
 VOID OutputDVDDiskKeyDescriptor(
 	PDVD_DISK_KEY_DESCRIPTOR dvdDiskKey
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DiskKeyData));
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("DiskKeyData"));
 	OutputCDMain(fileDisc, dvdDiskKey->DiskKeyData, 0, sizeof(dvdDiskKey->DiskKeyData));
 }
 
@@ -629,9 +642,9 @@ VOID OutputDiscBCADescriptor(
 	PDVD_BCA_DESCRIPTOR dvdBca,
 	WORD wFormatLength
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(BCAInformation));
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("BCAInformation"));
 	if (pDisc->DVD.protect == cprm) {
-		OutputDiscLogA(
+		OutputDiscLog(
 			"\t   BCA Record ID: %d\n"
 			"\t  Version Number: %d\n"
 			"\t     Data Length: %d\n"
@@ -640,12 +653,12 @@ VOID OutputDiscBCADescriptor(
 			, dvdBca->BCAInformation[2], dvdBca->BCAInformation[3]
 		);
 		for (BYTE i = 0; i < dvdBca->BCAInformation[3]; i++) {
-			OutputDiscLogA(" %02x", dvdBca->BCAInformation[4 + i]);
+			OutputDiscLog(" %02x", dvdBca->BCAInformation[4 + i]);
 		}
-		OutputDiscLogA("\n");
+		OutputDiscLog("\n");
 		if (pDisc->SCSI.wCurrentMedia == ProfileDvdRecordable ||
 			pDisc->SCSI.wCurrentMedia == ProfileDvdRewritable) {
-			OutputDiscLogA(
+			OutputDiscLog(
 				"\t      BCA Record ID: %d\n"
 				"\t     Version Number: %d\n"
 				"\t        Data Length: %d\n"
@@ -654,9 +667,9 @@ VOID OutputDiscBCADescriptor(
 				, dvdBca->BCAInformation[14], dvdBca->BCAInformation[15]
 			);
 			for (BYTE i = 0; i < dvdBca->BCAInformation[15]; i++) {
-				OutputDiscLogA(" %02x", dvdBca->BCAInformation[16 + i]);
+				OutputDiscLog(" %02x", dvdBca->BCAInformation[16 + i]);
 			}
-			OutputDiscLogA("\n");
+			OutputDiscLog("\n");
 		}
 	}
 	else {
@@ -668,7 +681,7 @@ VOID OutputDVDManufacturerDescriptor(
 	PDVD_MANUFACTURER_DESCRIPTOR dvdManufacturer,
 	PDISC_TYPE pDiscType
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(ManufacturingInformation));
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("ManufacturingInformation"));
 	OutputCDMain(fileDisc, dvdManufacturer->ManufacturingInformation, 0,
 		sizeof(dvdManufacturer->ManufacturingInformation));
 	if (!strncmp((LPCH)&dvdManufacturer->ManufacturingInformation[16], "Nintendo Game Disk", 18)) {
@@ -686,32 +699,32 @@ VOID OutputDVDManufacturerDescriptor(
 VOID OutputDVDMediaId(
 	LPBYTE lpFormat
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(MediaID)
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("MediaID")
 		"\t           Media Identifier:");
 	for (INT i = 0; i < 8; i++) {
-		OutputDiscLogA(" %02x", lpFormat[i]);
+		OutputDiscLog(" %02x", lpFormat[i]);
 	}
-	OutputDiscLogA(
+	OutputDiscLog(
 		"\n\tMessage Authentication Code:");
 	for (INT i = 8; i < 18; i++) {
-		OutputDiscLogA(" %02x", lpFormat[i]);
+		OutputDiscLog(" %02x", lpFormat[i]);
 	}
-	OutputDiscLogA(" -> it seems it's always random\n");
+	OutputDiscLog(" -> it seems it's always random\n");
 }
 
 VOID OutputDVDMediaKeyBlock(
 	LPBYTE lpFormat,
 	WORD wFormatLength
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(MediaKeyBlock)
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("MediaKeyBlock")
 		"\tMedia Key Block Total Packs: %u\n"
 		, *(lpFormat - 1));
-	OutputDiscLogA(
+	OutputDiscLog(
 		"\tMessage Authentication Code:");
 	for (INT i = 0; i < 10; i++) {
-		OutputDiscLogA(" %02x", lpFormat[i]);
+		OutputDiscLog(" %02x", lpFormat[i]);
 	}
-	OutputDiscLogA(
+	OutputDiscLog(
 		" -> it seems it's always random\n"
 		"\tMedia Key Block\n"
 	);
@@ -727,7 +740,8 @@ VOID OutputDiscDefinitionStructure(
 	}
 	else if (version == 6) {
 		WORD zonesNum = MAKEWORD(lpFormat[11], lpFormat[10]);
-		OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DiscDefinitionStructure)
+		OutputDiscLog(
+			OUTPUT_DHYPHEN_PLUS_STR("DiscDefinitionStructure")
 			"\t                        DDS Identifier: %02x%02x\n"
 			"\t                    Disk Certification\n"
 			"\t                            Formatting: %s\n"
@@ -740,9 +754,9 @@ VOID OutputDiscDefinitionStructure(
 			"\t Last sector in the Primary spare area: %7u (%#x)\n"
 			"\t                  First logical sector: %7u (%#x)\n"
 			, lpFormat[0], lpFormat[1]
-			, (lpFormat[3] & 0x80) == 0x80 ? "in process" : "has been completed"
-			, (lpFormat[3] & 0x10) == 0x10 ? "been" : "not been"
-			, (lpFormat[3] & 0x01) == 0x01 ? "been" : "not been"
+			, (lpFormat[3] & 0x80) == 0x80 ? _T("in process") : _T("has been completed")
+			, (lpFormat[3] & 0x10) == 0x10 ? _T("been") : _T("not been")
+			, (lpFormat[3] & 0x01) == 0x01 ? _T("been") : _T("not been")
 			, MAKEUINT(MAKEWORD(lpFormat[7], lpFormat[6]), MAKEWORD(lpFormat[5], lpFormat[4]))
 			, MAKEWORD(lpFormat[9], lpFormat[8])
 			, zonesNum
@@ -754,7 +768,7 @@ VOID OutputDiscDefinitionStructure(
 			, MAKEUINT(MAKEWORD(lpFormat[91], lpFormat[90]), MAKEWORD(lpFormat[89], lpFormat[88]))
 		);
 		for (INT i = 256, j = 0; j < (INT)zonesNum; i += 4, j++) {
-			OutputDiscLogA("\t                Start LSN for the Zone: %7u (%#x)\n"
+			OutputDiscLog("\t                Start LSN for the Zone: %7u (%#x)\n"
 				, MAKEUINT(MAKEWORD(lpFormat[i + 3], lpFormat[i + 2]), MAKEWORD(lpFormat[i + 1], lpFormat[i]))
 				, MAKEUINT(MAKEWORD(lpFormat[i + 3], lpFormat[i + 2]), MAKEWORD(lpFormat[i + 1], lpFormat[i]))
 			);
@@ -768,54 +782,54 @@ VOID OutputDiscDefinitionStructure(
 VOID OutputDVDRamMediumStatus(
 	PDVD_RAM_MEDIUM_STATUS dvdRamMeium
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDRamMediumStatus)
+	OutputDiscLog(
+		OUTPUT_DHYPHEN_PLUS_STR("DVDRamMediumStatus")
 		"\t              PersistentWriteProtect: %s\n"
 		"\t               CartridgeWriteProtect: %s\n"
 		"\t           MediaSpecificWriteInhibit: %s\n"
 		"\t                  CartridgeNotSealed: %s\n"
 		"\t                    MediaInCartridge: %s\n"
 		"\t              DiscTypeIdentification: %x\n"
-		"\tMediaSpecificWriteInhibitInformation: %s\n",
-		BOOLEAN_TO_STRING_YES_NO_A(dvdRamMeium->PersistentWriteProtect),
-		BOOLEAN_TO_STRING_YES_NO_A(dvdRamMeium->CartridgeWriteProtect),
-		BOOLEAN_TO_STRING_YES_NO_A(dvdRamMeium->MediaSpecificWriteInhibit),
-		BOOLEAN_TO_STRING_YES_NO_A(dvdRamMeium->CartridgeNotSealed),
-		BOOLEAN_TO_STRING_YES_NO_A(dvdRamMeium->MediaInCartridge),
-		dvdRamMeium->DiscTypeIdentification,
-		BOOLEAN_TO_STRING_YES_NO_A(dvdRamMeium->MediaSpecificWriteInhibitInformation));
+		"\tMediaSpecificWriteInhibitInformation: %s\n"
+		, BOOLEAN_TO_STRING_YES_NO(dvdRamMeium->PersistentWriteProtect)
+		, BOOLEAN_TO_STRING_YES_NO(dvdRamMeium->CartridgeWriteProtect)
+		, BOOLEAN_TO_STRING_YES_NO(dvdRamMeium->MediaSpecificWriteInhibit)
+		, BOOLEAN_TO_STRING_YES_NO(dvdRamMeium->CartridgeNotSealed)
+		, BOOLEAN_TO_STRING_YES_NO(dvdRamMeium->MediaInCartridge)
+		, dvdRamMeium->DiscTypeIdentification
+		, BOOLEAN_TO_STRING_YES_NO(dvdRamMeium->MediaSpecificWriteInhibitInformation));
 }
 
 VOID OutputDiscSpareAreaInformation(
 	PDVD_RAM_SPARE_AREA_INFORMATION dvdRamSpare
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDRamSpareAreaInformation)
+	OutputDiscLog(
+		OUTPUT_DHYPHEN_PLUS_STR("DVDRamSpareAreaInformation")
 		"\t          FreePrimarySpareSectors: %u\n"
 		"\t     FreeSupplementalSpareSectors: %u\n"
-		"\tAllocatedSupplementalSpareSectors: %u\n",
-		MAKEUINT(
-		MAKEWORD(dvdRamSpare->FreePrimarySpareSectors[3], dvdRamSpare->FreePrimarySpareSectors[2]),
-		MAKEWORD(dvdRamSpare->FreePrimarySpareSectors[1], dvdRamSpare->FreePrimarySpareSectors[0])),
-		MAKEUINT(
-		MAKEWORD(dvdRamSpare->FreeSupplementalSpareSectors[3], dvdRamSpare->FreeSupplementalSpareSectors[2]),
-		MAKEWORD(dvdRamSpare->FreeSupplementalSpareSectors[1], dvdRamSpare->FreeSupplementalSpareSectors[0])),
-		MAKEUINT(
-		MAKEWORD(dvdRamSpare->AllocatedSupplementalSpareSectors[3], dvdRamSpare->AllocatedSupplementalSpareSectors[2]),
-		MAKEWORD(dvdRamSpare->AllocatedSupplementalSpareSectors[1], dvdRamSpare->AllocatedSupplementalSpareSectors[0])));
+		"\tAllocatedSupplementalSpareSectors: %u\n"
+		, MAKEUINT(MAKEWORD(dvdRamSpare->FreePrimarySpareSectors[3], dvdRamSpare->FreePrimarySpareSectors[2]),
+			MAKEWORD(dvdRamSpare->FreePrimarySpareSectors[1], dvdRamSpare->FreePrimarySpareSectors[0]))
+		, MAKEUINT(MAKEWORD(dvdRamSpare->FreeSupplementalSpareSectors[3], dvdRamSpare->FreeSupplementalSpareSectors[2]),
+			MAKEWORD(dvdRamSpare->FreeSupplementalSpareSectors[1], dvdRamSpare->FreeSupplementalSpareSectors[0]))
+		, MAKEUINT(MAKEWORD(dvdRamSpare->AllocatedSupplementalSpareSectors[3], dvdRamSpare->AllocatedSupplementalSpareSectors[2]),
+			MAKEWORD(dvdRamSpare->AllocatedSupplementalSpareSectors[1], dvdRamSpare->AllocatedSupplementalSpareSectors[0])));
 }
 
 VOID OutputDVDRamRecordingType(
 	PDVD_RAM_RECORDING_TYPE dvdRamRecording
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDRamRecordingType)
-		"\tRealTimeData: %s\n",
-		BOOLEAN_TO_STRING_YES_NO_A(dvdRamRecording->RealTimeData));
+	OutputDiscLog(
+		OUTPUT_DHYPHEN_PLUS_STR("DVDRamRecordingType")
+		"\tRealTimeData: %s\n"
+		, BOOLEAN_TO_STRING_YES_NO(dvdRamRecording->RealTimeData));
 }
 
 VOID OutputDVDRmdLastBorderOut(
 	LPBYTE lpFormat,
 	WORD wFormatLength
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(RMD in last border-out));
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("RMD in last border-out"));
 	INT nRoop = wFormatLength / DISC_RAW_READ_SIZE;
 	for (INT i = 0; i < nRoop; i++) {
 		OutputCDMain(fileDisc, lpFormat + DISC_RAW_READ_SIZE * i, 0, DISC_RAW_READ_SIZE);
@@ -826,7 +840,8 @@ VOID OutputDVDRecordingManagementAreaData(
 	PDVD_RECORDING_MANAGEMENT_AREA_DATA dvdRecordingMan,
 	WORD wFormatLength
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDRecordingManagementAreaData)
+	OutputDiscLog(
+		OUTPUT_DHYPHEN_PLUS_STR("DVDRecordingManagementAreaData")
 		"\tLastRecordedRMASectorNumber: %u\n"
 		"\t                   RMDBytes: \n"
 		, MAKEUINT(MAKEWORD(dvdRecordingMan->LastRecordedRMASectorNumber[3]
@@ -845,7 +860,8 @@ VOID OutputDVDPreRecordedInformation(
 		, dvdPreRecorded->LastAddressOfDataRecordableArea[1])
 		, MAKEWORD(dvdPreRecorded->LastAddressOfDataRecordableArea[2], 0));
 
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDPreRecordedInformation)
+	OutputDiscLog(
+		OUTPUT_DHYPHEN_PLUS_STR("DVDPreRecordedInformation")
 		"\t                      FieldID_1: %02x\n"
 		"\t            DiscApplicatiowCode: %02x\n"
 		"\t               DiscPhysicalCode: %02x\n"
@@ -857,11 +873,11 @@ VOID OutputDVDPreRecordedInformation(
 		"\t                 WavelengthCode: %02x\n"
 		"\t              WriteStrategyCode: %02x%02x%02x%02x\n"
 		"\t                      FieldID_3: %02x\n"
-		"\t               ManufacturerId_3: %.6s\n"
+		"\t               ManufacturerId_3: %.6" CHARWIDTH "s\n"
 		"\t                      FieldID_4: %02x\n"
-		"\t               ManufacturerId_4: %.6s\n"
+		"\t               ManufacturerId_4: %.6" CHARWIDTH "s\n"
 		"\t                      FieldID_5: %02x\n"
-		"\t               ManufacturerId_5: %.6s\n"
+		"\t               ManufacturerId_5: %.6" CHARWIDTH "s\n"
 		, dvdPreRecorded->FieldID_1
 		, dvdPreRecorded->DiscApplicationCode
 		, dvdPreRecorded->DiscPhysicalCode
@@ -885,9 +901,10 @@ VOID OutputDVDPreRecordedInformation(
 VOID OutputDVDUniqueDiscIdentifer(
 	PDVD_UNIQUE_DISC_IDENTIFIER dvdUnique
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDUniqueDiscIdentifer)
+	OutputDiscLog(
+		OUTPUT_DHYPHEN_PLUS_STR("DVDUniqueDiscIdentifer")
 		"\t RandomNumber: %u\n"
-		"\tDate and Time: %.4s-%.2s-%.2s %.2s:%.2s:%.2s\n"
+		"\tDate and Time: %.4" CHARWIDTH "s-%.2" CHARWIDTH "s-%.2" CHARWIDTH "s %.2" CHARWIDTH "s:%.2" CHARWIDTH "s:%.2" CHARWIDTH "s\n"
 		, MAKEWORD(dvdUnique->RandomNumber[1], dvdUnique->RandomNumber[0])
 		, dvdUnique->Year, dvdUnique->Month, dvdUnique->Day
 		, dvdUnique->Hour, dvdUnique->Minute, dvdUnique->Second);
@@ -897,92 +914,99 @@ VOID OutputDVDAdipInformation(
 	LPBYTE lpFormat,
 	WORD wFormatLength
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(ADIP information)"\t");
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("ADIP information"));
 	OutputDVDCommonInfo(lpFormat, wFormatLength);
 }
 
 VOID OutputDVDDualLayerRecordingInformation(
 	PDVD_DUAL_LAYER_RECORDING_INFORMATION dvdDualLayer
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDDualLayerRecordingInformation)
+	OutputDiscLog(
+		OUTPUT_DHYPHEN_PLUS_STR("DVDDualLayerRecordingInformation")
 		"\tLayer0SectorsImmutable: %s\n"
-		"\t         Layer0Sectors: %u\n",
-		BOOLEAN_TO_STRING_YES_NO_A(dvdDualLayer->Layer0SectorsImmutable),
-		MAKEUINT(MAKEWORD(dvdDualLayer->Layer0Sectors[3], dvdDualLayer->Layer0Sectors[2]),
-		MAKEWORD(dvdDualLayer->Layer0Sectors[1], dvdDualLayer->Layer0Sectors[0])));
+		"\t         Layer0Sectors: %u\n"
+		, BOOLEAN_TO_STRING_YES_NO(dvdDualLayer->Layer0SectorsImmutable)
+		, MAKEUINT(MAKEWORD(dvdDualLayer->Layer0Sectors[3], dvdDualLayer->Layer0Sectors[2])
+			, MAKEWORD(dvdDualLayer->Layer0Sectors[1], dvdDualLayer->Layer0Sectors[0])));
 }
 
 VOID OutputDVDDualLayerMiddleZone(
 	PDVD_DUAL_LAYER_MIDDLE_ZONE_START_ADDRESS dvdDualLayerMiddle
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDDualLayerMiddleZoneStartAddress)
+	OutputDiscLog(
+		OUTPUT_DHYPHEN_PLUS_STR("DVDDualLayerMiddleZoneStartAddress")
 		"\t                   InitStatus: %s\n"
-		"\tShiftedMiddleAreaStartAddress: %u\n",
-		BOOLEAN_TO_STRING_YES_NO_A(dvdDualLayerMiddle->InitStatus),
-		MAKEUINT(MAKEWORD(dvdDualLayerMiddle->ShiftedMiddleAreaStartAddress[3],
-		dvdDualLayerMiddle->ShiftedMiddleAreaStartAddress[2]),
-		MAKEWORD(dvdDualLayerMiddle->ShiftedMiddleAreaStartAddress[1],
-		dvdDualLayerMiddle->ShiftedMiddleAreaStartAddress[0])));
+		"\tShiftedMiddleAreaStartAddress: %u\n"
+		, BOOLEAN_TO_STRING_YES_NO(dvdDualLayerMiddle->InitStatus)
+		, MAKEUINT(MAKEWORD(dvdDualLayerMiddle->ShiftedMiddleAreaStartAddress[3],
+			dvdDualLayerMiddle->ShiftedMiddleAreaStartAddress[2])
+		, MAKEWORD(dvdDualLayerMiddle->ShiftedMiddleAreaStartAddress[1],
+			dvdDualLayerMiddle->ShiftedMiddleAreaStartAddress[0])));
 }
 
 VOID OutputDVDDualLayerJumpInterval(
 	PDVD_DUAL_LAYER_JUMP_INTERVAL_SIZE dvdDualLayerJump
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDDualLayerJumpIntervalSize)
-		"\tJumpIntervalSize: %u\n",
-		MAKEUINT(MAKEWORD(dvdDualLayerJump->JumpIntervalSize[3],
-		dvdDualLayerJump->JumpIntervalSize[2]),
-		MAKEWORD(dvdDualLayerJump->JumpIntervalSize[1],
-		dvdDualLayerJump->JumpIntervalSize[0])));
+	OutputDiscLog(
+		OUTPUT_DHYPHEN_PLUS_STR("DVDDualLayerJumpIntervalSize")
+		"\tJumpIntervalSize: %u\n"
+		, MAKEUINT(MAKEWORD(dvdDualLayerJump->JumpIntervalSize[3],
+			dvdDualLayerJump->JumpIntervalSize[2])
+		, MAKEWORD(dvdDualLayerJump->JumpIntervalSize[1],
+			dvdDualLayerJump->JumpIntervalSize[0])));
 }
 
 VOID OutputDVDDualLayerManualLayerJump(
 	PDVD_DUAL_LAYER_MANUAL_LAYER_JUMP dvdDualLayerMan
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDDualLayerManualLayerJump)
-		"\tManualJumpLayerAddress: %u\n",
-		MAKEUINT(MAKEWORD(dvdDualLayerMan->ManualJumpLayerAddress[3],
-		dvdDualLayerMan->ManualJumpLayerAddress[2]),
-		MAKEWORD(dvdDualLayerMan->ManualJumpLayerAddress[1],
-		dvdDualLayerMan->ManualJumpLayerAddress[0])));
+	OutputDiscLog(
+		OUTPUT_DHYPHEN_PLUS_STR("DVDDualLayerManualLayerJump")
+		"\tManualJumpLayerAddress: %u\n"
+		, MAKEUINT(MAKEWORD(dvdDualLayerMan->ManualJumpLayerAddress[3],
+			dvdDualLayerMan->ManualJumpLayerAddress[2])
+		, MAKEWORD(dvdDualLayerMan->ManualJumpLayerAddress[1],
+			dvdDualLayerMan->ManualJumpLayerAddress[0])));
 }
 
 VOID OutputDVDDualLayerRemapping(
 	PDVD_DUAL_LAYER_REMAPPING_INFORMATION dvdDualLayerRemapping
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDDualLayerRemappingInformation)
-		"\tManualJumpLayerAddress: %u\n",
-		MAKEUINT(MAKEWORD(dvdDualLayerRemapping->RemappingAddress[3],
-		dvdDualLayerRemapping->RemappingAddress[2]),
-		MAKEWORD(dvdDualLayerRemapping->RemappingAddress[1],
-		dvdDualLayerRemapping->RemappingAddress[0])));
+	OutputDiscLog(
+		OUTPUT_DHYPHEN_PLUS_STR("DVDDualLayerRemappingInformation")
+		"\tManualJumpLayerAddress: %u\n"
+		, MAKEUINT(MAKEWORD(dvdDualLayerRemapping->RemappingAddress[3],
+			dvdDualLayerRemapping->RemappingAddress[2])
+		, MAKEWORD(dvdDualLayerRemapping->RemappingAddress[1],
+			dvdDualLayerRemapping->RemappingAddress[0])));
 }
 
 VOID OutputDVDDiscControlBlockHeader(
 	PDVD_DISC_CONTROL_BLOCK_HEADER dvdDiscCtrlBlk
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDDiscControlBlockHeader)
+	OutputDiscLog(
+		OUTPUT_DHYPHEN_PLUS_STR("DVDDiscControlBlockHeader")
 		"\tContentDescriptor: %u\n"
 		"\t           AsByte: %u\n"
-		"\t         VendorId: ",
-		MAKEUINT(MAKEWORD(dvdDiscCtrlBlk->ContentDescriptor[3],
-		dvdDiscCtrlBlk->ContentDescriptor[2]),
-		MAKEWORD(dvdDiscCtrlBlk->ContentDescriptor[1],
-		dvdDiscCtrlBlk->ContentDescriptor[0])),
-		MAKEUINT(MAKEWORD(dvdDiscCtrlBlk->ProhibitedActions.AsByte[3],
-		dvdDiscCtrlBlk->ProhibitedActions.AsByte[2]),
-		MAKEWORD(dvdDiscCtrlBlk->ProhibitedActions.AsByte[1],
-		dvdDiscCtrlBlk->ProhibitedActions.AsByte[0])));
+		"\t         VendorId: "
+		, MAKEUINT(MAKEWORD(dvdDiscCtrlBlk->ContentDescriptor[3],
+			dvdDiscCtrlBlk->ContentDescriptor[2])
+		, MAKEWORD(dvdDiscCtrlBlk->ContentDescriptor[1],
+			dvdDiscCtrlBlk->ContentDescriptor[0]))
+		, MAKEUINT(MAKEWORD(dvdDiscCtrlBlk->ProhibitedActions.AsByte[3],
+			dvdDiscCtrlBlk->ProhibitedActions.AsByte[2])
+		, MAKEWORD(dvdDiscCtrlBlk->ProhibitedActions.AsByte[1],
+			dvdDiscCtrlBlk->ProhibitedActions.AsByte[0])));
 	for (WORD k = 0; k < sizeof(dvdDiscCtrlBlk->VendorId); k++) {
-		OutputDiscLogA("%c", dvdDiscCtrlBlk->VendorId[k]);
+		OutputDiscLog("%c", dvdDiscCtrlBlk->VendorId[k]);
 	}
-	OutputDiscLogA("\n");
+	OutputDiscLog("\n");
 }
 
 VOID OutputDVDDiscControlBlockWriteInhibit(
 	PDVD_DISC_CONTROL_BLOCK_WRITE_INHIBIT dvdDiscCtrlBlkWrite
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDDiscControlBlockWriteInhibit)
+	OutputDiscLog(
+		OUTPUT_DHYPHEN_PLUS_STR("DVDDiscControlBlockWriteInhibit")
 		"\t      UpdateCount: %u\n"
 		"\t           AsByte: %u\n"
 		"\t   UpdatePassword: ",
@@ -993,31 +1017,32 @@ VOID OutputDVDDiscControlBlockWriteInhibit(
 		MAKEWORD(dvdDiscCtrlBlkWrite->WriteProtectActions.AsByte[1],
 		dvdDiscCtrlBlkWrite->WriteProtectActions.AsByte[0])));
 	for (WORD k = 0; k < sizeof(dvdDiscCtrlBlkWrite->UpdatePassword); k++) {
-		OutputDiscLogA("%c", dvdDiscCtrlBlkWrite->UpdatePassword[k]);
+		OutputDiscLog("%c", dvdDiscCtrlBlkWrite->UpdatePassword[k]);
 	}
-	OutputDiscLogA("\n");
+	OutputDiscLog("\n");
 }
 
 VOID OutputDVDDiscControlBlockSession(
 	PDVD_DISC_CONTROL_BLOCK_SESSION dvdDiscCtrlBlkSession
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDDiscControlBlockSession)
+	OutputDiscLog(
+		OUTPUT_DHYPHEN_PLUS_STR("DVDDiscControlBlockSession")
 		"\tSessionNumber: %u\n"
 		"\t       DiscID: \n",
 		MAKEWORD(dvdDiscCtrlBlkSession->SessionNumber[1], dvdDiscCtrlBlkSession->SessionNumber[0]));
 	for (WORD k = 0; k < sizeof(dvdDiscCtrlBlkSession->DiscID); k++) {
-		OutputDiscLogA("%c", dvdDiscCtrlBlkSession->DiscID[k]);
+		OutputDiscLog("%c", dvdDiscCtrlBlkSession->DiscID[k]);
 	}
-	OutputDiscLogA("\n");
+	OutputDiscLog("\n");
 
 	for (UINT j = 0; j < sizeof(dvdDiscCtrlBlkSession->SessionItem) / sizeof(DVD_DISC_CONTROL_BLOCK_SESSION_ITEM); j++) {
-		OutputDiscLogA(
+		OutputDiscLog(
 			"\t  SessionItem: %u\n"
 			"\t\t     AsByte: ", j);
 		for (WORD k = 0; k < sizeof(dvdDiscCtrlBlkSession->SessionItem[j].AsByte); k++) {
-			OutputDiscLogA("%c", dvdDiscCtrlBlkSession->SessionItem[j].AsByte[k]);
+			OutputDiscLog("%c", dvdDiscCtrlBlkSession->SessionItem[j].AsByte[k]);
 		}
-		OutputDiscLogA("\n");
+		OutputDiscLog("\n");
 	}
 }
 
@@ -1025,19 +1050,20 @@ VOID OutputDVDDiscControlBlockList(
 	PDVD_DISC_CONTROL_BLOCK_LIST dvdDiscCtrlBlkList,
 	WORD wFormatLength
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DVDDiscControlBlockListT)
+	OutputDiscLog(
+		OUTPUT_DHYPHEN_PLUS_STR("DVDDiscControlBlockListT")
 		"\tReadabldDCBs: %s\n"
-		"\tWritableDCBs: %s\n",
-		BOOLEAN_TO_STRING_YES_NO_A(dvdDiscCtrlBlkList->ReadabldDCBs),
-		BOOLEAN_TO_STRING_YES_NO_A(dvdDiscCtrlBlkList->WritableDCBs));
-	OutputDiscLogA(
-		"\tDVD_DISC_CONTROL_BLOCK_LIST_DCB: ");
+		"\tWritableDCBs: %s\n"
+		"\tDVD_DISC_CONTROL_BLOCK_LIST_DCB: "
+		, BOOLEAN_TO_STRING_YES_NO(dvdDiscCtrlBlkList->ReadabldDCBs)
+		, BOOLEAN_TO_STRING_YES_NO(dvdDiscCtrlBlkList->WritableDCBs));
+
 	for (WORD k = 0; k < wFormatLength - sizeof(DVD_DISC_CONTROL_BLOCK_LIST); k++) {
-		OutputDiscLogA("%u",
+		OutputDiscLog("%u",
 			MAKEUINT(MAKEWORD(dvdDiscCtrlBlkList->Dcbs[k].DcbIdentifier[3], dvdDiscCtrlBlkList->Dcbs[k].DcbIdentifier[2]),
 			MAKEWORD(dvdDiscCtrlBlkList->Dcbs[k].DcbIdentifier[1], dvdDiscCtrlBlkList->Dcbs[k].DcbIdentifier[0])));
 	}
-	OutputDiscLogA("\n");
+	OutputDiscLog("\n");
 
 }
 
@@ -1045,29 +1071,29 @@ VOID OutputDVDMtaEccBlock(
 	LPBYTE lpFormat,
 	WORD wFormatLength
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(MTA ECC Block)"\t");
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("MTA ECC Block")"\t");
 	OutputDVDCommonInfo(lpFormat, wFormatLength);
 }
 
 VOID OutputDiscWriteProtectionStatus(
 	PDVD_WRITE_PROTECTION_STATUS dvdWrite
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DiscWriteProtectionStatus)
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("DiscWriteProtectionStatus")
 		"\tSoftwareWriteProtectUntilPowerdown: %s\n"
 		"\t       MediaPersistentWriteProtect: %s\n"
 		"\t             CartridgeWriteProtect: %s\n"
-		"\t         MediaSpecificWriteProtect: %s\n",
-		BOOLEAN_TO_STRING_YES_NO_A(dvdWrite->SoftwareWriteProtectUntilPowerdown),
-		BOOLEAN_TO_STRING_YES_NO_A(dvdWrite->MediaPersistentWriteProtect),
-		BOOLEAN_TO_STRING_YES_NO_A(dvdWrite->CartridgeWriteProtect),
-		BOOLEAN_TO_STRING_YES_NO_A(dvdWrite->MediaSpecificWriteProtect));
+		"\t         MediaSpecificWriteProtect: %s\n"
+		, BOOLEAN_TO_STRING_YES_NO(dvdWrite->SoftwareWriteProtectUntilPowerdown)
+		, BOOLEAN_TO_STRING_YES_NO(dvdWrite->MediaPersistentWriteProtect)
+		, BOOLEAN_TO_STRING_YES_NO(dvdWrite->CartridgeWriteProtect)
+		, BOOLEAN_TO_STRING_YES_NO(dvdWrite->MediaSpecificWriteProtect));
 }
 
 VOID OutputDiscAACSVolumeIdentifier(
 	LPBYTE lpFormat,
 	WORD wFormatLength
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(AACS Volume Identifiers)"\t");
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("AACS Volume Identifiers")"\t");
 	OutputDVDCommonInfo(lpFormat, wFormatLength);
 }
 
@@ -1075,7 +1101,7 @@ VOID OutputDiscPreRecordedAACSMediaSerialNumber(
 	LPBYTE lpFormat,
 	WORD wFormatLength
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(PreRecorded AACS Media Serial Number)"\t");
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("PreRecorded AACS Media Serial Number")"\t");
 	OutputDVDCommonInfo(lpFormat, wFormatLength);
 }
 
@@ -1083,7 +1109,7 @@ VOID OutputDiscAACSMediaIdentifier(
 	LPBYTE lpFormat,
 	WORD wFormatLength
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(AACS Media Identifier)"\t");
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("AACS Media Identifier")"\t");
 	OutputDVDCommonInfo(lpFormat, wFormatLength);
 }
 
@@ -1091,20 +1117,20 @@ VOID OutputDiscAACSMediaKeyBlock(
 	LPBYTE lpFormat,
 	WORD wFormatLength
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(AACS Media Key Block)"\t");
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("AACS Media Key Block")"\t");
 	OutputDVDCommonInfo(lpFormat, wFormatLength);
 }
 
 VOID OutputDiscListOfRecognizedFormatLayers(
 	PDVD_LIST_OF_RECOGNIZED_FORMAT_LAYERS_TYPE_CODE dvdListOf
 ) {
-	OutputDiscLogA(
+	OutputDiscLog(
 		"\t\tNumberOfRecognizedFormatLayers: %u\n"
 		"\t\t             OnlineFormatlayer: %u\n"
-		"\t\t            DefaultFormatLayer: %u\n",
-		dvdListOf->NumberOfRecognizedFormatLayers,
-		dvdListOf->OnlineFormatlayer,
-		dvdListOf->DefaultFormatLayer);
+		"\t\t            DefaultFormatLayer: %u\n"
+		, dvdListOf->NumberOfRecognizedFormatLayers
+		, dvdListOf->OnlineFormatlayer
+		, dvdListOf->DefaultFormatLayer);
 }
 
 VOID OutputDVDStructureFormat(
@@ -1236,7 +1262,7 @@ VOID OutputDVDStructureFormat(
 		break;
 		// formats 0x91 through 0xFE are not yet defined
 	default:
-		OutputDiscLogA("\tUnknown: %02x\n", byFormatCode);
+		OutputDiscLog("\tUnknown: %02x\n", byFormatCode);
 		break;
 	}
 }
@@ -1249,38 +1275,38 @@ VOID OutputDVDCopyrightManagementInformation(
 		if ((dvdCopyright->CPR_MAI & 0x40) == 0x40) {
 			switch (dvdCopyright->CPR_MAI & 0x0f) {
 			case 0:
-				OutputDiscWithLBALogA("This sector is scrambled by CSS", nLBA);
+				OutputDiscWithLBALog("This sector is scrambled by CSS", nLBA);
 				break;
 			case 0x01:
-				OutputDiscWithLBALogA("This sector is encrypted by CPPM", nLBA);
+				OutputDiscWithLBALog("This sector is encrypted by CPPM", nLBA);
 				break;
 			default:
-				OutputDiscWithLBALogA("reserved", nLBA);
+				OutputDiscWithLBALog("reserved", nLBA);
 			}
 		}
 		else {
-			OutputDiscWithLBALogA("CSS or CPPM doesn't exist in this sector", nLBA);
+			OutputDiscWithLBALog("CSS or CPPM doesn't exist in this sector", nLBA);
 		}
 
 		switch (dvdCopyright->CPR_MAI & 0x30) {
 		case 0:
-			OutputDiscLogA(", copying is permitted without restriction\n");
+			OutputDiscLog(", copying is permitted without restriction\n");
 			break;
 		case 0x10:
-			OutputDiscLogA(", reserved\n");
+			OutputDiscLog(", reserved\n");
 			break;
 		case 0x20:
-			OutputDiscLogA(", one generation of copies may be made\n");
+			OutputDiscLog(", one generation of copies may be made\n");
 			break;
 		case 0x30:
-			OutputDiscLogA(", no copying is permitted\n");
+			OutputDiscLog(", no copying is permitted\n");
 			break;
 		default:
-			OutputDiscLogA("\n");
+			OutputDiscLog("\n");
 		}
 	}
 	else {
-		OutputDiscWithLBALogA("No protected sector\n", nLBA);
+		OutputDiscWithLBALog("No protected sector\n", nLBA);
 	}
 }
 
@@ -1288,38 +1314,38 @@ VOID OutputBDDiscInformation(
 	LPBYTE lpFormat,
 	WORD wFormatLength
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DiscInformationFromPIC)
-		"\t            DiscInformationIdentifier: %.2s\n"
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("DiscInformationFromPIC")
+		"\t            DiscInformationIdentifier: %.2" CHARWIDTH "s\n"
 		"\t                DiscInformationFormat: %02x\n"
 		"\t         NumberOfDIUnitsInEachDIBlock: %02x\n"
 		"\t                     DiscTypeSpecific: %02x\n"
 		"\tDIUnitSequenceNumber/ContinuationFlag: %02x\n"
 		"\t       NumberOfBytesInUseInThisDIUnit: %02x\n"
-		"\t                   DiscTypeIdentifier: %.3s\n"
+		"\t                   DiscTypeIdentifier: %.3" CHARWIDTH "s\n"
 		"\t               DiscSize/Class/Version: %02x\n"
 		"\t        DIUnitFormatDependentContents: "
 		, &lpFormat[0], lpFormat[2], lpFormat[3], lpFormat[4], lpFormat[5]
 		, lpFormat[6], &lpFormat[8], lpFormat[11]);
 	for (WORD k = 0; k < 52; k++) {
-		OutputDiscLogA("%02x", lpFormat[12 + k]);
+		OutputDiscLog("%02x", lpFormat[12 + k]);
 	}
-	OutputDiscLogA("\n\t                               Others: ");
+	OutputDiscLog("\n\t                               Others: ");
 	for (WORD k = 0; k < wFormatLength - 64; k++) {
-		OutputDiscLogA("%02x", lpFormat[64 + k]);
+		OutputDiscLog("%02x", lpFormat[64 + k]);
 	}
-	OutputDiscLogA("\n");
+	OutputDiscLog("\n");
 }
 
 VOID OutputCartridgeStatus(
 	LPBYTE lpFormat
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(CartridgeStatus)
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("CartridgeStatus")
 		"\t               CartridgeWriteProtect: %s\n"
 		"\t                  CartridgeNotSealed: %s\n"
 		"\t                    MediaInCartridge: %s\n"
-		, BOOLEAN_TO_STRING_YES_NO_A((lpFormat[0] & 0x04) == 0x04)
-		, BOOLEAN_TO_STRING_YES_NO_A((lpFormat[0] & 0x40) == 0x40)
-		, BOOLEAN_TO_STRING_YES_NO_A((lpFormat[0] & 0x80) == 0x80)
+		, BOOLEAN_TO_STRING_YES_NO((lpFormat[0] & 0x04) == 0x04)
+		, BOOLEAN_TO_STRING_YES_NO((lpFormat[0] & 0x40) == 0x40)
+		, BOOLEAN_TO_STRING_YES_NO((lpFormat[0] & 0x80) == 0x80)
 	);
 }
 
@@ -1329,24 +1355,27 @@ VOID OutputBDRawDefectList(
 ) {
 	UNREFERENCED_PARAMETER(wFormatLength);
 	UINT Entries = MAKEUINT(MAKEWORD(lpFormat[15], lpFormat[14]), MAKEWORD(lpFormat[13], lpFormat[12]));
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(RawDefectList)
-		"\t       DefectListIdentifier: %.2s\n"
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("RawDefectList")
+		"\t       DefectListIdentifier: %.2" CHARWIDTH "s\n"
 		"\t           DefectListFormat: %02x\n"
 		"\t      DefectListUpdateCount: %02x\n"
 		"\t  NumberOfDefectListEntries: %02x\n"
 		"\tDiscTypeSpecificInformation: "
-		, &lpFormat[0], lpFormat[2], MAKEUINT(MAKEWORD(lpFormat[7], lpFormat[6])
-			, MAKEWORD(lpFormat[5], lpFormat[4])), Entries);
+		, &lpFormat[0], lpFormat[2]
+		, MAKEUINT(MAKEWORD(lpFormat[7], lpFormat[6]), MAKEWORD(lpFormat[5], lpFormat[4]))
+		, Entries
+	);
 	for (WORD k = 0; k < 48; k++) {
-		OutputDiscLogA("%02x ", lpFormat[16 + k]);
+		OutputDiscLog("%02x ", lpFormat[16 + k]);
 	}
-	OutputDiscLogA("\nDefectEntries: ");
+	OutputDiscLog("\nDefectEntries: ");
 	for (UINT k = 0; k < Entries; k += 8) {
-		OutputDiscLogA("%02x%02x%02x%02x%02x%02x%02x%02x "
+		OutputDiscLog("%02x%02x%02x%02x%02x%02x%02x%02x "
 			, lpFormat[64 + k], lpFormat[65 + k], lpFormat[66 + k], lpFormat[67 + k]
-			, lpFormat[68 + k], lpFormat[69 + k], lpFormat[70 + k], lpFormat[71 + k]);
+			, lpFormat[68 + k], lpFormat[69 + k], lpFormat[70 + k], lpFormat[71 + k]
+		);
 	}
-	OutputDiscLogA("\n");
+	OutputDiscLog("\n");
 }
 
 VOID OutputBDPhysicalAddressControl(
@@ -1355,10 +1384,10 @@ VOID OutputBDPhysicalAddressControl(
 	INT nPacCnt
 ) {
 	if (nPacCnt == 0) {
-		OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(PacHeaderList));
+		OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("PacHeaderList"));
 		for (WORD i = 0; i < (wFormatLength - 2) / 384; i++) {
-			OutputDiscLogA(
-				"\t                       PAC ID: %.3s\n"
+			OutputDiscLog(
+				"\t                       PAC ID: %.3" CHARWIDTH "s\n"
 				"\t            PAC format number: %02x\n"
 				"\t             PAC Update Count: %d\n"
 				"\t            Unknown PAC Rules: %02x %02x %02x %02x\n"
@@ -1372,7 +1401,7 @@ VOID OutputBDPhysicalAddressControl(
 				, lpFormat[15]
 			);
 			for (BYTE j = 0; j < lpFormat[15]; j++) {
-				OutputDiscLogA("\t Segment %d: %02x %02x %02x %02x %02x %02x %02x %02x\n"
+				OutputDiscLog("\t Segment %d: %02x %02x %02x %02x %02x %02x %02x %02x\n"
 					, j
 					, lpFormat[16 + j * 8], lpFormat[17 + j * 8], lpFormat[18 + j * 8], lpFormat[19 + j * 8]
 					, lpFormat[20 + j * 8], lpFormat[21 + j * 8], lpFormat[22 + j * 8], lpFormat[23 + j * 8]
@@ -1382,10 +1411,10 @@ VOID OutputBDPhysicalAddressControl(
 		}
 	}
 	else if (nPacCnt == 1) {
-		OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(PacHeaderList));
+		OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("PacHeaderList"));
 		for (WORD i = 0; i < (wFormatLength - 2) / 4; i++) {
-			OutputDiscLogA(
-				"\t                       PAC ID: %.3s\n"
+			OutputDiscLog(
+				"\t                       PAC ID: %.3" CHARWIDTH "s\n"
 				"\t            PAC format number: %02x\n"
 				, (LPCH)&lpFormat[0]
 				, lpFormat[3]
@@ -1393,7 +1422,7 @@ VOID OutputBDPhysicalAddressControl(
 		}
 	}
 	else {
-		OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(PacData));
+		OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("PacData"));
 		OutputCDMain(fileDisc, lpFormat, 0, (INT)wFormatLength);
 	}
 }
@@ -1405,7 +1434,7 @@ VOID OutputBDStructureFormat(
 	LPBYTE lpFormat,
 	INT nPacCnt
 ) {
-	OutputDiscLogA("Disc Structure Data Length: %d\n", wFormatLength);
+	OutputDiscLog("Disc Structure Data Length: %d\n", wFormatLength);
 	switch (byFormatCode) {
 	case 0:
 		OutputBDDiscInformation(lpFormat, wFormatLength);
@@ -1461,7 +1490,7 @@ VOID OutputBDStructureFormat(
 		break;
 		// formats 0xc1 through 0xfe are not yet defined
 	default:
-		OutputDiscLogA("\tReserved\n");
+		OutputDiscLog("\tReserved\n");
 		break;
 	}
 }
@@ -1471,301 +1500,301 @@ VOID OutputXboxPublisher(
 	LPBYTE buf
 ) {
 	if (!strncmp((LPCH)buf, "AC", 2)) {
-		OutputDiscLogA("Acclaim Entertainment\n");
+		OutputDiscLog("Acclaim Entertainment\n");
 	}
 	else if (!strncmp((LPCH)buf, "AH", 2)) {
-		OutputDiscLogA("ARUSH Entertainment\n");
+		OutputDiscLog("ARUSH Entertainment\n");
 	}
 	else if (!strncmp((LPCH)buf, "AQ", 2)) {
-		OutputDiscLogA("Aqua System\n");
+		OutputDiscLog("Aqua System\n");
 	}
 	else if (!strncmp((LPCH)buf, "AS", 2)) {
-		OutputDiscLogA("ASK\n");
+		OutputDiscLog("ASK\n");
 	}
 	else if (!strncmp((LPCH)buf, "AT", 2)) {
-		OutputDiscLogA("Atlus\n");
+		OutputDiscLog("Atlus\n");
 	}
 	else if (!strncmp((LPCH)buf, "AV", 2)) {
-		OutputDiscLogA("Activision\n");
+		OutputDiscLog("Activision\n");
 	}
 	else if (!strncmp((LPCH)buf, "AY", 2)) {
-		OutputDiscLogA("Aspyr Media\n");
+		OutputDiscLog("Aspyr Media\n");
 	}
 	else if (!strncmp((LPCH)buf, "BA", 2)) {
-		OutputDiscLogA("Bandai\n");
+		OutputDiscLog("Bandai\n");
 	}
 	else if (!strncmp((LPCH)buf, "BL", 2)) {
-		OutputDiscLogA("Black Box\n");
+		OutputDiscLog("Black Box\n");
 	}
 	else if (!strncmp((LPCH)buf, "BM", 2)) {
-		OutputDiscLogA("BAM! Entertainment\n");
+		OutputDiscLog("BAM! Entertainment\n");
 	}
 	else if (!strncmp((LPCH)buf, "BR", 2)) {
-		OutputDiscLogA("Broccoli Co.\n");
+		OutputDiscLog("Broccoli Co.\n");
 	}
 	else if (!strncmp((LPCH)buf, "BS", 2)) {
-		OutputDiscLogA("Bethesda Softworks\n");
+		OutputDiscLog("Bethesda Softworks\n");
 	}
 	else if (!strncmp((LPCH)buf, "BU", 2)) {
-		OutputDiscLogA("Bunkasha Co.\n");
+		OutputDiscLog("Bunkasha Co.\n");
 	}
 	else if (!strncmp((LPCH)buf, "BV", 2)) {
-		OutputDiscLogA("Buena Vista Games\n");
+		OutputDiscLog("Buena Vista Games\n");
 	}
 	else if (!strncmp((LPCH)buf, "BW", 2)) {
-		OutputDiscLogA("BBC Multimedia\n");
+		OutputDiscLog("BBC Multimedia\n");
 	}
 	else if (!strncmp((LPCH)buf, "BZ", 2)) {
-		OutputDiscLogA("Blizzard\n");
+		OutputDiscLog("Blizzard\n");
 	}
 	else if (!strncmp((LPCH)buf, "CC", 2)) {
-		OutputDiscLogA("Capcom\n");
+		OutputDiscLog("Capcom\n");
 	}
 	else if (!strncmp((LPCH)buf, "CK", 2)) {
-		OutputDiscLogA("Kemco Corporation\n");
+		OutputDiscLog("Kemco Corporation\n");
 	}
 	else if (!strncmp((LPCH)buf, "CM", 2)) {
-		OutputDiscLogA("Codemasters\n");
+		OutputDiscLog("Codemasters\n");
 	}
 	else if (!strncmp((LPCH)buf, "CV", 2)) {
-		OutputDiscLogA("Crave Entertainment\n");
+		OutputDiscLog("Crave Entertainment\n");
 	}
 	else if (!strncmp((LPCH)buf, "DC", 2)) {
-		OutputDiscLogA("DreamCatcher Interactive\n");
+		OutputDiscLog("DreamCatcher Interactive\n");
 	}
 	else if (!strncmp((LPCH)buf, "DX", 2)) {
-		OutputDiscLogA("Davilex\n");
+		OutputDiscLog("Davilex\n");
 	}
 	else if (!strncmp((LPCH)buf, "EA", 2)) {
-		OutputDiscLogA("Electronic Arts\n");
+		OutputDiscLog("Electronic Arts\n");
 	}
 	else if (!strncmp((LPCH)buf, "EC", 2)) {
-		OutputDiscLogA("Encore inc\n");
+		OutputDiscLog("Encore inc\n");
 	}
 	else if (!strncmp((LPCH)buf, "EL", 2)) {
-		OutputDiscLogA("Enlight Software\n");
+		OutputDiscLog("Enlight Software\n");
 	}
 	else if (!strncmp((LPCH)buf, "EM", 2)) {
-		OutputDiscLogA("Empire Interactive\n");
+		OutputDiscLog("Empire Interactive\n");
 	}
 	else if (!strncmp((LPCH)buf, "ES", 2)) {
-		OutputDiscLogA("Eidos Interactive\n");
+		OutputDiscLog("Eidos Interactive\n");
 	}
 	else if (!strncmp((LPCH)buf, "FI", 2)) {
-		OutputDiscLogA("Fox Interactive\n");
+		OutputDiscLog("Fox Interactive\n");
 	}
 	else if (!strncmp((LPCH)buf, "FS", 2)) {
-		OutputDiscLogA("From Software\n");
+		OutputDiscLog("From Software\n");
 	}
 	else if (!strncmp((LPCH)buf, "GE", 2)) {
-		OutputDiscLogA("Genki Co.\n");
+		OutputDiscLog("Genki Co.\n");
 	}
 	else if (!strncmp((LPCH)buf, "GV", 2)) {
-		OutputDiscLogA("Groove Games\n");
+		OutputDiscLog("Groove Games\n");
 	}
 	else if (!strncmp((LPCH)buf, "HE", 2)) {
-		OutputDiscLogA("Tru Blu (Entertainment division of Home Entertainment Suppliers)\n");
+		OutputDiscLog("Tru Blu (Entertainment division of Home Entertainment Suppliers)\n");
 	}
 	else if (!strncmp((LPCH)buf, "HP", 2)) {
-		OutputDiscLogA("Hip games\n");
+		OutputDiscLog("Hip games\n");
 	}
 	else if (!strncmp((LPCH)buf, "HU", 2)) {
-		OutputDiscLogA("Hudson Soft\n");
+		OutputDiscLog("Hudson Soft\n");
 	}
 	else if (!strncmp((LPCH)buf, "HW", 2)) {
-		OutputDiscLogA("Highwaystar\n");
+		OutputDiscLog("Highwaystar\n");
 	}
 	else if (!strncmp((LPCH)buf, "IA", 2)) {
-		OutputDiscLogA("Mad Catz Interactive\n");
+		OutputDiscLog("Mad Catz Interactive\n");
 	}
 	else if (!strncmp((LPCH)buf, "IF", 2)) {
-		OutputDiscLogA("Idea Factory\n");
+		OutputDiscLog("Idea Factory\n");
 	}
 	else if (!strncmp((LPCH)buf, "IG", 2)) {
-		OutputDiscLogA("Infogrames\n");
+		OutputDiscLog("Infogrames\n");
 	}
 	else if (!strncmp((LPCH)buf, "IL", 2)) {
-		OutputDiscLogA("Interlex Corporation\n");
+		OutputDiscLog("Interlex Corporation\n");
 	}
 	else if (!strncmp((LPCH)buf, "IM", 2)) {
-		OutputDiscLogA("Imagine Media\n");
+		OutputDiscLog("Imagine Media\n");
 	}
 	else if (!strncmp((LPCH)buf, "IO", 2)) {
-		OutputDiscLogA("Ignition Entertainment\n");
+		OutputDiscLog("Ignition Entertainment\n");
 	}
 	else if (!strncmp((LPCH)buf, "IP", 2)) {
-		OutputDiscLogA("Interplay Entertainment\n");
+		OutputDiscLog("Interplay Entertainment\n");
 	}
 	else if (!strncmp((LPCH)buf, "IX", 2)) {
-		OutputDiscLogA("InXile Entertainment\n");
+		OutputDiscLog("InXile Entertainment\n");
 	}
 	else if (!strncmp((LPCH)buf, "JA", 2)) {
-		OutputDiscLogA("Jaleco\n");
+		OutputDiscLog("Jaleco\n");
 	}
 	else if (!strncmp((LPCH)buf, "JW", 2)) {
-		OutputDiscLogA("JoWooD\n");
+		OutputDiscLog("JoWooD\n");
 	}
 	else if (!strncmp((LPCH)buf, "KB", 2)) {
-		OutputDiscLogA("Kemco\n");
+		OutputDiscLog("Kemco\n");
 	}
 	else if (!strncmp((LPCH)buf, "KI", 2)) {
-		OutputDiscLogA("Kids Station Inc.\n");
+		OutputDiscLog("Kids Station Inc.\n");
 	}
 	else if (!strncmp((LPCH)buf, "KN", 2)) {
-		OutputDiscLogA("Konami\n");
+		OutputDiscLog("Konami\n");
 	}
 	else if (!strncmp((LPCH)buf, "KO", 2)) {
-		OutputDiscLogA("KOEI\n");
+		OutputDiscLog("KOEI\n");
 	}
 	else if (!strncmp((LPCH)buf, "KU", 2)) {
-		OutputDiscLogA("Kobi and/or GAE (formerly Global A Entertainment)\n");
+		OutputDiscLog("Kobi and/or GAE (formerly Global A Entertainment)\n");
 	}
 	else if (!strncmp((LPCH)buf, "LA", 2)) {
-		OutputDiscLogA("LucasArts\n");
+		OutputDiscLog("LucasArts\n");
 	}
 	else if (!strncmp((LPCH)buf, "LS", 2)) {
-		OutputDiscLogA("Black Bean Games (publishing arm of Leader S.p.A.\n");
+		OutputDiscLog("Black Bean Games (publishing arm of Leader S.p.A.\n");
 	}
 	else if (!strncmp((LPCH)buf, "MD", 2)) {
-		OutputDiscLogA("Metro3D\n");
+		OutputDiscLog("Metro3D\n");
 	}
 	else if (!strncmp((LPCH)buf, "ME", 2)) {
-		OutputDiscLogA("Medix\n");
+		OutputDiscLog("Medix\n");
 	}
 	else if (!strncmp((LPCH)buf, "MI", 2)) {
-		OutputDiscLogA("Microids\n");
+		OutputDiscLog("Microids\n");
 	}
 	else if (!strncmp((LPCH)buf, "MJ", 2)) {
-		OutputDiscLogA("Majesco Entertainment\n");
+		OutputDiscLog("Majesco Entertainment\n");
 	}
 	else if (!strncmp((LPCH)buf, "MM", 2)) {
-		OutputDiscLogA("Myelin Media\n");
+		OutputDiscLog("Myelin Media\n");
 	}
 	else if (!strncmp((LPCH)buf, "MP", 2)) {
-		OutputDiscLogA("MediaQuest\n");
+		OutputDiscLog("MediaQuest\n");
 	}
 	else if (!strncmp((LPCH)buf, "MS", 2)) {
-		OutputDiscLogA("Microsoft Game Studios\n");
+		OutputDiscLog("Microsoft Game Studios\n");
 	}
 	else if (!strncmp((LPCH)buf, "MW", 2)) {
-		OutputDiscLogA("Midway Games\n");
+		OutputDiscLog("Midway Games\n");
 	}
 	else if (!strncmp((LPCH)buf, "MX", 2)) {
-		OutputDiscLogA("Empire Interactive\n");
+		OutputDiscLog("Empire Interactive\n");
 	}
 	else if (!strncmp((LPCH)buf, "NK", 2)) {
-		OutputDiscLogA("NewKidCo\n");
+		OutputDiscLog("NewKidCo\n");
 	}
 	else if (!strncmp((LPCH)buf, "NL", 2)) {
-		OutputDiscLogA("NovaLogic\n");
+		OutputDiscLog("NovaLogic\n");
 	}
 	else if (!strncmp((LPCH)buf, "NM", 2)) {
-		OutputDiscLogA("Namco\n");
+		OutputDiscLog("Namco\n");
 	}
 	else if (!strncmp((LPCH)buf, "OX", 2)) {
-		OutputDiscLogA("Oxygen Interactive\n");
+		OutputDiscLog("Oxygen Interactive\n");
 	}
 	else if (!strncmp((LPCH)buf, "PC", 2)) {
-		OutputDiscLogA("Playlogic Entertainment\n");
+		OutputDiscLog("Playlogic Entertainment\n");
 	}
 	else if (!strncmp((LPCH)buf, "PL", 2)) {
-		OutputDiscLogA("Phantagram Co., Ltd.\n");
+		OutputDiscLog("Phantagram Co., Ltd.\n");
 	}
 	else if (!strncmp((LPCH)buf, "RA", 2)) {
-		OutputDiscLogA("Rage\n");
+		OutputDiscLog("Rage\n");
 	}
 	else if (!strncmp((LPCH)buf, "SA", 2)) {
-		OutputDiscLogA("Sammy\n");
+		OutputDiscLog("Sammy\n");
 	}
 	else if (!strncmp((LPCH)buf, "SC", 2)) {
-		OutputDiscLogA("SCi Games\n");
+		OutputDiscLog("SCi Games\n");
 	}
 	else if (!strncmp((LPCH)buf, "SE", 2)) {
-		OutputDiscLogA("SEGA\n");
+		OutputDiscLog("SEGA\n");
 	}
 	else if (!strncmp((LPCH)buf, "SN", 2)) {
-		OutputDiscLogA("SNK\n");
+		OutputDiscLog("SNK\n");
 	}
 	else if (!strncmp((LPCH)buf, "SS", 2)) {
-		OutputDiscLogA("Simon & Schuster\n");
+		OutputDiscLog("Simon & Schuster\n");
 	}
 	else if (!strncmp((LPCH)buf, "SU", 2)) {
-		OutputDiscLogA("Success Corporation\n");
+		OutputDiscLog("Success Corporation\n");
 	}
 	else if (!strncmp((LPCH)buf, "SW", 2)) {
-		OutputDiscLogA("Swing! Deutschland\n");
+		OutputDiscLog("Swing! Deutschland\n");
 	}
 	else if (!strncmp((LPCH)buf, "TA", 2)) {
-		OutputDiscLogA("Takara\n");
+		OutputDiscLog("Takara\n");
 	}
 	else if (!strncmp((LPCH)buf, "TC", 2)) {
-		OutputDiscLogA("Tecmo\n");
+		OutputDiscLog("Tecmo\n");
 	}
 	else if (!strncmp((LPCH)buf, "TD", 2)) {
-		OutputDiscLogA("The 3DO Company (or just 3DO)\n");
+		OutputDiscLog("The 3DO Company (or just 3DO)\n");
 	}
 	else if (!strncmp((LPCH)buf, "TK", 2)) {
-		OutputDiscLogA("Takuyo\n");
+		OutputDiscLog("Takuyo\n");
 	}
 	else if (!strncmp((LPCH)buf, "TM", 2)) {
-		OutputDiscLogA("TDK Mediactive\n");
+		OutputDiscLog("TDK Mediactive\n");
 	}
 	else if (!strncmp((LPCH)buf, "TQ", 2)) {
-		OutputDiscLogA("THQ\n");
+		OutputDiscLog("THQ\n");
 	}
 	else if (!strncmp((LPCH)buf, "TS", 2)) {
-		OutputDiscLogA("Titus Interactive\n");
+		OutputDiscLog("Titus Interactive\n");
 	}
 	else if (!strncmp((LPCH)buf, "TT", 2)) {
-		OutputDiscLogA("Take-Two Interactive Software\n");
+		OutputDiscLog("Take-Two Interactive Software\n");
 	}
 	else if (!strncmp((LPCH)buf, "US", 2)) {
-		OutputDiscLogA("Ubisoft\n");
+		OutputDiscLog("Ubisoft\n");
 	}
 	else if (!strncmp((LPCH)buf, "VC", 2)) {
-		OutputDiscLogA("Victor Interactive Software\n");
+		OutputDiscLog("Victor Interactive Software\n");
 	}
 	else if (!strncmp((LPCH)buf, "VN", 2)) {
-		OutputDiscLogA("Vivendi Universal (just took Interplays publishing rights)\n");
+		OutputDiscLog("Vivendi Universal (just took Interplays publishing rights)\n");
 	}
 	else if (!strncmp((LPCH)buf, "VU", 2)) {
-		OutputDiscLogA("Vivendi Universal Games\n");
+		OutputDiscLog("Vivendi Universal Games\n");
 	}
 	else if (!strncmp((LPCH)buf, "VV", 2)) {
-		OutputDiscLogA("Vivendi Universal Games\n");
+		OutputDiscLog("Vivendi Universal Games\n");
 	}
 	else if (!strncmp((LPCH)buf, "WE", 2)) {
-		OutputDiscLogA("Wanadoo Edition\n");
+		OutputDiscLog("Wanadoo Edition\n");
 	}
 	else if (!strncmp((LPCH)buf, "WR", 2)) {
-		OutputDiscLogA("Warner Bros. Interactive Entertainment\n");
+		OutputDiscLog("Warner Bros. Interactive Entertainment\n");
 	}
 	else if (!strncmp((LPCH)buf, "XI", 2)) {
-		OutputDiscLogA("XPEC Entertainment and Idea Factory\n");
+		OutputDiscLog("XPEC Entertainment and Idea Factory\n");
 	}
 	else if (!strncmp((LPCH)buf, "XK", 2)) {
-		OutputDiscLogA("Xbox kiosk disc\n");
+		OutputDiscLog("Xbox kiosk disc\n");
 	}
 	else if (!strncmp((LPCH)buf, "XL", 2)) {
-		OutputDiscLogA("Xbox special bundled or live demo disc\n");
+		OutputDiscLog("Xbox special bundled or live demo disc\n");
 	}
 	else if (!strncmp((LPCH)buf, "XM", 2)) {
-		OutputDiscLogA("Evolved Games\n");
+		OutputDiscLog("Evolved Games\n");
 	}
 	else if (!strncmp((LPCH)buf, "XP", 2)) {
-		OutputDiscLogA("XPEC Entertainment\n");
+		OutputDiscLog("XPEC Entertainment\n");
 	}
 	else if (!strncmp((LPCH)buf, "XR", 2)) {
-		OutputDiscLogA("Panorama\n");
+		OutputDiscLog("Panorama\n");
 	}
 	else if (!strncmp((LPCH)buf, "YB", 2)) {
-		OutputDiscLogA("YBM Sisa (South-Korea)\n");
+		OutputDiscLog("YBM Sisa (South-Korea)\n");
 	}
 	else if (!strncmp((LPCH)buf, "ZD", 2)) {
-		OutputDiscLogA("Zushi Games (formerly Zoo Digital Publishing)\n");
+		OutputDiscLog("Zushi Games (formerly Zoo Digital Publishing)\n");
 	}
 	else {
-		OutputDiscLogA("Unknown\n");
+		OutputDiscLog("Unknown\n");
 	}
 }
 
@@ -1773,35 +1802,36 @@ VOID OutputXboxRegion(
 	BYTE buf
 ) {
 	if (buf == 'W') {
-		OutputDiscLogA("World\n");
+		OutputDiscLog("World\n");
 	}
 	else if (buf == 'A') {
-		OutputDiscLogA("USA\n");
+		OutputDiscLog("USA\n");
 	}
 	else if (buf == 'J') {
-		OutputDiscLogA("Japan\n");
+		OutputDiscLog("Japan\n");
 	}
 	else if (buf == 'E') {
-		OutputDiscLogA("Europe\n");
+		OutputDiscLog("Europe\n");
 	}
 	else if (buf == 'K') {
-		OutputDiscLogA("USA, Japan\n");
+		OutputDiscLog("USA, Japan\n");
 	}
 	else if (buf == 'L') {
-		OutputDiscLogA("USA, Europe\n");
+		OutputDiscLog("USA, Europe\n");
 	}
 	else if (buf == 'H') {
-		OutputDiscLogA("Japan, Europe\n");
+		OutputDiscLog("Japan, Europe\n");
 	}
 	else {
-		OutputDiscLogA("Other\n")
+		OutputDiscLog("Other\n")
 	}
 }
 
 VOID OutputXboxManufacturingInfo(
 	LPBYTE buf
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(DiscManufacturingInformation)
+	OutputDiscLog(
+		OUTPUT_DHYPHEN_PLUS_STR("DiscManufacturingInformation")
 		"\tSystem Version: %02u\n"
 		, buf[0]
 	);
@@ -1810,38 +1840,38 @@ VOID OutputXboxManufacturingInfo(
 	printwin32filetime(MAKEUINT64(MAKEUINT(MAKEWORD(buf[16], buf[17]), MAKEWORD(buf[18], buf[19]))
 		, MAKEUINT(MAKEWORD(buf[20], buf[21]), MAKEWORD(buf[22], buf[23]))), date);
 	if (buf[0] == 0x01) {
-		OutputDiscLogA(
+		OutputDiscLog(
 			"\t     Publisher: "
 		);
 		OutputXboxPublisher(&buf[8]);
-		OutputDiscLogA(
+		OutputDiscLog(
 			"\t        Serial: %c%c%c\n"
 			"\t       Version: 1.%c%c\n"
 			"\t        Region: "
 			, buf[10], buf[11], buf[12], buf[13], buf[14]
 		);
 		OutputXboxRegion(buf[15]);
-		OutputDiscLogA(
-			"\t     Timestamp: %s\n"
+		OutputDiscLog(
+			"\t     Timestamp: %" CHARWIDTH "s\n"
 			"\t       Unknown: %02u\n"
 			, date, buf[24]);
 	}
 	else if (buf[0] == 0x02) {
-		OutputDiscLogA(
-			"\t     Timestamp: %s\n"
+		OutputDiscLog(
+			"\t     Timestamp: %" CHARWIDTH "s\n"
 			"\t       Unknown: %02u\n"
 			"\t      Media ID: "
 			, date, buf[24]);
 		for (WORD k = 32; k < 48; k++) {
-			OutputDiscLogA("%02x", buf[k]);
+			OutputDiscLog("%02x", buf[k]);
 		}
-		OutputDiscLogA(
+		OutputDiscLog(
 			"\n"
 			"\t     Publisher: "
 		);
 		OutputXboxPublisher(&buf[64]);
 
-		OutputDiscLogA(
+		OutputDiscLog(
 			"\t        Serial: %c%c%c%c\n"
 			"\t       Version: 1.%c%c\n"
 			"\t        Region: "
@@ -1849,13 +1879,13 @@ VOID OutputXboxManufacturingInfo(
 		);
 		OutputXboxRegion(buf[72]);
 		if (buf[73] == '0' && buf[74] == 'X') {
-			OutputDiscLogA(
+			OutputDiscLog(
 				"\t       Unknown: %c%c\n"
 				"\t          Disc: %c of %c\n"
 				, buf[73], buf[74], buf[75], buf[76])
 		}
 		else {
-			OutputDiscLogA(
+			OutputDiscLog(
 				"\t       Unknown: %c%c%c\n"
 				"\t          Disc: %c of %c\n"
 				, buf[73], buf[74], buf[75], buf[76], buf[77])
@@ -1870,94 +1900,95 @@ VOID OutputXboxSecuritySector(
 ) {
 	DWORD dwSectorLen = 0;
 	OutputDVDStructureFormat(pDisc, DvdPhysicalDescriptor, DISC_RAW_READ_SIZE, buf, &dwSectorLen, 0);
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(SecuritySector)
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("SecuritySector")
 		"\t                     CPR_MAI Key: %08x\n"
 		"\t      Version of challenge table: %02u\n"
 		"\t     Number of challenge entries: %u\n"
 		"\t     Encrypted challenge entries: "
 		, MAKEUINT(MAKEWORD(buf[723], buf[722]), MAKEWORD(buf[721], buf[720]))
-		, buf[768], buf[769]);
+		, buf[768], buf[769]
+	);
 	for (WORD k = 770; k < 1024; k++) {
-		OutputDiscLogA("%02x", buf[k]);
+		OutputDiscLog("%02x", buf[k]);
 	}
 
 	char date[20] = {};
 	printwin32filetime(MAKEUINT64(MAKEUINT(MAKEWORD(buf[1055], buf[1056]), MAKEWORD(buf[1057], buf[1058]))
 		, MAKEUINT(MAKEWORD(buf[1059], buf[1060]), MAKEWORD(buf[1061], buf[1062]))), date);
-	OutputDiscLogA(
+	OutputDiscLog(
 		"\n"
-		"\t            Timestamp of unknown: %s\n"
+		"\t            Timestamp of unknown: %" CHARWIDTH "s\n"
 		"\t                         Unknown: "
 		, date
 	);
 	for (WORD k = 1083; k < 1099; k++) {
-		OutputDiscLogA("%02x", buf[k]);
+		OutputDiscLog("%02x", buf[k]);
 	}
 
 	printwin32filetime(MAKEUINT64(MAKEUINT(MAKEWORD(buf[1183], buf[1184]), MAKEWORD(buf[1185], buf[1186]))
 		, MAKEUINT(MAKEWORD(buf[1187], buf[1188]), MAKEWORD(buf[1189], buf[1190]))), date);
-	OutputDiscLogA(
+	OutputDiscLog(
 		"\n"
-		"\t          Timestamp of authoring: %s\n"
+		"\t          Timestamp of authoring: %" CHARWIDTH "s\n"
 		"\t                         Unknown: %02x\n"
 		"\t                         Unknown: "
 		, date, buf[1210]
 	);
 	for (WORD k = 1211; k < 1227; k++) {
-		OutputDiscLogA("%02x", buf[k]);
+		OutputDiscLog("%02x", buf[k]);
 	}
 
-	OutputDiscLogA(
+	OutputDiscLog(
 		"\n"
 		"\t                    SHA-1 hash A: "
 	);
 	for (WORD k = 1227; k < 1247; k++) {
-		OutputDiscLogA("%02x", buf[k]);
+		OutputDiscLog("%02x", buf[k]);
 	}
 
-	OutputDiscLogA(
+	OutputDiscLog(
 		"\n"
 		"\t                     Signature A: "
 	);
 	for (WORD k = 1247; k < 1503; k++) {
-		OutputDiscLogA("%02x", buf[k]);
+		OutputDiscLog("%02x", buf[k]);
 	}
 
 	printwin32filetime(MAKEUINT64(MAKEUINT(MAKEWORD(buf[1503], buf[1504]), MAKEWORD(buf[1505], buf[1506]))
 		, MAKEUINT(MAKEWORD(buf[1507], buf[1508]), MAKEWORD(buf[1509], buf[1510]))), date);
-	OutputDiscLogA(
+	OutputDiscLog(
 		"\n"
-		"\t          Timestamp of mastering: %s\n"
+		"\t          Timestamp of mastering: %" CHARWIDTH "s\n"
 		"\t                         Unknown: %02x\n"
 		"\t                         Unknown: "
 		, date, buf[1530]
 	);
 	for (WORD k = 1531; k < 1547; k++) {
-		OutputDiscLogA("%02x", buf[k]);
+		OutputDiscLog("%02x", buf[k]);
 	}
 
-	OutputDiscLogA(
+	OutputDiscLog(
 		"\n"
 		"\t                    SHA-1 hash B: "
 	);
 	for (WORD k = 1547; k < 1567; k++) {
-		OutputDiscLogA("%02x", buf[k]);
+		OutputDiscLog("%02x", buf[k]);
 	}
 
-	OutputDiscLogA(
+	OutputDiscLog(
 		"\n"
 		"\t                     Signature B: "
 	);
 	for (WORD k = 1567; k < 1632; k++) {
-		OutputDiscLogA("%02x", buf[k]);
+		OutputDiscLog("%02x", buf[k]);
 	}
 
-	OutputDiscLogA(
+	OutputDiscLog(
 		"\n"
 		"\tNumber of security sector ranges: %u\n"
 		"\t          security sector ranges: \n"
-		, buf[1632]);
-
+		, buf[1632]
+	);
 	DWORD startLBA = 0, endLBA = 0;
 #ifdef _WIN32
 	PDVD_FULL_LAYER_DESCRIPTOR dvdLayer = (PDVD_FULL_LAYER_DESCRIPTOR)buf;
@@ -1972,25 +2003,25 @@ VOID OutputXboxSecuritySector(
 		DWORD startPsn = MAKEDWORD(MAKEWORD(buf[k + 5], buf[k + 4]), MAKEWORD(buf[k + 3], 0));
 		DWORD endPsn = MAKEDWORD(MAKEWORD(buf[k + 8], buf[k + 7]), MAKEWORD(buf[k + 6], 0));
 		if (i < 8) {
-			OutputDiscLogA("\t\t       Layer 0");
+			OutputDiscLog("\t\t       Layer 0");
 			startLBA = startPsn - 0x30000;
 			endLBA = endPsn - 0x30000;
 			pDisc->DVD.securitySectorRange[i][0] = startLBA;
 			pDisc->DVD.securitySectorRange[i][1] = endLBA;
 		}
 		else if (i < 16) {
-			OutputDiscLogA("\t\t       Layer 1");
+			OutputDiscLog("\t\t       Layer 1");
 			startLBA = dwEndLayerZeroSector * 2 - (~startPsn & 0xffffff) - 0x30000 + 1;
 			endLBA = dwEndLayerZeroSector * 2 - (~endPsn & 0xffffff) - 0x30000 + 1;
 			pDisc->DVD.securitySectorRange[i][0] = startLBA;
 			pDisc->DVD.securitySectorRange[i][1] = endLBA;
 		}
 		else {
-			OutputDiscLogA("\t\tUnknown ranges");
+			OutputDiscLog("\t\tUnknown ranges");
 			startLBA = startPsn;
 			endLBA = endPsn;
 		}
-		OutputDiscLogA("\t\tUnknown: %02x%02x%02x, startLBA-endLBA: %8lu-%8lu\n"
+		OutputDiscLog("\t\tUnknown: %02x%02x%02x, startLBA-endLBA: %8lu-%8lu\n"
 			, buf[k], buf[k + 1], buf[k + 2], startLBA, endLBA);
 	}
 }
@@ -2002,38 +2033,40 @@ VOID OutputXbox360SecuritySector(
 ) {
 	DWORD dwSectorLen = 0;
 	OutputDVDStructureFormat(pDisc, DvdPhysicalDescriptor, DISC_RAW_READ_SIZE, buf, &dwSectorLen, 0);
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(SecuritySector)
+	OutputDiscLog(
+		OUTPUT_DHYPHEN_PLUS_STR("SecuritySector")
 		"\t                         Unknown: "
 	);
 	for (WORD k = 256; k < 284; k++) {
-		OutputDiscLogA("%02x", buf[k]);
+		OutputDiscLog("%02x", buf[k]);
 	}
-	OutputDiscLogA("\n");
+	OutputDiscLog("\n");
 
 	for (INT i = 0; i < 21; i++) {
-		OutputDiscLogA(
+		OutputDiscLog(
 			"\t             [%02d] Challenge Data: %02x%02x%02x%02x, Response: %02x%02x%02x%02x%02x\n"
 			, i + 1, buf[512 + i * 9], buf[512 + i * 9 + 1], buf[512 + i * 9 + 2], buf[512 + i * 9 + 3]
 			, buf[512 + i * 9 + 4], buf[512 + i * 9 + 5], buf[512 + i * 9 + 6], buf[512 + i * 9 + 7], buf[512 + i * 9 + 8]
 		);
 	}
 
-	OutputDiscLogA(
+	OutputDiscLog(
 		"\t                     CPR_MAI Key: %08x\n"
 		"\t      Version of challenge table: %02u\n"
 		"\t     Number of challenge entries: %u\n"
 		"\t     Encrypted challenge entries: "
 		, MAKEUINT(MAKEWORD(buf[723], buf[722]), MAKEWORD(buf[721], buf[720]))
-		, buf[768], buf[769]);
+		, buf[768], buf[769]
+	);
 	for (WORD k = 770; k < 1024; k++) {
-		OutputDiscLogA("%02x", buf[k]);
+		OutputDiscLog("%02x", buf[k]);
 	}
-	OutputDiscLogA("\n");
+	OutputDiscLog("\n");
 
 	BYTE dcrt[252] = {};
 	decryptChallengeResponse(dcrt, buf);
 	for (INT i = 0; i < 21; i++) {
-		OutputDiscLogA(
+		OutputDiscLog(
 			"\t                    Decrypted[%02d] -> Challenge Type: %02x, Challenge ID: %02x"
 			", Tolerance: %02x, Type: %02x, Challenge Data: %02x%02x%02x%02x, Response: %02x%02x%02x%02x\n"
 			, i + 1, dcrt[i * 12], dcrt[i * 12 + 1], dcrt[i * 12 + 2], dcrt[i * 12 + 3]
@@ -2042,77 +2075,76 @@ VOID OutputXbox360SecuritySector(
 		);
 	}
 
-	OutputDiscLogA(
+	OutputDiscLog(
 		"\t                        Media ID: "
 	);
 	for (WORD k = 1120; k < 1136; k++) {
-		OutputDiscLogA("%02x", buf[k]);
+		OutputDiscLog("%02x", buf[k]);
 	}
 
 	CHAR date[21] = {};
 	printwin32filetime(MAKEUINT64(MAKEUINT(MAKEWORD(buf[1183], buf[1184]), MAKEWORD(buf[1185], buf[1186]))
 		, MAKEUINT(MAKEWORD(buf[1187], buf[1188]), MAKEWORD(buf[1189], buf[1190]))), date);
-	OutputDiscLogA(
+	OutputDiscLog(
 		"\n"
-		"\t          Timestamp of authoring: %s\n"
+		"\t          Timestamp of authoring: %" CHARWIDTH "s\n"
 		"\t                         Unknown: %02x\n"
 		"\t                         Unknown: "
 		, date, buf[1210]
 	);
 	for (WORD k = 1211; k < 1227; k++) {
-		OutputDiscLogA("%02x", buf[k]);
+		OutputDiscLog("%02x", buf[k]);
 	}
 
-	OutputDiscLogA(
+	OutputDiscLog(
 		"\n"
 		"\t                    SHA-1 hash A: "
 	);
 	for (WORD k = 1227; k < 1247; k++) {
-		OutputDiscLogA("%02x", buf[k]);
+		OutputDiscLog("%02x", buf[k]);
 	}
 
-	OutputDiscLogA(
+	OutputDiscLog(
 		"\n"
 		"\t                     Signature A: "
 	);
 	for (WORD k = 1247; k < 1503; k++) {
-		OutputDiscLogA("%02x", buf[k]);
+		OutputDiscLog("%02x", buf[k]);
 	}
 
 	printwin32filetime(MAKEUINT64(MAKEUINT(MAKEWORD(buf[1503], buf[1504]), MAKEWORD(buf[1505], buf[1506]))
 		, MAKEUINT(MAKEWORD(buf[1507], buf[1508]), MAKEWORD(buf[1509], buf[1510]))), date);
-	OutputDiscLogA(
+	OutputDiscLog(
 		"\n"
-		"\t          Timestamp of mastering: %s\n"
+		"\t          Timestamp of mastering: %" CHARWIDTH "s\n"
 		"\t                         Unknown: %02x\n"
 		"\t                         Unknown: "
 		, date, buf[1530]
 	);
 	for (WORD k = 1531; k < 1547; k++) {
-		OutputDiscLogA("%02x", buf[k]);
+		OutputDiscLog("%02x", buf[k]);
 	}
 
-	OutputDiscLogA(
+	OutputDiscLog(
 		"\n"
 		"\t                    SHA-1 hash B: "
 	);
 	for (WORD k = 1547; k < 1567; k++) {
-		OutputDiscLogA("%02x", buf[k]);
+		OutputDiscLog("%02x", buf[k]);
 	}
-	OutputDiscLogA(
+	OutputDiscLog(
 		"\n"
 		"\t                     Signature B: "
 	);
-
 	for (WORD k = 1567; k < 1632; k++) {
-		OutputDiscLogA("%02x", buf[k]);
+		OutputDiscLog("%02x", buf[k]);
 	}
-	OutputDiscLogA(
+	OutputDiscLog(
 		"\n"
 		"\tNumber of security sector ranges: %u\n"
 		"\t          security sector ranges: \n"
-		, buf[1632]);
-
+		, buf[1632]
+	);
 	DWORD startLBA = 0, endLBA = 0;
 #ifdef _WIN32
 	PDVD_FULL_LAYER_DESCRIPTOR dvdLayer = (PDVD_FULL_LAYER_DESCRIPTOR)buf;
@@ -2127,25 +2159,25 @@ VOID OutputXbox360SecuritySector(
 		DWORD startPsn = MAKEDWORD(MAKEWORD(buf[k + 5], buf[k + 4]), MAKEWORD(buf[k + 3], 0));
 		DWORD endPsn = MAKEDWORD(MAKEWORD(buf[k + 8], buf[k + 7]), MAKEWORD(buf[k + 6], 0));
 		if (i == 0) {
-			OutputDiscLogA("\t\t       Layer 0");
+			OutputDiscLog("\t\t       Layer 0");
 			startLBA = startPsn - 0x30000;
 			endLBA = endPsn - 0x30000;
 			pDisc->DVD.securitySectorRange[i][0] = startLBA;
 			pDisc->DVD.securitySectorRange[i][1] = endLBA;
 		}
 		else if (i == 3) {
-			OutputDiscLogA("\t\t       Layer 1");
+			OutputDiscLog("\t\t       Layer 1");
 			startLBA = dwEndLayerZeroSector * 2 - (~startPsn & 0xffffff) - 0x30000 + 1;
 			endLBA = dwEndLayerZeroSector * 2 - (~endPsn & 0xffffff) - 0x30000 + 1;
 			pDisc->DVD.securitySectorRange[i][0] = startLBA;
 			pDisc->DVD.securitySectorRange[i][1] = endLBA;
 		}
 		else {
-			OutputDiscLogA("\t\tUnknown ranges");
+			OutputDiscLog("\t\tUnknown ranges");
 			startLBA = startPsn;
 			endLBA = endPsn;
 		}
-		OutputDiscLogA("\t\tResponse Type: %02x, Challenge ID: %02x, Mod: %02x, startLBA-endLBA: %8lu-%8lu\n"
+		OutputDiscLog("\t\tResponse Type: %02x, Challenge ID: %02x, Mod: %02x, startLBA-endLBA: %8lu-%8lu\n"
 			, buf[k], buf[k + 1], buf[k + 2], startLBA, endLBA);
 	}
 }

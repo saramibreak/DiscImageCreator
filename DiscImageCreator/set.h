@@ -128,7 +128,7 @@ VOID SetMCNToString(
 VOID SetLBAForFirstAdr(
 	INT nFirstLBA[][2],
 	INT nRangeLBA[][2],
-	LPCSTR strAdr,
+	LPCTSTR strAdr,
 	LPINT nAdrLBAList,
 	BYTE byIdxOfSession,
 	BYTE byPlxtrDrive

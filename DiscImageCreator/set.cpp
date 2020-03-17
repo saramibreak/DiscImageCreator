@@ -101,8 +101,16 @@ VOID SetReadDiscCommand(
 		memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
 	}
 	if (bOutputLog) {
+#ifdef _DEBUG
 		OutputLog(standardOut | fileDisc,
-			_T("Set OpCode: %#02x, SubCode: %x(%s)\n"), lpCmd[0], lpCmd[10], szSubCode);
+			"Set Cmd: %#02x, %#02x, %#02x, %#02x, %#02x, %#02x, %#02x, %#02x, %#02x, %#02x, %#02x, %#02x\n"
+			, lpCmd[0], lpCmd[1], lpCmd[2], lpCmd[3], lpCmd[4], lpCmd[5]
+			, lpCmd[6], lpCmd[7], lpCmd[8], lpCmd[9], lpCmd[10], lpCmd[11]
+		);
+#else
+		OutputLog(standardOut | fileDisc,
+			"Set OpCode: %#02x, SubCode: %x(%s)\n", lpCmd[0], lpCmd[10], szSubCode);
+#endif
 	}
 }
 
@@ -186,9 +194,9 @@ VOID SetFeatureRealTimeStreaming(
 VOID SetAndOutputToc(
 	PDISC pDisc
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(TOC));
-	CONST INT typeSize = 7;
-	CHAR strType[typeSize] = {};
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("TOC"));
+	CONST INT typeSize = 7 * sizeof(_TCHAR);
+	_TCHAR strType[typeSize] = {};
 	BOOL bFirstData = TRUE;
 	TRACK_TYPE trkType = TRACK_TYPE::audioOnly;
 	// for swap command
@@ -217,10 +225,10 @@ VOID SetAndOutputToc(
 			pDisc->SCSI.lpLastLBAListOnToc[tIdx] - pDisc->SCSI.lp1stLBAListOnToc[tIdx] + 1;
 
 		if ((pDisc->SCSI.toc.TrackData[tIdx].Control & AUDIO_DATA_TRACK) == 0) {
-			strncpy(strType, " Audio", typeSize);
+			_tcsncpy(strType, _T(" Audio"), typeSize);
 		}
 		else if ((pDisc->SCSI.toc.TrackData[tIdx].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
-			strncpy(strType, "  Data", typeSize);
+			_tcsncpy(strType, _T("  Data"), typeSize);
 			if (bFirstData) {
 				pDisc->SCSI.n1stLBAofDataTrk = pDisc->SCSI.lp1stLBAListOnToc[tIdx];
 				pDisc->SCSI.by1stDataTrkNum = i;
@@ -234,7 +242,7 @@ VOID SetAndOutputToc(
 		if (i == pDisc->SCSI.toc.FirstTrack && pDisc->SCSI.lp1stLBAListOnToc[tIdx] > 0) {
 			if (pDisc->SCSI.byFormat != DISK_TYPE_CDI) {
 				pDisc->SCSI.nAllLength += pDisc->SCSI.lp1stLBAListOnToc[tIdx];
-				OutputDiscLogA("\tPregap Track   , LBA %8u - %8u, Length %8u\n",
+				OutputDiscLog("\tPregap Track   , LBA %8u - %8u, Length %8u\n",
 					0, pDisc->SCSI.lp1stLBAListOnToc[tIdx] - 1, pDisc->SCSI.lp1stLBAListOnToc[tIdx]);
 				if (trkType == TRACK_TYPE::dataExist) {
 					trkType = TRACK_TYPE::pregapDataIn1stTrack;
@@ -247,7 +255,7 @@ VOID SetAndOutputToc(
 		INT idx = i;
 		if (pDisc->SCSI.byFormat == DISK_TYPE_CDI && pDisc->SCSI.toc.LastTrack > 1) {
 			if (i == pDisc->SCSI.toc.FirstTrack) {
-				OutputDiscLogA(
+				OutputDiscLog(
 					"\t Audio Track %2u, LBA %8u - \n", i,	0);
 				pDisc->SCSI.n1stLBAofDataTrk = 0;
 				pDisc->SCSI.by1stDataTrkNum = 1;
@@ -256,7 +264,7 @@ VOID SetAndOutputToc(
 			}
 			idx = i + 1;
 		}
-		OutputDiscLogA(
+		OutputDiscLog(
 			"\t%s Track %2u, LBA %8u - %8u, Length %8u\n", strType, idx,
 			pDisc->SCSI.lp1stLBAListOnToc[tIdx], pDisc->SCSI.lpLastLBAListOnToc[tIdx],
 			pDisc->SCSI.lpLastLBAListOnToc[tIdx] - pDisc->SCSI.lp1stLBAListOnToc[tIdx] + 1);
@@ -265,7 +273,7 @@ VOID SetAndOutputToc(
 		pDisc->SCSI.lpLastLBAListOnToc[0] = pDisc->SCSI.lp1stLBAListOnToc[1] - 1;
 		pDisc->SCSI.nAllLength += pDisc->SCSI.lp1stLBAListOnToc[1];
 	}
-	OutputDiscLogA(
+	OutputDiscLog(
 		"\t                                          Total  %8u\n", pDisc->SCSI.nAllLength);
 	pDisc->SCSI.trkType = trkType;
 }
@@ -280,9 +288,9 @@ VOID SetAndOutputTocForGD(
 	pDisc->SCSI.nAllLength = (INT)(MAKELONG(
 		MAKEWORD(bufDec[0x2a0], bufDec[0x2a1]), MAKEWORD(bufDec[0x2a2], 0)) - 150);
 
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(TOC For GD(HD Area)));
-	CONST INT typeSize = 7;
-	CHAR strType[typeSize] = {};
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("TOC For GD(HD Area)"));
+	CONST INT typeSize = 7 * sizeof(_TCHAR);
+	_TCHAR strType[typeSize] = {};
 	BOOL bFirstData = TRUE;
 	TRACK_TYPE trkType = TRACK_TYPE::audioOnly;
 
@@ -304,10 +312,10 @@ VOID SetAndOutputTocForGD(
 		pDisc->SCSI.toc.TrackData[tIdx].TrackNumber = i;
 
 		if ((pDisc->SCSI.toc.TrackData[tIdx].Control & AUDIO_DATA_TRACK) == 0) {
-			strncpy(strType, " Audio", typeSize);
+			_tcsncpy(strType, _T(" Audio"), typeSize);
 		}
 		else if ((pDisc->SCSI.toc.TrackData[tIdx].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
-			strncpy(strType, "  Data", typeSize);
+			_tcsncpy(strType, _T("  Data"), typeSize);
 			if (bFirstData) {
 				pDisc->SCSI.n1stLBAofDataTrk = pDisc->SCSI.lp1stLBAListOnToc[tIdx];
 				pDisc->SCSI.by1stDataTrkNum = i;
@@ -317,12 +325,12 @@ VOID SetAndOutputTocForGD(
 			pDisc->SCSI.nLastLBAofDataTrk = pDisc->SCSI.lpLastLBAListOnToc[tIdx];
 			pDisc->SCSI.byLastDataTrkNum = i;
 		}
-		OutputDiscLogA(
+		OutputDiscLog(
 			"\t%s Track %2u, LBA %6u - %6u, Length %6u\n", strType, i,
 			pDisc->SCSI.lp1stLBAListOnToc[tIdx], pDisc->SCSI.lpLastLBAListOnToc[tIdx],
 			pDisc->SCSI.lpLastLBAListOnToc[tIdx] - pDisc->SCSI.lp1stLBAListOnToc[tIdx] + 1);
 	}
-	OutputDiscLogA("                                           Total %6d\n"
+	OutputDiscLog("                                           Total %6d\n"
 		, pDisc->SCSI.nAllLength - FIRST_LBA_FOR_GD);
 	pDisc->SCSI.trkType = trkType;
 }
@@ -334,11 +342,11 @@ VOID SetAndOutputTocFull(
 	WORD wTocEntries,
 	FILE* fpCcd
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(FULL TOC)
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("FULL TOC")
 		"\tFirstCompleteSession: %u\n"
-		"\t LastCompleteSession: %u\n",
-		fullToc->FirstCompleteSession,
-		fullToc->LastCompleteSession);
+		"\t LastCompleteSession: %u\n"
+		, fullToc->FirstCompleteSession
+		, fullToc->LastCompleteSession);
 	UCHAR ucTmpLastTrack = 0;
 
 	for (WORD a = 0; a < wTocEntries; a++) {
@@ -347,23 +355,23 @@ VOID SetAndOutputTocFull(
 		if (fpCcd) {
 			WriteCcdForEntry(pTocData, a, fpCcd);
 		}
-		OutputDiscLogA("\tSession %u, Ctl %u, Adr %u, Point 0x%02x,"
+		OutputDiscLog("\tSession %u, Ctl %u, Adr %u, Point 0x%02x,"
 			, pTocData[a].SessionNumber, pTocData[a].Control, pTocData[a].Adr, pTocData[a].Point);
 		switch (pTocData[a].Point) {
 		case 0xa0:
-			OutputDiscLogA(" FirstTrack %2u, ", pTocData[a].Msf[0]);
+			OutputDiscLog(" FirstTrack %2u, ", pTocData[a].Msf[0]);
 			switch (pTocData[a].Msf[1]) {
 			case DISK_TYPE_CDDA:
-				OutputDiscLogA("Format: CD-DA or CD-ROM\n");
+				OutputDiscLog("Format: CD-DA or CD-ROM\n");
 				break;
 			case DISK_TYPE_CDI:
-				OutputDiscLogA("Format: CD-I\n");
+				OutputDiscLog("Format: CD-I\n");
 				break;
 			case DISK_TYPE_XA:
-				OutputDiscLogA("Format: CD-ROM-XA\n");
+				OutputDiscLog("Format: CD-ROM-XA\n");
 				break;
 			default:
-				OutputDiscLogA("Format: Other [0x%02x]\n", pTocData[a].Msf[1]);
+				OutputDiscLog("Format: Other [0x%02x]\n", pTocData[a].Msf[1]);
 				break;
 			}
 			// set this by ReadTOCFull
@@ -373,13 +381,13 @@ VOID SetAndOutputTocFull(
 			}
 			break;
 		case 0xa1:
-			OutputDiscLogA("  LastTrack %2u\n", pTocData[a].Msf[0]);
+			OutputDiscLog("  LastTrack %2u\n", pTocData[a].Msf[0]);
 			ucTmpLastTrack = pTocData[a].Msf[0];
 			break;
 		case 0xa2:
 			nTmpLBA = 
 				MSFtoLBA(pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]) - 150;
-			OutputDiscLogA(
+			OutputDiscLog(
 				"      Lead-out, AMSF %02u:%02u:%02u (LBA[%06d, %#07x])\n"
 				, pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2], nTmpLBA, nTmpLBA);
 			if (fullToc->LastCompleteSession > 1) {
@@ -396,55 +404,87 @@ VOID SetAndOutputTocFull(
 				MSFtoLBA(pTocData[a].MsfExtra[0], pTocData[a].MsfExtra[1], pTocData[a].MsfExtra[2]) - 150;
 			nTmpLBA =
 				MSFtoLBA(pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]) - 150;
-			OutputDiscLogA(
+			OutputDiscLog(
 				"   NextSession, AMSF %02u:%02u:%02u (LBA[%06d, %#07x])\n"
 				"\t                    Outermost Lead-out of the disc, AMSF %02u:%02u:%02u (LBA[%06d, %#07x])\n" 
-				"\t                         Num of pointers in Mode 5, %02u\n", 
-				pTocData[a].MsfExtra[0], pTocData[a].MsfExtra[1], pTocData[a].MsfExtra[2], 
-				nTmpLBAExt, nTmpLBAExt,
-				pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2],
-				nTmpLBA, nTmpLBA, pTocData[a].Zero);
+				"\t                         Num of pointers in Mode 5, %02u\n"
+				, pTocData[a].MsfExtra[0], pTocData[a].MsfExtra[1], pTocData[a].MsfExtra[2]
+				, nTmpLBAExt, nTmpLBAExt
+				, pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]
+				, nTmpLBA, nTmpLBA, pTocData[a].Zero);
 			// set this by ReadTOCFull
 //			pDisc->SCSI.n1stLBAof2ndSession = nTmpLBAExt + 150;
 			break;
 		case 0xb1: // (Audio only: This identifies the presence of skip intervals)
-			OutputDiscLogA(
+			OutputDiscLog(
 				"\t                     Num of skip interval pointers, %02u\n"
-				"\t                        Num of skip track pointers, %02u\n",
-				pTocData[a].Msf[0], pTocData[a].Msf[1]);
+				"\t                        Num of skip track pointers, %02u\n"
+				, pTocData[a].Msf[0], pTocData[a].Msf[1]);
 			break;
 		case 0xb2: // (Audio only: This identifies tracks that should be skipped during playback)
 		case 0xb3:
 		case 0xb4:
-			OutputDiscLogA(
+			OutputDiscLog(
 				"                         Skip num, %02u %02u %02u %02u %02u %02u\n"
-				, pTocData[a].MsfExtra[0], pTocData[a].MsfExtra[1], pTocData[a].MsfExtra[2],
-				pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]);
+				, pTocData[a].MsfExtra[0], pTocData[a].MsfExtra[1], pTocData[a].MsfExtra[2]
+				, pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]);
 			break;
 		case 0xc0: // (Together with POINT=B0h, this is used to identify a multi-session disc)
 			nTmpLBA =
 				MSFtoLBA(pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]) - 150;
-			OutputDiscLogA(
-				" Optimum recording power, %02u\n"
-				"\t                         First Lead-in of the disc, AMSF %02u:%02u:%02u (LBA[%06d, %#07x])\n", 
-				pTocData[a].MsfExtra[0], 
-				pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2],
-				nTmpLBA, nTmpLBA);
+			if (pDisc->SCSI.wCurrentMedia == ProfileCdRecordable ||
+				pDisc->SCSI.wCurrentMedia == ProfileCdRewritable) {
+				OutputDiscLog(
+					"              ,  MSF %02u:%02u:%02u\n"
+					"\t                         First Lead-in of the disc, AMSF %02u:%02u:%02u\n"
+					, pTocData[a].MsfExtra[0], pTocData[a].MsfExtra[1], pTocData[a].MsfExtra[2]
+					, pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]);
+				// Ecma 394
+				// 4.4.1 Special Information 1 : M1,S1,F1 = 101
+				pTocData[a].MsfExtra[0] = (UCHAR)(pTocData[a].MsfExtra[0] >> 1 | 0x80);
+				pTocData[a].MsfExtra[1] = (UCHAR)(pTocData[a].MsfExtra[1] >> 1);
+				pTocData[a].MsfExtra[2] = (UCHAR)(pTocData[a].MsfExtra[2] >> 1 | 0x80);
+#if 0
+				PCDROM_TOC_ATIP_DATA_BLOCK pAtip = (PCDROM_TOC_ATIP_DATA_BLOCK)&pTocData[a].MsfExtra[0];
+				OutputCDAtipSI1(pAtip);
+				OutputCDAtipSI2(pAtip);
+#endif
+			}
+			else {
+				OutputDiscLog(
+					"              ,  MSF %02u:%02u:%02u\n"
+					"\t                         First Lead-in of the disc, AMSF %02u:%02u:%02u (LBA[%06d, %#07x])\n"
+					, pTocData[a].MsfExtra[0], pTocData[a].MsfExtra[1], pTocData[a].MsfExtra[2]
+					, pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]
+					, nTmpLBA, nTmpLBA);
+			}
 			break;
 		case 0xc1:
-			OutputDiscLogA(
-				"  Copy of info from A1 point in ATIP, %02u %02u %02u %02u %02u %02u\n"
-				, pTocData[a].MsfExtra[0], pTocData[a].MsfExtra[1], pTocData[a].MsfExtra[2],
-				pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]);
+			OutputDiscLog(
+				"\n     Copy of info from Additional Information1 in ATIP,  MSF %02u:%02u:%02u, AMSF %02u:%02u:%02u\n"
+				, pTocData[a].MsfExtra[0], pTocData[a].MsfExtra[1], pTocData[a].MsfExtra[2]
+				, pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]);
+			// Ecma 394
+			// 4.4.4 Additional Information 1 : M1,S1,F1 = 001
+			CDROM_TOC_ATIP_DATA_BLOCK atip;
+			if (pDisc->SCSI.wCurrentMedia == ProfileCdRewritable) {
+				atip.IsCdrw = TRUE;
+			}
+			atip.A1Valid = TRUE;
+			atip.A1Values[0] = (UCHAR)(pTocData[a].MsfExtra[0] >> 1);
+			atip.A1Values[1] = (UCHAR)(pTocData[a].MsfExtra[1] >> 1);
+			atip.A1Values[2] = (UCHAR)(pTocData[a].MsfExtra[2] >> 1 | 0x80);
+#if 0
+			OutputCDAtipAI1(&atip);
+#endif
 			break;
 		default:
 			if (pTocData[a].Adr == 1) {
 				nTmpLBA =
 					MSFtoLBA(pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]) - 150;
-				OutputDiscLogA(
+				OutputDiscLog(
 					"      Track %2u, AMSF %02u:%02u:%02u (LBA[%06d, %#07x])\n"
-					, pTocData[a].Point, pTocData[a].Msf[0],
-					pTocData[a].Msf[1], pTocData[a].Msf[2], nTmpLBA, nTmpLBA);
+					, pTocData[a].Point, pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2], nTmpLBA, nTmpLBA);
 				if (fullToc->LastCompleteSession > 1) {
 #if 0
 					// Rayman (USA) [SS], Wolfchild (Europe) [MCD]
@@ -479,13 +519,11 @@ VOID SetAndOutputTocFull(
 					MSFtoLBA(pTocData[a].MsfExtra[0], pTocData[a].MsfExtra[1], pTocData[a].MsfExtra[2]) - 150;
 				nTmpLBA =
 					MSFtoLBA(pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]) - 150;
-				OutputDiscLogA(
-					"\t              Skipped interval end time, AMSF %02u:%02u:%02u (LBA[%06d, %#07x])\n"
-					"\t              Skipped interval start time on playback, AMSF %02u:%02u:%02u (LBA[%06d, %#07x])\n",
-					pTocData[a].MsfExtra[0], pTocData[a].MsfExtra[1], pTocData[a].MsfExtra[2],
-					nTmpLBAExt, nTmpLBAExt,
-					pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2],
-					nTmpLBA, nTmpLBA);
+				OutputDiscLog(
+					"\t              Skipped interval end time, MSF %02u:%02u:%02u (LBA[%06d, %#07x])\n"
+					"\t              Skipped interval start time on playback, AMSF %02u:%02u:%02u (LBA[%06d, %#07x])\n"
+					, pTocData[a].MsfExtra[0], pTocData[a].MsfExtra[1], pTocData[a].MsfExtra[2], nTmpLBAExt, nTmpLBAExt
+					, pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2], nTmpLBA, nTmpLBA);
 			}
 			break;
 		}
@@ -533,10 +571,10 @@ VOID SetAndOutputTocCDText(
 			size_t len = strlen(pTmpText + uiTxtIdx);
 			strncpy(pDisc->SCSI.CDTEXT[nIdx].pszTitle[i], pTmpText + uiTxtIdx, len);
 			if (i == 0) {
-				OutputDiscLogA("\tAlbum Name: %s\n", pDisc->SCSI.CDTEXT[nIdx].pszTitle[i]);
+				OutputDiscLog("\tAlbum Name: %" CHARWIDTH "s\n", pTmpText + uiTxtIdx);
 			}
 			else {
-				OutputDiscLogA("\t Song Name[%d]: %s\n", i, pDisc->SCSI.CDTEXT[nIdx].pszTitle[i]);
+				OutputDiscLog("\t Song Name[%d]: %" CHARWIDTH "s\n", i, pTmpText + uiTxtIdx);
 			}
 			if (bUnicode) {
 				uiTxtIdx += 2;
@@ -558,10 +596,10 @@ VOID SetAndOutputTocCDText(
 			size_t len = strlen(pTmpText + uiTxtIdx);
 			strncpy(pDisc->SCSI.CDTEXT[nIdx].pszPerformer[i], pTmpText + uiTxtIdx, len);
 			if (i == 0) {
-				OutputDiscLogA("\tAlbum Performer: %s\n", pDisc->SCSI.CDTEXT[nIdx].pszPerformer[i]);
+				OutputDiscLog("\tAlbum Performer: %" CHARWIDTH "s\n", pTmpText + uiTxtIdx);
 			}
 			else {
-				OutputDiscLogA("\t Song Performer[%d]: %s\n", i, pDisc->SCSI.CDTEXT[nIdx].pszPerformer[i]);
+				OutputDiscLog("\t Song Performer[%d]: %" CHARWIDTH "s\n", i, pTmpText + uiTxtIdx);
 			}
 			if (bUnicode) {
 				uiTxtIdx += 2;
@@ -583,10 +621,10 @@ VOID SetAndOutputTocCDText(
 			size_t len = strlen(pTmpText + uiTxtIdx);
 			strncpy(pDisc->SCSI.CDTEXT[nIdx].pszSongWriter[i], pTmpText + uiTxtIdx, len);
 			if (i == 0) {
-				OutputDiscLogA("\tAlbum SongWriter: %s\n", pDisc->SCSI.CDTEXT[nIdx].pszSongWriter[i]);
+				OutputDiscLog("\tAlbum SongWriter: %" CHARWIDTH "s\n", pTmpText + uiTxtIdx);
 			}
 			else {
-				OutputDiscLogA("\t      SongWriter[%d]: %s\n", i, pDisc->SCSI.CDTEXT[nIdx].pszSongWriter[i]);
+				OutputDiscLog("\t      SongWriter[%d]: %" CHARWIDTH "s\n", i, pTmpText + uiTxtIdx);
 			}
 			if (bUnicode) {
 				uiTxtIdx += 2;
@@ -607,10 +645,10 @@ VOID SetAndOutputTocCDText(
 		for (UINT i = 0; i < uiLastTrackNum + 1; i++) {
 			size_t len = strlen(pTmpText + uiTxtIdx);
 			if (i == 0) {
-				OutputDiscLogA("\tAlbum Composer: %s\n", pTmpText + uiTxtIdx);
+				OutputDiscLog("\tAlbum Composer: %" CHARWIDTH "s\n", pTmpText + uiTxtIdx);
 			}
 			else {
-				OutputDiscLogA("\t      Composer[%d]: %s\n", i, pTmpText + uiTxtIdx);
+				OutputDiscLog("\t      Composer[%d]: %" CHARWIDTH "s\n", i, pTmpText + uiTxtIdx);
 			}
 			if (bUnicode) {
 				uiTxtIdx += 2;
@@ -631,10 +669,10 @@ VOID SetAndOutputTocCDText(
 		for (UINT i = 0; i < uiLastTrackNum + 1; i++) {
 			size_t len = strlen(pTmpText + uiTxtIdx);
 			if (i == 0) {
-				OutputDiscLogA("\tAlbum Arranger: %s\n", pTmpText + uiTxtIdx);
+				OutputDiscLog("\tAlbum Arranger: %" CHARWIDTH "s\n", pTmpText + uiTxtIdx);
 			}
 			else {
-				OutputDiscLogA("\t      Arranger[%d]: %s\n", i, pTmpText + uiTxtIdx);
+				OutputDiscLog("\t      Arranger[%d]: %" CHARWIDTH "s\n", i, pTmpText + uiTxtIdx);
 			}
 			if (bUnicode) {
 				uiTxtIdx += 2;
@@ -655,10 +693,10 @@ VOID SetAndOutputTocCDText(
 		for (UINT i = 0; i < uiLastTrackNum + 1; i++) {
 			size_t len = strlen(pTmpText + uiTxtIdx);
 			if (i == 0) {
-				OutputDiscLogA("\tAlbum Messages: %s\n", pTmpText + uiTxtIdx);
+				OutputDiscLog("\tAlbum Messages: %" CHARWIDTH "s\n", pTmpText + uiTxtIdx);
 			}
 			else {
-				OutputDiscLogA("\t      Messages[%d]: %s\n", i, pTmpText + uiTxtIdx);
+				OutputDiscLog("\t      Messages[%d]: %" CHARWIDTH "s\n", i, pTmpText + uiTxtIdx);
 			}
 			if (bUnicode) {
 				uiTxtIdx += 2;
@@ -676,7 +714,7 @@ VOID SetAndOutputTocCDText(
 		for (size_t t = uiIdxBegin; t < uiIdxEnd; t++, tEnt++) {
 			memcpy(pTmpText + 12 * t, (pDesc[tEnt].Text), 12);
 		}
-		OutputDiscLogA("\t      DiscId: %s\n", pTmpText + uiTxtIdx);
+		OutputDiscLog("\t      DiscId: %" CHARWIDTH "s\n", pTmpText + uiTxtIdx);
 	}
 	uiIdxBegin += uiPacksOfDiscId;
 	uiIdxEnd += uiPacksOfGenre;
@@ -685,12 +723,12 @@ VOID SetAndOutputTocCDText(
 		for (size_t t = uiIdxBegin; t < uiIdxEnd; t++, tEnt++) {
 			memcpy(pTmpText + 12 * t, (pDesc[tEnt].Text), 12);
 		}
-		OutputDiscLogA("\tGenre code: 0x%02x%02x"
+		OutputDiscLog("\tGenre code: 0x%02x%02x"
 			, *(pTmpText + uiTxtIdx), *(pTmpText + uiTxtIdx + 1));
 		if (*(pTmpText + uiTxtIdx + 1) != 0) {
-			OutputDiscLogA(" %s", pTmpText + uiTxtIdx + 2);
+			OutputDiscLog(" %" CHARWIDTH "s", pTmpText + uiTxtIdx + 2);
 		}
-		OutputDiscLogA("\n");
+		OutputDiscLog("\n");
 	}
 	uiIdxBegin += uiPacksOfGenre;
 	uiIdxEnd += uiPacksOfUpcEan;
@@ -702,10 +740,10 @@ VOID SetAndOutputTocCDText(
 		for (UINT i = 0; i < uiLastTrackNum + 1; i++) {
 			size_t len = strlen(pTmpText + uiTxtIdx);
 			if (i == 0) {
-				OutputDiscLogA("\tAlbum UpcEan: %s\n", pTmpText + uiTxtIdx);
+				OutputDiscLog("\tAlbum UpcEan: %" CHARWIDTH "s\n", pTmpText + uiTxtIdx);
 			}
 			else {
-				OutputDiscLogA("\t      UpcEan[%d]: %s\n", i, pTmpText + uiTxtIdx);
+				OutputDiscLog("\t      UpcEan[%d]: %" CHARWIDTH "s\n", i, pTmpText + uiTxtIdx);
 			}
 			uiTxtIdx += len;
 			uiTxtIdx++;
@@ -859,7 +897,7 @@ VOID SetTrackAttribution(
 				if (pDisc->SCSI.n1stLBAof2ndSession == -1 &&
 					tmpCurrentIndex == 1 &&
 					nLBA != pDisc->SCSI.lp1stLBAListOnToc[tIdx]) {
-					OutputSubInfoWithLBALogA(
+					OutputSubInfoWithLBALog(
 						"Subchannel & TOC doesn't sync. LBA on TOC[%d, %#x], index[%02u]\n",
 						nLBA, tmpCurrentTrackNum, pDisc->SCSI.lp1stLBAListOnToc[tIdx],
 						pDisc->SCSI.lp1stLBAListOnToc[tIdx], tmpCurrentIndex);
@@ -877,7 +915,7 @@ VOID SetTrackAttribution(
 					}
 				}
 				else {
-					OutputSubInfoWithLBALogA(
+					OutputSubInfoWithLBALog(
 						"There isn't the pregap on this track\n", nLBA, tmpCurrentTrackNum);
 					pDisc->SUB.lp1stLBAListOnSub[tIdx][tmpCurrentIndex] = nLBA;
 					pDisc->SUB.lp1stLBAListOnSubSync[tIdx][tmpCurrentIndex] = nLBA;
@@ -894,16 +932,16 @@ VOID SetTrackAttribution(
 						pDisc->SCSI.lpSessionNumList[tmpCurrentTrackNum - 1] > pDisc->SCSI.lpSessionNumList[tmpPrevTrackNum - 1]) {
 						nTmpLastLBA -= SESSION_TO_SESSION_SKIP_LBA;
 					}
-					OutputSubInfoWithLBALogA(
-						"Last LBA of this data track [L:%d]\n", nTmpLastLBA, tmpPrevTrackNum, (INT)__LINE__);
+					OutputSubInfoWithLBALog(
+						"Last LBA of this data track [L:%d]\n", nTmpLastLBA, tmpPrevTrackNum, __LINE__);
 					pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tmpPrevTrackNum - 1] = nTmpLastLBA;
 
-					OutputSubInfoWithLBALogA(
-						"TrackNum is changed [L:%d]\n", nLBA, tmpCurrentTrackNum, (INT)__LINE__);
+					OutputSubInfoWithLBALog(
+						"TrackNum is changed [L:%d]\n", nLBA, tmpCurrentTrackNum, __LINE__);
 				}
 				else if ((pDiscPerSector->subch.prev.byCtl & AUDIO_DATA_TRACK) == 0) {
-					OutputSubInfoWithLBALogA(
-						"TrackNum is changed [L:%d]\n", nLBA, tmpCurrentTrackNum, (INT)__LINE__);
+					OutputSubInfoWithLBALog(
+						"TrackNum is changed [L:%d]\n", nLBA, tmpCurrentTrackNum, __LINE__);
 				}
 			}
 		}
@@ -911,15 +949,15 @@ VOID SetTrackAttribution(
 		if (nLBA == pDisc->SCSI.lp1stLBAListOnToc[tIdx]) {
 			pDisc->SUB.lpCtlList[tIdx] = pDiscPerSector->subch.current.byCtl;
 			pDisc->MAIN.lpModeList[tIdx] = GetMode(pDiscPerSector, unscrambled);
-			OutputSubInfoWithLBALogA("Set Ctl: %d, Mode: %d\n"
+			OutputSubInfoWithLBALog("Set Ctl: %d, Mode: %d\n"
 				, nLBA, tmpCurrentTrackNum, pDisc->SUB.lpCtlList[tIdx], pDisc->MAIN.lpModeList[tIdx]);
 		}
 		// preserve the 1st LBA of the changed index 
 		if (pDiscPerSector->byTrackNum >= 1 && tmpPrevIndex + 1 == tmpCurrentIndex) {
 			if (tmpCurrentIndex != 1 && tmpCurrentIndex < MAXIMUM_NUMBER_INDEXES) {
 				if (pDisc->SUB.lp1stLBAListOnSub[tIdx][tmpCurrentIndex] == -1) {
-					OutputSubInfoWithLBALogA("Index is changed from [%02d] to [%02d] [L:%d]\n"
-						, nLBA, tmpCurrentTrackNum, tmpPrevIndex, tmpCurrentIndex, (INT)__LINE__);
+					OutputSubInfoWithLBALog("Index is changed from [%02d] to [%02d] [L:%d]\n"
+						, nLBA, tmpCurrentTrackNum, tmpPrevIndex, tmpCurrentIndex, __LINE__);
 					pDisc->SUB.lp1stLBAListOnSub[tIdx][tmpCurrentIndex] = nLBA;
 					pDisc->SUB.lp1stLBAListOnSubSync[tIdx][tmpCurrentIndex] = nLBA;
 				}
@@ -932,7 +970,7 @@ VOID SetTrackAttribution(
 						pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tIdx] = nLBA - 1;
 					}
 					else {
-						OutputSubInfoWithLBALogA(
+						OutputSubInfoWithLBALog(
 							"Subchannel & TOC doesn't sync. LBA on TOC[%d, %#x], prevIndex[%02u]\n",
 							nLBA, tmpCurrentTrackNum, pDisc->SCSI.lp1stLBAListOnToc[tIdx],
 							pDisc->SCSI.lp1stLBAListOnToc[tIdx], tmpPrevIndex);
@@ -941,8 +979,8 @@ VOID SetTrackAttribution(
 						pDisc->SUB.byDesync = TRUE;
 					}
 				}
-				OutputSubInfoWithLBALogA("Index is changed from [%02d] to [%02d] [L:%d]\n", nLBA
-					, tmpCurrentTrackNum, tmpPrevIndex, tmpCurrentIndex, (INT)__LINE__);
+				OutputSubInfoWithLBALog("Index is changed from [%02d] to [%02d] [L:%d]\n", nLBA
+					, tmpCurrentTrackNum, tmpPrevIndex, tmpCurrentIndex, __LINE__);
 
 				pDisc->SUB.lp1stLBAListOnSub[tIdx][1] = pDisc->SCSI.lp1stLBAListOnToc[tIdx];
 				if (pDisc->SUB.lp1stLBAListOnSub[tIdx][0] == pDisc->SUB.lp1stLBAListOnSub[tIdx][1]) {
@@ -960,32 +998,34 @@ VOID SetTrackAttribution(
 		else if (tmpPrevIndex >= 1 && tmpCurrentIndex == 0) {
 #if 0
 			for (INT i = pDisc->SCSI.toc.FirstTrack - 1; i < pDisc->SCSI.toc.LastTrack; i++) {
-				OutputString(_T("pDisc->SUB.lp1stLBAListOnSub[%d][%d]: %d, %p, LBA: %d\n")
-					, i, tmpCurrentIndex, pDisc->SUB.lp1stLBAListOnSub[i][tmpCurrentIndex], &pDisc->SUB.lp1stLBAListOnSub[i][tmpCurrentIndex], nLBA);
+				OutputString("pDisc->SUB.lp1stLBAListOnSub[%d][%d]: %d, %p, LBA: %d\n"
+					, i, tmpCurrentIndex, pDisc->SUB.lp1stLBAListOnSub[i][tmpCurrentIndex]
+					, &pDisc->SUB.lp1stLBAListOnSub[i][tmpCurrentIndex], nLBA);
 			}
 #endif
 			if (pDisc->SUB.lp1stLBAListOnSub[tIdx][tmpCurrentIndex] == -1) {
-				OutputSubInfoWithLBALogA("Index is changed from [%02d] to [%02d] [L:%d]\n", nLBA
-					, tmpCurrentTrackNum, tmpPrevIndex, tmpCurrentIndex, (INT)__LINE__);
+				OutputSubInfoWithLBALog("Index is changed from [%02d] to [%02d] [L:%d]\n", nLBA
+					, tmpCurrentTrackNum, tmpPrevIndex, tmpCurrentIndex, __LINE__);
 				pDisc->SUB.lp1stLBAListOnSub[tIdx][tmpCurrentIndex] = nLBA;
 				pDisc->SUB.lp1stLBAListOnSubSync[tIdx][tmpCurrentIndex] = nLBA;
 			}
 #if 0
 			for (INT i = pDisc->SCSI.toc.FirstTrack - 1; i < pDisc->SCSI.toc.LastTrack; i++) {
-				OutputString(_T("pDisc->SUB.lp1stLBAListOnSub[%d][%d]: %d, %p, LBA: %d\n")
-					, i, tmpCurrentIndex, pDisc->SUB.lp1stLBAListOnSub[i][tmpCurrentIndex], &pDisc->SUB.lp1stLBAListOnSub[i][tmpCurrentIndex], nLBA);
+				OutputString("pDisc->SUB.lp1stLBAListOnSub[%d][%d]: %d, %p, LBA: %d\n"
+					, i, tmpCurrentIndex, pDisc->SUB.lp1stLBAListOnSub[i][tmpCurrentIndex]
+					, &pDisc->SUB.lp1stLBAListOnSub[i][tmpCurrentIndex], nLBA);
 			}
 #endif
 		}
 
 		if ((pDisc->SCSI.toc.TrackData[tIdx].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK &&
 			(pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == 0) {
-			OutputMainInfoWithLBALogA(
+			OutputMainInfoWithLBALog(
 				"Data track, but this sector is audio\n", nLBA, tmpCurrentTrackNum);
 		}
 		else if ((pDisc->SCSI.toc.TrackData[tIdx].Control & AUDIO_DATA_TRACK) == 0 &&
 			(pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
-			OutputMainInfoWithLBALogA(
+			OutputMainInfoWithLBALog(
 				"Audio track, but this sector is data\n", nLBA, tmpCurrentTrackNum);
 		}
 
@@ -1005,19 +1045,19 @@ VOID SetTrackAttribution(
 			// preserve first LBA per data track
 			if (pDisc->SUB.lp1stLBAListOfDataTrackOnSub[tIdx] == -1 &&
 				(pDisc->SCSI.toc.TrackData[tIdx].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
-				OutputSubInfoWithLBALogA("1st LBA of this data track\n", nLBA, tmpCurrentTrackNum);
+				OutputSubInfoWithLBALog("1st LBA of this data track\n", nLBA, tmpCurrentTrackNum);
 				pDisc->SUB.lp1stLBAListOfDataTrackOnSub[tIdx] = nLBA;
 			}
 			else if (nLBA == pDisc->SCSI.nAllLength - 1) {
 				if (pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tIdx] == -1) {
 					// preserve last LBA per data track
 					if ((pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
-						OutputSubInfoWithLBALogA(
-							"Last LBA of this data track [L:%d]\n", nLBA, tmpCurrentTrackNum, (INT)__LINE__);
+						OutputSubInfoWithLBALog(
+							"Last LBA of this data track [L:%d]\n", nLBA, tmpCurrentTrackNum, __LINE__);
 						pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tIdx] = pDisc->SCSI.nAllLength - 1;
 					}
 				}
-				OutputSubInfoWithLBALogA("Last LBA of this disc\n", nLBA, tmpCurrentTrackNum);
+				OutputSubInfoWithLBALog("Last LBA of this disc\n", nLBA, tmpCurrentTrackNum);
 			}
 		}
 	}
@@ -1026,16 +1066,16 @@ VOID SetTrackAttribution(
 		((tmpCurrentTrackNum == 0 && (tmpCurrentIndex == 100 || tmpCurrentIndex == 101 ||
 			(tmpCurrentIndex == 0 && pDiscPerSector->subch.current.nAbsoluteTime == 0)))))) {
 		if (pDisc->SUB.lp1stLBAListOfDataTrackOnSub[pDiscPerSector->byTrackNum - 1] == -1) {
-			OutputSubInfoWithLBALogA("1st LBA of Lead-out or Lead-in\n", nLBA, tmpCurrentTrackNum);
+			OutputSubInfoWithLBALog("1st LBA of Lead-out or Lead-in\n", nLBA, tmpCurrentTrackNum);
 			pDisc->SUB.lp1stLBAListOfDataTrackOnSub[pDiscPerSector->byTrackNum - 1] = nLBA;
 			if (pDiscPerSector->byTrackNum < pDisc->SCSI.by1stDataTrkNum) {
 				pDisc->SCSI.by1stDataTrkNum = pDiscPerSector->byTrackNum;
 			}
 		}
 		else if (nLBA != pDisc->SCSI.n1stLBAof2ndSession - 150){
-			OutputSubInfoWithLBALogA(
+			OutputSubInfoWithLBALog(
 				"Set the last LBA of data track [%d]->[%d] [L:%d]\n", nLBA, tmpCurrentTrackNum,
-				pDisc->SUB.lpLastLBAListOfDataTrackOnSub[pDiscPerSector->byTrackNum - 1], nLBA, (INT)__LINE__);
+				pDisc->SUB.lpLastLBAListOfDataTrackOnSub[pDiscPerSector->byTrackNum - 1], nLBA, __LINE__);
 			pDisc->SUB.lpLastLBAListOfDataTrackOnSub[pDiscPerSector->byTrackNum - 1] = nLBA;
 		}
 	}
@@ -1140,7 +1180,7 @@ VOID SetMCNToString(
 VOID SetLBAForFirstAdr(
 	INT nFirstLBA[][2],
 	INT nRangeLBA[][2],
-	LPCSTR strAdr,
+	LPCTSTR strAdr,
 	LPINT nAdrLBAList,
 	BYTE byIdxOfSession,
 	BYTE byPlxtrDrive
@@ -1161,7 +1201,7 @@ VOID SetLBAForFirstAdr(
 				nFirstLBA[0][byIdxOfSession]++;
 			}
 		}
-		OutputDiscLogA(
+		OutputDiscLog(
 			"\tSession %d, 1st %s sector is %d, %s sector exists per %d byte\n"
 			, byIdxOfSession + 1, strAdr, nAdrLBAList[0]
 			, strAdr, nAdrLBAList[1] - nAdrLBAList[0]);
@@ -1189,7 +1229,7 @@ VOID SetLBAForFirstAdr(
 				nFirstLBA[0][byIdxOfSession]++;
 			}
 		}
-		OutputDiscLogA(
+		OutputDiscLog(
 			"\tSession %d, 1st %s sector is %d, %s sector exists per %d byte\n"
 			, byIdxOfSession + 1, strAdr, nAdrLBAList[0] - 1
 			, strAdr, nAdrLBAList[1] - nAdrLBAList[0] + 1);
@@ -1206,7 +1246,7 @@ VOID SetLBAForFirstAdr(
 				nFirstLBA[1][byIdxOfSession]++;
 			}
 		}
-		OutputDiscLogA(
+		OutputDiscLog(
 			"\tSession %d, 1st %s sector is %d, %s sector exists per %d\n"
 			"\t            2nd %s sector is %d, %s sector exists per %d\n"
 			, byIdxOfSession + 1
@@ -1228,7 +1268,7 @@ VOID SetLBAForFirstAdr(
 				nFirstLBA[2][byIdxOfSession]++;
 			}
 		}
-		OutputDiscLogA(
+		OutputDiscLog(
 			"\tSession %d, 1st %s sector is %d, %s sector exists per %d, %d, %d\n"
 			, byIdxOfSession + 1
 			, strAdr, nAdrLBAList[0]
@@ -1374,7 +1414,7 @@ VOID UpdateTmpSubchForMCN(
 					pDiscPerSector->subch.current.byTrackNum = (BYTE)(pDiscPerSector->subch.prev.byTrackNum + 1);
 					// pattern 1-1-1-1-1: change index. (pregap sector is 0)
 					pDiscPerSector->subch.current.byIndex = 0;
-					OutputSubInfoWithLBALogA(
+					OutputSubInfoWithLBALog(
 						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d) [L:%d]\n",
 						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subch.current.byTrackNum, pDiscPerSector->subch.prev.byTrackNum, __LINE__);
 				}
@@ -1406,7 +1446,7 @@ VOID UpdateTmpSubchForMCN(
 					pDiscPerSector->subch.current.byTrackNum = (BYTE)(pDiscPerSector->subch.prev.byTrackNum + 1);
 					// pattern 1-1-2-1-1: change index. (pregap sector is 0)
 					pDiscPerSector->subch.current.byIndex = 0;
-					OutputSubInfoWithLBALogA(
+					OutputSubInfoWithLBALog(
 						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d) [L:%d]\n",
 						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subch.current.byTrackNum, pDiscPerSector->subch.prev.byTrackNum, __LINE__);
 				}
@@ -1449,7 +1489,7 @@ VOID UpdateTmpSubchForMCN(
 					pDiscPerSector->subch.current.byTrackNum = (BYTE)(pDiscPerSector->subch.prev.byTrackNum + 1);
 					// pattern 1-2-1-1-1: change index. (pregap sector is 0)
 					pDiscPerSector->subch.current.byIndex = 0;
-					OutputSubInfoWithLBALogA(
+					OutputSubInfoWithLBALog(
 						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d) [L:%d]\n",
 						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subch.current.byTrackNum, pDiscPerSector->subch.prev.byTrackNum, __LINE__);
 				}
@@ -1481,7 +1521,7 @@ VOID UpdateTmpSubchForMCN(
 					pDiscPerSector->subch.current.byTrackNum = (BYTE)(pDiscPerSector->subch.prev.byTrackNum + 1);
 					// pattern 1-2-2-1-1: change index. (pregap sector is 0)
 					pDiscPerSector->subch.current.byIndex = 0;
-					OutputSubInfoWithLBALogA(
+					OutputSubInfoWithLBALog(
 						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d) [L:%d]\n",
 						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subch.current.byTrackNum, pDiscPerSector->subch.prev.byTrackNum, __LINE__);
 				}
@@ -1512,7 +1552,7 @@ VOID UpdateTmpSubchForMCN(
 					pDiscPerSector->subch.current.byTrackNum = (BYTE)(pDiscPerSector->subch.prev.byTrackNum + 1);
 					// pattern 2-1-1-1-2: not change index.
 					pDiscPerSector->subch.current.byIndex = pDiscPerSector->subch.prev.byIndex;
-					OutputSubInfoWithLBALogA(
+					OutputSubInfoWithLBALog(
 						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d) [L:%d]\n",
 						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subch.current.byTrackNum, pDiscPerSector->subch.prev.byTrackNum, __LINE__);
 				}
@@ -1578,7 +1618,7 @@ VOID UpdateTmpSubchForMCN(
 					pDiscPerSector->subch.current.byTrackNum = (BYTE)(pDiscPerSector->subch.prev.byTrackNum + 1);
 					// pattern 2-1-2-1-2: not change index.
 					pDiscPerSector->subch.current.byIndex = pDiscPerSector->subch.prev.byIndex;
-					OutputSubInfoWithLBALogA(
+					OutputSubInfoWithLBALog(
 						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d) [L:%d]\n",
 						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subch.current.byTrackNum, pDiscPerSector->subch.prev.byTrackNum, __LINE__);
 				}
@@ -1617,7 +1657,7 @@ VOID UpdateTmpSubchForMCN(
 					pDiscPerSector->subch.current.byTrackNum = (BYTE)(pDiscPerSector->subch.prev.byTrackNum + 1);
 					// pattern 2-2-1-1-2: not change index.
 					pDiscPerSector->subch.current.byIndex = pDiscPerSector->subch.prev.byIndex;
-					OutputSubInfoWithLBALogA(
+					OutputSubInfoWithLBALog(
 						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d) [L:%d]\n",
 						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subch.current.byTrackNum, pDiscPerSector->subch.prev.byTrackNum, __LINE__);
 				}
@@ -1657,7 +1697,7 @@ VOID UpdateTmpSubchForMCN(
 					pDiscPerSector->subch.current.byTrackNum = (BYTE)(pDiscPerSector->subch.prev.byTrackNum + 1);
 					// pattern 2-2-2-1-2: not change index.
 					pDiscPerSector->subch.current.byIndex = pDiscPerSector->subch.prev.byIndex;
-					OutputSubInfoWithLBALogA(
+					OutputSubInfoWithLBALog(
 						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d) [L:%d]\n",
 						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subch.current.byTrackNum, pDiscPerSector->subch.prev.byTrackNum, __LINE__);
 				}

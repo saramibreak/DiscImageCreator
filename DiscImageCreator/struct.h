@@ -191,8 +191,10 @@ typedef struct _EXT_ARG {
 	BYTE by74Min;
 	BYTE byVideoNow;
 	BYTE byVideoNowColor;
+	BYTE byVideoNowXp;
 	BYTE byNoSkipSS;
 	BYTE byAtari;
+	BYTE padding[3];
 	INT nAudioCDOffsetNum;
 	UINT uiMaxRereadNum;
 	INT nAllSectors;	// use for xbox360
@@ -227,7 +229,7 @@ typedef struct _DEVICE {
 	CHAR szProductRevisionLevel[4];
 	BYTE byPlxtrDrive;
 	BYTE byAsusDrive;
-	BYTE padding;
+	BYTE byLoadingMechanism;
 #ifdef _WIN32
 	BYTE byDriveLetter;
 #else

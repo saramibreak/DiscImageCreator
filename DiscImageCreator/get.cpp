@@ -61,8 +61,8 @@ BOOL GetDriveOffsetManually(
 ) {
 	_TCHAR aBuf[6] = {};
 	OutputString(
-		_T("This drive doesn't define in driveOffset.txt\n")
-		_T("Please input drive offset(Samples): "));
+		"This drive doesn't define in driveOffset.txt\n"
+		"Please input drive offset(Samples): ");
 	if (!_tscanf(_T("%6[^\n]%*[^\n]"), aBuf)) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
@@ -158,7 +158,7 @@ BOOL GetFilenameToSkipError(
 	FILE* fp = OpenProgrammabledFile(_T("ReadErrorProtect.txt"), _T("r"));
 	if (!fp) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(_T(" => ReadErrorProtect.txt"));
+		OutputErrorString(" => ReadErrorProtect.txt");
 		return FALSE;
 	}
 	CHAR comment[MAX_FNAME_FOR_VOLUME] = {};
@@ -435,7 +435,7 @@ BOOL GetEccEdcCmd(
 	}
 	else {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(_T(" => %s\n"), szPathForEcc);
+		OutputErrorString(" => %s\n", szPathForEcc);
 		bRet = FALSE;
 	}
 	return bRet;
@@ -470,7 +470,7 @@ BOOL GetUnscCmd(
 	}
 	else {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(_T(" => %s\n"), szPathForUnsc);
+		OutputErrorString(" => %s\n", szPathForUnsc);
 		bRet = FALSE;
 	}
 	return bRet;
@@ -498,7 +498,7 @@ BOOL GetCssCmd(
 	}
 
 	if (_tcslen(szFname) + _tcslen(keyFile) > _MAX_FNAME) {
-		OutputErrorString(_T("Path too long\n"));
+		OutputErrorString("Path too long\n");
 		return FALSE;
 	}
 	_tcsncpy(keyPath, szFname, _tcslen(szFname));
@@ -512,7 +512,7 @@ BOOL GetCssCmd(
 	UNREFERENCED_PARAMETER(protect);
 	BOOL bRet = GetCmd(szPathForCss, _T("./css-auth"), _T(".out"));
 #endif
-	OutputString(_T("%s\n"), szPathForCss);
+	OutputString("%s\n", szPathForCss);
 	if (bRet && PathFileExists(szPathForCss)) {
 		size_t size = _tcslen(szPathForCss) + _tcslen(szPathForKey) + 9 + 4;
 #ifdef _WIN32
@@ -531,7 +531,7 @@ BOOL GetCssCmd(
 	}
 	else {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(_T(" => %s\n"), szPathForCss);
+		OutputErrorString(" => %s\n", szPathForCss);
 		bRet = FALSE;
 	}
 	return bRet;

@@ -678,6 +678,67 @@ strcat, strcpy and strdup, respectively. */
 #define _ttmpnam    tmpnam
 #define _ttmpnam_s  tmpnam_s
 
+#ifdef _DEBUG
+#define _ttempnam_dbg   _tempnam_dbg
+#endif  /* _DEBUG */
+
+
+/* Io functions */
+
+#define _tchmod     _chmod
+#define _tcreat     _creat
+#define _tfindfirst      _findfirst
+#define _tfindfirst32    _findfirst32
+#define _tfindfirst64    _findfirst64
+#define _tfindfirsti64   _findfirsti64
+#define _tfindfirst32i64 _findfirst32i64
+#define _tfindfirst64i32 _findfirst64i32
+#define _tfindnext       _findnext
+#define _tfindnext32     _findnext32
+#define _tfindnext64     _findnext64
+#define _tfindnexti64    _findnexti64
+#define _tfindnext32i64  _findnext32i64
+#define _tfindnext64i32  _findnext64i32
+#define _tmktemp            _mktemp
+#define _tmktemp_s          _mktemp_s
+
+#define _topen      _open
+#define _taccess    _access
+#define _taccess_s  _access_s
+
+#define _tremove    remove
+#define _trename    rename
+#define _tsopen     _sopen
+#define _tsopen_s   _sopen_s
+#define _tunlink    _unlink
+
+#define _tfinddata_t      _finddata_t
+#define _tfinddata32_t    _finddata32_t
+#define _tfinddata64_t    __finddata64_t
+#define _tfinddatai64_t   _finddatai64_t
+#define _tfinddata32i64_t _finddata32i64_t
+#define _tfinddata64i32_t _finddata64i32_t
+
+/* ctype functions */
+#define _istascii       __isascii
+#define _istcntrl       iscntrl
+#define _istcntrl_l     _iscntrl_l
+#define _istxdigit      isxdigit
+#define _istxdigit_l    _isxdigit_l
+
+/* Stat functions */
+#define _tstat      _stat
+#define _tstat32    _stat32
+#define _tstat32i64 _stat32i64
+#define _tstat64    _stat64
+#define _tstat64i32 _stat64i32
+#define _tstati64   _stati64
+
+
+/* Setlocale functions */
+
+#define _tsetlocale setlocale
+
 /* String functions */
 
 #define _tcschr         strchr

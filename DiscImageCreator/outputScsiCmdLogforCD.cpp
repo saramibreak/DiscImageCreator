@@ -21,7 +21,7 @@
 VOID OutputFsImageDosHeader(
 	PIMAGE_DOS_HEADER pIdh
 ) {
-	OutputVolDescLogA(
+	OutputVolDescLog(
 		"\t========== Image Dos Header (%zu byte) ==========\n"
 		"\t                     Magic number: %04x\n"
 		"\t       Bytes on last page of file: %04x\n"
@@ -51,7 +51,7 @@ VOID OutputFsImageDosHeader(
 VOID OutputFsImageOS2Header(
 	PIMAGE_OS2_HEADER pIoh
 ) {
-	OutputVolDescLogA(
+	OutputVolDescLog(
 		"\t========== Image OS/2 .EXE header (%zu byte) ==========\n"
 		"\t                      Magic number: %04x\n"
 		"\t                    Version number: %02x\n"
@@ -100,7 +100,7 @@ VOID OutputFsImageOS2Header(
 VOID OutputFsImageNtHeader(
 	PIMAGE_NT_HEADERS32 pInh
 ) {
-	OutputVolDescLogA(
+	OutputVolDescLog(
 		"\t========== Image NT Header (%zu byte) ==========\n"
 		"\tSignature: %08lx\n"
 		"\t========== FileHeader ==========\n"
@@ -165,7 +165,7 @@ VOID OutputFsImageNtHeader(
 		, pInh->OptionalHeader.LoaderFlags, pInh->OptionalHeader.NumberOfRvaAndSizes
 		);
 	for (INT i = 0; i < IMAGE_NUMBEROF_DIRECTORY_ENTRIES; i++) {
-		OutputVolDescLogA(
+		OutputVolDescLog(
 			"\t\t\tVirtualAddress[%d]: %08lx\n"
 			"\t\t\t          Size[%d]: %08lx\n"
 			, i, pInh->OptionalHeader.DataDirectory[i].VirtualAddress
@@ -179,9 +179,9 @@ VOID OutputFsImageSectionHeader(
 	PDISC pDisc,
 	PIMAGE_SECTION_HEADER pIsh
 ) {
-	OutputVolDescLogA(
+	OutputVolDescLog(
 		"\t========== Image Section Header (%zu byte) ==========\n"
-		"\t                Name: %.8s\n"
+		"\t                Name: %.8" CHARWIDTH "s\n"
 		"\t     PhysicalAddress: %08lx\n"
 		"\t         VirtualSize: %08lx\n"
 		"\t      VirtualAddress: %08lx\n"
@@ -218,36 +218,36 @@ VOID OutputFsImageSectionHeader(
 VOID OutputTocWithPregap(
 	PDISC pDisc
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(TOC with pregap));
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("TOC with pregap"));
 	for (INT i = pDisc->SCSI.toc.FirstTrack - 1; i < pDisc->SCSI.toc.LastTrack; i++) {
-		OutputDiscLogA("\tTrack %2u, Ctl %u, Mode %u", i + 1,
+		OutputDiscLog("\tTrack %2u, Ctl %u, Mode %u", i + 1,
 			pDisc->SUB.lpCtlList[i], pDisc->MAIN.lpModeList[i]);
 
 		for (UINT j = 0; j < MAXIMUM_NUMBER_INDEXES; j++) {
 			if (pDisc->SUB.lp1stLBAListOnSub[i][j] != -1) {
-				OutputDiscLogA(", Index%u %6d", j, pDisc->SUB.lp1stLBAListOnSub[i][j]);
+				OutputDiscLog(", Index%u %6d", j, pDisc->SUB.lp1stLBAListOnSub[i][j]);
 			}
 			else if (j == 0) {
-				OutputDiscLogA(",              ");
+				OutputDiscLog(",              ");
 			}
 		}
-		OutputDiscLogA("\n");
+		OutputDiscLog("\n");
 	}
 	if (pDisc->SUB.byDesync) {
-		OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(TOC with pregap on desync));
+		OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("TOC with pregap on desync"));
 		for (INT i = pDisc->SCSI.toc.FirstTrack - 1; i < pDisc->SCSI.toc.LastTrack; i++) {
-			OutputDiscLogA("\tTrack %2u, Ctl %u, Mode %u", i + 1,
+			OutputDiscLog("\tTrack %2u, Ctl %u, Mode %u", i + 1,
 				pDisc->SUB.lpCtlList[i], pDisc->MAIN.lpModeList[i]);
 
 			for (UINT j = 0; j < MAXIMUM_NUMBER_INDEXES; j++) {
 				if (pDisc->SUB.lp1stLBAListOnSubSync[i][j] != -1) {
-					OutputDiscLogA(", Index%u %6d", j, pDisc->SUB.lp1stLBAListOnSubSync[i][j]);
+					OutputDiscLog(", Index%u %6d", j, pDisc->SUB.lp1stLBAListOnSubSync[i][j]);
 				}
 				else if (j == 0) {
-					OutputDiscLogA(",              ");
+					OutputDiscLog(",              ");
 				}
 			}
-			OutputDiscLogA("\n");
+			OutputDiscLog("\n");
 		}
 	}
 }
@@ -260,16 +260,16 @@ VOID OutputCDOffset(
 	INT nDriveOffset,
 	INT nSubChannelOffset
 ) {
-	OutputDiscLogA(STR_DOUBLE_HYPHEN_B "Offset ");
+	OutputDiscLog(STR_DOUBLE_HYPHEN_B "Offset ");
 	if (bGetDriveOffset) {
-		OutputDiscLogA("(Drive offset referes to http://www.accuraterip.com)");
+		OutputDiscLog("(Drive offset referes to http://www.accuraterip.com)");
 	}
-	OutputDiscLogA(STR_DOUBLE_HYPHEN_E);
+	OutputDiscLog(STR_DOUBLE_HYPHEN_E);
 
 	if (pExtArg->byAdd && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
 		pDisc->MAIN.nCombinedOffset += (INT)(pExtArg->nAudioCDOffsetNum * 4);
 		pExtArg->nAudioCDOffsetNum = 0; // If it is possible, I want to repair it by a better method...
-		OutputDiscLogA(
+		OutputDiscLog(
 			"\t       Combined Offset(Byte) %6d, (Samples) %5d\n"
 			"\t-         Drive Offset(Byte) %6d, (Samples) %5d\n"
 			"\t----------------------------------------------------\n"
@@ -280,7 +280,7 @@ VOID OutputCDOffset(
 			(pDisc->MAIN.nCombinedOffset - nDriveOffset) / 4);
 	}
 	else {
-		OutputDiscLogA(
+		OutputDiscLog(
 			"\t Combined Offset(Byte) %6d, (Samples) %5d\n"
 			"\t-   Drive Offset(Byte) %6d, (Samples) %5d\n"
 			"\t----------------------------------------------\n"
@@ -303,9 +303,9 @@ VOID OutputCDOffset(
 		pDisc->MAIN.nAdjustSectorNum =
 			pDisc->MAIN.nCombinedOffset / CD_RAW_SECTOR_SIZE - 1;
 	}
-	OutputDiscLogA("\tOverread sector: %d\n", pDisc->MAIN.nAdjustSectorNum);
+	OutputDiscLog("\tOverread sector: %d\n", pDisc->MAIN.nAdjustSectorNum);
 	if (nSubChannelOffset != 0xff) {
-		OutputDiscLogA("\tSubChannel Offset: %d\n", nSubChannelOffset);
+		OutputDiscLog("\tSubChannel Offset: %d\n", nSubChannelOffset);
 	}
 }
 
@@ -317,11 +317,11 @@ VOID OutputCDC2Error296(
 #ifdef _DEBUG
 	UNREFERENCED_PARAMETER(type);
 #endif
-	OutputLogA(type, OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(C2 error)
+	OutputLog(type, OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("C2 error")
 		"       +0 +1 +2 +3 +4 +5 +6 +7\n", nLBA, nLBA);
 
 	for (INT i = 0; i < CD_RAW_READ_C2_SIZE; i += 8) {
-		OutputLogA(type, "%04X : %02X %02X %02X %02X %02X %02X %02X %02X\n"
+		OutputLog(type, "%04X : %02X %02X %02X %02X %02X %02X %02X %02X\n"
 			, i, lpBuf[i], lpBuf[i + 1], lpBuf[i + 2], lpBuf[i + 3]
 			, lpBuf[i + 4], lpBuf[i + 5], lpBuf[i + 6], lpBuf[i + 7]);
 	}
@@ -336,31 +336,31 @@ VOID OutputCDMain(
 #ifdef _DEBUG
 	UNREFERENCED_PARAMETER(type);
 #endif
-	OutputLogA(type, OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Main Channel)
+	OutputLog(type, OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Main Channel")
 		"       +0 +1 +2 +3 +4 +5 +6 +7  +8 +9 +A +B +C +D +E +F\n", nLBA, nLBA);
 
 	for (INT i = 0; i < nSize; i += 16) {
 		if (16 > nSize - i) {
-			OutputLogA(type, "%04X : ", i);
+			OutputLog(type, "%04X : ", i);
 			for (INT j = 0; j < nSize - i; j++) {
 				if (j == 8) {
-					OutputLogA(type, " ");
+					OutputLog(type, " ");
 				}
-				OutputLogA(type, "%02X ", lpBuf[i + j]);
+				OutputLog(type, "%02X ", lpBuf[i + j]);
 			}
 		}
 		else {
-			OutputLogA(type,
+			OutputLog(type,
 				"%04X : %02X %02X %02X %02X %02X %02X %02X %02X  %02X %02X %02X %02X %02X %02X %02X %02X   "
 				, i, lpBuf[i], lpBuf[i + 1], lpBuf[i + 2], lpBuf[i + 3], lpBuf[i + 4], lpBuf[i + 5]
 				, lpBuf[i + 6], lpBuf[i + 7], lpBuf[i + 8], lpBuf[i + 9], lpBuf[i + 10], lpBuf[i + 11]
 				, lpBuf[i + 12], lpBuf[i + 13], lpBuf[i + 14], lpBuf[i + 15]);
 			for (INT j = 0; j < 16; j++) {
 				INT ch = isprint(lpBuf[i + j]) ? lpBuf[i + j] : '.';
-				OutputLogA(type, "%c", ch);
+				OutputLog(type, "%c", ch);
 			}
 		}
-		OutputLogA(type, "\n");
+		OutputLog(type, "\n");
 	}
 }
 
@@ -372,11 +372,11 @@ VOID OutputCDSub96Align(
 #ifdef _DEBUG
 	UNREFERENCED_PARAMETER(type);
 #endif
-	OutputLogA(type, OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Sub Channel)
+	OutputLog(type, OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Sub Channel")
 		"\t  +0 +1 +2 +3 +4 +5 +6 +7 +8 +9 +A +B\n", nLBA, nLBA);
 
 	for (INT i = 0, ch = 0x50; i < CD_RAW_READ_SUBCODE_SIZE; i += 12, ch++) {
-		OutputLogA(type,
+		OutputLog(type,
 			"\t%c %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n"
 			, ch, lpBuf[i], lpBuf[i + 1], lpBuf[i + 2], lpBuf[i + 3], lpBuf[i + 4], lpBuf[i + 5]
 			, lpBuf[i + 6], lpBuf[i + 7], lpBuf[i + 8], lpBuf[i + 9], lpBuf[i + 10], lpBuf[i + 11]);
@@ -391,12 +391,12 @@ VOID OutputCDSub96Raw(
 #ifdef _DEBUG
 	UNREFERENCED_PARAMETER(type);
 #endif
-	OutputLogA(type,
-		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(Sub Channel(Raw))
+	OutputLog(type,
+		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Sub Channel(Raw)")
 		"       +0 +1 +2 +3 +4 +5 +6 +7  +8 +9 +A +B +C +D +E +F\n", nLBA, nLBA);
 
 	for (INT i = 0; i < CD_RAW_READ_SUBCODE_SIZE; i += 16) {
-		OutputLogA(type,
+		OutputLog(type,
 			"%04X : %02X %02X %02X %02X %02X %02X %02X %02X  %02X %02X %02X %02X %02X %02X %02X %02X\n"
 			, i, lpBuf[i], lpBuf[i + 1], lpBuf[i + 2], lpBuf[i + 3], lpBuf[i + 4], lpBuf[i + 5]
 			, lpBuf[i + 6], lpBuf[i + 7], lpBuf[i + 8], lpBuf[i + 9], lpBuf[i + 10], lpBuf[i + 11]
@@ -509,7 +509,7 @@ VOID OutputCDSubToLog(
 			}
 			if (pDiscPerSector->subcode.prev[13] == 0xaa) {
 				pDisc->SCSI.nLeadoutLenOf1stSession = nLBA - pDisc->SCSI.n1stLBAofLeadout;
-				OutputLogA(standardOut | fileDisc, " Lead-out length of 1st session: %d\n"
+				OutputLog(standardOut | fileDisc, " Lead-out length of 1st session: %d\n"
 					, pDisc->SCSI.nLeadoutLenOf1stSession);
 				pDisc->SCSI.n1stLBAofLeadin = nLBA;
 			}
@@ -537,7 +537,7 @@ VOID OutputCDSubToLog(
 					pDiscPerSector->subcode.prev[14] == 0xa2)
 					) {
 					pDisc->SCSI.nLeadinLenOf2ndSession = nLBA - pDisc->SCSI.n1stLBAofLeadin;
-					OutputLogA(standardOut | fileDisc, " Lead-in length of 2nd session: %d\n"
+					OutputLog(standardOut | fileDisc, " Lead-in length of 2nd session: %d\n"
 						, pDisc->SCSI.nLeadinLenOf2ndSession);
 					pDisc->SCSI.nEndLBAOfLeadin = nLBA;
 				}
@@ -545,7 +545,7 @@ VOID OutputCDSubToLog(
 					BcdToDec(pDiscPerSector->subcode.current[13]) == pDisc->SCSI.by1stMultiSessionTrkNum &&
 					pDiscPerSector->subcode.prev[14] == 0 && pDiscPerSector->subcode.current[14] == 1) {
 					pDisc->SCSI.nPregapLenOf1stTrkOf2ndSession = nLBA - pDisc->SCSI.nEndLBAOfLeadin;
-					OutputLogA(standardOut | fileDisc, " Pregap length of 1st track of 2nd session: %d\n"
+					OutputLog(standardOut | fileDisc, " Pregap length of 1st track of 2nd session: %d\n"
 						, pDisc->SCSI.nPregapLenOf1stTrkOf2ndSession);
 				}
 			}
@@ -565,7 +565,7 @@ VOID OutputCDSubToLog(
 	}
 	case ADR_ENCODES_ISRC: {
 		if (pDiscPerSector->byTrackNum == 0 || pDisc->SCSI.toc.LastTrack < pDiscPerSector->byTrackNum) {
-			OutputSubErrorWithLBALogA(" Invalid Adr\n", nLBA, pDiscPerSector->byTrackNum);
+			OutputSubErrorWithLBALog(" Invalid Adr\n", nLBA, pDiscPerSector->byTrackNum);
 		}
 		else {
 			_TCHAR szISRC[META_ISRC_SIZE] = {};
@@ -712,6 +712,6 @@ VOID OutputCDSubToLog(
 #ifndef _DEBUG
 	_ftprintf(g_LogFile.fpSubReadable, _T("%s%s%s%s"), szSub0, szSub, szSub2, szSub3);
 #else
-	OutputDebugStringExA("%s%s%s%s", szSub0, szSub, szSub2, szSub3);
+	OutputDebugStringEx("%s%s%s%s", szSub0, szSub, szSub2, szSub3);
 #endif
 }

@@ -23,41 +23,41 @@
 VOID OutputInquiry(
 	PINQUIRYDATA pInquiry
 ) {
-	OutputDriveLogA(
-		OUTPUT_DHYPHEN_PLUS_STR(InquiryData)
+	OutputDriveLog(
+		OUTPUT_DHYPHEN_PLUS_STR("InquiryData")
 		"\t          DeviceType: ");
 	switch (pInquiry->DeviceType) {
 	case DIRECT_ACCESS_DEVICE:
-		OutputDriveLogA("DirectAccessDevice (Floppy etc)\n");
+		OutputDriveLog("DirectAccessDevice (Floppy etc)\n");
 		break;
 	case READ_ONLY_DIRECT_ACCESS_DEVICE:
-		OutputDriveLogA("ReadOnlyDirectAccessDevice (CD/DVD etc)\n");
+		OutputDriveLog("ReadOnlyDirectAccessDevice (CD/DVD etc)\n");
 		break;
 	case OPTICAL_DEVICE:
-		OutputDriveLogA("OpticalDisk\n");
+		OutputDriveLog("OpticalDisk\n");
 		break;
 	default:
-		OutputDriveLogA("OtherDevice\n");
+		OutputDriveLog("OtherDevice\n");
 		break;
 	}
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\t DeviceTypeQualifier: ");
 	switch (pInquiry->DeviceTypeQualifier) {
 	case DEVICE_QUALIFIER_ACTIVE:
-		OutputDriveLogA("Active\n");
+		OutputDriveLog("Active\n");
 		break;
 	case DEVICE_QUALIFIER_NOT_ACTIVE:
-		OutputDriveLogA("NotActive\n");
+		OutputDriveLog("NotActive\n");
 		break;
 	case DEVICE_QUALIFIER_NOT_SUPPORTED:
-		OutputDriveLogA("NotSupported\n");
+		OutputDriveLog("NotSupported\n");
 		break;
 	default:
-		OutputDriveLogA("\n");
+		OutputDriveLog("\n");
 		break;
 	}
 
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\t  DeviceTypeModifier: %u\n"
 		"\t      RemovableMedia: %s\n"
 		"\t            Versions: %u\n"
@@ -75,45 +75,45 @@ VOID OutputInquiry(
 		"\t      LinkedCommands: %s\n"
 		"\t  RelativeAddressing: %s\n",
 		pInquiry->DeviceTypeModifier,
-		BOOLEAN_TO_STRING_YES_NO_A(pInquiry->RemovableMedia),
+		BOOLEAN_TO_STRING_YES_NO(pInquiry->RemovableMedia),
 		pInquiry->Versions,
 		pInquiry->ResponseDataFormat,
-		BOOLEAN_TO_STRING_YES_NO_A(pInquiry->HiSupport),
-		BOOLEAN_TO_STRING_YES_NO_A(pInquiry->NormACA),
-		BOOLEAN_TO_STRING_YES_NO_A(pInquiry->TerminateTask),
-		BOOLEAN_TO_STRING_YES_NO_A(pInquiry->AERC),
+		BOOLEAN_TO_STRING_YES_NO(pInquiry->HiSupport),
+		BOOLEAN_TO_STRING_YES_NO(pInquiry->NormACA),
+		BOOLEAN_TO_STRING_YES_NO(pInquiry->TerminateTask),
+		BOOLEAN_TO_STRING_YES_NO(pInquiry->AERC),
 		pInquiry->AdditionalLength,
-		BOOLEAN_TO_STRING_YES_NO_A(pInquiry->MediumChanger),
-		BOOLEAN_TO_STRING_YES_NO_A(pInquiry->MultiPort),
-		BOOLEAN_TO_STRING_YES_NO_A(pInquiry->EnclosureServices),
-		BOOLEAN_TO_STRING_YES_NO_A(pInquiry->SoftReset),
-		BOOLEAN_TO_STRING_YES_NO_A(pInquiry->CommandQueue),
-		BOOLEAN_TO_STRING_YES_NO_A(pInquiry->LinkedCommands),
-		BOOLEAN_TO_STRING_YES_NO_A(pInquiry->RelativeAddressing));
+		BOOLEAN_TO_STRING_YES_NO(pInquiry->MediumChanger),
+		BOOLEAN_TO_STRING_YES_NO(pInquiry->MultiPort),
+		BOOLEAN_TO_STRING_YES_NO(pInquiry->EnclosureServices),
+		BOOLEAN_TO_STRING_YES_NO(pInquiry->SoftReset),
+		BOOLEAN_TO_STRING_YES_NO(pInquiry->CommandQueue),
+		BOOLEAN_TO_STRING_YES_NO(pInquiry->LinkedCommands),
+		BOOLEAN_TO_STRING_YES_NO(pInquiry->RelativeAddressing));
 
-	OutputDriveLogA(
-		"\t            VendorId: %.8s\n"
-		"\t           ProductId: %.16s\n"
-		"\tProductRevisionLevel: %.4s\n"
-		"\t      VendorSpecific: %.20s\n",
-		pInquiry->VendorId,
-		pInquiry->ProductId,
-		pInquiry->ProductRevisionLevel,
-		pInquiry->VendorSpecific);
+	OutputDriveLog(
+		"\t            VendorId: %.8" CHARWIDTH "s\n"
+		"\t           ProductId: %.16" CHARWIDTH "s\n"
+		"\tProductRevisionLevel: %.4" CHARWIDTH "s\n"
+		"\t      VendorSpecific: %.20" CHARWIDTH "s\n"
+		, pInquiry->VendorId
+		, pInquiry->ProductId
+		, pInquiry->ProductRevisionLevel
+		, pInquiry->VendorSpecific);
 }
 
 VOID OutputGetConfigurationHeader(
 	PGET_CONFIGURATION_HEADER pConfigHeader
 ) {
-	OutputDriveLogA(
-		OUTPUT_DHYPHEN_PLUS_STR(GetConfiguration)
+	OutputDriveLog(
+		OUTPUT_DHYPHEN_PLUS_STR("GetConfiguration")
 		"\t    DataLength: %ld\n"
 		"\tCurrentProfile: "
 		, MAKELONG(MAKEWORD(pConfigHeader->DataLength[3], pConfigHeader->DataLength[2]),
 		MAKEWORD(pConfigHeader->DataLength[1], pConfigHeader->DataLength[0])));
 	OutputGetConfigurationFeatureProfileType(
 		MAKEWORD(pConfigHeader->CurrentProfile[1], pConfigHeader->CurrentProfile[0]));
-	OutputDriveLogA("\n");
+	OutputDriveLog("\n");
 }
 
 VOID OutputGetConfigurationFeatureProfileType(
@@ -121,127 +121,127 @@ VOID OutputGetConfigurationFeatureProfileType(
 ) {
 	switch (wFeatureProfileType) {
 	case ProfileInvalid:
-		OutputDriveLogA("Invalid");
+		OutputDriveLog("Invalid");
 		break;
 	case ProfileNonRemovableDisk:
-		OutputDriveLogA("NonRemovableDisk");
+		OutputDriveLog("NonRemovableDisk");
 		break;
 	case ProfileRemovableDisk:
-		OutputDriveLogA("RemovableDisk");
+		OutputDriveLog("RemovableDisk");
 		break;
 	case ProfileMOErasable:
-		OutputDriveLogA("MOErasable");
+		OutputDriveLog("MOErasable");
 		break;
 	case ProfileMOWriteOnce:
-		OutputDriveLogA("MOWriteOnce");
+		OutputDriveLog("MOWriteOnce");
 		break;
 	case ProfileAS_MO:
-		OutputDriveLogA("AS_MO");
+		OutputDriveLog("AS_MO");
 		break;
 	case ProfileCdrom:
-		OutputDriveLogA("CD-ROM");
+		OutputDriveLog("CD-ROM");
 		break;
 	case ProfileCdRecordable:
-		OutputDriveLogA("CD-R");
+		OutputDriveLog("CD-R");
 		break;
 	case ProfileCdRewritable:
-		OutputDriveLogA("CD-RW");
+		OutputDriveLog("CD-RW");
 		break;
 	case ProfileDvdRom:
-		OutputDriveLogA("DVD-ROM");
+		OutputDriveLog("DVD-ROM");
 		break;
 	case ProfileDvdRecordable:
-		OutputDriveLogA("DVD-R");
+		OutputDriveLog("DVD-R");
 		break;
 	case ProfileDvdRam:
-		OutputDriveLogA("DVD-RAM");
+		OutputDriveLog("DVD-RAM");
 		break;
 	case ProfileDvdRewritable:
-		OutputDriveLogA("DVD-RW");
+		OutputDriveLog("DVD-RW");
 		break;
 	case ProfileDvdRWSequential:
-		OutputDriveLogA("DVD-RW Sequential");
+		OutputDriveLog("DVD-RW Sequential");
 		break;
 	case ProfileDvdDashRDualLayer:
-		OutputDriveLogA("DVD-R DL");
+		OutputDriveLog("DVD-R DL");
 		break;
 	case ProfileDvdDashRLayerJump:
-		OutputDriveLogA("DVD-R Layer Jump");
+		OutputDriveLog("DVD-R Layer Jump");
 		break;
 	case ProfileDvdPlusRW:
-		OutputDriveLogA("DVD+RW");
+		OutputDriveLog("DVD+RW");
 		break;
 	case ProfileDvdPlusR:
-		OutputDriveLogA("DVD+R");
+		OutputDriveLog("DVD+R");
 		break;
 	case ProfileDDCdrom:
-		OutputDriveLogA("DDCD-ROM");
+		OutputDriveLog("DDCD-ROM");
 		break;
 	case ProfileDDCdRecordable:
-		OutputDriveLogA("DDCD-R");
+		OutputDriveLog("DDCD-R");
 		break;
 	case ProfileDDCdRewritable:
-		OutputDriveLogA("DDCD-RW");
+		OutputDriveLog("DDCD-RW");
 		break;
 	case ProfileDvdPlusRWDualLayer:
-		OutputDriveLogA("DVD+RW DL");
+		OutputDriveLog("DVD+RW DL");
 		break;
 	case ProfileDvdPlusRDualLayer:
-		OutputDriveLogA("DVD+R DL");
+		OutputDriveLog("DVD+R DL");
 		break;
 	case ProfileBDRom:
-		OutputDriveLogA("BD-ROM");
+		OutputDriveLog("BD-ROM");
 		break;
 	case ProfileBDRSequentialWritable:
-		OutputDriveLogA("BD-R Sequential Writable");
+		OutputDriveLog("BD-R Sequential Writable");
 		break;
 	case ProfileBDRRandomWritable:
-		OutputDriveLogA("BD-R Random Writable");
+		OutputDriveLog("BD-R Random Writable");
 		break;
 	case ProfileBDRewritable:
-		OutputDriveLogA("BD-RW");
+		OutputDriveLog("BD-RW");
 		break;
 	case ProfileHDDVDRom:
-		OutputDriveLogA("HD DVD-ROM");
+		OutputDriveLog("HD DVD-ROM");
 		break;
 	case ProfileHDDVDRecordable:
-		OutputDriveLogA("HD DVD-R");
+		OutputDriveLog("HD DVD-R");
 		break;
 	case ProfileHDDVDRam:
-		OutputDriveLogA("HD DVD-RAM");
+		OutputDriveLog("HD DVD-RAM");
 		break;
 	case ProfileHDDVDRewritable:
-		OutputDriveLogA("HD-DVD-RW");
+		OutputDriveLog("HD-DVD-RW");
 		break;
 	case ProfileHDDVDRDualLayer:
-		OutputDriveLogA("HD-DVD-R DL");
+		OutputDriveLog("HD-DVD-R DL");
 		break;
 	case ProfileHDDVDRWDualLayer:
-		OutputDriveLogA("HD-DVD-RW DL");
+		OutputDriveLog("HD-DVD-RW DL");
 		break;
 	case ProfilePlaystationCdrom:
-		OutputDriveLogA("PlayStation CD-ROM");
+		OutputDriveLog("PlayStation CD-ROM");
 		break;
 	case ProfilePlaystation2Cdrom:
-		OutputDriveLogA("PlayStation2 CD-ROM");
+		OutputDriveLog("PlayStation2 CD-ROM");
 		break;
 	case ProfilePlaystation2DvdRom:
-		OutputDriveLogA("PlayStation2 DVD-ROM");
+		OutputDriveLog("PlayStation2 DVD-ROM");
 		break;
 	case ProfilePlaystation3DvdRom:
-		OutputDriveLogA("PlayStation3 DVD-ROM");
+		OutputDriveLog("PlayStation3 DVD-ROM");
 		break;
 	case ProfilePlaystation3BDRom:
-		OutputDriveLogA("PlayStation3 BD-ROM");
+		OutputDriveLog("PlayStation3 BD-ROM");
 		break;
 	case ProfilePlaystation4BDRom:
-		OutputDriveLogA("PlayStation4 BD-ROM");
+		OutputDriveLog("PlayStation4 BD-ROM");
 		break;
 	case ProfileNonStandard:
-		OutputDriveLogA("NonStandard");
+		OutputDriveLog("NonStandard");
 		break;
 	default:
-		OutputDriveLogA("Reserved [%#x]", wFeatureProfileType);
+		OutputDriveLog("Reserved [%#x]", wFeatureProfileType);
 		break;
 	}
 }
@@ -249,19 +249,19 @@ VOID OutputGetConfigurationFeatureProfileType(
 VOID OutputGetConfigurationFeatureProfileList(
 	PFEATURE_DATA_PROFILE_LIST pList
 ) {
-	OutputDriveLogA("\tFeatureProfileList\n");
+	OutputDriveLog("\tFeatureProfileList\n");
 	for (UINT i = 0; i < pList->Header.AdditionalLength / sizeof(FEATURE_DATA_PROFILE_LIST_EX); i++) {
-		OutputDriveLogA("\t\t");
+		OutputDriveLog("\t\t");
 		OutputGetConfigurationFeatureProfileType(
 			MAKEWORD(pList->Profiles[i].ProfileNumber[1], pList->Profiles[i].ProfileNumber[0]));
-		OutputDriveLogA("\n");
+		OutputDriveLog("\n");
 	}
 }
 
 VOID OutputGetConfigurationFeatureCore(
 	PFEATURE_DATA_CORE pCore
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureCore\n"
 		"\t\tPhysicalInterface: ");
 	LONG lVal = MAKELONG(
@@ -269,89 +269,91 @@ VOID OutputGetConfigurationFeatureCore(
 		MAKEWORD(pCore->PhysicalInterface[1], pCore->PhysicalInterface[0]));
 	switch (lVal) {
 	case 0:
-		OutputDriveLogA("Unspecified\n");
+		OutputDriveLog("Unspecified\n");
 		break;
 	case 1:
-		OutputDriveLogA("SCSI Family\n");
+		OutputDriveLog("SCSI Family\n");
 		break;
 	case 2:
-		OutputDriveLogA("ATAPI\n");
+		OutputDriveLog("ATAPI\n");
 		break;
 	case 3:
-		OutputDriveLogA("IEEE 1394 - 1995\n");
+		OutputDriveLog("IEEE 1394 - 1995\n");
 		break;
 	case 4:
-		OutputDriveLogA("IEEE 1394A\n");
+		OutputDriveLog("IEEE 1394A\n");
 		break;
 	case 5:
-		OutputDriveLogA("Fibre Channel\n");
+		OutputDriveLog("Fibre Channel\n");
 		break;
 	case 6:
-		OutputDriveLogA("IEEE 1394B\n");
+		OutputDriveLog("IEEE 1394B\n");
 		break;
 	case 7:
-		OutputDriveLogA("Serial ATAPI\n");
+		OutputDriveLog("Serial ATAPI\n");
 		break;
 	case 8:
-		OutputDriveLogA("USB (both 1.1 and 2.0)\n");
+		OutputDriveLog("USB (both 1.1 and 2.0)\n");
 		break;
 	case 0xffff:
-		OutputDriveLogA("Vendor Unique\n");
+		OutputDriveLog("Vendor Unique\n");
 		break;
 	default:
-		OutputDriveLogA("Reserved: %08ld\n", lVal);
+		OutputDriveLog("Reserved: %08ld\n", lVal);
 		break;
 	}
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\t\t  DeviceBusyEvent: %s\n"
 		"\t\t         INQUIRY2: %s\n",
-		BOOLEAN_TO_STRING_YES_NO_A(pCore->DeviceBusyEvent),
-		BOOLEAN_TO_STRING_YES_NO_A(pCore->INQUIRY2));
+		BOOLEAN_TO_STRING_YES_NO(pCore->DeviceBusyEvent),
+		BOOLEAN_TO_STRING_YES_NO(pCore->INQUIRY2));
 }
 
 VOID OutputGetConfigurationFeatureMorphing(
 	PFEATURE_DATA_MORPHING pMorphing
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureMorphing\n"
 		"\t\tAsynchronous: %s\n"
 		"\t\t     OCEvent: %s\n",
-		BOOLEAN_TO_STRING_YES_NO_A(pMorphing->Asynchronous),
-		BOOLEAN_TO_STRING_YES_NO_A(pMorphing->OCEvent));
+		BOOLEAN_TO_STRING_YES_NO(pMorphing->Asynchronous),
+		BOOLEAN_TO_STRING_YES_NO(pMorphing->OCEvent));
 }
 
 VOID OutputGetConfigurationFeatureRemovableMedium(
+	PDEVICE pDevice,
 	PFEATURE_DATA_REMOVABLE_MEDIUM pRemovableMedium
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureRemovableMedium\n"
 		"\t\t        Lockable: %s\n"
 		"\t\tDefaultToPrevent: %s\n"
 		"\t\t           Eject: %s\n"
 		"\t\tLoadingMechanism: ",
-		BOOLEAN_TO_STRING_YES_NO_A(pRemovableMedium->Lockable),
-		BOOLEAN_TO_STRING_YES_NO_A(pRemovableMedium->DefaultToPrevent),
-		BOOLEAN_TO_STRING_YES_NO_A(pRemovableMedium->Eject));
+		BOOLEAN_TO_STRING_YES_NO(pRemovableMedium->Lockable),
+		BOOLEAN_TO_STRING_YES_NO(pRemovableMedium->DefaultToPrevent),
+		BOOLEAN_TO_STRING_YES_NO(pRemovableMedium->Eject));
+	pDevice->byLoadingMechanism = pRemovableMedium->LoadingMechanism;
 	switch (pRemovableMedium->LoadingMechanism) {
 	case 0:
-		OutputDriveLogA("Caddy/Slot type loading mechanism\n");
+		OutputDriveLog("Caddy/Slot type loading mechanism\n");
 		break;
 	case 1:
-		OutputDriveLogA("Tray type loading mechanism\n");
+		OutputDriveLog("Tray type loading mechanism\n");
 		break;
 	case 2:
-		OutputDriveLogA("Pop-up type loading mechanism\n");
+		OutputDriveLog("Pop-up type loading mechanism\n");
 		break;
 	case 4:
-		OutputDriveLogA(
+		OutputDriveLog(
 			"Embedded changer with individually changeable discs\n");
 		break;
 	case 5:
-		OutputDriveLogA(
+		OutputDriveLog(
 			"Embedded changer using a magazine mechanism\n");
 		break;
 	default:
-		OutputDriveLogA(
+		OutputDriveLog(
 			"Reserved: %08d\n", pRemovableMedium->LoadingMechanism);
 		break;
 	}
@@ -360,22 +362,22 @@ VOID OutputGetConfigurationFeatureRemovableMedium(
 VOID OutputGetConfigurationFeatureWriteProtect(
 	PFEATURE_DATA_WRITE_PROTECT pWriteProtect
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureWriteProtect\n"
 		"\t\t               SupportsSWPPBit: %s\n"
 		"\t\tSupportsPersistentWriteProtect: %s\n"
 		"\t\t               WriteInhibitDCB: %s\n"
 		"\t\t           DiscWriteProtectPAC: %s\n",
-		BOOLEAN_TO_STRING_YES_NO_A(pWriteProtect->SupportsSWPPBit),
-		BOOLEAN_TO_STRING_YES_NO_A(pWriteProtect->SupportsPersistentWriteProtect),
-		BOOLEAN_TO_STRING_YES_NO_A(pWriteProtect->WriteInhibitDCB),
-		BOOLEAN_TO_STRING_YES_NO_A(pWriteProtect->DiscWriteProtectPAC));
+		BOOLEAN_TO_STRING_YES_NO(pWriteProtect->SupportsSWPPBit),
+		BOOLEAN_TO_STRING_YES_NO(pWriteProtect->SupportsPersistentWriteProtect),
+		BOOLEAN_TO_STRING_YES_NO(pWriteProtect->WriteInhibitDCB),
+		BOOLEAN_TO_STRING_YES_NO(pWriteProtect->DiscWriteProtectPAC));
 }
 
 VOID OutputGetConfigurationFeatureRandomReadable(
 	PFEATURE_DATA_RANDOM_READABLE pRandomReadable
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureRandomReadable\n"
 		"\t\t        LogicalBlockSize: %u\n"
 		"\t\t                Blocking: %u\n"
@@ -383,13 +385,13 @@ VOID OutputGetConfigurationFeatureRandomReadable(
 		MAKEUINT(MAKEWORD(pRandomReadable->LogicalBlockSize[3], pRandomReadable->LogicalBlockSize[2]),
 			MAKEWORD(pRandomReadable->LogicalBlockSize[1], pRandomReadable->LogicalBlockSize[0])),
 		MAKEWORD(pRandomReadable->Blocking[1], pRandomReadable->Blocking[0]),
-		BOOLEAN_TO_STRING_YES_NO_A(pRandomReadable->ErrorRecoveryPagePresent));
+		BOOLEAN_TO_STRING_YES_NO(pRandomReadable->ErrorRecoveryPagePresent));
 }
 
 VOID OutputGetConfigurationFeatureMultiRead(
 	PFEATURE_DATA_MULTI_READ pMultiRead
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureMultiRead\n"
 		"\t\t   Current: %u\n"
 		"\t\tPersistent: %u\n"
@@ -402,31 +404,31 @@ VOID OutputGetConfigurationFeatureMultiRead(
 VOID OutputGetConfigurationFeatureCdRead(
 	PFEATURE_DATA_CD_READ pCDRead
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureCdRead\n"
 		"\t\t          CDText: %s\n"
 		"\t\t     C2ErrorData: %s\n"
 		"\t\tDigitalAudioPlay: %s\n",
-		BOOLEAN_TO_STRING_YES_NO_A(pCDRead->CDText),
-		BOOLEAN_TO_STRING_YES_NO_A(pCDRead->C2ErrorData),
-		BOOLEAN_TO_STRING_YES_NO_A(pCDRead->DigitalAudioPlay));
+		BOOLEAN_TO_STRING_YES_NO(pCDRead->CDText),
+		BOOLEAN_TO_STRING_YES_NO(pCDRead->C2ErrorData),
+		BOOLEAN_TO_STRING_YES_NO(pCDRead->DigitalAudioPlay));
 }
 
 VOID OutputGetConfigurationFeatureDvdRead(
 	PFEATURE_DATA_DVD_READ pDVDRead
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureDvdRead\n"
 		"\t\t  Multi110: %s\n"
 		"\t\t DualDashR: %s\n",
-		BOOLEAN_TO_STRING_YES_NO_A(pDVDRead->Multi110),
-		BOOLEAN_TO_STRING_YES_NO_A(pDVDRead->DualDashR));
+		BOOLEAN_TO_STRING_YES_NO(pDVDRead->Multi110),
+		BOOLEAN_TO_STRING_YES_NO(pDVDRead->DualDashR));
 }
 
 VOID OutputGetConfigurationFeatureRandomWritable(
 	PFEATURE_DATA_RANDOM_WRITABLE pRandomWritable
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureRandomWritable\n"
 		"\t\t                 LastLBA: %u\n"
 		"\t\t        LogicalBlockSize: %u\n"
@@ -437,13 +439,13 @@ VOID OutputGetConfigurationFeatureRandomWritable(
 		MAKEUINT(MAKEWORD(pRandomWritable->LogicalBlockSize[3], pRandomWritable->LogicalBlockSize[2]),
 			MAKEWORD(pRandomWritable->LogicalBlockSize[1], pRandomWritable->LogicalBlockSize[0])),
 		MAKEWORD(pRandomWritable->Blocking[1], pRandomWritable->Blocking[0]),
-		BOOLEAN_TO_STRING_YES_NO_A(pRandomWritable->ErrorRecoveryPagePresent));
+		BOOLEAN_TO_STRING_YES_NO(pRandomWritable->ErrorRecoveryPagePresent));
 }
 
 VOID OutputGetConfigurationFeatureIncrementalStreamingWritable(
 	PFEATURE_DATA_INCREMENTAL_STREAMING_WRITABLE pIncremental
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureIncrementalStreamingWritable\n"
 		"\t\t        DataTypeSupported: %u\n"
 		"\t\t       BufferUnderrunFree: %s\n"
@@ -451,12 +453,12 @@ VOID OutputGetConfigurationFeatureIncrementalStreamingWritable(
 		"\t\tTrackRessourceInformation: %s\n"
 		"\t\t        NumberOfLinkSizes: %u\n",
 		MAKEWORD(pIncremental->DataTypeSupported[1], pIncremental->DataTypeSupported[0]),
-		BOOLEAN_TO_STRING_YES_NO_A(pIncremental->BufferUnderrunFree),
-		BOOLEAN_TO_STRING_YES_NO_A(pIncremental->AddressModeReservation),
-		BOOLEAN_TO_STRING_YES_NO_A(pIncremental->TrackRessourceInformation),
+		BOOLEAN_TO_STRING_YES_NO(pIncremental->BufferUnderrunFree),
+		BOOLEAN_TO_STRING_YES_NO(pIncremental->AddressModeReservation),
+		BOOLEAN_TO_STRING_YES_NO(pIncremental->TrackRessourceInformation),
 		pIncremental->NumberOfLinkSizes);
 	for (INT i = 0; i < pIncremental->NumberOfLinkSizes; i++) {
-		OutputDriveLogA(
+		OutputDriveLog(
 			"\t\tLinkSize%u: %u\n", i, pIncremental->LinkSize[i]);
 	}
 }
@@ -464,7 +466,7 @@ VOID OutputGetConfigurationFeatureIncrementalStreamingWritable(
 VOID OutputGetConfigurationFeatureSectorErasable(
 	PFEATURE_DATA_SECTOR_ERASABLE pSectorErasable
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureSectorErasable\n"
 		"\t\t   Current: %u\n"
 		"\t\tPersistent: %u\n"
@@ -477,33 +479,33 @@ VOID OutputGetConfigurationFeatureSectorErasable(
 VOID OutputGetConfigurationFeatureFormattable(
 	PFEATURE_DATA_FORMATTABLE pFormattable
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureFormattable\n"
 		"\t\t FullCertification: %s\n"
 		"\t\tQuickCertification: %s\n"
 		"\t\tSpareAreaExpansion: %s\n"
 		"\t\tRENoSpareAllocated: %s\n"
 		"\t\t   RRandomWritable: %s\n",
-		BOOLEAN_TO_STRING_YES_NO_A(pFormattable->FullCertification),
-		BOOLEAN_TO_STRING_YES_NO_A(pFormattable->QuickCertification),
-		BOOLEAN_TO_STRING_YES_NO_A(pFormattable->SpareAreaExpansion),
-		BOOLEAN_TO_STRING_YES_NO_A(pFormattable->RENoSpareAllocated),
-		BOOLEAN_TO_STRING_YES_NO_A(pFormattable->RRandomWritable));
+		BOOLEAN_TO_STRING_YES_NO(pFormattable->FullCertification),
+		BOOLEAN_TO_STRING_YES_NO(pFormattable->QuickCertification),
+		BOOLEAN_TO_STRING_YES_NO(pFormattable->SpareAreaExpansion),
+		BOOLEAN_TO_STRING_YES_NO(pFormattable->RENoSpareAllocated),
+		BOOLEAN_TO_STRING_YES_NO(pFormattable->RRandomWritable));
 }
 
 VOID OutputGetConfigurationFeatureDefectManagement(
 	PFEATURE_DATA_DEFECT_MANAGEMENT pDefect
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureDefectManagement\n"
 		"\t\tSupplimentalSpareArea: %s\n",
-		BOOLEAN_TO_STRING_YES_NO_A(pDefect->SupplimentalSpareArea));
+		BOOLEAN_TO_STRING_YES_NO(pDefect->SupplimentalSpareArea));
 }
 
 VOID OutputGetConfigurationFeatureWriteOnce(
 	PFEATURE_DATA_WRITE_ONCE pWriteOnce
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureWriteOnce\n"
 		"\t\t        LogicalBlockSize: %u\n"
 		"\t\t                Blocking: %u\n"
@@ -511,13 +513,13 @@ VOID OutputGetConfigurationFeatureWriteOnce(
 		MAKEUINT(MAKEWORD(pWriteOnce->LogicalBlockSize[3], pWriteOnce->LogicalBlockSize[2]),
 			MAKEWORD(pWriteOnce->LogicalBlockSize[1], pWriteOnce->LogicalBlockSize[0])),
 		MAKEWORD(pWriteOnce->Blocking[1], pWriteOnce->Blocking[0]),
-		BOOLEAN_TO_STRING_YES_NO_A(pWriteOnce->ErrorRecoveryPagePresent));
+		BOOLEAN_TO_STRING_YES_NO(pWriteOnce->ErrorRecoveryPagePresent));
 }
 
 VOID OutputGetConfigurationFeatureRestrictedOverwrite(
 	PFEATURE_DATA_RESTRICTED_OVERWRITE pRestricted
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureRestrictedOverwrite\n"
 		"\t\t   Current: %u\n"
 		"\t\tPersistent: %u\n"
@@ -530,7 +532,7 @@ VOID OutputGetConfigurationFeatureRestrictedOverwrite(
 VOID OutputGetConfigurationFeatureCdrwCAVWrite(
 	PFEATURE_DATA_CDRW_CAV_WRITE pCDRW
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureCdrwCAVWrite\n"
 		"\t\t   Current: %u\n"
 		"\t\tPersistent: %u\n"
@@ -543,25 +545,25 @@ VOID OutputGetConfigurationFeatureCdrwCAVWrite(
 VOID OutputGetConfigurationFeatureMrw(
 	PFEATURE_DATA_MRW pMrw
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureMrw\n"
 		"\t\t       Write: %s\n"
 		"\t\t DvdPlusRead: %s\n"
 		"\t\tDvdPlusWrite: %s\n",
-		BOOLEAN_TO_STRING_YES_NO_A(pMrw->Write),
-		BOOLEAN_TO_STRING_YES_NO_A(pMrw->DvdPlusRead),
-		BOOLEAN_TO_STRING_YES_NO_A(pMrw->DvdPlusWrite));
+		BOOLEAN_TO_STRING_YES_NO(pMrw->Write),
+		BOOLEAN_TO_STRING_YES_NO(pMrw->DvdPlusRead),
+		BOOLEAN_TO_STRING_YES_NO(pMrw->DvdPlusWrite));
 }
 
 VOID OutputGetConfigurationFeatureEnhancedDefectReporting(
 	PFEATURE_ENHANCED_DEFECT_REPORTING pEnhanced
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureEnhancedDefectReporting\n"
 		"\t\t       DRTDMSupported: %s\n"
 		"\t\tNumberOfDBICacheZones: %u\n"
 		"\t\t      NumberOfEntries: %u\n",
-		BOOLEAN_TO_STRING_YES_NO_A(pEnhanced->DRTDMSupported),
+		BOOLEAN_TO_STRING_YES_NO(pEnhanced->DRTDMSupported),
 		pEnhanced->NumberOfDBICacheZones,
 		MAKEWORD(pEnhanced->NumberOfEntries[1], pEnhanced->NumberOfEntries[0]));
 }
@@ -569,44 +571,44 @@ VOID OutputGetConfigurationFeatureEnhancedDefectReporting(
 VOID OutputGetConfigurationFeatureDvdPlusRW(
 	PFEATURE_DATA_DVD_PLUS_RW pDVDPLUSRW
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureDvdPlusRW\n"
 		"\t\t     Write: %s\n"
 		"\t\t CloseOnly: %s\n"
 		"\t\tQuickStart: %s\n",
-		BOOLEAN_TO_STRING_YES_NO_A(pDVDPLUSRW->Write),
-		BOOLEAN_TO_STRING_YES_NO_A(pDVDPLUSRW->CloseOnly),
-		BOOLEAN_TO_STRING_YES_NO_A(pDVDPLUSRW->QuickStart));
+		BOOLEAN_TO_STRING_YES_NO(pDVDPLUSRW->Write),
+		BOOLEAN_TO_STRING_YES_NO(pDVDPLUSRW->CloseOnly),
+		BOOLEAN_TO_STRING_YES_NO(pDVDPLUSRW->QuickStart));
 }
 
 VOID OutputGetConfigurationFeatureDvdPlusR(
 	PFEATURE_DATA_DVD_PLUS_R pDVDPLUSR
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureDvdPlusR\n"
 		"\t\tWrite: %s\n",
-		BOOLEAN_TO_STRING_YES_NO_A(pDVDPLUSR->Write));
+		BOOLEAN_TO_STRING_YES_NO(pDVDPLUSR->Write));
 }
 
 VOID OutputGetConfigurationFeatureRigidRestrictedOverwrite(
 	PFEATURE_DATA_DVD_RW_RESTRICTED_OVERWRITE pDVDRWRestricted
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureRigidRestrictedOverwrite\n"
 		"\t\t                   Blank: %s\n"
 		"\t\t            Intermediate: %s\n"
 		"\t\t    DefectStatusDataRead: %s\n"
 		"\t\tDefectStatusDataGenerate: %s\n",
-		BOOLEAN_TO_STRING_YES_NO_A(pDVDRWRestricted->Blank),
-		BOOLEAN_TO_STRING_YES_NO_A(pDVDRWRestricted->Intermediate),
-		BOOLEAN_TO_STRING_YES_NO_A(pDVDRWRestricted->DefectStatusDataRead),
-		BOOLEAN_TO_STRING_YES_NO_A(pDVDRWRestricted->DefectStatusDataGenerate));
+		BOOLEAN_TO_STRING_YES_NO(pDVDRWRestricted->Blank),
+		BOOLEAN_TO_STRING_YES_NO(pDVDRWRestricted->Intermediate),
+		BOOLEAN_TO_STRING_YES_NO(pDVDRWRestricted->DefectStatusDataRead),
+		BOOLEAN_TO_STRING_YES_NO(pDVDRWRestricted->DefectStatusDataGenerate));
 }
 
 VOID OutputGetConfigurationFeatureCdTrackAtOnce(
 	PFEATURE_DATA_CD_TRACK_AT_ONCE pCDTrackAtOnce
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureCdTrackAtOnce\n"
 		"\t\tRWSubchannelsRecordable: %s\n"
 		"\t\t           CdRewritable: %s\n"
@@ -615,19 +617,19 @@ VOID OutputGetConfigurationFeatureCdTrackAtOnce(
 		"\t\t      RWSubchannelRawOk: %s\n"
 		"\t\t     BufferUnderrunFree: %s\n"
 		"\t\t      DataTypeSupported: %u\n",
-		BOOLEAN_TO_STRING_YES_NO_A(pCDTrackAtOnce->RWSubchannelsRecordable),
-		BOOLEAN_TO_STRING_YES_NO_A(pCDTrackAtOnce->CdRewritable),
-		BOOLEAN_TO_STRING_YES_NO_A(pCDTrackAtOnce->TestWriteOk),
-		BOOLEAN_TO_STRING_YES_NO_A(pCDTrackAtOnce->RWSubchannelPackedOk),
-		BOOLEAN_TO_STRING_YES_NO_A(pCDTrackAtOnce->RWSubchannelRawOk),
-		BOOLEAN_TO_STRING_YES_NO_A(pCDTrackAtOnce->BufferUnderrunFree),
+		BOOLEAN_TO_STRING_YES_NO(pCDTrackAtOnce->RWSubchannelsRecordable),
+		BOOLEAN_TO_STRING_YES_NO(pCDTrackAtOnce->CdRewritable),
+		BOOLEAN_TO_STRING_YES_NO(pCDTrackAtOnce->TestWriteOk),
+		BOOLEAN_TO_STRING_YES_NO(pCDTrackAtOnce->RWSubchannelPackedOk),
+		BOOLEAN_TO_STRING_YES_NO(pCDTrackAtOnce->RWSubchannelRawOk),
+		BOOLEAN_TO_STRING_YES_NO(pCDTrackAtOnce->BufferUnderrunFree),
 		MAKEWORD(pCDTrackAtOnce->DataTypeSupported[1], pCDTrackAtOnce->DataTypeSupported[0]));
 }
 
 VOID OutputGetConfigurationFeatureCdMastering(
 	PFEATURE_DATA_CD_MASTERING pCDMastering
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureCdMastering\n"
 		"\t\tRWSubchannelsRecordable: %s\n"
 		"\t\t           CdRewritable: %s\n"
@@ -637,13 +639,13 @@ VOID OutputGetConfigurationFeatureCdMastering(
 		"\t\t        SessionAtOnceOk: %s\n"
 		"\t\t     BufferUnderrunFree: %s\n"
 		"\t\t  MaximumCueSheetLength: %u\n",
-		BOOLEAN_TO_STRING_YES_NO_A(pCDMastering->RWSubchannelsRecordable),
-		BOOLEAN_TO_STRING_YES_NO_A(pCDMastering->CdRewritable),
-		BOOLEAN_TO_STRING_YES_NO_A(pCDMastering->TestWriteOk),
-		BOOLEAN_TO_STRING_YES_NO_A(pCDMastering->RawRecordingOk),
-		BOOLEAN_TO_STRING_YES_NO_A(pCDMastering->RawMultiSessionOk),
-		BOOLEAN_TO_STRING_YES_NO_A(pCDMastering->SessionAtOnceOk),
-		BOOLEAN_TO_STRING_YES_NO_A(pCDMastering->BufferUnderrunFree),
+		BOOLEAN_TO_STRING_YES_NO(pCDMastering->RWSubchannelsRecordable),
+		BOOLEAN_TO_STRING_YES_NO(pCDMastering->CdRewritable),
+		BOOLEAN_TO_STRING_YES_NO(pCDMastering->TestWriteOk),
+		BOOLEAN_TO_STRING_YES_NO(pCDMastering->RawRecordingOk),
+		BOOLEAN_TO_STRING_YES_NO(pCDMastering->RawMultiSessionOk),
+		BOOLEAN_TO_STRING_YES_NO(pCDMastering->SessionAtOnceOk),
+		BOOLEAN_TO_STRING_YES_NO(pCDMastering->BufferUnderrunFree),
 		MAKEUINT(MAKEWORD(0, pCDMastering->MaximumCueSheetLength[2]),
 			MAKEWORD(pCDMastering->MaximumCueSheetLength[1], pCDMastering->MaximumCueSheetLength[0])));
 }
@@ -651,27 +653,27 @@ VOID OutputGetConfigurationFeatureCdMastering(
 VOID OutputGetConfigurationFeatureDvdRecordableWrite(
 	PFEATURE_DATA_DVD_RECORDABLE_WRITE pDVDRecordable
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureDvdRecordableWrite\n"
 		"\t\t            DVD_RW: %s\n"
 		"\t\t         TestWrite: %s\n"
 		"\t\t        RDualLayer: %s\n"
 		"\t\tBufferUnderrunFree: %s\n",
-		BOOLEAN_TO_STRING_YES_NO_A(pDVDRecordable->DVD_RW),
-		BOOLEAN_TO_STRING_YES_NO_A(pDVDRecordable->TestWrite),
-		BOOLEAN_TO_STRING_YES_NO_A(pDVDRecordable->RDualLayer),
-		BOOLEAN_TO_STRING_YES_NO_A(pDVDRecordable->BufferUnderrunFree));
+		BOOLEAN_TO_STRING_YES_NO(pDVDRecordable->DVD_RW),
+		BOOLEAN_TO_STRING_YES_NO(pDVDRecordable->TestWrite),
+		BOOLEAN_TO_STRING_YES_NO(pDVDRecordable->RDualLayer),
+		BOOLEAN_TO_STRING_YES_NO(pDVDRecordable->BufferUnderrunFree));
 }
 
 VOID OutputGetConfigurationFeatureLayerJumpRecording(
 	PFEATURE_DATA_LAYER_JUMP_RECORDING pLayerJumpRec
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureLayerJumpRecording\n"
 		"\t\tNumberOfLinkSizes: %u\n",
 		pLayerJumpRec->NumberOfLinkSizes);
 	for (INT i = 0; i < pLayerJumpRec->NumberOfLinkSizes; i++) {
-		OutputDriveLogA(
+		OutputDriveLog(
 			"\t\tLinkSize %u: %u\n", i, pLayerJumpRec->LinkSizes[i]);
 	}
 }
@@ -679,7 +681,7 @@ VOID OutputGetConfigurationFeatureLayerJumpRecording(
 VOID OutputGetConfigurationFeatureCDRWMediaWriteSupport(
 	PFEATURE_CD_RW_MEDIA_WRITE_SUPPORT pCDRWMediaWrite
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureCDRWMediaWriteSupport\n"
 		"\t\tSubtype 0: %s\n"
 		"\t\tSubtype 1: %s\n"
@@ -689,50 +691,50 @@ VOID OutputGetConfigurationFeatureCDRWMediaWriteSupport(
 		"\t\tSubtype 5: %s\n"
 		"\t\tSubtype 6: %s\n"
 		"\t\tSubtype 7: %s\n",
-		BOOLEAN_TO_STRING_YES_NO_A(pCDRWMediaWrite->CDRWMediaSubtypeSupport.Subtype0),
-		BOOLEAN_TO_STRING_YES_NO_A(pCDRWMediaWrite->CDRWMediaSubtypeSupport.Subtype1),
-		BOOLEAN_TO_STRING_YES_NO_A(pCDRWMediaWrite->CDRWMediaSubtypeSupport.Subtype2),
-		BOOLEAN_TO_STRING_YES_NO_A(pCDRWMediaWrite->CDRWMediaSubtypeSupport.Subtype3),
-		BOOLEAN_TO_STRING_YES_NO_A(pCDRWMediaWrite->CDRWMediaSubtypeSupport.Subtype4),
-		BOOLEAN_TO_STRING_YES_NO_A(pCDRWMediaWrite->CDRWMediaSubtypeSupport.Subtype5),
-		BOOLEAN_TO_STRING_YES_NO_A(pCDRWMediaWrite->CDRWMediaSubtypeSupport.Subtype6),
-		BOOLEAN_TO_STRING_YES_NO_A(pCDRWMediaWrite->CDRWMediaSubtypeSupport.Subtype7));
+		BOOLEAN_TO_STRING_YES_NO(pCDRWMediaWrite->CDRWMediaSubtypeSupport.Subtype0),
+		BOOLEAN_TO_STRING_YES_NO(pCDRWMediaWrite->CDRWMediaSubtypeSupport.Subtype1),
+		BOOLEAN_TO_STRING_YES_NO(pCDRWMediaWrite->CDRWMediaSubtypeSupport.Subtype2),
+		BOOLEAN_TO_STRING_YES_NO(pCDRWMediaWrite->CDRWMediaSubtypeSupport.Subtype3),
+		BOOLEAN_TO_STRING_YES_NO(pCDRWMediaWrite->CDRWMediaSubtypeSupport.Subtype4),
+		BOOLEAN_TO_STRING_YES_NO(pCDRWMediaWrite->CDRWMediaSubtypeSupport.Subtype5),
+		BOOLEAN_TO_STRING_YES_NO(pCDRWMediaWrite->CDRWMediaSubtypeSupport.Subtype6),
+		BOOLEAN_TO_STRING_YES_NO(pCDRWMediaWrite->CDRWMediaSubtypeSupport.Subtype7));
 }
 
 VOID OutputGetConfigurationFeatureBDRPseudoOverwrite(
 	PFEATURE_BD_R_PSEUDO_OVERWRITE pBDRPseudoOverwrite
 ) {
 	UNREFERENCED_PARAMETER(pBDRPseudoOverwrite);
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureBDRPseudoOverwrite\n");
 }
 
 VOID OutputGetConfigurationFeatureDvdPlusRWDualLayer(
 	PFEATURE_DATA_DVD_PLUS_RW_DUAL_LAYER pDVDPlusRWDL
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureDvdPlusRWDualLayer\n"
 		"\t\t     Write: %s\n"
 		"\t\t CloseOnly: %s\n"
 		"\t\tQuickStart: %s\n",
-		BOOLEAN_TO_STRING_YES_NO_A(pDVDPlusRWDL->Write),
-		BOOLEAN_TO_STRING_YES_NO_A(pDVDPlusRWDL->CloseOnly),
-		BOOLEAN_TO_STRING_YES_NO_A(pDVDPlusRWDL->QuickStart));
+		BOOLEAN_TO_STRING_YES_NO(pDVDPlusRWDL->Write),
+		BOOLEAN_TO_STRING_YES_NO(pDVDPlusRWDL->CloseOnly),
+		BOOLEAN_TO_STRING_YES_NO(pDVDPlusRWDL->QuickStart));
 }
 
 VOID OutputGetConfigurationFeatureDvdPlusRDualLayer(
 	PFEATURE_DATA_DVD_PLUS_R_DUAL_LAYER pDVDPlusRDL
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureDvdPlusRDualLayer\n"
 		"\t\tWrite: %s\n",
-		BOOLEAN_TO_STRING_YES_NO_A(pDVDPlusRDL->Write));
+		BOOLEAN_TO_STRING_YES_NO(pDVDPlusRDL->Write));
 }
 
 VOID OutputGetConfigurationFeatureBDRead(
 	PFEATURE_BD_READ pBDRead
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureBDRead\n"
 		"\t\tClass0BitmapBDREReadSupport Version8: %s\n"
 		"\t\tClass0BitmapBDREReadSupport Version9: %s\n"
@@ -926,204 +928,204 @@ VOID OutputGetConfigurationFeatureBDRead(
 		"\t\tClass3BitmapBDROMReadSupport Version5: %s\n"
 		"\t\tClass3BitmapBDROMReadSupport Version6: %s\n"
 		"\t\tClass3BitmapBDROMReadSupport Version7: %s\n"
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version8)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version9)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version10)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version11)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version12)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version13)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version14)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version15)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version0)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version1)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version2)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version3)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version4)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version5)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version6)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDREReadSupport.Version7)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version8)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version9)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version10)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version11)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version12)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version13)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version14)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version15)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version0)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version1)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version2)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version3)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version4)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version5)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version6)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDREReadSupport.Version7)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version8)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version9)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version10)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version11)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version12)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version13)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version14)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version15)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version0)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version1)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version2)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version3)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version4)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version5)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version6)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDREReadSupport.Version7)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version8)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version9)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version10)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version11)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version12)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version13)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version14)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version15)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version0)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version1)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version2)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version3)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version4)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version5)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version6)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDREReadSupport.Version7)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version8)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version9)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version10)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version11)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version12)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version13)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version14)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version15)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version0)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version1)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version2)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version3)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version4)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version5)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version6)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDRReadSupport.Version7)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version8)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version9)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version10)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version11)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version12)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version13)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version14)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version15)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version0)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version1)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version2)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version3)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version4)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version5)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version6)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDRReadSupport.Version7)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version8)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version9)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version10)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version11)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version12)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version13)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version14)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version15)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version0)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version1)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version2)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version3)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version4)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version5)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version6)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDRReadSupport.Version7)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version8)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version9)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version10)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version11)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version12)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version13)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version14)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version15)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version0)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version1)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version2)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version3)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version4)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version5)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version6)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDRReadSupport.Version7)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version8)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version9)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version10)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version11)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version12)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version13)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version14)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version15)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version0)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version1)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version2)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version3)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version4)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version5)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version6)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class0BitmapBDROMReadSupport.Version7)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version8)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version9)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version10)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version11)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version12)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version13)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version14)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version15)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version0)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version1)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version2)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version3)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version4)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version5)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version6)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class1BitmapBDROMReadSupport.Version7)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version8)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version9)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version10)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version11)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version12)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version13)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version14)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version15)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version0)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version1)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version2)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version3)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version4)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version5)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version6)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class2BitmapBDROMReadSupport.Version7)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version8)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version9)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version10)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version11)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version12)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version13)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version14)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version15)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version0)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version1)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version2)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version3)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version4)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version5)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version6)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDRead->Class3BitmapBDROMReadSupport.Version7));
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDREReadSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDREReadSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDREReadSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDREReadSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDREReadSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDREReadSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDREReadSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDREReadSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDREReadSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDREReadSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDREReadSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDREReadSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDREReadSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDREReadSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDREReadSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDREReadSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDREReadSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDREReadSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDREReadSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDREReadSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDREReadSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDREReadSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDREReadSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDREReadSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDREReadSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDREReadSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDREReadSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDREReadSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDREReadSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDREReadSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDREReadSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDREReadSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDREReadSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDREReadSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDREReadSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDREReadSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDREReadSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDREReadSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDREReadSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDREReadSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDREReadSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDREReadSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDREReadSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDREReadSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDREReadSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDREReadSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDREReadSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDREReadSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDREReadSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDREReadSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDREReadSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDREReadSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDREReadSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDREReadSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDREReadSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDREReadSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDREReadSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDREReadSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDREReadSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDREReadSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDREReadSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDREReadSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDREReadSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDREReadSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDRReadSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDRReadSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDRReadSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDRReadSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDRReadSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDRReadSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDRReadSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDRReadSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDRReadSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDRReadSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDRReadSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDRReadSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDRReadSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDRReadSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDRReadSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDRReadSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDRReadSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDRReadSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDRReadSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDRReadSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDRReadSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDRReadSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDRReadSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDRReadSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDRReadSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDRReadSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDRReadSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDRReadSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDRReadSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDRReadSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDRReadSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDRReadSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDRReadSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDRReadSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDRReadSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDRReadSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDRReadSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDRReadSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDRReadSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDRReadSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDRReadSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDRReadSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDRReadSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDRReadSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDRReadSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDRReadSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDRReadSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDRReadSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDRReadSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDRReadSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDRReadSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDRReadSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDRReadSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDRReadSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDRReadSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDRReadSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDRReadSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDRReadSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDRReadSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDRReadSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDRReadSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDRReadSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDRReadSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDRReadSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDROMReadSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDROMReadSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDROMReadSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDROMReadSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDROMReadSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDROMReadSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDROMReadSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDROMReadSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDROMReadSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDROMReadSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDROMReadSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDROMReadSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDROMReadSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDROMReadSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDROMReadSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class0BitmapBDROMReadSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDROMReadSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDROMReadSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDROMReadSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDROMReadSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDROMReadSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDROMReadSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDROMReadSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDROMReadSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDROMReadSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDROMReadSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDROMReadSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDROMReadSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDROMReadSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDROMReadSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDROMReadSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class1BitmapBDROMReadSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDROMReadSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDROMReadSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDROMReadSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDROMReadSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDROMReadSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDROMReadSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDROMReadSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDROMReadSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDROMReadSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDROMReadSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDROMReadSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDROMReadSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDROMReadSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDROMReadSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDROMReadSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class2BitmapBDROMReadSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDROMReadSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDROMReadSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDROMReadSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDROMReadSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDROMReadSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDROMReadSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDROMReadSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDROMReadSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDROMReadSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDROMReadSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDROMReadSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDROMReadSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDROMReadSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDROMReadSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDROMReadSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO(pBDRead->Class3BitmapBDROMReadSupport.Version7));
 }
 
 VOID OutputGetConfigurationFeatureBDWrite(
 	PFEATURE_BD_WRITE pBDWrite
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureBDWrite\n"
 		"\t\tSupportsVerifyNotRequired: %s\n"
 		"\t\tClass0BitmapBDREWriteSupport Version8: %s\n"
@@ -1254,180 +1256,180 @@ VOID OutputGetConfigurationFeatureBDWrite(
 		"\t\tClass3BitmapBDRWriteSupport Version5: %s\n"
 		"\t\tClass3BitmapBDRWriteSupport Version6: %s\n"
 		"\t\tClass3BitmapBDRWriteSupport Version7: %s\n"
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->SupportsVerifyNotRequired)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version8)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version9)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version10)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version11)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version12)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version13)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version14)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version15)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version0)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version1)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version2)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version3)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version4)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version5)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version6)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDREWriteSupport.Version7)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version8)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version9)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version10)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version11)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version12)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version13)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version14)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version15)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version0)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version1)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version2)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version3)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version4)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version5)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version6)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDREWriteSupport.Version7)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version8)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version9)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version10)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version11)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version12)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version13)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version14)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version15)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version0)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version1)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version2)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version3)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version4)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version5)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version6)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDREWriteSupport.Version7)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version8)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version9)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version10)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version11)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version12)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version13)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version14)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version15)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version0)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version1)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version2)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version3)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version4)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version5)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version6)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDREWriteSupport.Version7)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version8)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version9)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version10)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version11)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version12)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version13)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version14)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version15)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version0)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version1)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version2)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version3)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version4)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version5)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version6)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class0BitmapBDRWriteSupport.Version7)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version8)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version9)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version10)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version11)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version12)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version13)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version14)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version15)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version0)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version1)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version2)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version3)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version4)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version5)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version6)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class1BitmapBDRWriteSupport.Version7)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version8)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version9)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version10)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version11)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version12)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version13)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version14)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version15)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version0)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version1)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version2)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version3)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version4)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version5)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version6)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class2BitmapBDRWriteSupport.Version7)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version8)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version9)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version10)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version11)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version12)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version13)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version14)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version15)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version0)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version1)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version2)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version3)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version4)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version5)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version6)
-		, BOOLEAN_TO_STRING_YES_NO_A(pBDWrite->Class3BitmapBDRWriteSupport.Version7));
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->SupportsVerifyNotRequired)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDREWriteSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDREWriteSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDREWriteSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDREWriteSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDREWriteSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDREWriteSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDREWriteSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDREWriteSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDREWriteSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDREWriteSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDREWriteSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDREWriteSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDREWriteSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDREWriteSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDREWriteSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDREWriteSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDREWriteSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDREWriteSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDREWriteSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDREWriteSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDREWriteSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDREWriteSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDREWriteSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDREWriteSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDREWriteSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDREWriteSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDREWriteSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDREWriteSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDREWriteSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDREWriteSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDREWriteSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDREWriteSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDREWriteSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDREWriteSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDREWriteSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDREWriteSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDREWriteSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDREWriteSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDREWriteSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDREWriteSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDREWriteSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDREWriteSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDREWriteSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDREWriteSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDREWriteSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDREWriteSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDREWriteSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDREWriteSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDREWriteSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDREWriteSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDREWriteSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDREWriteSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDREWriteSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDREWriteSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDREWriteSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDREWriteSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDREWriteSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDREWriteSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDREWriteSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDREWriteSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDREWriteSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDREWriteSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDREWriteSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDREWriteSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDRWriteSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDRWriteSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDRWriteSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDRWriteSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDRWriteSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDRWriteSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDRWriteSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDRWriteSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDRWriteSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDRWriteSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDRWriteSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDRWriteSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDRWriteSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDRWriteSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDRWriteSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class0BitmapBDRWriteSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDRWriteSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDRWriteSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDRWriteSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDRWriteSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDRWriteSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDRWriteSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDRWriteSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDRWriteSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDRWriteSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDRWriteSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDRWriteSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDRWriteSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDRWriteSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDRWriteSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDRWriteSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class1BitmapBDRWriteSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDRWriteSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDRWriteSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDRWriteSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDRWriteSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDRWriteSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDRWriteSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDRWriteSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDRWriteSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDRWriteSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDRWriteSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDRWriteSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDRWriteSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDRWriteSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDRWriteSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDRWriteSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class2BitmapBDRWriteSupport.Version7)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDRWriteSupport.Version8)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDRWriteSupport.Version9)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDRWriteSupport.Version10)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDRWriteSupport.Version11)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDRWriteSupport.Version12)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDRWriteSupport.Version13)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDRWriteSupport.Version14)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDRWriteSupport.Version15)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDRWriteSupport.Version0)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDRWriteSupport.Version1)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDRWriteSupport.Version2)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDRWriteSupport.Version3)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDRWriteSupport.Version4)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDRWriteSupport.Version5)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDRWriteSupport.Version6)
+		, BOOLEAN_TO_STRING_YES_NO(pBDWrite->Class3BitmapBDRWriteSupport.Version7));
 }
 
 VOID OutputGetConfigurationFeatureTSR(
 	PFEATURE_TSR pTsr
 ) {
 	UNREFERENCED_PARAMETER(pTsr);
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureTSR\n");
 }
 
 VOID OutputGetConfigurationFeatureHDDVDRead(
 	PFEATURE_DATA_HDDVD_READ pHdRead
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureHDDVDRead\n"
 		"\t\tRecordable: %s\n"
 		"\t\tRewritable: %s\n"
-		, BOOLEAN_TO_STRING_YES_NO_A(pHdRead->Recordable)
-		, BOOLEAN_TO_STRING_YES_NO_A(pHdRead->Rewritable));
+		, BOOLEAN_TO_STRING_YES_NO(pHdRead->Recordable)
+		, BOOLEAN_TO_STRING_YES_NO(pHdRead->Rewritable));
 }
 
 VOID OutputGetConfigurationFeatureHDDVDWrite(
 	PFEATURE_DATA_HDDVD_WRITE pHdWrite
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureHDDVDWrite\n"
 		"\t\tRecordable: %s\n"
 		"\t\tRewritable: %s\n"
-		, BOOLEAN_TO_STRING_YES_NO_A(pHdWrite->Recordable)
-		, BOOLEAN_TO_STRING_YES_NO_A(pHdWrite->Rewritable));
+		, BOOLEAN_TO_STRING_YES_NO(pHdWrite->Recordable)
+		, BOOLEAN_TO_STRING_YES_NO(pHdWrite->Rewritable));
 }
 
 VOID OutputGetConfigurationFeatureHybridDisc(
 	PFEATURE_HYBRID_DISC pHybridDisc
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureHybridDisc\n"
 		"\t\tResetImmunity: %s\n",
-		BOOLEAN_TO_STRING_YES_NO_A(pHybridDisc->ResetImmunity));
+		BOOLEAN_TO_STRING_YES_NO(pHybridDisc->ResetImmunity));
 }
 
 VOID OutputGetConfigurationFeaturePowerManagement(
 	PFEATURE_DATA_POWER_MANAGEMENT pPower
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeaturePowerManagement\n"
 		"\t\t   Current: %u\n"
 		"\t\tPersistent: %u\n"
@@ -1440,64 +1442,64 @@ VOID OutputGetConfigurationFeaturePowerManagement(
 VOID OutputGetConfigurationFeatureSMART(
 	PFEATURE_DATA_SMART pSmart
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureSMART\n"
 		"\t\tFaultFailureReportingPagePresent: %s\n",
-		BOOLEAN_TO_STRING_YES_NO_A(pSmart->FaultFailureReportingPagePresent));
+		BOOLEAN_TO_STRING_YES_NO(pSmart->FaultFailureReportingPagePresent));
 }
 
 VOID OutputGetConfigurationFeatureEmbeddedChanger(
 	PFEATURE_DATA_EMBEDDED_CHANGER pEmbedded
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureEmbeddedChanger\n"
 		"\t\tSupportsDiscPresent: %s\n"
 		"\t\t  SideChangeCapable: %s\n"
 		"\t\t  HighestSlotNumber: %u\n",
-		BOOLEAN_TO_STRING_YES_NO_A(pEmbedded->SupportsDiscPresent),
-		BOOLEAN_TO_STRING_YES_NO_A(pEmbedded->SideChangeCapable),
+		BOOLEAN_TO_STRING_YES_NO(pEmbedded->SupportsDiscPresent),
+		BOOLEAN_TO_STRING_YES_NO(pEmbedded->SideChangeCapable),
 		pEmbedded->HighestSlotNumber);
 }
 
 VOID OutputGetConfigurationFeatureCDAudioAnalogPlay(
 	PFEATURE_DATA_CD_AUDIO_ANALOG_PLAY pCDAudio
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureCDAudioAnalogPlay\n"
 		"\t\t     SeperateVolume: %s\n"
 		"\t\tSeperateChannelMute: %s\n"
 		"\t\t      ScanSupported: %s\n"
 		"\t\tNumerOfVolumeLevels: %u\n",
-		BOOLEAN_TO_STRING_YES_NO_A(pCDAudio->SeperateVolume),
-		BOOLEAN_TO_STRING_YES_NO_A(pCDAudio->SeperateChannelMute),
-		BOOLEAN_TO_STRING_YES_NO_A(pCDAudio->ScanSupported),
+		BOOLEAN_TO_STRING_YES_NO(pCDAudio->SeperateVolume),
+		BOOLEAN_TO_STRING_YES_NO(pCDAudio->SeperateChannelMute),
+		BOOLEAN_TO_STRING_YES_NO(pCDAudio->ScanSupported),
 		MAKEWORD(pCDAudio->NumerOfVolumeLevels[1], pCDAudio->NumerOfVolumeLevels[0]));
 }
 
 VOID OutputGetConfigurationFeatureMicrocodeUpgrade(
 	PFEATURE_DATA_MICROCODE_UPDATE pMicrocode
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureMicrocodeUpgrade\n"
 		"\t\tM5: %s\n",
-		BOOLEAN_TO_STRING_YES_NO_A(pMicrocode->M5));
+		BOOLEAN_TO_STRING_YES_NO(pMicrocode->M5));
 }
 
 VOID OutputGetConfigurationFeatureTimeout(
 	PFEATURE_DATA_TIMEOUT pTimeOut
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureTimeout\n"
 		"\t\t    Group3: %s\n"
 		"\t\tUnitLength: %u\n",
-		BOOLEAN_TO_STRING_YES_NO_A(pTimeOut->Group3),
+		BOOLEAN_TO_STRING_YES_NO(pTimeOut->Group3),
 		MAKEWORD(pTimeOut->UnitLength[1], pTimeOut->UnitLength[0]));
 }
 
 VOID OutputGetConfigurationFeatureDvdCSS(
 	PFEATURE_DATA_DVD_CSS pDVDCss
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureDvdCSS\n"
 		"\t\tCssVersion: %u\n",
 		pDVDCss->CssVersion);
@@ -1506,36 +1508,36 @@ VOID OutputGetConfigurationFeatureDvdCSS(
 VOID OutputGetConfigurationFeatureRealTimeStreaming(
 	PFEATURE_DATA_REAL_TIME_STREAMING pRealTimeStreaming
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureRealTimeStreaming\n"
 		"\t\t        StreamRecording: %s\n"
 		"\t\t    WriteSpeedInGetPerf: %s\n"
 		"\t\t       WriteSpeedInMP2A: %s\n"
 		"\t\t             SetCDSpeed: %s\n"
 		"\t\tReadBufferCapacityBlock: %s\n",
-		BOOLEAN_TO_STRING_YES_NO_A(pRealTimeStreaming->StreamRecording),
-		BOOLEAN_TO_STRING_YES_NO_A(pRealTimeStreaming->WriteSpeedInGetPerf),
-		BOOLEAN_TO_STRING_YES_NO_A(pRealTimeStreaming->WriteSpeedInMP2A),
-		BOOLEAN_TO_STRING_YES_NO_A(pRealTimeStreaming->SetCDSpeed),
-		BOOLEAN_TO_STRING_YES_NO_A(pRealTimeStreaming->ReadBufferCapacityBlock));
+		BOOLEAN_TO_STRING_YES_NO(pRealTimeStreaming->StreamRecording),
+		BOOLEAN_TO_STRING_YES_NO(pRealTimeStreaming->WriteSpeedInGetPerf),
+		BOOLEAN_TO_STRING_YES_NO(pRealTimeStreaming->WriteSpeedInMP2A),
+		BOOLEAN_TO_STRING_YES_NO(pRealTimeStreaming->SetCDSpeed),
+		BOOLEAN_TO_STRING_YES_NO(pRealTimeStreaming->ReadBufferCapacityBlock));
 }
 
 VOID OutputGetConfigurationFeatureLogicalUnitSerialNumber(
 	PFEATURE_DATA_LOGICAL_UNIT_SERIAL_NUMBER pLogical
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureLogicalUnitSerialNumber\n"
 		"\t\tSerialNumber: ");
 	for (INT i = 0; i < pLogical->Header.AdditionalLength; i++) {
-		OutputDriveLogA("%c", pLogical->SerialNumber[i]);
+		OutputDriveLog("%c", pLogical->SerialNumber[i]);
 	}
-	OutputDriveLogA("\n");
+	OutputDriveLog("\n");
 }
 
 VOID OutputGetConfigurationFeatureMediaSerialNumber(
 	PFEATURE_MEDIA_SERIAL_NUMBER pMediaSerialNumber
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureMediaSerialNumber\n"
 		"\t\t   Current: %u\n"
 		"\t\tPersistent: %u\n"
@@ -1548,9 +1550,9 @@ VOID OutputGetConfigurationFeatureMediaSerialNumber(
 VOID OutputGetConfigurationFeatureDiscControlBlocks(
 	PFEATURE_DATA_DISC_CONTROL_BLOCKS pDiscCtrlBlk
 ) {
-	OutputDriveLogA("\tFeatureDiscControlBlocks\n");
+	OutputDriveLog("\tFeatureDiscControlBlocks\n");
 	for (INT i = 0; i < pDiscCtrlBlk->Header.AdditionalLength; i++) {
-		OutputDriveLogA(
+		OutputDriveLog(
 			"\t\tContentDescriptor %02u: %08ld\n", i,
 			MAKELONG(
 				MAKEWORD(pDiscCtrlBlk->Data[i].ContentDescriptor[3], pDiscCtrlBlk->Data[i].ContentDescriptor[2]),
@@ -1561,7 +1563,7 @@ VOID OutputGetConfigurationFeatureDiscControlBlocks(
 VOID OutputGetConfigurationFeatureDvdCPRM(
 	PFEATURE_DATA_DVD_CPRM pDVDCprm
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureDvdCPRM\n"
 		"\t\tCPRMVersion: %u\n",
 		pDVDCprm->CPRMVersion);
@@ -1570,8 +1572,8 @@ VOID OutputGetConfigurationFeatureDvdCPRM(
 VOID OutputGetConfigurationFeatureFirmwareDate(
 	PFEATURE_DATA_FIRMWARE_DATE pFirmwareDate
 ) {
-	OutputDriveLogA(
-		"\tFeatureFirmwareDate: %.4s-%.2s-%.2s %.2s:%.2s:%.2s\n"
+	OutputDriveLog(
+		"\tFeatureFirmwareDate: %.4" CHARWIDTH "s-%.2" CHARWIDTH "s-%.2" CHARWIDTH "s %.2" CHARWIDTH "s:%.2" CHARWIDTH "s:%.2" CHARWIDTH "s\n"
 		, pFirmwareDate->Year, pFirmwareDate->Month, pFirmwareDate->Day
 		, pFirmwareDate->Hour, pFirmwareDate->Minute, pFirmwareDate->Seconds);
 }
@@ -1579,13 +1581,13 @@ VOID OutputGetConfigurationFeatureFirmwareDate(
 VOID OutputGetConfigurationFeatureAACS(
 	PFEATURE_DATA_AACS pAACS
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureAACS\n"
 		"\t\tBindingNonceGeneration: %s\n"
 		"\t\tBindingNonceBlockCount: %u\n"
 		"\t\t         NumberOfAGIDs: %u\n"
 		"\t\t           AACSVersion: %u\n",
-		BOOLEAN_TO_STRING_YES_NO_A(pAACS->BindingNonceGeneration),
+		BOOLEAN_TO_STRING_YES_NO(pAACS->BindingNonceGeneration),
 		pAACS->BindingNonceBlockCount,
 		pAACS->NumberOfAGIDs,
 		pAACS->AACSVersion);
@@ -1594,7 +1596,7 @@ VOID OutputGetConfigurationFeatureAACS(
 VOID OutputGetConfigurationFeatureVCPS(
 	PFEATURE_VCPS pVcps
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tFeatureVCPS\n"
 		"\t\t   Current: %u\n"
 		"\t\tPersistent: %u\n"
@@ -1607,26 +1609,26 @@ VOID OutputGetConfigurationFeatureVCPS(
 VOID OutputGetConfigurationFeatureReserved(
 	PFEATURE_DATA_RESERVED pReserved
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tReserved (FeatureCode[%#04x])\n"
 		"\t\tData: ", MAKEWORD(pReserved->Header.FeatureCode[1], pReserved->Header.FeatureCode[0]));
 	for (INT i = 0; i < pReserved->Header.AdditionalLength; i++) {
-		OutputDriveLogA("%02x", pReserved->Data[i]);
+		OutputDriveLog("%02x", pReserved->Data[i]);
 	}
-	OutputDriveLogA("\n");
+	OutputDriveLog("\n");
 }
 
 VOID OutputGetConfigurationFeatureVendorSpecific(
 	PFEATURE_DATA_VENDOR_SPECIFIC pVendorSpecific
 ) {
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tVendorSpecific (FeatureCode[%#04x])\n"
 		"\t\tVendorSpecificData: ",
 		MAKEWORD(pVendorSpecific->Header.FeatureCode[1], pVendorSpecific->Header.FeatureCode[0]));
 	for (INT i = 0; i < pVendorSpecific->Header.AdditionalLength; i++) {
-		OutputDriveLogA("%02x", pVendorSpecific->VendorSpecificData[i]);
+		OutputDriveLog("%02x", pVendorSpecific->VendorSpecificData[i]);
 	}
-	OutputDriveLogA("\n");
+	OutputDriveLog("\n");
 }
 
 VOID OutputGetConfigurationFeatureNumber(
@@ -1648,7 +1650,7 @@ VOID OutputGetConfigurationFeatureNumber(
 			OutputGetConfigurationFeatureMorphing((PFEATURE_DATA_MORPHING)&lpConf[n]);
 			break;
 		case FeatureRemovableMedium:
-			OutputGetConfigurationFeatureRemovableMedium((PFEATURE_DATA_REMOVABLE_MEDIUM)&lpConf[n]);
+			OutputGetConfigurationFeatureRemovableMedium(pDevice, (PFEATURE_DATA_REMOVABLE_MEDIUM)&lpConf[n]);
 			break;
 		case FeatureWriteProtect:
 			OutputGetConfigurationFeatureWriteProtect((PFEATURE_DATA_WRITE_PROTECT)&lpConf[n]);
@@ -1812,200 +1814,734 @@ VOID OutputGetConfigurationFeatureNumber(
 	}
 }
 
-VOID OutputCDAtip(
+VOID OutputCDAtipSI1(
 	PCDROM_TOC_ATIP_DATA_BLOCK pAtip
 ) {
-	OutputDiscLogA(OUTPUT_DHYPHEN_PLUS_STR(TOC ATIP)
-		"\t        WritePower: %u\n"
-		"\tCdrwReferenceSpeed: %u\n"
-		"\t   UnrestrictedUse: %s\n"
+//	BYTE tmp[3] = {};
+//	memcpy(tmp, pAtip, 3);
+	OutputDiscLog(
+		"\tSpecial Information 1\n"
+//		"\t\t            msf: %02u:%02u:%02u\n"
+		"\t\t     WritePower: %u\n"
+		"\t\t ReferenceSpeed: %u\n"
+		"\t\tUnrestrictedUse: %s\n"
+//		, tmp[0], tmp[1], tmp[2]
 		, pAtip->WritePower
 		, pAtip->CdrwReferenceSpeed
-		, BOOLEAN_TO_STRING_YES_NO_A(pAtip->UnrestrictedUse)
+		, BOOLEAN_TO_STRING_YES_NO(pAtip->UnrestrictedUse)
 	);
 	switch (pAtip->IsCdrw)
 	{
 	case 0:
-		OutputDiscLogA("\t          DiscType: CD-R, DiscSubType: %u\n", pAtip->DiscSubType);
+		OutputDiscLog("\t\t       DiscType: %u (CD-R), DiscSubType: %u \n"
+			, pAtip->IsCdrw, pAtip->DiscSubType);
 		break;
 	case 1:
-		OutputDiscLogA("\t          DiscType: CD-RW, ");
+		OutputDiscLog("\t\t       DiscType: %u (CD-RW), DiscSubType: %u "
+			, pAtip->IsCdrw, pAtip->DiscSubType);
 		switch (pAtip->DiscSubType)
 		{
 		case 0:
-			OutputDiscLogA("DiscSubType: Standard Speed\n");
+			OutputDiscLog("(Standard Speed (1x-4x))\n");
 			break;
 		case 1:
-			OutputDiscLogA("DiscSubType: High Speed\n");
+			OutputDiscLog("(High Speed (4x-10x))\n");
+			break;
+		case 2:
+			OutputDiscLog("(Ultra Speed (8x-24x))\n");
+			break;
+		case 3:
+			OutputDiscLog("(Ultra Speed (8x-32x))\n");
 			break;
 		default:
-			OutputDiscLogA("DiscSubType: Unknown\n");
+			OutputDiscLog("(Unknown)\n");
 			break;
 		}
 		break;
 	default:
-		OutputDiscLogA("          DiscType: Unknown\n");
+		OutputDiscLog("\t\t       DiscType: Unknown\n");
 		break;
 	}
+}
 
-	OutputDiscLogA(
-		"\t         LeadInMsf: %02u:%02u:%02u\n"
-		"\t          => Manufacturer: "
+VOID OutputCDAtipSI2(
+	PCDROM_TOC_ATIP_DATA_BLOCK pAtip
+) {
+	OutputDiscLog(
+		"\tSpecial Information 2\n"
+		"\t\t      LeadInMsf: %02u:%02u:%02u\n"
+		"\t\t       => Manufacturer: "
 		, pAtip->LeadInMsf[0], pAtip->LeadInMsf[1], pAtip->LeadInMsf[2]
 	);
 	// http://web.archive.org/web/20061027043819/www.cdr-forum.de/download/cdr.pdf
 	BYTE s = pAtip->LeadInMsf[1];
 	BYTE f = pAtip->LeadInMsf[2];
 	if (s == 21 && 40 <= f && f <= 49) {
-		OutputDiscLogA("Optical Disc Manufacturing Equipment\n");
+		OutputDiscLog("Optical Disc Manufacturing Equipment\n");
 	}
 	else if (s == 22 && f <= 9) {
-		OutputDiscLogA("Woongjin Media corp.\n");
+		OutputDiscLog("Woongjin Media corp.\n");
 	}
 	else if ((s == 22 || s == 45) && 40 <= f && f <= 49) {
-		OutputDiscLogA("CIS Technology Inc.\n");
+		OutputDiscLog("CIS Technology Inc.\n");
 	}
 	else if ((s == 23 && f <= 9) || (s == 49 && 60 <= f && f <= 69)) {
-		OutputDiscLogA("Matsushita Electric Industrial Co., Ltd.\n");
+		OutputDiscLog("Matsushita Electric Industrial Co., Ltd.\n");
 	}
 	else if (s == 23 && 10 <= f && f <= 19) {
-		OutputDiscLogA("Doremi Media Co., Ltd.\n");
+		OutputDiscLog("Doremi Media Co., Ltd.\n");
 	}
 	else if ((s == 24 || s == 46) && f <= 9) {
-		OutputDiscLogA("Taiyo Yuden Company Limited\n");
+		OutputDiscLog("Taiyo Yuden Company Limited\n");
 	}
 	else if ((s == 24 || s == 46) && 10 <= f && f <= 19) {
-		OutputDiscLogA("SONY Corporation\n");
+		OutputDiscLog("SONY Corporation\n");
 	}
 	else if ((s == 24 && 20 <= f && f <= 29) || (s == 46 && 30 <= f && f <= 39)) {
-		OutputDiscLogA("Computer Support Italy s.r.l.\n");
+		OutputDiscLog("Computer Support Italy s.r.l.\n");
 	}
 	else if ((s == 24 && 30 <= f && f <= 39) || (s == 45 && 10 <= f && f <= 19)) {
-		OutputDiscLogA("UNITECH JAPAN INC.\n");
+		OutputDiscLog("UNITECH JAPAN INC.\n");
 	}
 	else if ((s == 25 && 20 <= f && f <= 29) || (s == 47 && 10 <= f && f <= 19)) {
-		OutputDiscLogA("Hitachi Maxell, Ltd.\n");
+		OutputDiscLog("Hitachi Maxell, Ltd.\n");
 	}
 	else if ((s == 25 && 30 <= f && f <= 39) || (s == 51 && 20 <= f && f <= 29)) {
-		OutputDiscLogA("INFODISC Technology Co., Ltd.\n");
+		OutputDiscLog("INFODISC Technology Co., Ltd.\n");
 	}
 	else if (s == 25 && 50 <= f && f <= 59) {
-		OutputDiscLogA("AMS Technology Inc.\n");
+		OutputDiscLog("AMS Technology Inc.\n");
 	}
 	else if ((s == 25 || s == 45) && 60 <= f && f <= 69) {
-		OutputDiscLogA("Xcitek Inc.\n");
+		OutputDiscLog("Xcitek Inc.\n");
 	}
 	else if ((s == 26 || s == 45) && f <= 9) {
-		OutputDiscLogA("FORNET INTERNATIONAL PTE LTD.\n");
+		OutputDiscLog("FORNET INTERNATIONAL PTE LTD.\n");
 	}
 	else if ((s == 26 && 10 <= f && f <= 19) || (s == 47 && 40 <= f && f <= 49)) {
-		OutputDiscLogA("POSTECH Corporation\n");
+		OutputDiscLog("POSTECH Corporation\n");
 	}
 	else if (s == 26 && 20 <= f && f <= 29) {
-		OutputDiscLogA("SKC Co., Ltd.n");
+		OutputDiscLog("SKC Co., Ltd.n");
 	}
 	else if (s == 26 && 30 <= f && f <= 39) {
-		OutputDiscLogA("OPTICAL DISC CORPRATION\n");
+		OutputDiscLog("OPTICAL DISC CORPRATION\n");
 	}
 	else if ((s == 26 || s == 46) && 40 <= f && f <= 49) {
-		OutputDiscLogA("FUJI Photo Film Co., Ltd\n");
+		OutputDiscLog("FUJI Photo Film Co., Ltd\n");
 	}
 	else if ((s == 26 && 50 <= f && f <= 59) || (s == 48 && 60 <= f && f <= 69)) {
-		OutputDiscLogA("POSTECH Corporation\n");
+		OutputDiscLog("POSTECH Corporation\n");
 	}
 	else if ((s == 26 || s == 46) && 60 <= f && f <= 69) {
-		OutputDiscLogA("CMC Magnetics Corporation\n");
+		OutputDiscLog("CMC Magnetics Corporation\n");
 	}
 	else if ((s == 27 && 1 <= f && f <= 9) || (s == 48 && 40 <= f && f <= 49)) {
-		OutputDiscLogA("DIGITAL STORAGE TECHNOLOGY CO., LTD\n");
+		OutputDiscLog("DIGITAL STORAGE TECHNOLOGY CO., LTD\n");
 	}
 	else if ((s == 27 && 10 <= f && f <= 19) || (s == 48 && 20 <= f && f <= 29)) {
-		OutputDiscLogA("Kodak Japan Limited\n");
+		OutputDiscLog("Kodak Japan Limited\n");
 	}
 	else if ((s == 27 || s == 47) && 20 <= f && f <= 29) {
-		OutputDiscLogA("Princo Corporation\n");
+		OutputDiscLog("Princo Corporation\n");
 	}
 	else if ((s == 27 || s == 48) && 30 <= f && f <= 39) {
-		OutputDiscLogA("Pioneer Video Corporation\n");
+		OutputDiscLog("Pioneer Video Corporation\n");
 	}
 	else if ((s == 27 && 40 <= f && f <= 49) || (s == 48 && 10 <= f && f <= 19)) {
-		OutputDiscLogA("Kodak Japan Limited\n");
+		OutputDiscLog("Kodak Japan Limited\n");
 	}
 	else if ((s == 27 || s == 48) && 50 <= f && f <= 59) {
-		OutputDiscLogA("Mitsui Chemicals, Inc.\n");
+		OutputDiscLog("Mitsui Chemicals, Inc.\n");
 	}
 	else if ((s == 27 && 60 <= f && f <= 69) || (s == 48 && f <= 9)) {
-		OutputDiscLogA("Ricoh Company Limited\n");
+		OutputDiscLog("Ricoh Company Limited\n");
 	}
 	else if ((s == 28 || s == 49) && 10 <= f && f <= 19) {
-		OutputDiscLogA("GIGASTORAGE CORPORATION\n");
+		OutputDiscLog("GIGASTORAGE CORPORATION\n");
 	}
 	else if ((s == 28 || s == 46) && 20 <= f && f <= 29) {
-		OutputDiscLogA("Multi Media Masters & Machinary SA\n");
+		OutputDiscLog("Multi Media Masters & Machinary SA\n");
 	}
 	else if ((s == 28 && 30 <= f && f <= 39) || (s == 46 && 50 <= f && f <= 59)) {
-		OutputDiscLogA("Auvistar Industry Co., Ltd.\n");
+		OutputDiscLog("Auvistar Industry Co., Ltd.\n");
 	}
 	else if ((s == 28 && 40 <= f && f <= 49) || (s == 48 && 20 <= f && f <= 29)) {
-		OutputDiscLogA("King Pro Mediatek Inc.\n");
+		OutputDiscLog("King Pro Mediatek Inc.\n");
 	}
 	else if (s == 29 && f <= 9) {
-		OutputDiscLogA("Taeil Media Co., Ltd.\n");
+		OutputDiscLog("Taeil Media Co., Ltd.\n");
 	}
 	else if ((s == 29 || s == 50) && 10 <= f && f <= 19) {
-		OutputDiscLogA("Vanguard Disc Inc.\n");
+		OutputDiscLog("Vanguard Disc Inc.\n");
 	}
 	else if ((s == 30 && 10 <= f && f <= 19) || (s == 50 && 30 <= f && f <= 39)) {
-		OutputDiscLogA("CDA Datentrager Albrechts GmbH\n");
+		OutputDiscLog("CDA Datentrager Albrechts GmbH\n");
 	}
 	else if ((s == 31 && f <= 9) || (s == 47 && 50 <= f && f <= 59)) {
-		OutputDiscLogA("Ritek Co.\n");
+		OutputDiscLog("Ritek Co.\n");
 	}
 	else if ((s == 31 && 30 <= f && f <= 39) || (s == 51 && 10 <= f && f <= 19)) {
-		OutputDiscLogA("Grand Advance Technology Ltd.\n");
+		OutputDiscLog("Grand Advance Technology Ltd.\n");
 	}
 	else if ((s == 32 || s == 49) && f <= 9) {
-		OutputDiscLogA("TDK Corporation\n");
+		OutputDiscLog("TDK Corporation\n");
 	}
 	else if ((s == 32 && 10 <= f && f <= 19) || (s == 47 && 60 <= f && f <= 69)) {
-		OutputDiscLogA("Grand Advance Technology Ltd.\n");
+		OutputDiscLog("Grand Advance Technology Ltd.\n");
 	}
 	else if ((s == 34 || s == 50) && 20 <= f && f <= 29) {
-		OutputDiscLogA("Mitsubishi Chemical Corporation\n");
+		OutputDiscLog("Mitsubishi Chemical Corporation\n");
 	}
 	else {
-		OutputDiscLogA("Unknown\n");
+		OutputDiscLog("Unknown\n");
 	}
 
 	INT rc = pAtip->LeadInMsf[2] % 10;
-	OutputDiscLogA("              => Recording characteristics: ");
+	OutputDiscLog("               => Recording characteristics: ");
 	if (0 <= rc && rc <= 4) {
-		OutputDiscLogA("Long Strategy Type (ex. Cyanine type media)\n");
+		OutputDiscLog("Long Strategy Type (ex. Cyanine type media)\n");
 	}
 	else if (5 <= rc && rc <= 9) {
-		OutputDiscLogA("Short Strategy Type (ex. Phthalocyanine type media)\n");
+		OutputDiscLog("Short Strategy Type (ex. Phthalocyanine type media)\n");
 	}
+}
 
-	OutputDiscLogA(
-		"\t        LeadOutMsf: %02u:%02u:%02u\n"
-		, pAtip->LeadOutMsf[0], pAtip->LeadOutMsf[1], pAtip->LeadOutMsf[2]
-	);
+VOID OutputCDAtipAI1(
+	PCDROM_TOC_ATIP_DATA_BLOCK pAtip
+) {
 	if (pAtip->A1Valid) {
-		OutputDiscLogA(
-			"\t          A1Values: %02u:%02u:%02u\n"
+		OutputDiscLog(
+			"\tAdditional Information 1\n"
+			"\t\t       A1Values: %02u:%02u:%02u\n"
 			, pAtip->A1Values[0], pAtip->A1Values[1], pAtip->A1Values[2]
 		);
+
+		OutputDiscLog(
+			"\t\t        => Lowest Test Speed: %d "
+			, pAtip->A1Values[0] >> 4 & 0x07
+		);
+		switch (pAtip->A1Values[0] >> 4 & 0x07) {
+		case 0:
+			OutputDiscLog("(1x nominal CD Speed)\n");
+			break;
+		case 2:
+			OutputDiscLog("(4x nominal CD Speed)\n");
+			break;
+		case 6:
+			OutputDiscLog("(16x nominal CD Speed)\n");
+			break;
+		default:
+			OutputDiscLog("(Unknown CD Speed)\n");
+			break;
+		}
+
+		OutputDiscLog(
+			"\t\t        => Highest Test Speed: %d "
+			, pAtip->A1Values[0] & 0x0f
+		);
+		switch (pAtip->A1Values[0] & 0x0f) {
+		case 2:
+			OutputDiscLog("(4x nominal CD Speed)\n");
+			break;
+		case 4:
+			OutputDiscLog("(10x nominal CD Speed)\n");
+			break;
+		case 6:
+			OutputDiscLog("(16x nominal CD Speed)\n");
+			break;
+		case 7:
+			OutputDiscLog("(20x nominal CD Speed)\n");
+			break;
+		case 8:
+			OutputDiscLog("(24x nominal CD Speed)\n");
+			break;
+		case 9:
+			OutputDiscLog("(32x nominal CD Speed)\n");
+			break;
+		case 10:
+			OutputDiscLog("(40x nominal CD Speed)\n");
+			break;
+		case 11:
+			OutputDiscLog("(48x nominal CD Speed)\n");
+			break;
+		default:
+			OutputDiscLog("(Unknown CD Speed)\n");
+			break;
+		}
+
+		if (pAtip->IsCdrw) {
+			OutputDiscLog(
+				"\t\t        => Power Multiplication Factor p: %d\n"
+				"\t\t        => Target g value of the modulation/power function: %d\n"
+				"\t\t        => Recommended erase/write power ratio e: %d\n"
+				"\t\t        => Write-strategy optimization for dTtop: %d\n"
+				"\t\t        => Write-strategy optimization for dTera: %d\n"
+				, pAtip->A1Values[1] >> 4 & 0x07
+				, pAtip->A1Values[1] >> 1 & 0x03
+				, pAtip->A1Values[2] >> 4 & 0x07
+				, pAtip->A1Values[2] >> 2 & 0x03
+				, pAtip->A1Values[2] & 0x03
+			);
+		}
+		else {
+			OutputDiscLog(
+				"\t\t        => High-Speed subtype: %d\n"
+				"\t\t        => Optimum B-range: %d "
+				, pAtip->A1Values[1] >> 4 & 0x07
+				, pAtip->A1Values[1] & 0x03
+			);
+			switch (pAtip->A1Values[1] & 0x03) {
+			case 0:
+				OutputDiscLog("(-8 ~ 0 %%)\n");
+				break;
+			case 1:
+				OutputDiscLog("(-4 ~ 4 %%)\n");
+				break;
+			case 2:
+				OutputDiscLog("(-0 ~ +8 %%)\n");
+				break;
+			case 3:
+				OutputDiscLog("(+4 ~ +12 %%)\n");
+				break;
+			default:
+				OutputDiscLog("other\n");
+				break;
+			};
+
+			OutputDiscLog(
+				"\t\t        => Optimum pulse length: %d "
+				, pAtip->A1Values[2] >> 4 & 0x07
+			);
+			switch (pAtip->A1Values[2] >> 4 & 0x07) {
+			case 0:
+				OutputDiscLog("(n-0)T\n");
+				break;
+			case 1:
+				OutputDiscLog("(n-0.25)T\n");
+				break;
+			case 2:
+				OutputDiscLog("(n-0.50)T\n");
+				break;
+			case 3:
+				OutputDiscLog("(n-0.75)T\n");
+				break;
+			case 4:
+				OutputDiscLog("(n+0.25)T\n");
+				break;
+			case 5:
+				OutputDiscLog("(n+0.50)T\n");
+				break;
+			case 6:
+				OutputDiscLog("(n+0.75)T\n");
+				break;
+			case 7:
+				OutputDiscLog("(n+1.00)T\n");
+				break;
+			default:
+				OutputDiscLog("other\n");
+				break;
+			};
+
+			OutputDiscLog(
+				"\t\t        => Length of Additional Capacity & Lead-out Area: %d "
+				, pAtip->A1Values[2] & 0x0f
+			);
+			if ((pAtip->A1Values[2] & 0x0f) == 0) {
+				OutputDiscLog("(2 minutes)\n");
+			}
+			else {
+				OutputDiscLog("other\n");
+			}
+		}
 	}
+}
+
+VOID OutputCDAtip(
+	PCDROM_TOC_ATIP_DATA_BLOCK pAtip
+) {
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("TOC ATIP"));
+	OutputCDAtipSI1(pAtip);
+	OutputCDAtipSI2(pAtip);
+
+	OutputDiscLog(
+		"\tSpecial Information 3\n"
+		"\t\t     LeadOutMsf: %02u:%02u:%02u\n"
+		, pAtip->LeadOutMsf[0], pAtip->LeadOutMsf[1], pAtip->LeadOutMsf[2]
+	);
+	OutputCDAtipAI1(pAtip);
 	if (pAtip->A2Valid) {
-		OutputDiscLogA(
-			"\t          A2Values: %02u:%02u:%02u\n"
+		OutputDiscLog(
+			"\tAdditional Information 2\n"
+			"\t\t      A2Values: %02u:%02u:%02u\n"
 			, pAtip->A2Values[0], pAtip->A2Values[1], pAtip->A2Values[2]
 		);
+		if (pAtip->IsCdrw) {
+			OutputDiscLog(
+				"\t\t        => Lowest e2Tf Write-strategy Test Speed: %d "
+				, pAtip->A2Values[0] >> 4 & 0x07
+			);
+			switch (pAtip->A2Values[0] >> 4 & 0x07) {
+			case 2:
+				OutputDiscLog("(4x nominal CD Speed)\n");
+				break;
+			case 3:
+				OutputDiscLog("(8x nominal CD Speed)\n");
+				break;
+			default:
+				OutputDiscLog("(Unknown CD Speed)\n");
+				break;
+			}
+
+			OutputDiscLog(
+				"\t\t        => Highest e2Tf Write-strategy Test Speed: %d "
+				, pAtip->A2Values[0] & 0x0f
+			);
+			switch (pAtip->A2Values[0] & 0x0f) {
+			case 6:
+				OutputDiscLog("(10x nominal CD Speed)\n");
+				break;
+			case 8:
+				OutputDiscLog("(24x nominal CD Speed)\n");
+				break;
+			case 9:
+				OutputDiscLog("(32x nominal CD Speed)\n");
+				break;
+			default:
+				OutputDiscLog("(Unknown CD Speed)\n");
+				break;
+			}
+
+			OutputDiscLog(
+				"\t\t        => Optimum write power indication at 16x and e2Tf Write-strategy: %d "
+				, pAtip->A2Values[1] >> 4 & 0x07
+			);
+			switch (pAtip->A2Values[1] >> 4 & 0x07) {
+			case 0:
+				OutputDiscLog("(not specified)\n");
+				break;
+			case 1:
+				OutputDiscLog("(30 mW)\n");
+				break;
+			case 2:
+				OutputDiscLog("(32.5 mW)\n");
+				break;
+			case 3:
+				OutputDiscLog("(35 mW)\n");
+				break;
+			case 4:
+				OutputDiscLog("(38 mW)\n");
+				break;
+			case 5:
+				OutputDiscLog("(41 mW)\n");
+				break;
+			case 6:
+				OutputDiscLog("(45 mW)\n");
+				break;
+			case 7:
+				OutputDiscLog("(50 mW)\n");
+				break;
+			default:
+				OutputDiscLog("(Unknown)\n");
+				break;
+			}
+
+			OutputDiscLog(
+				"\t\t        => Optimum write power indication at HTS and e2Tf Write-strategy: %d "
+				, pAtip->A2Values[1] >> 1 & 0x07
+			);
+			switch (pAtip->A2Values[1] >> 1 & 0x07) {
+			case 0:
+				OutputDiscLog("(not specified)\n");
+				break;
+			case 1:
+				OutputDiscLog("(30 mW)\n");
+				break;
+			case 2:
+				OutputDiscLog("(32.5 mW)\n");
+				break;
+			case 3:
+				OutputDiscLog("(35 mW)\n");
+				break;
+			case 4:
+				OutputDiscLog("(38 mW)\n");
+				break;
+			case 5:
+				OutputDiscLog("(41 mW)\n");
+				break;
+			case 6:
+				OutputDiscLog("(45 mW)\n");
+				break;
+			case 7:
+				OutputDiscLog("(50 mW)\n");
+				break;
+			default:
+				OutputDiscLog("(Unknown)\n");
+				break;
+			}
+
+			OutputDiscLog(
+				"\t\t        => Optimum erase power indication at 16x and e2Tf Write-strategy: %d "
+				, pAtip->A2Values[2] >> 4 & 0x07
+			);
+			switch (pAtip->A2Values[2] >> 4 & 0x07) {
+			case 0:
+				OutputDiscLog("(not specified)\n");
+				break;
+			case 1:
+				OutputDiscLog("(6 mW)\n");
+				break;
+			case 2:
+				OutputDiscLog("(7 mW)\n");
+				break;
+			case 3:
+				OutputDiscLog("(8 mW)\n");
+				break;
+			case 4:
+				OutputDiscLog("(9.5 mW)\n");
+				break;
+			case 5:
+				OutputDiscLog("(11 mW)\n");
+				break;
+			case 6:
+				OutputDiscLog("(13 mW)\n");
+				break;
+			case 7:
+				OutputDiscLog("(15 mW)\n");
+				break;
+			default:
+				OutputDiscLog("(Unknown)\n");
+				break;
+			}
+
+			OutputDiscLog(
+				"\t\t        => Optimum erase power indication at HTS and e2Tf Write-strategy: %d "
+				, pAtip->A2Values[2] >> 1 & 0x07
+			);
+			switch (pAtip->A2Values[2] >> 1 & 0x07) {
+			case 0:
+				OutputDiscLog("(not specified)\n");
+				break;
+			case 1:
+				OutputDiscLog("(6 mW)\n");
+				break;
+			case 2:
+				OutputDiscLog("(7 mW)\n");
+				break;
+			case 3:
+				OutputDiscLog("(8 mW)\n");
+				break;
+			case 4:
+				OutputDiscLog("(9.5 mW)\n");
+				break;
+			case 5:
+				OutputDiscLog("(11 mW)\n");
+				break;
+			case 6:
+				OutputDiscLog("(13 mW)\n");
+				break;
+			case 7:
+				OutputDiscLog("(15 mW)\n");
+				break;
+			default:
+				OutputDiscLog("(Unknown)\n");
+				break;
+			}
+		}
+		else {
+			OutputDiscLog(
+				"\t\t        => Indicative Optimum Writing Power at Lowest Test Speed: %d "
+				, pAtip->A2Values[0] >> 4 & 0x07
+			);
+			switch (pAtip->A2Values[0] >> 4 & 0x07) {
+			case 0:
+				OutputDiscLog("(7 mW)\n");
+				break;
+			case 1:
+				OutputDiscLog("(8 mW)\n");
+				break;
+			case 2:
+				OutputDiscLog("(9 mW)\n");
+				break;
+			case 3:
+				OutputDiscLog("(10 mW)\n");
+				break;
+			case 4:
+				OutputDiscLog("(11 mW)\n");
+				break;
+			case 5:
+				OutputDiscLog("(12 mW)\n");
+				break;
+			case 6:
+				OutputDiscLog("(13 mW)\n");
+				break;
+			case 7:
+				OutputDiscLog("(14 mW)\n");
+				break;
+			default:
+				OutputDiscLog("(Unknown)\n");
+				break;
+			}
+
+			OutputDiscLog(
+				"\t\t        => Indicative Optimum Writing Power at Highest Test Speed: %d "
+				, pAtip->A2Values[0] & 0x0f
+			);
+			switch (pAtip->A2Values[0] & 0x0f) {
+			case 0:
+				OutputDiscLog("(16 mW)\n");
+				break;
+			case 1:
+				OutputDiscLog("(18 mW)\n");
+				break;
+			case 2:
+				OutputDiscLog("(20 mW)\n");
+				break;
+			case 3:
+				OutputDiscLog("(22 mW)\n");
+				break;
+			case 4:
+				OutputDiscLog("(24 mW)\n");
+				break;
+			case 5:
+				OutputDiscLog("(26 mW)\n");
+				break;
+			case 6:
+				OutputDiscLog("(28 mW)\n");
+				break;
+			case 7:
+				OutputDiscLog("(30 mW)\n");
+				break;
+			case 8:
+				OutputDiscLog("(32 mW)\n");
+				break;
+			case 9:
+				OutputDiscLog("(34 mW)\n");
+				break;
+			case 10:
+				OutputDiscLog("(36 mW)\n");
+				break;
+			case 11:
+				OutputDiscLog("(38 mW)\n");
+				break;
+			case 12:
+				OutputDiscLog("(41 mW)\n");
+				break;
+			case 13:
+				OutputDiscLog("(44 mW)\n");
+				break;
+			case 14:
+				OutputDiscLog("(47 mW)\n");
+				break;
+			case 15:
+				OutputDiscLog("(50 mW)\n");
+				break;
+			default:
+				OutputDiscLog("(Unknown)\n");
+				break;
+			}
+
+			OutputDiscLog(
+				"\t\t        => Power Boost for I3 pits: %d "
+				, pAtip->A2Values[1] >> 4 & 0x07
+			);
+			switch (pAtip->A2Values[1] >> 4 & 0x07) {
+			case 0:
+				OutputDiscLog("(0%%)\n");
+				break;
+			case 1:
+				OutputDiscLog("(2%%)\n");
+				break;
+			case 2:
+				OutputDiscLog("(4%%)\n");
+				break;
+			case 3:
+				OutputDiscLog("(6%%)\n");
+				break;
+			case 4:
+				OutputDiscLog("(8%%)\n");
+				break;
+			case 5:
+				OutputDiscLog("(10%%)\n");
+				break;
+			case 6:
+				OutputDiscLog("(12%%)\n");
+				break;
+			case 7:
+				OutputDiscLog("(14%%)\n");
+				break;
+			default:
+				OutputDiscLog("(Unknown)\n");
+				break;
+			}
+
+			OutputDiscLog(
+				"\t\t        => Pulse length correction after I3 lands: %d "
+				, pAtip->A2Values[1] >> 2 & 0x03
+			);
+			switch (pAtip->A2Values[1] >> 2 & 0x03) {
+			case 0:
+				OutputDiscLog("(0T)\n");
+				break;
+			case 1:
+				OutputDiscLog("(1/16T)\n");
+				break;
+			case 2:
+				OutputDiscLog("(2/16T)\n");
+				break;
+			case 3:
+				OutputDiscLog("(3/16T)\n");
+				break;
+			default:
+				OutputDiscLog("(Unknown)\n");
+				break;
+			}
+		}
 	}
 	if (pAtip->A3Valid) {
-		OutputDiscLogA(
-			"\t          A3Values: %02u:%02u:%02u\n"
+		OutputDiscLog(
+			"\tAdditional Information 3\n"
+			"\t\t       A3Values: %02u:%02u:%02u\n"
 			, pAtip->A3Values[0], pAtip->A3Values[1], pAtip->A3Values[2]
+		);
+		OutputDiscLog(
+			"\t\t        => Media technology type: %d "
+			, pAtip->A3Values[0] >> 5 & 0x03
+		);
+		switch (pAtip->A3Values[0] >> 5 & 0x03) {
+		case 0:
+			if (pAtip->IsCdrw) {
+				OutputDiscLog("(Phase-change type recording layer)\n");
+			}
+			else {
+				OutputDiscLog("(Cyanine or comparable type recording layer)\n");
+			}
+			break;
+		case 1:
+			if (pAtip->IsCdrw) {
+				OutputDiscLog("(Reserved)\n");
+			}
+			else {
+				OutputDiscLog("(Phtalo-cyanine or comparable type recording layer)\n");
+			}
+			break;
+		case 2:
+			OutputDiscLog("(Reserved)\n");
+			break;
+		case 3:
+			OutputDiscLog("(Other type of recording layer)\n");
+			break;
+		default:
+			OutputDiscLog("(Unknown)\n");
+			break;
+		}
+
+		WORD Mid1st = MAKEWORD(pAtip->A3Values[0] & 0x1f, pAtip->A3Values[1] & 0x7f);
+		OutputDiscLog(
+			"\t\t        => Media IDentification (MID) code first part: %d\n"
+			"\t\t        => Media IDentification (MID) code second part: %d\n"
+			"\t\t        => Product revision number: %d\n"
+			, Mid1st, pAtip->A3Values[1] >> 3 & 0x0f, pAtip->A3Values[2] & 0x03
 		);
 	}
 }
@@ -2021,26 +2557,26 @@ VOID OutputCDTextOther(
 	for (size_t z = 0; z <= bySizeInfoIdx; z++) {
 		if (pDesc[z].PackType == CDROM_CD_TEXT_PACK_TOC_INFO) {
 			// detail in Page 54-55 of EN 60908:1999
-			OutputDiscLogA("\tTocInfo\n");
+			OutputDiscLog("\tTocInfo\n");
 			if (nTocInfoCnt == 0) {
-				OutputDiscLogA(
+				OutputDiscLog(
 					"\t\t  First track number: %u\n"
 					"\t\t   Last track number: %u\n"
-					"\t\t       Lead-out(msf): %u:%u:%u\n"
+					"\t\t       Lead-out(msf): %02u:%02u:%02u\n"
 					, pDesc[z].Text[0],	pDesc[z].Text[1], pDesc[z].Text[3]
 					, pDesc[z].Text[4], pDesc[z].Text[5]);
 			}
-			if (nTocInfoCnt == 1) {
+			if (nTocInfoCnt >= 1) {
 				for (INT i = 0, j = 0; i < 4; i++, j += 3) {
-					OutputDiscLogA(
-						"\t\t    Track %d(msf): %u:%u:%u\n"
+					OutputDiscLog(
+						"\t\t    Track %d(msf): %02u:%02u:%02u\n"
 						, i + 1, pDesc[z].Text[j], pDesc[z].Text[j + 1], pDesc[z].Text[j + 2]);
 				}
 			}
 			nTocInfoCnt++;
 		}
 		else if (pDesc[z].PackType == CDROM_CD_TEXT_PACK_TOC_INFO2) {
-			OutputDiscLogA(
+			OutputDiscLog(
 				"\tTocInfo2\n"
 				"\t\t         Priority number: %u\n"
 				"\t\t     Number of intervals: %u\n"
@@ -2055,32 +2591,32 @@ VOID OutputCDTextOther(
 		}
 		else if (pDesc[z].PackType == CDROM_CD_TEXT_PACK_SIZE_INFO) {
 			// detail in Page 56 of EN 60908:1999
-			OutputDiscLogA("\tSizeInfo\n");
+			OutputDiscLog("\tSizeInfo\n");
 			if (nSizeInfoCnt == 0) {
 				BYTE ch = pDesc[wTocTextEntries - uiSizeInfoCnt].Text[0];
-				OutputDiscLogA(
+				OutputDiscLog(
 					"\t\t         Charactor Code for this BLOCK: 0x%02x ", ch);
 				switch (ch) {
 				case 0x00:
-					OutputDiscLogA("(ISO/IEC 8859-1 [Latin-1])\n");
+					OutputDiscLog("(ISO/IEC 8859-1 [Latin-1])\n");
 					break;
 				case 0x01:
-					OutputDiscLogA("(ISO/IEC 646 [ASCII])\n");
+					OutputDiscLog("(ISO/IEC 646 [ASCII])\n");
 					break;
 				case 0x80:
-					OutputDiscLogA("(Shift-JIS)\n");
+					OutputDiscLog("(Shift-JIS)\n");
 					break;
 				case 0x81:
-					OutputDiscLogA("(Korean character code)\n");
+					OutputDiscLog("(Korean character code)\n");
 					break;
 				case 0x82:
-					OutputDiscLogA("(Mandarin Chinese character code)\n");
+					OutputDiscLog("(Mandarin Chinese character code)\n");
 					break;
 				default:
-					OutputDiscLogA("(Reserved)\n");
+					OutputDiscLog("(Reserved)\n");
 					break;
 				}
-				OutputDiscLogA(
+				OutputDiscLog(
 					"\t\t                    First track Number: %u\n"
 					"\t\t                     Last track Number: %u\n"
 					"\t\t                         Mode2 PACKETs: %s\n"
@@ -2098,11 +2634,11 @@ VOID OutputCDTextOther(
 					"\t\tNumber of PACKS with $87 (GENRE)      : %u\n"
 					, pDesc[wTocTextEntries - uiSizeInfoCnt].Text[1]
 					, pDesc[wTocTextEntries - uiSizeInfoCnt].Text[2]
-					, BOOLEAN_TO_STRING_YES_NO_A(pDesc[wTocTextEntries - uiSizeInfoCnt].Text[3] & 0x80)
-					, BOOLEAN_TO_STRING_YES_NO_A(pDesc[wTocTextEntries - uiSizeInfoCnt].Text[3] & 0x40)
-					, BOOLEAN_TO_STRING_YES_NO_A(pDesc[wTocTextEntries - uiSizeInfoCnt].Text[3] & 0x04)
-					, BOOLEAN_TO_STRING_YES_NO_A(pDesc[wTocTextEntries - uiSizeInfoCnt].Text[3] & 0x02)
-					, BOOLEAN_TO_STRING_YES_NO_A(pDesc[wTocTextEntries - uiSizeInfoCnt].Text[3] & 0x01)
+					, BOOLEAN_TO_STRING_YES_NO(pDesc[wTocTextEntries - uiSizeInfoCnt].Text[3] & 0x80)
+					, BOOLEAN_TO_STRING_YES_NO(pDesc[wTocTextEntries - uiSizeInfoCnt].Text[3] & 0x40)
+					, BOOLEAN_TO_STRING_YES_NO(pDesc[wTocTextEntries - uiSizeInfoCnt].Text[3] & 0x04)
+					, BOOLEAN_TO_STRING_YES_NO(pDesc[wTocTextEntries - uiSizeInfoCnt].Text[3] & 0x02)
+					, BOOLEAN_TO_STRING_YES_NO(pDesc[wTocTextEntries - uiSizeInfoCnt].Text[3] & 0x01)
 					, pDesc[wTocTextEntries - uiSizeInfoCnt].Text[4]
 					, pDesc[wTocTextEntries - uiSizeInfoCnt].Text[5]
 					, pDesc[wTocTextEntries - uiSizeInfoCnt].Text[6]
@@ -2113,7 +2649,7 @@ VOID OutputCDTextOther(
 					, pDesc[wTocTextEntries - uiSizeInfoCnt].Text[11]);
 			}
 			else if (nSizeInfoCnt == 1) {
-				OutputDiscLogA(
+				OutputDiscLog(
 					"\t\tNumber of PACKS with $88 (TOC_INFO)   : %u\n"
 					"\t\tNumber of PACKS with $89 (TOC_INFO2)  : %u\n"
 					"\t\tNumber of PACKS with $8a              : %u\n"
@@ -2140,7 +2676,7 @@ VOID OutputCDTextOther(
 					, pDesc[wTocTextEntries - uiSizeInfoCnt + 1].Text[11]);
 			}
 			else if (nSizeInfoCnt == 2) {
-				OutputDiscLogA(
+				OutputDiscLog(
 					"\t\t       Last Sequence number of BLOCK 4: %u\n"
 					"\t\t       Last Sequence number of BLOCK 5: %u\n"
 					"\t\t       Last Sequence number of BLOCK 6: %u\n"
@@ -2150,27 +2686,27 @@ VOID OutputCDTextOther(
 					, pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[2]
 					, pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[3]);
 				// https://tech.ebu.ch/docs/tech/tech3264.pdf
-				CHAR szLangCode[][15] = {
-					"not applicable", "Albanian", "Breton", "Catalan", "Croatian", "Welsh", "Czech", "Danish",
-					"German", "English", "Spanish", "Esperanto", "Estonian", "Basque", "Faroese", "French",
-					"Frisian", "Irish", "Gaelic", "Galician", "Icelandic", "Italian", "Lappish", "Latin",
-					"Latvian", "Luxembourgian", "Lithuanian", "Hungarian", "Maltese", "Dutch", "Norwegian", "Occitan",
-					"Polish", "Portugese", "Romanian", "Romansh", "Serbian", "Slovak", "Slovenian", "Finnish",
-					"Swedish", "Turkish", "Flemish", "Wallon", "", "", "", "",
-					"", "", "", "", "", "", "", "",
-					"", "", "", "", "", "", "", "",
-					"", "", "", "", "", "Zulu", "Vietnamese", "Uzbek",
-					"Urdu", "Ukrainian", "Thai", "Telugu", "Tatar", "Tamil", "Tadzhik", "Swahili",
-					"Sranan Tongo", "Somali", "Sinhalese", "Shona", "Serbo-croat", "Ruthenian", "Russian", "Quechua",
-					"Pushtu", "Punjabi", "Persian", "Papamiento", "Oriya", "Nepali", "Ndebele", "Marathi",
-					"Moldavian", "Malaysian", "Malagasay", "Macedonian", "Laotian", "Korean", "Khmer", "Kazakh",
-					"Kannada", "Japanese", "Indonesian", "Hindi", "Hebrew", "Hausa", "Gurani", "Gujurati",
-					"Greek", "Georgian", "Fulani", "Dari", "Churash", "Chinese", "Burmese", "Bulgarian",
-					"Bengali", "Bielorussian", "Bambora", "Azerbaijani", "Assamese", "Armenian", "Arabic", "Amharic"
+				_TCHAR szLangCode[][15] = {
+					_T("not applicable"), _T("Albanian"), _T("Breton"), _T("Catalan"), _T("Croatian"), _T("Welsh"), _T("Czech"), _T("Danish"),
+					_T("German"), _T("English"), _T("Spanish"), _T("Esperanto"), _T("Estonian"), _T("Basque"), _T("Faroese"), _T("French"),
+					_T("Frisian"), _T("Irish"), _T("Gaelic"), _T("Galician"), _T("Icelandic"), _T("Italian"), _T("Lappish"), _T("Latin"),
+					_T("Latvian"), _T("Luxembourgian"), _T("Lithuanian"), _T("Hungarian"), _T("Maltese"), _T("Dutch"), _T("Norwegian"), _T("Occitan"),
+					_T("Polish"), _T("Portugese"), _T("Romanian"), _T("Romansh"), _T("Serbian"), _T("Slovak"), _T("Slovenian"), _T("Finnish"),
+					_T("Swedish"), _T("Turkish"), _T("Flemish"), _T("Wallon"), _T(""), _T(""), _T(""), _T(""),
+					_T(""), _T(""), _T(""), _T(""), _T(""), _T(""), _T(""), _T(""),
+					_T(""), _T(""), _T(""), _T(""), _T(""), _T(""), _T(""), _T(""),
+					_T(""), _T(""), _T(""), _T(""), _T(""), _T("Zulu"), _T("Vietnamese"), _T("Uzbek"),
+					_T("Urdu"), _T("Ukrainian"), _T("Thai"), _T("Telugu"), _T("Tatar"), _T("Tamil"), _T("Tadzhik"), _T("Swahili"),
+					_T("Sranan Tongo"), _T("Somali"), _T("Sinhalese"), _T("Shona"), _T("Serbo-croat"), _T("Ruthenian"), _T("Russian"), _T("Quechua"),
+					_T("Pushtu"), _T("Punjabi"), _T("Persian"), _T("Papamiento"), _T("Oriya"), _T("Nepali"), _T("Ndebele"), _T("Marathi"),
+					_T("Moldavian"), _T("Malaysian"), _T("Malagasay"), _T("Macedonian"), _T("Laotian"), _T("Korean"), _T("Khmer"), _T("Kazakh"),
+					_T("Kannada"), _T("Japanese"), _T("Indonesian"), _T("Hindi"), _T("Hebrew"), _T("Hausa"), _T("Gurani"), _T("Gujurati"),
+					_T("Greek"), _T("Georgian"), _T("Fulani"), _T("Dari"), _T("Churash"), _T("Chinese"), _T("Burmese"), _T("Bulgarian"),
+					_T("Bengali"), _T("Bielorussian"), _T("Bambora"), _T("Azerbaijani"), _T("Assamese"), _T("Armenian"), _T("Arabic"), _T("Amharic")
 				};
 				for (INT i = 0, j = 4; i < 8; i++, j++) {
 					UCHAR lang = pDesc[wTocTextEntries - uiSizeInfoCnt + 2].Text[j];
-					OutputDiscLogA(
+					OutputDiscLog(
 						"\t\t                 Language code BLOCK %d: 0x%02x (%s)\n", i, lang, szLangCode[lang]);
 				}
 			}
@@ -2182,17 +2718,17 @@ VOID OutputCDTextOther(
 VOID OutputDiscInformation(
 	PDISC_INFORMATION pDiscInformation
 ) {
-	LPCSTR lpDiscStatus[] = {
-		"Empty", "Incomplete", "Complete", "Others"
+	LPCTSTR lpDiscStatus[] = {
+		_T("Empty"), _T("Incomplete"), _T("Complete"), _T("Others")
 	};
-	LPCSTR lpStateOfLastSession[] = {
-		"Empty", "Incomplete", "Reserved / Damaged", "Complete"
+	LPCTSTR lpStateOfLastSession[] = {
+		_T("Empty"), _T("Incomplete"), _T("Reserved / Damaged"), _T("Complete")
 	};
-	LPCSTR lpBGFormatStatus[] = {
-		"None", "Incomplete", "Running", "Complete"
+	LPCTSTR lpBGFormatStatus[] = {
+		_T("None"), _T("Incomplete"), _T("Running"), _T("Complete")
 	};
-	OutputDiscLogA(
-		OUTPUT_DHYPHEN_PLUS_STR(DiscInformation)
+	OutputDiscLog(
+		OUTPUT_DHYPHEN_PLUS_STR("DiscInformation")
 		"\t                  DiscStatus: %s\n"
 		"\t           LastSessionStatus: %s\n"
 		"\t                    Erasable: %s\n"
@@ -2208,42 +2744,42 @@ VOID OutputDiscInformation(
 		"\t                    DiscType: "
 		, lpDiscStatus[pDiscInformation->DiscStatus]
 		, lpStateOfLastSession[pDiscInformation->LastSessionStatus]
-		, BOOLEAN_TO_STRING_YES_NO_A(pDiscInformation->Erasable)
+		, BOOLEAN_TO_STRING_YES_NO(pDiscInformation->Erasable)
 		, pDiscInformation->FirstTrackNumber
 		, pDiscInformation->NumberOfSessionsLsb
 		, pDiscInformation->LastSessionFirstTrackLsb
 		, pDiscInformation->LastSessionLastTrackLsb
 		, lpBGFormatStatus[pDiscInformation->MrwStatus]
-		, BOOLEAN_TO_STRING_YES_NO_A(pDiscInformation->MrwDirtyBit)
-		, BOOLEAN_TO_STRING_YES_NO_A(pDiscInformation->URU)
-		, BOOLEAN_TO_STRING_YES_NO_A(pDiscInformation->DBC_V)
-		, BOOLEAN_TO_STRING_YES_NO_A(pDiscInformation->DID_V));
+		, BOOLEAN_TO_STRING_YES_NO(pDiscInformation->MrwDirtyBit)
+		, BOOLEAN_TO_STRING_YES_NO(pDiscInformation->URU)
+		, BOOLEAN_TO_STRING_YES_NO(pDiscInformation->DBC_V)
+		, BOOLEAN_TO_STRING_YES_NO(pDiscInformation->DID_V));
 	switch (pDiscInformation->DiscType) {
 	case DISK_TYPE_CDDA:
-		OutputDiscLogA("CD-DA or CD-ROM Disc\n");
+		OutputDiscLog("CD-DA or CD-ROM Disc\n");
 		break;
 	case DISK_TYPE_CDI:
-		OutputDiscLogA("CD-I Disc\n");
+		OutputDiscLog("CD-I Disc\n");
 		break;
 	case DISK_TYPE_XA:
-		OutputDiscLogA("CD-ROM XA Disc\n");
+		OutputDiscLog("CD-ROM XA Disc\n");
 		break;
 	case DISK_TYPE_UNDEFINED:
-		OutputDiscLogA("Undefined\n");
+		OutputDiscLog("Undefined\n");
 		break;
 	default:
-		OutputDiscLogA("Reserved\n");
+		OutputDiscLog("Reserved\n");
 		break;
 	}
 	if (pDiscInformation->DID_V) {
-		OutputDiscLogA(
+		OutputDiscLog(
 			"\t          DiscIdentification: %u%u%u%u\n",
 			pDiscInformation->DiskIdentification[0],
 			pDiscInformation->DiskIdentification[1],
 			pDiscInformation->DiskIdentification[2],
 			pDiscInformation->DiskIdentification[3]);
 	}
-	OutputDiscLogA(
+	OutputDiscLog(
 		"\t           LastSessionLeadIn: %02x:%02x:%02x:%02x\n"
 		"\tLastPossibleLeadOutStartTime: %02x:%02x:%02x:%02x\n",
 		pDiscInformation->LastSessionLeadIn[0],
@@ -2255,7 +2791,7 @@ VOID OutputDiscInformation(
 		pDiscInformation->LastPossibleLeadOutStartTime[2],
 		pDiscInformation->LastPossibleLeadOutStartTime[3]);
 	if (pDiscInformation->DBC_V) {
-		OutputDiscLogA(
+		OutputDiscLog(
 			"\t                 DiscBarCode: %u%u%u%u%u%u%u%u\n",
 			pDiscInformation->DiskBarCode[0],
 			pDiscInformation->DiskBarCode[1],
@@ -2266,15 +2802,15 @@ VOID OutputDiscInformation(
 			pDiscInformation->DiskBarCode[6],
 			pDiscInformation->DiskBarCode[7]);
 	}
-	OutputDiscLogA(
+	OutputDiscLog(
 		"\t            NumberOPCEntries: %u\n",
 		pDiscInformation->NumberOPCEntries);
 	if (pDiscInformation->NumberOPCEntries) {
-		OutputDiscLogA(
+		OutputDiscLog(
 			"\t                    OPCTable\n");
 	}
 	for (INT i = 0; i < pDiscInformation->NumberOPCEntries; i++) {
-		OutputDiscLogA(
+		OutputDiscLog(
 			"\t\t                     Speed: %u%u\n"
 			"\t\t                 OPCValues: %u%u%u%u%u%u\n",
 			pDiscInformation->OPCTable[0].Speed[0],
@@ -2291,8 +2827,8 @@ VOID OutputDiscInformation(
 VOID OutputModeParmeterHeader(
 	PMODE_PARAMETER_HEADER pHeader
 ) {
-	OutputDriveLogA(
-		OUTPUT_DHYPHEN_PLUS_STR(ModeParmeterHeader)
+	OutputDriveLog(
+		OUTPUT_DHYPHEN_PLUS_STR("ModeParmeterHeader")
 		"\t           ModeDataLength: %u\n"
 		"\t               MediumType: %u\n"
 		"\t  DeviceSpecificParameter: %u\n"
@@ -2306,8 +2842,8 @@ VOID OutputModeParmeterHeader(
 VOID OutputModeParmeterHeader10(
 	PMODE_PARAMETER_HEADER10 pHeader
 ) {
-	OutputDriveLogA(
-		OUTPUT_DHYPHEN_PLUS_STR(ModeParmeterHeader10)
+	OutputDriveLog(
+		OUTPUT_DHYPHEN_PLUS_STR("ModeParmeterHeader10")
 		"\t           ModeDataLength: %u\n"
 		"\t               MediumType: %u\n"
 		"\t  DeviceSpecificParameter: %u\n"
@@ -2324,8 +2860,8 @@ VOID OutputCDVDCapabilitiesPage(
 	PCDVD_CAPABILITIES_PAGE cdvd,
 	INT perKb
 ) {
-	OutputDriveLogA(
-		OUTPUT_DHYPHEN_PLUS_STR(CDVD Capabilities & Mechanism Status Page)
+	OutputDriveLog(
+		OUTPUT_DHYPHEN_PLUS_STR("CDVD Capabilities & Mechanism Status Page")
 		"\t                 PageCode: %#04x\n"
 		"\t                    PSBit: %s\n"
 		"\t               PageLength: %u\n"
@@ -2362,58 +2898,58 @@ VOID OutputCDVDCapabilitiesPage(
 		"\t                    Eject: %s\n"
 		"\t     LoadingMechanismType: "
 		, cdvd->PageCode
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->PSBit)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->PSBit)
 		, cdvd->PageLength
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->CDRRead)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->CDERead)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->Method2)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->DVDROMRead)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->DVDRRead)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->DVDRAMRead)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->CDRWrite)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->CDEWrite)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->TestWrite)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->DVDRWrite)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->DVDRAMWrite)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->AudioPlay)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->Composite)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->DigitalPortOne)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->DigitalPortTwo)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->Mode2Form1)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->Mode2Form2)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->MultiSession)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->BufferUnderrunFree)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->CDDA)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->CDDAAccurate)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->RWSupported)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->RWDeinterleaved)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->C2Pointers)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->ISRC)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->UPC)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->ReadBarCodeCapable)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->Lock)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->LockState)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->PreventJumper)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->Eject));
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->CDRRead)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->CDERead)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->Method2)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->DVDROMRead)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->DVDRRead)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->DVDRAMRead)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->CDRWrite)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->CDEWrite)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->TestWrite)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->DVDRWrite)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->DVDRAMWrite)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->AudioPlay)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->Composite)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->DigitalPortOne)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->DigitalPortTwo)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->Mode2Form1)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->Mode2Form2)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->MultiSession)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->BufferUnderrunFree)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->CDDA)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->CDDAAccurate)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->RWSupported)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->RWDeinterleaved)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->C2Pointers)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->ISRC)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->UPC)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->ReadBarCodeCapable)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->Lock)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->LockState)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->PreventJumper)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->Eject));
 
 	switch (cdvd->LoadingMechanismType) {
 	case LOADING_MECHANISM_CADDY:
-		OutputDriveLogA("caddy\n");
+		OutputDriveLog("caddy\n");
 		break;
 	case LOADING_MECHANISM_TRAY:
-		OutputDriveLogA("tray\n");
+		OutputDriveLog("tray\n");
 		break;
 	case LOADING_MECHANISM_POPUP:
-		OutputDriveLogA("popup\n");
+		OutputDriveLog("popup\n");
 		break;
 	case LOADING_MECHANISM_INDIVIDUAL_CHANGER:
-		OutputDriveLogA("individual changer\n");
+		OutputDriveLog("individual changer\n");
 		break;
 	case LOADING_MECHANISM_CARTRIDGE_CHANGER:
-		OutputDriveLogA("cartridge changer\n");
+		OutputDriveLog("cartridge changer\n");
 		break;
 	default:
-		OutputDriveLogA("unknown\n");
+		OutputDriveLog("unknown\n");
 		break;
 	}
 	WORD rsm = MAKEWORD(cdvd->ReadSpeedMaximum[1], cdvd->ReadSpeedMaximum[0]);
@@ -2421,7 +2957,7 @@ VOID OutputCDVDCapabilitiesPage(
 	WORD wsm = MAKEWORD(cdvd->WriteSpeedMaximum[1], cdvd->WriteSpeedMaximum[0]);
 	WORD wsc = MAKEWORD(cdvd->WriteSpeedCurrent[1], cdvd->WriteSpeedCurrent[0]);
 	WORD bs = MAKEWORD(cdvd->BufferSize[1], cdvd->BufferSize[0]);
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\t           SeparateVolume: %s\n"
 		"\t      SeperateChannelMute: %s\n"
 		"\t      SupportsDiskPresent: %s\n"
@@ -2439,20 +2975,20 @@ VOID OutputCDVDCapabilitiesPage(
 		"\t        WriteSpeedMaximum: %uKB/sec (%ux)\n"
 		"\t        WriteSpeedCurrent: %uKB/sec (%ux)\n"
 		"\t   CopyManagementRevision: %u\n"
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->SeparateVolume)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->SeperateChannelMute)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->SupportsDiskPresent)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->SWSlotSelection)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->SideChangeCapable)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->RWInLeadInReadable)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->SeparateVolume)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->SeperateChannelMute)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->SupportsDiskPresent)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->SWSlotSelection)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->SideChangeCapable)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->RWInLeadInReadable)
 		, rsm, rsm / perKb
 		, MAKEWORD(cdvd->NumberVolumeLevels[1],
 			cdvd->NumberVolumeLevels[0])
 		, bs
 		, rsc, rsc / perKb
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->BCK)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->RCK)
-		, BOOLEAN_TO_STRING_YES_NO_A(cdvd->LSBF)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->BCK)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->RCK)
+		, BOOLEAN_TO_STRING_YES_NO(cdvd->LSBF)
 		, cdvd->Length
 		, wsm, wsm / perKb
 		, wsc, wsc / perKb
@@ -2464,8 +3000,8 @@ VOID OutputPageCDvdInactivity(
 	size_t pcOfs
 ) {
 	PCDVD_INACTIVITY_TIMEOUT_PAGE inactivity = (PCDVD_INACTIVITY_TIMEOUT_PAGE)(modesense + pcOfs);
-	OutputDriveLogA(
-		OUTPUT_DHYPHEN_PLUS_STR(CDVD_INACTIVITY_TIMEOUT_PAGE)
+	OutputDriveLog(
+		OUTPUT_DHYPHEN_PLUS_STR("CDVD_INACTIVITY_TIMEOUT_PAGE")
 		"\t                 PageCode: %#04x\n"
 		"\t                    PSBit: %s\n"
 		"\t               PageLength: %u\n"
@@ -2474,10 +3010,10 @@ VOID OutputPageCDvdInactivity(
 		"\t   GroupOneMinimumTimeout: %d\n"
 		"\t   GroupTwoMinimumTimeout: %d\n"
 		, inactivity->PageCode
-		, BOOLEAN_TO_STRING_YES_NO_A(inactivity->PSBit)
+		, BOOLEAN_TO_STRING_YES_NO(inactivity->PSBit)
 		, inactivity->PageLength
-		, BOOLEAN_TO_STRING_YES_NO_A(inactivity->SWPP)
-		, BOOLEAN_TO_STRING_YES_NO_A(inactivity->DISP)
+		, BOOLEAN_TO_STRING_YES_NO(inactivity->SWPP)
+		, BOOLEAN_TO_STRING_YES_NO(inactivity->DISP)
 		, MAKEWORD(inactivity->GroupOneMinimumTimeout[1], inactivity->GroupOneMinimumTimeout[0])
 		, MAKEWORD(inactivity->GroupTwoMinimumTimeout[1], inactivity->GroupTwoMinimumTimeout[0])
 	);
@@ -2488,8 +3024,8 @@ VOID OutputPagePowerCondition(
 	size_t pcOfs
 ) {
 	PPOWER_CONDITION_PAGE power = (PPOWER_CONDITION_PAGE)(modesense + pcOfs);
-	OutputDriveLogA(
-		OUTPUT_DHYPHEN_PLUS_STR(POWER_CONDITION_PAGE)
+	OutputDriveLog(
+		OUTPUT_DHYPHEN_PLUS_STR("POWER_CONDITION_PAGE")
 		"\t                 PageCode: %#04x\n"
 		"\t                    PSBit: %s\n"
 		"\t               PageLength: %u\n"
@@ -2498,10 +3034,10 @@ VOID OutputPagePowerCondition(
 		"\t                IdleTimer: %d\n"
 		"\t             StandbyTimer: %d\n"
 		, power->PageCode
-		, BOOLEAN_TO_STRING_YES_NO_A(power->PSBit)
+		, BOOLEAN_TO_STRING_YES_NO(power->PSBit)
 		, power->PageLength
-		, BOOLEAN_TO_STRING_YES_NO_A(power->Standby)
-		, BOOLEAN_TO_STRING_YES_NO_A(power->Idle)
+		, BOOLEAN_TO_STRING_YES_NO(power->Standby)
+		, BOOLEAN_TO_STRING_YES_NO(power->Idle)
 		, MAKEUINT(MAKEWORD(power->IdleTimer[3], power->IdleTimer[2])
 			, MAKEWORD(power->IdleTimer[1], power->IdleTimer[0]))
 		, MAKEUINT(MAKEWORD(power->StandbyTimer[3], power->StandbyTimer[2])
@@ -2514,8 +3050,8 @@ VOID OutputPageCDvdFeatureSet(
 	size_t pcOfs
 ) {
 	PCDVD_FEATURE_SET_PAGE feature = (PCDVD_FEATURE_SET_PAGE)(modesense + pcOfs);
-	OutputDriveLogA(
-		OUTPUT_DHYPHEN_PLUS_STR(CDVD_FEATURE_SET_PAGE)
+	OutputDriveLog(
+		OUTPUT_DHYPHEN_PLUS_STR("CDVD_FEATURE_SET_PAGE")
 		"\t                 PageCode: %#04x\n"
 		"\t                    PSBit: %s\n"
 		"\t               PageLength: %u\n"
@@ -2530,7 +3066,7 @@ VOID OutputPageCDvdFeatureSet(
 		"\t         RandomRecordable: %d\n"
 		"\t              KeyExchange: %d\n"
 		, feature->PageCode
-		, BOOLEAN_TO_STRING_YES_NO_A(feature->PSBit)
+		, BOOLEAN_TO_STRING_YES_NO(feature->PSBit)
 		, feature->PageLength
 		, MAKEWORD(feature->CDAudio[1], feature->CDAudio[0])
 		, MAKEWORD(feature->EmbeddedChanger[1], feature->EmbeddedChanger[0])
@@ -2550,8 +3086,8 @@ VOID OutputPageCdAudioControl(
 	size_t pcOfs
 ) {
 	PCDAUDIO_CONTROL_PAGE ctrl = (PCDAUDIO_CONTROL_PAGE)(modesense + pcOfs);
-	OutputDriveLogA(
-		OUTPUT_DHYPHEN_PLUS_STR(CDAUDIO_CONTROL_PAGE)
+	OutputDriveLog(
+		OUTPUT_DHYPHEN_PLUS_STR("CDAUDIO_CONTROL_PAGE")
 		"\t                 PageCode: %#04x\n"
 		"\t                    PSBit: %s\n"
 		"\t               PageLength: %u\n"
@@ -2566,10 +3102,10 @@ VOID OutputPageCdAudioControl(
 		"\t      ChannelSelection[3]: %d\n"
 		"\t                Volume[3]: %d\n"
 		, ctrl->PageCode
-		, BOOLEAN_TO_STRING_YES_NO_A(ctrl->PSBit)
+		, BOOLEAN_TO_STRING_YES_NO(ctrl->PSBit)
 		, ctrl->PageLength
-		, BOOLEAN_TO_STRING_YES_NO_A(ctrl->StopOnTrackCrossing)
-		, BOOLEAN_TO_STRING_YES_NO_A(ctrl->Immediate)
+		, BOOLEAN_TO_STRING_YES_NO(ctrl->StopOnTrackCrossing)
+		, BOOLEAN_TO_STRING_YES_NO(ctrl->Immediate)
 		, ctrl->CDDAOutputPorts[0].ChannelSelection
 		, ctrl->CDDAOutputPorts[0].Volume
 		, ctrl->CDDAOutputPorts[1].ChannelSelection
@@ -2586,8 +3122,8 @@ VOID OutputPageCdDeviceParameters(
 	size_t pcOfs
 ) {
 	LPBYTE buf = modesense + pcOfs;
-	OutputDriveLogA(
-		OUTPUT_DHYPHEN_PLUS_STR(CD_DEVICE_PARAMETERS_PAGE)
+	OutputDriveLog(
+		OUTPUT_DHYPHEN_PLUS_STR("CD_DEVICE_PARAMETERS_PAGE")
 		"\t                 PageCode: %#04x\n"
 		"\t                    PSBit: %s\n"
 		"\t               PageLength: %u\n"
@@ -2595,7 +3131,7 @@ VOID OutputPageCdDeviceParameters(
 		"\t TheNumberOfSUnitPerMUnit: %d\n"
 		"\t TheNumberOfFUnitPerSUnit: %d\n"
 		, buf[0] & 0x3f
-		, BOOLEAN_TO_STRING_YES_NO_A((buf[0] >> 7) & 0x01)
+		, BOOLEAN_TO_STRING_YES_NO((buf[0] >> 7) & 0x01)
 		, buf[1]
 		, buf[3] & 0x0f
 		, MAKEWORD(buf[5], buf[4])
@@ -2608,8 +3144,8 @@ VOID OutputPageWriteCaching(
 	size_t pcOfs
 ) {
 	PMODE_CACHING_PAGE caching = (PMODE_CACHING_PAGE)(modesense + pcOfs);
-	OutputDriveLogA(
-		OUTPUT_DHYPHEN_PLUS_STR(MODE_CACHING_PAGE)
+	OutputDriveLog(
+		OUTPUT_DHYPHEN_PLUS_STR("MODE_CACHING_PAGE")
 		"\t                 PageCode: %#04x\n"
 		"\t              PageSavable: %s\n"
 		"\t               PageLength: %u\n"
@@ -2623,11 +3159,11 @@ VOID OutputPageWriteCaching(
 		"\t          MaximumPrefetch: %d\n"
 		"\t   MaximumPrefetchCeiling: %d\n"
 		, caching->PageCode
-		, BOOLEAN_TO_STRING_YES_NO_A(caching->PageSavable)
+		, BOOLEAN_TO_STRING_YES_NO(caching->PageSavable)
 		, caching->PageLength
-		, BOOLEAN_TO_STRING_YES_NO_A(caching->ReadDisableCache)
-		, BOOLEAN_TO_STRING_YES_NO_A(caching->MultiplicationFactor)
-		, BOOLEAN_TO_STRING_YES_NO_A(caching->WriteCacheEnable)
+		, BOOLEAN_TO_STRING_YES_NO(caching->ReadDisableCache)
+		, BOOLEAN_TO_STRING_YES_NO(caching->MultiplicationFactor)
+		, BOOLEAN_TO_STRING_YES_NO(caching->WriteCacheEnable)
 		, caching->WriteRetensionPriority
 		, caching->ReadRetensionPriority
 		, MAKEWORD(caching->DisablePrefetchTransfer[1], caching->DisablePrefetchTransfer[0])
@@ -2642,8 +3178,8 @@ VOID OutputPageWriteParameters(
 	size_t pcOfs
 ) {
 	PMODE_CDROM_WRITE_PARAMETERS_PAGE2 wparam = (PMODE_CDROM_WRITE_PARAMETERS_PAGE2)(modesense + pcOfs);
-	OutputDriveLogA(
-		OUTPUT_DHYPHEN_PLUS_STR(MODE_CDROM_WRITE_PARAMETERS_PAGE)
+	OutputDriveLog(
+		OUTPUT_DHYPHEN_PLUS_STR("MODE_CDROM_WRITE_PARAMETERS_PAGE")
 		"\t                 PageCode: %#04x\n"
 		"\t              PageSavable: %s\n"
 		"\t               PageLength: %u\n"
@@ -2661,19 +3197,19 @@ VOID OutputPageWriteParameters(
 		"\t            SessionFormat: %d\n"
 		"\t               PacketSize: %d\n"
 		"\t         AudioPauseLength: %d\n"
-		"\t       MediaCatalogNumber: %16s\n"
-		"\t                     ISRC: %16s\n"
+		"\t       MediaCatalogNumber: %16" CHARWIDTH "s\n"
+		"\t                     ISRC: %16" CHARWIDTH "s\n"
 		"\t            SubHeaderData: %d\n"
 		, wparam->PageCode
-		, BOOLEAN_TO_STRING_YES_NO_A(wparam->PageSavable)
+		, BOOLEAN_TO_STRING_YES_NO(wparam->PageSavable)
 		, wparam->PageLength
 		, wparam->WriteType
-		, BOOLEAN_TO_STRING_YES_NO_A(wparam->TestWrite)
-		, BOOLEAN_TO_STRING_YES_NO_A(wparam->LinkSizeValid)
-		, BOOLEAN_TO_STRING_YES_NO_A(wparam->BufferUnderrunFreeEnabled)
+		, BOOLEAN_TO_STRING_YES_NO(wparam->TestWrite)
+		, BOOLEAN_TO_STRING_YES_NO(wparam->LinkSizeValid)
+		, BOOLEAN_TO_STRING_YES_NO(wparam->BufferUnderrunFreeEnabled)
 		, wparam->TrackMode
-		, BOOLEAN_TO_STRING_YES_NO_A(wparam->Copy)
-		, BOOLEAN_TO_STRING_YES_NO_A(wparam->FixedPacket)
+		, BOOLEAN_TO_STRING_YES_NO(wparam->Copy)
+		, BOOLEAN_TO_STRING_YES_NO(wparam->FixedPacket)
 		, wparam->MultiSession
 		, wparam->DataBlockType
 		, wparam->LinkSize
@@ -2694,8 +3230,8 @@ VOID OutputPageRigidGeometry(
 	size_t pcOfs
 ) {
 	PMODE_RIGID_GEOMETRY_PAGE geom = (PMODE_RIGID_GEOMETRY_PAGE)(modesense + pcOfs);
-	OutputDriveLogA(
-		OUTPUT_DHYPHEN_PLUS_STR(MODE_RIGID_GEOMETRY_PAGE)
+	OutputDriveLog(
+		OUTPUT_DHYPHEN_PLUS_STR("MODE_RIGID_GEOMETRY_PAGE")
 		"\t                PageCode: %#04x\n"
 		"\t             PageSavable: %s\n"
 		"\t              PageLength: %u\n"
@@ -2709,7 +3245,7 @@ VOID OutputPageRigidGeometry(
 		"\t          RotationOffset: %d\n"
 		"\t            RoataionRate: %d\n"
 		, geom->PageCode
-		, BOOLEAN_TO_STRING_YES_NO_A(geom->PageSavable)
+		, BOOLEAN_TO_STRING_YES_NO(geom->PageSavable)
 		, geom->PageLength
 		, MAKEUINT(MAKEWORD(geom->NumberOfCylinders[2], geom->NumberOfCylinders[1])
 			, MAKEWORD(geom->NumberOfCylinders[0], 0))
@@ -2721,7 +3257,7 @@ VOID OutputPageRigidGeometry(
 		, MAKEWORD(geom->DriveStepRate[1], geom->DriveStepRate[0])
 		, MAKEUINT(MAKEWORD(geom->LandZoneCyclinder[2], geom->LandZoneCyclinder[1])
 			, MAKEWORD(geom->LandZoneCyclinder[0], 0))
-		, BOOLEAN_TO_STRING_YES_NO_A(geom->RotationalPositionLock)
+		, BOOLEAN_TO_STRING_YES_NO(geom->RotationalPositionLock)
 		, geom->RotationOffset
 		, MAKEWORD(geom->RoataionRate[1], geom->RoataionRate[0])
 	);
@@ -2732,16 +3268,16 @@ VOID OutputPageMrw(
 	size_t pcOfs
 ) {
 	PMODE_MRW_PAGE mrw = (PMODE_MRW_PAGE)(modesense + pcOfs);
-	OutputDriveLogA(
-		OUTPUT_DHYPHEN_PLUS_STR(MODE_MRW_PAGE)
+	OutputDriveLog(
+		OUTPUT_DHYPHEN_PLUS_STR("MODE_MRW_PAGE")
 		"\t                PageCode: %#04x\n"
 		"\t             PageSavable: %s\n"
 		"\t              PageLength: %u\n"
 		"\t                LbaSpace: %s\n"
 		, mrw->PageCode
-		, BOOLEAN_TO_STRING_YES_NO_A(mrw->PageSavable)
+		, BOOLEAN_TO_STRING_YES_NO(mrw->PageSavable)
 		, mrw->PageLength
-		, BOOLEAN_TO_STRING_YES_NO_A(mrw->LbaSpace)
+		, BOOLEAN_TO_STRING_YES_NO(mrw->LbaSpace)
 	);
 }
 
@@ -2750,8 +3286,8 @@ VOID OutputPageDisconnect(
 	size_t pcOfs
 ) {
 	PMODE_DISCONNECT_PAGE dis = (PMODE_DISCONNECT_PAGE)(modesense + pcOfs);
-	OutputDriveLogA(
-		OUTPUT_DHYPHEN_PLUS_STR(MODE_DISCONNECT_PAGE)
+	OutputDriveLog(
+		OUTPUT_DHYPHEN_PLUS_STR("MODE_DISCONNECT_PAGE")
 		"\t                 PageCode: %#04x\n"
 		"\t              PageSavable: %s\n"
 		"\t               PageLength: %u\n"
@@ -2763,7 +3299,7 @@ VOID OutputPageDisconnect(
 		"\t         MaximumBurstSize: %u\n"
 		"\t   DataTransferDisconnect: %u\n"
 		, dis->PageCode
-		, BOOLEAN_TO_STRING_YES_NO_A(dis->PageSavable)
+		, BOOLEAN_TO_STRING_YES_NO(dis->PageSavable)
 		, dis->PageLength
 		, dis->BufferFullRatio
 		, dis->BufferEmptyRatio
@@ -2780,8 +3316,8 @@ VOID OutputPageErrorRecovery(
 	size_t pcOfs
 ) {
 	PMODE_READ_WRITE_RECOVERY_PAGE rec = (PMODE_READ_WRITE_RECOVERY_PAGE)(modesense + pcOfs);
-	OutputDriveLogA(
-		OUTPUT_DHYPHEN_PLUS_STR(MODE_READ_WRITE_RECOVERY_PAGE)
+	OutputDriveLog(
+		OUTPUT_DHYPHEN_PLUS_STR("MODE_READ_WRITE_RECOVERY_PAGE")
 		"\t                 PageCode: %#04x\n"
 		"\t              PageSavable: %s\n"
 		"\t               PageLength: %u\n"
@@ -2795,15 +3331,15 @@ VOID OutputPageErrorRecovery(
 		"\t           ReadRetryCount: %d\n"
 		"\t          WriteRetryCount: %d\n"
 		, rec->PageCode
-		, BOOLEAN_TO_STRING_YES_NO_A(rec->PSBit)
+		, BOOLEAN_TO_STRING_YES_NO(rec->PSBit)
 		, rec->PageLength
-		, BOOLEAN_TO_STRING_YES_NO_A(rec->DCRBit)
-		, BOOLEAN_TO_STRING_YES_NO_A(rec->PERBit)
-		, BOOLEAN_TO_STRING_YES_NO_A(rec->EERBit)
-		, BOOLEAN_TO_STRING_YES_NO_A(rec->RCBit)
-		, BOOLEAN_TO_STRING_YES_NO_A(rec->TBBit)
-		, BOOLEAN_TO_STRING_YES_NO_A(rec->ARRE)
-		, BOOLEAN_TO_STRING_YES_NO_A(rec->AWRE)
+		, BOOLEAN_TO_STRING_YES_NO(rec->DCRBit)
+		, BOOLEAN_TO_STRING_YES_NO(rec->PERBit)
+		, BOOLEAN_TO_STRING_YES_NO(rec->EERBit)
+		, BOOLEAN_TO_STRING_YES_NO(rec->RCBit)
+		, BOOLEAN_TO_STRING_YES_NO(rec->TBBit)
+		, BOOLEAN_TO_STRING_YES_NO(rec->ARRE)
+		, BOOLEAN_TO_STRING_YES_NO(rec->AWRE)
 		, rec->ReadRetryCount
 		, rec->WriteRetryCount
 	);
@@ -2815,21 +3351,21 @@ VOID OutputPageUnknown(
 	LPCTSTR str
 ) {
 	int len = *(modesense + pcOfs + 1);
-	OutputDriveLogA(
-		OUTPUT_DHYPHEN_PLUS_STR(%s)
+	OutputDriveLog(
+		OUTPUT_DHYPHEN_PLUS_STR("%s")
 		"\t                 PageCode: %#04x\n"
 		"\t                    PSBit: %s\n"
 		"\t               PageLength: %u\n"
 		"\t                  Unknown: "
 		, str
 		, *(modesense + pcOfs) & 0x3f
-		, BOOLEAN_TO_STRING_YES_NO_A((*(modesense + pcOfs) >> 7) & 0x01)
+		, BOOLEAN_TO_STRING_YES_NO((*(modesense + pcOfs) >> 7) & 0x01)
 		, len
 	);
 	for (int t = 0; t < len; t++) {
-		OutputDriveLogA("%02x", *(modesense + pcOfs + t));
+		OutputDriveLog("%02x", *(modesense + pcOfs + t));
 	}
-	OutputDriveLogA("\n");
+	OutputDriveLog("\n");
 }
 
 VOID OutputModeSense(
@@ -2858,7 +3394,7 @@ VOID OutputModeSense(
 			continue;
 		}
 		if (pagecode == MODE_PAGE_VENDOR_SPECIFIC) {
-			OutputPageUnknown(modesense, pcOfs, "VENDOR_SPECIFIC");
+			OutputPageUnknown(modesense, pcOfs, _T("VENDOR_SPECIFIC"));
 		}
 		else if (pagecode == MODE_PAGE_ERROR_RECOVERY) {
 			OutputPageErrorRecovery(modesense, pcOfs);
@@ -2876,22 +3412,22 @@ VOID OutputModeSense(
 			OutputPageWriteParameters(modesense, pcOfs);
 		}
 		else if (pagecode == MODE_PAGE_VERIFY_ERROR) {
-			OutputPageUnknown(modesense, pcOfs, "VERIFY_ERROR");
+			OutputPageUnknown(modesense, pcOfs, _T("VERIFY_ERROR"));
 		}
 		else if (pagecode == MODE_PAGE_CACHING) {
 			OutputPageWriteCaching(modesense, pcOfs);
 		}
 		else if (pagecode == MODE_PAGE_PERIPHERAL) {
-			OutputPageUnknown(modesense, pcOfs, "PERIPHERAL");
+			OutputPageUnknown(modesense, pcOfs, _T("PERIPHERAL"));
 		}
 		else if (pagecode == MODE_PAGE_CONTROL) {
-			OutputPageUnknown(modesense, pcOfs, "CONTROL");
+			OutputPageUnknown(modesense, pcOfs, _T("CONTROL"));
 		}
 		else if (pagecode == MODE_PAGE_MEDIUM_TYPES) {
-			OutputPageUnknown(modesense, pcOfs, "MEDIUM_TYPES");
+			OutputPageUnknown(modesense, pcOfs, _T("MEDIUM_TYPES"));
 		}
 		else if (pagecode == MODE_PAGE_NOTCH_PARTITION) {
-			OutputPageUnknown(modesense, pcOfs, "NOTCH_PARTITION");
+			OutputPageUnknown(modesense, pcOfs, _T("NOTCH_PARTITION"));
 		}
 		else if (pagecode == 0x0d) {
 			OutputPageCdDeviceParameters(modesense, pcOfs);
@@ -2900,49 +3436,49 @@ VOID OutputModeSense(
 			OutputPageCdAudioControl(modesense, pcOfs);
 		}
 		else if (pagecode == MODE_PAGE_DATA_COMPRESS) {
-			OutputPageUnknown(modesense, pcOfs, "DATA_COMPRESS");
+			OutputPageUnknown(modesense, pcOfs, _T("DATA_COMPRESS"));
 		}
 		else if (pagecode == MODE_PAGE_DEVICE_CONFIG) {
-			OutputPageUnknown(modesense, pcOfs, "DEVICE_CONFIG");
+			OutputPageUnknown(modesense, pcOfs, _T("DEVICE_CONFIG"));
 		}
 		else if (pagecode == MODE_PAGE_MEDIUM_PARTITION) {
-			OutputPageUnknown(modesense, pcOfs, "MEDIUM_PARTITION");
+			OutputPageUnknown(modesense, pcOfs, _T("MEDIUM_PARTITION"));
 		}
 		else if (pagecode == MODE_PAGE_ENCLOSURE_SERVICES_MANAGEMENT) {
-			OutputPageUnknown(modesense, pcOfs, "ENCLOSURE_SERVICES_MANAGEMENT");
+			OutputPageUnknown(modesense, pcOfs, _T("ENCLOSURE_SERVICES_MANAGEMENT"));
 		}
 		else if (pagecode == MODE_PAGE_EXTENDED) {
-			OutputPageUnknown(modesense, pcOfs, "EXTENDED");
+			OutputPageUnknown(modesense, pcOfs, _T("EXTENDED"));
 		}
 		else if (pagecode == MODE_PAGE_EXTENDED_DEVICE_SPECIFIC) {
-			OutputPageUnknown(modesense, pcOfs, "EXTENDED_DEVICE_SPECIFIC");
+			OutputPageUnknown(modesense, pcOfs, _T("EXTENDED_DEVICE_SPECIFIC"));
 		}
 		else if (pagecode == MODE_PAGE_CDVD_FEATURE_SET) {
 			OutputPageCDvdFeatureSet(modesense, pcOfs);
 		}
 		else if (pagecode == MODE_PAGE_PROTOCOL_SPECIFIC_PORT) {
-			OutputPageUnknown(modesense, pcOfs, "PROTOCOL_SPECIFIC_PORT");
+			OutputPageUnknown(modesense, pcOfs, _T("PROTOCOL_SPECIFIC_PORT"));
 		}
 		else if (pagecode == MODE_PAGE_POWER_CONDITION) {
 			OutputPagePowerCondition(modesense, pcOfs);
 		}
 		else if (pagecode == MODE_PAGE_LUN_MAPPING) {
-			OutputPageUnknown(modesense, pcOfs, "LUN_MAPPING");
+			OutputPageUnknown(modesense, pcOfs, _T("LUN_MAPPING"));
 		}
 		else if (pagecode == MODE_PAGE_FAULT_REPORTING) {
-			OutputPageUnknown(modesense, pcOfs, "FAULT_REPORTING");
+			OutputPageUnknown(modesense, pcOfs, _T("FAULT_REPORTING"));
 		}
 		else if (pagecode == MODE_PAGE_CDVD_INACTIVITY) {
 			OutputPageCDvdInactivity(modesense, pcOfs);
 		}
 		else if (pagecode == MODE_PAGE_ELEMENT_ADDRESS) {
-			OutputPageUnknown(modesense, pcOfs, "ELEMENT_ADDRESS");
+			OutputPageUnknown(modesense, pcOfs, _T("ELEMENT_ADDRESS"));
 		}
 		else if (pagecode == MODE_PAGE_TRANSPORT_GEOMETRY) {
-			OutputPageUnknown(modesense, pcOfs, "TRANSPORT_GEOMETRY");
+			OutputPageUnknown(modesense, pcOfs, _T("TRANSPORT_GEOMETRY"));
 		}
 		else if (pagecode == MODE_PAGE_DEVICE_CAPABILITIES) {
-			OutputPageUnknown(modesense, pcOfs, "DEVICE_CAPABILITIES");
+			OutputPageUnknown(modesense, pcOfs, _T("DEVICE_CAPABILITIES"));
 		}
 		else if (pagecode == MODE_PAGE_CAPABILITIES) {
 			PCDVD_CAPABILITIES_PAGE capabilities = (PCDVD_CAPABILITIES_PAGE)(modesense + pcOfs);
@@ -2965,7 +3501,7 @@ VOID OutputModeSense(
 			break;
 		}
 		else {
-			OutputPageUnknown(modesense, pcOfs, "Unknown");
+			OutputPageUnknown(modesense, pcOfs, _T("Unknown"));
 		}
 		pagecode = (BYTE)(modesense[bufOfs] & 0x3f);
 		pcLen += modesense[bufOfs + 1];
@@ -2978,8 +3514,8 @@ VOID OutputModeSense(
 VOID OutputReadBufferCapacity(
 	PREAD_BUFFER_CAPACITY_DATA pReadBufCapaData
 ) {
-	OutputDriveLogA(
-		OUTPUT_DHYPHEN_PLUS_STR(ReadBufferCapacity)
+	OutputDriveLog(
+		OUTPUT_DHYPHEN_PLUS_STR("ReadBufferCapacity")
 		"\t    TotalBufferSize: %uKByte\n"
 		"\tAvailableBufferSize: %uKByte\n",
 		MAKEUINT(MAKEWORD(pReadBufCapaData->TotalBufferSize[3],	pReadBufCapaData->TotalBufferSize[2]),
@@ -2991,18 +3527,16 @@ VOID OutputReadBufferCapacity(
 VOID OutputSetSpeed(
 	PCDROM_SET_SPEED pSetspeed
 ) {
-	OutputDriveLogA(
-		OUTPUT_DHYPHEN_PLUS_STR(SetSpeed)
+	OutputDriveLog(
+		OUTPUT_DHYPHEN_PLUS_STR("SetSpeed")
 		"\t    RequestType: %s\n"
 		"\t      ReadSpeed: %uKB/sec\n"
 		"\t     WriteSpeed: %uKB/sec\n"
 		"\tRotationControl: %s\n",
-		pSetspeed->RequestType == 0 ?
-		"CdromSetSpeed" : "CdromSetStreaming",
+		pSetspeed->RequestType == 0 ? _T("CdromSetSpeed") : _T("CdromSetStreaming"),
 		pSetspeed->ReadSpeed,
 		pSetspeed->WriteSpeed,
-		pSetspeed->RotationControl == 0 ?
-		"CdromDefaultRotation" : "CdromCAVRotation");
+		pSetspeed->RotationControl == 0 ? _T("CdromDefaultRotation") : _T("CdromCAVRotation"));
 }
 
 VOID OutputEepromUnknownByte(
@@ -3011,29 +3545,29 @@ VOID OutputEepromUnknownByte(
 	UINT endIdx
 ) {
 	if (startIdx <= endIdx) {
-		OutputDriveLogA("\t   Unknown[%03d]: ", startIdx);
+		OutputDriveLog("\t   Unknown[%03d]: ", startIdx);
 		for (UINT i = startIdx; i <= endIdx; i++) {
-			OutputDriveLogA("%02x ", pBuf[i]);
+			OutputDriveLog("%02x ", pBuf[i]);
 		}
-		OutputDriveLogA("\n");
+		OutputDriveLog("\n");
 	}
 }
 
 VOID OutputEepromOverPX712(
 	LPBYTE pBuf
 ) {
-	OutputDriveLogA("\t    Silent Mode: ");
+	OutputDriveLog("\t    Silent Mode: ");
 	if (pBuf[0] == 1) {
-		OutputDriveLogA(
+		OutputDriveLog(
 			"Enabled\n"
 			"\t\t       Access Time: ");
 		if (pBuf[1] == 0) {
-			OutputDriveLogA("Fast\n");
+			OutputDriveLog("Fast\n");
 		}
 		else if (pBuf[1] == 1) {
-			OutputDriveLogA("Slow\n");
+			OutputDriveLog("Slow\n");
 		}
-		OutputDriveLogA(
+		OutputDriveLog(
 			"\t\t     CD Read Speed: %dx\n"
 			"\t\t    DVD Read Speed: %dx\n"
 			"\t\t    CD Write Speed: %dx\n"
@@ -3045,77 +3579,77 @@ VOID OutputEepromOverPX712(
 			, pBuf[5], pBuf[6], pBuf[7], pBuf[8]);
 	}
 	else {
-		OutputDriveLogA("Disable\n");
+		OutputDriveLog("Disable\n");
 	}
 	
 	UINT tmp = 9;
-	OutputDriveLogA("\t        SecuRec: ");
+	OutputDriveLog("\t        SecuRec: ");
 	while (tmp < 29) {
-		OutputDriveLogA("%02x ", pBuf[tmp]);
+		OutputDriveLog("%02x ", pBuf[tmp]);
 		tmp += 1;
 	}
 
-	OutputDriveLogA("\n\t      SpeedRead: ");
+	OutputDriveLog("\n\t      SpeedRead: ");
 	if (pBuf[29] == 0xf0 || pBuf[29] == 0) {
-		OutputDriveLogA("Enable");
+		OutputDriveLog("Enable");
 	}
 	else if (pBuf[29] == 0xff || pBuf[29] == 0x0f) {
-		OutputDriveLogA("Disable");
+		OutputDriveLog("Disable");
 	}
-	OutputDriveLogA("\n\t        Unknown: %x\n", pBuf[30]);
+	OutputDriveLog("\n\t        Unknown: %x\n", pBuf[30]);
 
-	OutputDriveLogA("\t  Spindown Time: ");
+	OutputDriveLog("\t  Spindown Time: ");
 	switch (pBuf[31]) {
 	case 0:
-		OutputDriveLogA("Infinite\n");
+		OutputDriveLog("Infinite\n");
 		break;
 	case 1:
-		OutputDriveLogA("125 ms\n");
+		OutputDriveLog("125 ms\n");
 		break;
 	case 2:
-		OutputDriveLogA("250 ms\n");
+		OutputDriveLog("250 ms\n");
 		break;
 	case 3:
-		OutputDriveLogA("500 ms\n");
+		OutputDriveLog("500 ms\n");
 		break;
 	case 4:
-		OutputDriveLogA("1 second\n");
+		OutputDriveLog("1 second\n");
 		break;
 	case 5:
-		OutputDriveLogA("2 seconds\n");
+		OutputDriveLog("2 seconds\n");
 		break;
 	case 6:
-		OutputDriveLogA("4 seconds\n");
+		OutputDriveLog("4 seconds\n");
 		break;
 	case 7:
-		OutputDriveLogA("8 seconds\n");
+		OutputDriveLog("8 seconds\n");
 		break;
 	case 8:
-		OutputDriveLogA("16 seconds\n");
+		OutputDriveLog("16 seconds\n");
 		break;
 	case 9:
-		OutputDriveLogA("32 seconds\n");
+		OutputDriveLog("32 seconds\n");
 		break;
 	case 10:
-		OutputDriveLogA("1 minite\n");
+		OutputDriveLog("1 minite\n");
 		break;
 	case 11:
-		OutputDriveLogA("2 minites\n");
+		OutputDriveLog("2 minites\n");
 		break;
 	case 12:
-		OutputDriveLogA("4 minites\n");
+		OutputDriveLog("4 minites\n");
 		break;
 	case 13:
-		OutputDriveLogA("8 minites\n");
+		OutputDriveLog("8 minites\n");
 		break;
 	case 14:
-		OutputDriveLogA("16 minites\n");
+		OutputDriveLog("16 minites\n");
 		break;
 	case 15:
-		OutputDriveLogA("32 minites\n");
+		OutputDriveLog("32 minites\n");
 		break;
 	default:
-		OutputDriveLogA("Unset\n");
+		OutputDriveLog("Unset\n");
 		break;
 	}
 
@@ -3127,7 +3661,7 @@ VOID OutputEepromOverPX712(
 		MAKELONG(MAKEWORD(pBuf[45], pBuf[44]), MAKEWORD(pBuf[43], pBuf[42]));
 	LONG udw = 
 		MAKELONG(MAKEWORD(pBuf[49], pBuf[48]), MAKEWORD(pBuf[47], pBuf[46]));
-	OutputDriveLogA(
+	OutputDriveLog(
 		"\tDisc load count: %u\n"
 		"\t   CD read time: %02lu:%02lu:%02lu\n"
 		"\t  CD write time: %02lu:%02lu:%02lu\n"
@@ -3141,22 +3675,22 @@ VOID OutputEepromOverPX712(
 
 	OutputEepromUnknownByte(pBuf, 50, 114);
 
-	OutputDriveLogA("\tChange BookType: ");
+	OutputDriveLog("\tChange BookType: ");
 	switch (pBuf[115]) {
 	case 0xfc:
-		OutputDriveLogA("for DVD+R, DVD+R DL\n");
+		OutputDriveLog("for DVD+R, DVD+R DL\n");
 		break;
 	case 0xfd:
-		OutputDriveLogA("for DVD+R\n");
+		OutputDriveLog("for DVD+R\n");
 		break;
 	case 0xfe:
-		OutputDriveLogA("for DVD+R DL\n");
+		OutputDriveLog("for DVD+R DL\n");
 		break;
 	case 0xff:
-		OutputDriveLogA("Disable\n");
+		OutputDriveLog("Disable\n");
 		break;
 	default:
-		OutputDriveLogA("Unknown[%02x]\n", pBuf[115]);
+		OutputDriveLog("Unknown[%02x]\n", pBuf[115]);
 		break;
 	}
 }
@@ -3167,10 +3701,10 @@ VOID OutputEeprom(
 	BOOL byPlxtrDrive
 ) {
 	if (nRoop == 0) {
-		OutputDriveLogA(
+		OutputDriveLog(
 			"\t      Signature: %02x %02x\n"
-			"\t       VendorId: %.8s\n"
-			"\t      ProductId: %.16s\n"
+			"\t       VendorId: %.8" CHARWIDTH "s\n"
+			"\t      ProductId: %.16" CHARWIDTH "s\n"
 			"\t   SerialNumber: %06lu\n"
 			, pBuf[0], pBuf[1]
 			, (LPCH)&pBuf[2]
@@ -3185,7 +3719,7 @@ VOID OutputEeprom(
 		case PLXTR_DRIVE_TYPE::PX716A:
 		case PLXTR_DRIVE_TYPE::PX714A:
 		case PLXTR_DRIVE_TYPE::PX712A:
-			OutputDriveLogA("\t            TLA: %.4s\n", (LPCH)&pBuf[41]);
+			OutputDriveLog("\t            TLA: %.4" CHARWIDTH "s\n", (LPCH)&pBuf[41]);
 			break;
 		default:
 			OutputEepromUnknownByte(pBuf, 41, 44);
@@ -3205,7 +3739,7 @@ VOID OutputEeprom(
 			OutputEepromUnknownByte(pBuf, 108, 255);
 			OutputEepromOverPX712(&pBuf[256]);
 			OutputEepromUnknownByte(pBuf, 372, 510);
-			OutputDriveLogA(
+			OutputDriveLog(
 				"\t            Sum: %02x (SpeedRead: %02x + Spindown Time: %02x + BookType: %02x + Others)\n"
 				, pBuf[511], pBuf[285], pBuf[287], pBuf[371]);
 			break;
@@ -3216,7 +3750,7 @@ VOID OutputEeprom(
 			OutputEepromUnknownByte(pBuf, 108, 114);
 			LONG ucr = MAKELONG(MAKEWORD(pBuf[120], pBuf[119]), MAKEWORD(pBuf[118], pBuf[117]));
 			LONG ucw = MAKELONG(MAKEWORD(pBuf[125], pBuf[124]), MAKEWORD(pBuf[123], pBuf[122]));
-			OutputDriveLogA(
+			OutputDriveLog(
 				"\tDisc load count: %u\n"
 				"\t   CD read time: %02lu:%02lu:%02lu\n"
 				"\t        Unknown: %02x\n"
@@ -3230,7 +3764,7 @@ VOID OutputEeprom(
 				MAKELONG(MAKEWORD(pBuf[215], pBuf[214]), MAKEWORD(pBuf[213], pBuf[212]));
 			LONG udw =
 				MAKELONG(MAKEWORD(pBuf[219], pBuf[218]), MAKEWORD(pBuf[217], pBuf[216]));
-			OutputDriveLogA(
+			OutputDriveLog(
 				"\t  DVD read time: %02lu:%02lu:%02lu\n"
 				"\t DVD write time: %02lu:%02lu:%02lu\n"
 				, udr / 3600, udr / 60 % 60, udr % 60
@@ -3242,17 +3776,17 @@ VOID OutputEeprom(
 		{
 			OutputEepromUnknownByte(pBuf, 108, 123);
 			LONG ucr = MAKELONG(MAKEWORD(pBuf[127], pBuf[126]), MAKEWORD(pBuf[125], pBuf[124]));
-			OutputDriveLogA(
+			OutputDriveLog(
 				"\t   CD read time: %02lu:%02lu:%02lu\n"
 				, ucr / 3600, ucr / 60 % 60, ucr % 60);
 			OutputEepromUnknownByte(pBuf, 128, 187);
 			LONG udr =
 				MAKELONG(MAKEWORD(pBuf[191], pBuf[190]), MAKEWORD(pBuf[189], pBuf[188]));
-			OutputDriveLogA(
+			OutputDriveLog(
 				"\t  DVD read time: %02lu:%02lu:%02lu\n"
 				, udr / 3600, udr / 60 % 60, udr % 60);
 			OutputEepromUnknownByte(pBuf, 192, 226);
-			OutputDriveLogA(
+			OutputDriveLog(
 				"\tDisc load count: %u\n"
 				, MAKEWORD(pBuf[228], pBuf[227]));
 			OutputEepromUnknownByte(pBuf, 229, 255);
@@ -3267,7 +3801,7 @@ VOID OutputEeprom(
 		{
 			LONG ucr = MAKELONG(MAKEWORD(pBuf[111], pBuf[110]), MAKEWORD(pBuf[109], pBuf[108]));
 			LONG ucw = MAKELONG(MAKEWORD(pBuf[125], pBuf[124]), MAKEWORD(pBuf[123], pBuf[122]));
-			OutputDriveLogA(
+			OutputDriveLog(
 				"\t   CD read time: %02lu:%02lu:%02lu\n"
 				"\t        Unknown: %02x %02x %02x %02x %02x %02x %02x %02x\n"
 				"\tDisc load count: %u\n"
@@ -3287,7 +3821,7 @@ VOID OutputEeprom(
 		{
 			OutputEepromUnknownByte(pBuf, 108, 119);
 			LONG ucw = MAKELONG(MAKEWORD(pBuf[125], pBuf[124]), MAKEWORD(pBuf[123], pBuf[122]));
-			OutputDriveLogA(
+			OutputDriveLog(
 				"\tDisc load count: %u\n"
 				"\t  CD write time: %02lu:%02lu:%02lu\n"
 				, MAKEWORD(pBuf[121], pBuf[120])
@@ -3303,7 +3837,7 @@ VOID OutputEeprom(
 		{
 			OutputEepromUnknownByte(pBuf, 108, 121);
 			LONG ucw = MAKELONG(MAKEWORD(pBuf[125], pBuf[124]), MAKEWORD(pBuf[123], pBuf[122]));
-			OutputDriveLogA(
+			OutputDriveLog(
 				"\t  CD write time: %02lu:%02lu:%02lu\n"
 				, ucw / 3600, ucw / 60 % 60, ucw % 60);
 			OutputEepromUnknownByte(pBuf, 126, 127);
@@ -3328,49 +3862,49 @@ VOID OutputEeprom(
 	else if (nRoop == 1 && byPlxtrDrive <= PLXTR_DRIVE_TYPE::PX714A) {
 		OutputEepromOverPX712(pBuf);
 		
-		OutputDriveLogA("\t  Auto Strategy: ");
+		OutputDriveLog("\t  Auto Strategy: ");
 		switch (pBuf[116]) {
 		case 0x06:
 			if (PLXTR_DRIVE_TYPE::PX716AL <= byPlxtrDrive && byPlxtrDrive <= PLXTR_DRIVE_TYPE::PX714A) {
-				OutputDriveLogA("AS OFF\n");
+				OutputDriveLog("AS OFF\n");
 			}
 			else {
-				OutputDriveLogA("Unknown[%02x]\n", pBuf[116]);
+				OutputDriveLog("Unknown[%02x]\n", pBuf[116]);
 			}
 			break;
 		case 0x07:
 			if (PLXTR_DRIVE_TYPE::PX716AL <= byPlxtrDrive && byPlxtrDrive <= PLXTR_DRIVE_TYPE::PX714A) {
-				OutputDriveLogA("Auto Selection\n");
+				OutputDriveLog("Auto Selection\n");
 			}
 			else {
-				OutputDriveLogA("AS ON\n");
+				OutputDriveLog("AS ON\n");
 			}
 			break;
 		case 0x0b:
-			OutputDriveLogA("AS ON(Forced)\n");
+			OutputDriveLog("AS ON(Forced)\n");
 			break;
 		case 0x0e:
 			if (byPlxtrDrive <= PLXTR_DRIVE_TYPE::PX755A) {
-				OutputDriveLogA("AS OFF\n");
+				OutputDriveLog("AS OFF\n");
 			}
 			else {
-				OutputDriveLogA("Unknown[%02x]\n", pBuf[116]);
+				OutputDriveLog("Unknown[%02x]\n", pBuf[116]);
 			}
 			break;
 		case 0x0f:
 			if (byPlxtrDrive <= PLXTR_DRIVE_TYPE::PX755A) {
-				OutputDriveLogA("Auto Selection\n");
+				OutputDriveLog("Auto Selection\n");
 			}
 			else {
-				OutputDriveLogA("Unknown[%02x]\n", pBuf[116]);
+				OutputDriveLog("Unknown[%02x]\n", pBuf[116]);
 			}
 			break;
 		default:
-			OutputDriveLogA("Unknown[%02x]\n", pBuf[116]);
+			OutputDriveLog("Unknown[%02x]\n", pBuf[116]);
 			break;
 		}
 		OutputEepromUnknownByte(pBuf, 117, 254);
-		OutputDriveLogA(
+		OutputDriveLog(
 			"\t            Sum: %02x (SpeedRead: %02x + Spindown Time: %02x + BookType: %02x + Auto Strategy: %02x + Others)\n"
 			, pBuf[255], pBuf[29], pBuf[31], pBuf[115], pBuf[116]);
 	}

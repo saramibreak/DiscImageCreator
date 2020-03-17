@@ -71,6 +71,12 @@
 
 #define MAX_READ_ERROR_FILE_COUNT (16)
 
+#if defined _WIN32 && defined UNICODE
+#define CHARWIDTH "h"
+#else
+#define CHARWIDTH
+#endif
+
 // PLEXTOR specified command
 #if 0
 #define SCSIOP_PLXTR_GET_AUTH		(0xD4)

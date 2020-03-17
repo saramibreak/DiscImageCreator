@@ -25,8 +25,7 @@
 #include "set.h"
 
 #ifdef _DEBUG
-WCHAR logBufferW[DISC_RAW_READ_SIZE];
-CHAR logBufferA[DISC_RAW_READ_SIZE];
+_TCHAR logBuffer[DISC_RAW_READ_SIZE];
 #endif
 // These global variable is set at prngcd.cpp
 extern unsigned char scrambled_table[2352];
@@ -53,7 +52,7 @@ FILE* CreateOrOpenFile(
 		size_t plusFnameLen = _tcslen(pszPlusFname);
 		UINT pathSize = UINT(_tcslen(szDir) + _tcslen(szFname) + plusFnameLen + _tcslen(pszExt));
 		if (pathSize > _MAX_FNAME) {
-			OutputErrorString(_T("File Size is too long: %u\n"), pathSize);
+			OutputErrorString("File Size is too long: %u\n", pathSize);
 			return NULL;
 		}
 		_tcsncat(szFname, pszPlusFname, plusFnameLen);
@@ -95,132 +94,6 @@ FILE* CreateOrOpenFile(
 #endif
 	return fp;
 }
-#ifdef _WIN32
-FILE* CreateOrOpenFileW(
-	LPCWSTR pszPath,
-	LPCWSTR pszPlusFname,
-	LPWSTR pszOutPath,
-	LPWSTR pszFnameAndExt,
-	LPWSTR pszFname,
-	LPCWSTR pszExt,
-	LPCWSTR pszMode,
-	BYTE byTrackNum,
-	BYTE byMaxTrackNum
-) {
-	WCHAR szDstPath[_MAX_PATH] = {};
-	WCHAR szDrive[_MAX_DRIVE] = {};
-	WCHAR szDir[_MAX_DIR] = {};
-	WCHAR szFname[_MAX_FNAME] = {};
-	WCHAR szExt[_MAX_EXT] = {};
-
-	_wsplitpath(pszPath, szDrive, szDir, szFname, szExt);
-	if (pszPlusFname) {
-		size_t plusFnameLen = wcslen(pszPlusFname);
-		UINT pathSize = UINT(wcslen(szDir) + wcslen(szFname) + plusFnameLen + wcslen(pszExt));
-		if (pathSize > _MAX_FNAME) {
-			OutputErrorString(_T("File Size is too long: %u\n"), pathSize);
-			return NULL;
-		}
-		wcsncat(szFname, pszPlusFname, plusFnameLen);
-	}
-	if (byMaxTrackNum <= 1) {
-		_snwprintf(szDstPath, sizeof(szDstPath) / sizeof(szDstPath[0]),
-			L"%s%s%s%s", szDrive, szDir, szFname, pszExt);
-	}
-	else if (2 <= byMaxTrackNum && byMaxTrackNum <= 9) {
-		_snwprintf(szDstPath, sizeof(szDstPath) / sizeof(szDstPath[0]),
-			L"%s%s%s (Track %u)%s", szDrive, szDir, szFname, byTrackNum, pszExt);
-	}
-	else if (10 <= byMaxTrackNum) {
-		_snwprintf(szDstPath, sizeof(szDstPath) / sizeof(szDstPath[0]),
-			L"%s%s%s (Track %02u)%s", szDrive, szDir, szFname, byTrackNum, pszExt);
-	}
-	szDstPath[_MAX_PATH - 1] = 0;
-
-	if (pszFnameAndExt) {
-		// size of pszFnameAndExt must be _MAX_PATH.
-		ZeroMemory(pszFnameAndExt, _MAX_FNAME);
-		_wsplitpath(szDstPath, NULL, NULL, szFname, szExt);
-		_snwprintf(pszFnameAndExt, _MAX_FNAME, L"%s%s", szFname, szExt);
-	}
-	if (pszFname) {
-		// size of pszFname must be _MAX_PATH.
-		ZeroMemory(pszFname, _MAX_FNAME);
-		_wsplitpath(szDstPath, NULL, NULL, szFname, NULL);
-		_snwprintf(pszFname, _MAX_FNAME, L"%s", szFname);
-	}
-	if (pszOutPath) {
-		// size of pszOutPath must be _MAX_PATH.
-		wcsncpy(pszOutPath, szDstPath, _MAX_PATH);
-	}
-	FILE* fp = _wfopen(szDstPath, pszMode);
-#ifndef UNICODE
-	// delete bom
-	fseek(fp, 0, SEEK_SET);
-#endif
-	return fp;
-}
-#endif
-FILE* CreateOrOpenFileA(
-	LPCSTR pszPath,
-	LPCSTR pszPlusFname,
-	LPSTR pszOutPath,
-	LPSTR pszFnameAndExt,
-	LPSTR pszFname,
-	LPCSTR pszExt,
-	LPCSTR pszMode,
-	BYTE byTrackNum,
-	BYTE byMaxTrackNum
-) {
-	CHAR szDstPath[_MAX_PATH] = {};
-	CHAR szDrive[_MAX_DRIVE] = {};
-	CHAR szDir[_MAX_DIR] = {};
-	CHAR szFname[_MAX_FNAME] = {};
-	CHAR szExt[_MAX_EXT] = {};
-
-	_splitpath(pszPath, szDrive, szDir, szFname, szExt);
-	if (pszPlusFname) {
-		size_t plusFnameLen = strlen(pszPlusFname);
-		UINT pathSize = UINT(strlen(szDir) + strlen(szFname) + plusFnameLen + strlen(pszExt));
-		if (pathSize > _MAX_FNAME) {
-			OutputErrorString(_T("File Size is too long: %u\n"), pathSize);
-			return NULL;
-		}
-		strncat(szFname, pszPlusFname, plusFnameLen);
-	}
-	if (byMaxTrackNum <= 1) {
-		_snprintf(szDstPath, sizeof(szDstPath) / sizeof(szDstPath[0]),
-			"%s%s%s%s", szDrive, szDir, szFname, pszExt);
-	}
-	else if (2 <= byMaxTrackNum && byMaxTrackNum <= 9) {
-		_snprintf(szDstPath, sizeof(szDstPath) / sizeof(szDstPath[0]),
-			"%s%s%s (Track %u)%s", szDrive, szDir, szFname, byTrackNum, pszExt);
-	}
-	else if (10 <= byMaxTrackNum) {
-		_snprintf(szDstPath, sizeof(szDstPath) / sizeof(szDstPath[0]),
-			"%s%s%s (Track %02u)%s", szDrive, szDir, szFname, byTrackNum, pszExt);
-	}
-	szDstPath[_MAX_PATH - 1] = 0;
-
-	if (pszFnameAndExt) {
-		// size of pszFnameAndExt must be _MAX_FNAME.
-		ZeroMemory(pszFnameAndExt, _MAX_FNAME);
-		_splitpath(szDstPath, NULL, NULL, szFname, szExt);
-		_snprintf(pszFnameAndExt, _MAX_FNAME, "%s%s", szFname, szExt);
-	}
-	if (pszFname) {
-		// size of pszFname must be _MAX_FNAME.
-		ZeroMemory(pszFname, _MAX_FNAME);
-		_splitpath(szDstPath, NULL, NULL, szFname, NULL);
-		_snprintf(pszFname, _MAX_FNAME, "%s", szFname);
-	}
-	if (pszOutPath) {
-		// size of pszOutPath must be _MAX_PATH.
-		strncpy(pszOutPath, szDstPath, _MAX_PATH);
-	}
-	FILE* fp = fopen(szDstPath, pszMode);
-	return fp;
-}
 
 FILE* OpenProgrammabledFile(
 	LPCTSTR pszFname,
@@ -252,29 +125,6 @@ FILE* OpenProgrammabledFile(
 	}
 	return fp;
 }
-#ifdef _WIN32
-FILE* OpenProgrammabledFileW(
-	LPCWSTR pszFname,
-	LPCWSTR pszMode
-) {
-	WCHAR szFullPath[_MAX_PATH] = {};
-	if (!::GetModuleFileNameW(NULL, szFullPath, sizeof(szFullPath) / sizeof(szFullPath[0]))) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return NULL;
-	}
-	FILE* fp = NULL;
-	LPWCH p = wcsrchr(szFullPath, '\\');
-	if (p) {
-		p[0] = 0;
-		WCHAR szFullPathName[_MAX_PATH] = {};
-		_snwprintf(szFullPathName
-			, sizeof(szFullPathName) / sizeof(szFullPathName[0]), L"%s\\%s", szFullPath, pszFname);
-		szFullPathName[_MAX_PATH - 1] = 0;
-		fp = _wfopen(szFullPathName, pszMode);
-	}
-	return fp;
-}
-#endif
 
 VOID WriteCcdForDisc(
 	WORD wTocEntries,
@@ -423,10 +273,10 @@ BOOL WriteCcdFirst(
 					bySessionNum++;
 				}
 				OutputString(
-					_T("\rChecking SubQ adr (Track) %2u/%2u"), pTocData[i].Point, pDisc->SCSI.toc.LastTrack);
+					"\rChecking SubQ adr (Track) %2u/%2u", pTocData[i].Point, pDisc->SCSI.toc.LastTrack);
 			}
 		}
-		OutputString(_T("\n"));
+		OutputString("\n");
 		FreeAndNull(pBuf);
 	}
 	return TRUE;
@@ -978,7 +828,7 @@ VOID WriteErrorBuffer(
 			}
 		}
 	}
-	OutputLogA(fileMainError,
+	OutputLog(fileMainError,
 		"LBA[%06d, %#07x] Read error. padding [%ubyte]\n", nLBA, nLBA, uiSize);
 
 	if (*pExecType != swap || (*pExecType == swap && nLBA < SECOND_ERROR_OF_LEADOUT)) {
@@ -1006,8 +856,8 @@ BOOL WriteParsingSubfile(
 ) {
 	BOOL bRet = TRUE;
 #ifndef _DEBUG
-	if (NULL == (g_LogFile.fpSubReadable = CreateOrOpenFileA(
-		pszSubfile, "_subReadable", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
+	if (NULL == (g_LogFile.fpSubReadable = CreateOrOpenFile(
+		pszSubfile, _T("_subReadable"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
@@ -1020,8 +870,8 @@ BOOL WriteParsingSubfile(
 
 	try {
 #ifndef _DEBUG
-		if (NULL == (g_LogFile.fpSubError = CreateOrOpenFileA(
-			pszSubfile, "_subError", NULL, NULL, NULL, ".txt", "w", 0, 0))) {
+		if (NULL == (g_LogFile.fpSubError = CreateOrOpenFile(
+			pszSubfile, _T("_subError"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
@@ -1094,9 +944,9 @@ BOOL WriteParsingSubfile(
 			byPrevTrackNum = byTrackNum;
 			OutputCDSubToLog(&discData, &discPerSector, lpSubcodeRtoW, nLBA);
 			OutputString(
-				_T("\rParsing sub (Size) %8d/%8lu"), i + CD_RAW_READ_SUBCODE_SIZE, dwFileSize);
+				"\rParsing sub (Size) %8d/%8lu", i + CD_RAW_READ_SUBCODE_SIZE, dwFileSize);
 		}
-		OutputString(_T("\n"));
+		OutputString("\n");
 	}
 	catch (BOOL bErr) {
 		bRet = bErr;
@@ -1141,7 +991,7 @@ BOOL WriteParsingMdsfile(
 			throw FALSE;
 		}
 		if (fread(data, sizeof(BYTE), dwFileSize, fpMds) < dwFileSize) {
-			OutputErrorString(_T("Failed to read [F:%s][L:%d]\n"), _T(__FUNCTION__), __LINE__);
+			OutputErrorString("Failed to read [F:%s][L:%d]\n", _T(__FUNCTION__), __LINE__);
 			FcloseAndNull(fpMds);
 			throw FALSE;
 		};
@@ -1236,57 +1086,57 @@ BOOL WriteParsingMdsfile(
 			}
 		}
 		_ftprintf(fpParse,
-			_T(OUTPUT_DHYPHEN_PLUS_STR(Header))
-			_T("                  id: %.16s\n")
-			_T("             unknown: %d\n")
-			_T("           mediaType: %d\n")
-			_T("          sessionNum: %d\n")
-			_T("             unknown: %d\n")
-			_T("            LenOfBca: %d\n")
-			_T("            ofsToBca: %d\n")
-			_T("  ofsTo1stSessionBlk: %d\n")
-			_T("            ofsToDpm: %d\n")
+			_T(OUTPUT_DHYPHEN_PLUS_STR("Header")
+			"                  id: %.16" CHARWIDTH "s\n"
+			"             unknown: %d\n"
+			"           mediaType: %d\n"
+			"          sessionNum: %d\n"
+			"             unknown: %d\n"
+			"            LenOfBca: %d\n"
+			"            ofsToBca: %d\n"
+			"  ofsTo1stSessionBlk: %d\n"
+			"            ofsToDpm: %d\n")
 			, h.fileId, h.unknown1, h.mediaType, h.sessionNum
 			, h.unknown2, h.lenOfBca, h.ofsToBca
 			, h.ofsTo1stSessionBlk, h.ofsToDpm
 		);
 		if (h.mediaType == 0x10) {
-			LPCSTR lpBookType[] = {
-				"DVD-ROM", "DVD-RAM", "DVD-R", "DVD-RW",
-				"HD DVD-ROM", "HD DVD-RAM", "HD DVD-R", "Reserved",
-				"Reserved", "DVD+RW", "DVD+R", "Reserved",
-				"Reserved", "DVD+RW DL", "DVD+R DL", "Reserved"
+			LPCTSTR lpBookType[] = {
+				_T("DVD-ROM"), _T("DVD-RAM"), _T("DVD-R"), _T("DVD-RW"),
+				_T("HD DVD-ROM"), _T("HD DVD-RAM"), _T("HD DVD-R"), _T("Reserved"),
+				_T("Reserved"), _T("DVD+RW"), _T("DVD+R"), _T("Reserved"),
+				_T("Reserved"), _T("DVD+RW DL"), _T("DVD+R DL"), _T("Reserved")
 			};
 
-			LPCSTR lpMaximumRate[] = {
-				"2.52 Mbps", "5.04 Mbps", "10.08 Mbps", "20.16 Mbps",
-				"30.24 Mbps", "Reserved", "Reserved", "Reserved",
-				"Reserved", "Reserved", "Reserved", "Reserved",
-				"Reserved", "Reserved", "Reserved", "Not Specified"
+			LPCTSTR lpMaximumRate[] = {
+				_T("2.52 Mbps"), _T("5.04 Mbps"), _T("10.08 Mbps"), _T("20.16 Mbps"),
+				_T("30.24 Mbps"), _T("Reserved"), _T("Reserved"), _T("Reserved"),
+				_T("Reserved"), _T("Reserved"), _T("Reserved"), _T("Reserved"),
+				_T("Reserved"), _T("Reserved"), _T("Reserved"), _T("Not Specified")
 			};
 
-			LPCSTR lpLayerType[] = {
-				"Unknown", "Layer contains embossed data", "Layer contains recordable data", "Unknown",
-				"Layer contains rewritable data", "Unknown", "Unknown", "Unknown",
-				"Reserved", "Unknown", "Unknown", "Unknown",
-				"Unknown", "Unknown", "Unknown", "Unknown"
+			LPCTSTR lpLayerType[] = {
+				_T("Unknown"), _T("Layer contains embossed data"), _T("Layer contains recordable data"), _T("Unknown"),
+				_T("Layer contains rewritable data"), _T("Unknown"), _T("Unknown"), _T("Unknown"),
+				_T("Reserved"), _T("Unknown"), _T("Unknown"), _T("Unknown"),
+				_T("Unknown"), _T("Unknown"), _T("Unknown"), _T("Unknown")
 			};
 
-			LPCSTR lpTrackDensity[] = {
-				"0.74um/track", "0.80um/track", "0.615um/track", "0.40um/track",
-				"0.34um/track", "Reserved", "Reserved", "Reserved",
-				"Reserved", "Reserved", "Reserved", "Reserved",
-				"Reserved", "Reserved", "Reserved", "Reserved"
+			LPCTSTR lpTrackDensity[] = {
+				_T("0.74um/track"), _T("0.80um/track"), _T("0.615um/track"), _T("0.40um/track"),
+				_T("0.34um/track"), _T("Reserved"), _T("Reserved"), _T("Reserved"),
+				_T("Reserved"), _T("Reserved"), _T("Reserved"), _T("Reserved"),
+				_T("Reserved"), _T("Reserved"), _T("Reserved"), _T("Reserved")
 			};
 
-			LPCSTR lpLinearDensity[] = {
-				"0.267um/bit", "0.293um/bit", "0.409 to 0.435um/bit", "Reserved",
-				"0.280 to 0.291um/bit", "0.153um/bit", "0.130 to 0.140um/bit", "Reserved",
-				"0.353um/bit", "Reserved", "Reserved", "Reserved",
-				"Reserved", "Reserved", "Reserved", "Reserved"
+			LPCTSTR lpLinearDensity[] = {
+				_T("0.267um/bit"), _T("0.293um/bit"), _T("0.409 to 0.435um/bit"), _T("Reserved"),
+				_T("0.280 to 0.291um/bit"), _T("0.153um/bit"), _T("0.130 to 0.140um/bit"), _T("Reserved"),
+				_T("0.353um/bit"), _T("Reserved"), _T("Reserved"), _T("Reserved"),
+				_T("Reserved"), _T("Reserved"), _T("Reserved"), _T("Reserved")
 			};
 			for (INT i = 0; i < layer; i++) {
-				_ftprintf(fpParse, _T(OUTPUT_DHYPHEN_PLUS_STR(BCA)));
+				_ftprintf(fpParse, _T(OUTPUT_DHYPHEN_PLUS_STR("BCA")));
 				for (size_t k = 0; k < sizeof(dvd[i].bca); k += 16) {
 					_ftprintf(fpParse,
 						_T("%04zX : %02X %02X %02X %02X %02X %02X %02X %02X  %02X %02X %02X %02X %02X %02X %02X %02X\n")
@@ -1301,7 +1151,7 @@ BOOL WriteParsingMdsfile(
 				REVERSE_LONG(&dwEndDataSector);
 				REVERSE_LONG(&dwEndLayerZeroSector);
 				_ftprintf(fpParse,
-					_T(OUTPUT_DHYPHEN_PLUS_STR(DVD Structure))
+					_T(OUTPUT_DHYPHEN_PLUS_STR("DVD Structure")
 					"\t       BookVersion: %u\n"
 					"\t          BookType: %s\n"
 					"\t       MinimumRate: %s\n"
@@ -1315,7 +1165,7 @@ BOOL WriteParsingMdsfile(
 					"\t     EndDataSector: %7lu (%#lx)\n"
 					"\tEndLayerZeroSector: %7lu (%#lx)\n"
 					"\t           BCAFlag: %s\n"
-					"\t     MediaSpecific: \n",
+					"\t     MediaSpecific: \n"),
 					dvd[i].layer.commonHeader.BookVersion,
 					lpBookType[dvd[i].layer.commonHeader.BookType],
 					lpMaximumRate[dvd[i].layer.commonHeader.MinimumRate],
@@ -1328,7 +1178,8 @@ BOOL WriteParsingMdsfile(
 					dwStartingDataSector, dwStartingDataSector,
 					dwEndDataSector, dwEndDataSector,
 					dwEndLayerZeroSector, dwEndLayerZeroSector,
-					dvd[i].layer.commonHeader.BCAFlag == 0 ? "No" : "Exist");
+					dvd[i].layer.commonHeader.BCAFlag == 0 ? _T("No") : _T("Exist")
+				);
 				for (size_t j = 0; j < sizeof(dvd[i].layer.MediaSpecific); j += 16) {
 					_ftprintf(fpParse,
 						_T("%04X : %02X %02X %02X %02X %02X %02X %02X %02X  %02X %02X %02X %02X %02X %02X %02X %02X\n")
@@ -1343,7 +1194,7 @@ BOOL WriteParsingMdsfile(
 		}
 		for (INT i = 0; i < h.sessionNum; i++) {
 			_ftprintf(fpParse,
-				_T(OUTPUT_DHYPHEN_PLUS_STR(SessionBlock))
+				OUTPUT_DHYPHEN_PLUS_STR("SessionBlock")
 				_T("         startSector: %d\n")
 				_T("           endSector: %d\n")
 				_T("          sessionNum: %d\n")
@@ -1359,7 +1210,7 @@ BOOL WriteParsingMdsfile(
 		}
 		for (INT i = 0; i < tdb; i++) {
 			_ftprintf(fpParse,
-				OUTPUT_DHYPHEN_PLUS_STR(DataBlock)
+				OUTPUT_DHYPHEN_PLUS_STR("DataBlock")
 				_T("           trackMode: %d\n")
 				_T("          numOfSubch: %d\n")
 				_T("              adrCtl: %d\n")
@@ -1383,7 +1234,7 @@ BOOL WriteParsingMdsfile(
 		if (h.mediaType != 0x10) {
 			for (INT i = 0; i < tdb; i++) {
 				_ftprintf(fpParse,
-					OUTPUT_DHYPHEN_PLUS_STR(IndexBlock)
+					OUTPUT_DHYPHEN_PLUS_STR("IndexBlock")
 					_T("           NumOfIdx0: %d\n")
 					_T("           NumOfIdx1: %d\n")
 					, ib[i].NumOfIdx0, ib[i].NumOfIdx1
@@ -1396,15 +1247,15 @@ BOOL WriteParsingMdsfile(
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		}
 		_ftprintf(fpParse,
-			_T(OUTPUT_DHYPHEN_PLUS_STR(Fname))
-			_T("          ofsToFname: %d\n")
-			_T("            fnameFmt: %d\n")
-			_T("         fnameString: %s\n")
+			_T(OUTPUT_DHYPHEN_PLUS_STR("Fname")
+			"          ofsToFname: %d\n"
+			"            fnameFmt: %d\n"
+			"         fnameString: %" CHARWIDTH "s\n")
 			, fb.ofsToFname, fb.fnameFmt, fname
 		);
 		if (h.ofsToDpm > 0) {
 			_ftprintf(fpParse,
-				OUTPUT_DHYPHEN_PLUS_STR(DPM)
+				OUTPUT_DHYPHEN_PLUS_STR("DPM")
 				_T("      dpmBlkTotalNum: %d\n")
 				, pdb->dpmBlkTotalNum);
 			for (UINT i = 0; i < pdb->dpmBlkTotalNum; i++) {
@@ -1517,7 +1368,7 @@ BOOL DescrambleMainChannelForGD(
 	BYTE bufImg[CD_RAW_SECTOR_SIZE] = {};
 	for (DWORD i = 0; i < dwAllSectorVal; i++) {
 		if (fread(bufScm, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpScm) < CD_RAW_SECTOR_SIZE) {
-			OutputErrorString(_T("Failed to read\n"));
+			OutputErrorString("Failed to read\n");
 			break;
 		}
 		if (IsValidMainDataHeader(bufScm)) {
@@ -1533,9 +1384,9 @@ BOOL DescrambleMainChannelForGD(
 			// copy audio data
 			fwrite(bufScm, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpImg);
 		}
-		OutputString(_T("\rDescrambling img (LBA) %6lu/%6lu"), i, dwAllSectorVal);
+		OutputString("\rDescrambling img (LBA) %6lu/%6lu", i, dwAllSectorVal);
 	}
-	OutputString(_T("\n"));
+	OutputString("\n");
 	FcloseAndNull(fpImg);
 	FcloseAndNull(fpScm);
 	return bRet;
@@ -1579,18 +1430,18 @@ BOOL CreateBinCueForGD(
 
 		DWORD dwFileSize = GetFileSize(0, fpImg);
 		if (dwFileSize < 0x110 + 512) {
-			OutputErrorString(_T("No GD-ROM data. Size: %lu\n"), dwFileSize);
+			OutputErrorString("No GD-ROM data. Size: %lu\n", dwFileSize);
 			throw FALSE;
 		}
 		fseek(fpImg, 0x110, SEEK_SET);
 		// 0x110 - 0x31F is toc data
 		BYTE aToc[512] = {};
 		if (fread(aToc, sizeof(BYTE), sizeof(aToc), fpImg) < sizeof(aToc)) {
-			OutputErrorString(_T("Failed to read [F:%s][L:%d]\n"), _T(__FUNCTION__), __LINE__);
+			OutputErrorString("Failed to read [F:%s][L:%d]\n", _T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
 		if (aToc[0] != 'T' || aToc[1] != 'O' || aToc[2] != 'C' || aToc[3] != '1') {
-			OutputErrorString(_T("No GD-ROM data. Header: %c%c%c%c\n"),
+			OutputErrorString("No GD-ROM data. Header: %c%c%c%c\n",
 				aToc[0], aToc[1], aToc[2], aToc[3]);
 			throw FALSE;
 		}
@@ -1680,7 +1531,7 @@ BOOL CreateBinCueForGD(
 		_TCHAR pszBinFname[_MAX_PATH] = {};
 
 		for (BYTE i = 3; i <= byMaxTrackNum; i++) {
-			OutputString(_T("\rCreating bin, cue (Track) %2u/%2u"), i, byMaxTrackNum);
+			OutputString("\rCreating bin, cue (Track) %2u/%2u", i, byMaxTrackNum);
 			if (NULL == (fpBin = CreateOrOpenFile(pszPath, NULL, NULL,
 				pszBinFname, NULL, _T(".bin"), _T("wb"), i, byMaxTrackNum))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -1741,13 +1592,13 @@ BOOL CreateBinCueForGD(
 				throw FALSE;
 			}
 			if (fread(lpBuf, sizeof(BYTE), size, fpImg) < size) {
-				OutputErrorString(_T("Failed to read [L:%d]\n"), __LINE__);
+				OutputErrorString("Failed to read [L:%d]\n", __LINE__);
 			}
 			fwrite(lpBuf, sizeof(BYTE), size, fpBin);
 			FcloseAndNull(fpBin);
 			FreeAndNull(lpBuf);
 		}
-		OutputString(_T("\n"));
+		OutputString("\n");
 	}
 	catch (BOOL ret) {
 		bRet = ret;
@@ -1786,7 +1637,7 @@ VOID DescrambleMainChannelAll(
 		INT nFirstLBA = pDisc->SUB.lp1stLBAListOfDataTrackOnSub[k];
 		if (nFirstLBA != -1) {
 			INT nLastLBA = pDisc->SUB.lpLastLBAListOfDataTrackOnSub[k];
-			OutputDiscLogA("\tTrack %2u Data Sector: %6d - %6d (%#07x - %#07x)\n",
+			OutputDiscLog("\tTrack %2u Data Sector: %6d - %6d (%#07x - %#07x)\n",
 				k + 1, nFirstLBA, nLastLBA, nFirstLBA, nLastLBA);
 			if (!pExtArg->byMultiSession && pDisc->SCSI.lpSessionNumList[k] >= 2) {
 				INT nSkipLBA = (SESSION_TO_SESSION_SKIP_LBA * (INT)(pDisc->SCSI.lpSessionNumList[k] - 1));
@@ -1809,17 +1660,17 @@ VOID DescrambleMainChannelAll(
 				// 嘘の データを読み込む場合があります。
 				fseek(fpImg, lSeekPtr * CD_RAW_SECTOR_SIZE, SEEK_SET);
 				if (fread(aSrcBuf, sizeof(BYTE), sizeof(aSrcBuf), fpImg) < sizeof(aSrcBuf)) {
-					OutputErrorString(_T("LBA[%06d, %#07x]: Failed to read [F:%s][L:%d]\n")
-						,nFirstLBA, nFirstLBA, _T(__FUNCTION__), __LINE__);
+					OutputErrorString("LBA[%06d, %#07x]: Failed to read [F:%s][L:%d]\n"
+						, nFirstLBA, nFirstLBA, _T(__FUNCTION__), __LINE__);
 					break;
 				}
 				if (IsValidMainDataHeader(aSrcBuf)) {
 					if (aSrcBuf[0x0f] == 0x60) {
 						for (INT n = 0x10; n < CD_RAW_SECTOR_SIZE; n++) {
 							if (aSrcBuf[n] != lpScrambledBuf[n]) {
-								OutputMainErrorWithLBALogA("Not all zero sector\n", nFirstLBA, k + 1);
+								OutputMainErrorWithLBALog("Not all zero sector\n", nFirstLBA, k + 1);
 								OutputString(
-									_T("\rDescrambling data sector of img: %6d/%6d"), nFirstLBA, nLastLBA);
+									"\rDescrambling data sector of img: %6d/%6d", nFirstLBA, nLastLBA);
 								OutputCDMain(fileMainError, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
 								continue;
 							}
@@ -1827,43 +1678,43 @@ VOID DescrambleMainChannelAll(
 					}
 					else if (aSrcBuf[0x0f] == 0x61) {
 						if (IsValidReservedByte(aSrcBuf)) {
-							OutputMainErrorWithLBALogA("A part of reversed sector. (Not be scrambled)\n", nFirstLBA, k + 1);
+							OutputMainErrorWithLBALog("A part of reversed sector. (Not be scrambled)\n", nFirstLBA, k + 1);
 							OutputCDMain(fileMainError, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
 						}
 					}
 					else if (aSrcBuf[0x0f] == 0x00 || aSrcBuf[0x0f] == 0x01 || aSrcBuf[0x0f] == 0x02) {
-						OutputMainErrorWithLBALogA("Reversed sector. (Not be scrambled)\n", nFirstLBA, k + 1);
+						OutputMainErrorWithLBALog("Reversed sector. (Not be scrambled)\n", nFirstLBA, k + 1);
 						OutputCDMain(fileMainError, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
 					}
 					else if (aSrcBuf[0x0f] != 0x60 && aSrcBuf[0x0f] != 0x61 && aSrcBuf[0x0f] != 0x62 &&
 						aSrcBuf[0x0f] != 0x00 && aSrcBuf[0x0f] != 0x01 && aSrcBuf[0x0f] != 0x02) {
-						OutputMainErrorWithLBALogA("Invalid mode. ", nFirstLBA, k + 1);
+						OutputMainErrorWithLBALog("Invalid mode. ", nFirstLBA, k + 1);
 						BYTE m, s, f = 0;
 						LBAtoMSF(nFirstLBA + 150, &m, &s, &f);
 						if (aSrcBuf[0x0c] == m && aSrcBuf[0x0d] == s && aSrcBuf[0x0e] == f) {
-							OutputMainErrorLogA("Reversed sector. (Not be scrambled)\n");
+							OutputMainErrorLog("Reversed sector. (Not be scrambled)\n");
 							if (!IsValidReservedByte(aSrcBuf)) {
-								OutputMainErrorLogA("Invalid reserved byte. Skip descrambling\n");
+								OutputMainErrorLog("Invalid reserved byte. Skip descrambling\n");
 								OutputString(
-									_T("\rDescrambling data sector of img: %6d/%6d"), nFirstLBA, nLastLBA);
+									"\rDescrambling data sector of img: %6d/%6d", nFirstLBA, nLastLBA);
 								OutputCDMain(fileMainError, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
 								continue;
 							}
 						}
 						else if (IsValidReservedByte(aSrcBuf)) {
-							OutputMainErrorLogA("A part of reversed sector. (Not be scrambled)\n");
+							OutputMainErrorLog("A part of reversed sector. (Not be scrambled)\n");
 						}
 						else if (aSrcBuf[0x814] != 0x48 || aSrcBuf[0x815] != 0x64 || aSrcBuf[0x816] != 0x36 ||
 							aSrcBuf[0x817] != 0xab || aSrcBuf[0x818] != 0x56 || aSrcBuf[0x819] != 0xff ||
 							aSrcBuf[0x81a] != 0x7e || aSrcBuf[0x81b] != 0xc0) {
-							OutputMainErrorLogA("Invalid reserved byte. Skip descrambling\n");
+							OutputMainErrorLog("Invalid reserved byte. Skip descrambling\n");
 							OutputString(
-								_T("\rDescrambling data sector of img: %6d/%6d"), nFirstLBA, nLastLBA);
+								"\rDescrambling data sector of img: %6d/%6d", nFirstLBA, nLastLBA);
 							OutputCDMain(fileMainError, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
 							continue;
 						}
 						else {
-							OutputMainErrorLogA("\n");
+							OutputMainErrorLog("\n");
 						}
 						OutputCDMain(fileMainError, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
 					}
@@ -1876,14 +1727,14 @@ VOID DescrambleMainChannelAll(
 				else {
 					if (pDisc->SCSI.trkType != TRACK_TYPE::pregapAudioIn1stTrack &&
 						pDisc->SCSI.trkType != TRACK_TYPE::pregapDataIn1stTrack) {
-						OutputMainErrorWithLBALogA("Invalid sync. Skip descrambling\n", nFirstLBA, k + 1);
+						OutputMainErrorWithLBALog("Invalid sync. Skip descrambling\n", nFirstLBA, k + 1);
 						OutputCDMain(fileMainError, aSrcBuf, nFirstLBA, CD_RAW_SECTOR_SIZE);
 					}
 				}
 				OutputString(
-					_T("\rDescrambling data sector of img: %6d/%6d"), nFirstLBA, nLastLBA);
+					"\rDescrambling data sector of img: %6d/%6d", nFirstLBA, nLastLBA);
 			}
-			OutputString(_T("\n"));
+			OutputString("\n");
 		}
 	}
 }
@@ -1906,7 +1757,7 @@ VOID DescrambleMainChannelPartial(
 		// 嘘の データを読み込む場合があります。
 		fseek(fpImg, lSeekPtr * CD_RAW_SECTOR_SIZE, SEEK_SET);
 		if (fread(aSrcBuf, sizeof(BYTE), sizeof(aSrcBuf), fpImg) < sizeof(aSrcBuf)) {
-			OutputErrorString(_T("Failed to read [F:%s][L:%d]\n"), _T(__FUNCTION__), __LINE__);
+			OutputErrorString("Failed to read [F:%s][L:%d]\n", _T(__FUNCTION__), __LINE__);
 			break;
 		}
 		if (IsValidMainDataHeader(aSrcBuf)) {
@@ -1918,18 +1769,18 @@ VOID DescrambleMainChannelPartial(
 				fwrite(aSrcBuf, sizeof(BYTE), sizeof(aSrcBuf), fpImg);
 			}
 			else {
-				OutputMainInfoWithLBALogA("Invalid mode. Skip descrambling\n", nStartLBA, 0);
+				OutputMainInfoWithLBALog("Invalid mode. Skip descrambling\n", nStartLBA, 0);
 				OutputCDMain(fileMainInfo, aSrcBuf, nStartLBA, CD_RAW_SECTOR_SIZE);
 			}
 		}
 		else {
-			OutputMainErrorWithLBALogA("Invalid sync. Skip descrambling\n", nStartLBA, 0);
+			OutputMainErrorWithLBALog("Invalid sync. Skip descrambling\n", nStartLBA, 0);
 			OutputCDMain(fileMainError, aSrcBuf, nStartLBA, CD_RAW_SECTOR_SIZE);
 		}
 		OutputString(
-			_T("\rDescrambling data sector of img: %6d/%6d"), nStartLBA, nEndLBA);
+			"\rDescrambling data sector of img: %6d/%6d", nStartLBA, nEndLBA);
 	}
-	OutputString(_T("\n"));
+	OutputString("\n");
 }
 
 BOOL CreateBin(
@@ -2001,13 +1852,13 @@ BOOL CreateBin(
 	fseek(fpImg, nPrevLBA * CD_RAW_SECTOR_SIZE, SEEK_SET);
 	LPBYTE lpBuf = (LPBYTE)calloc(stBufSize, sizeof(BYTE));
 	if (!lpBuf) {
-		OutputString(_T("\n"));
+		OutputString("\n");
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(_T("bufSize: %zd"), stBufSize);
+		OutputErrorString("bufSize: %zd", stBufSize);
 		return FALSE;
 	}
 	if (fread(lpBuf, sizeof(BYTE), stBufSize, fpImg) < stBufSize) {
-		OutputErrorString(_T("Failed to read: read size %zd [F:%s][L:%d]\n"), stBufSize, _T(__FUNCTION__), __LINE__);
+		OutputErrorString("Failed to read: read size %zd [F:%s][L:%d]\n", stBufSize, _T(__FUNCTION__), __LINE__);
 		FreeAndNull(lpBuf);
 		return FALSE;
 	}
@@ -2107,7 +1958,7 @@ BOOL CreateBinCueCcd(
 			}
 			for (BYTE i = pDisc->SCSI.toc.FirstTrack; i <= pDisc->SCSI.toc.LastTrack; i++) {
 				OutputString(
-					_T("\rCreating cue and ccd (Track) %2u/%2u"), i, pDisc->SCSI.toc.LastTrack);
+					"\rCreating cue and ccd (Track) %2u/%2u", i, pDisc->SCSI.toc.LastTrack);
 				// This fpBin is dummy to get filename and ext written in cue
 				_TCHAR out[_MAX_PATH] = {};
 				if (NULL == (fpBin = CreateOrOpenFile(pszPath, NULL, out, pszFname,
@@ -2264,10 +2115,10 @@ BOOL CreateBinCueCcd(
 			FcloseAndNull(fpCueSyncForImg);
 			FcloseAndNull(fpCueSync);
 		}
-		OutputString(_T("\n"));
+		OutputString("\n");
 		for (BYTE i = pDisc->SCSI.toc.FirstTrack; i <= pDisc->SCSI.toc.LastTrack; i++) {
 			OutputString(
-				_T("\rCreating bin (Track) %2u/%2u"), i, pDisc->SCSI.toc.LastTrack);
+				"\rCreating bin (Track) %2u/%2u", i, pDisc->SCSI.toc.LastTrack);
 			if (NULL == (fpBin = CreateOrOpenFile(pszPath, NULL, NULL, NULL,
 				NULL, _T(".bin"), _T("wb"), i, pDisc->SCSI.toc.LastTrack))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -2301,7 +2152,7 @@ BOOL CreateBinCueCcd(
 				nNextLBA += 150;
 			}
 #ifdef _DEBUG
-			OutputDebugStringExA(" nNextLBA(%d) - nLBA(%d) = %d\n", nNextLBA, nLBA, nNextLBA - nLBA);
+			OutputDebugStringEx(" nNextLBA(%d) - nLBA(%d) = %d\n", nNextLBA, nLBA, nNextLBA - nLBA);
 #endif
 			bRet = CreateBin(pExtArg, pDisc, i, nNextLBA, nLBA, fpImg, fpBin);
 			FcloseAndNull(fpBin);
@@ -2334,7 +2185,7 @@ BOOL CreateBinCueCcd(
 				}
 			}
 		}
-		OutputString(_T("\n"));
+		OutputString("\n");
 		FcloseAndNull(fpBinSync);
 		FcloseAndNull(fpBin);
 	}
@@ -2354,7 +2205,7 @@ VOID OutputIntentionalSubchannel(
 ) {
 	BYTE m, s, f;
 	LBAtoMSF(nLBA + 150, &m, &s, &f);
-	OutputSubIntentionalLogA(
+	OutputSubIntentionalLog(
 		"MSF: %02d:%02d:%02d Q-Data: %02x%02x%02x %02x:%02x:%02x %02x %02x:%02x:%02x %02x%02x\n"
 		, m, s, f, lpSubcode[0], lpSubcode[1], lpSubcode[2], lpSubcode[3], lpSubcode[4], lpSubcode[5]
 		, lpSubcode[6], lpSubcode[7], lpSubcode[8], lpSubcode[9], lpSubcode[10], lpSubcode[11]
@@ -2393,12 +2244,12 @@ VOID OutputLastErrorNumAndString(
 		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM,
 		NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&lpMsgBuf, 0, NULL);
 	// http://blog.livedoor.jp/afsoft/archives/52230222.html
-	OutputErrorString(_T("[F:%s][L:%lu] GetLastError: %lu, %s\n"),
+	OutputErrorString("[F:%s][L:%lu] GetLastError: %lu, %s\n",
 		pszFuncName, lLineNum, GetLastError(), (LPCTSTR)lpMsgBuf);
 
 	LocalFree(lpMsgBuf);
 #else
-	OutputErrorString(_T("[F:%s][L:%lu] GetLastError: %lu, %s\n"),
+	OutputErrorString("[F:%s][L:%lu] GetLastError: %lu, %s\n",
 		pszFuncName, lLineNum, GetLastError(), strerror(GetLastError()));
 #endif
 }
@@ -2408,217 +2259,217 @@ VOID OutputProductType(
 ) {
 	switch (dwProductType) {
 	case PRODUCT_ULTIMATE:
-		OutputString(_T("Ultimate"));
+		OutputString("Ultimate");
 		break;
 	case PRODUCT_HOME_BASIC:
-		OutputString(_T("Home Basic"));
+		OutputString("Home Basic");
 		break;
 	case PRODUCT_HOME_PREMIUM:
-		OutputString(_T("Home Premium"));
+		OutputString("Home Premium");
 		break;
 	case PRODUCT_ENTERPRISE:
-		OutputString(_T("Enterprise"));
+		OutputString("Enterprise");
 		break;
 	case PRODUCT_HOME_BASIC_N:
-		OutputString(_T("Home Basic N"));
+		OutputString("Home Basic N");
 		break;
 	case PRODUCT_BUSINESS:
-		OutputString(_T("Business"));
+		OutputString("Business");
 		break;
 	case PRODUCT_STANDARD_SERVER:
-		OutputString(_T("Standard"));
+		OutputString("Standard");
 		break;
 	case PRODUCT_DATACENTER_SERVER:
-		OutputString(_T("Datacenter"));
+		OutputString("Datacenter");
 		break;
 	case PRODUCT_SMALLBUSINESS_SERVER:
-		OutputString(_T("Small Business"));
+		OutputString("Small Business");
 		break;
 	case PRODUCT_ENTERPRISE_SERVER:
-		OutputString(_T("Enterprise"));
+		OutputString("Enterprise");
 		break;
 	case PRODUCT_STARTER:
-		OutputString(_T("Starter"));
+		OutputString("Starter");
 		break;
 	case PRODUCT_DATACENTER_SERVER_CORE:
-		OutputString(_T("Datacenter (core installation)"));
+		OutputString("Datacenter (core installation)");
 		break;
 	case PRODUCT_STANDARD_SERVER_CORE:
-		OutputString(_T("Standard (core installation)"));
+		OutputString("Standard (core installation)");
 		break;
 	case PRODUCT_ENTERPRISE_SERVER_CORE:
-		OutputString(_T("Enterprise (core installation)"));
+		OutputString("Enterprise (core installation)");
 		break;
 	case PRODUCT_ENTERPRISE_SERVER_IA64:
-		OutputString(_T("Enterprise for Itanium-based Systems"));
+		OutputString("Enterprise for Itanium-based Systems");
 		break;
 	case PRODUCT_BUSINESS_N:
-		OutputString(_T("Business N"));
+		OutputString("Business N");
 		break;
 	case PRODUCT_WEB_SERVER:
-		OutputString(_T("Web"));
+		OutputString("Web");
 		break;
 	case PRODUCT_CLUSTER_SERVER:
-		OutputString(_T("Cluster"));
+		OutputString("Cluster");
 		break;
 	case PRODUCT_HOME_SERVER:
-		OutputString(_T("Home"));
+		OutputString("Home");
 		break;
 	case PRODUCT_STORAGE_EXPRESS_SERVER:
-		OutputString(_T("Storage Express"));
+		OutputString("Storage Express");
 		break;
 	case PRODUCT_STORAGE_STANDARD_SERVER:
-		OutputString(_T("Strage Standard"));
+		OutputString("Strage Standard");
 		break;
 	case PRODUCT_STORAGE_WORKGROUP_SERVER:
-		OutputString(_T("Storage Workgroup"));
+		OutputString("Storage Workgroup");
 		break;
 	case PRODUCT_STORAGE_ENTERPRISE_SERVER:
-		OutputString(_T("Storage Enterprise"));
+		OutputString("Storage Enterprise");
 		break;
 	case PRODUCT_SERVER_FOR_SMALLBUSINESS:
-		OutputString(_T("for Small Business"));
+		OutputString("for Small Business");
 		break;
 	case PRODUCT_SMALLBUSINESS_SERVER_PREMIUM:
-		OutputString(_T("Small Business Premium"));
+		OutputString("Small Business Premium");
 		break;
 	case PRODUCT_HOME_PREMIUM_N:
-		OutputString(_T("Home Premium N"));
+		OutputString("Home Premium N");
 		break;
 	case PRODUCT_ENTERPRISE_N:
-		OutputString(_T("Enterprise N"));
+		OutputString("Enterprise N");
 		break;
 	case PRODUCT_ULTIMATE_N:
-		OutputString(_T("Ultimate N"));
+		OutputString("Ultimate N");
 		break;
 	case PRODUCT_WEB_SERVER_CORE:
-		OutputString(_T("Web (core installation)"));
+		OutputString("Web (core installation)");
 		break;
 	case PRODUCT_MEDIUMBUSINESS_SERVER_MANAGEMENT:
-		OutputString(_T("Medium Business Server Management"));
+		OutputString("Medium Business Server Management");
 		break;
 	case PRODUCT_MEDIUMBUSINESS_SERVER_SECURITY:
-		OutputString(_T("Medium Business Server Security"));
+		OutputString("Medium Business Server Security");
 		break;
 	case PRODUCT_MEDIUMBUSINESS_SERVER_MESSAGING:
-		OutputString(_T("Medium Business Server Messaging"));
+		OutputString("Medium Business Server Messaging");
 		break;
 	case PRODUCT_SERVER_FOUNDATION:
-		OutputString(_T("Foundation"));
+		OutputString("Foundation");
 		break;
 	case PRODUCT_HOME_PREMIUM_SERVER:
-		OutputString(_T("Home Premium"));
+		OutputString("Home Premium");
 		break;
 	case PRODUCT_SERVER_FOR_SMALLBUSINESS_V:
-		OutputString(_T("for Small Business without Hyper-V"));
+		OutputString("for Small Business without Hyper-V");
 		break;
 	case PRODUCT_STANDARD_SERVER_V:
-		OutputString(_T("Standard without Hyper-V"));
+		OutputString("Standard without Hyper-V");
 		break;
 	case PRODUCT_DATACENTER_SERVER_V:
-		OutputString(_T("Datacenter without Hyper-V (full installation)"));
+		OutputString("Datacenter without Hyper-V (full installation)");
 		break;
 	case PRODUCT_ENTERPRISE_SERVER_V:
-		OutputString(_T("Enterprise without Hyper-V (full installation)"));
+		OutputString("Enterprise without Hyper-V (full installation)");
 		break;
 	case PRODUCT_DATACENTER_SERVER_CORE_V:
-		OutputString(_T("Datacenter without Hyper-V (core installation)"));
+		OutputString("Datacenter without Hyper-V (core installation)");
 		break;
 	case PRODUCT_STANDARD_SERVER_CORE_V:
-		OutputString(_T("Standard without Hyper-V (core installation)"));
+		OutputString("Standard without Hyper-V (core installation)");
 		break;
 	case PRODUCT_ENTERPRISE_SERVER_CORE_V:
-		OutputString(_T("Enterprise without Hyper-V (core installation)"));
+		OutputString("Enterprise without Hyper-V (core installation)");
 		break;
 	case PRODUCT_HYPERV:
-		OutputString(_T("without Hyper-V"));
+		OutputString("without Hyper-V");
 		break;
 	case PRODUCT_STORAGE_EXPRESS_SERVER_CORE:
-		OutputString(_T("Storage Express (core installation)"));
+		OutputString("Storage Express (core installation)");
 		break;
 	case PRODUCT_STORAGE_STANDARD_SERVER_CORE:
-		OutputString(_T("Storage Strandard (core installation)"));
+		OutputString("Storage Strandard (core installation)");
 		break;
 	case PRODUCT_STORAGE_WORKGROUP_SERVER_CORE:
-		OutputString(_T("Storage Workgroup (core installation)"));
+		OutputString("Storage Workgroup (core installation)");
 		break;
 	case PRODUCT_STORAGE_ENTERPRISE_SERVER_CORE:
-		OutputString(_T("Storage Enterprise (core installation)"));
+		OutputString("Storage Enterprise (core installation)");
 		break;
 	case PRODUCT_STARTER_N:
-		OutputString(_T("Starter N"));
+		OutputString("Starter N");
 		break;
 	case PRODUCT_PROFESSIONAL:
-		OutputString(_T("Professional"));
+		OutputString("Professional");
 		break;
 	case PRODUCT_PROFESSIONAL_N:
-		OutputString(_T("Professional N"));
+		OutputString("Professional N");
 		break;
 	case PRODUCT_SB_SOLUTION_SERVER:
-		OutputString(_T("SB Solution"));
+		OutputString("SB Solution");
 		break;
 	case PRODUCT_SERVER_FOR_SB_SOLUTIONS:
-		OutputString(_T("for SB Solutions"));
+		OutputString("for SB Solutions");
 		break;
 	case PRODUCT_STANDARD_SERVER_SOLUTIONS:
-		OutputString(_T("Standard Server Solutions"));
+		OutputString("Standard Server Solutions");
 		break;
 	case PRODUCT_STANDARD_SERVER_SOLUTIONS_CORE:
-		OutputString(_T("Standard Server Solutions (core installation)"));
+		OutputString("Standard Server Solutions (core installation)");
 		break;
 	case PRODUCT_SB_SOLUTION_SERVER_EM:
-		OutputString(_T("SB Solutions Server EM"));
+		OutputString("SB Solutions Server EM");
 		break;
 	case PRODUCT_SERVER_FOR_SB_SOLUTIONS_EM:
-		OutputString(_T("for SB Solutions EM"));
+		OutputString("for SB Solutions EM");
 		break;
 	case PRODUCT_SOLUTION_EMBEDDEDSERVER:
-		OutputString(_T("Solution Embedded Server"));
+		OutputString("Solution Embedded Server");
 		break;
 	case PRODUCT_SOLUTION_EMBEDDEDSERVER_CORE:
-		OutputString(_T("Solution Embedded Server (core installation)"));
+		OutputString("Solution Embedded Server (core installation)");
 		break;
 	case PRODUCT_SMALLBUSINESS_SERVER_PREMIUM_CORE:
-		OutputString(_T("Small Business Server Premium (core installation)"));
+		OutputString("Small Business Server Premium (core installation)");
 		break;
 	case PRODUCT_ESSENTIALBUSINESS_SERVER_MGMT:
-		OutputString(_T("Essential Business Server MGMT"));
+		OutputString("Essential Business Server MGMT");
 		break;
 	case PRODUCT_ESSENTIALBUSINESS_SERVER_ADDL:
-		OutputString(_T("Essential Business Server ADDL"));
+		OutputString("Essential Business Server ADDL");
 		break;
 	case PRODUCT_ESSENTIALBUSINESS_SERVER_MGMTSVC:
-		OutputString(_T("Essential Business Server MGMTSVC"));
+		OutputString("Essential Business Server MGMTSVC");
 		break;
 	case PRODUCT_ESSENTIALBUSINESS_SERVER_ADDLSVC:
-		OutputString(_T("Essential Business Server ADDLSVC"));
+		OutputString("Essential Business Server ADDLSVC");
 		break;
 	case PRODUCT_CLUSTER_SERVER_V:
-		OutputString(_T("Cluster without Hyper-V"));
+		OutputString("Cluster without Hyper-V");
 		break;
 	case PRODUCT_EMBEDDED:
-		OutputString(_T("Embedded"));
+		OutputString("Embedded");
 		break;
 	case PRODUCT_STARTER_E:
-		OutputString(_T("Starter E"));
+		OutputString("Starter E");
 		break;
 	case PRODUCT_HOME_BASIC_E:
-		OutputString(_T("Home Basic E"));
+		OutputString("Home Basic E");
 		break;
 	case PRODUCT_HOME_PREMIUM_E:
-		OutputString(_T("Home Premium E"));
+		OutputString("Home Premium E");
 		break;
 	case PRODUCT_PROFESSIONAL_E:
-		OutputString(_T("Professional E"));
+		OutputString("Professional E");
 		break;
 	case PRODUCT_ENTERPRISE_E:
-		OutputString(_T("Enterprise E"));
+		OutputString("Enterprise E");
 		break;
 	case PRODUCT_ULTIMATE_E:
-		OutputString(_T("Ultimate E"));
+		OutputString("Ultimate E");
 		break;
 	default:
-		OutputString(_T("Other"));
+		OutputString("Other");
 		break;
 	}
 }
@@ -2659,74 +2510,74 @@ BOOL OutputWindowsVersion(
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
-	OutputString(_T("OS\n"));
+	OutputString("OS\n");
 	switch (OSver.dwMajorVersion) {
 	case 5:
 		switch (OSver.dwMinorVersion) {
 		case 0:
-			OutputString(_T("\tWindows 2000 "));
+			OutputString("\tWindows 2000 ");
 			switch (OSver.wProductType) {
 			case VER_NT_WORKSTATION:
-				OutputString(_T("Professional"));
+				OutputString("Professional");
 				break;
 			case VER_NT_DOMAIN_CONTROLLER:
 			case VER_NT_SERVER:
 				if (OSver.wSuiteMask & VER_SUITE_ENTERPRISE) {
-					OutputString(_T("Advanced Server"));
+					OutputString("Advanced Server");
 				}
 				else if (OSver.wSuiteMask & VER_SUITE_DATACENTER) {
-					OutputString(_T("Datacenter Server"));
+					OutputString("Datacenter Server");
 				}
 				else {
-					OutputString(_T("Server"));
+					OutputString("Server");
 				}
 				break;
 			}
 			break;
 		case 1:
-			OutputString(_T("\tWindows XP "));
+			OutputString("\tWindows XP ");
 			switch (OSver.wProductType) {
 			case VER_NT_WORKSTATION:
 				if (OSver.wSuiteMask & VER_SUITE_PERSONAL) {
-					OutputString(_T("Home Edition"));
+					OutputString("Home Edition");
 				}
 				else if (OSver.wSuiteMask & VER_SUITE_EMBEDDEDNT) {
-					OutputString(_T("Embedded"));
+					OutputString("Embedded");
 				}
 				else {
-					OutputString(_T("Professional"));
+					OutputString("Professional");
 				}
 				break;
 			}
 			break;
 		case 2:
-			OutputString(_T("\tWindows Server 2003 "));
+			OutputString("\tWindows Server 2003 ");
 			switch (OSver.wProductType) {
 			case VER_NT_DOMAIN_CONTROLLER:
 			case VER_NT_SERVER:
 				if (OSver.wSuiteMask & VER_SUITE_SMALLBUSINESS) {
-					OutputString(_T("Small Business Server"));
+					OutputString("Small Business Server");
 				}
 				else if (OSver.wSuiteMask & VER_SUITE_ENTERPRISE) {
-					OutputString(_T("Enterprise Edition"));
+					OutputString("Enterprise Edition");
 				}
 				else if (OSver.wSuiteMask & VER_SUITE_SMALLBUSINESS_RESTRICTED) {
-					OutputString(_T("Small Business Server with the restrictive client license"));
+					OutputString("Small Business Server with the restrictive client license");
 				}
 				else if (OSver.wSuiteMask & VER_SUITE_DATACENTER) {
-					OutputString(_T("Datacenter Edition"));
+					OutputString("Datacenter Edition");
 				}
 				else if (OSver.wSuiteMask & VER_SUITE_BLADE) {
-					OutputString(_T("Web Edition"));
+					OutputString("Web Edition");
 				}
 				else if (OSver.wSuiteMask & VER_SUITE_STORAGE_SERVER) {
-					OutputString(_T("Storage Server Edition"));
+					OutputString("Storage Server Edition");
 				}
 				else if (OSver.wSuiteMask & VER_SUITE_COMPUTE_SERVER) {
-					OutputString(_T("Compute Cluster Edition"));
+					OutputString("Compute Cluster Edition");
 				}
 				else {
-					OutputString(_T("Other"));
+					OutputString("Other");
 				}
 				break;
 			}
@@ -2741,12 +2592,12 @@ BOOL OutputWindowsVersion(
 		case 0:
 			switch (OSver.wProductType) {
 			case VER_NT_WORKSTATION:
-				OutputString(_T("\tWindows Vista "));
+				OutputString("\tWindows Vista ");
 				OutputProductType(dwProductType);
 				break;
 			case VER_NT_DOMAIN_CONTROLLER:
 			case VER_NT_SERVER:
-				OutputString(_T("\tWindows Server 2008 "));
+				OutputString("\tWindows Server 2008 ");
 				OutputProductType(dwProductType);
 				break;
 			}
@@ -2754,12 +2605,12 @@ BOOL OutputWindowsVersion(
 		case 1:
 			switch (OSver.wProductType) {
 			case VER_NT_WORKSTATION:
-				OutputString(_T("\tWindows 7 "));
+				OutputString("\tWindows 7 ");
 				OutputProductType(dwProductType);
 				break;
 			case VER_NT_DOMAIN_CONTROLLER:
 			case VER_NT_SERVER:
-				OutputString(_T("\tWindows Server 2008 R2 "));
+				OutputString("\tWindows Server 2008 R2 ");
 				OutputProductType(dwProductType);
 				break;
 			}
@@ -2767,12 +2618,12 @@ BOOL OutputWindowsVersion(
 		case 2:
 			switch (OSver.wProductType) {
 			case VER_NT_WORKSTATION:
-				OutputString(_T("\tWindows 8 "));
+				OutputString("\tWindows 8 ");
 				OutputProductType(dwProductType);
 				break;
 			case VER_NT_DOMAIN_CONTROLLER:
 			case VER_NT_SERVER:
-				OutputString(_T("\tWindows Server 2012 "));
+				OutputString("\tWindows Server 2012 ");
 				OutputProductType(dwProductType);
 				break;
 			}
@@ -2780,12 +2631,12 @@ BOOL OutputWindowsVersion(
 		case 3:
 			switch (OSver.wProductType) {
 			case VER_NT_WORKSTATION:
-				OutputString(_T("\tWindows 8.1 "));
+				OutputString("\tWindows 8.1 ");
 				OutputProductType(dwProductType);
 				break;
 			case VER_NT_DOMAIN_CONTROLLER:
 			case VER_NT_SERVER:
-				OutputString(_T("\tWindows Server 2012 R2 "));
+				OutputString("\tWindows Server 2012 R2 ");
 				OutputProductType(dwProductType);
 				break;
 			}
@@ -2800,19 +2651,19 @@ BOOL OutputWindowsVersion(
 		case 0:
 			switch (OSver.wProductType) {
 			case VER_NT_WORKSTATION:
-				OutputString(_T("\tWindows 10 "));
+				OutputString("\tWindows 10 ");
 				OutputProductType(dwProductType);
 				break;
 			case VER_NT_DOMAIN_CONTROLLER:
 			case VER_NT_SERVER:
-				OutputString(_T("\tWindows Server 2016 "));
+				OutputString("\tWindows Server 2016 ");
 				OutputProductType(dwProductType);
 				break;
 			}
 			break;
 		}
 	}
-	OutputString(_T(" %s "), OSver.szCSDVersion);
+	OutputString(" %s ", OSver.szCSDVersion);
 	BOOL b64BitOS = TRUE;
 #ifndef _WIN64
 	if (!::IsWow64Process(GetCurrentProcess(), &b64BitOS)) {
@@ -2824,11 +2675,11 @@ BOOL OutputWindowsVersion(
 	if (b64BitOS) {
 		bit = 64;
 	}
-	OutputString(_T("%dbit\n"), bit);
+	OutputString("%dbit\n", bit);
 #ifdef _DEBUG
 	OutputString(
-		_T("\tMajorVersion: %lu, MinorVersion: %lu, BuildNumber: %lu, PlatformId: %lu\n")
-		_T("\tServicePackMajor: %u, ServicePackMinor: %u, SuiteMask: %u, ProductType: %u\n"),
+		"\tMajorVersion: %lu, MinorVersion: %lu, BuildNumber: %lu, PlatformId: %lu\n"
+		"\tServicePackMajor: %u, ServicePackMinor: %u, SuiteMask: %u, ProductType: %u\n",
 		OSver.dwMajorVersion, OSver.dwMinorVersion, OSver.dwBuildNumber, OSver.dwPlatformId,
 		OSver.wServicePackMajor, OSver.wServicePackMinor, OSver.wSuiteMask, OSver.wProductType);
 #endif
@@ -2863,7 +2714,7 @@ BOOL OutputMergedFile(
 	}
 	BYTE buf[2352] = {};
 	if (fread(buf, sizeof(BYTE), sizeof(buf), fpSrc2) < sizeof(buf)) {
-		OutputErrorString(_T("Failed to read: read size %zd [F:%s][L:%d]\n"), sizeof(buf), _T(__FUNCTION__), __LINE__);
+		OutputErrorString("Failed to read: read size %zd [F:%s][L:%d]\n", sizeof(buf), _T(__FUNCTION__), __LINE__);
 		FcloseAndNull(fpSrc1);
 		FcloseAndNull(fpSrc2);
 		FcloseAndNull(fpDst);
@@ -2874,7 +2725,7 @@ BOOL OutputMergedFile(
 
 	for (INT i = 0; i < nLBA; i++) {
 		if (fread(buf, sizeof(BYTE), sizeof(buf), fpSrc1) < sizeof(buf)) {
-			OutputErrorString(_T("Failed to read: read size %zd [F:%s][L:%d]\n"), sizeof(buf), _T(__FUNCTION__), __LINE__);
+			OutputErrorString("Failed to read: read size %zd [F:%s][L:%d]\n", sizeof(buf), _T(__FUNCTION__), __LINE__);
 			FcloseAndNull(fpSrc1);
 			FcloseAndNull(fpSrc2);
 			FcloseAndNull(fpDst);
@@ -2884,7 +2735,7 @@ BOOL OutputMergedFile(
 	}
 
 	if (fread(buf, sizeof(BYTE), sizeof(buf), fpSrc2) < sizeof(buf)) {
-		OutputErrorString(_T("Failed to read: read size %zd [F:%s][L:%d]\n"), sizeof(buf), _T(__FUNCTION__), __LINE__);
+		OutputErrorString("Failed to read: read size %zd [F:%s][L:%d]\n", sizeof(buf), _T(__FUNCTION__), __LINE__);
 		FcloseAndNull(fpSrc1);
 		FcloseAndNull(fpSrc2);
 		FcloseAndNull(fpDst);
@@ -2894,7 +2745,7 @@ BOOL OutputMergedFile(
 	while (!feof(fpSrc2) && !ferror(fpSrc2)) {
 		fwrite(buf, sizeof(BYTE), sizeof(buf), fpDst);
 		if (fread(buf, sizeof(BYTE), sizeof(buf), fpSrc2) < sizeof(buf)) {
-			OutputErrorString(_T("Failed to read: read size %zd [F:%s][L:%d]\n"), sizeof(buf), _T(__FUNCTION__), __LINE__);
+			OutputErrorString("Failed to read: read size %zd [F:%s][L:%d]\n", sizeof(buf), _T(__FUNCTION__), __LINE__);
 			FcloseAndNull(fpSrc1);
 			FcloseAndNull(fpSrc2);
 			FcloseAndNull(fpDst);
@@ -2905,7 +2756,7 @@ BOOL OutputMergedFile(
 	fseek(fpSrc1, -2352, SEEK_CUR);
 
 	if (fread(buf, sizeof(BYTE), sizeof(buf), fpSrc1) < sizeof(buf)) {
-		OutputErrorString(_T("Failed to read: read size %zd [F:%s][L:%d]\n"), sizeof(buf), _T(__FUNCTION__), __LINE__);
+		OutputErrorString("Failed to read: read size %zd [F:%s][L:%d]\n", sizeof(buf), _T(__FUNCTION__), __LINE__);
 		FcloseAndNull(fpSrc1);
 		FcloseAndNull(fpSrc2);
 		FcloseAndNull(fpDst);
@@ -2914,7 +2765,7 @@ BOOL OutputMergedFile(
 	while (!feof(fpSrc1) && !ferror(fpSrc1)) {
 		fwrite(buf, sizeof(BYTE), sizeof(buf), fpDst);
 		if (fread(buf, sizeof(BYTE), sizeof(buf), fpSrc1) < sizeof(buf)) {
-			OutputErrorString(_T("Failed to read: read size %zd [F:%s][L:%d]\n"), sizeof(buf), _T(__FUNCTION__), __LINE__);
+			OutputErrorString("Failed to read: read size %zd [F:%s][L:%d]\n", sizeof(buf), _T(__FUNCTION__), __LINE__);
 			FcloseAndNull(fpSrc1);
 			FcloseAndNull(fpSrc2);
 			FcloseAndNull(fpDst);
