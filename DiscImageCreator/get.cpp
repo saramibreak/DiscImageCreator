@@ -86,7 +86,7 @@ BOOL GetDriveOffsetAuto(
 		return FALSE;
 	}
 
-	CHAR szTmpProduct[DRIVE_PRODUCT_ID_SIZE] = {};
+	CHAR szTmpProduct[DRIVE_PRODUCT_ID_SIZE + 1] = {};
 	for (size_t src = 0, dst = 0; dst < DRIVE_PRODUCT_ID_SIZE; dst++) {
 		// remove multiple or last space
 		if (pDevice->szProductId[dst] == ' ') {
