@@ -36,7 +36,9 @@ VOID FixMainHeader(
 	if (nMainDataType == scrambled) {
 		size_t ofs = CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize;
 		memcpy(lpWorkBuf, pDiscPerSector->data.current + pDisc->MAIN.uiMainDataSlideSize, ofs);
-		memcpy(lpWorkBuf + ofs, pDiscPerSector->data.next, pDisc->MAIN.uiMainDataSlideSize);
+		if (pDiscPerSector->data.next) {
+			memcpy(lpWorkBuf + ofs, pDiscPerSector->data.next, pDisc->MAIN.uiMainDataSlideSize);
+		}
 	}
 	else {
 		memcpy(lpWorkBuf, pDiscPerSector->data.current, CD_RAW_SECTOR_SIZE);
