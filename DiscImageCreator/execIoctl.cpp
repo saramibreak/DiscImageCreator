@@ -62,13 +62,22 @@ BOOL StorageGetMediaTypesEx(
 	else {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 	}
-	DISK_GEOMETRY_EX geom = {};
+
+	size_t geomSize = sizeof(DISK_GEOMETRY_EX) + sizeof(DISK_PARTITION_INFO) + sizeof(DISK_DETECTION_INFO);
+	LPBYTE lpBuf = (LPBYTE)calloc(geomSize, sizeof(BYTE));
+	if (!lpBuf) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		return FALSE;
+	}
 	bRet = DeviceIoControl(pDevice->hDevice, IOCTL_DISK_GET_DRIVE_GEOMETRY_EX,
-		NULL, 0, &geom, sizeof(DISK_GEOMETRY_EX), &dwReturned, 0);
+		NULL, 0, lpBuf, geomSize, &dwReturned, 0);
 	if (bRet) {
-		OutputDiskGeometryEx(&geom);
-		*pDiskSize = (DWORD64)geom.DiskSize.QuadPart;
-		*pBytePerSector = geom.Geometry.BytesPerSector;
+		PDISK_GEOMETRY_EX pGeom = (PDISK_GEOMETRY_EX)lpBuf;
+//		OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("DISK_GEOMETRY"));
+//		OutputDiskGeometry((PDISK_GEOMETRY)lpBuf, 1);
+		OutputDiskGeometryEx(pGeom);
+		*pDiskSize = (DWORD64)pGeom->DiskSize.QuadPart;
+		*pBytePerSector = pGeom->Geometry.BytesPerSector;
 	}
 	return bRet;
 }
@@ -79,35 +88,36 @@ BOOL ReadDirectoryRecord(
 #else
 	int handle,
 #endif
-	LONG seekPos,
+	LARGE_INTEGER seekPos,
 	DWORD dwBytesPerSector,
 	PFAT pFat,
 	_TCHAR* pTab
 ) {
-	LPBYTE lpBuf = (LPBYTE)calloc(dwBytesPerSector, sizeof(BYTE));
+	DWORD dwReadSize = dwBytesPerSector * pFat->SecPerClus;
+	LPBYTE lpBuf = (LPBYTE)calloc(dwReadSize, sizeof(BYTE));
 	if (!lpBuf) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
-	SetFilePointer(handle, seekPos, NULL, FILE_BEGIN);
+	SetFilePointerEx(handle, seekPos, NULL, FILE_BEGIN);
 	BOOL bRet = FALSE;
 	DWORD dwBytesRead = 0;
 	UINT cnt = pFat->RootEntCnt;
 	if (cnt == 0) {
-		cnt = (UINT)dwBytesPerSector;
+		cnt = (UINT)dwReadSize;
 	}
 	BOOL bRoop = TRUE;
 	while (bRoop) {
-		bRet = ReadFile(handle, lpBuf, dwBytesPerSector, &dwBytesRead, 0);
+		bRet = ReadFile(handle, lpBuf, dwReadSize, &dwBytesRead, 0);
 		if (bRet) {
-			if (dwBytesPerSector == dwBytesRead) {
+			if (dwReadSize == dwBytesRead) {
 				for (UINT i = 0; i < cnt; i += 32) {
 					if (lpBuf[i] == 0) {
 						bRoop = FALSE;
 						break;
 					}
 					else if (lpBuf[i] == 0xe5) {
-						OutputVolDescLog("%sDeteled Entry\n", &pTab[0]);
+						OutputVolDescLog("%sDeleted Entry\n", &pTab[0]);
 					}
 					else if ((lpBuf[11 + i] & 0x0f) == 0x0f) {
 						WCHAR fname[_MAX_FNAME] = {};
@@ -140,7 +150,7 @@ BOOL ReadDirectoryRecord(
 						);
 					}
 					else {
-						WORD FstClusLO = MAKEWORD(lpBuf[26 + i], lpBuf[27 + i]);
+						DWORD FstClus = MAKEDWORD(MAKEWORD(lpBuf[26 + i], lpBuf[27 + i]), MAKEWORD(lpBuf[20 + i], lpBuf[21 + i]));
 						OutputVolDescLog(
 							"%s        DIR_Name: %.11" CHARWIDTH "s\n"
 							"%s        DIR_Attr: 0x%02x\n"
@@ -164,15 +174,19 @@ BOOL ReadDirectoryRecord(
 							, &pTab[0], MAKEWORD(lpBuf[20 + i], lpBuf[21 + i])
 							, &pTab[0], ((lpBuf[23 + i] >> 3) & 0x1f), ((lpBuf[23 + i] << 3) & 0x38) | ((lpBuf[22 + i] >> 5) & 0x07), (lpBuf[22 + i] & 0x1f) / 2
 							, &pTab[0], ((lpBuf[25 + i] >> 1) & 0x7f) + 1980, ((lpBuf[25 + i] << 3) & 0x08) | ((lpBuf[24 + i] >> 5) & 0x07), lpBuf[24 + i] & 0x1f
-							, &pTab[0], FstClusLO
+							, &pTab[0], MAKEWORD(lpBuf[26 + i], lpBuf[27 + i])
 							, &pTab[0], MAKEUINT(MAKEWORD(lpBuf[28 + i], lpBuf[29 + i]), MAKEWORD(lpBuf[30 + i], lpBuf[31 + i]))
 						);
-						if (FstClusLO != 0 && (lpBuf[11 + i] & 0x10) == 0x10 && lpBuf[i] != '.') {
-							LONG seekPosNext = (LONG)((pFat->DataStartSector + (FstClusLO - 2) * pFat->SecPerClus) * dwBytesPerSector);
-							size_t idx = _tcslen((CONST _TCHAR*)pTab[0]);
+						if (FstClus != 0 && (lpBuf[11 + i] & 0x10) == 0x10 && lpBuf[i] != '.') {
+							INT lNextReadSec = (INT)((pFat->DataStartSector + (FstClus - 2) * pFat->SecPerClus));
+							LARGE_INTEGER seekPosNext;
+							LONGLONG tmp = (LONGLONG)lNextReadSec;
+							seekPosNext.QuadPart = tmp * dwBytesPerSector;
+							size_t idx = _tcslen(&pTab[0]);
 							pTab[idx] = '\t';
-							OutputVolDescLog("%s" OUTPUT_DHYPHEN_PLUS_STR("DirectoryEntry"), &pTab[0]);
-							ReadDirectoryRecord(handle, (LONG)seekPosNext, dwBytesPerSector, pFat, pTab);
+							OutputVolDescLog("%s", &pTab[0]);
+							OutputVolDescWithLBALog1("DirectoryEntry", lNextReadSec);
+							ReadDirectoryRecord(handle, seekPosNext, dwBytesPerSector, pFat, pTab);
 							pTab[idx] = 0;
 						}
 					}
@@ -212,8 +226,11 @@ BOOL ReadFileSystem(
 				OutputFileAllocationTable(lpBuf, &fat);
 				_TCHAR szTab[256] = {};
 				szTab[0] = _T('\t');
-				OutputVolDescLog("%s" OUTPUT_DHYPHEN_PLUS_STR("DirectoryEntry"), szTab);
-				ReadDirectoryRecord(handle, (LONG)(fat.RootDirStartSector * dwBytesPerSector), dwBytesPerSector, &fat, szTab);
+				OutputVolDescLog("%s", szTab);
+				OutputVolDescWithLBALog1("DirectoryEntry", fat.RootDirStartSector);
+				LARGE_INTEGER seekPos;
+				seekPos.QuadPart = fat.RootDirStartSector * dwBytesPerSector;
+				ReadDirectoryRecord(handle, seekPos, dwBytesPerSector, &fat, szTab);
 			}
 			else if (IsDriverDescriptorRecord(lpBuf)) {
 				OutputDriveDescriptorRecord(lpBuf);
