@@ -3130,34 +3130,34 @@ VOID OutputMediaType(
 		OutputDiscLog("Format is unknown\n");
 		break;
 	case F5_1Pt2_512:
-		OutputDiscLog("5.25, 1.2MB, 512 bytes/sector\n");
+		OutputDiscLog("5.25\", 1.2MB, 512 bytes/sector\n");
 		break;
 	case F3_1Pt44_512:
-		OutputDiscLog("3.5, 1.44MB, 512 bytes/sector\n");
+		OutputDiscLog("3.5\", 1.44MB, 512 bytes/sector\n");
 		break;
 	case F3_2Pt88_512:
-		OutputDiscLog("3.5, 2.88MB, 512 bytes/sector\n");
+		OutputDiscLog("3.5\", 2.88MB, 512 bytes/sector\n");
 		break;
 	case F3_20Pt8_512:
-		OutputDiscLog("3.5, 20.8MB, 512 bytes/sector\n");
+		OutputDiscLog("3.5\", 20.8MB, 512 bytes/sector\n");
 		break;
 	case F3_720_512:
-		OutputDiscLog("3.5, 720KB, 512 bytes/sector\n");
+		OutputDiscLog("3.5\", 720KB, 512 bytes/sector\n");
 		break;
 	case F5_360_512:
-		OutputDiscLog("5.25, 360KB, 512 bytes/sector\n");
+		OutputDiscLog("5.25\", 360KB, 512 bytes/sector\n");
 		break;
 	case F5_320_512:
-		OutputDiscLog("5.25, 320KB, 512 bytes/sector\n");
+		OutputDiscLog("5.25\", 320KB, 512 bytes/sector\n");
 		break;
 	case F5_320_1024:
-		OutputDiscLog("5.25, 320KB, 1024 bytes/sector\n");
+		OutputDiscLog("5.25\", 320KB, 1024 bytes/sector\n");
 		break;
 	case F5_180_512:
-		OutputDiscLog("5.25, 180KB, 512 bytes/sector\n");
+		OutputDiscLog("5.25\", 180KB, 512 bytes/sector\n");
 		break;
 	case F5_160_512:
-		OutputDiscLog("5.25, 160KB, 512 bytes/sector\n");
+		OutputDiscLog("5.25\", 160KB, 512 bytes/sector\n");
 		break;
 	case RemovableMedia:
 		OutputDiscLog("Removable media other than floppy\n");
@@ -3166,46 +3166,456 @@ VOID OutputMediaType(
 		OutputDiscLog("Fixed hard disk media\n");
 		break;
 	case F3_120M_512:
-		OutputDiscLog("3.5, 120M Floppy\n");
+		OutputDiscLog("3.5\", 120M Floppy\n");
 		break;
 	case F3_640_512:
-		OutputDiscLog("3.5, 640KB, 512 bytes/sector\n");
+		OutputDiscLog("3.5\", 640KB, 512 bytes/sector\n");
 		break;
 	case F5_640_512:
-		OutputDiscLog("5.25, 640KB, 512 bytes/sector\n");
+		OutputDiscLog("5.25\", 640KB, 512 bytes/sector\n");
 		break;
 	case F5_720_512:
-		OutputDiscLog("5.25, 720KB, 512 bytes/sector\n");
+		OutputDiscLog("5.25\", 720KB, 512 bytes/sector\n");
 		break;
 	case F3_1Pt2_512:
-		OutputDiscLog("3.5, 1.2Mb, 512 bytes/sector\n");
+		OutputDiscLog("3.5\", 1.2Mb, 512 bytes/sector\n");
 		break;
 	case F3_1Pt23_1024:
-		OutputDiscLog("3.5, 1.23Mb, 1024 bytes/sector\n");
+		OutputDiscLog("3.5\", 1.23Mb, 1024 bytes/sector\n");
 		break;
 	case F5_1Pt23_1024:
-		OutputDiscLog("5.25, 1.23MB, 1024 bytes/sector\n");
+		OutputDiscLog("5.25\", 1.23MB, 1024 bytes/sector\n");
 		break;
 	case F3_128Mb_512:
-		OutputDiscLog("3.5 MO, 128Mb, 512 bytes/sector\n");
+		OutputDiscLog("3.5\" MO, 128Mb, 512 bytes/sector\n");
 		break;
 	case F3_230Mb_512:
-		OutputDiscLog("3.5 MO, 230Mb, 512 bytes/sector\n");
+		OutputDiscLog("3.5\" MO, 230Mb, 512 bytes/sector\n");
 		break;
 	case F8_256_128:
-		OutputDiscLog("8, 256KB, 128 bytes/sector\n");
+		OutputDiscLog("8\", 256KB, 128 bytes/sector\n");
 		break;
 	case F3_200Mb_512:
-		OutputDiscLog("3.5, 200M Floppy (HiFD)\n");
+		OutputDiscLog("3.5\", 200M Floppy (HiFD)\n");
 		break;
 	case F3_240M_512:
-		OutputDiscLog("3.5, 240Mb Floppy (HiFD)\n");
+		OutputDiscLog("3.5\", 240Mb Floppy (HiFD)\n");
 		break;
 	case F3_32M_512:
-		OutputDiscLog("3.5, 32Mb Floppy\n");
+		OutputDiscLog("3.5\", 32Mb Floppy\n");
 		break;
 	default:
-		OutputDiscLog("Unknown media type\n");
+		OutputDiscLog("Unknown media type: %d\n", mType);
+		break;
+	}
+}
+
+VOID OutputStorageMediaType(
+	STORAGE_MEDIA_TYPE mType
+) {
+	switch (mType) {
+	case DDS_4mm:
+		OutputDiscLog("Tape - DAT DDS1,2,... (all vendors)\n");
+		break;
+	case MiniQic:
+		OutputDiscLog("Tape - miniQIC Tape\n");
+		break;
+	case Travan:
+		OutputDiscLog("Tape - Travan TR-1,2,3,...\n");
+		break;
+	case QIC:
+		OutputDiscLog("Tape - QIC\n");
+		break;
+	case MP_8mm:
+		OutputDiscLog("Tape - 8mm Exabyte Metal Particle\n");
+		break;
+	case AME_8mm:
+		OutputDiscLog("Tape - 8mm Exabyte Advanced Metal Evap\n");
+		break;
+	case AIT1_8mm:
+		OutputDiscLog("Tape - 8mm Sony AIT\n");
+		break;
+	case DLT:
+		OutputDiscLog("Tape - DLT Compact IIIxt, IV\n");
+		break;
+	case NCTP:
+		OutputDiscLog("Tape - Philips NCTP\n");
+		break;
+	case IBM_3480:
+		OutputDiscLog("Tape - IBM 3480\n");
+		break;
+	case IBM_3490E:
+		OutputDiscLog("Tape - IBM 3490E\n");
+		break;
+	case IBM_Magstar_3590:
+		OutputDiscLog("Tape - IBM Magstar 3590\n");
+		break;
+	case IBM_Magstar_MP:
+		OutputDiscLog("Tape - IBM Magstar MP\n");
+		break;
+	case STK_DATA_D3:
+		OutputDiscLog("Tape - STK Data D3\n");
+		break;
+	case SONY_DTF:
+		OutputDiscLog("Tape - Sony DTF\n");
+		break;
+	case DV_6mm:
+		OutputDiscLog("Tape - 6mm Digital Video\n");
+		break;
+	case DMI:
+		OutputDiscLog("Tape - Exabyte DMI and compatibles\n");
+		break;
+	case SONY_D2:
+		OutputDiscLog("Tape - Sony D2S and D2L\n");
+		break;
+	case CLEANER_CARTRIDGE:
+		OutputDiscLog("Cleaner - All Drive types that support Drive Cleaners\n");
+		break;
+	case CD_ROM:
+		OutputDiscLog("Opt_Disk - CD\n");
+		break;
+	case CD_R:
+		OutputDiscLog("Opt_Disk - CD-Recordable (Write Once)\n");
+		break;
+	case CD_RW:
+		OutputDiscLog("Opt_Disk - CD-Rewriteable\n");
+		break;
+	case DVD_ROM:
+		OutputDiscLog("Opt_Disk - DVD-ROM\n");
+		break;
+	case DVD_R:
+		OutputDiscLog("Opt_Disk - DVD-Recordable (Write Once)\n");
+		break;
+	case DVD_RW:
+		OutputDiscLog("Opt_Disk - DVD-Rewriteable\n");
+		break;
+	case MO_3_RW:
+		OutputDiscLog("Opt_Disk - 3.5\" Rewriteable MO Disk\n");
+		break;
+	case MO_5_WO:
+		OutputDiscLog("Opt_Disk - MO 5.25\" Write Once\n");
+		break;
+	case MO_5_RW:
+		OutputDiscLog("Opt_Disk - MO 5.25\" Rewriteable (not LIMDOW)\n");
+		break;
+	case MO_5_LIMDOW:
+		OutputDiscLog("Opt_Disk - MO 5.25\" Rewriteable (LIMDOW)\n");
+		break;
+	case PC_5_WO:
+		OutputDiscLog("Opt_Disk - Phase Change 5.25\" Write Once Optical\n");
+		break;
+	case PC_5_RW:
+		OutputDiscLog("Opt_Disk - Phase Change 5.25\" Rewriteable\n");
+		break;
+	case PD_5_RW:
+		OutputDiscLog("Opt_Disk - PhaseChange Dual Rewriteable\n");
+		break;
+	case ABL_5_WO:
+		OutputDiscLog("Opt_Disk - Ablative 5.25\" Write Once Optical\n");
+		break;
+	case PINNACLE_APEX_5_RW:
+		OutputDiscLog("Opt_Disk - Pinnacle Apex 4.6GB Rewriteable Optical\n");
+		break;
+	case SONY_12_WO:
+		OutputDiscLog("Opt_Disk - Sony 12\" Write Once\n");
+		break;
+	case PHILIPS_12_WO:
+		OutputDiscLog("Opt_Disk - Philips/LMS 12\" Write Once\n");
+		break;
+	case HITACHI_12_WO:
+		OutputDiscLog("Opt_Disk - Hitachi 12\" Write Once\n");
+		break;
+	case CYGNET_12_WO:
+		OutputDiscLog("Opt_Disk - Cygnet/ATG 12\" Write Once\n");
+		break;
+	case KODAK_14_WO:
+		OutputDiscLog("Opt_Disk - Kodak 14\" Write Once\n");
+		break;
+	case MO_NFR_525:
+		OutputDiscLog("Opt_Disk - Near Field Recording (Terastor)\n");
+		break;
+	case NIKON_12_RW:
+		OutputDiscLog("Opt_Disk - Nikon 12\" Rewriteable\n");
+		break;
+	case IOMEGA_ZIP:
+		OutputDiscLog("Mag_Disk - Iomega Zip\n");
+		break;
+	case IOMEGA_JAZ:
+		OutputDiscLog("Mag_Disk - Iomega Jaz\n");
+		break;
+	case SYQUEST_EZ135:
+		OutputDiscLog("Mag_Disk - Syquest EZ135\n");
+		break;
+	case SYQUEST_EZFLYER:
+		OutputDiscLog("Mag_Disk - Syquest EzFlyer\n");
+		break;
+	case SYQUEST_SYJET:
+		OutputDiscLog("Mag_Disk - Syquest SyJet\n");
+		break;
+	case AVATAR_F2:
+		OutputDiscLog("Mag_Disk - 2.5\" Floppy\n");
+		break;
+	case MP2_8mm:
+		OutputDiscLog("Tape - 8mm Hitachi\n");
+		break;
+	case DST_S:
+		OutputDiscLog("Ampex DST Small Tapes\n");
+		break;
+	case DST_M:
+		OutputDiscLog("Ampex DST Medium Tapes\n");
+		break;
+	case DST_L:
+		OutputDiscLog("Ampex DST Large Tapes\n");
+		break;
+	case VXATape_1:
+		OutputDiscLog("Ecrix 8mm Tape 1\n");
+		break;
+	case VXATape_2:
+		OutputDiscLog("Ecrix 8mm Tape 2\n");
+		break;
+	case STK_9840:
+		OutputDiscLog("STK 9840\n");
+		break;
+	case LTO_Ultrium:
+		OutputDiscLog("IBM, HP, Seagate LTO Ultrium\n");
+		break;
+	case LTO_Accelis:
+		OutputDiscLog("IBM, HP, Seagate LTO Accelis\n");
+		break;
+	case DVD_RAM:
+		OutputDiscLog("Opt_Disk - DVD-RAM\n");
+		break;
+	case AIT_8mm:
+		OutputDiscLog("AIT2 or higher\n");
+		break;
+	case ADR_1:
+		OutputDiscLog("OnStream ADR Mediatypes 1\n");
+		break;
+	case ADR_2:
+		OutputDiscLog("OnStream ADR Mediatypes 2\n");
+		break;
+	case STK_9940:
+		OutputDiscLog("STK 9940\n");
+		break;
+	case SAIT:
+		OutputDiscLog("SAIT Tapes\n");
+		break;
+	case VXATape:
+		OutputDiscLog("VXA (Ecrix 8mm) Tape\n");
+		break;
+	default:
+		OutputDiscLog("Unknown storage media type: %d\n", mType);
+		break;
+	}
+}
+
+VOID OutputDeviceType(
+	DWORD deviceType
+) {
+	switch (deviceType) {
+	case FILE_DEVICE_BEEP:
+		OutputDiscLog("BEEP\n");
+		break;
+	case FILE_DEVICE_CD_ROM:
+		OutputDiscLog("CD_ROM\n");
+		break;
+	case FILE_DEVICE_CD_ROM_FILE_SYSTEM:
+		OutputDiscLog("CD_ROM_FILE_SYSTEM\n");
+		break;
+	case FILE_DEVICE_CONTROLLER:
+		OutputDiscLog("CONTROLLER\n");
+		break;
+	case FILE_DEVICE_DATALINK:
+		OutputDiscLog("DATALINK\n");
+		break;
+	case FILE_DEVICE_DFS:
+		OutputDiscLog("DFS\n");
+		break;
+	case FILE_DEVICE_DISK:
+		OutputDiscLog("DISK\n");
+		break;
+	case FILE_DEVICE_DISK_FILE_SYSTEM:
+		OutputDiscLog("DISK_FILE_SYSTEM\n");
+		break;
+	case FILE_DEVICE_FILE_SYSTEM:
+		OutputDiscLog("FILE_SYSTEM\n");
+		break;
+	case FILE_DEVICE_INPORT_PORT:
+		OutputDiscLog("INPORT_PORT\n");
+		break;
+	case FILE_DEVICE_KEYBOARD:
+		OutputDiscLog("KEYBOARD\n");
+		break;
+	case FILE_DEVICE_MAILSLOT:
+		OutputDiscLog("MAILSLOT\n");
+		break;
+	case FILE_DEVICE_MIDI_IN:
+		OutputDiscLog("MIDI_IN\n");
+		break;
+	case FILE_DEVICE_MIDI_OUT:
+		OutputDiscLog("MIDI_OUT\n");
+		break;
+	case FILE_DEVICE_MOUSE:
+		OutputDiscLog("MOUSE\n");
+		break;
+	case FILE_DEVICE_MULTI_UNC_PROVIDER:
+		OutputDiscLog("MULTI_UNC_PROVIDER\n");
+		break;
+	case FILE_DEVICE_NAMED_PIPE:
+		OutputDiscLog("NAMED_PIPE\n");
+		break;
+	case FILE_DEVICE_NETWORK:
+		OutputDiscLog("NETWORK\n");
+		break;
+	case FILE_DEVICE_NETWORK_BROWSER:
+		OutputDiscLog("NETWORK_BROWSER\n");
+		break;
+	case FILE_DEVICE_NETWORK_FILE_SYSTEM:
+		OutputDiscLog("NETWORK_FILE_SYSTEM\n");
+		break;
+	case FILE_DEVICE_NULL:
+		OutputDiscLog("NULL\n");
+		break;
+	case FILE_DEVICE_PARALLEL_PORT:
+		OutputDiscLog("PARALLEL_PORT\n");
+		break;
+	case FILE_DEVICE_PHYSICAL_NETCARD:
+		OutputDiscLog("PHYSICAL_NETCARD\n");
+		break;
+	case FILE_DEVICE_PRINTER:
+		OutputDiscLog("PRINTER\n");
+		break;
+	case FILE_DEVICE_SCANNER:
+		OutputDiscLog("SCANNER\n");
+		break;
+	case FILE_DEVICE_SERIAL_MOUSE_PORT:
+		OutputDiscLog("SERIAL_MOUSE_PORT\n");
+		break;
+	case FILE_DEVICE_SERIAL_PORT:
+		OutputDiscLog("SERIAL_PORT\n");
+		break;
+	case FILE_DEVICE_SCREEN:
+		OutputDiscLog("SCREEN\n");
+		break;
+	case FILE_DEVICE_SOUND:
+		OutputDiscLog("SOUND\n");
+		break;
+	case FILE_DEVICE_STREAMS:
+		OutputDiscLog("STREAMS\n");
+		break;
+	case FILE_DEVICE_TAPE:
+		OutputDiscLog("TAPE\n");
+		break;
+	case FILE_DEVICE_TAPE_FILE_SYSTEM:
+		OutputDiscLog("TAPE_FILE_SYSTEM\n");
+		break;
+	case FILE_DEVICE_TRANSPORT:
+		OutputDiscLog("TRANSPORT\n");
+		break;
+	case FILE_DEVICE_UNKNOWN:
+		OutputDiscLog("UNKNOWN\n");
+		break;
+	case FILE_DEVICE_VIDEO:
+		OutputDiscLog("VIDEO\n");
+		break;
+	case FILE_DEVICE_VIRTUAL_DISK:
+		OutputDiscLog("VIRTUAL_DISK\n");
+		break;
+	case FILE_DEVICE_WAVE_IN:
+		OutputDiscLog("WAVE_IN\n");
+		break;
+	case FILE_DEVICE_WAVE_OUT:
+		OutputDiscLog("WAVE_OUT\n");
+		break;
+	case FILE_DEVICE_8042_PORT:
+		OutputDiscLog("8042_PORT\n");
+		break;
+	case FILE_DEVICE_NETWORK_REDIRECTOR:
+		OutputDiscLog("NETWORK_REDIRECTOR\n");
+		break;
+	case FILE_DEVICE_BATTERY:
+		OutputDiscLog("BATTERY\n");
+		break;
+	case FILE_DEVICE_BUS_EXTENDER:
+		OutputDiscLog("BUS_EXTENDER\n");
+		break;
+	case FILE_DEVICE_MODEM:
+		OutputDiscLog("MODEM\n");
+		break;
+	case FILE_DEVICE_VDM:
+		OutputDiscLog("VDM\n");
+		break;
+	case FILE_DEVICE_MASS_STORAGE:
+		OutputDiscLog("MASS_STORAGE\n");
+		break;
+	case FILE_DEVICE_SMB:
+		OutputDiscLog("SMB\n");
+		break;
+	case FILE_DEVICE_KS:
+		OutputDiscLog("KS\n");
+		break;
+	case FILE_DEVICE_CHANGER:
+		OutputDiscLog("CHANGER\n");
+		break;
+	case FILE_DEVICE_SMARTCARD:
+		OutputDiscLog("SMARTCARD\n");
+		break;
+	case FILE_DEVICE_ACPI:
+		OutputDiscLog("ACPI\n");
+		break;
+	case FILE_DEVICE_DVD:
+		OutputDiscLog("DVD\n");
+		break;
+	case FILE_DEVICE_FULLSCREEN_VIDEO:
+		OutputDiscLog("FULLSCREEN_VIDEO\n");
+		break;
+	case FILE_DEVICE_DFS_FILE_SYSTEM:
+		OutputDiscLog("DFS_FILE_SYSTEM\n");
+		break;
+	case FILE_DEVICE_DFS_VOLUME:
+		OutputDiscLog("DFS_VOLUME\n");
+		break;
+	case FILE_DEVICE_SERENUM:
+		OutputDiscLog("SERENUM\n");
+		break;
+	case FILE_DEVICE_TERMSRV:
+		OutputDiscLog("TERMSRV\n");
+		break;
+	case FILE_DEVICE_KSEC:
+		OutputDiscLog("KSEC\n");
+		break;
+	case FILE_DEVICE_FIPS:
+		OutputDiscLog("FIPS\n");
+		break;
+	case FILE_DEVICE_INFINIBAND:
+		OutputDiscLog("INFINIBAND\n");
+		break;
+	case FILE_DEVICE_VMBUS:
+		OutputDiscLog("VMBUS\n");
+		break;
+	case FILE_DEVICE_CRYPT_PROVIDER:
+		OutputDiscLog("CRYPT_PROVIDER\n");
+		break;
+	case FILE_DEVICE_WPD:
+		OutputDiscLog("WPD\n");
+		break;
+	case FILE_DEVICE_BLUETOOTH:
+		OutputDiscLog("BLUETOOTH\n");
+		break;
+	case FILE_DEVICE_MT_COMPOSITE:
+		OutputDiscLog("MT_COMPOSITE\n");
+		break;
+	case FILE_DEVICE_MT_TRANSPORT:
+		OutputDiscLog("MT_TRANSPORT\n");
+		break;
+	case FILE_DEVICE_BIOMETRIC:
+		OutputDiscLog("BIOMETRIC\n");
+		break;
+	case FILE_DEVICE_PMI:
+		OutputDiscLog("PMI\n");
+		break;
+	default:
+		OutputDiscLog("Unknown Device: %ld\n", deviceType);
 		break;
 	}
 }
@@ -3251,7 +3661,7 @@ VOID OutputDiskGeometryEx(
 		OUTPUT_DHYPHEN_PLUS_STR("DISK_GEOMETRY_EX")
 		"\t            DiskSize: %llu (Bytes)\n"
 		"\t SizeOfPartitionInfo: %lu\n"
-		"\t      PartitionStyle: %u\n"
+		"\t      PartitionStyle: %u "
 		, pGeom->DiskSize.QuadPart
 		, partition->SizeOfPartitionInfo
 		, partition->PartitionStyle
@@ -3261,6 +3671,7 @@ VOID OutputDiskGeometryEx(
 		case PARTITION_STYLE_MBR:
 #ifdef _WIN32
 			OutputDiscLog(
+				"(MBR)\n"
 				"\t           Signiture: %lu\n"
 				"\t            CheckSum: %lu\n"
 				, partition->Mbr.Signature
@@ -3268,6 +3679,7 @@ VOID OutputDiskGeometryEx(
 			);
 #else
 			OutputDiscLog(
+				"(MBR)\n"
 				"\t           Signiture: %lu\n"
 				"\t            CheckSum: %lu\n"
 				, partition->DUMMYUNIONNAME.Mbr.Signature
@@ -3278,6 +3690,7 @@ VOID OutputDiskGeometryEx(
 		case PARTITION_STYLE_GPT:
 #ifdef _WIN32
 			OutputDiscLog(
+				"(GPT)\n"
 				"\t        DiskId.Data1: %lu\n"
 				"\t        DiskId.Data2: %u\n"
 				"\t        DiskId.Data3: %u\n"
@@ -3292,6 +3705,7 @@ VOID OutputDiskGeometryEx(
 			);
 #else
 			OutputDiscLog(
+				"(GPT)\n"
 				"\t        DiskId.Data1: %lu\n"
 				"\t        DiskId.Data2: %u\n"
 				"\t        DiskId.Data3: %u\n"
@@ -3307,24 +3721,29 @@ VOID OutputDiskGeometryEx(
 #endif
 			break;
 		case PARTITION_STYLE_RAW:
+			OutputDiscLog("(GPT)\n");
 			break;
 		default:
+			OutputDiscLog("(Unknown)\n");
 			break;
 		}
-		OutputDiscLog(
-			"\t    SizeOfDetectInfo: %lu\n"
-			"\t       DetectionType: %u\n"
-			, detection->SizeOfDetectInfo
-			, detection->DetectionType
-		);
 	}
+
+	OutputDiscLog(
+		"\t    SizeOfDetectInfo: %lu\n"
+		"\t       DetectionType: %u "
+		, detection->SizeOfDetectInfo
+		, detection->DetectionType
+	);
 	if (detection->SizeOfDetectInfo) {
 		switch (detection->DetectionType) {
 		case DetectNone:
+			OutputDiscLog("(None)\n");
 			break;
 		case DetectInt13:
 #ifdef _WIN32
 			OutputDiscLog(
+				"(Int13)\n"
 				"\t         DriveSelect: %u\n"
 				"\t        MaxCylinders: %lu\n"
 				"\t     SectorsPerTrack: %u\n"
@@ -3338,6 +3757,7 @@ VOID OutputDiskGeometryEx(
 			);
 #else
 			OutputDiscLog(
+				"(Int13)\n"
 				"\t         DriveSelect: %u\n"
 				"\t        MaxCylinders: %lu\n"
 				"\t     SectorsPerTrack: %u\n"
@@ -3354,6 +3774,7 @@ VOID OutputDiskGeometryEx(
 		case DetectExInt13:
 #ifdef _WIN32
 			OutputDiscLog(
+				"(ExInt13)\n"
 				"\t        ExBufferSize: %u\n"
 				"\t             ExFlags: %u\n"
 				"\t         ExCylinders: %lu\n"
@@ -3373,6 +3794,7 @@ VOID OutputDiskGeometryEx(
 			);
 #else
 			OutputDiscLog(
+				"(ExInt13)\n"
 				"\t        ExBufferSize: %u\n"
 				"\t             ExFlags: %u\n"
 				"\t         ExCylinders: %lu\n"
@@ -3393,6 +3815,7 @@ VOID OutputDiskGeometryEx(
 #endif
 			break;
 		default:
+			OutputDiscLog("(Unknown)\n");
 			break;
 		}
 	}
@@ -3404,11 +3827,15 @@ VOID OutputRemovableDiskInfo(
 ) {
 	OutputDiscLog(
 		OUTPUT_DHYPHEN_PLUS_STR("DEVICE_MEDIA_INFO")
-		"\t          DeviceType: %ld\n"
+		"\t          DeviceType: "
+	);
+	OutputDeviceType(pMedia->DeviceType);
+	OutputDiscLog(
 		"\t      MediaInfoCount: %ld\n"
-		, pMedia->DeviceType, pMedia->MediaInfoCount
+		, pMedia->MediaInfoCount
 	);
 	for (DWORD i = 0; i < pMedia->MediaInfoCount; i++) {
+		// TODO: pMedia->MediaInfo[i].DeviceSpecific.TapeInfo
 		OutputDiscLog(
 			"\t           Cylinders: %ld\n"
 			"\t           MediaType: "
@@ -3419,22 +3846,40 @@ VOID OutputRemovableDiskInfo(
 			OutputMediaType((MEDIA_TYPE)mType);
 		}
 		else {
-			// TODO
-			OutputDiscLog("Other media\n");
+			OutputStorageMediaType(mType);
 		}
 
+		DWORD mc = pMedia->MediaInfo[i].DeviceSpecific.RemovableDiskInfo.MediaCharacteristics;
 		OutputDiscLog(
 			"\t   TracksPerCylinder: %ld\n"
 			"\t     SectorsPerTrack: %ld\n"
 			"\t      BytesPerSector: %ld\n"
 			"\t    NumberMediaSides: %ld\n"
-			"\tMediaCharacteristics: %lx\n"
+			"\tMediaCharacteristics:"
 			, pMedia->MediaInfo[i].DeviceSpecific.RemovableDiskInfo.TracksPerCylinder
 			, pMedia->MediaInfo[i].DeviceSpecific.RemovableDiskInfo.SectorsPerTrack
 			, pMedia->MediaInfo[i].DeviceSpecific.RemovableDiskInfo.BytesPerSector
 			, pMedia->MediaInfo[i].DeviceSpecific.RemovableDiskInfo.NumberMediaSides
-			, pMedia->MediaInfo[i].DeviceSpecific.RemovableDiskInfo.MediaCharacteristics
 		);
+		if ((mc & MEDIA_ERASEABLE) == MEDIA_ERASEABLE) {
+			OutputDiscLog(" Eraseable");
+		}
+		if ((mc & MEDIA_WRITE_ONCE) == MEDIA_WRITE_ONCE) {
+			OutputDiscLog(" WriteOnce");
+		}
+		if ((mc & MEDIA_READ_ONLY) == MEDIA_READ_ONLY) {
+			OutputDiscLog(" ReadOnly");
+		}
+		if ((mc & MEDIA_READ_WRITE) == MEDIA_READ_WRITE) {
+			OutputDiscLog(" ReadWrite");
+		}
+		if ((mc & MEDIA_WRITE_PROTECTED) == MEDIA_WRITE_PROTECTED) {
+			OutputDiscLog(" WriteProtected");
+		}
+		if ((mc & MEDIA_CURRENTLY_MOUNTED) == MEDIA_CURRENTLY_MOUNTED) {
+			OutputDiscLog(" CurrentlyMounted");
+		}
+		OutputDiscLog("\n");
 	}
 }
 
