@@ -44,11 +44,13 @@ VOID FixMainHeader(
 		memcpy(lpWorkBuf, pDiscPerSector->data.current, CD_RAW_SECTOR_SIZE);
 	}
 
+	BOOL bChangedBuf = FALSE;
 	if (pDisc->PROTECT.byExist == datel || pDisc->PROTECT.byExist == datelAlt) {
 		if (lpWorkBuf[15] != 0x62) {
 			OutputMainErrorWithLBALog("Original Mode[0x%02x] -> Fixed Mode[0x%02x]\n"
 				, nLBA, pDiscPerSector->byTrackNum, lpWorkBuf[15], pDiscPerSector->mainHeader.current[15]);
 			lpWorkBuf[15] = pDiscPerSector->mainHeader.current[15];
+			bChangedBuf = TRUE;
 		}
 	}
 	BOOL bHeader = IsValidMainDataHeader(lpWorkBuf);
@@ -67,12 +69,25 @@ VOID FixMainHeader(
 						"Sync was generated\n", nLBA, pDiscPerSector->byTrackNum);
 					OutputCDMain(fileMainError, lpWorkBuf, nLBA, MAINHEADER_MODE1_SIZE);
 					bHeader = TRUE;
+					bChangedBuf = TRUE;
 					FlushLog();
 				}
 			}
 		}
 	}
 
+	if (bChangedBuf) {
+		if (nMainDataType == scrambled) {
+			size_t ofs = CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize;
+			memcpy(pDiscPerSector->data.current + pDisc->MAIN.uiMainDataSlideSize, lpWorkBuf, ofs);
+			if (pDiscPerSector->data.next) {
+				memcpy(pDiscPerSector->data.next, lpWorkBuf + ofs, pDisc->MAIN.uiMainDataSlideSize);
+			}
+		}
+		else {
+			memcpy(pDiscPerSector->data.current, lpWorkBuf, CD_RAW_SECTOR_SIZE);
+		}
+	}
 	memcpy(pDiscPerSector->mainHeader.current, lpWorkBuf, MAINHEADER_MODE1_SIZE);
 	UpdateTmpMainHeader(pDiscPerSector, nMainDataType);
 
