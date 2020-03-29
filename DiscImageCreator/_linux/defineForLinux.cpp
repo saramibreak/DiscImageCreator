@@ -388,6 +388,14 @@ off_t SetFilePointer(int fd, off_t pos, void* a, int origin)
 	return lseek(fd, pos, origin);
 }
 
+
+off_t SetFilePointerEx(int fd, LARGE_INTEGER pos, void* a, int origin)
+{
+	UNREFERENCED_PARAMETER(a);
+	off64_t ofs = pos.QuadPart;
+	return lseek64(fd, ofs, origin);
+}
+
 unsigned int Sleep(unsigned long seconds)
 {
 	return sleep((unsigned int)seconds / 1000);
