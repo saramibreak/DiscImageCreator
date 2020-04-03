@@ -346,7 +346,7 @@ extern "C" {
 			UCHAR Unicode : 1;
 			union {
 				UCHAR Text[12];
-				WCHAR WText[6];
+//				WCHAR WText[6];
 			};
 			UCHAR CRC[2];
 		} CDROM_TOC_CD_TEXT_DATA_BLOCK, *PCDROM_TOC_CD_TEXT_DATA_BLOCK;
