@@ -620,3 +620,25 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - fixed: splitted the subs indexes CUE
 - improved: TOCATIP logs
 - improved: Reading erroneous directory record (support [PSX] Tokimeki Memorial - forever with you, [PSX] Aitakute... - Your Smiles in My Heart)
+
+*2020-04-03
+- added: output ApplePartitionMap log
+- added: /p is supported by PX-W4012 and some old plextor
+- added: /vnx flag for videonow xp
+- added: TOC reading for slot mechanism drive when swap command is used
+- added: output DeviceType, StorageMediaType when disk command is used
+- changed: /p and /c2 can't use together
+- changed: PX-708A 1.04 is enabled to use
+- improved: TOC_ATIP log
+- fixed: misdetected leadin sector
+- fixed: misdetected last sector of data track on subchannel
+- fixed: do not check month and day of directory record for NERO___BURNING_ROM
+- fixed: UNICODE build
+- fixed: sector length of DVD-RAM, DVD+R
+- fixed: TOC_INFO of CDTEXT
+- fixed: when sub or mds command is used and valid extention is omitted, its command fails to execute
+- fixed: swap command didn't work from 20191223
+- fixed: get some drive offset
+- fixed: Log of DISK_GEOMETRY_EX and FAT32
+- fixed: PS2 unlicensed discs can't dump from 20191223
+- fixed: Linux can't dump CD with CDTEXT
