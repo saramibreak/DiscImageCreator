@@ -870,6 +870,7 @@ BOOL SetStreaming(
 	PDEVICE pDevice,
 	DWORD dwDiscSpeedNum
 ) {
+	UNREFERENCED_PARAMETER(dwDiscSpeedNum);
 	CDB::_SET_STREAMING cdb = {};
 	cdb.OperationCode = SCSIOP_SET_STREAMING;
 	_declspec(align(4)) PERFORMANCE_DESCRIPTOR pd = {};
@@ -883,7 +884,7 @@ BOOL SetStreaming(
 	REVERSE_BYTES(&pd.ReadSize, &nRSize);
 	REVERSE_BYTES(&pd.WriteSize, &nWSize);
 
-	INT nTime = 0x3e8;
+//	INT nTime = 0x3e8;
 //	REVERSE_BYTES(&pd.ReadTime, &nTime);
 //	REVERSE_BYTES(&pd.WriteTime, &nTime);
 #endif
