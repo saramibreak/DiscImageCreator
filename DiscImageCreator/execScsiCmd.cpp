@@ -481,6 +481,9 @@ BOOL ReadTOCText(
 	}
 
 	WORD wTocTextEntries = (WORD)(wTocTextEntriesAll / sizeof(CDROM_TOC_CD_TEXT_DATA_BLOCK));
+#ifndef _WIN32
+//	OutputDiscLog("sizeof(CDROM_TOC_CD_TEXT_DATA_BLOCK): %u\n", sizeof(CDROM_TOC_CD_TEXT_DATA_BLOCK));
+#endif
 	WriteCcdForCDText(wTocTextEntries, fpCcd);
 
 	WORD wTocTextLenFix = (WORD)(wTocTextEntriesAll + sizeof(CDROM_TOC_CD_TEXT_DATA));
@@ -496,8 +499,8 @@ BOOL ReadTOCText(
 	}
 #ifdef _DEBUG
 	OutputDiscLog(
-		"TocTextLen: %u, TocTextEntriesAll: %u, TocTextEntries: %u, TocTextLenFix: %u\n",
-		wTocTextLen, wTocTextEntriesAll, wTocTextEntries, wTocTextLenFix);
+		"TocTextLen: %u, TocTextEntriesAll: %u, TocTextEntries: %u, TocTextLenFix: %u\n"
+		, wTocTextLen, wTocTextEntriesAll, wTocTextEntries, wTocTextLenFix);
 #endif
 	REVERSE_BYTES_SHORT(&cdb.AllocationLength, &wTocTextLenFix);
 	LPCH pTmpText = NULL;
@@ -862,6 +865,71 @@ BOOL SetDiscSpeed(
 	return TRUE;
 }
 
+BOOL SetStreaming(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	DWORD dwDiscSpeedNum
+) {
+	CDB::_SET_STREAMING cdb = {};
+	cdb.OperationCode = SCSIOP_SET_STREAMING;
+	_declspec(align(4)) PERFORMANCE_DESCRIPTOR pd = {};
+	size_t size = sizeof(PERFORMANCE_DESCRIPTOR);
+	REVERSE_BYTES_SHORT(&cdb.ParameterListLength, &size);
+#if 1
+	INT nLBA = 0x7FFFFFFF;
+	REVERSE_BYTES(&pd.EndLba, &nLBA);
+	INT nRSize = 0;
+	INT nWSize = 0;
+	REVERSE_BYTES(&pd.ReadSize, &nRSize);
+	REVERSE_BYTES(&pd.WriteSize, &nWSize);
+
+	INT nTime = 0x3e8;
+//	REVERSE_BYTES(&pd.ReadTime, &nTime);
+//	REVERSE_BYTES(&pd.WriteTime, &nTime);
+#endif
+#ifdef _WIN32
+	INT direction = SCSI_IOCTL_DATA_OUT;
+#else
+	INT direction = SG_DXFER_FROM_DEV;
+#endif
+	BYTE byScsiStatus = 0;
+	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH
+		, &pd, direction, size, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+		return FALSE;
+	}
+	OutputDriveLog(
+		OUTPUT_DHYPHEN_PLUS_STR("SetStreaming")
+		"\t        RandomAccess: %s\n"
+		"\t               Exact: %s\n"
+		"\t     RestoreDefaults: %s\n"
+		"\tWriteRotationControl: %s\n"
+		"\t            StartLba: %d (%x)\n"
+		"\t              EndLba: %d (%x)\n"
+		"\t            ReadSize: %d (%x)\n"
+		"\t            ReadTime: %d (%x)\n"
+		"\t           WriteSize: %d (%x)\n"
+		"\t           WriteTime: %d (%x)\n"
+		, BOOLEAN_TO_STRING_YES_NO(pd.RandomAccess)
+		, BOOLEAN_TO_STRING_YES_NO(pd.Exact)
+		, BOOLEAN_TO_STRING_YES_NO(pd.RestoreDefaults)
+		, BOOLEAN_TO_STRING_YES_NO(pd.WriteRotationControl)
+		, MAKEUINT(MAKEWORD(pd.StartLba[3], pd.StartLba[2]), MAKEWORD(pd.StartLba[1], pd.StartLba[0]))
+		, MAKEUINT(MAKEWORD(pd.StartLba[3], pd.StartLba[2]), MAKEWORD(pd.StartLba[1], pd.StartLba[0]))
+		, MAKEUINT(MAKEWORD(pd.EndLba[3], pd.EndLba[2]), MAKEWORD(pd.EndLba[1], pd.EndLba[0]))
+		, MAKEUINT(MAKEWORD(pd.EndLba[3], pd.EndLba[2]), MAKEWORD(pd.EndLba[1], pd.EndLba[0]))
+		, MAKEUINT(MAKEWORD(pd.ReadSize[3], pd.ReadSize[2]), MAKEWORD(pd.ReadSize[1], pd.ReadSize[0]))
+		, MAKEUINT(MAKEWORD(pd.ReadSize[3], pd.ReadSize[2]), MAKEWORD(pd.ReadSize[1], pd.ReadSize[0]))
+		, MAKEUINT(MAKEWORD(pd.ReadTime[3], pd.ReadTime[2]), MAKEWORD(pd.ReadTime[1], pd.ReadTime[0]))
+		, MAKEUINT(MAKEWORD(pd.ReadTime[3], pd.ReadTime[2]), MAKEWORD(pd.ReadTime[1], pd.ReadTime[0]))
+		, MAKEUINT(MAKEWORD(pd.WriteSize[3], pd.WriteSize[2]), MAKEWORD(pd.WriteSize[1], pd.WriteSize[0]))
+		, MAKEUINT(MAKEWORD(pd.WriteSize[3], pd.WriteSize[2]), MAKEWORD(pd.WriteSize[1], pd.WriteSize[0]))
+		, MAKEUINT(MAKEWORD(pd.WriteTime[3], pd.WriteTime[2]), MAKEWORD(pd.WriteTime[1], pd.WriteTime[0]))
+		, MAKEUINT(MAKEWORD(pd.WriteTime[3], pd.WriteTime[2]), MAKEWORD(pd.WriteTime[1], pd.WriteTime[0]))
+	);
+	return TRUE;
+}
+
 // feature PLEXTOR drive
 BOOL SetSpeedRead(
 	PEXT_ARG pExtArg,
@@ -1111,7 +1179,7 @@ BOOL ReadDriveInformation(
 		if (*pExecType != drivespeed) {
 #if 0
 			if (*pExecType == dvd) {
-				SetStreaming(pDevice, dwCDSpeed);
+				SetStreaming(pExtArg, pDevice, uiCDSpeed);
 			}
 			else {
 #endif
