@@ -600,6 +600,7 @@ int appendExtIfNotExt(_TCHAR* szPathFromArg, size_t pathLen, _TCHAR* szTmpPath)
 	if (_tcsncmp(ext, _T(".bin"), sizeof(ext) / sizeof(ext[0])) != 0 &&
 		_tcsncmp(ext, _T(".iso"), sizeof(ext) / sizeof(ext[0])) != 0 &&
 		_tcsncmp(ext, _T(".sub"), sizeof(ext) / sizeof(ext[0])) != 0 &&
+		_tcsncmp(ext, _T(".mds"), sizeof(ext) / sizeof(ext[0])) != 0 &&
 		_tcsncmp(ext, _T(".mdf"), sizeof(ext) / sizeof(ext[0])) != 0
 		) {
 		OutputString("valid extension was omitted. -> ");
