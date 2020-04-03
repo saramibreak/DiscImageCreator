@@ -548,6 +548,7 @@ VOID OutputDVDLayerDescriptor(
 	else {
 		if (layerNumber == 0) {
 			*lpdwSectorLength = dwEndDataSector - dwStartingDataSector + 1;
+			pDisc->DVD.dwLayer0SectorLength = *lpdwSectorLength;
 			OutputDiscLog(
 				OUTPUT_DHYPHEN_PLUS_STR("SectorLength")
 				"\tLayerZeroSector: %7lu (%#lx)\n"
