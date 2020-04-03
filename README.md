@@ -13,7 +13,10 @@
   or  
  To: https://github.com/saramibreak/DiscImageCreator/issues
 
- if you report a bug, try to use the latest test version. http://www.mediafire.com/file/eq80y20l9cwf48f/DiscImageCreator_test.7z.  
+ if you report a bug, try to use the latest test version.  
+   Windows: http://www.mediafire.com/file/eq80y20l9cwf48f/DiscImageCreator_test.7z  
+   Linux: http://www.mediafire.com/file/uw3e03kdkmsmvvq/DiscImageCreator_linux_test.tar.gz 
+
  Nevertheless a bug exists, please upload all .txt file the app created.
 
 ## Requirement
@@ -58,7 +61,8 @@
 - HD-DVD: All supported drive
 - BD: All supported drive (PS3 is only supported by [some mediatek drive](https://rpcs3.net/quickstart) or PS3 drive)
     - You need to get the [3k3y ripper](https://web.archive.org/web/20150212063714/http://www.3k3y.com/) if you want to dump the data1/data2
-- Floppy: All supported drive
+- Other: Comfirmed device below
+   - FD, MD, MO, USB, ZIP
 
 ### Not recommend
 - CD: (Because it can't read lead-in and/or lead-out and can't exec 0xd8 opcode)
