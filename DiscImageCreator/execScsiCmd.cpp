@@ -873,7 +873,11 @@ BOOL SetStreaming(
 	UNREFERENCED_PARAMETER(dwDiscSpeedNum);
 	CDB::_SET_STREAMING cdb = {};
 	cdb.OperationCode = SCSIOP_SET_STREAMING;
+#ifdef _WIN32
 	_declspec(align(4)) PERFORMANCE_DESCRIPTOR pd = {};
+#else
+	__attribute__((aligned(4))) PERFORMANCE_DESCRIPTOR pd = {};
+#endif
 	size_t size = sizeof(PERFORMANCE_DESCRIPTOR);
 	REVERSE_BYTES_SHORT(&cdb.ParameterListLength, &size);
 #if 1
