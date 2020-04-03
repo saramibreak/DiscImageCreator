@@ -70,7 +70,7 @@ BOOL StorageGetMediaTypesEx(
 		return FALSE;
 	}
 	bRet = DeviceIoControl(pDevice->hDevice, IOCTL_DISK_GET_DRIVE_GEOMETRY_EX,
-		NULL, 0, lpBuf, geomSize, &dwReturned, 0);
+		NULL, 0, lpBuf, (DWORD)geomSize, &dwReturned, 0);
 	if (bRet) {
 		PDISK_GEOMETRY_EX pGeom = (PDISK_GEOMETRY_EX)lpBuf;
 //		OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("DISK_GEOMETRY"));
