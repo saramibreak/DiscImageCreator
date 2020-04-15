@@ -30,11 +30,11 @@
 #include <io.h>
 #include <Shlobj.h>
 #endif
-#if 0
+
 // extract cab file
 #include <setupapi.h>
 #pragma comment (lib, "setupapi.lib")
-#endif
+
 // XML
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS
 #include <atlbase.h>

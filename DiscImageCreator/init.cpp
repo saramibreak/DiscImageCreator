@@ -172,6 +172,16 @@ BOOL InitProtectData(
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
+		if (NULL == ((*pDisc)->PROTECT.pDataLenForExe =
+			(LPINT)calloc(EXELBA_STORE_SIZE, sizeof(INT)))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			throw FALSE;
+		}
+		if (NULL == ((*pDisc)->PROTECT.pSectorSizeForExe =
+			(LPINT)calloc(EXELBA_STORE_SIZE, sizeof(INT)))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			throw FALSE;
+		}
 		if (NULL == ((*pDisc)->PROTECT.pNameForExe =
 			(LPCH*)calloc(EXELBA_STORE_SIZE, sizeof(INT_PTR)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -437,6 +447,8 @@ VOID TerminateProtectData(
 	}
 	FreeAndNull((*pDisc)->PROTECT.pNameForExe);
 	FreeAndNull((*pDisc)->PROTECT.pExtentPosForExe);
+	FreeAndNull((*pDisc)->PROTECT.pDataLenForExe);
+	FreeAndNull((*pDisc)->PROTECT.pSectorSizeForExe);
 }
 
 VOID TerminateSubData(

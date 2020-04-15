@@ -53,8 +53,8 @@ BOOL OutputFsPathTableRecord(
 	UINT uiPathTblPos,
 	UINT uiPathTblSize,
 	BOOL bPathType,
-	PDIRECTORY_RECORD pDirRec,
-	LPINT nDirPosNum
+	PPATH_TABLE_RECORD pPathTblRec,
+	LPUINT uiDirPosNum
 );
 
 VOID OutputFileAllocationTable(

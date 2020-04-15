@@ -30,7 +30,37 @@ VOID OutputFsImageNtHeader(
 
 VOID OutputFsImageSectionHeader(
 	PDISC pDisc,
-	PIMAGE_SECTION_HEADER pIsh
+	PIMAGE_SECTION_HEADER pIsh,
+	LPBOOL bSecurom
+);
+
+VOID OutputSecuRomDllHeader(
+	LPBYTE lpBuf,
+	LPUINT uiOfsOf16,
+	LPUINT uiOfsOf32,
+	LPUINT uiOfsOfNT,
+	LPINT idx
+);
+
+VOID OutputSint16(
+	LPBYTE lpBuf,
+	UINT uiOfsOf16,
+	UINT uiOfsOfSecuRomDll,
+	INT idx
+);
+
+VOID OutputSint32(
+	PDISC pDisc,
+	LPBYTE lpBuf,
+	INT nOfsOf32dll,
+	BOOL bDummy
+);
+
+VOID OutputSintNT(
+	PDISC pDisc,
+	LPBYTE lpBuf,
+	INT nOfsOfNTdll,
+	BOOL bDummy
 );
 
 VOID OutputTocWithPregap(

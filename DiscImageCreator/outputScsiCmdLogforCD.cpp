@@ -177,7 +177,8 @@ VOID OutputFsImageNtHeader(
 // https://msdn.microsoft.com/en-us/library/windows/desktop/ms680341(v=vs.85).aspx
 VOID OutputFsImageSectionHeader(
 	PDISC pDisc,
-	PIMAGE_SECTION_HEADER pIsh
+	PIMAGE_SECTION_HEADER pIsh,
+	LPBOOL bSecurom
 ) {
 	OutputVolDescLog(
 		"\t========== Image Section Header (%zu byte) ==========\n"
@@ -208,10 +209,183 @@ VOID OutputFsImageSectionHeader(
 		pDisc->PROTECT.byExist = protectCDVOB;
 		strncpy(pDisc->PROTECT.name[0], (LPCH)pIsh->Name, sizeof(pIsh->Name));
 	}
-	else if (!strncmp((LPCH)pIsh->Name, ".cms_t", 6) || !strncmp((LPCH)pIsh->Name, ".cms_d", 6)) {
+	else if (!strncmp((LPCH)pIsh->Name, ".cms_t", 6) ||
+		!strncmp((LPCH)pIsh->Name, ".cms_d", 6) ||
+		!strncmp((LPCH)pIsh->Name, ".psbf", 5) // [PC] Hidden & Dangerous 2 (Europe)
+		) {
 		// This string exists SecuROM OLD "Re-Volt (Europe)" and SecuROM NEW "Supreme Snowboarding (Europe) and "Beam Breakers (Europe) etc"
 		pDisc->PROTECT.byExist = securomTmp;
 		strncpy(pDisc->PROTECT.name[0], (LPCH)pIsh->Name, sizeof(pIsh->Name));
+		*bSecurom = TRUE;
+	}
+}
+
+VOID OutputSecuRomDllHeader(
+	LPBYTE lpBuf,
+	LPUINT uiOfsOf16,
+	LPUINT uiOfsOf32,
+	LPUINT uiOfsOfNT,
+	LPINT idx
+) {
+	OutputVolDescLog(
+		OUTPUT_DHYPHEN_PLUS_STR("SecuROM DLL Header")
+		"\t         Signature: %.4" CHARWIDTH "s\n"
+		"\t     Unknown Value: %08x\n"
+		"\t           Version: %.8" CHARWIDTH "s\n"
+		"\t    Unknown String: %.4" CHARWIDTH "s\n"
+		, &lpBuf[0]
+		, MAKEUINT(MAKEWORD(lpBuf[4], lpBuf[5]), MAKEWORD(lpBuf[6], lpBuf[7]))
+		, &lpBuf[8]
+		, &lpBuf[16]
+	);
+	for (INT i = 3, j = 0; i < 12; i++, j += 2) {
+		OutputVolDescLog(
+			"\tSecuROM Sector[%02d]: %5d (%04x)\n"
+			, i, MAKEWORD(lpBuf[20 + j], lpBuf[21 + j]), MAKEWORD(lpBuf[20 + j], lpBuf[21 + j])
+		);
+	};
+	for (INT i = 0, j = 0; i < 13; i++, j += 2) {
+		OutputVolDescLog(
+			"\tUnknown Value: %5d (%04x)\n"
+			, MAKEWORD(lpBuf[38 + j], lpBuf[39 + j]), MAKEWORD(lpBuf[38 + j], lpBuf[39 + j])
+		);
+	}
+
+	if (!strncmp((CONST PCHAR)&lpBuf[8], "4.8", 3)) {
+		*uiOfsOf16 = MAKEUINT(MAKEWORD(lpBuf[132], lpBuf[133]), MAKEWORD(lpBuf[134], lpBuf[135]));
+		*uiOfsOf32 = MAKEUINT(MAKEWORD(lpBuf[180], lpBuf[181]), MAKEWORD(lpBuf[182], lpBuf[183]));
+		*uiOfsOfNT = MAKEUINT(MAKEWORD(lpBuf[228], lpBuf[229]), MAKEWORD(lpBuf[230], lpBuf[231]));
+		*idx = 68;
+		OutputVolDescLog(
+			"\tUnknown String: %.10" CHARWIDTH "s\n"
+			, &lpBuf[64]
+		);
+		for (INT i = 0, j = 0; i < 29; i++, j += 2) {
+			OutputVolDescLog(
+				"\tUnknown Value: %5d (%04x)\n"
+				, MAKEWORD(lpBuf[74 + j], lpBuf[75 + j]), MAKEWORD(lpBuf[74 + j], lpBuf[75 + j])
+			);
+		}
+	}
+	else {
+		*uiOfsOf16 = MAKEUINT(MAKEWORD(lpBuf[64], lpBuf[65]), MAKEWORD(lpBuf[66], lpBuf[67]));
+		*uiOfsOf32 = MAKEUINT(MAKEWORD(lpBuf[112], lpBuf[113]), MAKEWORD(lpBuf[114], lpBuf[115]));
+		*uiOfsOfNT = MAKEUINT(MAKEWORD(lpBuf[160], lpBuf[161]), MAKEWORD(lpBuf[162], lpBuf[163]));
+	}
+
+	OutputVolDescLog(
+		"\t-----------------------\n"
+		"\tOffset of dll: %08x\n"
+		"\t  Size of dll: %08x\n"
+		"\tUnknown Value: %08x\n"
+		"\tUnknown Value: %08x\n"
+		"\tUnknown Value: %08x\n"
+		"\tUnknown Value: %08x\n"
+		"\tUnknown Value: %08x\n"
+		"\tUnknown Value: %08x\n"
+		"\t         Name: %.12" CHARWIDTH "s\n"
+		"\tUnknown Value: %08x\n"
+		"\t-----------------------\n"
+		"\tOffset of dll: %08x\n"
+		"\t  Size of dll: %08x\n"
+		"\tUnknown Value: %08x\n"
+		"\tUnknown Value: %08x\n"
+		"\tUnknown Value: %08x\n"
+		"\tUnknown Value: %08x\n"
+		"\tUnknown Value: %08x\n"
+		"\tUnknown Value: %08x\n"
+		"\t         Name: %.12" CHARWIDTH "s\n"
+		"\tUnknown Value: %08x\n"
+		"\t-----------------------\n"
+		"\tOffset of dll: %08x\n"
+		"\t  Size of dll: %08x\n"
+		"\tUnknown Value: %08x\n"
+		"\tUnknown Value: %08x\n"
+		"\tUnknown Value: %08x\n"
+		"\tUnknown Value: %08x\n"
+		"\tUnknown Value: %08x\n"
+		"\tUnknown Value: %08x\n"
+		"\t         Name: %.12" CHARWIDTH "s\n"
+		"\tUnknown Value: %08x\n"
+		, *uiOfsOf16
+		, MAKEUINT(MAKEWORD(lpBuf[68 + *idx], lpBuf[69 + *idx]), MAKEWORD(lpBuf[70 + *idx], lpBuf[71 + *idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[72 + *idx], lpBuf[73 + *idx]), MAKEWORD(lpBuf[74 + *idx], lpBuf[75 + *idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[76 + *idx], lpBuf[77 + *idx]), MAKEWORD(lpBuf[78 + *idx], lpBuf[79 + *idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[80 + *idx], lpBuf[81 + *idx]), MAKEWORD(lpBuf[82 + *idx], lpBuf[83 + *idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[84 + *idx], lpBuf[85 + *idx]), MAKEWORD(lpBuf[86 + *idx], lpBuf[87 + *idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[88 + *idx], lpBuf[89 + *idx]), MAKEWORD(lpBuf[90 + *idx], lpBuf[91 + *idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[92 + *idx], lpBuf[93 + *idx]), MAKEWORD(lpBuf[94 + *idx], lpBuf[95 + *idx]))
+		, &lpBuf[96 + *idx]
+		, MAKEUINT(MAKEWORD(lpBuf[108 + *idx], lpBuf[109 + *idx]), MAKEWORD(lpBuf[110 + *idx], lpBuf[111 + *idx]))
+		, *uiOfsOf32
+		, MAKEUINT(MAKEWORD(lpBuf[116 + *idx], lpBuf[117 + *idx]), MAKEWORD(lpBuf[118 + *idx], lpBuf[119 + *idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[120 + *idx], lpBuf[121 + *idx]), MAKEWORD(lpBuf[122 + *idx], lpBuf[123 + *idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[124 + *idx], lpBuf[125 + *idx]), MAKEWORD(lpBuf[126 + *idx], lpBuf[127 + *idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[128 + *idx], lpBuf[129 + *idx]), MAKEWORD(lpBuf[130 + *idx], lpBuf[131 + *idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[132 + *idx], lpBuf[133 + *idx]), MAKEWORD(lpBuf[134 + *idx], lpBuf[135 + *idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[136 + *idx], lpBuf[137 + *idx]), MAKEWORD(lpBuf[138 + *idx], lpBuf[139 + *idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[140 + *idx], lpBuf[141 + *idx]), MAKEWORD(lpBuf[142 + *idx], lpBuf[143 + *idx]))
+		, &lpBuf[144 + *idx]
+		, MAKEUINT(MAKEWORD(lpBuf[156 + *idx], lpBuf[157 + *idx]), MAKEWORD(lpBuf[158 + *idx], lpBuf[159 + *idx]))
+		, *uiOfsOfNT
+		, MAKEUINT(MAKEWORD(lpBuf[164 + *idx], lpBuf[165 + *idx]), MAKEWORD(lpBuf[166 + *idx], lpBuf[167 + *idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[168 + *idx], lpBuf[169 + *idx]), MAKEWORD(lpBuf[160 + *idx], lpBuf[161 + *idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[172 + *idx], lpBuf[173 + *idx]), MAKEWORD(lpBuf[174 + *idx], lpBuf[175 + *idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[176 + *idx], lpBuf[177 + *idx]), MAKEWORD(lpBuf[178 + *idx], lpBuf[179 + *idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[180 + *idx], lpBuf[181 + *idx]), MAKEWORD(lpBuf[182 + *idx], lpBuf[183 + *idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[184 + *idx], lpBuf[185 + *idx]), MAKEWORD(lpBuf[186 + *idx], lpBuf[187 + *idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[188 + *idx], lpBuf[189 + *idx]), MAKEWORD(lpBuf[190 + *idx], lpBuf[191 + *idx]))
+		, &lpBuf[192 + *idx]
+		, MAKEUINT(MAKEWORD(lpBuf[204 + *idx], lpBuf[205 + *idx]), MAKEWORD(lpBuf[206 + *idx], lpBuf[207 + *idx]))
+	);
+}
+
+VOID OutputSint16(
+	LPBYTE lpBuf,
+	UINT uiOfsOf16,
+	UINT uiOfsOfSecuRomDll,
+	INT idx
+) {
+	OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR("SIntf16.dll"));
+	PIMAGE_DOS_HEADER pIDh2 = (PIMAGE_DOS_HEADER)&lpBuf[208 + idx];
+	OutputFsImageDosHeader(pIDh2);
+	PIMAGE_OS2_HEADER pIOh = (PIMAGE_OS2_HEADER)&lpBuf[uiOfsOf16 - uiOfsOfSecuRomDll + pIDh2->e_lfanew];
+	OutputFsImageOS2Header(pIOh);
+}
+
+VOID OutputSint32(
+	PDISC pDisc,
+	LPBYTE lpBuf,
+	INT nOfsOf32dll,
+	BOOL bDummy
+) {
+	OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR("SIntf32.dll"));
+	PIMAGE_DOS_HEADER pIDh3 = (PIMAGE_DOS_HEADER)&lpBuf[nOfsOf32dll];
+	OutputFsImageDosHeader(pIDh3);
+	PIMAGE_NT_HEADERS32 pINH3 = (PIMAGE_NT_HEADERS32)&lpBuf[nOfsOf32dll + pIDh3->e_lfanew];
+	OutputFsImageNtHeader(pINH3);
+	ULONG nOfs3 = nOfsOf32dll + pIDh3->e_lfanew + sizeof(IMAGE_NT_HEADERS32);
+	for (INT i = 0; i < pINH3->FileHeader.NumberOfSections; i++) {
+		OutputFsImageSectionHeader(pDisc, (PIMAGE_SECTION_HEADER)&lpBuf[nOfs3], &bDummy);
+		nOfs3 += sizeof(IMAGE_SECTION_HEADER);
+	}
+}
+
+VOID OutputSintNT(
+	PDISC pDisc,
+	LPBYTE lpBuf,
+	INT nOfsOfNTdll,
+	BOOL bDummy
+) {
+	OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR("SIntfNT.dll"));
+	PIMAGE_DOS_HEADER pIDh4 = (PIMAGE_DOS_HEADER)&lpBuf[nOfsOfNTdll];
+	OutputFsImageDosHeader(pIDh4);
+	PIMAGE_NT_HEADERS32 pINH4 = (PIMAGE_NT_HEADERS32)&lpBuf[nOfsOfNTdll + pIDh4->e_lfanew];
+	OutputFsImageNtHeader(pINH4);
+	ULONG nOfs4 = nOfsOfNTdll + pIDh4->e_lfanew + sizeof(IMAGE_NT_HEADERS32);
+	for (INT i = 0; i < pINH4->FileHeader.NumberOfSections; i++) {
+		OutputFsImageSectionHeader(pDisc, (PIMAGE_SECTION_HEADER)&lpBuf[nOfs4], &bDummy);
+		nOfs4 += sizeof(IMAGE_SECTION_HEADER);
 	}
 }
 

@@ -109,12 +109,19 @@ VOID OutputFsDirectoryRecord(
 		, lpBuf[0], lpBuf[1], uiExtentPos, uiDataLen, lpBuf[18] + 1900, lpBuf[19], lpBuf[20]
 		, lpBuf[21], lpBuf[22], lpBuf[23], (CHAR)lpBuf[24] / 4, (CHAR)lpBuf[24] % 4 * 15
 		, lpBuf[25], str, lpBuf[26], lpBuf[27], vsn, lpBuf[32]);
+	BOOL bSkip = FALSE;
 	for (INT n = 0; n < lpBuf[32]; n++) {
 #ifndef _WIN32
 		if (lpBuf[33 + n] == 0) continue;
 #endif
 		OutputVolDescLog("%c", lpBuf[33 + n]);
-		fname[n] = (CHAR)lpBuf[33 + n];
+		if (lpBuf[33 + n] == ';' && n == lpBuf[32] - 2) {
+			// skip "file revision number"
+			bSkip = TRUE;
+		}
+		if (!bSkip) {
+			fname[n] = (CHAR)lpBuf[33 + n];
+		}
 	}
 	OutputVolDescLog("\n");
 
@@ -232,34 +239,22 @@ VOID OutputFsDirectoryRecord(
 
 		if (pDisc->PROTECT.byExist == no) {
 			// for CodeLock, ProtectCD-VOB, a part of SecuROM
-			LPCH p = strstr(fnameForProtect, ".EXE");
-			if (!p) {
-				// Doesn't exist stristr in C/C++...
-				p = strstr(fnameForProtect, ".exe");
-				if (!p) {
-					p = strstr(fnameForProtect, ".DLL");
-					if (!p) {
-						p = strstr(fnameForProtect, ".dll");
-#if 0
-						if (!p) {
-							p = strstr(fnameForProtect, ".CAB");
-							if (!p) {
-								p = strstr(fnameForProtect, ".cab");
-							}
-						}
-#endif
+			CHAR szSearchStr[][5] = { ".EXE", ".exe", ".DLL", ".dll", ".DAT", ".HDR", ".CAB", ".cab" };
+			for (INT i = 0; i < 8; i++) {
+				LPCH p = strstr(fnameForProtect, szSearchStr[i]);
+				if (p) {
+					if (pDisc->PROTECT.nCntForExe == EXELBA_STORE_SIZE) {
+						OutputLog(standardError | fileMainError, "Reached MAX .exe num\n");
+						return;
 					}
+					size_t len = (size_t)(p - fnameForProtect + 4);
+					pDisc->PROTECT.pExtentPosForExe[pDisc->PROTECT.nCntForExe] = (INT)uiExtentPos;
+					pDisc->PROTECT.pDataLenForExe[pDisc->PROTECT.nCntForExe] = (INT)uiDataLen;
+					pDisc->PROTECT.pSectorSizeForExe[pDisc->PROTECT.nCntForExe] = (INT)(uiDataLen / DISC_RAW_READ_SIZE);
+					strncpy(pDisc->PROTECT.pNameForExe[pDisc->PROTECT.nCntForExe], fnameForProtect, len);
+					pDisc->PROTECT.nCntForExe++;
+					break;
 				}
-			}
-			if (p) {
-				if (pDisc->PROTECT.nCntForExe == EXELBA_STORE_SIZE) {
-					OutputLog(standardError | fileMainError, "Reached MAX .exe num\n");
-					return;
-				}
-				size_t len = (size_t)(p - fnameForProtect + 4);
-				pDisc->PROTECT.pExtentPosForExe[pDisc->PROTECT.nCntForExe] = (INT)uiExtentPos;
-				strncpy(pDisc->PROTECT.pNameForExe[pDisc->PROTECT.nCntForExe], fnameForProtect, len);
-				pDisc->PROTECT.nCntForExe++;
 			}
 		}
 	}
@@ -574,32 +569,32 @@ BOOL OutputFsPathTableRecord(
 	UINT uiPathTblPos,
 	UINT uiPathTblSize,
 	BOOL bPathType,
-	PDIRECTORY_RECORD pDirRec,
-	LPINT nDirPosNum
+	PPATH_TABLE_RECORD pPathTblRec,
+	LPUINT uiDirPosNum
 ) {
 	OutputVolDescLog(
 		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Path Table Record"), (INT)uiPathTblPos, (INT)uiPathTblPos);
 	for (UINT i = 0; i < uiPathTblSize;) {
-		if (*nDirPosNum > DIRECTORY_RECORD_SIZE) {
-			OutputErrorString("Directory Record is over %d\n", DIRECTORY_RECORD_SIZE);
+		if (*uiDirPosNum > PATH_TABLE_RECORD_SIZE) {
+			OutputErrorString("Directory Record is over %d\n", PATH_TABLE_RECORD_SIZE);
 			FlushLog();
 			return FALSE;
 		}
-		pDirRec[*nDirPosNum].uiDirNameLen = lpBuf[i];
+		pPathTblRec[*uiDirPosNum].uiDirNameLen = lpBuf[i];
 		if (bPathType == lType) {
-			pDirRec[*nDirPosNum].uiPosOfDir = MAKEUINT(MAKEWORD(lpBuf[2 + i], lpBuf[3 + i]),
+			pPathTblRec[*uiDirPosNum].uiPosOfDir = MAKEUINT(MAKEWORD(lpBuf[2 + i], lpBuf[3 + i]),
 				MAKEWORD(lpBuf[4 + i], lpBuf[5 + i])) / uiLogicalBlkCoef;
 		}
 		else {
-			pDirRec[*nDirPosNum].uiPosOfDir = MAKEUINT(MAKEWORD(lpBuf[5 + i], lpBuf[4 + i]),
+			pPathTblRec[*uiDirPosNum].uiPosOfDir = MAKEUINT(MAKEWORD(lpBuf[5 + i], lpBuf[4 + i]),
 				MAKEWORD(lpBuf[3 + i], lpBuf[2 + i])) / uiLogicalBlkCoef;
 		}
-		if (pDirRec[*nDirPosNum].uiDirNameLen > 0) {
+		if (pPathTblRec[*uiDirPosNum].uiDirNameLen > 0) {
 			if (bPathType == lType) {
-				pDirRec[*nDirPosNum].uiNumOfUpperDir = MAKEWORD(lpBuf[6 + i], lpBuf[7 + i]);
+				pPathTblRec[*uiDirPosNum].uiNumOfUpperDir = MAKEWORD(lpBuf[6 + i], lpBuf[7 + i]);
 			}
 			else {
-				pDirRec[*nDirPosNum].uiNumOfUpperDir = MAKEWORD(lpBuf[7 + i], lpBuf[6 + i]);
+				pPathTblRec[*uiDirPosNum].uiNumOfUpperDir = MAKEWORD(lpBuf[7 + i], lpBuf[6 + i]);
 			}
 			OutputVolDescLog(
 				"\t     Length of Directory Identifier: %u\n"
@@ -607,26 +602,26 @@ BOOL OutputFsPathTableRecord(
 				"\t                 Position of Extent: %u\n"
 				"\t          Number of Upper Directory: %u\n"
 				"\t               Directory Identifier: "
-				, pDirRec[*nDirPosNum].uiDirNameLen, lpBuf[1 + i]
-				, pDirRec[*nDirPosNum].uiPosOfDir, pDirRec[*nDirPosNum].uiNumOfUpperDir);
-			for (size_t n = 0; n < pDirRec[*nDirPosNum].uiDirNameLen; n++) {
+				, pPathTblRec[*uiDirPosNum].uiDirNameLen, lpBuf[1 + i]
+				, pPathTblRec[*uiDirPosNum].uiPosOfDir, pPathTblRec[*uiDirPosNum].uiNumOfUpperDir);
+			for (size_t n = 0; n < pPathTblRec[*uiDirPosNum].uiDirNameLen; n++) {
 #ifndef _WIN32
 				if (lpBuf[8 + i + n] == 0) continue;
 #endif
 				OutputVolDescLog("%c", lpBuf[8 + i + n]);
-				pDirRec[*nDirPosNum].szDirName[n] = (CHAR)lpBuf[8 + i + n];
+				pPathTblRec[*uiDirPosNum].szDirName[n] = (CHAR)lpBuf[8 + i + n];
 			}
 			OutputVolDescLog("\n\n");
 
-			i += 8 + pDirRec[*nDirPosNum].uiDirNameLen;
+			i += 8 + pPathTblRec[*uiDirPosNum].uiDirNameLen;
 			if ((i % 2) != 0) {
 				i++;
 			}
-			*nDirPosNum = *nDirPosNum + 1;
+			*uiDirPosNum = *uiDirPosNum + 1;
 		}
 		else {
 			OutputVolDescLog(
-				"\t     Length of Directory Identifier: %u\n", pDirRec[*nDirPosNum].uiDirNameLen);
+				"\t     Length of Directory Identifier: %u\n", pPathTblRec[*uiDirPosNum].uiDirNameLen);
 			break;
 		}
 	}

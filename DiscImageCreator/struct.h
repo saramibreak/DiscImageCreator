@@ -362,9 +362,11 @@ typedef struct _DISC {
 		} ERROR_SECTOR;
 		INT nPrevLBAOfPathTablePos; // for CodeLock
 		INT nNextLBAOfLastVolDesc; // for CodeLock
-		LPINT pExtentPosForExe; // for CodeLock
-		LPCH* pNameForExe; // for CodeLock
-		INT nCntForExe; // for CodeLock
+		LPINT pExtentPosForExe;
+		LPINT pSectorSizeForExe;
+		LPINT pDataLenForExe;
+		LPCH* pNameForExe;
+		INT nCntForExe;
 	} PROTECT;
 	struct _DVD {
 		UCHAR ucBca;
@@ -384,6 +386,8 @@ typedef struct _DISC {
 		INT nLBAForParamSfo;
 	} BD;
 	LPBYTE lpCachedBuf; // for Asus 0xF1 opcode
+	CHAR archivedFile[16][_MAX_PATH];
+	INT archivedFileNum;
 } DISC, *PDISC;
 
 typedef struct _VOLUME_DESCRIPTOR {
@@ -403,13 +407,13 @@ typedef struct _VOLUME_DESCRIPTOR {
 	UINT uiVolumeSpaceSize;
 } VOLUME_DESCRIPTOR, *PVOLUME_DESCRIPTOR;
 
-typedef struct _DIRECTORY_RECORD {
+typedef struct _PATH_TABLE_RECORD {
 	UINT uiDirNameLen;
 	UINT uiPosOfDir;
 	UINT uiNumOfUpperDir;
 	CHAR szDirName[MAX_FNAME_FOR_VOLUME];
-	UINT uiDirSize;
-} DIRECTORY_RECORD, *PDIRECTORY_RECORD;
+	UINT uiDirSize; // This is actually DIRECTORY RECORD info
+} PATH_TABLE_RECORD, *PPATH_TABLE_RECORD;
 
 typedef struct _UDF {
 	UINT uiPVDPos;	// from Anchor Volume Descriptor Pointer

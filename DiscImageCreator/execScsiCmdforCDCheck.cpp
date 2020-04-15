@@ -1120,7 +1120,19 @@ BOOL ReadCDForCheckingSubRtoW(
 	FreeAndNull(pBuf);
 	return bRet;
 }
-#if 0
+
+BOOL IsImageSig(
+	LPBYTE lpBuf,
+	INT nSignature
+) {
+	WORD wMagic = MAKEWORD(lpBuf[0], lpBuf[1]);
+	if (wMagic == nSignature) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
+#ifdef _WIN32
 LRESULT WINAPI CabinetCallback(
 	IN PVOID pMyInstallData,
 	IN UINT Notification,
@@ -1147,7 +1159,7 @@ LRESULT WINAPI CabinetCallback(
 		break;
 	case SPFILENOTIFY_FILEEXTRACTED:
 		pFilePaths = (FILEPATHS *)Param1;
-		printf("Extracted %s\n", pFilePaths->Target);
+//		printf("Extracting %s\n", pFilePaths->Target);
 		break;
 	case SPFILENOTIFY_FILEOPDELAYED:
 		break;
@@ -1155,18 +1167,18 @@ LRESULT WINAPI CabinetCallback(
 	return lRetVal;
 }
 
-BOOL IterateCabinet(
-	PTSTR pszCabFile
+#define FILE_DELETE 1
+#define FILE_SEARCH 2
+#define FILE_EXTRACT 3
+
+BOOL ProcessDirectory(
+	PDISC pDisc,
+	LPTSTR szExtractdir,
+	INT nOperate
 ) {
-	_TCHAR szExtractdir[_MAX_PATH];
-	if (!GetCurrentDirectory(sizeof(szExtractdir) / sizeof(szExtractdir[0]), szExtractdir)) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return FALSE;
-	}
-	lstrcat(szExtractdir, "\\extract_cab\\");
 	_TCHAR szExtractdirFind[_MAX_PATH];
 	memcpy(szExtractdirFind, szExtractdir, _MAX_PATH);
-	lstrcat(szExtractdirFind, "*");
+	_tcscat(szExtractdirFind, _T("*"));
 
 	if (PathFileExists(szExtractdir)) {
 		WIN32_FIND_DATA fd;
@@ -1175,30 +1187,118 @@ BOOL IterateCabinet(
 			return FALSE;
 		}
 		do {
-			if (0 != _tcscmp(fd.cFileName, _T("."))
-				&& 0 != _tcscmp(fd.cFileName, _T(".."))) {
-				TCHAR szFoundFilePathName[_MAX_PATH];
+			if (_tcscmp(fd.cFileName, _T(".")) &&
+				_tcscmp(fd.cFileName, _T(".."))) {
+				_TCHAR szFoundFilePathName[_MAX_PATH];
 				_tcsncpy(szFoundFilePathName, szExtractdir, _MAX_PATH);
 				_tcsncat(szFoundFilePathName, fd.cFileName, _MAX_PATH);
 
 				if (!(FILE_ATTRIBUTE_DIRECTORY & fd.dwFileAttributes)) {
-					if (!DeleteFile(szFoundFilePathName)) {
-						FindClose(hFind);
-						return FALSE;
+					if (nOperate == FILE_DELETE || nOperate == FILE_EXTRACT) {
+						if (!DeleteFile(szFoundFilePathName)) {
+							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+							OutputErrorString("Failed to DeleteFile %s\n", fd.cFileName);
+							FindClose(hFind);
+							return FALSE;
+						}
+					}
+					else if (nOperate == FILE_SEARCH) {
+						if (_tcsstr(szFoundFilePathName, _T(".EXE")) ||
+							_tcsstr(szFoundFilePathName, _T(".exe")) ||
+							_tcsstr(szFoundFilePathName, _T(".DLL")) ||
+							_tcsstr(szFoundFilePathName, _T(".dll"))
+							) {
+							FILE* fp = _tfopen(szFoundFilePathName, _T("rb"));
+							if (!fp) {
+								OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+								OutputErrorString("Failed to OpenFile: %s\n", szFoundFilePathName);
+								return FALSE;
+							}
+							BYTE lpBuf[DISC_RAW_READ_SIZE * 2] = {};
+							fread(lpBuf, sizeof(lpBuf), sizeof(BYTE), fp);
+							OutputCDMain(fileMainInfo, lpBuf, 0, DISC_RAW_READ_SIZE * 2);
+
+							if (IsImageSig(lpBuf, IMAGE_DOS_SIGNATURE)) {
+								PIMAGE_DOS_HEADER pIDh = (PIMAGE_DOS_HEADER)&lpBuf[0];
+								OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR("%s"), fd.cFileName);
+								OutputFsImageDosHeader(pIDh);
+
+								if (IsImageSig(&lpBuf[pIDh->e_lfanew], IMAGE_NT_SIGNATURE)) {
+									PIMAGE_NT_HEADERS32 pINH = (PIMAGE_NT_HEADERS32)&lpBuf[pIDh->e_lfanew];
+									OutputFsImageNtHeader(pINH);
+
+									ULONG nOfs = pIDh->e_lfanew + sizeof(IMAGE_NT_HEADERS32);
+									BOOL bSecurom = FALSE;
+									for (INT i = 0; i < pINH->FileHeader.NumberOfSections; i++) {
+										OutputFsImageSectionHeader(pDisc, (PIMAGE_SECTION_HEADER)&lpBuf[nOfs], &bSecurom);
+										nOfs += sizeof(IMAGE_SECTION_HEADER);
+									}
+									if (bSecurom) {
+										fseek(fp, -4, SEEK_END);
+										UINT uiOfsOfSecuRomDll = 0;
+										fread(&uiOfsOfSecuRomDll, 1, sizeof(UINT), fp);
+										fseek(fp, (LONG)uiOfsOfSecuRomDll, SEEK_SET);
+										fread(lpBuf, sizeof(lpBuf), sizeof(BYTE), fp);
+										OutputCDMain(fileMainInfo, lpBuf, 0, DISC_RAW_READ_SIZE * 2);
+
+										UINT uiOfsOf16 = 0;
+										UINT uiOfsOf32 = 0;
+										UINT uiOfsOfNT = 0;
+										INT idx = 0;
+										OutputSecuRomDllHeader(lpBuf, &uiOfsOf16, &uiOfsOf32, &uiOfsOfNT, &idx);
+										OutputSint16(lpBuf, uiOfsOf16, uiOfsOfSecuRomDll, idx);
+
+										fseek(fp, (LONG)uiOfsOf32, SEEK_SET);
+										fread(lpBuf, sizeof(lpBuf), sizeof(BYTE), fp);
+										OutputCDMain(fileMainInfo, lpBuf, 0, DISC_RAW_READ_SIZE * 2);
+										OutputSint32(pDisc, lpBuf, 0, FALSE);
+
+										fseek(fp, (LONG)uiOfsOfNT, SEEK_SET);
+										fread(lpBuf, sizeof(lpBuf), sizeof(BYTE), fp);
+										OutputCDMain(fileMainInfo, lpBuf, 0, DISC_RAW_READ_SIZE * 2);
+										OutputSintNT(pDisc, lpBuf, 0, FALSE);
+									}
+								}
+								else if (IsImageSig(&lpBuf[pIDh->e_lfanew], IMAGE_OS2_SIGNATURE)) {
+									OutputFsImageOS2Header((PIMAGE_OS2_HEADER)&lpBuf[pIDh->e_lfanew]);
+								}
+								else if (IsImageSig(&lpBuf[pIDh->e_lfanew], IMAGE_OS2_SIGNATURE_LE)) {
+									// TODO
+								}
+								else {
+									OutputVolDescLog(
+										"%s: ImageNT,NE,LEHeader doesn't exist\n", fd.cFileName);
+								}
+							}
+							FcloseAndNull(fp);
+						}
 					}
 				}
 			}
 		} while (FindNextFile(hFind, &fd));
 		FindClose(hFind);
 	}
-	if (!MakeSureDirectoryPathExists(szExtractdir)) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return FALSE;
+	if (nOperate == FILE_EXTRACT) {
+#ifdef UNICODE
+		if (SHCreateDirectory(NULL, szExtractdir)) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			OutputErrorString("Failed to SHCreateDirectory: %s\n", szExtractdir);
+			return FALSE;
+		}
+#else
+		if (!MakeSureDirectoryPathExists(szExtractdir)) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			OutputErrorString("Failed to MakeSureDirectoryPathExists: %s\n", szExtractdir);
+			return FALSE;
+		}
+#endif
 	}
-	if (!SetupIterateCabinet(pszCabFile,
-		0, (PSP_FILE_CALLBACK)CabinetCallback, szExtractdir)) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return FALSE;
+	else if (nOperate == FILE_DELETE) {
+		if (!RemoveDirectory(szExtractdir)) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			OutputErrorString("Failed to RemoveDirectory: %s\n", szExtractdir);
+			return FALSE;
+		}
 	}
 	return TRUE;
 }
@@ -1216,74 +1316,149 @@ BOOL ReadCDForCheckingExe(
 	BYTE byTransferLen = 1;
 	BYTE byRoopLen = byTransferLen;
 	SetCommandForTransferLength(pExecType, pDevice, pCdb, dwSize, &byTransferLen, &byRoopLen);
+	INT nCabIdx = 0;
 	for (INT n = 0; pDisc->PROTECT.pExtentPosForExe[n] != 0; n++) {
-#if 0
+		if (!ExecReadCD(pExtArg, pDevice, pCdb, pDisc->PROTECT.pExtentPosForExe[n],
+			lpBuf, dwSize, _T(__FUNCTION__), __LINE__)) {
+			continue;
+		}
+		BOOL bCab = FALSE;
 		if (strstr(pDisc->PROTECT.pNameForExe[n], ".CAB") || strstr(pDisc->PROTECT.pNameForExe[n], ".cab")) {
-			// Get the absPath of cab file from path table
-			IterateCabinet(pDisc->PROTECT.pNameForExe[n]);
-			IterateCabinet("C:\\test\\disk1\\1.cab");
-			// Search exe, dll from extracted file
-			// Open exe, dll
-			// Read
-		}
-		else {
+			if (!strncmp((CONST PCHAR)&lpBuf[0], "MSCF", 4)) {
+#ifdef _WIN32
+				OutputString(
+					"Detected MicroSoft Cabinet File: %" CHARWIDTH "s\n"
+					"Please wait until all files are extracted. This is needed to search protection\n"
+					, pDisc->archivedFile[nCabIdx]
+				);
+				CHAR cabFullPathTmp[_MAX_PATH] = {};
+				CHAR drive[_MAX_DRIVE] = {};
+				_snprintf(drive, sizeof(drive), "%c:", pDevice->byDriveLetter);
+				strncat(cabFullPathTmp, drive, sizeof(drive));
+				strncat(cabFullPathTmp, pDisc->archivedFile[nCabIdx], sizeof(pDisc->archivedFile[nCabIdx]));
+
+				_TCHAR szExtractdir[_MAX_PATH] = {};
+				if (!GetCurrentDirectory(sizeof(szExtractdir) / sizeof(szExtractdir[0]), szExtractdir)) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					return FALSE;
+				}
+				_tcscat(szExtractdir, _T("\\!extracted\\"));
+				ProcessDirectory(pDisc, szExtractdir, FILE_EXTRACT);
+
+				_TCHAR cabFullPath[_MAX_PATH] = {};
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, 0,
+					cabFullPathTmp, sizeof(cabFullPathTmp), cabFullPath, sizeof(cabFullPath));
+#else
+				strncpy(cabFullPath, cabFullPathTmp, sizeof(cabFullPathTmp));
 #endif
-			if (!ExecReadCD(pExtArg, pDevice, pCdb, pDisc->PROTECT.pExtentPosForExe[n],
-				lpBuf, dwSize, _T(__FUNCTION__), __LINE__)) {
-				//				return FALSE;
-				// FIFA 99 (Europe) on PX-5224A
-				// LBA[000000, 0000000], [F:ReadCDForCheckingExe][L:734]
-				//		OperationCode: 0xa8
-				//		ScsiStatus: 0x02 = CHECK_CONDITION
-				//		SenseData Key-Asc-Ascq: 03-02-83 = MEDIUM_ERROR - OTHER
-				//  =>  The reason is unknown...
-				continue;
+				if (!SetupIterateCabinet(cabFullPath, 0, (PSP_FILE_CALLBACK)CabinetCallback, szExtractdir)) {
+					// 
+				}
+				nCabIdx++;
+				// Search exe, dll from extracted file
+				ProcessDirectory(pDisc, szExtractdir, FILE_SEARCH);
+				ProcessDirectory(pDisc, szExtractdir, FILE_DELETE);
+				bCab = TRUE;
+#else
+				// TODO: linux can use cabextract
+#endif
 			}
-#if 0
+			else if (!strncmp((CONST PCHAR)&lpBuf[0], "ISc(", 4)) {
+			}
 		}
-#endif
-		WORD wMagic = MAKEWORD(lpBuf[0], lpBuf[1]);
-		if (wMagic == IMAGE_DOS_SIGNATURE) {
-			PIMAGE_DOS_HEADER pIDh = (PIMAGE_DOS_HEADER)&lpBuf[0];
-			if (dwSize < (DWORD)pIDh->e_lfanew) {
-				if (pDevice->dwMaxTransferLength < (DWORD)pIDh->e_lfanew) {
-					OutputVolDescLog("%" CHARWIDTH "s: offset is very big (%lu). read skip [TODO]\n"
-						, pDisc->PROTECT.pNameForExe[n], pIDh->e_lfanew);
+
+		if (!bCab) {
+			if (IsImageSig(lpBuf, IMAGE_DOS_SIGNATURE)) {
+				PIMAGE_DOS_HEADER pIDh = (PIMAGE_DOS_HEADER)&lpBuf[0];
+				if (dwSize < (DWORD)pIDh->e_lfanew) {
+					if (pDevice->dwMaxTransferLength < (DWORD)pIDh->e_lfanew) {
+						OutputVolDescLog("%" CHARWIDTH "s: offset is very big (%lu). read skip [TODO]\n"
+							, pDisc->PROTECT.pNameForExe[n], pIDh->e_lfanew);
+					}
+					else {
+						SetCommandForTransferLength(pExecType, pDevice, pCdb, (DWORD)pIDh->e_lfanew, &byTransferLen, &byRoopLen);
+						dwSize = DWORD(DISC_RAW_READ_SIZE) * byTransferLen;
+						n--;
+					}
+					continue;
+				}
+				OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA
+					, pDisc->PROTECT.pExtentPosForExe[n], pDisc->PROTECT.pExtentPosForExe[n], pDisc->PROTECT.pNameForExe[n]);
+				OutputFsImageDosHeader(pIDh);
+
+				if (IsImageSig(&lpBuf[pIDh->e_lfanew], IMAGE_NT_SIGNATURE)) {
+					PIMAGE_NT_HEADERS32 pINH = (PIMAGE_NT_HEADERS32)&lpBuf[pIDh->e_lfanew];
+					OutputFsImageNtHeader(pINH);
+
+					ULONG nOfs = pIDh->e_lfanew + sizeof(IMAGE_NT_HEADERS32);
+					BOOL bSecurom = FALSE;
+					for (INT i = 0; i < pINH->FileHeader.NumberOfSections; i++) {
+						OutputFsImageSectionHeader(pDisc, (PIMAGE_SECTION_HEADER)&lpBuf[nOfs], &bSecurom);
+						nOfs += sizeof(IMAGE_SECTION_HEADER);
+					}
+					if (bSecurom) {
+						INT nLastSector = pDisc->PROTECT.pExtentPosForExe[n] + pDisc->PROTECT.pSectorSizeForExe[n];
+						if (!ExecReadCD(pExtArg, pDevice, pCdb, nLastSector, lpBuf, dwSize, _T(__FUNCTION__), __LINE__)) {
+							continue;
+						}
+						OutputCDMain(fileMainInfo, lpBuf, nLastSector, DISC_RAW_READ_SIZE);
+						INT nMod = pDisc->PROTECT.pDataLenForExe[n] % DISC_RAW_READ_SIZE;
+						UINT uiOfsOfSecuRomDll = 
+							MAKEUINT(MAKEWORD(lpBuf[nMod - 4], lpBuf[nMod - 3]), MAKEWORD(lpBuf[nMod - 2], lpBuf[nMod - 1]));
+						UINT uiPosOfSecuRomDll = uiOfsOfSecuRomDll / DISC_RAW_READ_SIZE;
+
+						INT n1stSector = (INT)(pDisc->PROTECT.pExtentPosForExe[n] + uiPosOfSecuRomDll);
+						if (!ExecReadCD(pExtArg, pDevice, pCdb, n1stSector, lpBuf, dwSize, _T(__FUNCTION__), __LINE__)) {
+							continue;
+						}
+						OutputCDMain(fileMainInfo, lpBuf, n1stSector, DISC_RAW_READ_SIZE);
+
+						UINT uiOfsOf16 = 0;
+						UINT uiOfsOf32 = 0;
+						UINT uiOfsOfNT = 0;
+						INT idx = 0;
+						OutputSecuRomDllHeader(lpBuf, &uiOfsOf16, &uiOfsOf32, &uiOfsOfNT, &idx);
+						OutputSint16(lpBuf, uiOfsOf16, uiOfsOfSecuRomDll, idx);
+
+						SetCommandForTransferLength(pExecType, pDevice, pCdb, DISC_RAW_READ_SIZE * 2, &byTransferLen, &byRoopLen);
+						UINT tmp = uiOfsOf32 / DISC_RAW_READ_SIZE;
+						INT n2ndSector = (INT)(pDisc->PROTECT.pExtentPosForExe[n] + tmp);
+						if (!ExecReadCD(pExtArg, pDevice, pCdb, n2ndSector, lpBuf, DISC_RAW_READ_SIZE * 2, _T(__FUNCTION__), __LINE__)) {
+							continue;
+						}
+						OutputCDMain(fileMainInfo, lpBuf, n2ndSector, DISC_RAW_READ_SIZE * 2);
+						INT nOfsOf32dll = (INT)(uiOfsOf32 - uiOfsOfSecuRomDll) % DISC_RAW_READ_SIZE;
+
+						OutputSint32(pDisc, lpBuf, nOfsOf32dll, FALSE);
+
+						UINT tmp2 = uiOfsOfNT / DISC_RAW_READ_SIZE;
+						INT n3rdSector = (INT)(pDisc->PROTECT.pExtentPosForExe[n] + tmp2);
+						if (!ExecReadCD(pExtArg, pDevice, pCdb, n3rdSector, lpBuf, DISC_RAW_READ_SIZE * 2, _T(__FUNCTION__), __LINE__)) {
+							continue;
+						}
+						OutputCDMain(fileMainInfo, lpBuf, n3rdSector, DISC_RAW_READ_SIZE * 2);
+						INT nOfsOfNTdll = (INT)(uiOfsOfNT - uiOfsOfSecuRomDll) % DISC_RAW_READ_SIZE;
+
+						OutputSintNT(pDisc, lpBuf, nOfsOfNTdll, FALSE);
+						SetCommandForTransferLength(pExecType, pDevice, pCdb, DISC_RAW_READ_SIZE, &byTransferLen, &byRoopLen);
+					}
+				}
+				else if (IsImageSig(&lpBuf[pIDh->e_lfanew], IMAGE_OS2_SIGNATURE)) {
+					OutputFsImageOS2Header((PIMAGE_OS2_HEADER)&lpBuf[pIDh->e_lfanew]);
+				}
+				else if (IsImageSig(&lpBuf[pIDh->e_lfanew], IMAGE_OS2_SIGNATURE_LE)) {
+					// TODO
 				}
 				else {
-					SetCommandForTransferLength(pExecType, pDevice, pCdb, (DWORD)pIDh->e_lfanew, &byTransferLen, &byRoopLen);
-					dwSize = DWORD(DISC_RAW_READ_SIZE) * byTransferLen;
-					n--;
+					OutputVolDescLog(
+						"%" CHARWIDTH "s: ImageNT,NE,LEHeader doesn't exist\n", pDisc->PROTECT.pNameForExe[n]);
 				}
-				continue;
-			}
-			OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA
-				, pDisc->PROTECT.pExtentPosForExe[n], pDisc->PROTECT.pExtentPosForExe[n], pDisc->PROTECT.pNameForExe[n]);
-			OutputFsImageDosHeader(pIDh);
-			WORD wMagic2 = MAKEWORD(lpBuf[pIDh->e_lfanew], lpBuf[pIDh->e_lfanew + 1]);
-			if (wMagic2 == IMAGE_NT_SIGNATURE) {
-				PIMAGE_NT_HEADERS32 pINH = (PIMAGE_NT_HEADERS32)&lpBuf[pIDh->e_lfanew];
-				OutputFsImageNtHeader(pINH);
-				ULONG nOfs = pIDh->e_lfanew + sizeof(IMAGE_NT_HEADERS32);
-				for (INT i = 0; i < pINH->FileHeader.NumberOfSections; i++) {
-					OutputFsImageSectionHeader(pDisc, (PIMAGE_SECTION_HEADER)&lpBuf[nOfs]);
-					nOfs += sizeof(IMAGE_SECTION_HEADER);
-				}
-			}
-			else if (wMagic2 == IMAGE_OS2_SIGNATURE) {
-				OutputFsImageOS2Header((PIMAGE_OS2_HEADER)&lpBuf[pIDh->e_lfanew]);
-			}
-			else if (wMagic2 == IMAGE_OS2_SIGNATURE_LE) {
-				// TODO
 			}
 			else {
 				OutputVolDescLog(
-					"%" CHARWIDTH "s: ImageNT,NE,LEHeader doesn't exist\n", pDisc->PROTECT.pNameForExe[n]);
+					"%" CHARWIDTH "s: ImageDosHeader doesn't exist\n", pDisc->PROTECT.pNameForExe[n]);
 			}
-		}
-		else {
-			OutputVolDescLog(
-				"%" CHARWIDTH "s: ImageDosHeader doesn't exist\n", pDisc->PROTECT.pNameForExe[n]);
 		}
 		OutputString("\rChecking EXE %4d", n + 1);
 	}
