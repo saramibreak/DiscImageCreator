@@ -168,10 +168,20 @@ BOOL ReadWriteDat(
 	WCHAR wszPathForDat[_MAX_PATH] = {};
 	_TCHAR szTmpPath[_MAX_PATH] = {};
 	if (bDesync) {
-		_sntprintf(szTmpPath, _MAX_PATH, _T("%s\\%s\\%s (Subs indexes).dat"), szDrive, szDir, szFname);
+		if (szDir[1] == '\0') {
+			_sntprintf(szTmpPath, _MAX_PATH, _T("%s\\%s (Subs indexes).dat"), szDrive, szFname);
+		}
+		else {
+			_sntprintf(szTmpPath, _MAX_PATH, _T("%s\\%s\\%s (Subs indexes).dat"), szDrive, szDir, szFname);
+		}
 	}
 	else {
-		_sntprintf(szTmpPath, _MAX_PATH, _T("%s\\%s\\%s.dat"), szDrive, szDir, szFname);
+		if (szDir[1] == '\0') {
+			_sntprintf(szTmpPath, _MAX_PATH, _T("%s\\%s.dat"), szDrive, szFname);
+		}
+		else {
+			_sntprintf(szTmpPath, _MAX_PATH, _T("%s\\%s\\%s.dat"), szDrive, szDir, szFname);
+		}
 	}
 	szTmpPath[_MAX_FNAME - 1] = 0;
 #ifndef UNICODE
@@ -234,8 +244,10 @@ BOOL ReadWriteDat(
 	wszDir[size - 1] = 0;
 #endif
 	LPWCH p = wcsrchr(wszDir, L'\\');
-	*p = NULL;
-	p = wcsrchr(wszDir, L'\\');
+	if (wszDir[1] != '\0') {
+		*p = NULL;
+		p = wcsrchr(wszDir, L'\\');
+	}
 	LPWCH pCurrentDir = p + 1;
 
 	XmlNodeType nodeType;
