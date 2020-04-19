@@ -28,6 +28,7 @@
 #include "set.h"
 #include "_external/abgx360.h"
 #include "_external/mbedtls/aes.h"
+#include "_external/NonStandardFunction.h"
 
 BOOL ReadCDFor3DODirectory(
 	PEXT_ARG pExtArg,
@@ -262,7 +263,7 @@ BOOL ReadDirectoryRecordDetail(
 							strncat(strTmpFull, strTmp, strlen(strTmp));
 						}
 					}
-					if (strstr(szCurDirName, ".CAB") || strstr(szCurDirName, ".cab") || strstr(szCurDirName, ".HDR")) {
+					if (strcasestr(szCurDirName, ".CAB") || strcasestr(szCurDirName, ".HDR")) {
 						if (pDisc->archivedFileNum == 16) {
 							OutputString("There is cab file more than 16\n");
 						}

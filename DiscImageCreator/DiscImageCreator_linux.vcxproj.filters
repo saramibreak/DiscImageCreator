@@ -117,6 +117,9 @@
     <ClCompile Include="outputFileSystem.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="_external\NonStandardFunction.cpp">
+      <Filter>_external</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="calcHash.h">
@@ -256,6 +259,9 @@
     </ClInclude>
     <ClInclude Include="outputFileSystem.h">
       <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\NonStandardFunction.h">
+      <Filter>_external</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

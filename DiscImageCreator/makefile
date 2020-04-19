@@ -45,6 +45,7 @@ SOURCES_CXX := \
   _external/crc16ccitt.o \
   _external/crc32.o \
   _external/md5c.o \
+  _external/NonStandardFunction.o \
   _external/platform_util.o \
   _external/prngcd.o \
   _external/rijndael-alg-fst.o \

@@ -29,9 +29,15 @@ VOID OutputFsImageNtHeader(
 );
 
 VOID OutputFsImageSectionHeader(
+	PEXT_ARG pExtArg,
 	PDISC pDisc,
 	PIMAGE_SECTION_HEADER pIsh,
 	LPBOOL bSecurom
+);
+
+VOID OutputSecuRomDll4_87Header(
+	LPBYTE lpBuf,
+	INT i
 );
 
 VOID OutputSecuRomDllHeader(
@@ -50,14 +56,12 @@ VOID OutputSint16(
 );
 
 VOID OutputSint32(
-	PDISC pDisc,
 	LPBYTE lpBuf,
 	INT nOfsOf32dll,
 	BOOL bDummy
 );
 
 VOID OutputSintNT(
-	PDISC pDisc,
 	LPBYTE lpBuf,
 	INT nOfsOfNTdll,
 	BOOL bDummy

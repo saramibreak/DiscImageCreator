@@ -17,6 +17,7 @@
 #include "convert.h"
 #include "get.h"
 #include "output.h"
+#include "_external/NonStandardFunction.h"
 
 VOID OutputFsImageDosHeader(
 	PIMAGE_DOS_HEADER pIdh
@@ -174,8 +175,36 @@ VOID OutputFsImageNtHeader(
 	}
 }
 
+BOOL IsKnownSectionName(
+	LPCH lpName
+) {
+	if (strcasestr(lpName, "bss") ||
+		strcasestr(lpName, "tls") ||
+		strcasestr(lpName, "text") ||
+		strcasestr(lpName, "data") ||
+		strcasestr(lpName, "rsrc") ||
+		strcasestr(lpName, "orpc") ||
+		strcasestr(lpName, "BINK") ||
+		strcasestr(lpName, "CODE") ||
+		strcasestr(lpName, "reloc") ||
+		strcasestr(lpName, "debug") ||
+		strcasestr(lpName, "drectve") ||
+		strcasestr(lpName, "msvcjmc") ||
+		strcasestr(lpName, "PAGE") ||
+		strcasestr(lpName, "INIT") ||
+		strcasestr(lpName, "PAGE") ||
+		strcasestr(lpName, "SEG") ||
+		strcasestr(lpName, "UPX") ||
+		strcasestr(lpName, "MSSMIXER")
+		) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
 // https://msdn.microsoft.com/en-us/library/windows/desktop/ms680341(v=vs.85).aspx
 VOID OutputFsImageSectionHeader(
+	PEXT_ARG pExtArg,
 	PDISC pDisc,
 	PIMAGE_SECTION_HEADER pIsh,
 	LPBOOL bSecurom
@@ -198,25 +227,109 @@ VOID OutputFsImageSectionHeader(
 		, pIsh->PointerToRelocations, pIsh->PointerToLinenumbers, pIsh->NumberOfRelocations
 		, pIsh->NumberOfLinenumbers, pIsh->Characteristics
 	);
-	if (!strncmp((LPCH)pIsh->Name, "icd1", 4)) {
-		pDisc->PROTECT.byExist = codelock;
-		strncpy(pDisc->PROTECT.name[0], (LPCH)pIsh->Name, sizeof(pIsh->Name));
-		pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] = pDisc->PROTECT.nNextLBAOfLastVolDesc;
-		pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0] =
-			pDisc->PROTECT.nPrevLBAOfPathTablePos - pDisc->PROTECT.nNextLBAOfLastVolDesc;
+	if (pDisc != NULL) {
+		if (!strncmp((LPCH)pIsh->Name, "icd1", 4)) {
+			pDisc->PROTECT.byExist = codelock;
+			strncpy(pDisc->PROTECT.name[0], (LPCH)pIsh->Name, sizeof(pIsh->Name));
+			pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] = pDisc->PROTECT.nNextLBAOfLastVolDesc;
+			pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0] =
+				pDisc->PROTECT.nPrevLBAOfPathTablePos - pDisc->PROTECT.nNextLBAOfLastVolDesc;
+		}
+		else if (!strncmp((LPCH)pIsh->Name, ".vob.pcd", 8)) {
+			pDisc->PROTECT.byExist = protectCDVOB;
+			strncpy(pDisc->PROTECT.name[0], (LPCH)pIsh->Name, sizeof(pIsh->Name));
+		}
+		else if (!strncmp((LPCH)pIsh->Name, ".cms_t", 6) || !strncmp((LPCH)pIsh->Name, ".cms_d", 6) ||
+			(pExtArg != NULL && pExtArg->byIntentionalSub && !IsKnownSectionName((LPCH)pIsh->Name))
+			) {
+			// This string exists SecuROM OLD "Re-Volt (Europe)" and SecuROM NEW "Supreme Snowboarding (Europe) and "Beam Breakers (Europe) etc"
+			pDisc->PROTECT.byExist = securomTmp;
+			strncpy(pDisc->PROTECT.name[0], (LPCH)pIsh->Name, sizeof(pIsh->Name));
+			*bSecurom = TRUE;
+		}
 	}
-	else if (!strncmp((LPCH)pIsh->Name, ".vob.pcd", 8)) {
-		pDisc->PROTECT.byExist = protectCDVOB;
-		strncpy(pDisc->PROTECT.name[0], (LPCH)pIsh->Name, sizeof(pIsh->Name));
+}
+
+VOID OutputSecuRomDll4_87Header(
+	LPBYTE lpBuf,
+	INT i
+) {
+	BYTE scrTbl[] = {
+		      0x00, 0x02,
+		0x08, 0x03, 0x08,
+		0x14, 0x06, 0x0e,
+		// I don't know whether the upper data is correct
+		0x20, 0x09, 0x14,
+		0x2c, 0x0c, 0x1a,
+		0x38, 0x0f, 0x20,
+		0x44, 0x12, 0x26,
+		0x50, 0x15, 0x2c,
+		0x5c, 0x18, 0x32,
+		0x68, 0x1b, 0x38,
+		0x74, 0x1e, 0x3e,
+		0x80, 0x21, 0x44,
+		0x8c, 0x24, 0x4a,
+		// I don't know whether the lower data is correct
+		0x98, 0x27, 0x50,
+		0xa4, 0x2a, 0x56,
+		0xb0, 0x2d, 0x5c,
+		0xbc, 0x30, 0x62,
+		0xc8, 0x33, 0x68,
+		0xd4, 0x36, 0x6e,
+		0xe0, 0x39, 0x74,
+		0xec, 0x3c, 0x7a,
+		0xf8, 0x3f, 0x80,
+		0x04, 0x42, 0x86,
+		0x10, 0x45, 0x8c,
+		0x1c, 0x48, 0x92,
+		0x28, 0x4b, 0x98,
+		0x34, 0x4e, 0x9e,
+		0x40, 0x51
+	};
+	OutputVolDescLog(
+		"\t" OUTPUT_DHYPHEN_PLUS_STR("SecuROM DLL Header")
+		"\t\t         Signature: %02x %02x %02x %02x\n"
+		"\t\t     Unknown Value: %02x %02x %02x %02x\n"
+		"\t\t           Version: %c%c%c%c%c%c%c\n"
+		"\t\t    Unknown String: %c%c%c%c\n"
+		, lpBuf[0 + i] ^ scrTbl[0], lpBuf[1 + i] ^ scrTbl[1], lpBuf[2 + i] ^ scrTbl[2], lpBuf[3 + i] ^ scrTbl[3]
+		, lpBuf[4 + i] ^ scrTbl[4], lpBuf[5 + i] ^ scrTbl[5], lpBuf[6 + i] ^ scrTbl[6], lpBuf[7 + i] ^ scrTbl[7]
+		, lpBuf[8 + i] ^ scrTbl[8], lpBuf[9 + i] ^ scrTbl[9], lpBuf[10 + i] ^ scrTbl[10], lpBuf[11 + i] ^ scrTbl[11]
+		, lpBuf[12 + i] ^ scrTbl[12], lpBuf[13 + i] ^ scrTbl[13], lpBuf[14 + i] ^ scrTbl[14]
+		, lpBuf[16 + i] ^ scrTbl[16], lpBuf[17 + i] ^ scrTbl[17], lpBuf[18 + i] ^ scrTbl[18], lpBuf[19 + i] ^ scrTbl[19]
+	);
+	for (INT k = 3, j = 0; k < 12; k++, j += 2) {
+		OutputVolDescLog(
+			"\t\tSecuROM Sector[%02d]: %5d (%04x)\n"
+			, k, MAKEWORD(lpBuf[20 + i + j] ^ scrTbl[20 + j], lpBuf[21 + i + j] ^ scrTbl[21 + j])
+			, MAKEWORD(lpBuf[20 + i + j] ^ scrTbl[20 + j], lpBuf[21 + i + j] ^ scrTbl[21 + j])
+		);
+	};
+	for (INT m = 0, j = 0; m < 13; m++, j += 2) {
+		OutputVolDescLog(
+			"\t\tUnknown Value: %5d (%04x)\n"
+			, MAKEWORD(lpBuf[38 + i + j] ^ scrTbl[38 + j], lpBuf[39 + i + j] ^ scrTbl[39 + j])
+			, MAKEWORD(lpBuf[38 + i + j] ^ scrTbl[38 + j], lpBuf[39 + i + j] ^ scrTbl[39 + j])
+		);
 	}
-	else if (!strncmp((LPCH)pIsh->Name, ".cms_t", 6) ||
-		!strncmp((LPCH)pIsh->Name, ".cms_d", 6) ||
-		!strncmp((LPCH)pIsh->Name, ".psbf", 5) // [PC] Hidden & Dangerous 2 (Europe)
-		) {
-		// This string exists SecuROM OLD "Re-Volt (Europe)" and SecuROM NEW "Supreme Snowboarding (Europe) and "Beam Breakers (Europe) etc"
-		pDisc->PROTECT.byExist = securomTmp;
-		strncpy(pDisc->PROTECT.name[0], (LPCH)pIsh->Name, sizeof(pIsh->Name));
-		*bSecurom = TRUE;
+	CHAR str[10] = {};
+	for (INT m = 0, j = 0; m < 10; m++, j++) {
+		str[m] = lpBuf[64 + i + j] ^ scrTbl[64 + j];
+	}
+	OutputVolDescLog(
+		"\t\tUnknown String: %.10" CHARWIDTH "s\n", &str[0]
+	);
+	OutputVolDescLog(
+		"\t\tOffset of SecuROM DLL Header: %5d (%04x)\n"
+		, MAKEUINT(MAKEWORD(lpBuf[82 + i], lpBuf[83 + i]), MAKEWORD(lpBuf[84 + i], lpBuf[85 + i]))
+		, MAKEUINT(MAKEWORD(lpBuf[82 + i], lpBuf[83 + i]), MAKEWORD(lpBuf[84 + i], lpBuf[85 + i]))
+	);
+	for (INT m = 0, j = 0; m < 20; m++, j += 2) {
+		OutputVolDescLog(
+			"\t\tUnknown Value: %5d (%04x)\n"
+			, MAKEWORD(lpBuf[86 + i + j], lpBuf[87 + i + j])
+			, MAKEWORD(lpBuf[86 + i + j], lpBuf[87 + i + j])
+		);
 	}
 }
 
@@ -228,11 +341,11 @@ VOID OutputSecuRomDllHeader(
 	LPINT idx
 ) {
 	OutputVolDescLog(
-		OUTPUT_DHYPHEN_PLUS_STR("SecuROM DLL Header")
-		"\t         Signature: %.4" CHARWIDTH "s\n"
-		"\t     Unknown Value: %08x\n"
-		"\t           Version: %.8" CHARWIDTH "s\n"
-		"\t    Unknown String: %.4" CHARWIDTH "s\n"
+		"\t" OUTPUT_DHYPHEN_PLUS_STR("SecuROM DLL Header")
+		"\t\t         Signature: %.4" CHARWIDTH "s\n"
+		"\t\t     Unknown Value: %08x\n"
+		"\t\t           Version: %.8" CHARWIDTH "s\n"
+		"\t\t    Unknown String: %.4" CHARWIDTH "s\n"
 		, &lpBuf[0]
 		, MAKEUINT(MAKEWORD(lpBuf[4], lpBuf[5]), MAKEWORD(lpBuf[6], lpBuf[7]))
 		, &lpBuf[8]
@@ -240,13 +353,13 @@ VOID OutputSecuRomDllHeader(
 	);
 	for (INT i = 3, j = 0; i < 12; i++, j += 2) {
 		OutputVolDescLog(
-			"\tSecuROM Sector[%02d]: %5d (%04x)\n"
+			"\t\tSecuROM Sector[%02d]: %5d (%04x)\n"
 			, i, MAKEWORD(lpBuf[20 + j], lpBuf[21 + j]), MAKEWORD(lpBuf[20 + j], lpBuf[21 + j])
 		);
 	};
 	for (INT i = 0, j = 0; i < 13; i++, j += 2) {
 		OutputVolDescLog(
-			"\tUnknown Value: %5d (%04x)\n"
+			"\t\tUnknown Value: %5d (%04x)\n"
 			, MAKEWORD(lpBuf[38 + j], lpBuf[39 + j]), MAKEWORD(lpBuf[38 + j], lpBuf[39 + j])
 		);
 	}
@@ -257,12 +370,11 @@ VOID OutputSecuRomDllHeader(
 		*uiOfsOfNT = MAKEUINT(MAKEWORD(lpBuf[228], lpBuf[229]), MAKEWORD(lpBuf[230], lpBuf[231]));
 		*idx = 68;
 		OutputVolDescLog(
-			"\tUnknown String: %.10" CHARWIDTH "s\n"
-			, &lpBuf[64]
+			"\t\tUnknown String: %.10" CHARWIDTH "s\n", &lpBuf[64]
 		);
 		for (INT i = 0, j = 0; i < 29; i++, j += 2) {
 			OutputVolDescLog(
-				"\tUnknown Value: %5d (%04x)\n"
+				"\t\tUnknown Value: %5d (%04x)\n"
 				, MAKEWORD(lpBuf[74 + j], lpBuf[75 + j]), MAKEWORD(lpBuf[74 + j], lpBuf[75 + j])
 			);
 		}
@@ -274,39 +386,39 @@ VOID OutputSecuRomDllHeader(
 	}
 
 	OutputVolDescLog(
-		"\t-----------------------\n"
-		"\tOffset of dll: %08x\n"
-		"\t  Size of dll: %08x\n"
-		"\tUnknown Value: %08x\n"
-		"\tUnknown Value: %08x\n"
-		"\tUnknown Value: %08x\n"
-		"\tUnknown Value: %08x\n"
-		"\tUnknown Value: %08x\n"
-		"\tUnknown Value: %08x\n"
-		"\t         Name: %.12" CHARWIDTH "s\n"
-		"\tUnknown Value: %08x\n"
-		"\t-----------------------\n"
-		"\tOffset of dll: %08x\n"
-		"\t  Size of dll: %08x\n"
-		"\tUnknown Value: %08x\n"
-		"\tUnknown Value: %08x\n"
-		"\tUnknown Value: %08x\n"
-		"\tUnknown Value: %08x\n"
-		"\tUnknown Value: %08x\n"
-		"\tUnknown Value: %08x\n"
-		"\t         Name: %.12" CHARWIDTH "s\n"
-		"\tUnknown Value: %08x\n"
-		"\t-----------------------\n"
-		"\tOffset of dll: %08x\n"
-		"\t  Size of dll: %08x\n"
-		"\tUnknown Value: %08x\n"
-		"\tUnknown Value: %08x\n"
-		"\tUnknown Value: %08x\n"
-		"\tUnknown Value: %08x\n"
-		"\tUnknown Value: %08x\n"
-		"\tUnknown Value: %08x\n"
-		"\t         Name: %.12" CHARWIDTH "s\n"
-		"\tUnknown Value: %08x\n"
+		"\t\t-----------------------\n"
+		"\t\tOffset of dll: %08x\n"
+		"\t\t  Size of dll: %08x\n"
+		"\t\tUnknown Value: %08x\n"
+		"\t\tUnknown Value: %08x\n"
+		"\t\tUnknown Value: %08x\n"
+		"\t\tUnknown Value: %08x\n"
+		"\t\tUnknown Value: %08x\n"
+		"\t\tUnknown Value: %08x\n"
+		"\t\t         Name: %.12" CHARWIDTH "s\n"
+		"\t\tUnknown Value: %08x\n"
+		"\t\t-----------------------\n"
+		"\t\tOffset of dll: %08x\n"
+		"\t\t  Size of dll: %08x\n"
+		"\t\tUnknown Value: %08x\n"
+		"\t\tUnknown Value: %08x\n"
+		"\t\tUnknown Value: %08x\n"
+		"\t\tUnknown Value: %08x\n"
+		"\t\tUnknown Value: %08x\n"
+		"\t\tUnknown Value: %08x\n"
+		"\t\t         Name: %.12" CHARWIDTH "s\n"
+		"\t\tUnknown Value: %08x\n"
+		"\t\t-----------------------\n"
+		"\t\tOffset of dll: %08x\n"
+		"\t\t  Size of dll: %08x\n"
+		"\t\tUnknown Value: %08x\n"
+		"\t\tUnknown Value: %08x\n"
+		"\t\tUnknown Value: %08x\n"
+		"\t\tUnknown Value: %08x\n"
+		"\t\tUnknown Value: %08x\n"
+		"\t\tUnknown Value: %08x\n"
+		"\t\t         Name: %.12" CHARWIDTH "s\n"
+		"\t\tUnknown Value: %08x\n"
 		, *uiOfsOf16
 		, MAKEUINT(MAKEWORD(lpBuf[68 + *idx], lpBuf[69 + *idx]), MAKEWORD(lpBuf[70 + *idx], lpBuf[71 + *idx]))
 		, MAKEUINT(MAKEWORD(lpBuf[72 + *idx], lpBuf[73 + *idx]), MAKEWORD(lpBuf[74 + *idx], lpBuf[75 + *idx]))
@@ -354,7 +466,6 @@ VOID OutputSint16(
 }
 
 VOID OutputSint32(
-	PDISC pDisc,
 	LPBYTE lpBuf,
 	INT nOfsOf32dll,
 	BOOL bDummy
@@ -366,13 +477,12 @@ VOID OutputSint32(
 	OutputFsImageNtHeader(pINH3);
 	ULONG nOfs3 = nOfsOf32dll + pIDh3->e_lfanew + sizeof(IMAGE_NT_HEADERS32);
 	for (INT i = 0; i < pINH3->FileHeader.NumberOfSections; i++) {
-		OutputFsImageSectionHeader(pDisc, (PIMAGE_SECTION_HEADER)&lpBuf[nOfs3], &bDummy);
+		OutputFsImageSectionHeader(NULL, NULL, (PIMAGE_SECTION_HEADER)&lpBuf[nOfs3], &bDummy);
 		nOfs3 += sizeof(IMAGE_SECTION_HEADER);
 	}
 }
 
 VOID OutputSintNT(
-	PDISC pDisc,
 	LPBYTE lpBuf,
 	INT nOfsOfNTdll,
 	BOOL bDummy
@@ -384,7 +494,7 @@ VOID OutputSintNT(
 	OutputFsImageNtHeader(pINH4);
 	ULONG nOfs4 = nOfsOfNTdll + pIDh4->e_lfanew + sizeof(IMAGE_NT_HEADERS32);
 	for (INT i = 0; i < pINH4->FileHeader.NumberOfSections; i++) {
-		OutputFsImageSectionHeader(pDisc, (PIMAGE_SECTION_HEADER)&lpBuf[nOfs4], &bDummy);
+		OutputFsImageSectionHeader(NULL, NULL, (PIMAGE_SECTION_HEADER)&lpBuf[nOfs4], &bDummy);
 		nOfs4 += sizeof(IMAGE_SECTION_HEADER);
 	}
 }

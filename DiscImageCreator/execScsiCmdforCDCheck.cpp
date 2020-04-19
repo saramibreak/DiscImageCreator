@@ -25,6 +25,7 @@
 #include "output.h"
 #include "outputScsiCmdLogforCD.h"
 #include "set.h"
+#include "_external/NonStandardFunction.h"
 
 BOOL ReadCDForSubChannelOffset(
 	PEXT_ARG pExtArg,
@@ -1132,6 +1133,24 @@ BOOL IsImageSig(
 	return FALSE;
 }
 
+BOOL IsSecuromDllSig(
+	LPBYTE lpBuf,
+	INT i
+) {
+	if (lpBuf[0 + i] == 0xca && lpBuf[1 + i] == 0xdd && lpBuf[2 + i] == 0xdd && lpBuf[3 + i] == 0xac &&
+		lpBuf[4 + i] == 0x03 && lpBuf[5 + i] == 0xca && lpBuf[6 + i] == 0xdd && lpBuf[7 + i] == 0x00) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
+LONG GetOfsOfSecuromDllSig(
+	LPBYTE lpBuf,
+	INT i
+) {
+	return MAKELONG(MAKEWORD(lpBuf[i + 82], lpBuf[i + 83]), MAKEWORD(lpBuf[i + 84], lpBuf[i + 85]));
+}
+
 #ifdef _WIN32
 LRESULT WINAPI CabinetCallback(
 	IN PVOID pMyInstallData,
@@ -1167,11 +1186,112 @@ LRESULT WINAPI CabinetCallback(
 	return lRetVal;
 }
 
+BOOL ReadExeFromFile(
+	PEXT_ARG pExtArg,
+	PDISC pDisc,
+	LPCTSTR szFullPath,
+	LPCTSTR szFileName
+) {
+	FILE* fp = _tfopen(szFullPath, _T("rb"));
+	if (!fp) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		OutputErrorString("Failed to OpenFile: %s\n", szFullPath);
+		return FALSE;
+	}
+	CONST INT bufsize = DISC_RAW_READ_SIZE * 2;
+	BYTE lpBuf[bufsize] = {};
+	fread(lpBuf, sizeof(lpBuf), sizeof(BYTE), fp);
+	OutputCDMain(fileMainInfo, lpBuf, 0, bufsize);
+
+	if (IsImageSig(lpBuf, IMAGE_DOS_SIGNATURE)) {
+		PIMAGE_DOS_HEADER pIDh = (PIMAGE_DOS_HEADER)&lpBuf[0];
+		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR("%s"), szFileName);
+		OutputFsImageDosHeader(pIDh);
+
+		if (IsImageSig(&lpBuf[pIDh->e_lfanew], IMAGE_NT_SIGNATURE)) {
+			PIMAGE_NT_HEADERS32 pINH = (PIMAGE_NT_HEADERS32)&lpBuf[pIDh->e_lfanew];
+			OutputFsImageNtHeader(pINH);
+
+			ULONG nOfs = pIDh->e_lfanew + sizeof(IMAGE_NT_HEADERS32);
+			BOOL bSecurom = FALSE;
+			for (INT i = 0; i < pINH->FileHeader.NumberOfSections; i++) {
+				OutputFsImageSectionHeader(pExtArg, pDisc, (PIMAGE_SECTION_HEADER)&lpBuf[nOfs], &bSecurom);
+				nOfs += sizeof(IMAGE_SECTION_HEADER);
+			}
+			if (bSecurom) {
+				fseek(fp, -4, SEEK_END);
+				UINT uiOfsOfSecuRomDll = 0;
+				fread(&uiOfsOfSecuRomDll, 1, sizeof(UINT), fp);
+				if (uiOfsOfSecuRomDll) {
+					fseek(fp, (LONG)uiOfsOfSecuRomDll, SEEK_SET);
+					fread(lpBuf, sizeof(lpBuf), sizeof(BYTE), fp);
+					OutputCDMain(fileMainInfo, lpBuf, 0, bufsize);
+
+					UINT uiOfsOf16 = 0;
+					UINT uiOfsOf32 = 0;
+					UINT uiOfsOfNT = 0;
+					INT idx = 0;
+					OutputSecuRomDllHeader(lpBuf, &uiOfsOf16, &uiOfsOf32, &uiOfsOfNT, &idx);
+					OutputSint16(lpBuf, uiOfsOf16, uiOfsOfSecuRomDll, idx);
+
+					fseek(fp, (LONG)uiOfsOf32, SEEK_SET);
+					fread(lpBuf, sizeof(lpBuf), sizeof(BYTE), fp);
+					OutputCDMain(fileMainInfo, lpBuf, 0, bufsize);
+					OutputSint32(lpBuf, 0, FALSE);
+
+					fseek(fp, (LONG)uiOfsOfNT, SEEK_SET);
+					fread(lpBuf, sizeof(lpBuf), sizeof(BYTE), fp);
+					OutputCDMain(fileMainInfo, lpBuf, 0, bufsize);
+					OutputSintNT(lpBuf, 0, FALSE);
+				}
+				else if (pExtArg->byIntentionalSub) {
+					rewind(fp);
+					fread(lpBuf, sizeof(lpBuf), sizeof(BYTE), fp);
+					BOOL bFound = FALSE;
+					while (!feof(fp) && !ferror(fp)) {
+						for (INT i = 0; i < sizeof(lpBuf) - 8; i++) {
+							if (IsSecuromDllSig(lpBuf, i)) {
+								LONG lSigPos = ftell(fp) - bufsize + i;
+								LONG lSigOfs = GetOfsOfSecuromDllSig(lpBuf, i);
+								if (lSigPos == lSigOfs) {
+									OutputSecuRomDll4_87Header(lpBuf, i);
+									OutputCDMain(fileMainInfo, lpBuf, 0, bufsize);
+									bFound = TRUE;
+									break;
+								}
+							}
+						}
+						if (bFound) {
+							break;
+						}
+						else {	
+							fread(lpBuf, sizeof(lpBuf), sizeof(BYTE), fp);
+						}
+					}
+				}
+			}
+		}
+		else if (IsImageSig(&lpBuf[pIDh->e_lfanew], IMAGE_OS2_SIGNATURE)) {
+			OutputFsImageOS2Header((PIMAGE_OS2_HEADER)&lpBuf[pIDh->e_lfanew]);
+		}
+		else if (IsImageSig(&lpBuf[pIDh->e_lfanew], IMAGE_OS2_SIGNATURE_LE)) {
+			// TODO
+		}
+		else {
+			OutputVolDescLog(
+				"%s: ImageNT,NE,LEHeader doesn't exist\n", szFileName);
+		}
+	}
+	FcloseAndNull(fp);
+	return TRUE;
+}
+
 #define FILE_DELETE 1
 #define FILE_SEARCH 2
-#define FILE_EXTRACT 3
+#define FILE_CREATE 3
 
 BOOL ProcessDirectory(
+	PEXT_ARG pExtArg, 
 	PDISC pDisc,
 	LPTSTR szExtractdir,
 	INT nOperate
@@ -1194,7 +1314,7 @@ BOOL ProcessDirectory(
 				_tcsncat(szFoundFilePathName, fd.cFileName, _MAX_PATH);
 
 				if (!(FILE_ATTRIBUTE_DIRECTORY & fd.dwFileAttributes)) {
-					if (nOperate == FILE_DELETE || nOperate == FILE_EXTRACT) {
+					if (nOperate == FILE_DELETE || nOperate == FILE_CREATE) {
 						if (!DeleteFile(szFoundFilePathName)) {
 							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 							OutputErrorString("Failed to DeleteFile %s\n", fd.cFileName);
@@ -1208,69 +1328,9 @@ BOOL ProcessDirectory(
 							_tcsstr(szFoundFilePathName, _T(".DLL")) ||
 							_tcsstr(szFoundFilePathName, _T(".dll"))
 							) {
-							FILE* fp = _tfopen(szFoundFilePathName, _T("rb"));
-							if (!fp) {
-								OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-								OutputErrorString("Failed to OpenFile: %s\n", szFoundFilePathName);
+							if (!ReadExeFromFile(pExtArg, pDisc, szFoundFilePathName, fd.cFileName)) {
 								return FALSE;
 							}
-							BYTE lpBuf[DISC_RAW_READ_SIZE * 2] = {};
-							fread(lpBuf, sizeof(lpBuf), sizeof(BYTE), fp);
-							OutputCDMain(fileMainInfo, lpBuf, 0, DISC_RAW_READ_SIZE * 2);
-
-							if (IsImageSig(lpBuf, IMAGE_DOS_SIGNATURE)) {
-								PIMAGE_DOS_HEADER pIDh = (PIMAGE_DOS_HEADER)&lpBuf[0];
-								OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR("%s"), fd.cFileName);
-								OutputFsImageDosHeader(pIDh);
-
-								if (IsImageSig(&lpBuf[pIDh->e_lfanew], IMAGE_NT_SIGNATURE)) {
-									PIMAGE_NT_HEADERS32 pINH = (PIMAGE_NT_HEADERS32)&lpBuf[pIDh->e_lfanew];
-									OutputFsImageNtHeader(pINH);
-
-									ULONG nOfs = pIDh->e_lfanew + sizeof(IMAGE_NT_HEADERS32);
-									BOOL bSecurom = FALSE;
-									for (INT i = 0; i < pINH->FileHeader.NumberOfSections; i++) {
-										OutputFsImageSectionHeader(pDisc, (PIMAGE_SECTION_HEADER)&lpBuf[nOfs], &bSecurom);
-										nOfs += sizeof(IMAGE_SECTION_HEADER);
-									}
-									if (bSecurom) {
-										fseek(fp, -4, SEEK_END);
-										UINT uiOfsOfSecuRomDll = 0;
-										fread(&uiOfsOfSecuRomDll, 1, sizeof(UINT), fp);
-										fseek(fp, (LONG)uiOfsOfSecuRomDll, SEEK_SET);
-										fread(lpBuf, sizeof(lpBuf), sizeof(BYTE), fp);
-										OutputCDMain(fileMainInfo, lpBuf, 0, DISC_RAW_READ_SIZE * 2);
-
-										UINT uiOfsOf16 = 0;
-										UINT uiOfsOf32 = 0;
-										UINT uiOfsOfNT = 0;
-										INT idx = 0;
-										OutputSecuRomDllHeader(lpBuf, &uiOfsOf16, &uiOfsOf32, &uiOfsOfNT, &idx);
-										OutputSint16(lpBuf, uiOfsOf16, uiOfsOfSecuRomDll, idx);
-
-										fseek(fp, (LONG)uiOfsOf32, SEEK_SET);
-										fread(lpBuf, sizeof(lpBuf), sizeof(BYTE), fp);
-										OutputCDMain(fileMainInfo, lpBuf, 0, DISC_RAW_READ_SIZE * 2);
-										OutputSint32(pDisc, lpBuf, 0, FALSE);
-
-										fseek(fp, (LONG)uiOfsOfNT, SEEK_SET);
-										fread(lpBuf, sizeof(lpBuf), sizeof(BYTE), fp);
-										OutputCDMain(fileMainInfo, lpBuf, 0, DISC_RAW_READ_SIZE * 2);
-										OutputSintNT(pDisc, lpBuf, 0, FALSE);
-									}
-								}
-								else if (IsImageSig(&lpBuf[pIDh->e_lfanew], IMAGE_OS2_SIGNATURE)) {
-									OutputFsImageOS2Header((PIMAGE_OS2_HEADER)&lpBuf[pIDh->e_lfanew]);
-								}
-								else if (IsImageSig(&lpBuf[pIDh->e_lfanew], IMAGE_OS2_SIGNATURE_LE)) {
-									// TODO
-								}
-								else {
-									OutputVolDescLog(
-										"%s: ImageNT,NE,LEHeader doesn't exist\n", fd.cFileName);
-								}
-							}
-							FcloseAndNull(fp);
 						}
 					}
 				}
@@ -1278,7 +1338,7 @@ BOOL ProcessDirectory(
 		} while (FindNextFile(hFind, &fd));
 		FindClose(hFind);
 	}
-	if (nOperate == FILE_EXTRACT) {
+	if (nOperate == FILE_CREATE) {
 #ifdef UNICODE
 		if (SHCreateDirectory(NULL, szExtractdir)) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -1323,48 +1383,148 @@ BOOL ReadCDForCheckingExe(
 			continue;
 		}
 		BOOL bCab = FALSE;
-		if (strstr(pDisc->PROTECT.pNameForExe[n], ".CAB") || strstr(pDisc->PROTECT.pNameForExe[n], ".cab")) {
+		if (strcasestr(pDisc->PROTECT.pNameForExe[n], ".CAB") ||
+			strcasestr(pDisc->PROTECT.pNameForExe[n], ".HDR")) {
+			CHAR cabFullPathTmp[_MAX_PATH] = {};
+			CHAR drive[_MAX_DRIVE] = {};
+#ifdef _WIN32
+			_snprintf(drive, sizeof(drive), "%c:", pDevice->byDriveLetter);
+#else
+			_snprintf(drive, sizeof(drive), "%s", pDevice->drivepath);
+#endif
+			strncat(cabFullPathTmp, drive, sizeof(drive));
+			strncat(cabFullPathTmp, pDisc->archivedFile[nCabIdx], sizeof(pDisc->archivedFile[nCabIdx]));
+
+			_TCHAR szTmpPath[_MAX_PATH] = {};
+			if (!GetCurrentDirectory(sizeof(szTmpPath) / sizeof(szTmpPath[0]), szTmpPath)) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				return FALSE;
+			}
+
+			_TCHAR cabFullPath[_MAX_PATH] = {};
+#ifdef UNICODE
+			MultiByteToWideChar(CP_ACP, 0,
+				cabFullPathTmp, sizeof(cabFullPathTmp), cabFullPath, sizeof(cabFullPath));
+#else
+			strncpy(cabFullPath, cabFullPathTmp, sizeof(cabFullPathTmp));
+#endif
 			if (!strncmp((CONST PCHAR)&lpBuf[0], "MSCF", 4)) {
 #ifdef _WIN32
 				OutputString(
-					"Detected MicroSoft Cabinet File: %" CHARWIDTH "s\n"
+					"\nDetected MicroSoft Cabinet File: %" CHARWIDTH "s\n"
 					"Please wait until all files are extracted. This is needed to search protection\n"
 					, pDisc->archivedFile[nCabIdx]
 				);
-				CHAR cabFullPathTmp[_MAX_PATH] = {};
-				CHAR drive[_MAX_DRIVE] = {};
-				_snprintf(drive, sizeof(drive), "%c:", pDevice->byDriveLetter);
-				strncat(cabFullPathTmp, drive, sizeof(drive));
-				strncat(cabFullPathTmp, pDisc->archivedFile[nCabIdx], sizeof(pDisc->archivedFile[nCabIdx]));
-
-				_TCHAR szExtractdir[_MAX_PATH] = {};
-				if (!GetCurrentDirectory(sizeof(szExtractdir) / sizeof(szExtractdir[0]), szExtractdir)) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					return FALSE;
-				}
-				_tcscat(szExtractdir, _T("\\!extracted\\"));
-				ProcessDirectory(pDisc, szExtractdir, FILE_EXTRACT);
-
-				_TCHAR cabFullPath[_MAX_PATH] = {};
-#ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, 0,
-					cabFullPathTmp, sizeof(cabFullPathTmp), cabFullPath, sizeof(cabFullPath));
-#else
-				strncpy(cabFullPath, cabFullPathTmp, sizeof(cabFullPathTmp));
-#endif
-				if (!SetupIterateCabinet(cabFullPath, 0, (PSP_FILE_CALLBACK)CabinetCallback, szExtractdir)) {
+				_tcscat(szTmpPath, _T("\\!extracted\\"));
+				ProcessDirectory(pExtArg, pDisc, szTmpPath, FILE_CREATE);
+				if (!SetupIterateCabinet(cabFullPath, 0, (PSP_FILE_CALLBACK)CabinetCallback, szTmpPath)) {
 					// 
 				}
 				nCabIdx++;
 				// Search exe, dll from extracted file
-				ProcessDirectory(pDisc, szExtractdir, FILE_SEARCH);
-				ProcessDirectory(pDisc, szExtractdir, FILE_DELETE);
+				ProcessDirectory(pExtArg, pDisc, szTmpPath, FILE_SEARCH);
+				ProcessDirectory(pExtArg, pDisc, szTmpPath, FILE_DELETE);
 				bCab = TRUE;
 #else
 				// TODO: linux can use cabextract
 #endif
 			}
 			else if (!strncmp((CONST PCHAR)&lpBuf[0], "ISc(", 4)) {
+#ifdef _WIN32
+				OutputString(
+					"\nDetected InterShield Cabinet File: %" CHARWIDTH "s\n"
+					"Please wait until all files are extracted. This is needed to search protection\n"
+					, pDisc->archivedFile[nCabIdx]
+				);
+				nCabIdx++;
+				bCab = TRUE;
+				_TCHAR szPathIsc[_MAX_PATH] = {};
+				bRet = GetCmd(szPathIsc, _T("i6comp"), _T("exe"));
+
+				if (bRet && PathFileExists(szPathIsc)) {
+					_TCHAR szTmpFullPath[_MAX_PATH] = {};
+					_tcsncpy(szTmpFullPath, szTmpPath, sizeof(_MAX_PATH) / sizeof(_TCHAR));
+					_tcscat(szTmpPath, _T("\\!exelist.txt"));
+
+					CONST INT nStrSize = _MAX_PATH * 2;
+					_TCHAR str[nStrSize] = {};
+					LPCTSTR szSearchList[] = { _T(".exe"), _T(".dll") };
+
+					for (INT i = 0; i < 2; i++) {
+						// Get all .exe or .dll list from .cab
+						// i6comp.exe output the file list like this
+						// 07-12-1999 12:45          0 A___          0    5 iKernel.exe
+						// 09-16-2002 19:12    2379215 A___    1125708   40 Lithtech.exe
+						// 09-16-2002 15:45    1658880 A___     718535   46 SierraUp.exe
+						_sntprintf(str, nStrSize,
+							_T("\"\"%s\" l -o \"%s\"\" 2> NUL | findstr /e /i %s > %s")
+							, szPathIsc, cabFullPath, szSearchList[i], szTmpPath);
+						_tsystem(str);
+
+						FILE* fp = _tfopen(szTmpPath, _T("r"));
+						if (!fp) {
+							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+							continue;
+						}
+
+						_TCHAR buf[512] = {};
+						_fgetts(buf, sizeof(buf), fp);
+						while (!feof(fp) && !ferror(fp)) {
+							LPTCH pTrimBuf[7] = {};
+							pTrimBuf[0] = _tcstok(buf, _T(" ")); // space
+							for (INT nRoop = 1; nRoop < 7; nRoop++) {
+								pTrimBuf[nRoop] = _tcstok(NULL, _T(" ")); // space
+							}
+							// File size is over 0
+							if (_tcscmp(pTrimBuf[4], _T("0"))) {
+								// extract .exe or .dll from .cab
+								_sntprintf(str, nStrSize,
+									_T("\"\"%s\" e -o \"%s\" %s\" 2> NUL"), szPathIsc, cabFullPath, pTrimBuf[5]);
+								_tsystem(str);
+
+								if (!GetCurrentDirectory(sizeof(szTmpFullPath) / sizeof(szTmpFullPath[0]), szTmpFullPath)) {
+									OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+									return FALSE;
+								}
+								_TCHAR fname[_MAX_PATH] = {};
+								size_t len = 0;
+								// exclude path
+								// 03-27-2003 11:07     274432 A___     128354   56 utils\clcompile.exe
+								_TCHAR* p = _tcsrchr(pTrimBuf[6], '\\');
+								if (p) {
+									len = _tcslen(p + sizeof(_TCHAR));
+									_tcsncpy(fname, p + sizeof(_TCHAR), len);
+								}
+								else {
+									len = _tcslen(pTrimBuf[6]);
+									_tcsncpy(fname, pTrimBuf[6], len);
+								}
+								_tcscat(szTmpFullPath, _T("\\"));
+								// Delete '\n'
+								fname[len - sizeof(_TCHAR)] = '\0';
+								_tcscat(szTmpFullPath, fname);
+
+								if (!ReadExeFromFile(pExtArg, pDisc, szTmpFullPath, fname)) {
+									continue;
+								}
+								if (!DeleteFile(szTmpFullPath)) {
+									OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+									OutputErrorString("Failed to DeleteFile %s\n", fname);
+								}
+								ZeroMemory(szTmpFullPath, sizeof(szTmpFullPath));
+							}
+							_fgetts(buf, sizeof(buf), fp);
+						}
+						FcloseAndNull(fp);
+					}
+					if (!DeleteFile(szTmpPath)) {
+						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+						OutputErrorString("Failed to DeleteFile %s\n", szTmpPath);
+					}
+				}
+#else
+				// TODO: linux doesn't support yet
+#endif
 			}
 		}
 
@@ -1383,6 +1543,10 @@ BOOL ReadCDForCheckingExe(
 					}
 					continue;
 				}
+				if (dwSize > DISC_RAW_READ_SIZE) {
+					SetCommandForTransferLength(pExecType, pDevice, pCdb, DISC_RAW_READ_SIZE, &byTransferLen, &byRoopLen);
+					dwSize = DISC_RAW_READ_SIZE;
+				}
 				OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA
 					, pDisc->PROTECT.pExtentPosForExe[n], pDisc->PROTECT.pExtentPosForExe[n], pDisc->PROTECT.pNameForExe[n]);
 				OutputFsImageDosHeader(pIDh);
@@ -1394,54 +1558,89 @@ BOOL ReadCDForCheckingExe(
 					ULONG nOfs = pIDh->e_lfanew + sizeof(IMAGE_NT_HEADERS32);
 					BOOL bSecurom = FALSE;
 					for (INT i = 0; i < pINH->FileHeader.NumberOfSections; i++) {
-						OutputFsImageSectionHeader(pDisc, (PIMAGE_SECTION_HEADER)&lpBuf[nOfs], &bSecurom);
+						OutputFsImageSectionHeader(pExtArg, pDisc, (PIMAGE_SECTION_HEADER)&lpBuf[nOfs], &bSecurom);
 						nOfs += sizeof(IMAGE_SECTION_HEADER);
 					}
 					if (bSecurom) {
-						INT nLastSector = pDisc->PROTECT.pExtentPosForExe[n] + pDisc->PROTECT.pSectorSizeForExe[n];
+						INT nLastSector = pDisc->PROTECT.pExtentPosForExe[n] + pDisc->PROTECT.pSectorSizeForExe[n] - 1;
 						if (!ExecReadCD(pExtArg, pDevice, pCdb, nLastSector, lpBuf, dwSize, _T(__FUNCTION__), __LINE__)) {
 							continue;
 						}
 						OutputCDMain(fileMainInfo, lpBuf, nLastSector, DISC_RAW_READ_SIZE);
 						INT nMod = pDisc->PROTECT.pDataLenForExe[n] % DISC_RAW_READ_SIZE;
-						UINT uiOfsOfSecuRomDll = 
-							MAKEUINT(MAKEWORD(lpBuf[nMod - 4], lpBuf[nMod - 3]), MAKEWORD(lpBuf[nMod - 2], lpBuf[nMod - 1]));
-						UINT uiPosOfSecuRomDll = uiOfsOfSecuRomDll / DISC_RAW_READ_SIZE;
-
-						INT n1stSector = (INT)(pDisc->PROTECT.pExtentPosForExe[n] + uiPosOfSecuRomDll);
-						if (!ExecReadCD(pExtArg, pDevice, pCdb, n1stSector, lpBuf, dwSize, _T(__FUNCTION__), __LINE__)) {
-							continue;
+						UINT uiOfsOfSecuRomDll = 0;
+						if (nMod) {
+							uiOfsOfSecuRomDll = MAKEUINT(MAKEWORD(lpBuf[nMod - 4], lpBuf[nMod - 3]), MAKEWORD(lpBuf[nMod - 2], lpBuf[nMod - 1]));
 						}
-						OutputCDMain(fileMainInfo, lpBuf, n1stSector, DISC_RAW_READ_SIZE);
-
-						UINT uiOfsOf16 = 0;
-						UINT uiOfsOf32 = 0;
-						UINT uiOfsOfNT = 0;
-						INT idx = 0;
-						OutputSecuRomDllHeader(lpBuf, &uiOfsOf16, &uiOfsOf32, &uiOfsOfNT, &idx);
-						OutputSint16(lpBuf, uiOfsOf16, uiOfsOfSecuRomDll, idx);
-
-						SetCommandForTransferLength(pExecType, pDevice, pCdb, DISC_RAW_READ_SIZE * 2, &byTransferLen, &byRoopLen);
-						UINT tmp = uiOfsOf32 / DISC_RAW_READ_SIZE;
-						INT n2ndSector = (INT)(pDisc->PROTECT.pExtentPosForExe[n] + tmp);
-						if (!ExecReadCD(pExtArg, pDevice, pCdb, n2ndSector, lpBuf, DISC_RAW_READ_SIZE * 2, _T(__FUNCTION__), __LINE__)) {
-							continue;
+						else {
+							uiOfsOfSecuRomDll = MAKEUINT(MAKEWORD(lpBuf[DISC_RAW_READ_SIZE - 4], lpBuf[DISC_RAW_READ_SIZE - 3])
+								, MAKEWORD(lpBuf[DISC_RAW_READ_SIZE - 2], lpBuf[DISC_RAW_READ_SIZE - 1]));
 						}
-						OutputCDMain(fileMainInfo, lpBuf, n2ndSector, DISC_RAW_READ_SIZE * 2);
-						INT nOfsOf32dll = (INT)(uiOfsOf32 - uiOfsOfSecuRomDll) % DISC_RAW_READ_SIZE;
+						if (uiOfsOfSecuRomDll && uiOfsOfSecuRomDll < (UINT)pDisc->PROTECT.pDataLenForExe[n]) {
+							UINT uiPosOfSecuRomDll = uiOfsOfSecuRomDll / DISC_RAW_READ_SIZE;
 
-						OutputSint32(pDisc, lpBuf, nOfsOf32dll, FALSE);
+							INT n1stSector = (INT)(pDisc->PROTECT.pExtentPosForExe[n] + uiPosOfSecuRomDll);
+							if (!ExecReadCD(pExtArg, pDevice, pCdb, n1stSector, lpBuf, dwSize, _T(__FUNCTION__), __LINE__)) {
+								continue;
+							}
+							OutputCDMain(fileMainInfo, lpBuf, n1stSector, DISC_RAW_READ_SIZE);
 
-						UINT tmp2 = uiOfsOfNT / DISC_RAW_READ_SIZE;
-						INT n3rdSector = (INT)(pDisc->PROTECT.pExtentPosForExe[n] + tmp2);
-						if (!ExecReadCD(pExtArg, pDevice, pCdb, n3rdSector, lpBuf, DISC_RAW_READ_SIZE * 2, _T(__FUNCTION__), __LINE__)) {
-							continue;
+							UINT uiOfsOf16 = 0;
+							UINT uiOfsOf32 = 0;
+							UINT uiOfsOfNT = 0;
+							INT idx = 0;
+							if (!strncmp((CONST LPCH)&lpBuf[0], "AddD", 4)) {
+								OutputSecuRomDllHeader(lpBuf, &uiOfsOf16, &uiOfsOf32, &uiOfsOfNT, &idx);
+								OutputSint16(lpBuf, uiOfsOf16, uiOfsOfSecuRomDll, idx);
+
+								CONST DWORD bufsize = DISC_RAW_READ_SIZE * 2;
+								SetCommandForTransferLength(pExecType, pDevice, pCdb, bufsize, &byTransferLen, &byRoopLen);
+								UINT tmp = uiOfsOf32 / DISC_RAW_READ_SIZE;
+								INT n2ndSector = (INT)(pDisc->PROTECT.pExtentPosForExe[n] + tmp);
+								if (!ExecReadCD(pExtArg, pDevice, pCdb, n2ndSector, lpBuf, bufsize, _T(__FUNCTION__), __LINE__)) {
+									continue;
+								}
+								OutputCDMain(fileMainInfo, lpBuf, n2ndSector, (INT)bufsize);
+								INT nOfsOf32dll = (INT)(uiOfsOf32 - uiOfsOfSecuRomDll) % DISC_RAW_READ_SIZE;
+
+								OutputSint32(lpBuf, nOfsOf32dll, FALSE);
+
+								UINT tmp2 = uiOfsOfNT / DISC_RAW_READ_SIZE;
+								INT n3rdSector = (INT)(pDisc->PROTECT.pExtentPosForExe[n] + tmp2);
+								if (!ExecReadCD(pExtArg, pDevice, pCdb, n3rdSector, lpBuf, bufsize, _T(__FUNCTION__), __LINE__)) {
+									continue;
+								}
+								OutputCDMain(fileMainInfo, lpBuf, n3rdSector, (INT)bufsize);
+								INT nOfsOfNTdll = (INT)(uiOfsOfNT - uiOfsOfSecuRomDll) % DISC_RAW_READ_SIZE;
+
+								OutputSintNT(lpBuf, nOfsOfNTdll, FALSE);
+								SetCommandForTransferLength(pExecType, pDevice, pCdb, DISC_RAW_READ_SIZE, &byTransferLen, &byRoopLen);
+							}
 						}
-						OutputCDMain(fileMainInfo, lpBuf, n3rdSector, DISC_RAW_READ_SIZE * 2);
-						INT nOfsOfNTdll = (INT)(uiOfsOfNT - uiOfsOfSecuRomDll) % DISC_RAW_READ_SIZE;
-
-						OutputSintNT(pDisc, lpBuf, nOfsOfNTdll, FALSE);
-						SetCommandForTransferLength(pExecType, pDevice, pCdb, DISC_RAW_READ_SIZE, &byTransferLen, &byRoopLen);
+						else if (pExtArg->byIntentionalSub) {
+							BOOL bFound = FALSE;
+							for (INT j = 0; j < pDisc->PROTECT.pSectorSizeForExe[n]; j++) {
+								if (!ExecReadCD(pExtArg, pDevice, pCdb
+									, pDisc->PROTECT.pExtentPosForExe[n] + j, lpBuf, dwSize, _T(__FUNCTION__), __LINE__)) {
+									continue;
+								}
+								for (INT i = 0; i < (INT)dwSize - 8; i++) {
+									if (IsSecuromDllSig(lpBuf, i)) {
+										LONG lSigPos = (LONG)dwSize * j + i;
+										LONG lSigOfs = GetOfsOfSecuromDllSig(lpBuf, i);
+										if (lSigPos == lSigOfs) {
+											OutputSecuRomDll4_87Header(lpBuf, i);
+											OutputCDMain(fileMainInfo, lpBuf, pDisc->PROTECT.pExtentPosForExe[n] + j, (INT)dwSize);
+											bFound = TRUE;
+											break;
+										}
+									}
+								}
+								if (bFound) {
+									break;
+								}
+							}
+						}
 					}
 				}
 				else if (IsImageSig(&lpBuf[pIDh->e_lfanew], IMAGE_OS2_SIGNATURE)) {
@@ -1457,7 +1656,8 @@ BOOL ReadCDForCheckingExe(
 			}
 			else {
 				OutputVolDescLog(
-					"%" CHARWIDTH "s: ImageDosHeader doesn't exist\n", pDisc->PROTECT.pNameForExe[n]);
+					"LBA: %d, %" CHARWIDTH "s: ImageDosHeader doesn't exist\n"
+					, pDisc->PROTECT.pExtentPosForExe[n], pDisc->PROTECT.pNameForExe[n]);
 			}
 		}
 		OutputString("\rChecking EXE %4d", n + 1);

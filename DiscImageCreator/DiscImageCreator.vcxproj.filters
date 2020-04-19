@@ -144,6 +144,9 @@
     <ClInclude Include="outputFileSystem.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="_external\NonStandardFunction.h">
+      <Filter>_external</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="_external\crc16ccitt.cpp">
@@ -238,6 +241,9 @@
     </ClCompile>
     <ClCompile Include="outputFileSystem.cpp">
       <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="_external\NonStandardFunction.cpp">
+      <Filter>_external</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

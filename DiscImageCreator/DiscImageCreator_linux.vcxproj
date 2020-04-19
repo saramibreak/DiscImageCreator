@@ -91,6 +91,7 @@
     <ClCompile Include="_external\crc16ccitt.cpp" />
     <ClCompile Include="_external\crc32.cpp" />
     <ClCompile Include="_external\md5c.cpp" />
+    <ClCompile Include="_external\NonStandardFunction.cpp" />
     <ClCompile Include="_external\platform_util.cpp" />
     <ClCompile Include="_external\prngcd.cpp" />
     <ClCompile Include="_external\rijndael-alg-fst.cpp" />
@@ -140,6 +141,7 @@
     <ClInclude Include="_external\mbedtls\platform_util.h" />
     <ClInclude Include="_external\mbedtls\threading.h" />
     <ClInclude Include="_external\md5.h" />
+    <ClInclude Include="_external\NonStandardFunction.h" />
     <ClInclude Include="_external\prngcd.h" />
     <ClInclude Include="_external\rijndael-alg-fst.h" />
     <ClInclude Include="_external\sha1.h" />

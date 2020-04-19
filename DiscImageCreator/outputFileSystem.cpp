@@ -17,6 +17,7 @@
 #include "convert.h"
 #include "get.h"
 #include "output.h"
+#include "_external/NonStandardFunction.h"
 
 VOID OutputFsBootRecord(
 	LPBYTE lpBuf
@@ -239,9 +240,9 @@ VOID OutputFsDirectoryRecord(
 
 		if (pDisc->PROTECT.byExist == no) {
 			// for CodeLock, ProtectCD-VOB, a part of SecuROM
-			CHAR szSearchStr[][5] = { ".EXE", ".exe", ".DLL", ".dll", ".DAT", ".HDR", ".CAB", ".cab" };
-			for (INT i = 0; i < 8; i++) {
-				LPCH p = strstr(fnameForProtect, szSearchStr[i]);
+			CHAR szSearchStr[][5] = { ".EXE", ".DLL", ".DAT", ".HDR", ".CAB" };
+			for (size_t i = 0; i < sizeof(szSearchStr[0]); i++) {
+				LPCH p = strcasestr(fnameForProtect, szSearchStr[i]);
 				if (p) {
 					if (pDisc->PROTECT.nCntForExe == EXELBA_STORE_SIZE) {
 						OutputLog(standardError | fileMainError, "Reached MAX .exe num\n");
@@ -251,6 +252,9 @@ VOID OutputFsDirectoryRecord(
 					pDisc->PROTECT.pExtentPosForExe[pDisc->PROTECT.nCntForExe] = (INT)uiExtentPos;
 					pDisc->PROTECT.pDataLenForExe[pDisc->PROTECT.nCntForExe] = (INT)uiDataLen;
 					pDisc->PROTECT.pSectorSizeForExe[pDisc->PROTECT.nCntForExe] = (INT)(uiDataLen / DISC_RAW_READ_SIZE);
+					if (uiDataLen % DISC_RAW_READ_SIZE > 0) {
+						pDisc->PROTECT.pSectorSizeForExe[pDisc->PROTECT.nCntForExe] += 1;
+					}
 					strncpy(pDisc->PROTECT.pNameForExe[pDisc->PROTECT.nCntForExe], fnameForProtect, len);
 					pDisc->PROTECT.nCntForExe++;
 					break;
