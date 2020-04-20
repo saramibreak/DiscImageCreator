@@ -187,8 +187,18 @@ BOOL InitProtectData(
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
+		if (NULL == ((*pDisc)->PROTECT.pFullNameForExe =
+			(LPCH*)calloc(EXELBA_STORE_SIZE, sizeof(INT_PTR)))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			throw FALSE;
+		}
 		for (size_t h = 0; h < EXELBA_STORE_SIZE; h++) {
 			if (NULL == ((*pDisc)->PROTECT.pNameForExe[h] =
+				(LPCH)calloc(MAX_FNAME_FOR_VOLUME, sizeof(CHAR)))) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				throw FALSE;
+			}
+			if (NULL == ((*pDisc)->PROTECT.pFullNameForExe[h] =
 				(LPCH)calloc(MAX_FNAME_FOR_VOLUME, sizeof(CHAR)))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
@@ -444,8 +454,10 @@ VOID TerminateProtectData(
 ) {
 	for (size_t h = 0; h < EXELBA_STORE_SIZE; h++) {
 		FreeAndNull((*pDisc)->PROTECT.pNameForExe[h]);
+		FreeAndNull((*pDisc)->PROTECT.pFullNameForExe[h]);
 	}
 	FreeAndNull((*pDisc)->PROTECT.pNameForExe);
+	FreeAndNull((*pDisc)->PROTECT.pFullNameForExe);
 	FreeAndNull((*pDisc)->PROTECT.pExtentPosForExe);
 	FreeAndNull((*pDisc)->PROTECT.pDataLenForExe);
 	FreeAndNull((*pDisc)->PROTECT.pSectorSizeForExe);

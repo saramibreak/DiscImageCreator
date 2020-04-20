@@ -235,45 +235,12 @@ BOOL ReadDirectoryRecordDetail(
 					OutputVolDescLog("LBA %d, ofs %d: Data length is incorrect\n", nLBA, uiOfs);
 				}
 				OutputFsDirectoryRecord(
-					pExtArg, pDisc, lpDirRec, uiExtentPos, uiDataLen, szCurDirName);
+					pExtArg, pDisc, lpDirRec, uiExtentPos, uiDataLen, szCurDirName, pPathTblRec, uiPathTblIdx);
 				uiOfs += lpDirRec[0];
 
 				// not upper and current directory
 				if (!(lpDirRec[32] == 1 && szCurDirName[0] == 0) &&
 					!(lpDirRec[32] == 1 && szCurDirName[0] == 1)) {
-					CHAR* pName[8] = {};
-					INT fullIdx = 0;
-					pName[fullIdx++] = szCurDirName;
-
-					for (UINT idx = uiPathTblIdx; idx != 0;) {
-						pName[fullIdx++] = &pPathTblRec[idx].szDirName[0];
-						idx = pPathTblRec[idx].uiNumOfUpperDir - 1;
-					}
-					OutputVolDescLog("FullPath: ");
-					CHAR strTmp[_MAX_PATH] = {};
-					CHAR strTmpFull[_MAX_PATH] = {};
-					for (INT i = fullIdx; 0 < i; i--) {
-						if (pName[i - 1] != 0) {
-#ifdef _WIN32
-							_snprintf(strTmp, sizeof(strTmp), "\\%s", pName[i - 1]);
-#else
-							_snprintf(strTmp, sizeof(strTmp), "/%s", pName[i - 1]);
-#endif
-							OutputVolDescLog("%" CHARWIDTH "s", strTmp);
-							strncat(strTmpFull, strTmp, strlen(strTmp));
-						}
-					}
-					if (strcasestr(szCurDirName, ".CAB") || strcasestr(szCurDirName, ".HDR")) {
-						if (pDisc->archivedFileNum == 16) {
-							OutputString("There is cab file more than 16\n");
-						}
-						else {
-							strncat(&pDisc->archivedFile[pDisc->archivedFileNum][0], strTmpFull, strlen(strTmpFull));
-							pDisc->archivedFileNum++;
-						}
-					}
-					OutputVolDescLog("\n\n");
-
 					if ((lpDirRec[25] & 0x02 || (pDisc->SCSI.byFormat == DISK_TYPE_CDI && lpDirRec[25] == 0))) {
 						for (UINT i = 1; i < uiDirPosNum; i++) {
 							if (uiExtentPos == pPathTblRec[i].uiPosOfDir &&

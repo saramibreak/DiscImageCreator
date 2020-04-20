@@ -195,6 +195,7 @@ BOOL IsKnownSectionName(
 		strcasestr(lpName, "PAGE") ||
 		strcasestr(lpName, "SEG") ||
 		strcasestr(lpName, "UPX") ||
+		strcasestr(lpName, "ENGINE") ||
 		strcasestr(lpName, "MSSMIXER")
 		) {
 		return TRUE;
@@ -239,12 +240,19 @@ VOID OutputFsImageSectionHeader(
 			pDisc->PROTECT.byExist = protectCDVOB;
 			strncpy(pDisc->PROTECT.name[0], (LPCH)pIsh->Name, sizeof(pIsh->Name));
 		}
-		else if (!strncmp((LPCH)pIsh->Name, ".cms_t", 6) || !strncmp((LPCH)pIsh->Name, ".cms_d", 6) ||
-			(pExtArg != NULL && pExtArg->byIntentionalSub && !IsKnownSectionName((LPCH)pIsh->Name))
+		else if (!strncmp((LPCH)pIsh->Name, ".cms_t", 6) || !strncmp((LPCH)pIsh->Name, ".cms_d", 6)
 			) {
 			// This string exists SecuROM OLD "Re-Volt (Europe)" and SecuROM NEW "Supreme Snowboarding (Europe) and "Beam Breakers (Europe) etc"
 			pDisc->PROTECT.byExist = securomTmp;
 			strncpy(pDisc->PROTECT.name[0], (LPCH)pIsh->Name, sizeof(pIsh->Name));
+			*bSecurom = TRUE;
+		}
+		else if (pExtArg != NULL && pExtArg->byIntentionalSub && !IsKnownSectionName((LPCH)pIsh->Name)) {
+			// some SecuROM discs have random section names
+			if (pDisc->PROTECT.byExist == no) {
+				pDisc->PROTECT.byExist = securomTmp;
+				strncpy(pDisc->PROTECT.name[0], (LPCH)pIsh->Name, sizeof(pIsh->Name));
+			}
 			*bSecurom = TRUE;
 		}
 	}
@@ -364,7 +372,22 @@ VOID OutputSecuRomDllHeader(
 		);
 	}
 
-	if (!strncmp((CONST PCHAR)&lpBuf[8], "4.8", 3)) {
+	if (!strncmp((LPCH)&lpBuf[8], "4.6", 3)) {
+		*uiOfsOf16 = MAKEUINT(MAKEWORD(lpBuf[96], lpBuf[97]), MAKEWORD(lpBuf[98], lpBuf[99]));
+		*uiOfsOf32 = MAKEUINT(MAKEWORD(lpBuf[144], lpBuf[145]), MAKEWORD(lpBuf[146], lpBuf[147]));
+		*uiOfsOfNT = MAKEUINT(MAKEWORD(lpBuf[192], lpBuf[193]), MAKEWORD(lpBuf[194], lpBuf[195]));
+		*idx = 32;
+		OutputVolDescLog(
+			"\t\tUnknown String: %.10" CHARWIDTH "s\n", &lpBuf[64]
+		);
+		for (INT i = 0, j = 0; i < 11; i++, j += 2) {
+			OutputVolDescLog(
+				"\t\tUnknown Value: %5d (%04x)\n"
+				, MAKEWORD(lpBuf[74 + j], lpBuf[75 + j]), MAKEWORD(lpBuf[74 + j], lpBuf[75 + j])
+			);
+		}
+	}
+	else if (!strncmp((LPCH)&lpBuf[8], "4.8", 3)) {
 		*uiOfsOf16 = MAKEUINT(MAKEWORD(lpBuf[132], lpBuf[133]), MAKEWORD(lpBuf[134], lpBuf[135]));
 		*uiOfsOf32 = MAKEUINT(MAKEWORD(lpBuf[180], lpBuf[181]), MAKEWORD(lpBuf[182], lpBuf[183]));
 		*uiOfsOfNT = MAKEUINT(MAKEWORD(lpBuf[228], lpBuf[229]), MAKEWORD(lpBuf[230], lpBuf[231]));

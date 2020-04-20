@@ -44,7 +44,9 @@ VOID OutputFsDirectoryRecord(
 	LPBYTE lpBuf,
 	UINT uiExtentPos,
 	UINT uiDataLen,
-	LPSTR fname
+	LPSTR fname,
+	PPATH_TABLE_RECORD pPathTblRec,
+	UINT uiPathTblIdx
 );
 
 BOOL OutputFsPathTableRecord(

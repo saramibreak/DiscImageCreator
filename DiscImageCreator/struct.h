@@ -366,6 +366,7 @@ typedef struct _DISC {
 		LPINT pSectorSizeForExe;
 		LPINT pDataLenForExe;
 		LPCH* pNameForExe;
+		LPCH* pFullNameForExe;
 		INT nCntForExe;
 	} PROTECT;
 	struct _DVD {
@@ -386,8 +387,6 @@ typedef struct _DISC {
 		INT nLBAForParamSfo;
 	} BD;
 	LPBYTE lpCachedBuf; // for Asus 0xF1 opcode
-	CHAR archivedFile[16][_MAX_PATH];
-	INT archivedFileNum;
 } DISC, *PDISC;
 
 typedef struct _VOLUME_DESCRIPTOR {

@@ -54,7 +54,9 @@ VOID OutputFsDirectoryRecord(
 	LPBYTE lpBuf,
 	UINT uiExtentPos,
 	UINT uiDataLen,
-	LPSTR fname
+	LPSTR fname,
+	PPATH_TABLE_RECORD pPathTblRec,
+	UINT uiPathTblIdx
 ) {
 	CHAR str[128]{};
 	INT nFileFlag = lpBuf[25];
@@ -126,6 +128,34 @@ VOID OutputFsDirectoryRecord(
 	}
 	OutputVolDescLog("\n");
 
+	CHAR strTmpFull[_MAX_PATH] = {};
+	// not upper and current directory
+	if (pPathTblRec &&
+		!(lpBuf[32] == 1 && fname[0] == 0) &&
+		!(lpBuf[32] == 1 && fname[0] == 1)) {
+		CHAR* pName[8] = {};
+		INT fullIdx = 0;
+		pName[fullIdx++] = fname;
+
+		for (UINT idx = uiPathTblIdx; idx != 0;) {
+			pName[fullIdx++] = &pPathTblRec[idx].szDirName[0];
+			idx = pPathTblRec[idx].uiNumOfUpperDir - 1;
+		}
+		OutputVolDescLog("FullPath: ");
+		CHAR strTmp[_MAX_PATH] = {};
+		for (INT i = fullIdx; 0 < i; i--) {
+			if (pName[i - 1] != 0) {
+#ifdef _WIN32
+				_snprintf(strTmp, sizeof(strTmp), "\\%s", pName[i - 1]);
+#else
+				_snprintf(strTmp, sizeof(strTmp), "/%s", pName[i - 1]);
+#endif
+				OutputVolDescLog("%" CHARWIDTH "s", strTmp);
+				strncat(strTmpFull, strTmp, strlen(strTmp));
+			}
+		}
+		OutputVolDescLog("\n\n");
+	}
 	if (!strncmp(fname, "PARAM.SFO", 9)) {
 		pDisc->BD.nLBAForParamSfo = (INT)uiExtentPos;
 	}
@@ -256,6 +286,7 @@ VOID OutputFsDirectoryRecord(
 						pDisc->PROTECT.pSectorSizeForExe[pDisc->PROTECT.nCntForExe] += 1;
 					}
 					strncpy(pDisc->PROTECT.pNameForExe[pDisc->PROTECT.nCntForExe], fnameForProtect, len);
+					strncpy(pDisc->PROTECT.pFullNameForExe[pDisc->PROTECT.nCntForExe], strTmpFull, strlen(strTmpFull));
 					pDisc->PROTECT.nCntForExe++;
 					break;
 				}
@@ -306,7 +337,7 @@ VOID OutputFsVolumeDescriptorSecond(
 	UINT uiExtentPos = GetSizeOrUintForVolDesc(lpBuf + 158, UINT(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
 	UINT uiDataLen = GetSizeOrUintForVolDesc(lpBuf + 166, UINT(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
 	CHAR fname[64] = {};
-	OutputFsDirectoryRecord(pExtArg, pDisc, lpBuf + 156, uiExtentPos, uiDataLen, fname);
+	OutputFsDirectoryRecord(pExtArg, pDisc, lpBuf + 156, uiExtentPos, uiDataLen, fname, NULL, 0);
 	if (bTCHAR) {
 		OutputVolDescLog(
 			"\t                        Volume Set Identifier: %.64" CHARWIDTH "s\n"

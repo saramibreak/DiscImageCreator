@@ -1323,14 +1323,8 @@ BOOL ProcessDirectory(
 						}
 					}
 					else if (nOperate == FILE_SEARCH) {
-						if (_tcsstr(szFoundFilePathName, _T(".EXE")) ||
-							_tcsstr(szFoundFilePathName, _T(".exe")) ||
-							_tcsstr(szFoundFilePathName, _T(".DLL")) ||
-							_tcsstr(szFoundFilePathName, _T(".dll"))
-							) {
-							if (!ReadExeFromFile(pExtArg, pDisc, szFoundFilePathName, fd.cFileName)) {
-								return FALSE;
-							}
+						if (!ReadExeFromFile(pExtArg, pDisc, szFoundFilePathName, fd.cFileName)) {
+							return FALSE;
 						}
 					}
 				}
@@ -1363,6 +1357,30 @@ BOOL ProcessDirectory(
 	return TRUE;
 }
 #endif
+VOID GetFullPathWithDrive(
+	PDEVICE pDevice,
+	PDISC pDisc,
+	INT nIdx,
+	_TCHAR* FullPathWithDrive
+) {
+	CHAR FullPathTmp[_MAX_PATH] = {};
+	CHAR drive[_MAX_DRIVE] = {};
+#ifdef _WIN32
+	_snprintf(drive, sizeof(drive), "%c:", pDevice->byDriveLetter);
+#else
+	_snprintf(drive, sizeof(drive), "%s", pDevice->drivepath);
+#endif
+	strncat(FullPathTmp, drive, sizeof(drive));
+	strncat(FullPathTmp, pDisc->PROTECT.pFullNameForExe[nIdx], strlen(pDisc->PROTECT.pFullNameForExe[nIdx]));
+
+#ifdef UNICODE
+	MultiByteToWideChar(CP_ACP, 0,
+		FullPathTmp, sizeof(FullPathTmp), FullPathWithDrive, (INT)_tcslen(FullPathWithDrive));
+#else
+	strncpy(FullPathWithDrive, FullPathTmp, sizeof(FullPathTmp));
+#endif
+}
+
 BOOL ReadCDForCheckingExe(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
@@ -1376,51 +1394,35 @@ BOOL ReadCDForCheckingExe(
 	BYTE byTransferLen = 1;
 	BYTE byRoopLen = byTransferLen;
 	SetCommandForTransferLength(pExecType, pDevice, pCdb, dwSize, &byTransferLen, &byRoopLen);
-	INT nCabIdx = 0;
+
 	for (INT n = 0; pDisc->PROTECT.pExtentPosForExe[n] != 0; n++) {
 		if (!ExecReadCD(pExtArg, pDevice, pCdb, pDisc->PROTECT.pExtentPosForExe[n],
 			lpBuf, dwSize, _T(__FUNCTION__), __LINE__)) {
 			continue;
 		}
 		BOOL bCab = FALSE;
+		_TCHAR FullPathWithDrive[_MAX_PATH] = {};
 		if (strcasestr(pDisc->PROTECT.pNameForExe[n], ".CAB") ||
 			strcasestr(pDisc->PROTECT.pNameForExe[n], ".HDR")) {
-			CHAR cabFullPathTmp[_MAX_PATH] = {};
-			CHAR drive[_MAX_DRIVE] = {};
-#ifdef _WIN32
-			_snprintf(drive, sizeof(drive), "%c:", pDevice->byDriveLetter);
-#else
-			_snprintf(drive, sizeof(drive), "%s", pDevice->drivepath);
-#endif
-			strncat(cabFullPathTmp, drive, sizeof(drive));
-			strncat(cabFullPathTmp, pDisc->archivedFile[nCabIdx], sizeof(pDisc->archivedFile[nCabIdx]));
 
 			_TCHAR szTmpPath[_MAX_PATH] = {};
 			if (!GetCurrentDirectory(sizeof(szTmpPath) / sizeof(szTmpPath[0]), szTmpPath)) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				return FALSE;
 			}
-
-			_TCHAR cabFullPath[_MAX_PATH] = {};
-#ifdef UNICODE
-			MultiByteToWideChar(CP_ACP, 0,
-				cabFullPathTmp, sizeof(cabFullPathTmp), cabFullPath, sizeof(cabFullPath));
-#else
-			strncpy(cabFullPath, cabFullPathTmp, sizeof(cabFullPathTmp));
-#endif
+			GetFullPathWithDrive(pDevice, pDisc, n, FullPathWithDrive);
 			if (!strncmp((CONST PCHAR)&lpBuf[0], "MSCF", 4)) {
 #ifdef _WIN32
 				OutputString(
 					"\nDetected MicroSoft Cabinet File: %" CHARWIDTH "s\n"
 					"Please wait until all files are extracted. This is needed to search protection\n"
-					, pDisc->archivedFile[nCabIdx]
+					, pDisc->PROTECT.pFullNameForExe[n]
 				);
 				_tcscat(szTmpPath, _T("\\!extracted\\"));
 				ProcessDirectory(pExtArg, pDisc, szTmpPath, FILE_CREATE);
-				if (!SetupIterateCabinet(cabFullPath, 0, (PSP_FILE_CALLBACK)CabinetCallback, szTmpPath)) {
+				if (!SetupIterateCabinet(FullPathWithDrive, 0, (PSP_FILE_CALLBACK)CabinetCallback, szTmpPath)) {
 					// 
 				}
-				nCabIdx++;
 				// Search exe, dll from extracted file
 				ProcessDirectory(pExtArg, pDisc, szTmpPath, FILE_SEARCH);
 				ProcessDirectory(pExtArg, pDisc, szTmpPath, FILE_DELETE);
@@ -1434,9 +1436,8 @@ BOOL ReadCDForCheckingExe(
 				OutputString(
 					"\nDetected InterShield Cabinet File: %" CHARWIDTH "s\n"
 					"Please wait until all files are extracted. This is needed to search protection\n"
-					, pDisc->archivedFile[nCabIdx]
+					, pDisc->PROTECT.pFullNameForExe[n]
 				);
-				nCabIdx++;
 				bCab = TRUE;
 				_TCHAR szPathIsc[_MAX_PATH] = {};
 				bRet = GetCmd(szPathIsc, _T("i6comp"), _T("exe"));
@@ -1458,7 +1459,7 @@ BOOL ReadCDForCheckingExe(
 						// 09-16-2002 15:45    1658880 A___     718535   46 SierraUp.exe
 						_sntprintf(str, nStrSize,
 							_T("\"\"%s\" l -o \"%s\"\" 2> NUL | findstr /e /i %s > %s")
-							, szPathIsc, cabFullPath, szSearchList[i], szTmpPath);
+							, szPathIsc, FullPathWithDrive, szSearchList[i], szTmpPath);
 						_tsystem(str);
 
 						FILE* fp = _tfopen(szTmpPath, _T("r"));
@@ -1479,7 +1480,7 @@ BOOL ReadCDForCheckingExe(
 							if (_tcscmp(pTrimBuf[4], _T("0"))) {
 								// extract .exe or .dll from .cab
 								_sntprintf(str, nStrSize,
-									_T("\"\"%s\" e -o \"%s\" %s\" 2> NUL"), szPathIsc, cabFullPath, pTrimBuf[5]);
+									_T("\"\"%s\" e -o \"%s\" %s\" 2> NUL"), szPathIsc, FullPathWithDrive, pTrimBuf[5]);
 								_tsystem(str);
 
 								if (!GetCurrentDirectory(sizeof(szTmpFullPath) / sizeof(szTmpFullPath[0]), szTmpFullPath)) {
@@ -1561,8 +1562,9 @@ BOOL ReadCDForCheckingExe(
 						OutputFsImageSectionHeader(pExtArg, pDisc, (PIMAGE_SECTION_HEADER)&lpBuf[nOfs], &bSecurom);
 						nOfs += sizeof(IMAGE_SECTION_HEADER);
 					}
+
+					INT nLastSector = pDisc->PROTECT.pExtentPosForExe[n] + pDisc->PROTECT.pSectorSizeForExe[n] - 1;
 					if (bSecurom) {
-						INT nLastSector = pDisc->PROTECT.pExtentPosForExe[n] + pDisc->PROTECT.pSectorSizeForExe[n] - 1;
 						if (!ExecReadCD(pExtArg, pDevice, pCdb, nLastSector, lpBuf, dwSize, _T(__FUNCTION__), __LINE__)) {
 							continue;
 						}
@@ -1641,6 +1643,57 @@ BOOL ReadCDForCheckingExe(
 								}
 							}
 						}
+					}
+					else if (strcasestr(pDisc->PROTECT.pNameForExe[n], "SETUP.EXE")) {
+#ifdef _WIN32
+						for (INT i = pDisc->PROTECT.pExtentPosForExe[n] + 1; i < nLastSector; i++) {
+							if (!ExecReadCD(pExtArg, pDevice, pCdb, i, lpBuf, dwSize, _T(__FUNCTION__), __LINE__)) {
+								continue;
+							}
+							
+							BOOL bFound = FALSE;
+							for (DWORD j = 0; j < dwSize - 8; j++) {
+								if (!strncmp((LPCH)&lpBuf[j], "WiseMain", 8)) {
+									OutputString(
+										"\nDetected Wise Installation: %" CHARWIDTH "s\n"
+										"Please wait until all files are extracted. This is needed to search protection\n"
+										, pDisc->PROTECT.pFullNameForExe[n]
+									);
+									OutputCDMain(fileMainInfo, lpBuf, i, (INT)dwSize);
+
+									_TCHAR szTmpPath[_MAX_PATH] = {};
+									if (!GetCurrentDirectory(sizeof(szTmpPath) / sizeof(szTmpPath[0]), szTmpPath)) {
+										OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+										return FALSE;
+									}
+									_tcscat(szTmpPath, _T("\\!extracted\\"));
+									GetFullPathWithDrive(pDevice, pDisc, n, FullPathWithDrive);
+									ProcessDirectory(pExtArg, pDisc, szTmpPath, FILE_CREATE);
+
+									_TCHAR szPathWise[_MAX_PATH] = {};
+									bRet = GetCmd(szPathWise, _T("E_WISE_W"), _T("EXE"));
+
+									if (bRet && PathFileExists(szPathWise)) {
+										CONST INT nStrSize = _MAX_PATH * 2;
+										_TCHAR str[nStrSize] = {};
+										_sntprintf(str, nStrSize,
+											_T("\"\"%s\" \"%s\" \"%s\"\" > NUL")
+											, szPathWise, FullPathWithDrive, szTmpPath);
+										_tsystem(str);
+										ProcessDirectory(pExtArg, pDisc, szTmpPath, FILE_SEARCH);
+										ProcessDirectory(pExtArg, pDisc, szTmpPath, FILE_DELETE);
+										bFound = TRUE;
+										break;
+									}
+								}
+							}
+							if (bFound) {
+								break;
+							}
+						}
+#else
+					// TODO: linux doesn't support yet
+#endif
 					}
 				}
 				else if (IsImageSig(&lpBuf[pIDh->e_lfanew], IMAGE_OS2_SIGNATURE)) {
