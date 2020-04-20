@@ -244,11 +244,11 @@ See LICENSE
   aes.cpp, aesni.cpp, platform_util.cpp, mbedtls folder  
     https://github.com/ARMmbed/mbedtls  
     Apache License Version 2.0  
-    Copyright (C) 2006-2015, ARM Limited, All Rights Reserved  
+    Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
 
   abgx360.cpp  
     http://abgx360.cc/  
-    Copyright 2008-2012 by Seacrest <Seacrest[at]abgx360[dot]net>  
+    Copyright 2008-2012 by Seacrest <Seacrest[at]abgx360[dot]net>
 
   rijndael-alg-fst.cpp/h  
     Vincent Rijmen <vincent.rijmen@esat.kuleuven.ac.be>  
@@ -258,15 +258,15 @@ See LICENSE
 
   crc16  
     http://oku.edu.mie-u.ac.jp/~okumura/algo/  src\crc16t.c in algo.lzh  
-    Copyright (c) 1991 Haruhiko Okumura  
+    Copyright (c) 1991 Haruhiko Okumura
 
   crc32  
     https://www.rfc-editor.org/info/rfc1952  
-    Copyright (c) 1996 L. Peter Deutsch  
+    Copyright (c) 1996 L. Peter Deutsch
 
   md5  
     https://www.rfc-editor.org/info/rfc1321  
-    Copyright (C) 1991-2, RSA Data Security, Inc. Created 1991. All rights reserved.  
+    Copyright (C) 1991-2, RSA Data Security, Inc. Created 1991. All rights reserved.
 
   sha1  
     https://www.rfc-editor.org/info/rfc3174  
@@ -277,6 +277,15 @@ See LICENSE
     zlib license  
     Original code by Lee Thomason (www.grinninglizard.com)
 
+- About Release_ANSI folder  
+  E_WISE_W.EXE  
+    http://kannegieser.net/veit/  
+    Copyright (c) 2002. 7. 1 Veit Kannegieser
+    
+  i6comp.exe  
+    Copyright (c) Jun-16-2000 fOSSiL,Dec-27-2000 Morlac
+  
+    
 ## Disclaimer
  Use this tool at own your risk.
  Trouble in regard to the use of this tool, I can not guarantee any.
