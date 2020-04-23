@@ -3707,9 +3707,9 @@ VOID OutputEeprom(
 			"\t      ProductId: %.16" CHARWIDTH "s\n"
 			"\t   SerialNumber: %06lu\n"
 			, pBuf[0], pBuf[1]
-			, (LPCH)&pBuf[2]
-			, (LPCH)&pBuf[10]
-			, strtoul((LPCH)&pBuf[26], NULL, 16));
+			, &pBuf[2]
+			, &pBuf[10]
+			, strtoul((LPCCH)&pBuf[26], NULL, 16));
 		OutputEepromUnknownByte(pBuf, 31, 40);
 
 		switch (byPlxtrDrive) {
@@ -3719,7 +3719,7 @@ VOID OutputEeprom(
 		case PLXTR_DRIVE_TYPE::PX716A:
 		case PLXTR_DRIVE_TYPE::PX714A:
 		case PLXTR_DRIVE_TYPE::PX712A:
-			OutputDriveLog("\t            TLA: %.4" CHARWIDTH "s\n", (LPCH)&pBuf[41]);
+			OutputDriveLog("\t            TLA: %.4" CHARWIDTH "s\n", &pBuf[41]);
 			break;
 		default:
 			OutputEepromUnknownByte(pBuf, 41, 44);

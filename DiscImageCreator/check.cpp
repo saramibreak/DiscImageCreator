@@ -375,8 +375,8 @@ BOOL IsValid3doDataHeader(
 	}
 	if (bRet) {
 		for (i = 132; i < 2048; i += 8) {
-			if (strncmp((CHAR*)&lpBuf[i], "duck", 4) &&
-				strncmp((CHAR*)&lpBuf[i + 4], "iama", 4)) {
+			if (strncmp((LPCCH)&lpBuf[i], "duck", 4) &&
+				strncmp((LPCCH)&lpBuf[i + 4], "iama", 4)) {
 				bRet = FALSE;
 				break;
 			}
@@ -451,11 +451,11 @@ BOOL IsValidPcfxSector(
 	LPBYTE lpBuf
 ) {
 	BOOL bRet = FALSE;
-	if (!strncmp((LPCH)&lpBuf[0], "PC-FX:Hu_CD-ROM ", 16)) {
+	if (!strncmp((LPCCH)&lpBuf[0], "PC-FX:Hu_CD-ROM ", 16)) {
 		bRet = TRUE;
 	}
 	// Super PCEngine Fan Deluxe - Special CD-ROM Vol. 1 (Japan)
-	else if (!strncmp((LPCH)&lpBuf[1], "UDSON CD-EMUL2 ", 15)) {
+	else if (!strncmp((LPCCH)&lpBuf[1], "UDSON CD-EMUL2 ", 15)) {
 		bRet = TRUE;
 	}
 	return bRet;

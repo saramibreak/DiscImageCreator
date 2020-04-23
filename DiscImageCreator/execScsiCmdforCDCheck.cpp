@@ -1411,7 +1411,7 @@ BOOL ReadCDForCheckingExe(
 				return FALSE;
 			}
 			GetFullPathWithDrive(pDevice, pDisc, n, FullPathWithDrive);
-			if (!strncmp((CONST PCHAR)&lpBuf[0], "MSCF", 4)) {
+			if (!strncmp((LPCCH)&lpBuf[0], "MSCF", 4)) {
 #ifdef _WIN32
 				OutputString(
 					"\nDetected MicroSoft Cabinet File: %" CHARWIDTH "s\n"
@@ -1431,7 +1431,7 @@ BOOL ReadCDForCheckingExe(
 				// TODO: linux can use cabextract
 #endif
 			}
-			else if (!strncmp((CONST PCHAR)&lpBuf[0], "ISc(", 4)) {
+			else if (!strncmp((LPCCH)&lpBuf[0], "ISc(", 4)) {
 #ifdef _WIN32
 				OutputString(
 					"\nDetected InterShield Cabinet File: %" CHARWIDTH "s\n"
@@ -1591,7 +1591,7 @@ BOOL ReadCDForCheckingExe(
 							UINT uiOfsOf32 = 0;
 							UINT uiOfsOfNT = 0;
 							INT idx = 0;
-							if (!strncmp((CONST LPCH)&lpBuf[0], "AddD", 4)) {
+							if (!strncmp((LPCCH)&lpBuf[0], "AddD", 4)) {
 								OutputSecuRomDllHeader(lpBuf, &uiOfsOf16, &uiOfsOf32, &uiOfsOfNT, &idx);
 								OutputSint16(lpBuf, uiOfsOf16, uiOfsOfSecuRomDll, idx);
 
@@ -1653,7 +1653,7 @@ BOOL ReadCDForCheckingExe(
 							
 							BOOL bFound = FALSE;
 							for (DWORD j = 0; j < dwSize - 8; j++) {
-								if (!strncmp((LPCH)&lpBuf[j], "WiseMain", 8)) {
+								if (!strncmp((LPCCH)&lpBuf[j], "WiseMain", 8)) {
 									OutputString(
 										"\nDetected Wise Installation: %" CHARWIDTH "s\n"
 										"Please wait until all files are extracted. This is needed to search protection\n"

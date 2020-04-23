@@ -176,7 +176,7 @@ VOID OutputFsImageNtHeader(
 }
 
 BOOL IsKnownSectionName(
-	LPCH lpName
+	LPCCH lpName
 ) {
 	if (strcasestr(lpName, "bss") ||
 		strcasestr(lpName, "tls") ||
@@ -229,29 +229,29 @@ VOID OutputFsImageSectionHeader(
 		, pIsh->NumberOfLinenumbers, pIsh->Characteristics
 	);
 	if (pDisc != NULL) {
-		if (!strncmp((LPCH)pIsh->Name, "icd1", 4)) {
+		if (!strncmp((LPCCH)pIsh->Name, "icd1", 4)) {
 			pDisc->PROTECT.byExist = codelock;
-			strncpy(pDisc->PROTECT.name[0], (LPCH)pIsh->Name, sizeof(pIsh->Name));
+			strncpy(pDisc->PROTECT.name[0], (LPCCH)pIsh->Name, sizeof(pIsh->Name));
 			pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] = pDisc->PROTECT.nNextLBAOfLastVolDesc;
 			pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0] =
 				pDisc->PROTECT.nPrevLBAOfPathTablePos - pDisc->PROTECT.nNextLBAOfLastVolDesc;
 		}
-		else if (!strncmp((LPCH)pIsh->Name, ".vob.pcd", 8)) {
+		else if (!strncmp((LPCCH)pIsh->Name, ".vob.pcd", 8)) {
 			pDisc->PROTECT.byExist = protectCDVOB;
-			strncpy(pDisc->PROTECT.name[0], (LPCH)pIsh->Name, sizeof(pIsh->Name));
+			strncpy(pDisc->PROTECT.name[0], (LPCCH)pIsh->Name, sizeof(pIsh->Name));
 		}
-		else if (!strncmp((LPCH)pIsh->Name, ".cms_t", 6) || !strncmp((LPCH)pIsh->Name, ".cms_d", 6)
+		else if (!strncmp((LPCCH)pIsh->Name, ".cms_t", 6) || !strncmp((LPCCH)pIsh->Name, ".cms_d", 6)
 			) {
 			// This string exists SecuROM OLD "Re-Volt (Europe)" and SecuROM NEW "Supreme Snowboarding (Europe) and "Beam Breakers (Europe) etc"
 			pDisc->PROTECT.byExist = securomTmp;
-			strncpy(pDisc->PROTECT.name[0], (LPCH)pIsh->Name, sizeof(pIsh->Name));
+			strncpy(pDisc->PROTECT.name[0], (LPCCH)pIsh->Name, sizeof(pIsh->Name));
 			*bSecurom = TRUE;
 		}
-		else if (pExtArg != NULL && pExtArg->byIntentionalSub && !IsKnownSectionName((LPCH)pIsh->Name)) {
+		else if (pExtArg != NULL && pExtArg->byIntentionalSub && !IsKnownSectionName((LPCCH)pIsh->Name)) {
 			// some SecuROM discs have random section names
 			if (pDisc->PROTECT.byExist == no) {
 				pDisc->PROTECT.byExist = securomTmp;
-				strncpy(pDisc->PROTECT.name[0], (LPCH)pIsh->Name, sizeof(pIsh->Name));
+				strncpy(pDisc->PROTECT.name[0], (LPCCH)pIsh->Name, sizeof(pIsh->Name));
 			}
 			*bSecurom = TRUE;
 		}
@@ -372,7 +372,7 @@ VOID OutputSecuRomDllHeader(
 		);
 	}
 
-	if (!strncmp((LPCH)&lpBuf[8], "4.6", 3)) {
+	if (!strncmp((LPCCH)&lpBuf[8], "4.6", 3)) {
 		*uiOfsOf16 = MAKEUINT(MAKEWORD(lpBuf[96], lpBuf[97]), MAKEWORD(lpBuf[98], lpBuf[99]));
 		*uiOfsOf32 = MAKEUINT(MAKEWORD(lpBuf[144], lpBuf[145]), MAKEWORD(lpBuf[146], lpBuf[147]));
 		*uiOfsOfNT = MAKEUINT(MAKEWORD(lpBuf[192], lpBuf[193]), MAKEWORD(lpBuf[194], lpBuf[195]));
@@ -387,7 +387,7 @@ VOID OutputSecuRomDllHeader(
 			);
 		}
 	}
-	else if (!strncmp((LPCH)&lpBuf[8], "4.8", 3)) {
+	else if (!strncmp((LPCCH)&lpBuf[8], "4.8", 3)) {
 		*uiOfsOf16 = MAKEUINT(MAKEWORD(lpBuf[132], lpBuf[133]), MAKEWORD(lpBuf[134], lpBuf[135]));
 		*uiOfsOf32 = MAKEUINT(MAKEWORD(lpBuf[180], lpBuf[181]), MAKEWORD(lpBuf[182], lpBuf[183]));
 		*uiOfsOfNT = MAKEUINT(MAKEWORD(lpBuf[228], lpBuf[229]), MAKEWORD(lpBuf[230], lpBuf[231]));

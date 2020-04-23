@@ -70,11 +70,11 @@ BOOL Inquiry(
 		return FALSE;
 	}
 	strncpy(pDevice->szVendorId,
-		(LPCH)&inquiryData.VendorId, sizeof(pDevice->szVendorId));
+		(LPCCH)&inquiryData.VendorId, sizeof(pDevice->szVendorId));
 	strncpy(pDevice->szProductId,
-		(LPCH)&inquiryData.ProductId, sizeof(pDevice->szProductId));
+		(LPCCH)&inquiryData.ProductId, sizeof(pDevice->szProductId));
 	strncpy(pDevice->szProductRevisionLevel,
-		(LPCH)&inquiryData.ProductRevisionLevel, sizeof(pDevice->szProductRevisionLevel));
+		(LPCCH)&inquiryData.ProductRevisionLevel, sizeof(pDevice->szProductRevisionLevel));
 
 	if (*pExecType != drivespeed) {
 		OutputInquiry(&inquiryData);

@@ -164,7 +164,7 @@ BOOL ReadDirectoryRecord(
 							"%s     DIR_WrtDate: %04d/%02d/%02d\n"
 							"%s   DIR_FstClusLO: %d\n"
 							"%s    DIR_FileSize: %d\n\n"
-							, &pTab[0], (LPCH)&lpBuf[i]
+							, &pTab[0], &lpBuf[i]
 							, &pTab[0], lpBuf[11 + i]
 							, &pTab[0], lpBuf[12 + i]
 							, &pTab[0], lpBuf[13 + i]

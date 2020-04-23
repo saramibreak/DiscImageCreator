@@ -26,7 +26,7 @@ VOID OutputFsBootRecord(
 		"\t                       Boot System Identifier: %.32" CHARWIDTH "s\n"
 		"\t                              Boot Identifier: %.32" CHARWIDTH "s\n"
 		"\t                              Boot System Use: "
-		, (LPCH)&lpBuf[7], (LPCH)&lpBuf[39]);
+		, &lpBuf[7], &lpBuf[39]);
 	for (INT i = 71; i < 2048; i++) {
 		OutputVolDescLog("%x", lpBuf[i]);
 	}
@@ -133,7 +133,7 @@ VOID OutputFsDirectoryRecord(
 	if (pPathTblRec &&
 		!(lpBuf[32] == 1 && fname[0] == 0) &&
 		!(lpBuf[32] == 1 && fname[0] == 1)) {
-		CHAR* pName[8] = {};
+		LPCH pName[8] = {};
 		INT fullIdx = 0;
 		pName[fullIdx++] = fname;
 
@@ -376,8 +376,8 @@ VOID OutputFsVolumeDescriptorSecond(
 		&lpBuf[864], &lpBuf[868], &lpBuf[870], &lpBuf[872], &lpBuf[874]
 		, &lpBuf[876], &lpBuf[878], (CHAR)lpBuf[880] / 4, abs((CHAR)lpBuf[880] % 4 * 15),
 		lpBuf[881]);
-	if (!strncmp((CONST PCHAR) & lpBuf[883], "MVSNRGFP", 8)) {
-		strncpy(pDisc->PROTECT.name[0], (CONST PCHAR) & lpBuf[883], 8);
+	if (!strncmp((LPCCH)&lpBuf[883], "MVSNRGFP", 8)) {
+		strncpy(pDisc->PROTECT.name[0], (LPCCH)&lpBuf[883], 8);
 		pDisc->PROTECT.byExist = ripGuard;
 	}
 	for (INT i = 883; i <= 1394; i++) {
@@ -395,19 +395,19 @@ VOID OutputFsVolumeDescriptorForISO9660(
 	CHAR str32[2][32] = { {} };
 	CHAR str128[4][128] = { {} };
 	CHAR str37[3][37] = { {} };
-	strncpy(str32[0], (LPCH)&lpBuf[8], sizeof(str32[0]));
-	strncpy(str32[1], (LPCH)&lpBuf[40], sizeof(str32[1]));
-	strncpy(str128[0], (LPCH)&lpBuf[190], sizeof(str128[0]));
-	strncpy(str128[1], (LPCH)&lpBuf[318], sizeof(str128[1]));
-	strncpy(str128[2], (LPCH)&lpBuf[446], sizeof(str128[2]));
-	strncpy(str128[3], (LPCH)&lpBuf[574], sizeof(str128[3]));
-	strncpy(str37[0], (LPCH)&lpBuf[702], sizeof(str37[0]));
-	strncpy(str37[1], (LPCH)&lpBuf[739], sizeof(str37[1]));
-	strncpy(str37[2], (LPCH)&lpBuf[776], sizeof(str37[2]));
+	strncpy(str32[0], (LPCCH)&lpBuf[8], sizeof(str32[0]));
+	strncpy(str32[1], (LPCCH)&lpBuf[40], sizeof(str32[1]));
+	strncpy(str128[0], (LPCCH)&lpBuf[190], sizeof(str128[0]));
+	strncpy(str128[1], (LPCCH)&lpBuf[318], sizeof(str128[1]));
+	strncpy(str128[2], (LPCCH)&lpBuf[446], sizeof(str128[2]));
+	strncpy(str128[3], (LPCCH)&lpBuf[574], sizeof(str128[3]));
+	strncpy(str37[0], (LPCCH)&lpBuf[702], sizeof(str37[0]));
+	strncpy(str37[1], (LPCCH)&lpBuf[739], sizeof(str37[1]));
+	strncpy(str37[2], (LPCCH)&lpBuf[776], sizeof(str37[2]));
 	OutputFsVolumeDescriptorFirst(pDisc, lpBuf, str32, pVolDesc);
 	if (lpBuf[0] == 2) {
 		OutputVolDescLog(
-			"\t                             Escape Sequences: %.32" CHARWIDTH "s\n", (LPCH)&lpBuf[88]);
+			"\t                             Escape Sequences: %.32" CHARWIDTH "s\n", &lpBuf[88]);
 	}
 	OutputFsVolumeDescriptorSecond(pExtArg, pDisc, lpBuf, str128, str37, FALSE);
 }
@@ -440,7 +440,7 @@ VOID OutputFsVolumeDescriptorForJoliet(
 		}
 	}
 	else {
-		strncpy(str32[0], (LPCH)&lpBuf[8], sizeof(str32[0]));
+		strncpy(str32[0], (LPCCH)&lpBuf[8], sizeof(str32[0]));
 	}
 
 	if (lpBuf[40] == 0 && lpBuf[41] >= 0x20) {
@@ -534,7 +534,7 @@ VOID OutputFsVolumeDescriptorForJoliet(
 	OutputFsVolumeDescriptorFirst(pDisc, lpBuf, str32, pVolDesc);
 
 	OutputVolDescLog(
-		"\t                             Escape Sequences: %.32" CHARWIDTH "s\n", (LPCH)&lpBuf[88]);
+		"\t                             Escape Sequences: %.32" CHARWIDTH "s\n", &lpBuf[88]);
 	OutputFsVolumeDescriptorSecond(pExtArg, pDisc, lpBuf, str128, str37, TRUE);
 }
 
@@ -542,8 +542,8 @@ VOID OutputFsVolumePartitionDescriptor(
 	LPBYTE lpBuf
 ) {
 	CHAR str[2][32] = { {} };
-	strncpy(str[0], (LPCH)&lpBuf[8], sizeof(str[0]));
-	strncpy(str[1], (LPCH)&lpBuf[40], sizeof(str[1]));
+	strncpy(str[0], (LPCCH)&lpBuf[8], sizeof(str[0]));
+	strncpy(str[1], (LPCCH)&lpBuf[40], sizeof(str[1]));
 	OutputVolDescLog(
 		"\t          System Identifier: %.32" CHARWIDTH "s\n"
 		"\tVolume Partition Identifier: %.32" CHARWIDTH "s\n"
@@ -577,7 +577,7 @@ VOID OutputFsVolumeDescriptor(
 		"\t                       Volume Descriptor Type: %u\n"
 		"\t                          Standard Identifier: %.5" CHARWIDTH "s\n"
 		"\t                    Volume Descriptor Version: %u\n"
-		, nLBA, lpBuf[0], (LPCH)&lpBuf[1], lpBuf[6]);
+		, nLBA, lpBuf[0], &lpBuf[1], lpBuf[6]);
 
 	if (lpBuf[0] == 0) {
 		OutputFsBootRecord(lpBuf);
@@ -693,7 +693,7 @@ VOID OutputFileAllocationTable(
 		"\t       BPB_HiddSec: %d\n"
 		"\t      BPB_TotSec32: %d\n"
 		, lpBuf[0], lpBuf[1], lpBuf[2]
-		, (LPCH)&lpBuf[3]
+		, &lpBuf[3]
 		, BytsPerSec
 		, fat->SecPerClus
 		, RsvdSecCnt
@@ -738,8 +738,8 @@ VOID OutputFileAllocationTable(
 		, lpBuf[i + 1]
 		, lpBuf[i + 2]
 		, MAKEUINT(MAKEWORD(lpBuf[i + 3], lpBuf[i + 4]), MAKEWORD(lpBuf[i + 5], lpBuf[i + 6]))
-		, (LPCH)&lpBuf[i + 7]
-		, (LPCH)&lpBuf[i + 18]
+		, &lpBuf[i + 7]
+		, &lpBuf[i + 18]
 	);
 	for (INT j = i + 26; j < 510; j++) {
 		OutputVolDescLog("%02x ", lpBuf[j]);
@@ -793,7 +793,7 @@ VOID OutputDriveDescriptorRecord(
 		"\t           block size of the device: %d\n"
 		"\t     number of blocks on the device: %d\n"
 		"\tnumber of driver descriptor entries: %d\n"
-		, (LPCH)&lpBuf[0]
+		, &lpBuf[0]
 		, MAKEWORD(lpBuf[3], lpBuf[2])
 		, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], lpBuf[4]))
 		, MAKEWORD(lpBuf[17], lpBuf[16])
@@ -821,12 +821,12 @@ VOID OutputPartitionMap(
 		"\t            boot code entry point: %d\n"
 		"\t               boot code checksum: %d\n"
 		"\t                   processor type: %.16" CHARWIDTH "s\n"
-		, (LPCH)&lpBuf[0]
+		, &lpBuf[0]
 		, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], lpBuf[4]))
 		, MAKEUINT(MAKEWORD(lpBuf[11], lpBuf[10]), MAKEWORD(lpBuf[9], lpBuf[8]))
 		, MAKEUINT(MAKEWORD(lpBuf[15], lpBuf[14]), MAKEWORD(lpBuf[13], lpBuf[12]))
-		, (LPCH)&lpBuf[16]
-		, (LPCH)&lpBuf[48]
+		, &lpBuf[16]
+		, &lpBuf[48]
 		, MAKEUINT(MAKEWORD(lpBuf[83], lpBuf[82]), MAKEWORD(lpBuf[81], lpBuf[80]))
 		, MAKEUINT(MAKEWORD(lpBuf[87], lpBuf[86]), MAKEWORD(lpBuf[85], lpBuf[84]))
 		, MAKEUINT(MAKEWORD(lpBuf[91], lpBuf[90]), MAKEWORD(lpBuf[89], lpBuf[88]))
@@ -835,9 +835,9 @@ VOID OutputPartitionMap(
 		, MAKEUINT(MAKEWORD(lpBuf[103], lpBuf[102]), MAKEWORD(lpBuf[101], lpBuf[100]))
 		, MAKEUINT(MAKEWORD(lpBuf[111], lpBuf[110]), MAKEWORD(lpBuf[109], lpBuf[108]))
 		, MAKEUINT(MAKEWORD(lpBuf[119], lpBuf[118]), MAKEWORD(lpBuf[117], lpBuf[116]))
-		, (LPCH)&lpBuf[120]
+		, &lpBuf[120]
 	);
-	if (!strncmp((LPCH)&lpBuf[48], "Apple_HFS", 9)) {
+	if (!strncmp((LPCCH)&lpBuf[48], "Apple_HFS", 9)) {
 		*bHfs = TRUE;
 	}
 }
@@ -904,7 +904,7 @@ VOID OutputFsMasterDirectoryBlocks(
 		, MAKEWORD(lpBuf[29], lpBuf[28])
 		, MAKEUINT(MAKEWORD(lpBuf[33], lpBuf[32]), MAKEWORD(lpBuf[31], lpBuf[30]))
 		, MAKEWORD(lpBuf[35], lpBuf[34])
-		, (LPCH)&lpBuf[37]
+		, &lpBuf[37]
 		, szBufl
 		, MAKEWORD(lpBuf[69], lpBuf[68])
 		, MAKEUINT(MAKEWORD(lpBuf[73], lpBuf[72]), MAKEWORD(lpBuf[71], lpBuf[70]))
@@ -1044,7 +1044,7 @@ VOID OutputFs3doDirectoryRecord(
 	CHAR fname[32] = {};
 	while (cur < uiDirSize) {
 		LPBYTE dirEnt = lpBuf + cur;
-		strncpy(fname, (LPCH)&dirEnt[32], sizeof(fname));
+		strncpy(fname, (LPCCH)&dirEnt[32], sizeof(fname));
 		lastCopy = MAKEUINT(MAKEWORD(dirEnt[67], dirEnt[66]), MAKEWORD(dirEnt[65], dirEnt[64]));
 		cur += THREEDO_DIR_ENTRY_SIZE;
 		OutputVolDescLog(
@@ -1106,13 +1106,13 @@ VOID OutputFsPceBootSector(
 	INT nLBA
 ) {
 	CHAR str[24] = {};
-	strncpy(str, (LPCH)&lpBuf[32], sizeof(str));
+	strncpy(str, (LPCCH)&lpBuf[32], sizeof(str));
 	CHAR str2[50] = {};
-	strncpy(str2, (LPCH)&lpBuf[56], sizeof(str2));
+	strncpy(str2, (LPCCH)&lpBuf[56], sizeof(str2));
 	CHAR str3[17] = {};
-	strncpy(str3, (LPCH)&lpBuf[106], sizeof(str3) - 1);
+	strncpy(str3, (LPCCH)&lpBuf[106], sizeof(str3) - 1);
 	CHAR str4[7] = {};
-	strncpy(str4, (LPCH)&lpBuf[122], sizeof(str4) - 1);
+	strncpy(str4, (LPCCH)&lpBuf[122], sizeof(str4) - 1);
 	OutputVolDescWithLBALog2("PCE Boot Sector",
 		"\t       load start record no.of CD: %02x:%02x:%02x\n"
 		"\t          load block length of CD: %02x\n"
@@ -1148,7 +1148,7 @@ VOID OutputFsPcfxHeader(
 	LPBYTE lpBuf,
 	INT nLBA
 ) {
-	OutputVolDescWithLBALog2("PCFX Warning msg", "\t%" CHARWIDTH "s\n", nLBA, (LPCH)&lpBuf[0]);
+	OutputVolDescWithLBALog2("PCFX Warning msg", "\t%" CHARWIDTH "s\n", nLBA, &lpBuf[0]);
 }
 
 VOID OutputFsPcfxSector(
@@ -1160,7 +1160,7 @@ VOID OutputFsPcfxSector(
 		"\tMaker(short): %" CHARWIDTH "s\n"
 		"\t Maker(long): %" CHARWIDTH "s\n"
 		"\t         YMD: %" CHARWIDTH "s\n"
-		, nLBA, (LPCH)&lpBuf[0], (LPCH)&lpBuf[48], (LPCH)&lpBuf[52], (LPCH)&lpBuf[120]
+		, nLBA, &lpBuf[0], &lpBuf[48], &lpBuf[52], &lpBuf[120]
 	);
 }
 
@@ -1198,7 +1198,7 @@ VOID OutputFsRegid(
 		"\t\tIdentifier: %.23" CHARWIDTH "s\n"
 		"\t\tIdentifier Suffix: ",
 		lpBuf[0],
-		(LPCH)&lpBuf[1]);
+		&lpBuf[1]);
 	for (INT i = 24; i < 32; i++) {
 		OutputVolDescLog("%02x", lpBuf[i]);
 	}
@@ -1278,7 +1278,7 @@ VOID OutputFsVolumeStructureDescriptorFormat(
 		"\tStructure Type: %u\n"
 		"\tStandard Identifier: %.5" CHARWIDTH "s\n"
 		"\tStructure Version: %u\n"
-		, nLBA, nLBA, lpBuf[0], (LPCH)&lpBuf[1], lpBuf[6]);
+		, nLBA, nLBA, lpBuf[0], &lpBuf[1], lpBuf[6]);
 }
 
 VOID OutputFsVolumeRecognitionSequence(
@@ -1286,27 +1286,27 @@ VOID OutputFsVolumeRecognitionSequence(
 	INT nLBA,
 	LPBOOL pUDF
 ) {
-	if (lpBuf[0] == 0 && !strncmp((LPCH)&lpBuf[1], "BOOT2", 5)) {
+	if (lpBuf[0] == 0 && !strncmp((LPCCH)&lpBuf[1], "BOOT2", 5)) {
 		OutputFsVolumeStructureDescriptorFormat(lpBuf, nLBA);
 		OutputFsBootDescriptor(lpBuf);
 		*pUDF = TRUE;
 	}
-	else if (lpBuf[0] == 0 && !strncmp((LPCH)&lpBuf[1], "BEA01", 5)) {
+	else if (lpBuf[0] == 0 && !strncmp((LPCCH)&lpBuf[1], "BEA01", 5)) {
 		OutputFsVolumeStructureDescriptorFormat(lpBuf, nLBA);
 		OutputFsBeginningExtendedAreaDescriptor(lpBuf);
 		*pUDF = TRUE;
 	}
-	else if (lpBuf[0] == 0 && !strncmp((LPCH)&lpBuf[1], "NSR02", 5)) {
+	else if (lpBuf[0] == 0 && !strncmp((LPCCH)&lpBuf[1], "NSR02", 5)) {
 		OutputFsVolumeStructureDescriptorFormat(lpBuf, nLBA);
 		OutputFsNSRDescriptor(lpBuf);
 		*pUDF = TRUE;
 	}
-	else if (lpBuf[0] == 0 && !strncmp((LPCH)&lpBuf[1], "NSR03", 5)) {
+	else if (lpBuf[0] == 0 && !strncmp((LPCCH)&lpBuf[1], "NSR03", 5)) {
 		OutputFsVolumeStructureDescriptorFormat(lpBuf, nLBA);
 		OutputFsNSRDescriptor(lpBuf);
 		*pUDF = TRUE;
 	}
-	else if (lpBuf[0] == 0 && !strncmp((LPCH)&lpBuf[1], "TEA01", 5)) {
+	else if (lpBuf[0] == 0 && !strncmp((LPCCH)&lpBuf[1], "TEA01", 5)) {
 		OutputFsVolumeStructureDescriptorFormat(lpBuf, nLBA);
 		OutputFsTerminatingExtendedAreaDescriptor(lpBuf);
 		*pUDF = TRUE;
@@ -1319,7 +1319,7 @@ VOID OutputFsCharspec(
 	OutputVolDescLog(
 		"\t\tCharacter Set Type: %u\n"
 		"\t\tCharacter Set Information: %.63" CHARWIDTH "s\n",
-		lpBuf[0], (LPCH)&lpBuf[1]);
+		lpBuf[0], &lpBuf[1]);
 }
 
 VOID OutputFsExtentDescriptor(
@@ -1573,16 +1573,16 @@ VOID OutputFsFileSetDescriptor(
 	OutputVolDescLog(
 		"\tLogical Volume Identifier: %.128" CHARWIDTH "s\n"
 		"\tFile Set Character Set\n"
-		, (LPCH)&lpBuf[112]);
+		, &lpBuf[112]);
 	OutputFsCharspec(lpBuf + 240);
 
 	OutputVolDescLog(
 		"\tFile Set Identifier: %.32" CHARWIDTH "s\n"
 		"\tCopyright File Identifier: %.32" CHARWIDTH "s\n"
 		"\tAbstract File Identifier: %.32" CHARWIDTH "s\n"
-		, (LPCH)&lpBuf[304]
-		, (LPCH)&lpBuf[336]
-		, (LPCH)&lpBuf[368]);
+		, &lpBuf[304]
+		, &lpBuf[336]
+		, &lpBuf[368]);
 
 	OutputVolDescLog("\tRoot Directory ICB\n");
 	OutputFsLongAllocationDescriptor(lpBuf + 400);
@@ -1651,7 +1651,7 @@ VOID OutputFsLogicalVolumeIntegrityDescriptor(
 			"\t\tMinimum UDF Read Revision: %#04x\n"
 			"\t\tMinimum UDF Write Revision: %#04x\n"
 			"\t\tMaximum UDF Write Revision: %#04x\n"
-			, lpBuf[nOfs], (LPCH)&lpBuf[nOfs + 1], (LPCH)&lpBuf[nOfs + 25]
+			, lpBuf[nOfs], &lpBuf[nOfs + 1], &lpBuf[nOfs + 25]
 			, MAKEUINT(MAKEWORD(lpBuf[nOfs + 32], lpBuf[nOfs + 33]), MAKEWORD(lpBuf[nOfs + 34], lpBuf[nOfs + 35]))
 			, MAKEUINT(MAKEWORD(lpBuf[nOfs + 36], lpBuf[nOfs + 37]), MAKEWORD(lpBuf[nOfs + 38], lpBuf[nOfs + 39]))
 			, MAKEWORD(lpBuf[nOfs + 40], lpBuf[nOfs + 41])
@@ -1700,7 +1700,7 @@ VOID OutputFsLogicalVolumeDescriptor(
 		"\tLogical Volume Identifier: %.128" CHARWIDTH "s\n"
 		"\tLogical Block Size : %u\n"
 		"\tDomain Identifier\n",
-		(LPCH)&lpBuf[84],
+		&lpBuf[84],
 		MAKEUINT(MAKEWORD(lpBuf[212], lpBuf[213]), MAKEWORD(lpBuf[214], lpBuf[215])));
 	OutputFsRegid(lpBuf + 216);
 
@@ -1871,10 +1871,10 @@ VOID OutputFsImplementationUseVolumeDescriptor(
 		"\t\tLV Info 2: %.36" CHARWIDTH "s\n"
 		"\t\tLV Info 3: %.36" CHARWIDTH "s\n"
 		"\t\tImplemention ID\n"
-		, (LPCH)&lpBuf[nOfs + 64]
-		, (LPCH)&lpBuf[nOfs + 192]
-		, (LPCH)&lpBuf[nOfs + 228]
-		, (LPCH)&lpBuf[nOfs + 264]
+		, &lpBuf[nOfs + 64]
+		, &lpBuf[nOfs + 192]
+		, &lpBuf[nOfs + 228]
+		, &lpBuf[nOfs + 264]
 	);
 	OutputFsRegid(lpBuf + 352);
 
@@ -1925,14 +1925,14 @@ VOID OutputFsPrimaryVolumeDescriptorForUDF(
 		"\tDescriptor Character Set\n",
 		MAKEUINT(MAKEWORD(lpBuf[16], lpBuf[17]), MAKEWORD(lpBuf[18], lpBuf[19])),
 		MAKEUINT(MAKEWORD(lpBuf[20], lpBuf[21]), MAKEWORD(lpBuf[22], lpBuf[23])),
-		(LPCH)&lpBuf[24],
+		&lpBuf[24],
 		MAKEWORD(lpBuf[56], lpBuf[57]),
 		MAKEWORD(lpBuf[58], lpBuf[59]),
 		MAKEWORD(lpBuf[60], lpBuf[61]),
 		MAKEWORD(lpBuf[62], lpBuf[63]),
 		MAKEUINT(MAKEWORD(lpBuf[64], lpBuf[65]), MAKEWORD(lpBuf[66], lpBuf[67])),
 		MAKEUINT(MAKEWORD(lpBuf[68], lpBuf[69]), MAKEWORD(lpBuf[70], lpBuf[71])),
-		(LPCH)&lpBuf[72]);
+		&lpBuf[72]);
 
 	OutputFsCharspec(lpBuf + 200);
 

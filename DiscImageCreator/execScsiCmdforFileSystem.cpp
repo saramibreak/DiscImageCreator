@@ -64,7 +64,7 @@ BOOL ReadCDFor3DODirectory(
 			LPBYTE lpDirEnt = lpBuf + ofs;
 			UINT lFlags = MAKEUINT(
 				MAKEWORD(lpDirEnt[3], lpDirEnt[2]), MAKEWORD(lpDirEnt[1], lpDirEnt[0]));
-			strncpy(fname, (LPCH)&lpDirEnt[32], sizeof(fname));
+			strncpy(fname, (LPCCH)&lpDirEnt[32], sizeof(fname));
 			UINT lastCopy = MAKEUINT(
 				MAKEWORD(lpDirEnt[67], lpDirEnt[66]), MAKEWORD(lpDirEnt[65], lpDirEnt[64]));
 			ofs += THREEDO_DIR_ENTRY_SIZE;
@@ -508,8 +508,8 @@ BOOL ReadVolumeDescriptor(
 			, pCdb, nTmpLBA + nSectorOfs, lpBuf, bufDec, byTransferLen, _T(__FUNCTION__), __LINE__)) {
 			break;
 		}
-		if (!strncmp((LPCH)&lpBuf[1], "CD001", 5) ||
-			(pDisc->SCSI.byFormat == DISK_TYPE_CDI && !strncmp((LPCH)&lpBuf[1], "CD-I ", 5))) {
+		if (!strncmp((LPCCH)&lpBuf[1], "CD001", 5) ||
+			(pDisc->SCSI.byFormat == DISK_TYPE_CDI && !strncmp((LPCCH)&lpBuf[1], "CD-I ", 5))) {
 			if (nTmpLBA == nPVD) {
 				WORD wLogicalBlkSize = GetSizeOrWordForVolDesc(lpBuf + 128);
 				pVolDesc->ISO_9660.uiLogicalBlkCoef = (BYTE)(DISC_RAW_READ_SIZE / wLogicalBlkSize);
@@ -1220,10 +1220,10 @@ BOOL ReadXBOXFileSystem(
 		"\t           Image creation time: %.20" CHARWIDTH "s\n"
 		"\t                        Footer: %.20" CHARWIDTH "s\n"
 		, nLBA, nLBA
-		, (LPCH)&lpBuf[0]
+		, &lpBuf[0]
 		, uiDirPos, uiDirPos
 		, uiDirTblSize, uiDirTblSize
-		, date, (LPCH)&lpBuf[2028]
+		, date, &lpBuf[2028]
 	);
 	if (uiDirTblSize % DISC_RAW_READ_SIZE != 0) {
 		uiDirTblSize += DISC_RAW_READ_SIZE * (uiDirTblSize / DISC_RAW_READ_SIZE + 1) - uiDirTblSize;
@@ -1268,8 +1268,8 @@ BOOL ReadNintendoSystemHeader(
 		"\t                         Audio Streaming: %d\n"
 		"\t                      Stream Buffer Size: %d\n"
 		"\t                               Game Name: %" CHARWIDTH "s\n"
-		, (LPCH)&buf[0], (LPCH)&buf[1], (LPCH)&buf[3], (LPCH)&buf[4]
-		, buf[6], buf[7], buf[8], buf[9], (LPCH)&buf[32]
+		, &buf[0], &buf[1], &buf[3], &buf[4]
+		, buf[6], buf[7], buf[8], buf[9], &buf[32]
 	);
 	return TRUE;
 }
@@ -1334,7 +1334,7 @@ BOOL ReadNintendoFileSystem(
 		"\t           apploader entrypoint: %#x\n"
 		"\t          size of the apploader: %d(%#x)\n"
 		"\t                   trailer size: %d(%#x)\n"
-		, (LPCH)&buf[0]
+		, &buf[0]
 		, MAKEUINT(MAKEWORD(buf[19], buf[18]), MAKEWORD(buf[17], buf[16]))
 		, MAKEUINT(MAKEWORD(buf[23], buf[22]), MAKEWORD(buf[21], buf[20]))
 		, MAKEUINT(MAKEWORD(buf[23], buf[22]), MAKEWORD(buf[21], buf[20]))
@@ -1386,7 +1386,7 @@ BOOL ReadNintendoFileSystem(
 					"\t               file_name: %" CHARWIDTH "s\n"
 					"\t             file_offset: %d(%#x)\n"
 					"\t             file_length: %d(%#x)\n\n"
-					, (LPCH)&lpBuf[posOfString + ofsString]
+					, &lpBuf[posOfString + ofsString]
 					, MAKEUINT(MAKEWORD(lpBuf[7 + i], lpBuf[6 + i]), MAKEWORD(lpBuf[5 + i], lpBuf[4 + i]))
 					, MAKEUINT(MAKEWORD(lpBuf[7 + i], lpBuf[6 + i]), MAKEWORD(lpBuf[5 + i], lpBuf[4 + i]))
 					, MAKEUINT(MAKEWORD(lpBuf[11 + i], lpBuf[10 + i]), MAKEWORD(lpBuf[9 + i], lpBuf[8 + i]))
@@ -1398,7 +1398,7 @@ BOOL ReadNintendoFileSystem(
 					"\t                dir_name: %" CHARWIDTH "s\n"
 					"\t           parent_offset: %d(%#x)\n"
 					"\t             next_offset: %d(%#x)\n\n"
-					, (LPCH)&lpBuf[posOfString + ofsString]
+					, &lpBuf[posOfString + ofsString]
 					, MAKEUINT(MAKEWORD(lpBuf[7 + i], lpBuf[6 + i]), MAKEWORD(lpBuf[5 + i], lpBuf[4 + i]))
 					, MAKEUINT(MAKEWORD(lpBuf[7 + i], lpBuf[6 + i]), MAKEWORD(lpBuf[5 + i], lpBuf[4 + i]))
 					, MAKEUINT(MAKEWORD(lpBuf[11 + i], lpBuf[10 + i]), MAKEWORD(lpBuf[9 + i], lpBuf[8 + i]))
@@ -1569,7 +1569,7 @@ BOOL ReadWiiPartition(
 				"\n"
 				"\t                Signature issuer: %" CHARWIDTH "s\n"
 				"\t                       ECDH data: "
-				, (LPCH)&buf[0x140]
+				, &buf[0x140]
 			);
 			for (INT i = 0; i < 0x3c; i++) {
 				OutputVolDescLog("%02x", buf[0x0180 + i]);
@@ -1702,7 +1702,7 @@ BOOL ReadWiiPartition(
 				"\t                        Group ID: %x\n"
 				"\t                          Region: %x\n"
 				"\t                         Ratings: "
-				, (LPCH)&buf[0x140], buf[0x180], buf[0x181], buf[0x182], buf[0x183]
+				, &buf[0x140], buf[0x180], buf[0x181], buf[0x182], buf[0x183]
 				, MAKEUINT64(MAKEUINT(MAKEWORD(buf[0x18B], buf[0x18A]), MAKEWORD(buf[0x189], buf[0x188]))
 					, MAKEUINT(MAKEWORD(buf[0x187], buf[0x186]), MAKEWORD(buf[0x185], buf[0x184])))
 				, MAKEUINT64(MAKEUINT(MAKEWORD(buf[0x193], buf[0x192]), MAKEWORD(buf[0x191], buf[0x190]))
@@ -1809,9 +1809,9 @@ BOOL ReadWiiPartition(
 					"\t                             Tag: %x\n"
 					"\t                            Name: %" CHARWIDTH "s\n"
 					"\t                             Key: "
-					, (LPCH)&buf[ofs]
+					, &buf[ofs]
 					, MAKEUINT(MAKEWORD(buf[ofs + 67], buf[ofs + 66]), MAKEWORD(buf[ofs + 65], buf[ofs + 64]))
-					, (LPCH)&buf[ofs + 68]
+					, &buf[ofs + 68]
 				);
 				for (INT i = 0; i < 316; i++) {
 					OutputVolDescLog("%02x", buf[ofs + 132 + i]);
@@ -2034,11 +2034,11 @@ BOOL ReadSACDFileSystem(
 		"\t          Disc_Genre4: %02x %02x %02x %02x\n"
 		"\t            Disc_Date: %d/%02d/%02d\n"
 		"\t    Max_Text_Channels: %d\n"
-		, (LPCH)&mToc.Master_TOC_Signature[0]
+		, &mToc.Master_TOC_Signature[0]
 		, mToc.Major_Version, mToc.Minor_Version
 		, mToc.Album_Set_Size
 		, mToc.Album_Sequence_Number
-		, (LPCH)&mToc.Album_Catalog_Number[0]
+		, &mToc.Album_Catalog_Number[0]
 		, mToc.Album_Genre[0][0], mToc.Album_Genre[0][1], mToc.Album_Genre[0][2], mToc.Album_Genre[0][3]
 		, mToc.Album_Genre[1][0], mToc.Album_Genre[1][1], mToc.Album_Genre[1][2], mToc.Album_Genre[1][3]
 		, mToc.Album_Genre[2][0], mToc.Album_Genre[2][1], mToc.Album_Genre[2][2], mToc.Album_Genre[2][3]
@@ -2050,7 +2050,7 @@ BOOL ReadSACDFileSystem(
 		, mToc.Disc_Flags_Hybrid
 		, mToc.TWOCH_TOC_Len, mToc.TWOCH_TOC_Len
 		, mToc.MC_TOC_Len, mToc.MC_TOC_Len
-		, (LPCH)&mToc.Disc_Catalog_Number[0]
+		, &mToc.Disc_Catalog_Number[0]
 		, mToc.Disc_Genre[0][0], mToc.Disc_Genre[0][1], mToc.Disc_Genre[0][2], mToc.Disc_Genre[0][3]
 		, mToc.Disc_Genre[1][0], mToc.Disc_Genre[1][1], mToc.Disc_Genre[1][2], mToc.Disc_Genre[1][3]
 		, mToc.Disc_Genre[2][0], mToc.Disc_Genre[2][1], mToc.Disc_Genre[2][2], mToc.Disc_Genre[2][3]
@@ -2066,7 +2066,7 @@ BOOL ReadSACDFileSystem(
 		OutputVolDescLog(
 			"\t     Language_Code[%d]: %.2" CHARWIDTH "s\n"
 			"\tCharacter_Set_Code[%d]: %s\n"
-			, i + 1, (LPCH)&mToc.Txt_Ch.locale[i].Language_Code[0]
+			, i + 1, &mToc.Txt_Ch.locale[i].Language_Code[0]
 			, i + 1, &Lang[mToc.Txt_Ch.locale[i].Character_Set_Code]
 		);
 	}
@@ -2123,7 +2123,7 @@ BOOL ReadSACDFileSystem(
 
 		OutputVolDescLog(
 			OUTPUT_DHYPHEN_PLUS_STR("Master_Text")
-			"\t   Master_Text_Signature: %8" CHARWIDTH "s\n", (LPCH)&lpBuf[0]
+			"\t   Master_Text_Signature: %8" CHARWIDTH "s\n", &lpBuf[0]
 		);
 		OutputVolDescLog("\t             Album_Title: ");
 		if (mText.Album_Title_Ptr) {
@@ -2235,7 +2235,7 @@ BOOL ReadSACDFileSystem(
 	OutputCDMain(fileMainInfo, lpBuf, nLBA, DISC_RAW_READ_SIZE);
 	OutputVolDescLog(
 		OUTPUT_DHYPHEN_PLUS_STR("Manufacture")
-		"\tManuf_Info_Signature: %.8" CHARWIDTH "s\n", (LPCH)&lpBuf[0]);
+		"\tManuf_Info_Signature: %.8" CHARWIDTH "s\n", &lpBuf[0]);
 
 	INT nChToc[] = { (INT)mToc.TWOCH_TOC_1_Address , (INT)mToc.MC_TOC_1_Address, 0 };
 	for (INT c = 0; nChToc[c] != 0; c++) {
@@ -2302,7 +2302,7 @@ BOOL ReadSACDFileSystem(
 			"\t   Audio_Start_Address: %d (%#02x)\n"
 			"\t     Audio_End_Address: %d (%#02x)\n"
 			"\t     Max_Text_Channels: %d\n"
-			, (LPCH)&lpBuf[0]
+			, &lpBuf[0]
 			, aToc.Major_Version, aToc.Minor_Version
 			, aToc.Area_TOC_Length, aToc.Area_TOC_Length
 			, aToc.Unknown1, aToc.Unknown1
@@ -2319,7 +2319,7 @@ BOOL ReadSACDFileSystem(
 			OutputVolDescLog(
 				"\t      Language_Code[%d]: %.2" CHARWIDTH "s\n"
 				"\t Character_Set_Code[%d]: %s\n"
-				, i + 1, (LPCH)&aToc.Txt_Ch.locale[i].Language_Code[0]
+				, i + 1, &aToc.Txt_Ch.locale[i].Language_Code[0]
 				, i + 1, &Lang[aToc.Txt_Ch.locale[i].Character_Set_Code]
 			);
 		}
@@ -2359,7 +2359,7 @@ BOOL ReadSACDFileSystem(
 			OutputVolDescLog(
 				OUTPUT_DHYPHEN_PLUS_STR("Track_List")
 				"\t Track_List_1_Signature: %.8" CHARWIDTH "s\n"
-				, (LPCH)&lpBuf[0]
+				, &lpBuf[0]
 			);
 			for (INT i = 0; i < aToc.Last_Track_Number; i++) {
 				REVERSE_BYTES(&tList.Track_Start_Address[i], &lpBuf[0x8 + sizeof(UINT) * i]);
@@ -2392,12 +2392,12 @@ BOOL ReadSACDFileSystem(
 		OutputVolDescLog(
 			OUTPUT_DHYPHEN_PLUS_STR("ISRC_and_Genre_List")
 			"\tISRC_and_Genre_List_Signature: %.8" CHARWIDTH "s\n"
-			, (LPCH)&lpBuf[0]
+			, &lpBuf[0]
 		);
 		for (INT i = 0; i < aToc.Last_Track_Number; i++) {
 			OutputVolDescLog(
 				"\t           ISRC_and_Genre[%02d]: %.12" CHARWIDTH "s\n"
-				, i + 1, (LPCH)&lpBuf[0x8 + 12 * i]
+				, i + 1, &lpBuf[0x8 + 12 * i]
 			);
 		}
 
@@ -2439,7 +2439,7 @@ BOOL ReadSACDFileSystem(
 				"\tAccess_List_Signature: %.8" CHARWIDTH "s\n"
 				"\t            N_Entries: %d\n"
 				"\t       Main_Step_Size: %d\n"
-				, (LPCH)&lpBuf[0]
+				, &lpBuf[0]
 				, alist.N_Entries
 				, alist.Main_Step_Size
 			);
@@ -2486,7 +2486,7 @@ BOOL ReadSACDFileSystem(
 			OutputVolDescLog(
 				OUTPUT_DHYPHEN_PLUS_STR("Track_Text")
 				"\tTrack_Text_Signature: %.8" CHARWIDTH "s\n"
-				, (LPCH)&lpBuf[0]
+				, &lpBuf[0]
 			);
 			for (INT i = 0; i < aToc.Last_Track_Number; i++) {
 				REVERSE_BYTES_SHORT(&TTxt.Track_Text_Pos[i], &lpBuf[0x8 + sizeof(USHORT) * i]);
