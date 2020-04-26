@@ -854,24 +854,24 @@ VOID OutputFsMasterDirectoryBlocks(
 	tm* ctime = gmtime(&creationTime);
 	ctime->tm_year -= 66; // HFS starts from 1904, while UNIX starts from 1970
 	_TCHAR szBufc[128] = {};
-	_tcsftime(szBufc, sizeof(szBufc) / sizeof(szBufc[0]), _T("%Y/%m/%d %H:%M:%S"), ctime);
+	_tcsftime(szBufc, sizeof(szBufc) / sizeof(szBufc[0]), _T("%Y-%m-%d %H:%M:%S"), ctime);
 
 	tm* mtime = gmtime(&modificationTime);
 	mtime->tm_year -= 66;
 	_TCHAR szBufm[128] = {};
-	_tcsftime(szBufm, sizeof(szBufm) / sizeof(szBufm[0]), _T("%Y/%m/%d %H:%M:%S"), mtime);
+	_tcsftime(szBufm, sizeof(szBufm) / sizeof(szBufm[0]), _T("%Y-%m-%d %H:%M:%S"), mtime);
 
 	tm* ltime = gmtime(&lastTime);
 	ltime->tm_year -= 66;
 	_TCHAR szBufl[128] = {};
 	if (lastTime) {
-		_tcsftime(szBufl, sizeof(szBufl) / sizeof(szBufl[0]), _T("%Y/%m/%d %H:%M:%S"), mtime);
+		_tcsftime(szBufl, sizeof(szBufl) / sizeof(szBufl[0]), _T("%Y-%m-%d %H:%M:%S"), mtime);
 	}
 
 	OutputVolDescWithLBALog2("Master Directory Blocks",
 		"\t                       volume signature: %04x\n"
-		"\t       date and time of volume creation: %s\n"
-		"\t     date and time of last modification: %s\n"
+		"\t       date and time of volume creation: %lld (%s)\n"
+		"\t     date and time of last modification: %lld (%s)\n"
 		"\t                      volume attributes: %04x\n"
 		"\t      number of files in root directory: %d\n"
 		"\t           first block of volume bitmap: %d\n"
@@ -883,7 +883,7 @@ VOID OutputFsMasterDirectoryBlocks(
 		"\t            next unused catalog node ID: %d\n"
 		"\t     number of unused allocation blocks: %d\n"
 		"\t                            volume name: %.27" CHARWIDTH "s\n"
-		"\t           date and time of last backup: %s\n"
+		"\t           date and time of last backup: %lld (%s)\n"
 		"\t          volume backup sequence number: %d\n"
 		"\t                     volume write count: %d\n"
 		"\t   clump size for extents overflow file: %d\n"
@@ -892,8 +892,8 @@ VOID OutputFsMasterDirectoryBlocks(
 		"\t              number of files in volume: %d\n"
 		"\t        number of directories in volume: %d\n"
 		, nLBA, MAKEWORD(lpBuf[1], lpBuf[0])
-		, szBufc
-		, szBufm
+		, creationTime, szBufc
+		, modificationTime, szBufm
 		, MAKEWORD(lpBuf[11], lpBuf[10])
 		, MAKEWORD(lpBuf[13], lpBuf[12])
 		, MAKEWORD(lpBuf[15], lpBuf[14])
@@ -905,7 +905,7 @@ VOID OutputFsMasterDirectoryBlocks(
 		, MAKEUINT(MAKEWORD(lpBuf[33], lpBuf[32]), MAKEWORD(lpBuf[31], lpBuf[30]))
 		, MAKEWORD(lpBuf[35], lpBuf[34])
 		, &lpBuf[37]
-		, szBufl
+		, lastTime, szBufl
 		, MAKEWORD(lpBuf[69], lpBuf[68])
 		, MAKEUINT(MAKEWORD(lpBuf[73], lpBuf[72]), MAKEWORD(lpBuf[71], lpBuf[70]))
 		, MAKEUINT(MAKEWORD(lpBuf[77], lpBuf[76]), MAKEWORD(lpBuf[75], lpBuf[74]))

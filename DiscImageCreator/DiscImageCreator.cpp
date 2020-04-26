@@ -1701,7 +1701,7 @@ int main(int argc, char* argv[])
 
 			now = time(NULL);
 			ts = localtime(&now);
-			_tcsftime(szBuf, sizeof(szBuf) / sizeof(szBuf[0]), _T("%Y/%m/%d(%a) %H:%M:%S"), ts);
+			_tcsftime(szBuf, sizeof(szBuf) / sizeof(szBuf[0]), _T("%Y-%m-%d(%a) %H:%M:%S"), ts);
 			OutputString("StartTime: %s\n", szBuf);
 
 			if (execType != merge) {
@@ -1713,7 +1713,7 @@ int main(int argc, char* argv[])
 
 			now = time(NULL);
 			ts = localtime(&now);
-			_tcsftime(szBuf, sizeof(szBuf) / sizeof(szBuf[0]), _T("%Y/%m/%d(%a) %H:%M:%S"), ts);
+			_tcsftime(szBuf, sizeof(szBuf) / sizeof(szBuf[0]), _T("%Y-%m-%d(%a) %H:%M:%S"), ts);
 			OutputString("EndTime: %s\n", szBuf);
 		}
 		if (!extArg.byQuiet) {
