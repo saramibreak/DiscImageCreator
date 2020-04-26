@@ -1314,6 +1314,9 @@ BOOL ProcessDirectory(
 				_tcsncat(szFoundFilePathName, fd.cFileName, _MAX_PATH);
 
 				if (!(FILE_ATTRIBUTE_DIRECTORY & fd.dwFileAttributes)) {
+					if (FILE_ATTRIBUTE_READONLY & fd.dwFileAttributes) {
+						SetFileAttributes(szFoundFilePathName, fd.dwFileAttributes - FILE_ATTRIBUTE_READONLY);
+					}
 					if (nOperate == FILE_DELETE || nOperate == FILE_CREATE) {
 						if (!DeleteFile(szFoundFilePathName)) {
 							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -1402,6 +1405,11 @@ BOOL ReadCDForCheckingExe(
 		}
 		BOOL bCab = FALSE;
 		_TCHAR FullPathWithDrive[_MAX_PATH] = {};
+		GetFullPathWithDrive(pDevice, pDisc, n, FullPathWithDrive);
+		if (strcasestr(FullPathWithDrive, "directx")) {
+			continue;
+		}
+
 		if (strcasestr(pDisc->PROTECT.pNameForExe[n], ".CAB") ||
 			strcasestr(pDisc->PROTECT.pNameForExe[n], ".HDR")) {
 
@@ -1410,7 +1418,7 @@ BOOL ReadCDForCheckingExe(
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				return FALSE;
 			}
-			GetFullPathWithDrive(pDevice, pDisc, n, FullPathWithDrive);
+			
 			if (!strncmp((LPCCH)&lpBuf[0], "MSCF", 4)) {
 #ifdef _WIN32
 				OutputString(
@@ -1507,6 +1515,10 @@ BOOL ReadCDForCheckingExe(
 
 								if (!ReadExeFromFile(pExtArg, pDisc, szTmpFullPath, fname)) {
 									continue;
+								}
+								DWORD attr = GetFileAttributes(szTmpFullPath);
+								if (FILE_ATTRIBUTE_READONLY & attr) {
+									SetFileAttributes(szTmpFullPath, attr - FILE_ATTRIBUTE_READONLY);
 								}
 								if (!DeleteFile(szTmpFullPath)) {
 									OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
