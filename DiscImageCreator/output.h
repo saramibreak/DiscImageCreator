@@ -95,6 +95,8 @@ extern _TCHAR logBuffer[DISC_RAW_READ_SIZE];
 
 #define OutputSubIntentionalLog(str, ...)		OutputDebugStringEx(str, ##__VA_ARGS__)
 
+#define OutputSubReadableLog(str, ...)		OutputDebugStringEx(str, ##__VA_ARGS__)
+
 #define OutputSubErrorLog(str, ...)	OutputDebugStringEx(str, ##__VA_ARGS__)
 #define OutputSubErrorWithLBALog(str, nLBA, track, ...) \
 	OutputDebugStringWithLBAEx(STR_LBA STR_TRACK STR_SUB str, nLBA, track, ##__VA_ARGS__)
@@ -165,6 +167,8 @@ extern _LOG_FILE g_LogFile;
 
 #define OutputSubIntentionalLog(str, ...)		_ftprintf(g_LogFile.fpSubIntention, _T(str), ##__VA_ARGS__);
 #define OutputSubIntentionalLogWithT(str, ...)	_ftprintf(g_LogFile.fpSubIntention, str, ##__VA_ARGS__);
+
+#define OutputSubReadableLog(str, ...)		_ftprintf(g_LogFile.fpSubReadable, _T(str), ##__VA_ARGS__);
 
 #define OutputSubErrorLog(str, ...)			_ftprintf(g_LogFile.fpSubError, _T(str), ##__VA_ARGS__);
 #define OutputSubErrorLogWithT(str, ...)	_ftprintf(g_LogFile.fpSubError, str, ##__VA_ARGS__);
