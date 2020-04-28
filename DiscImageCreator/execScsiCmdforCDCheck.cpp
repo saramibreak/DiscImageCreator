@@ -1406,7 +1406,7 @@ BOOL ReadCDForCheckingExe(
 		BOOL bCab = FALSE;
 		_TCHAR FullPathWithDrive[_MAX_PATH] = {};
 		GetFullPathWithDrive(pDevice, pDisc, n, FullPathWithDrive);
-		if (strcasestr(FullPathWithDrive, "directx")) {
+		if (strcasestrW(FullPathWithDrive, _T("directx"))) {
 			continue;
 		}
 
