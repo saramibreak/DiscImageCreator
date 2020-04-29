@@ -18,6 +18,46 @@
 #include "outputScsiCmdLogforCD.h"
 #include "_external/abgx360.h"
 
+VOID OutputDVDHeader(
+	LPBYTE lpBuf,
+	DWORD dwSectorSize,
+	INT nLBA
+) {
+	OutputRawReadableLog(
+		STR_LBA "SectorInfo[%02x]{Layer %d, %s, "
+		, nLBA, nLBA, lpBuf[0], lpBuf[0] & 0x01
+		, (lpBuf[0] & 0x02) == 0 ? _T("read-only") : _T("other")
+	);
+	switch ((lpBuf[0] & 0x0c) >> 2) {
+	case 0:
+		OutputRawReadableLog("Data Zone, ");
+		break;
+	case 1:
+		OutputRawReadableLog("Lead-in Zone, ");
+		break;
+	case 2:
+		OutputRawReadableLog("Lead-out Zone, ");
+		break;
+	case 3:
+		OutputRawReadableLog("Middle Zone, ");
+		break;
+	default:
+		break;
+	}
+	UINT gotSectorNum = MAKEUINT(MAKEWORD(lpBuf[3], lpBuf[2]), MAKEWORD(lpBuf[1], 0));
+	OutputRawReadableLog(
+		"%s}, SectorNumber[%06x (%d)], IED[%04x], CPR_MAI[%02x%02x%02x%02x%02x%02x], "
+		, (lpBuf[0] & 0x20) == 0 ? _T("greater than 40%") : _T("40% max")
+		, gotSectorNum, gotSectorNum, MAKEWORD(lpBuf[5], lpBuf[4])
+		, lpBuf[6], lpBuf[7], lpBuf[8], lpBuf[9], lpBuf[10], lpBuf[11]
+	);
+	UINT edc = MAKEUINT(MAKEWORD(lpBuf[2063], lpBuf[2062]), MAKEWORD(lpBuf[2061], lpBuf[2060]));
+	if (dwSectorSize == DVD_RAW_SECTOR2_SIZE) {
+		edc = MAKEUINT(MAKEWORD(lpBuf[2383], lpBuf[2382]), MAKEWORD(lpBuf[2381], lpBuf[2380]));
+	}
+	OutputRawReadableLog("EDC[%08x]\n", edc);
+}
+
 VOID OutputDVDRamLayerDescriptor(
 	PDISC pDisc,
 	LPBYTE lpBuf
@@ -831,9 +871,9 @@ VOID OutputDVDRmdLastBorderOut(
 	WORD wFormatLength
 ) {
 	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("RMD in last border-out"));
-	INT nRoop = wFormatLength / DISC_RAW_READ_SIZE;
+	INT nRoop = wFormatLength / DISC_MAIN_DATA_SIZE;
 	for (INT i = 0; i < nRoop; i++) {
-		OutputCDMain(fileDisc, lpFormat + DISC_RAW_READ_SIZE * i, 0, DISC_RAW_READ_SIZE);
+		OutputCDMain(fileDisc, lpFormat + DISC_MAIN_DATA_SIZE * i, 0, DISC_MAIN_DATA_SIZE);
 	}
 }
 
@@ -1900,7 +1940,7 @@ VOID OutputXboxSecuritySector(
 	LPBYTE buf
 ) {
 	DWORD dwSectorLen = 0;
-	OutputDVDStructureFormat(pDisc, DvdPhysicalDescriptor, DISC_RAW_READ_SIZE, buf, &dwSectorLen, 0);
+	OutputDVDStructureFormat(pDisc, DvdPhysicalDescriptor, DISC_MAIN_DATA_SIZE, buf, &dwSectorLen, 0);
 	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("SecuritySector")
 		"\t                     CPR_MAI Key: %08x\n"
 		"\t      Version of challenge table: %02u\n"
@@ -2033,7 +2073,7 @@ VOID OutputXbox360SecuritySector(
 	LPBYTE buf
 ) {
 	DWORD dwSectorLen = 0;
-	OutputDVDStructureFormat(pDisc, DvdPhysicalDescriptor, DISC_RAW_READ_SIZE, buf, &dwSectorLen, 0);
+	OutputDVDStructureFormat(pDisc, DvdPhysicalDescriptor, DISC_MAIN_DATA_SIZE, buf, &dwSectorLen, 0);
 	OutputDiscLog(
 		OUTPUT_DHYPHEN_PLUS_STR("SecuritySector")
 		"\t                         Unknown: "

@@ -39,7 +39,7 @@ VOID OutputFsVolumeDescriptorFirst(
 	CHAR str32[][32],
 	PVOLUME_DESCRIPTOR pVolDesc
 ) {
-	UINT vss = GetSizeOrUintForVolDesc(lpBuf + 80, UINT(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
+	UINT vss = GetSizeOrUintForVolDesc(lpBuf + 80, UINT(pDisc->SCSI.nAllLength * DISC_MAIN_DATA_SIZE));
 	OutputVolDescLog(
 		"\t                            System Identifier: %.32" CHARWIDTH "s\n"
 		"\t                            Volume Identifier: %.32" CHARWIDTH "s\n"
@@ -195,63 +195,63 @@ VOID OutputFsDirectoryRecord(
 				pDisc->PROTECT.byExist = datel;
 				strncpy(pDisc->PROTECT.name[0], fnameForProtect, 7);
 				pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] = (INT)uiExtentPos;
-				pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0] = (INT)(uiDataLen / DISC_RAW_READ_SIZE);
+				pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0] = (INT)(uiDataLen / DISC_MAIN_DATA_SIZE);
 			}
 			else if (pDisc->PROTECT.byExist == datel && !strncmp(fnameForProtect, "DATA.DAT", 8)) {
 				// for "DVD Region X"
 				pDisc->PROTECT.byExist = datelAlt;
 				strncpy(pDisc->PROTECT.name2, fnameForProtect, 8);
 				pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd = (INT)uiExtentPos;
-				pDisc->PROTECT.ERROR_SECTOR.nSectorSize2nd = (INT)(uiDataLen / DISC_RAW_READ_SIZE);
+				pDisc->PROTECT.ERROR_SECTOR.nSectorSize2nd = (INT)(uiDataLen / DISC_MAIN_DATA_SIZE);
 			}
 			else if (!strncmp(fnameForProtect, "CD.IDX", 6)) {
 				pDisc->PROTECT.byExist = cdidx;
 				strncpy(pDisc->PROTECT.name[0], fnameForProtect, 6);
 				pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] = (INT)uiExtentPos;
-				pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0] = (INT)(uiDataLen / DISC_RAW_READ_SIZE);
+				pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0] = (INT)(uiDataLen / DISC_MAIN_DATA_SIZE);
 			}
 			else if (!strncmp(fnameForProtect, "LASERLOK.IN", 11)) {
 				pDisc->PROTECT.byExist = laserlock;
 				strncpy(pDisc->PROTECT.name[0], fnameForProtect, 11);
 				pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] = (INT)uiExtentPos;
-				pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0] = (INT)(uiDataLen / DISC_RAW_READ_SIZE - 1);
+				pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0] = (INT)(uiDataLen / DISC_MAIN_DATA_SIZE - 1);
 			}
 			else if (!_strnicmp(fnameForProtect, "PROTECT.PRO", 11)) {
 				pDisc->PROTECT.byExist = proring;
 				strncpy(pDisc->PROTECT.name[0], fnameForProtect, 11);
 				pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] = (INT)uiExtentPos;
-				pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0] = (INT)(uiDataLen / DISC_RAW_READ_SIZE - 1);
+				pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0] = (INT)(uiDataLen / DISC_MAIN_DATA_SIZE - 1);
 			}
 			else if (!strncmp(fnameForProtect, "00000001.LT1", 12)) {
 				pDisc->PROTECT.byExist = safeDiscLite;
 				strncpy(pDisc->PROTECT.name[0], fnameForProtect, 12);
 				pDisc->PROTECT.byTmpForSafeDisc = TRUE;
-				pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] = (INT)(uiExtentPos + uiDataLen / DISC_RAW_READ_SIZE);
+				pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] = (INT)(uiExtentPos + uiDataLen / DISC_MAIN_DATA_SIZE);
 			}
 			else if (!strncmp(fnameForProtect, "00000001.TMP", 12) && pDisc->PROTECT.byExist != safeDisc) {
 				pDisc->PROTECT.byExist = safeDisc;
 				strncpy(pDisc->PROTECT.name[0], fnameForProtect, 12);
 				pDisc->PROTECT.byTmpForSafeDisc = TRUE;
-				pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] = (INT)(uiExtentPos + uiDataLen / DISC_RAW_READ_SIZE);
+				pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] = (INT)(uiExtentPos + uiDataLen / DISC_MAIN_DATA_SIZE);
 			}
 			else if (!_strnicmp(fnameForProtect, "00002.TMP", 9)) {
 				pDisc->PROTECT.byExist = smartE;
 				strncpy(pDisc->PROTECT.name[0], fnameForProtect, 9);
 				pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] = (INT)uiExtentPos;
-				pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0] = (INT)(uiDataLen / DISC_RAW_READ_SIZE - 1);
+				pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0] = (INT)(uiDataLen / DISC_MAIN_DATA_SIZE - 1);
 			}
 			else if (GetReadErrorFileName(pExtArg, fnameForProtect)) {
 				pDisc->PROTECT.byExist = physicalErr;
 				strncpy(pDisc->PROTECT.name[pExtArg->FILE.readErrCnt], fnameForProtect, strlen(fnameForProtect));
 				pDisc->PROTECT.ERROR_SECTOR.nExtentPos[pExtArg->FILE.readErrCnt] = (INT)uiExtentPos;
-				pDisc->PROTECT.ERROR_SECTOR.nSectorSize[pExtArg->FILE.readErrCnt] = (INT)(uiDataLen / DISC_RAW_READ_SIZE - 1);
+				pDisc->PROTECT.ERROR_SECTOR.nSectorSize[pExtArg->FILE.readErrCnt] = (INT)(uiDataLen / DISC_MAIN_DATA_SIZE - 1);
 				pExtArg->FILE.readErrCnt++;
 			}
 			else if (GetC2ErrorFileName(pExtArg, fnameForProtect)) {
 				pDisc->PROTECT.byExist = c2Err;
 				strncpy(pDisc->PROTECT.name[pExtArg->FILE.c2ErrCnt], fnameForProtect, strlen(fnameForProtect));
 				pDisc->PROTECT.ERROR_SECTOR.nExtentPos[pExtArg->FILE.c2ErrCnt] = (INT)uiExtentPos;
-				pDisc->PROTECT.ERROR_SECTOR.nSectorSize[pExtArg->FILE.c2ErrCnt] = (INT)(uiDataLen / DISC_RAW_READ_SIZE - 1);
+				pDisc->PROTECT.ERROR_SECTOR.nSectorSize[pExtArg->FILE.c2ErrCnt] = (INT)(uiDataLen / DISC_MAIN_DATA_SIZE - 1);
 				pExtArg->FILE.c2ErrCnt++;
 			}
 		}
@@ -281,8 +281,8 @@ VOID OutputFsDirectoryRecord(
 					size_t len = (size_t)(p - fnameForProtect + 4);
 					pDisc->PROTECT.pExtentPosForExe[pDisc->PROTECT.nCntForExe] = (INT)uiExtentPos;
 					pDisc->PROTECT.pDataLenForExe[pDisc->PROTECT.nCntForExe] = (INT)uiDataLen;
-					pDisc->PROTECT.pSectorSizeForExe[pDisc->PROTECT.nCntForExe] = (INT)(uiDataLen / DISC_RAW_READ_SIZE);
-					if (uiDataLen % DISC_RAW_READ_SIZE > 0) {
+					pDisc->PROTECT.pSectorSizeForExe[pDisc->PROTECT.nCntForExe] = (INT)(uiDataLen / DISC_MAIN_DATA_SIZE);
+					if (uiDataLen % DISC_MAIN_DATA_SIZE > 0) {
 						pDisc->PROTECT.pSectorSizeForExe[pDisc->PROTECT.nCntForExe] += 1;
 					}
 					strncpy(pDisc->PROTECT.pNameForExe[pDisc->PROTECT.nCntForExe], fnameForProtect, len);
@@ -306,7 +306,7 @@ VOID OutputFsVolumeDescriptorSecond(
 	WORD vss = GetSizeOrWordForVolDesc(lpBuf + 120);
 	WORD vsn = GetSizeOrWordForVolDesc(lpBuf + 124);
 	WORD lbs = GetSizeOrWordForVolDesc(lpBuf + 128);
-	UINT pts = GetSizeOrUintForVolDesc(lpBuf + 132, UINT(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
+	UINT pts = GetSizeOrUintForVolDesc(lpBuf + 132, UINT(pDisc->SCSI.nAllLength * DISC_MAIN_DATA_SIZE));
 	UINT lopt = MAKEUINT(MAKEWORD(lpBuf[140], lpBuf[141]),
 		MAKEWORD(lpBuf[142], lpBuf[143]));
 	if (lopt == 0) {
@@ -334,8 +334,8 @@ VOID OutputFsVolumeDescriptorSecond(
 		"\tLocation of Optional Occurrence of Path Table: %u\n"
 		, vss, vsn, lbs, pts, lopt, loopt);
 
-	UINT uiExtentPos = GetSizeOrUintForVolDesc(lpBuf + 158, UINT(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
-	UINT uiDataLen = GetSizeOrUintForVolDesc(lpBuf + 166, UINT(pDisc->SCSI.nAllLength * DISC_RAW_READ_SIZE));
+	UINT uiExtentPos = GetSizeOrUintForVolDesc(lpBuf + 158, UINT(pDisc->SCSI.nAllLength * DISC_MAIN_DATA_SIZE));
+	UINT uiDataLen = GetSizeOrUintForVolDesc(lpBuf + 166, UINT(pDisc->SCSI.nAllLength * DISC_MAIN_DATA_SIZE));
 	CHAR fname[64] = {};
 	OutputFsDirectoryRecord(pExtArg, pDisc, lpBuf + 156, uiExtentPos, uiDataLen, fname, NULL, 0);
 	if (bTCHAR) {

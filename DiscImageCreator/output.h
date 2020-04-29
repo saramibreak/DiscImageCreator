@@ -46,22 +46,22 @@
 #ifdef _DEBUG
 #define FlushLog()
 
-extern _TCHAR logBuffer[DISC_RAW_READ_SIZE];
+extern _TCHAR logBuffer[DISC_MAIN_DATA_SIZE];
 #define OutputDebugStringEx(str, ...) \
 { \
-	_sntprintf(logBuffer, DISC_RAW_READ_SIZE, _T(str), ##__VA_ARGS__); \
+	_sntprintf(logBuffer, DISC_MAIN_DATA_SIZE, _T(str), ##__VA_ARGS__); \
 	logBuffer[2047] = 0; \
 	OutputDebugString(logBuffer); \
 }
 #define OutputDebugStringWithLBAEx(str, nLBA, track, ...) \
 { \
-	_sntprintf(logBuffer, DISC_RAW_READ_SIZE, _T(str), nLBA, nLBA, track, ##__VA_ARGS__); \
+	_sntprintf(logBuffer, DISC_MAIN_DATA_SIZE, _T(str), nLBA, nLBA, track, ##__VA_ARGS__); \
 	logBuffer[2047] = 0; \
 	OutputDebugString(logBuffer); \
 }
 #define OutputDebugStringWithLBAEx2(str, nLBA, ...) \
 { \
-	_sntprintf(logBuffer, DISC_RAW_READ_SIZE, _T(str), nLBA, nLBA, ##__VA_ARGS__); \
+	_sntprintf(logBuffer, DISC_MAIN_DATA_SIZE, _T(str), nLBA, nLBA, ##__VA_ARGS__); \
 	logBuffer[2047] = 0; \
 	OutputDebugString(logBuffer); \
 }
@@ -104,6 +104,8 @@ extern _TCHAR logBuffer[DISC_RAW_READ_SIZE];
 #define OutputC2ErrorLog(str, ...)		OutputDebugStringEx(str, ##__VA_ARGS__)
 #define OutputC2ErrorWithLBALog(str, nLBA, ...) \
 	OutputDebugStringWithLBAEx2(STR_LBA str, nLBA, ##__VA_ARGS__);
+
+#define OutputRawReadableLog(str, ...)		OutputDebugStringEx(str, ##__VA_ARGS__)
 
 #define OutputLog(type, str, ...)		OutputDebugStringEx(str, ##__VA_ARGS__)
 #else
@@ -183,6 +185,8 @@ extern _LOG_FILE g_LogFile;
 	_ftprintf(g_LogFile.fpC2Error, _T(STR_LBA str), nLBA, nLBA, ##__VA_ARGS__);
 #define OutputC2ErrorWithLBALogWithT(str, nLBA, ...) \
 	_ftprintf(g_LogFile.fpC2Error, STR_LBA str, nLBA, nLBA, ##__VA_ARGS__);
+
+#define OutputRawReadableLog(str, ...)		_ftprintf(g_LogFile.fpRawReadable, _T(str), ##__VA_ARGS__);
 
 #define OutputLog(type, str, ...) \
 { \

@@ -1320,13 +1320,13 @@ BOOL AnalyzeIfoFile(
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
-			if (fread(pSector, sizeof(BYTE), DISC_RAW_READ_SIZE, fp) != DISC_RAW_READ_SIZE) {
+			if (fread(pSector, sizeof(BYTE), DISC_MAIN_DATA_SIZE, fp) != DISC_MAIN_DATA_SIZE) {
 				throw FALSE;
 			}
 			WORD wNumOfTitleSets = MAKEWORD(pSector[0x3f], pSector[0x3e]);
 			LONG lStartOfsOfPttSrpt = MAKELONG(MAKEWORD(pSector[0xc7], pSector[0xc6]), MAKEWORD(pSector[0xc5], pSector[0xc4]));
-			fseek(fp, DISC_RAW_READ_SIZE * lStartOfsOfPttSrpt, SEEK_SET);
-			if (fread(pSector, sizeof(BYTE), DISC_RAW_READ_SIZE, fp) != DISC_RAW_READ_SIZE) {
+			fseek(fp, DISC_MAIN_DATA_SIZE * lStartOfsOfPttSrpt, SEEK_SET);
+			if (fread(pSector, sizeof(BYTE), DISC_MAIN_DATA_SIZE, fp) != DISC_MAIN_DATA_SIZE) {
 				throw FALSE;
 			}
 			WORD wNumOfTitlePlayMaps = MAKEWORD(pSector[1], pSector[0]);
@@ -1353,12 +1353,12 @@ BOOL AnalyzeIfoFile(
 						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 						break;
 					}
-					if (fread(pSector, sizeof(BYTE), DISC_RAW_READ_SIZE, fpVts) != DISC_RAW_READ_SIZE) {
+					if (fread(pSector, sizeof(BYTE), DISC_MAIN_DATA_SIZE, fpVts) != DISC_MAIN_DATA_SIZE) {
 						FcloseAndNull(fpVts);
 						break;
 					}
 					LONG lStartOfsOfPgci = MAKELONG(MAKEDWORD(pSector[0xcf], pSector[0xce]), MAKEDWORD(pSector[0xcd], pSector[0xcc]));
-					fseek(fpVts, DISC_RAW_READ_SIZE * lStartOfsOfPgci, SEEK_SET);
+					fseek(fpVts, DISC_MAIN_DATA_SIZE * lStartOfsOfPgci, SEEK_SET);
 
 					if (fread(pSector, sizeof(BYTE), 8, fpVts) != 8) {
 						FcloseAndNull(fpVts);

@@ -525,8 +525,8 @@ BOOL OutputHash(
 		!_tcsncmp(pszFnameAndExt, _T("SS.bin"), 6) ||
 		!_tcsncmp(pszFnameAndExt, _T("PFI.bin"), 7) ||
 		!_tcsncmp(pszFnameAndExt, _T("DMI.bin"), 7) ||
-		ui64FileSize % DISC_RAW_READ_SIZE == 0) {
-		uiSectorSizeOne = DISC_RAW_READ_SIZE;
+		ui64FileSize % DISC_MAIN_DATA_SIZE == 0) {
+		uiSectorSizeOne = DISC_MAIN_DATA_SIZE;
 	}
 
 	UINT64 ui64SectorSizeAll = ui64FileSize / (UINT64)uiSectorSizeOne;

@@ -15,6 +15,12 @@
  */
 #pragma once
 
+VOID OutputDVDHeader(
+	LPBYTE lpBuf,
+	DWORD dwSectorSize,
+	INT nLBA
+);
+
 VOID OutputDVDStructureFormat(
 	PDISC pDisc,
 	BYTE byFormatCode,

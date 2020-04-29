@@ -55,13 +55,13 @@ BOOL ExecReadDisc(
 			return FALSE;
 		}
 		for (BYTE i = 0; i < byTransferLen; i++) {
-			memcpy(lpBuf + DISC_RAW_READ_SIZE * i, bufDec + CD_RAW_SECTOR_SIZE * i + 16, DISC_RAW_READ_SIZE);
-//			OutputCDMain(fileMainInfo, lpBuf + DISC_RAW_READ_SIZE * i, nLBA, DISC_RAW_READ_SIZE);
+			memcpy(lpBuf + DISC_MAIN_DATA_SIZE * i, bufDec + CD_RAW_SECTOR_SIZE * i + 16, DISC_MAIN_DATA_SIZE);
+//			OutputCDMain(fileMainInfo, lpBuf + DISC_MAIN_DATA_SIZE * i, nLBA, DISC_MAIN_DATA_SIZE);
 		}
 	}
 	else {
 		if (!ExecReadCD(pExtArg, pDevice, pCdb, nLBA, lpBuf,
-			(DWORD)(DISC_RAW_READ_SIZE * byTransferLen), pszFuncName, lLineNum)) {
+			(DWORD)(DISC_MAIN_DATA_SIZE * byTransferLen), pszFuncName, lLineNum)) {
 			return FALSE;
 		}
 	}

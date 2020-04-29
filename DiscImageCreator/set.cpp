@@ -127,18 +127,18 @@ VOID SetCommandForTransferLength(
 			*lpTransferLen = (BYTE)(dwSize / CD_RAW_SECTOR_SIZE);
 		}
 		else {
-			*lpTransferLen = (BYTE)(dwSize / DISC_RAW_READ_SIZE + 1);
+			*lpTransferLen = (BYTE)(dwSize / DISC_MAIN_DATA_SIZE + 1);
 		}
 	}
 	else {
-		*lpTransferLen = (BYTE)(dwSize / DISC_RAW_READ_SIZE);
+		*lpTransferLen = (BYTE)(dwSize / DISC_MAIN_DATA_SIZE);
 	}
 	// Generally, directory size is per 2048 byte
 	// Exception:
 	//  Codename - Outbreak (Europe) (Sold Out Software)
 	//  Commandos - Behind Enemy Lines (Europe) (Sold Out Software)
 	// and more
-	if (dwSize % DISC_RAW_READ_SIZE != 0) {
+	if (dwSize % DISC_MAIN_DATA_SIZE != 0) {
 		(*lpTransferLen)++;
 	}
 	if (*pExecType == gd) {

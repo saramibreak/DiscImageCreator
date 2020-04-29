@@ -1205,7 +1205,7 @@ BOOL ReadExeFromFile(
 		OutputErrorString("Failed to OpenFile: %s\n", szFullPath);
 		return FALSE;
 	}
-	CONST INT bufsize = DISC_RAW_READ_SIZE * 2;
+	CONST INT bufsize = DISC_MAIN_DATA_SIZE * 2;
 	BYTE lpBuf[bufsize] = {};
 	fread(lpBuf, sizeof(lpBuf), sizeof(BYTE), fp);
 	OutputCDMain(fileMainInfo, lpBuf, 0, bufsize);
@@ -1400,7 +1400,7 @@ BOOL ReadCDForCheckingExe(
 	LPBYTE lpBuf
 ) {
 	BOOL bRet = TRUE;
-	DWORD dwSize = DISC_RAW_READ_SIZE;
+	DWORD dwSize = DISC_MAIN_DATA_SIZE;
 	BYTE byTransferLen = 1;
 	BYTE byRoopLen = byTransferLen;
 	SetCommandForTransferLength(pExecType, pDevice, pCdb, dwSize, &byTransferLen, &byRoopLen);
@@ -1413,10 +1413,11 @@ BOOL ReadCDForCheckingExe(
 		BOOL bCab = FALSE;
 		_TCHAR FullPathWithDrive[_MAX_PATH] = {};
 		GetFullPathWithDrive(pDevice, pDisc, n, FullPathWithDrive);
+#ifdef _WIN32
 		if (strcasestrW(FullPathWithDrive, _T("directx"))) {
 			continue;
 		}
-
+#endif
 		if (strcasestr(pDisc->PROTECT.pNameForExe[n], ".CAB") ||
 			strcasestr(pDisc->PROTECT.pNameForExe[n], ".HDR")) {
 
@@ -1558,14 +1559,14 @@ BOOL ReadCDForCheckingExe(
 					}
 					else {
 						SetCommandForTransferLength(pExecType, pDevice, pCdb, (DWORD)pIDh->e_lfanew, &byTransferLen, &byRoopLen);
-						dwSize = DWORD(DISC_RAW_READ_SIZE) * byTransferLen;
+						dwSize = DWORD(DISC_MAIN_DATA_SIZE) * byTransferLen;
 						n--;
 					}
 					continue;
 				}
-				if (dwSize > DISC_RAW_READ_SIZE) {
-					SetCommandForTransferLength(pExecType, pDevice, pCdb, DISC_RAW_READ_SIZE, &byTransferLen, &byRoopLen);
-					dwSize = DISC_RAW_READ_SIZE;
+				if (dwSize > DISC_MAIN_DATA_SIZE) {
+					SetCommandForTransferLength(pExecType, pDevice, pCdb, DISC_MAIN_DATA_SIZE, &byTransferLen, &byRoopLen);
+					dwSize = DISC_MAIN_DATA_SIZE;
 				}
 				OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA
 					, pDisc->PROTECT.pExtentPosForExe[n], pDisc->PROTECT.pExtentPosForExe[n], pDisc->PROTECT.pNameForExe[n]);
@@ -1587,24 +1588,24 @@ BOOL ReadCDForCheckingExe(
 						if (!ExecReadCD(pExtArg, pDevice, pCdb, nLastSector, lpBuf, dwSize, _T(__FUNCTION__), __LINE__)) {
 							continue;
 						}
-						OutputCDMain(fileMainInfo, lpBuf, nLastSector, DISC_RAW_READ_SIZE);
-						INT nMod = pDisc->PROTECT.pDataLenForExe[n] % DISC_RAW_READ_SIZE;
+						OutputCDMain(fileMainInfo, lpBuf, nLastSector, DISC_MAIN_DATA_SIZE);
+						INT nMod = pDisc->PROTECT.pDataLenForExe[n] % DISC_MAIN_DATA_SIZE;
 						UINT uiOfsOfSecuRomDll = 0;
 						if (nMod) {
 							uiOfsOfSecuRomDll = MAKEUINT(MAKEWORD(lpBuf[nMod - 4], lpBuf[nMod - 3]), MAKEWORD(lpBuf[nMod - 2], lpBuf[nMod - 1]));
 						}
 						else {
-							uiOfsOfSecuRomDll = MAKEUINT(MAKEWORD(lpBuf[DISC_RAW_READ_SIZE - 4], lpBuf[DISC_RAW_READ_SIZE - 3])
-								, MAKEWORD(lpBuf[DISC_RAW_READ_SIZE - 2], lpBuf[DISC_RAW_READ_SIZE - 1]));
+							uiOfsOfSecuRomDll = MAKEUINT(MAKEWORD(lpBuf[DISC_MAIN_DATA_SIZE - 4], lpBuf[DISC_MAIN_DATA_SIZE - 3])
+								, MAKEWORD(lpBuf[DISC_MAIN_DATA_SIZE - 2], lpBuf[DISC_MAIN_DATA_SIZE - 1]));
 						}
 						if (uiOfsOfSecuRomDll && uiOfsOfSecuRomDll < (UINT)pDisc->PROTECT.pDataLenForExe[n]) {
-							UINT uiPosOfSecuRomDll = uiOfsOfSecuRomDll / DISC_RAW_READ_SIZE;
+							UINT uiPosOfSecuRomDll = uiOfsOfSecuRomDll / DISC_MAIN_DATA_SIZE;
 
 							INT n1stSector = (INT)(pDisc->PROTECT.pExtentPosForExe[n] + uiPosOfSecuRomDll);
 							if (!ExecReadCD(pExtArg, pDevice, pCdb, n1stSector, lpBuf, dwSize, _T(__FUNCTION__), __LINE__)) {
 								continue;
 							}
-							OutputCDMain(fileMainInfo, lpBuf, n1stSector, DISC_RAW_READ_SIZE);
+							OutputCDMain(fileMainInfo, lpBuf, n1stSector, DISC_MAIN_DATA_SIZE);
 
 							UINT uiOfsOf16 = 0;
 							UINT uiOfsOf32 = 0;
@@ -1614,28 +1615,28 @@ BOOL ReadCDForCheckingExe(
 								OutputSecuRomDllHeader(lpBuf, &uiOfsOf16, &uiOfsOf32, &uiOfsOfNT, &idx);
 								OutputSint16(lpBuf, uiOfsOf16, uiOfsOfSecuRomDll, idx);
 
-								CONST DWORD bufsize = DISC_RAW_READ_SIZE * 2;
+								CONST DWORD bufsize = DISC_MAIN_DATA_SIZE * 2;
 								SetCommandForTransferLength(pExecType, pDevice, pCdb, bufsize, &byTransferLen, &byRoopLen);
-								UINT tmp = uiOfsOf32 / DISC_RAW_READ_SIZE;
+								UINT tmp = uiOfsOf32 / DISC_MAIN_DATA_SIZE;
 								INT n2ndSector = (INT)(pDisc->PROTECT.pExtentPosForExe[n] + tmp);
 								if (!ExecReadCD(pExtArg, pDevice, pCdb, n2ndSector, lpBuf, bufsize, _T(__FUNCTION__), __LINE__)) {
 									continue;
 								}
 								OutputCDMain(fileMainInfo, lpBuf, n2ndSector, (INT)bufsize);
-								INT nOfsOf32dll = (INT)(uiOfsOf32 - uiOfsOfSecuRomDll) % DISC_RAW_READ_SIZE;
+								INT nOfsOf32dll = (INT)(uiOfsOf32 - uiOfsOfSecuRomDll) % DISC_MAIN_DATA_SIZE;
 
 								OutputSint32(lpBuf, nOfsOf32dll, FALSE);
 
-								UINT tmp2 = uiOfsOfNT / DISC_RAW_READ_SIZE;
+								UINT tmp2 = uiOfsOfNT / DISC_MAIN_DATA_SIZE;
 								INT n3rdSector = (INT)(pDisc->PROTECT.pExtentPosForExe[n] + tmp2);
 								if (!ExecReadCD(pExtArg, pDevice, pCdb, n3rdSector, lpBuf, bufsize, _T(__FUNCTION__), __LINE__)) {
 									continue;
 								}
 								OutputCDMain(fileMainInfo, lpBuf, n3rdSector, (INT)bufsize);
-								INT nOfsOfNTdll = (INT)(uiOfsOfNT - uiOfsOfSecuRomDll) % DISC_RAW_READ_SIZE;
+								INT nOfsOfNTdll = (INT)(uiOfsOfNT - uiOfsOfSecuRomDll) % DISC_MAIN_DATA_SIZE;
 
 								OutputSintNT(lpBuf, nOfsOfNTdll, FALSE);
-								SetCommandForTransferLength(pExecType, pDevice, pCdb, DISC_RAW_READ_SIZE, &byTransferLen, &byRoopLen);
+								SetCommandForTransferLength(pExecType, pDevice, pCdb, DISC_MAIN_DATA_SIZE, &byTransferLen, &byRoopLen);
 							}
 						}
 						else if (pExtArg->byIntentionalSub) {
@@ -1742,16 +1743,16 @@ BOOL ReadCDForSegaDisc(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice
 ) {
-	BYTE buf[DISC_RAW_READ_SIZE] = {};
+	BYTE buf[DISC_MAIN_DATA_SIZE] = {};
 	CDB::_READ12 cdb = {};
 	cdb.OperationCode = SCSIOP_READ12;
 	cdb.TransferLength[3] = 1;
 
 	if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, 0, buf,
-		DISC_RAW_READ_SIZE, _T(__FUNCTION__), __LINE__)) {
+		DISC_MAIN_DATA_SIZE, _T(__FUNCTION__), __LINE__)) {
 	}
 	if (!memcmp(buf, "SEGA", 4)) {
-		OutputCDMain(fileMainInfo, buf, 0, DISC_RAW_READ_SIZE);
+		OutputCDMain(fileMainInfo, buf, 0, DISC_MAIN_DATA_SIZE);
 	}
 	return TRUE;
 }
@@ -1760,7 +1761,7 @@ BOOL ReadCDForCheckingPsxRegion(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice
 ) {
-	BYTE buf[DISC_RAW_READ_SIZE] = {};
+	BYTE buf[DISC_MAIN_DATA_SIZE] = {};
 	CONST CHAR regionPal[] =
 		"          Licensed  by          Sony Computer Entertainment Euro pe   ";
 	CONST CHAR regionPal2[] =
@@ -1770,7 +1771,7 @@ BOOL ReadCDForCheckingPsxRegion(
 	cdb.TransferLength[3] = 1;
 
 	if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, 4, buf,
-		DISC_RAW_READ_SIZE, _T(__FUNCTION__), __LINE__)) {
+		DISC_MAIN_DATA_SIZE, _T(__FUNCTION__), __LINE__)) {
 		return TRUE;
 	}
 	OutputCDMain(fileMainInfo, buf, 4, 80);
@@ -1790,7 +1791,7 @@ VOID ReadCDForScanningPsxAntiMod(
 	PDISC pDisc
 ) {
 	BOOL bRet = FALSE;
-	BYTE buf[DISC_RAW_READ_SIZE] = {};
+	BYTE buf[DISC_MAIN_DATA_SIZE] = {};
 	CONST CHAR antiModStrEn[] =
 		"     SOFTWARE TERMINATED\nCONSOLE MAY HAVE BEEN MODIFIED\n     CALL 1-888-780-7690";
 	CONST CHAR antiModStrJp[] =
@@ -1801,19 +1802,19 @@ VOID ReadCDForScanningPsxAntiMod(
 
 	for (INT nLBA = 18; nLBA < pDisc->SCSI.nLastLBAofDataTrk - 150; nLBA++) {
 		if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, buf,
-			DISC_RAW_READ_SIZE, _T(__FUNCTION__), __LINE__)) {
+			DISC_MAIN_DATA_SIZE, _T(__FUNCTION__), __LINE__)) {
 			return;
 		}
-		for (INT i = 0; i < DISC_RAW_READ_SIZE; i++) {
+		for (INT i = 0; i < DISC_MAIN_DATA_SIZE; i++) {
 			if (!memcmp(&buf[i], antiModStrEn, sizeof(antiModStrEn))) {
 				OutputLog(fileDisc | standardOut, "\nDetected anti-mod string (en): LBA %d", nLBA);
-				OutputCDMain(fileMainInfo, buf, nLBA, DISC_RAW_READ_SIZE);
+				OutputCDMain(fileMainInfo, buf, nLBA, DISC_MAIN_DATA_SIZE);
 				bRet += TRUE;
 			}
 			if (!memcmp(&buf[i], antiModStrJp, sizeof(antiModStrJp))) {
 				OutputLog(fileDisc | standardOut, "\nDetected anti-mod string (jp): LBA %d\n", nLBA);
 				if (!bRet) {
-					OutputCDMain(fileMainInfo, buf, nLBA, DISC_RAW_READ_SIZE);
+					OutputCDMain(fileMainInfo, buf, nLBA, DISC_MAIN_DATA_SIZE);
 				}
 				bRet += TRUE;
 			}

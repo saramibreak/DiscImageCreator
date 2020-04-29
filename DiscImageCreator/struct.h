@@ -162,6 +162,7 @@ typedef struct _LOG_FILE {
 	FILE* fpSubReadable;
 	FILE* fpSubError;
 	FILE* fpC2Error;
+	FILE* fpRawReadable;
 } LOG_FILE, *PLOG_FILE;
 
 typedef struct _EXT_ARG {

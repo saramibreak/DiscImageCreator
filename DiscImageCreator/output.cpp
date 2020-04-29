@@ -25,7 +25,7 @@
 #include "set.h"
 
 #ifdef _DEBUG
-_TCHAR logBuffer[DISC_RAW_READ_SIZE];
+_TCHAR logBuffer[DISC_MAIN_DATA_SIZE];
 #endif
 // These global variable is set at prngcd.cpp
 extern unsigned char scrambled_table[2352];

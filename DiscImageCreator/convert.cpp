@@ -191,7 +191,7 @@ LPVOID ConvParagraphBoundary(
 UINT PadSizeForVolDesc(
 	UINT uiSize
 ) {
-	INT nPadding = DISC_RAW_READ_SIZE - (INT)uiSize;
+	INT nPadding = DISC_MAIN_DATA_SIZE - (INT)uiSize;
 	// uiSize isn't 2048 byte
 	if (nPadding != 0) {
 		// uiSize is smaller than 2048 byte
@@ -205,10 +205,10 @@ UINT PadSizeForVolDesc(
 		}
 		// uiSize is larger than 2048 byte
 		else {
-			nPadding = (INT)uiSize % DISC_RAW_READ_SIZE;
+			nPadding = (INT)uiSize % DISC_MAIN_DATA_SIZE;
 			// uiSize isn't 4096, 6144, 8192 etc byte
 			if (nPadding != 0) {
-				nPadding = DISC_RAW_READ_SIZE - nPadding;
+				nPadding = DISC_MAIN_DATA_SIZE - nPadding;
 				uiSize += nPadding;
 			}
 		}
