@@ -888,10 +888,10 @@ BOOL ReadCDForCheckingSubQAdr(
 						OutputCDSub96Align(fileDisc, pDiscPerSector->subcode.current, nLBA);
 						OutputDiscLog(
 							"\tISRC: [%" CHARWIDTH "s]\n"
-							"\t    => Country: %" CHARWIDTH ".2s\n"
-							"\t    =>   Owner: %" CHARWIDTH ".3s\n"
-							"\t    =>    Year: %" CHARWIDTH ".2s\n"
-							"\t    =>  Serial: %" CHARWIDTH ".5s\n"
+							"\t    => Country: %.2" CHARWIDTH "s\n"
+							"\t    =>   Owner: %.3" CHARWIDTH "s\n"
+							"\t    =>    Year: %.2" CHARWIDTH "s\n"
+							"\t    =>  Serial: %.5" CHARWIDTH "s\n"
 							, szISRC, szISRC, &szISRC[2], &szISRC[5], &szISRC[7]
 						);
 					}
