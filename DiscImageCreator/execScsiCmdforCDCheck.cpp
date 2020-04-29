@@ -886,7 +886,14 @@ BOOL ReadCDForCheckingSubQAdr(
 						strncpy(pDisc->SUB.pszISRC[byIdxOfTrack], szISRC, META_ISRC_SIZE);
 						pDisc->SUB.lpISRCList[byIdxOfTrack] = bISRC;
 						OutputCDSub96Align(fileDisc, pDiscPerSector->subcode.current, nLBA);
-						OutputDiscLog("\tISRC: [%" CHARWIDTH "s]\n", szISRC);
+						OutputDiscLog(
+							"\tISRC: [%" CHARWIDTH "s]\n"
+							"\t    => Country: %" CHARWIDTH ".2s\n"
+							"\t    =>   Owner: %" CHARWIDTH ".3s\n"
+							"\t    =>    Year: %" CHARWIDTH ".2s\n"
+							"\t    =>  Serial: %" CHARWIDTH ".5s\n"
+							, szISRC, szISRC, &szISRC[2], &szISRC[5], &szISRC[7]
+						);
 					}
 				}
 			}
