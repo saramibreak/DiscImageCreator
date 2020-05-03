@@ -35,6 +35,13 @@ VOID OutputFsImageSectionHeader(
 	LPBOOL bSecurom
 );
 
+VOID OutputImportDirectory(
+	LPBYTE lpBuf,
+	DWORD dwImportVirtualAddress,
+	DWORD dwImportSize,
+	DWORD dwOfs
+);
+
 VOID OutputSecuRomDll4_87Header(
 	LPBYTE lpBuf,
 	INT i

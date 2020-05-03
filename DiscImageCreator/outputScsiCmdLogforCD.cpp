@@ -461,6 +461,97 @@ VOID OutputFsImageNtHeader(
 	}
 }
 
+VOID OutputImportDirectory(
+	LPBYTE lpBuf,
+	DWORD dwImportVirtualAddress,
+	DWORD dwImportSize,
+	DWORD dwOfs
+) {
+	INT nDllNum = 0;
+	size_t nTmpOfs = 0;
+	for (;;) {
+		PIMAGE_IMPORT_DESCRIPTOR imp = (PIMAGE_IMPORT_DESCRIPTOR)&lpBuf[dwOfs + nTmpOfs];
+		if (imp->OriginalFirstThunk == 0 && imp->TimeDateStamp == 0 &&
+			imp->ForwarderChain == 0 && imp->Name == 0 && imp->FirstThunk == 0) {
+			break;
+		}
+		else {
+			OutputVolDescLog(
+				"\t========== Import Section %d ==========\n"
+				"\t\tOriginalFirstThunk: %04lx\n"
+				"\t\t     TimeDateStamp: %04lx\n"
+				"\t\t    ForwarderChain: %04lx\n"
+				"\t\t              Name: %04lx\n"
+				"\t\t        FirstThunk: %04lx\n"
+				, nDllNum + 1, imp->OriginalFirstThunk
+				, imp->TimeDateStamp, imp->ForwarderChain, imp->Name, imp->FirstThunk
+			);
+			nTmpOfs += sizeof(IMAGE_IMPORT_DESCRIPTOR);
+			nDllNum++;
+		}
+	}
+
+	PIMAGE_IMPORT_DESCRIPTOR imp = (PIMAGE_IMPORT_DESCRIPTOR)&lpBuf[dwOfs];
+	DWORD dwOfs2 = dwOfs + dwImportSize;
+	for (INT i = 0; i < nDllNum; i++) {
+		OutputVolDescLog(
+			"\t========== LUT %d ==========\n", i + 1
+		);
+		for (;;) {
+			DWORD va = MAKEDWORD(MAKEWORD(lpBuf[dwOfs2], lpBuf[dwOfs2 + 1]), MAKEWORD(lpBuf[dwOfs2 + 2], lpBuf[dwOfs2 + 3]));
+			dwOfs2 += sizeof(DWORD);
+			if (va) {
+				OutputVolDescLog(
+					"\t\t VirtualAddress: %04lx\n", va
+				);
+			}
+			else {
+				break;
+			}
+		}
+	}
+	DWORD dwOfs3 = dwOfs + imp->Name - dwImportVirtualAddress;
+	nTmpOfs = sizeof(IMAGE_IMPORT_DESCRIPTOR);
+	for (INT i = 0; i < nDllNum; i++) {
+		OutputVolDescLog(
+			"\t========== DLL %d==========\n"
+			"\t\t Name: %" CHARWIDTH "s\n", i + 1, &lpBuf[dwOfs3]
+		);
+		size_t dlllen = strlen((LPCH)&lpBuf[dwOfs3]);
+		if (dlllen % 2) {
+			dlllen++;
+		}
+		else {
+			dlllen += 2;
+		}
+		imp = (PIMAGE_IMPORT_DESCRIPTOR)&lpBuf[dwOfs + nTmpOfs];
+		DWORD dwOfs3Next = dwOfs + imp->Name - dwImportVirtualAddress;
+		OutputVolDescLog(
+			"\t\t========== Function ==========\n"
+		);
+		size_t funclen = 0;
+		for (DWORD j = 0; j < dwOfs3Next - dwOfs3 - dlllen; j += funclen) {
+			OutputVolDescLog(
+				"\t\t\t Addr: %04x\n"
+				"\t\t\t Name: %" CHARWIDTH "s\n"
+				, lpBuf[dwOfs3 + dlllen + j], &lpBuf[dwOfs3 + dlllen + j + 2]
+			);
+			funclen = 2 + strlen((LPCH)&lpBuf[dwOfs3 + dlllen + j + 2]);
+			if (funclen == 2) {
+				break;
+			}
+			if (funclen % 2) {
+				funclen++;
+			}
+			else {
+				funclen += 2;
+			}
+		}
+		dwOfs3 = dwOfs3Next;
+		nTmpOfs += sizeof(IMAGE_IMPORT_DESCRIPTOR);
+	}
+}
+
 BOOL IsKnownSectionName(
 	LPCCH lpName
 ) {
@@ -735,16 +826,20 @@ VOID OutputSecuRomDll4_87Header(
 		0x34, 0x4e, 0x9e,
 		0x40, 0x51
 	};
+	_TCHAR ver[8] = {};
+	_sntprintf(ver, sizeof(ver), _T("%c%c%c%c%c%c%c")
+		, lpBuf[8 + i] ^ scrTbl[8], lpBuf[9 + i] ^ scrTbl[9], lpBuf[10 + i] ^ scrTbl[10], lpBuf[11 + i] ^ scrTbl[11]
+		, lpBuf[12 + i] ^ scrTbl[12], lpBuf[13 + i] ^ scrTbl[13], lpBuf[14 + i] ^ scrTbl[14]);
+	OutputString("\nDetected SecuROM %s\n", ver);
 	OutputVolDescLog(
 		"\t" OUTPUT_DHYPHEN_PLUS_STR("SecuROM DLL Header")
 		"\t\t         Signature: %02x %02x %02x %02x\n"
 		"\t\t     Unknown Value: %02x %02x %02x %02x\n"
-		"\t\t           Version: %c%c%c%c%c%c%c\n"
+		"\t\t           Version: %s\n"
 		"\t\t    Unknown String: %c%c%c%c\n"
 		, lpBuf[0 + i] ^ scrTbl[0], lpBuf[1 + i] ^ scrTbl[1], lpBuf[2 + i] ^ scrTbl[2], lpBuf[3 + i] ^ scrTbl[3]
 		, lpBuf[4 + i] ^ scrTbl[4], lpBuf[5 + i] ^ scrTbl[5], lpBuf[6 + i] ^ scrTbl[6], lpBuf[7 + i] ^ scrTbl[7]
-		, lpBuf[8 + i] ^ scrTbl[8], lpBuf[9 + i] ^ scrTbl[9], lpBuf[10 + i] ^ scrTbl[10], lpBuf[11 + i] ^ scrTbl[11]
-		, lpBuf[12 + i] ^ scrTbl[12], lpBuf[13 + i] ^ scrTbl[13], lpBuf[14 + i] ^ scrTbl[14]
+		, ver
 		, lpBuf[16 + i] ^ scrTbl[16], lpBuf[17 + i] ^ scrTbl[17], lpBuf[18 + i] ^ scrTbl[18], lpBuf[19 + i] ^ scrTbl[19]
 	);
 	for (INT k = 3, j = 0; k < 12; k++, j += 2) {
@@ -789,6 +884,7 @@ VOID OutputSecuRomDllHeader(
 	LPUINT uiOfsOfNT,
 	LPINT idx
 ) {
+	OutputString("\nDetected SecuROM %.8" CHARWIDTH "s\n", &lpBuf[8]);
 	OutputVolDescLog(
 		"\t" OUTPUT_DHYPHEN_PLUS_STR("SecuROM DLL Header")
 		"\t\t         Signature: %.4" CHARWIDTH "s\n"

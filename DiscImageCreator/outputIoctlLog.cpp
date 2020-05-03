@@ -3669,7 +3669,6 @@ VOID OutputDiskGeometryEx(
 	if (partition->SizeOfPartitionInfo) {
 		switch (partition->PartitionStyle) {
 		case PARTITION_STYLE_MBR:
-#ifdef _WIN32
 			OutputDiscLog(
 				"(MBR)\n"
 				"\t           Signiture: %lu\n"
@@ -3677,18 +3676,8 @@ VOID OutputDiskGeometryEx(
 				, partition->Mbr.Signature
 				, partition->Mbr.CheckSum
 			);
-#else
-			OutputDiscLog(
-				"(MBR)\n"
-				"\t           Signiture: %lu\n"
-				"\t            CheckSum: %lu\n"
-				, partition->DUMMYUNIONNAME.Mbr.Signature
-				, partition->DUMMYUNIONNAME.Mbr.CheckSum
-			);
-#endif
 			break;
 		case PARTITION_STYLE_GPT:
-#ifdef _WIN32
 			OutputDiscLog(
 				"(GPT)\n"
 				"\t        DiskId.Data1: %lu\n"
@@ -3703,22 +3692,6 @@ VOID OutputDiskGeometryEx(
 				, partition->Gpt.DiskId.Data4[4], partition->Gpt.DiskId.Data4[5]
 				, partition->Gpt.DiskId.Data4[6], partition->Gpt.DiskId.Data4[7]
 			);
-#else
-			OutputDiscLog(
-				"(GPT)\n"
-				"\t        DiskId.Data1: %lu\n"
-				"\t        DiskId.Data2: %u\n"
-				"\t        DiskId.Data3: %u\n"
-				"\t        DiskId.Data4: %02x%02x%02x%02x%02x%02x%02x%02x\n"
-				, partition->DUMMYUNIONNAME.Gpt.DiskId.Data1
-				, partition->DUMMYUNIONNAME.Gpt.DiskId.Data2
-				, partition->DUMMYUNIONNAME.Gpt.DiskId.Data3
-				, partition->DUMMYUNIONNAME.Gpt.DiskId.Data4[0], partition->DUMMYUNIONNAME.Gpt.DiskId.Data4[1]
-				, partition->DUMMYUNIONNAME.Gpt.DiskId.Data4[2], partition->DUMMYUNIONNAME.Gpt.DiskId.Data4[3]
-				, partition->DUMMYUNIONNAME.Gpt.DiskId.Data4[4], partition->DUMMYUNIONNAME.Gpt.DiskId.Data4[5]
-				, partition->DUMMYUNIONNAME.Gpt.DiskId.Data4[6], partition->DUMMYUNIONNAME.Gpt.DiskId.Data4[7]
-			);
-#endif
 			break;
 		case PARTITION_STYLE_RAW:
 			OutputDiscLog("(GPT)\n");
@@ -3741,7 +3714,6 @@ VOID OutputDiskGeometryEx(
 			OutputDiscLog("(None)\n");
 			break;
 		case DetectInt13:
-#ifdef _WIN32
 			OutputDiscLog(
 				"(Int13)\n"
 				"\t         DriveSelect: %u\n"
@@ -3755,24 +3727,8 @@ VOID OutputDiskGeometryEx(
 				, detection->Int13.MaxHeads
 				, detection->Int13.NumberDrives
 			);
-#else
-			OutputDiscLog(
-				"(Int13)\n"
-				"\t         DriveSelect: %u\n"
-				"\t        MaxCylinders: %lu\n"
-				"\t     SectorsPerTrack: %u\n"
-				"\t            MaxHeads: %u\n"
-				"\t        NumberDrives: %u\n"
-				, detection->DUMMYUNIONNAME.DUMMYSTRUCTNAME.Int13.DriveSelect
-				, detection->DUMMYUNIONNAME.DUMMYSTRUCTNAME.Int13.MaxCylinders
-				, detection->DUMMYUNIONNAME.DUMMYSTRUCTNAME.Int13.SectorsPerTrack
-				, detection->DUMMYUNIONNAME.DUMMYSTRUCTNAME.Int13.MaxHeads
-				, detection->DUMMYUNIONNAME.DUMMYSTRUCTNAME.Int13.NumberDrives
-			);
-#endif
 			break;
 		case DetectExInt13:
-#ifdef _WIN32
 			OutputDiscLog(
 				"(ExInt13)\n"
 				"\t        ExBufferSize: %u\n"
@@ -3792,27 +3748,6 @@ VOID OutputDiskGeometryEx(
 				, detection->ExInt13.ExSectorSize
 				, detection->ExInt13.ExReserved
 			);
-#else
-			OutputDiscLog(
-				"(ExInt13)\n"
-				"\t        ExBufferSize: %u\n"
-				"\t             ExFlags: %u\n"
-				"\t         ExCylinders: %lu\n"
-				"\t             ExHeads: %lu\n"
-				"\t   ExSectorsPerTrack: %lu\n"
-				"\t   ExSectorsPerDrive: %llu\n"
-				"\t        ExSectorSize: %u\n"
-				"\t          ExReserved: %u\n"
-				, detection->DUMMYUNIONNAME.DUMMYSTRUCTNAME.ExInt13.ExBufferSize
-				, detection->DUMMYUNIONNAME.DUMMYSTRUCTNAME.ExInt13.ExFlags
-				, detection->DUMMYUNIONNAME.DUMMYSTRUCTNAME.ExInt13.ExCylinders
-				, detection->DUMMYUNIONNAME.DUMMYSTRUCTNAME.ExInt13.ExHeads
-				, detection->DUMMYUNIONNAME.DUMMYSTRUCTNAME.ExInt13.ExSectorsPerTrack
-				, detection->DUMMYUNIONNAME.DUMMYSTRUCTNAME.ExInt13.ExSectorsPerDrive
-				, detection->DUMMYUNIONNAME.DUMMYSTRUCTNAME.ExInt13.ExSectorSize
-				, detection->DUMMYUNIONNAME.DUMMYSTRUCTNAME.ExInt13.ExReserved
-			);
-#endif
 			break;
 		default:
 			OutputDiscLog("(Unknown)\n");
