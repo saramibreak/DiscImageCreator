@@ -1061,22 +1061,38 @@ VOID SetTrackAttribution(
 			}
 		}
 	}
-	else if (*pExecType != swap && (pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK &&
-		(tmpCurrentTrackNum == 110 || // '110' is Lead-out, '100'&'101' is Lead-in
-		((tmpCurrentTrackNum == 0 && (tmpCurrentIndex == 100 || tmpCurrentIndex == 101 ||
-			(tmpCurrentIndex == 0 && pDiscPerSector->subch.current.nAbsoluteTime == 0)))))) {
-		if (pDisc->SUB.lp1stLBAListOfDataTrackOnSub[pDiscPerSector->byTrackNum - 1] == -1) {
-			OutputSubInfoWithLBALog("1st LBA of Lead-out or Lead-in\n", nLBA, tmpCurrentTrackNum);
-			pDisc->SUB.lp1stLBAListOfDataTrackOnSub[pDiscPerSector->byTrackNum - 1] = nLBA;
-			if (pDiscPerSector->byTrackNum < pDisc->SCSI.by1stDataTrkNum) {
-				pDisc->SCSI.by1stDataTrkNum = pDiscPerSector->byTrackNum;
+	else if (*pExecType != swap && (pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+		// '110' is Lead-out
+		if (tmpCurrentTrackNum == 110 ||
+			(tmpCurrentTrackNum == 0 &&
+				// '100'&'101' is Lead-in
+				(tmpCurrentIndex == 100 || tmpCurrentIndex == 101 ||
+					(tmpCurrentIndex == 0 &&
+						pDiscPerSector->subch.current.nAbsoluteTime == 0) ||
+					// MAQIUPAI [unlicensed DC]
+					// LBA[088955, 0x15b7b]: P[00], Q[01aa01012974001948057886]{Audio, 2ch, Copy NG, Pre-emphasis No, LeadOut  , Idx[01], RMSF[01:29:74], AMSF[19:48:05]}, RtoW[0, 0, 0, 0]
+					// LBA[088956, 0x15b7c]: P[00], Q[410012194806002050060e6d]{ Data,      Copy NG,                  Point[12], AMSF[19:48:06], StartTimeOfTrack[20:50:06]}, RtoW[0, 0, 0, 0]
+					// LBA[088957, 0x15b7d]: P[00], Q[41001219480700205006a43c]{ Data,      Copy NG,                  Point[12], AMSF[19:48:07], StartTimeOfTrack[20:50:06]}, RtoW[0, 0, 0, 0]
+					// LBA[088958, 0x15b7e]: P[00], Q[41001219480800205006c1c5]{ Data,      Copy NG,                  Point[12], AMSF[19:48:08], StartTimeOfTrack[20:50:06]}, RtoW[0, 0, 0, 0]
+					// LBA[088959, 0x15b7f]: P[00], Q[4100a0194809001220009c35]{ Data,      Copy NG,                  Point[a0], AMSF[19:48:09], TrackNumOf1stTrack[12], ProgramAreaFormat[20]}, RtoW[0, 0, 0, 0]
+					(tmpCurrentIndex == pDisc->SCSI.by1stMultiSessionTrkNum &&
+						pDiscPerSector->subch.current.nRelativeTime == pDiscPerSector->subch.prev.nAbsoluteTime + 1)
+					)
+				)
+			) {
+			if (pDisc->SUB.lp1stLBAListOfDataTrackOnSub[pDiscPerSector->byTrackNum - 1] == -1) {
+				OutputSubInfoWithLBALog("1st LBA of Lead-out or Lead-in\n", nLBA, tmpCurrentTrackNum);
+				pDisc->SUB.lp1stLBAListOfDataTrackOnSub[pDiscPerSector->byTrackNum - 1] = nLBA;
+				if (pDiscPerSector->byTrackNum < pDisc->SCSI.by1stDataTrkNum) {
+					pDisc->SCSI.by1stDataTrkNum = pDiscPerSector->byTrackNum;
+				}
 			}
-		}
-		else if (nLBA != pDisc->SCSI.n1stLBAof2ndSession - 150){
-			OutputSubInfoWithLBALog(
-				"Set the last LBA of data track [%d]->[%d] [L:%d]\n", nLBA, tmpCurrentTrackNum,
-				pDisc->SUB.lpLastLBAListOfDataTrackOnSub[pDiscPerSector->byTrackNum - 1], nLBA, __LINE__);
-			pDisc->SUB.lpLastLBAListOfDataTrackOnSub[pDiscPerSector->byTrackNum - 1] = nLBA;
+			else if (nLBA != pDisc->SCSI.n1stLBAof2ndSession - 150) {
+				OutputSubInfoWithLBALog(
+					"Set the last LBA of data track [%d]->[%d] [L:%d]\n", nLBA, tmpCurrentTrackNum,
+					pDisc->SUB.lpLastLBAListOfDataTrackOnSub[pDiscPerSector->byTrackNum - 1], nLBA, __LINE__);
+				pDisc->SUB.lpLastLBAListOfDataTrackOnSub[pDiscPerSector->byTrackNum - 1] = nLBA;
+			}
 		}
 	}
 }
