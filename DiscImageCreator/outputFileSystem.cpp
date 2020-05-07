@@ -271,7 +271,7 @@ VOID OutputFsDirectoryRecord(
 		if (pDisc->PROTECT.byExist == no) {
 			// for CodeLock, ProtectCD-VOB, a part of SecuROM
 			CHAR szSearchStr[][5] = { ".EXE", ".DLL", ".DAT", ".HDR", ".CAB" };
-			for (size_t i = 0; i < sizeof(szSearchStr[0]); i++) {
+			for (size_t i = 0; i < sizeof(szSearchStr) / sizeof(szSearchStr[0]); i++) {
 				LPCH p = strcasestr(fnameForProtect, szSearchStr[i]);
 				if (p) {
 					if (pDisc->PROTECT.nCntForExe == EXELBA_STORE_SIZE) {
