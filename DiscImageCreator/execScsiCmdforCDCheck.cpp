@@ -1836,28 +1836,30 @@ VOID ReadCDForScanningPsxAntiMod(
 	PDISC pDisc
 ) {
 	BOOL bRet = FALSE;
-	BYTE buf[DISC_MAIN_DATA_SIZE] = {};
+	BYTE buf[DISC_MAIN_DATA_SIZE * 2] = {};
 	CONST CHAR antiModStrEn[] =
 		"     SOFTWARE TERMINATED\nCONSOLE MAY HAVE BEEN MODIFIED\n     CALL 1-888-780-7690";
 	CONST CHAR antiModStrJp[] =
 		"強制終了しました。\n本体が改造されている\nおそれがあります。";
 	CDB::_READ12 cdb = {};
 	cdb.OperationCode = SCSIOP_READ12;
-	cdb.TransferLength[3] = 1;
+	cdb.TransferLength[3] = 2;
 
 	for (INT nLBA = 18; nLBA < pDisc->SCSI.nLastLBAofDataTrk - 150; nLBA++) {
 		if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, buf,
-			DISC_MAIN_DATA_SIZE, _T(__FUNCTION__), __LINE__)) {
+			DISC_MAIN_DATA_SIZE * 2, _T(__FUNCTION__), __LINE__)) {
 			return;
 		}
 		for (INT i = 0; i < DISC_MAIN_DATA_SIZE; i++) {
 			if (!memcmp(&buf[i], antiModStrEn, sizeof(antiModStrEn))) {
-				OutputLog(fileDisc | standardOut, "\nDetected anti-mod string (en): LBA %d", nLBA);
+				OutputLog(fileDisc | standardOut
+					, "\nDetected anti-mod string (en): LBA %d, offset %d(0x%03x)", nLBA, i, i);
 				OutputCDMain(fileMainInfo, buf, nLBA, DISC_MAIN_DATA_SIZE);
 				bRet += TRUE;
 			}
 			if (!memcmp(&buf[i], antiModStrJp, sizeof(antiModStrJp))) {
-				OutputLog(fileDisc | standardOut, "\nDetected anti-mod string (jp): LBA %d\n", nLBA);
+				OutputLog(fileDisc | standardOut
+					, "\nDetected anti-mod string (jp): LBA %d, offset %d(0x%03x)\n", nLBA, i, i);
 				if (!bRet) {
 					OutputCDMain(fileMainInfo, buf, nLBA, DISC_MAIN_DATA_SIZE);
 				}
