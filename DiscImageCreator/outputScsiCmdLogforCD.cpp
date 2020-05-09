@@ -463,92 +463,69 @@ VOID OutputFsImageNtHeader(
 
 VOID OutputImportDirectory(
 	LPBYTE lpBuf,
+	DWORD dwBufSize,
 	DWORD dwImportVirtualAddress,
-	DWORD dwImportSize,
 	DWORD dwOfs
 ) {
 	INT nDllNum = 0;
-	size_t nTmpOfs = 0;
+	size_t stDescOfs = 0;
 	for (;;) {
-		PIMAGE_IMPORT_DESCRIPTOR imp = (PIMAGE_IMPORT_DESCRIPTOR)&lpBuf[dwOfs + nTmpOfs];
+		PIMAGE_IMPORT_DESCRIPTOR imp = (PIMAGE_IMPORT_DESCRIPTOR)&lpBuf[dwOfs + stDescOfs];
 		if (imp->OriginalFirstThunk == 0 && imp->TimeDateStamp == 0 &&
 			imp->ForwarderChain == 0 && imp->Name == 0 && imp->FirstThunk == 0) {
 			break;
 		}
 		else {
 			OutputVolDescLog(
-				"\t========== Import Section %d ==========\n"
-				"\t\tOriginalFirstThunk: %04lx\n"
-				"\t\t     TimeDateStamp: %04lx\n"
-				"\t\t    ForwarderChain: %04lx\n"
-				"\t\t              Name: %04lx\n"
-				"\t\t        FirstThunk: %04lx\n"
-				, nDllNum + 1, imp->OriginalFirstThunk
-				, imp->TimeDateStamp, imp->ForwarderChain, imp->Name, imp->FirstThunk
+				"\t========== IMAGE_IMPORT_DESCRIPTOR %d ==========\n"
+				"\t\tOriginalFirstThunk: %08lx\n"
+				"\t\t     TimeDateStamp: %08lx\n"
+				"\t\t    ForwarderChain: %08lx\n"
+				"\t\t              Name: %08lx (%s)\n"
+				"\t\t        FirstThunk: %08lx\n"
+				, nDllNum + 1, imp->OriginalFirstThunk, imp->TimeDateStamp
+				, imp->ForwarderChain, imp->Name
+				, &lpBuf[dwOfs + imp->Name - dwImportVirtualAddress]
+				, imp->FirstThunk
 			);
-			nTmpOfs += sizeof(IMAGE_IMPORT_DESCRIPTOR);
+			size_t stThunkOfs = 0;
+			for (;;) {
+				PIMAGE_THUNK_DATA32 thunk = 0;
+				if (imp->OriginalFirstThunk) {
+					thunk = (PIMAGE_THUNK_DATA32)&lpBuf[dwOfs + imp->OriginalFirstThunk - dwImportVirtualAddress + stThunkOfs];
+				}
+				else if (imp->FirstThunk) {
+					thunk = (PIMAGE_THUNK_DATA32)&lpBuf[dwOfs + imp->FirstThunk - dwImportVirtualAddress + stThunkOfs];
+				}
+				else {
+					break;
+				}
+
+				if (thunk->u1.AddressOfData == 0) {
+					break;
+				}
+				else {
+					OutputVolDescLog(
+						"\t\t========== IMAGE_THUNK_DATA ==========\n"
+						"\t\t\tAddressOfData: %08lx\n", thunk->u1.AddressOfData
+					);
+					if (dwBufSize >= dwOfs + thunk->u1.AddressOfData - dwImportVirtualAddress) {
+						PIMAGE_IMPORT_BY_NAME byname =
+							(PIMAGE_IMPORT_BY_NAME)&lpBuf[dwOfs + thunk->u1.AddressOfData - dwImportVirtualAddress];
+						OutputVolDescLog(
+							"\t\t\t========== IMAGE_IMPORT_BY_NAME ==========\n"
+							"\t\t\t\tHint: %04x\n"
+							"\t\t\t\tName: %s\n"
+							, byname->Hint, byname->Name
+						);
+					}
+				}
+
+				stThunkOfs += sizeof(IMAGE_THUNK_DATA32);
+			}
+			stDescOfs += sizeof(IMAGE_IMPORT_DESCRIPTOR);
 			nDllNum++;
 		}
-	}
-
-	PIMAGE_IMPORT_DESCRIPTOR imp = (PIMAGE_IMPORT_DESCRIPTOR)&lpBuf[dwOfs];
-	DWORD dwOfs2 = dwOfs + dwImportSize;
-	for (INT i = 0; i < nDllNum; i++) {
-		OutputVolDescLog(
-			"\t========== LUT %d ==========\n", i + 1
-		);
-		for (;;) {
-			DWORD va = MAKEDWORD(MAKEWORD(lpBuf[dwOfs2], lpBuf[dwOfs2 + 1]), MAKEWORD(lpBuf[dwOfs2 + 2], lpBuf[dwOfs2 + 3]));
-			dwOfs2 += sizeof(DWORD);
-			if (va) {
-				OutputVolDescLog(
-					"\t\t VirtualAddress: %04lx\n", va
-				);
-			}
-			else {
-				break;
-			}
-		}
-	}
-	DWORD dwOfs3 = dwOfs + imp->Name - dwImportVirtualAddress;
-	nTmpOfs = sizeof(IMAGE_IMPORT_DESCRIPTOR);
-	for (INT i = 0; i < nDllNum; i++) {
-		OutputVolDescLog(
-			"\t========== DLL %d==========\n"
-			"\t\t Name: %" CHARWIDTH "s\n", i + 1, &lpBuf[dwOfs3]
-		);
-		size_t dlllen = strlen((LPCH)&lpBuf[dwOfs3]);
-		if (dlllen % 2) {
-			dlllen++;
-		}
-		else {
-			dlllen += 2;
-		}
-		imp = (PIMAGE_IMPORT_DESCRIPTOR)&lpBuf[dwOfs + nTmpOfs];
-		DWORD dwOfs3Next = dwOfs + imp->Name - dwImportVirtualAddress;
-		OutputVolDescLog(
-			"\t\t========== Function ==========\n"
-		);
-		size_t funclen = 0;
-		for (DWORD j = 0; j < dwOfs3Next - dwOfs3 - dlllen; j += funclen) {
-			OutputVolDescLog(
-				"\t\t\t Addr: %04x\n"
-				"\t\t\t Name: %" CHARWIDTH "s\n"
-				, lpBuf[dwOfs3 + dlllen + j], &lpBuf[dwOfs3 + dlllen + j + 2]
-			);
-			funclen = 2 + strlen((LPCH)&lpBuf[dwOfs3 + dlllen + j + 2]);
-			if (funclen == 2) {
-				break;
-			}
-			if (funclen % 2) {
-				funclen++;
-			}
-			else {
-				funclen += 2;
-			}
-		}
-		dwOfs3 = dwOfs3Next;
-		nTmpOfs += sizeof(IMAGE_IMPORT_DESCRIPTOR);
 	}
 }
 

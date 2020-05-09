@@ -37,8 +37,8 @@ VOID OutputFsImageSectionHeader(
 
 VOID OutputImportDirectory(
 	LPBYTE lpBuf,
+	DWORD dwBufSize,
 	DWORD dwImportVirtualAddress,
-	DWORD dwImportSize,
 	DWORD dwOfs
 );
 

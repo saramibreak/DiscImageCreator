@@ -1239,8 +1239,9 @@ BOOL ReadExeFromFile(
 			if (dwImportSize > 0) {
 				fseek(fp, (LONG)dwImportPointerToRawData, SEEK_SET);
 				fread(lpBuf, sizeof(BYTE), bufsize, fp);
+				OutputMainInfoLog("dwImportVirtualAddress: 0x%lx, dwImportSize: 0x%lx\n", dwImportVirtualAddress, dwImportSize);
 				OutputCDMain(fileMainInfo, lpBuf, 0, DISC_MAIN_DATA_SIZE);
-				OutputImportDirectory(lpBuf, dwImportVirtualAddress, dwImportSize, 0);
+				OutputImportDirectory(lpBuf, bufsize, dwImportVirtualAddress, 0);
 			}
 			if (bSecurom) {
 				INT nSecuromReadSize = DISC_MAIN_DATA_SIZE * 2;
@@ -1601,6 +1602,7 @@ BOOL ReadCDForCheckingExe(
 					DWORD dwImportVirtualAddress = pINH->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress;
 					DWORD dwImportSize = pINH->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].Size;
 					DWORD dwImportPointerToRawData = 0;
+					DWORD dwImportDataOfs = 0;
 					ULONG nOfs = pIDh->e_lfanew + sizeof(IMAGE_NT_HEADERS32);
 					BOOL bSecurom = FALSE;
 
@@ -1611,8 +1613,9 @@ BOOL ReadCDForCheckingExe(
 
 						if (pISH->VirtualAddress <= dwImportVirtualAddress && dwImportVirtualAddress <= pISH->VirtualAddress + pISH->Misc.VirtualSize) {
 							dwImportPointerToRawData = pISH->PointerToRawData + dwImportVirtualAddress - pISH->VirtualAddress;
-							dwSize = pISH->PointerToRawData + pISH->SizeOfRawData - dwImportPointerToRawData;
-							dwSize += DISC_MAIN_DATA_SIZE - dwSize % DISC_MAIN_DATA_SIZE;
+							dwImportDataOfs = dwImportPointerToRawData % DISC_MAIN_DATA_SIZE;
+							DWORD dwTmpSize = dwImportDataOfs + pISH->SizeOfRawData;
+							dwSize = DISC_MAIN_DATA_SIZE * (dwTmpSize / DISC_MAIN_DATA_SIZE + 1);
 						}
 					}
 					if (dwImportSize > 0) {
@@ -1625,9 +1628,10 @@ BOOL ReadCDForCheckingExe(
 							if (!ExecReadCD(pExtArg, pDevice, pCdb, nImpSection, lpBuf, dwSize, _T(__FUNCTION__), __LINE__)) {
 								continue;
 							}
+							OutputMainInfoLog("dwImportVirtualAddress: 0x%lx, dwImportSize: 0x%lx, dwImportDataOfs: 0x%lx\n"
+								, dwImportVirtualAddress, dwImportSize, dwImportDataOfs);
 							OutputCDMain(fileMainInfo, lpBuf, nImpSection, (INT)dwSize);
-							nOfs = dwImportPointerToRawData % DISC_MAIN_DATA_SIZE;
-							OutputImportDirectory(lpBuf, dwImportVirtualAddress, dwImportSize, nOfs);
+							OutputImportDirectory(lpBuf, dwSize, dwImportVirtualAddress, dwImportDataOfs);
 						}
 					}
 					dwSize = DISC_MAIN_DATA_SIZE;
