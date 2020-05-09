@@ -1236,11 +1236,12 @@ BOOL ReadExeFromFile(
 					dwImportPointerToRawData = pISH->PointerToRawData + dwImportVirtualAddress - pISH->VirtualAddress;
 				}
 			}
-			fseek(fp, (LONG)dwImportPointerToRawData, SEEK_SET);
-			fread(lpBuf, sizeof(BYTE), bufsize, fp);
-			OutputCDMain(fileMainInfo, lpBuf, 0, DISC_MAIN_DATA_SIZE);
-			OutputImportDirectory(lpBuf, dwImportVirtualAddress, dwImportSize, 0);
-
+			if (dwImportSize > 0) {
+				fseek(fp, (LONG)dwImportPointerToRawData, SEEK_SET);
+				fread(lpBuf, sizeof(BYTE), bufsize, fp);
+				OutputCDMain(fileMainInfo, lpBuf, 0, DISC_MAIN_DATA_SIZE);
+				OutputImportDirectory(lpBuf, dwImportVirtualAddress, dwImportSize, 0);
+			}
 			if (bSecurom) {
 				INT nSecuromReadSize = DISC_MAIN_DATA_SIZE * 2;
 				fseek(fp, -4, SEEK_END);
@@ -1614,18 +1615,20 @@ BOOL ReadCDForCheckingExe(
 							dwSize += DISC_MAIN_DATA_SIZE - dwSize % DISC_MAIN_DATA_SIZE;
 						}
 					}
-					if (dwSize > pDevice->dwMaxTransferLength) {
-						OutputVolDescLog(STR_LBA "Skip Reading ImportDirectory\n", pDisc->PROTECT.pExtentPosForExe[n], pDisc->PROTECT.pExtentPosForExe[n]);
-					}
-					else {
-						INT nImpSection = pDisc->PROTECT.pExtentPosForExe[n] + (INT)dwImportPointerToRawData / DISC_MAIN_DATA_SIZE;
-						SetCommandForTransferLength(pExecType, pDevice, pCdb, dwSize, &byTransferLen, &byRoopLen);
-						if (!ExecReadCD(pExtArg, pDevice, pCdb, nImpSection, lpBuf, dwSize, _T(__FUNCTION__), __LINE__)) {
-							continue;
+					if (dwImportSize > 0) {
+						if (dwSize > pDevice->dwMaxTransferLength) {
+							OutputVolDescLog(STR_LBA "Skip Reading ImportDirectory\n", pDisc->PROTECT.pExtentPosForExe[n], pDisc->PROTECT.pExtentPosForExe[n]);
 						}
-						OutputCDMain(fileMainInfo, lpBuf, nImpSection, (INT)dwSize);
-						nOfs = dwImportPointerToRawData % DISC_MAIN_DATA_SIZE;
-						OutputImportDirectory(lpBuf, dwImportVirtualAddress, dwImportSize, nOfs);
+						else {
+							INT nImpSection = pDisc->PROTECT.pExtentPosForExe[n] + (INT)dwImportPointerToRawData / DISC_MAIN_DATA_SIZE;
+							SetCommandForTransferLength(pExecType, pDevice, pCdb, dwSize, &byTransferLen, &byRoopLen);
+							if (!ExecReadCD(pExtArg, pDevice, pCdb, nImpSection, lpBuf, dwSize, _T(__FUNCTION__), __LINE__)) {
+								continue;
+							}
+							OutputCDMain(fileMainInfo, lpBuf, nImpSection, (INT)dwSize);
+							nOfs = dwImportPointerToRawData % DISC_MAIN_DATA_SIZE;
+							OutputImportDirectory(lpBuf, dwImportVirtualAddress, dwImportSize, nOfs);
+						}
 					}
 					dwSize = DISC_MAIN_DATA_SIZE;
 					SetCommandForTransferLength(pExecType, pDevice, pCdb, dwSize, &byTransferLen, &byRoopLen);
