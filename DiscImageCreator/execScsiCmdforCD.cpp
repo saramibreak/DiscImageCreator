@@ -435,19 +435,19 @@ BOOL ReadCDForRereadingSectorType2(
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
-		if (NULL == (lpRereadSector = (LPBYTE*)calloc(dwTransferLen, sizeof(UINT_PTR)))) {
+		if (NULL == (lpRereadSector = (LPBYTE*)calloc(dwTransferLen, sizeof(LPBYTE)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
-		if (NULL == (lpCrc32RereadSector = (LPDWORD*)calloc(dwTransferLen, sizeof(DWORD_PTR)))) {
+		if (NULL == (lpCrc32RereadSector = (LPDWORD*)calloc(dwTransferLen, sizeof(LPDWORD)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
-		if (NULL == (lpRepeatedNum = (LPUINT*)calloc(dwTransferLen, sizeof(UINT_PTR)))) {
+		if (NULL == (lpRepeatedNum = (LPUINT*)calloc(dwTransferLen, sizeof(LPUINT)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
-		if (NULL == (lpContainsC2 = (LPUINT*)calloc(dwTransferLen, sizeof(UINT_PTR)))) {
+		if (NULL == (lpContainsC2 = (LPUINT*)calloc(dwTransferLen, sizeof(LPUINT)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
@@ -518,26 +518,28 @@ BOOL ReadCDForRereadingSectorType2(
 							break;
 						}
 					}
-					for (UINT j = 0; j <= i; j++) {
-						if (dwTmpCrc32 == lpCrc32RereadSector[k][j]) {
-							OutputC2ErrorLog("[%03d]:0x%08lx, %d ", i, dwTmpCrc32, bC2);
-							lpRepeatedNum[k][j] += 1;
-							lpContainsC2[k][j] += bC2;
-							bMatch = TRUE;
-							break;
+					if (lpCrc32RereadSector[k]) {
+						for (UINT j = 0; j <= i; j++) {
+							if (dwTmpCrc32 == lpCrc32RereadSector[k][j]) {
+								OutputC2ErrorLog("[%03d]:0x%08lx, %d ", i, dwTmpCrc32, bC2);
+								lpRepeatedNum[k][j] += 1;
+								lpContainsC2[k][j] += bC2;
+								bMatch = TRUE;
+								break;
+							}
 						}
-					}
-					if (!bMatch) {
-						lpCrc32RereadSector[k][idx] = dwTmpCrc32;
-						memcpy(&lpRereadSector[k][CD_RAW_SECTOR_SIZE * idx]
-							, lpBufMain + CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * k, CD_RAW_SECTOR_SIZE);
-						OutputC2ErrorLog("[%03d]:0x%08lx, %d ", idx, dwTmpCrc32, bC2);
+						if (!bMatch) {
+							lpCrc32RereadSector[k][idx] = dwTmpCrc32;
+							memcpy(&lpRereadSector[k][CD_RAW_SECTOR_SIZE * idx]
+								, lpBufMain + CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * k, CD_RAW_SECTOR_SIZE);
+							OutputC2ErrorLog("[%03d]:0x%08lx, %d ", idx, dwTmpCrc32, bC2);
 #if 0
-						if (idx > 0) {
-							OutputCDMain(fileC2Error, &lpRereadSector[k][CD_RAW_SECTOR_SIZE * idx]
-								, nLBA - pDisc->MAIN.nOffsetStart + (INT)k, CD_RAW_SECTOR_SIZE);
-						}
+							if (idx > 0) {
+								OutputCDMain(fileC2Error, &lpRereadSector[k][CD_RAW_SECTOR_SIZE * idx]
+									, nLBA - pDisc->MAIN.nOffsetStart + (INT)k, CD_RAW_SECTOR_SIZE);
+							}
 #endif
+						}
 					}
 				}
 				OutputC2ErrorLog("\n");
@@ -548,44 +550,46 @@ BOOL ReadCDForRereadingSectorType2(
 			}
 
 			for (DWORD q = 0; q < dwTransferLen; q++) {
-				UINT uiMaxNum = lpRepeatedNum[q][0];
-				UINT uiMaxC2 = lpContainsC2[q][0];
-				for (INT k = 0; k < idx - 1; k++) {
-					uiMaxNum = max(uiMaxNum, lpRepeatedNum[q][k + 1]);
-					uiMaxC2 = max(uiMaxC2, lpContainsC2[q][k + 1]);
-				}
+				if (lpRepeatedNum[q]) {
+					UINT uiMaxNum = lpRepeatedNum[q][0];
+					UINT uiMaxC2 = lpContainsC2[q][0];
+					for (INT k = 0; k < idx - 1; k++) {
+						uiMaxNum = max(uiMaxNum, lpRepeatedNum[q][k + 1]);
+						uiMaxC2 = max(uiMaxC2, lpContainsC2[q][k + 1]);
+					}
 
-				INT nTmpLBA = nLBA - pDisc->MAIN.nOffsetStart + (INT)q;
-				if (uiMaxC2 == 0) {
-					OutputC2ErrorWithLBALog(
-						"to[%06d] All crc32 is probably bad. No rewrite\n", nTmpLBA - 1, nTmpLBA);
-				}
-				else if (uiMaxNum + 1 == pExtArg->uiMaxRereadNum &&
-					lpCrc32RereadSector[q][0] == pDisc->MAIN.lpAllSectorCrc32[nTmpLBA]) {
-					OutputC2ErrorWithLBALog(
-						"to[%06d] All same crc32. No rewrite\n", nTmpLBA - 1, nTmpLBA);
-				}
-				else {
-					for (INT l = 0; l < idx; l++) {
-						if (uiMaxC2 == lpContainsC2[q][l]) {
-							OutputC2ErrorWithLBALog(
-								"to[%06d] crc32[%d]:0x%08lx, no c2 %u times. Rewrite\n"
-								, nTmpLBA - 1, nTmpLBA, l, lpCrc32RereadSector[q][l], uiMaxC2 + 1);
-							fseek(fpImg, CD_RAW_SECTOR_SIZE * (LONG)(nLBA + q) - pDisc->MAIN.nCombinedOffset, SEEK_SET);
-							// Write track to scrambled again
-							WriteMainChannel(pExecType, pExtArg, pDisc, &lpRereadSector[q][CD_RAW_SECTOR_SIZE * l], nLBA, fpImg);
-							fseek(fpC2, CD_RAW_READ_C2_294_SIZE * (LONG)nLBA - (pDisc->MAIN.nCombinedOffset / 8), SEEK_SET);
-							if (q + 1 < dwTransferLen) {
-								WriteC2(pExtArg, pDisc, &lpRereadSector[q + 1][CD_RAW_SECTOR_SIZE * l] + pDevice->TRANSFER.uiBufC2Offset, nLBA, fpC2);
-							}
+					INT nTmpLBA = nLBA - pDisc->MAIN.nOffsetStart + (INT)q;
+					if (uiMaxC2 == 0) {
+						OutputC2ErrorWithLBALog(
+							"to[%06d] All crc32 is probably bad. No rewrite\n", nTmpLBA - 1, nTmpLBA);
+					}
+					else if (uiMaxNum + 1 == pExtArg->uiMaxRereadNum &&
+						lpCrc32RereadSector[q][0] == pDisc->MAIN.lpAllSectorCrc32[nTmpLBA]) {
+						OutputC2ErrorWithLBALog(
+							"to[%06d] All same crc32. No rewrite\n", nTmpLBA - 1, nTmpLBA);
+					}
+					else {
+						for (INT l = 0; l < idx; l++) {
+							if (uiMaxC2 == lpContainsC2[q][l]) {
+								OutputC2ErrorWithLBALog(
+									"to[%06d] crc32[%d]:0x%08lx, no c2 %u times. Rewrite\n"
+									, nTmpLBA - 1, nTmpLBA, l, lpCrc32RereadSector[q][l], uiMaxC2 + 1);
+								fseek(fpImg, CD_RAW_SECTOR_SIZE * (LONG)(nLBA + q) - pDisc->MAIN.nCombinedOffset, SEEK_SET);
+								// Write track to scrambled again
+								WriteMainChannel(pExecType, pExtArg, pDisc, &lpRereadSector[q][CD_RAW_SECTOR_SIZE * l], nLBA, fpImg);
+								fseek(fpC2, CD_RAW_READ_C2_294_SIZE * (LONG)nLBA - (pDisc->MAIN.nCombinedOffset / 8), SEEK_SET);
+								if (q + 1 < dwTransferLen) {
+									WriteC2(pExtArg, pDisc, &lpRereadSector[q + 1][CD_RAW_SECTOR_SIZE * l] + pDevice->TRANSFER.uiBufC2Offset, nLBA, fpC2);
+								}
 #if 0
-							OutputC2ErrorLog("Seek to %ld (0x%08lx)\n"
-								, CD_RAW_SECTOR_SIZE * (LONG)(nLBA + q) - pDisc->MAIN.nCombinedOffset
-								, CD_RAW_SECTOR_SIZE * (LONG)(nLBA + q) - pDisc->MAIN.nCombinedOffset);
-							OutputCDMain(fileC2Error, &lpRereadSector[q][CD_RAW_SECTOR_SIZE * l], nTmpLBA, CD_RAW_SECTOR_SIZE);
-							OutputC2ErrorLog("\n");
+								OutputC2ErrorLog("Seek to %ld (0x%08lx)\n"
+									, CD_RAW_SECTOR_SIZE * (LONG)(nLBA + q) - pDisc->MAIN.nCombinedOffset
+									, CD_RAW_SECTOR_SIZE * (LONG)(nLBA + q) - pDisc->MAIN.nCombinedOffset);
+								OutputCDMain(fileC2Error, &lpRereadSector[q][CD_RAW_SECTOR_SIZE * l], nTmpLBA, CD_RAW_SECTOR_SIZE);
+								OutputC2ErrorLog("\n");
 #endif
-							break;
+								break;
+							}
 						}
 					}
 				}
@@ -593,10 +597,18 @@ BOOL ReadCDForRereadingSectorType2(
 			nLBA += (INT)dwTransferLen;
 			for (DWORD r = 0; r < dwTransferLen; r++) {
 				for (INT p = 0; p < idx; p++) {
-					lpRereadSector[r][p] = 0;
-					lpCrc32RereadSector[r][p] = 0;
-					lpRepeatedNum[r][p] = 0;
-					lpContainsC2[r][p] = 0;
+					if (lpRereadSector[r]) {
+						lpRereadSector[r][p] = 0;
+					}
+					if (lpCrc32RereadSector[r]) {
+						lpCrc32RereadSector[r][p] = 0;
+					}
+					if (lpRepeatedNum[r]) {
+						lpRepeatedNum[r][p] = 0;
+					}
+					if (lpContainsC2[r]) {
+						lpContainsC2[r][p] = 0;
+					}
 				}
 			}
 		}

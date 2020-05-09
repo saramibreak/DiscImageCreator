@@ -58,6 +58,9 @@ VOID OutputFsDirectoryRecord(
 	PPATH_TABLE_RECORD pPathTblRec,
 	UINT uiPathTblIdx
 ) {
+	if (!fname) {
+		return;
+	}
 	CHAR str[128]{};
 	INT nFileFlag = lpBuf[25];
 	if (nFileFlag & 0x01) {

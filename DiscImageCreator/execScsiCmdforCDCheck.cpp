@@ -1393,13 +1393,16 @@ VOID GetFullPathWithDrive(
 ) {
 	CHAR FullPathTmp[_MAX_PATH] = {};
 	CHAR drive[_MAX_DRIVE] = {};
+	CHAR dir[_MAX_DIR] = {};
+	CHAR filename[_MAX_FNAME] = {};
+	CHAR ext[_MAX_EXT] = {};
 #ifdef _WIN32
 	_snprintf(drive, sizeof(drive), "%c:", pDevice->byDriveLetter);
 #else
 	_snprintf(drive, sizeof(drive), "%s", pDevice->drivepath);
 #endif
-	strncat(FullPathTmp, drive, sizeof(drive));
-	strncat(FullPathTmp, pDisc->PROTECT.pFullNameForExe[nIdx], strlen(pDisc->PROTECT.pFullNameForExe[nIdx]));
+	_splitpath(pDisc->PROTECT.pFullNameForExe[nIdx], NULL, dir, filename, ext);
+	_makepath(FullPathTmp, drive, dir, filename, ext);
 
 #ifdef UNICODE
 	MultiByteToWideChar(CP_ACP, 0,

@@ -44,14 +44,14 @@ BOOL InitLBAPerTrack(
 		(*pExecType == gd || *pExecType == swap) ? MAXIMUM_NUMBER_TRACKS : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
 	if (NULL == (*pDisc)->SCSI.lp1stLBAListOnToc) {
 		if (NULL == ((*pDisc)->SCSI.lp1stLBAListOnToc =
-			(LPINT)calloc(dwTrackAllocSize, sizeof(UINT_PTR)))) {
+			(LPINT)calloc(dwTrackAllocSize, sizeof(INT)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
 		}
 	}
 	if (NULL == (*pDisc)->SCSI.lpLastLBAListOnToc) {
 		if (NULL == ((*pDisc)->SCSI.lpLastLBAListOnToc =
-			(LPINT)calloc(dwTrackAllocSize, sizeof(UINT_PTR)))) {
+			(LPINT)calloc(dwTrackAllocSize, sizeof(INT)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
 		}
@@ -66,7 +66,7 @@ BOOL InitTocFullData(
 	size_t dwTrackAllocSize =
 		(*pExecType == gd || *pExecType == swap) ? MAXIMUM_NUMBER_TRACKS : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
 	if (NULL == ((*pDisc)->SCSI.lpSessionNumList =
-		(LPBYTE)calloc(dwTrackAllocSize, sizeof(UINT_PTR)))) {
+		(LPBYTE)calloc(dwTrackAllocSize, sizeof(BYTE)))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
@@ -86,7 +86,7 @@ BOOL InitTocTextData(
 		(*pExecType == gd || *pExecType == swap) ? MAXIMUM_NUMBER_TRACKS : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
 	try {
 		if (NULL == ((*pDisc)->SUB.pszISRC =
-			(LPSTR*)calloc(dwTrackAllocSize * 2, sizeof(INT_PTR)))) {
+			(LPSTR*)calloc(dwTrackAllocSize * 2, sizeof(LPSTR)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
@@ -100,17 +100,17 @@ BOOL InitTocTextData(
 		if (pDevice->FEATURE.byCanCDText || *pExecType == gd || *pExecType == swap) {
 			for (INT i = 0; i < MAX_CDTEXT_LANG; i++) {
 				if (NULL == ((*pDisc)->SCSI.CDTEXT[i].pszTitle =
-					(LPSTR*)calloc(dwTrackAllocSize * 2, sizeof(INT_PTR)))) {
+					(LPSTR*)calloc(dwTrackAllocSize * 2, sizeof(LPSTR)))) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 					throw FALSE;
 				}
 				if (NULL == ((*pDisc)->SCSI.CDTEXT[i].pszPerformer =
-					(LPSTR*)calloc(dwTrackAllocSize * 2, sizeof(INT_PTR)))) {
+					(LPSTR*)calloc(dwTrackAllocSize * 2, sizeof(LPSTR)))) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 					throw FALSE;
 				}
 				if (NULL == ((*pDisc)->SCSI.CDTEXT[i].pszSongWriter =
-					(LPSTR*)calloc(dwTrackAllocSize * 2, sizeof(INT_PTR)))) {
+					(LPSTR*)calloc(dwTrackAllocSize * 2, sizeof(LPSTR)))) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 					throw FALSE;
 				}
@@ -183,12 +183,12 @@ BOOL InitProtectData(
 			throw FALSE;
 		}
 		if (NULL == ((*pDisc)->PROTECT.pNameForExe =
-			(LPCH*)calloc(EXELBA_STORE_SIZE, sizeof(INT_PTR)))) {
+			(LPCH*)calloc(EXELBA_STORE_SIZE, sizeof(LPCH)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
 		if (NULL == ((*pDisc)->PROTECT.pFullNameForExe =
-			(LPCH*)calloc(EXELBA_STORE_SIZE, sizeof(INT_PTR)))) {
+			(LPCH*)calloc(EXELBA_STORE_SIZE, sizeof(LPCH)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
@@ -225,12 +225,12 @@ BOOL InitSubData(
 			throw FALSE;
 		}
 		if (NULL == ((*pDisc)->SUB.lp1stLBAListOnSub =
-			(LPINT*)calloc(dwTrackAllocSize * 2, sizeof(INT_PTR)))) {
+			(LPINT*)calloc(dwTrackAllocSize * 2, sizeof(LPINT)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
 		if (NULL == ((*pDisc)->SUB.lp1stLBAListOnSubSync = 
-			(LPINT*)calloc(dwTrackAllocSize * 2, sizeof(INT_PTR)))) {
+			(LPINT*)calloc(dwTrackAllocSize * 2, sizeof(LPINT)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
