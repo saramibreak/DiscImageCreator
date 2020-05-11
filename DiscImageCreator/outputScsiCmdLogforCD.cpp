@@ -104,7 +104,7 @@ VOID OutputFsImageNtHeader(
 	time_t timeDateStamp = pInh->FileHeader.TimeDateStamp;
 	tm* ctime = gmtime(&timeDateStamp);
 	_TCHAR szTime[128] = {};
-	_tcsftime(szTime, sizeof(szTime) / sizeof(szTime[0]), _T("%Y-%m-%d %H:%M:%S"), ctime);
+	_tcsftime(szTime, sizeof(szTime) / sizeof(szTime[0]), _T("%FT%T"), ctime);
 
 	OutputVolDescLog(
 		"\t========== Image NT Header (%zu byte) ==========\n"

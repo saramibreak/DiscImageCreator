@@ -1694,13 +1694,10 @@ int main(int argc, char* argv[])
 			nRet = FALSE;
 		}
 		else {
-			time_t now;
-			struct tm* ts;
 			_TCHAR szBuf[128] = {};
-
-			now = time(NULL);
-			ts = localtime(&now);
-			_tcsftime(szBuf, sizeof(szBuf) / sizeof(szBuf[0]), _T("%Y-%m-%d(%a) %H:%M:%S"), ts);
+			time_t now = time(NULL);
+			tm* ts = localtime(&now);
+			_tcsftime(szBuf, sizeof(szBuf) / sizeof(szBuf[0]), _T("%FT%T%z"), ts);
 			OutputString("StartTime: %s\n", szBuf);
 
 			if (execType != merge) {
@@ -1712,7 +1709,7 @@ int main(int argc, char* argv[])
 
 			now = time(NULL);
 			ts = localtime(&now);
-			_tcsftime(szBuf, sizeof(szBuf) / sizeof(szBuf[0]), _T("%Y-%m-%d(%a) %H:%M:%S"), ts);
+			_tcsftime(szBuf, sizeof(szBuf) / sizeof(szBuf[0]), _T("%FT%T%z"), ts);
 			OutputString("EndTime: %s\n", szBuf);
 		}
 		if (!extArg.byQuiet) {

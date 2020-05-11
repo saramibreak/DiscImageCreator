@@ -1573,7 +1573,7 @@ VOID OutputGetConfigurationFeatureFirmwareDate(
 	PFEATURE_DATA_FIRMWARE_DATE pFirmwareDate
 ) {
 	OutputDriveLog(
-		"\tFeatureFirmwareDate: %.4" CHARWIDTH "s-%.2" CHARWIDTH "s-%.2" CHARWIDTH "s %.2" CHARWIDTH "s:%.2" CHARWIDTH "s:%.2" CHARWIDTH "s\n"
+		"\tFeatureFirmwareDate: %.4" CHARWIDTH "s-%.2" CHARWIDTH "s-%.2" CHARWIDTH "sT%.2" CHARWIDTH "s:%.2" CHARWIDTH "s:%.2" CHARWIDTH "s\n"
 		, pFirmwareDate->Year, pFirmwareDate->Month, pFirmwareDate->Day
 		, pFirmwareDate->Hour, pFirmwareDate->Minute, pFirmwareDate->Seconds);
 }

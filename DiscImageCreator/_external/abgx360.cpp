@@ -43,7 +43,7 @@ void printwin32filetime(unsigned long long win32filetime, char* date) {
 	}
 	// days == -1 means the while loop executed during a leap year with days=365
 	if (days == -1) {
-		_snprintf(date, 20, "%u/12/31 %02llu:%02llu:%02llu", year - 1, hours % 24, minutes % 60, seconds % 60);
+		_snprintf(date, 20, "%u-12-31T%02llu:%02llu:%02llu", year - 1, hours % 24, minutes % 60, seconds % 60);
 	}
 	else {
 		// days++ makes it more natural (days=1 is now Jan 1 and Feb 1 is days=32)
@@ -66,7 +66,7 @@ void printwin32filetime(unsigned long long win32filetime, char* date) {
 		else if (days > 59 + leap) { days -= 59 + leap;  month = 3; }
 		else if (days > 31) { days -= 31;       month = 2; }
 		else month = 1;
-		_snprintf(date, 20, "%u/%02i/%02lu %02llu:%02llu:%02llu", year, month, days, hours % 24, minutes % 60, seconds % 60);
+		_snprintf(date, 20, "%u-%02i-%02luT%02llu:%02llu:%02llu", year, month, days, hours % 24, minutes % 60, seconds % 60);
 	}
 	return;
 }

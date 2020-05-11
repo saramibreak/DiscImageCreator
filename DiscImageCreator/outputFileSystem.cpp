@@ -105,7 +105,7 @@ VOID OutputFsDirectoryRecord(
 		"\t\tExtended Attribute Record Length: %u\n"
 		"\t\t              Location of Extent: %u\n"
 		"\t\t                     Data Length: %u\n"
-		"\t\t         Recording Date and Time: %u-%02u-%02u %02u:%02u:%02u %+03d:%02u\n"
+		"\t\t         Recording Date and Time: %u-%02u-%02uT%02u:%02u:%02u%+03d:%02u\n"
 		"\t\t                      File Flags: %u (%" CHARWIDTH "s)\n"
 		"\t\t                  File Unit Size: %u\n"
 		"\t\t             Interleave Gap Size: %u\n"
@@ -364,10 +364,10 @@ VOID OutputFsVolumeDescriptorSecond(
 			, str128[0], str128[1], str128[2], str128[3], str37[0], str37[1], str37[2]);
 	}
 	OutputVolDescLog(
-		"\t                Volume Creation Date and Time: %.4" CHARWIDTH "s-%.2" CHARWIDTH "s-%.2" CHARWIDTH "s %.2" CHARWIDTH "s:%.2" CHARWIDTH "s:%.2" CHARWIDTH "s.%.2" CHARWIDTH "s %+03d:%02d\n"
-		"\t            Volume Modification Date and Time: %.4" CHARWIDTH "s-%.2" CHARWIDTH "s-%.2" CHARWIDTH "s %.2" CHARWIDTH "s:%.2" CHARWIDTH "s:%.2" CHARWIDTH "s.%.2" CHARWIDTH "s %+03d:%02d\n"
-		"\t              Volume Expiration Date and Time: %.4" CHARWIDTH "s-%.2" CHARWIDTH "s-%.2" CHARWIDTH "s %.2" CHARWIDTH "s:%.2" CHARWIDTH "s:%.2" CHARWIDTH "s.%.2" CHARWIDTH "s %+03d:%02d\n"
-		"\t               Volume Effective Date and Time: %.4" CHARWIDTH "s-%.2" CHARWIDTH "s-%.2" CHARWIDTH "s %.2" CHARWIDTH "s:%.2" CHARWIDTH "s:%.2" CHARWIDTH "s.%.2" CHARWIDTH "s %+03d:%02d\n"
+		"\t                Volume Creation Date and Time: %.4" CHARWIDTH "s-%.2" CHARWIDTH "s-%.2" CHARWIDTH "sT%.2" CHARWIDTH "s:%.2" CHARWIDTH "s:%.2" CHARWIDTH "s.%.2" CHARWIDTH "s%+03d:%02d\n"
+		"\t            Volume Modification Date and Time: %.4" CHARWIDTH "s-%.2" CHARWIDTH "s-%.2" CHARWIDTH "sT%.2" CHARWIDTH "s:%.2" CHARWIDTH "s:%.2" CHARWIDTH "s.%.2" CHARWIDTH "s%+03d:%02d\n"
+		"\t              Volume Expiration Date and Time: %.4" CHARWIDTH "s-%.2" CHARWIDTH "s-%.2" CHARWIDTH "sT%.2" CHARWIDTH "s:%.2" CHARWIDTH "s:%.2" CHARWIDTH "s.%.2" CHARWIDTH "s%+03d:%02d\n"
+		"\t               Volume Effective Date and Time: %.4" CHARWIDTH "s-%.2" CHARWIDTH "s-%.2" CHARWIDTH "sT%.2" CHARWIDTH "s:%.2" CHARWIDTH "s:%.2" CHARWIDTH "s.%.2" CHARWIDTH "s%+03d:%02d\n"
 		"\t                       File Structure Version: %u\n"
 		"\t                              Application Use: ",
 		&lpBuf[813], &lpBuf[817], &lpBuf[819], &lpBuf[821], &lpBuf[823]
@@ -857,18 +857,18 @@ VOID OutputFsMasterDirectoryBlocks(
 	tm* ctime = gmtime(&creationTime);
 	ctime->tm_year -= 66; // HFS starts from 1904, while UNIX starts from 1970
 	_TCHAR szBufc[128] = {};
-	_tcsftime(szBufc, sizeof(szBufc) / sizeof(szBufc[0]), _T("%Y-%m-%d %H:%M:%S"), ctime);
+	_tcsftime(szBufc, sizeof(szBufc) / sizeof(szBufc[0]), _T("%FT%T"), ctime);
 
 	tm* mtime = gmtime(&modificationTime);
 	mtime->tm_year -= 66;
 	_TCHAR szBufm[128] = {};
-	_tcsftime(szBufm, sizeof(szBufm) / sizeof(szBufm[0]), _T("%Y-%m-%d %H:%M:%S"), mtime);
+	_tcsftime(szBufm, sizeof(szBufm) / sizeof(szBufm[0]), _T("%FT%T"), mtime);
 
 	tm* ltime = gmtime(&lastTime);
 	ltime->tm_year -= 66;
 	_TCHAR szBufl[128] = {};
 	if (lastTime) {
-		_tcsftime(szBufl, sizeof(szBufl) / sizeof(szBufl[0]), _T("%Y-%m-%d %H:%M:%S"), mtime);
+		_tcsftime(szBufl, sizeof(szBufl) / sizeof(szBufl[0]), _T("%FT%T"), mtime);
 	}
 
 	OutputVolDescWithLBALog2("Master Directory Blocks",
@@ -1173,24 +1173,23 @@ VOID OutputFsRecordingDateAndTime(
 ) {
 	WORD sTime = MAKEWORD(lpBuf[0], lpBuf[1]);
 	CHAR cTimeZone = (CHAR)(sTime >> 12 & 0x0f);
-	OutputVolDescLog("\tRecording Date and Time: ");
+	SHORT nTime = sTime & 0xfff;
+
+	OutputVolDescLog(
+		"\tRecording Date and Time: %u-%02u-%02uT%02u:%02u:%02u.%02u%02u%02u%+03d:%02d"
+		, MAKEWORD(lpBuf[2], lpBuf[3]), lpBuf[4], lpBuf[5],	lpBuf[6], lpBuf[7], lpBuf[8], lpBuf[9], lpBuf[10], lpBuf[11], nTime / 60, nTime % 60);
 	if (cTimeZone == 0) {
-		OutputVolDescLog("UTC ");
+		OutputVolDescLog(" (UTC)\n");
 	}
 	else if (cTimeZone == 1) {
-		OutputVolDescLog("LocalTime ");
+		OutputVolDescLog(" (LocalTime)\n");
 	}
 	else if (cTimeZone == 2) {
-		OutputVolDescLog("OriginalTime ");
+		OutputVolDescLog(" (OriginalTime)\n");
 	}
 	else {
-		OutputVolDescLog("Reserved ");
+		OutputVolDescLog(" (Reserved)\n");
 	}
-	SHORT nTime = sTime & 0xfff;
-	OutputVolDescLog(
-		"%+03d%02d %u-%02u-%02u %02u:%02u:%02u.%02u.%02u.%02u\n",
-		nTime / 60, nTime % 60, MAKEWORD(lpBuf[2], lpBuf[3]), lpBuf[4], lpBuf[5],
-		lpBuf[6], lpBuf[7], lpBuf[8], lpBuf[9], lpBuf[10], lpBuf[11]);
 }
 
 VOID OutputFsRegid(

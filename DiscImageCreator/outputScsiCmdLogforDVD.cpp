@@ -945,7 +945,7 @@ VOID OutputDVDUniqueDiscIdentifer(
 	OutputDiscLog(
 		OUTPUT_DHYPHEN_PLUS_STR("DVDUniqueDiscIdentifer")
 		"\t RandomNumber: %u\n"
-		"\tDate and Time: %.4" CHARWIDTH "s-%.2" CHARWIDTH "s-%.2" CHARWIDTH "s %.2" CHARWIDTH "s:%.2" CHARWIDTH "s:%.2" CHARWIDTH "s\n"
+		"\tDate and Time: %.4" CHARWIDTH "s-%.2" CHARWIDTH "s-%.2" CHARWIDTH "sT%.2" CHARWIDTH "s:%.2" CHARWIDTH "s:%.2" CHARWIDTH "s\n"
 		, MAKEWORD(dvdUnique->RandomNumber[1], dvdUnique->RandomNumber[0])
 		, dvdUnique->Year, dvdUnique->Month, dvdUnique->Day
 		, dvdUnique->Hour, dvdUnique->Minute, dvdUnique->Second);
