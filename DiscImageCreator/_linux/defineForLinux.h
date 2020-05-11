@@ -552,6 +552,64 @@ typedef struct _IMAGE_SECTION_HEADER {
 //
 #define IMAGE_SCN_SCALE_INDEX                0x00000001  // Tls index is scaled
 
+//
+// DLL support.
+//
+
+//
+// Export Format
+//
+
+typedef struct _IMAGE_EXPORT_DIRECTORY {
+	DWORD   Characteristics;
+	DWORD   TimeDateStamp;
+	WORD    MajorVersion;
+	WORD    MinorVersion;
+	DWORD   Name;
+	DWORD   Base;
+	DWORD   NumberOfFunctions;
+	DWORD   NumberOfNames;
+	DWORD   AddressOfFunctions;     // RVA from base of image
+	DWORD   AddressOfNames;         // RVA from base of image
+	DWORD   AddressOfNameOrdinals;  // RVA from base of image
+} IMAGE_EXPORT_DIRECTORY, * PIMAGE_EXPORT_DIRECTORY;
+
+//
+// Import Format
+//
+
+typedef struct _IMAGE_IMPORT_BY_NAME {
+	WORD    Hint;
+	BYTE    Name[1];
+} IMAGE_IMPORT_BY_NAME, * PIMAGE_IMPORT_BY_NAME;
+
+typedef struct _IMAGE_THUNK_DATA64 {
+	union {
+		ULONGLONG ForwarderString;  // PBYTE 
+		ULONGLONG Function;         // PDWORD
+		ULONGLONG Ordinal;
+		ULONGLONG AddressOfData;    // PIMAGE_IMPORT_BY_NAME
+	} u1;
+} IMAGE_THUNK_DATA64;
+typedef IMAGE_THUNK_DATA64* PIMAGE_THUNK_DATA64;
+
+typedef struct _IMAGE_THUNK_DATA32 {
+	union {
+		DWORD ForwarderString;      // PBYTE 
+		DWORD Function;             // PDWORD
+		DWORD Ordinal;
+		DWORD AddressOfData;        // PIMAGE_IMPORT_BY_NAME
+	} u1;
+} IMAGE_THUNK_DATA32;
+typedef IMAGE_THUNK_DATA32* PIMAGE_THUNK_DATA32;
+
+#define IMAGE_ORDINAL_FLAG64 0x8000000000000000
+#define IMAGE_ORDINAL_FLAG32 0x80000000
+#define IMAGE_ORDINAL64(Ordinal) (Ordinal & 0xffff)
+#define IMAGE_ORDINAL32(Ordinal) (Ordinal & 0xffff)
+#define IMAGE_SNAP_BY_ORDINAL64(Ordinal) ((Ordinal & IMAGE_ORDINAL_FLAG64) != 0)
+#define IMAGE_SNAP_BY_ORDINAL32(Ordinal) ((Ordinal & IMAGE_ORDINAL_FLAG32) != 0)
+
 
 typedef struct _IMAGE_IMPORT_DESCRIPTOR {
 	union {
