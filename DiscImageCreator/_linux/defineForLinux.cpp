@@ -152,6 +152,13 @@ void _makepath(char* Path, const char* Drive, const char* Directory,
 	return;
 }
 
+int PathSet(char* path, char const* fullpath)
+{
+       strcat(path, fullpath);
+
+       return 1; /* not sure when this function would 'fail' */
+}
+
 // http://stackoverflow.com/questions/3218201/find-a-replacement-for-windows-pathappend-on-gnu-linux
 int PathAppend(char* path, char const* more)
 {

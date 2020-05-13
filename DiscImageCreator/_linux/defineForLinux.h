@@ -2219,6 +2219,8 @@ void _makepath(char* Path, const char* Drive, const char* Directory, const char*
 // http://stackoverflow.com/questions/3218201/find-a-replacement-for-windows-pathappend-on-gnu-linux
 int PathAppend(char* path, char const* more);
 
+int PathSet(char* path, char const* fullpath);
+
 // https://www.quora.com/How-do-I-check-if-a-file-already-exists-using-C-file-I-O
 int PathFileExists(const char *filename);
 
