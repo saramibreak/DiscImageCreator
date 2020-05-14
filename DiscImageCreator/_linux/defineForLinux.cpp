@@ -154,7 +154,7 @@ void _makepath(char* Path, const char* Drive, const char* Directory,
 
 int PathSet(char* path, char const* fullpath)
 {
-       strcat(path, fullpath);
+       strcpy(path, fullpath);
 
        return 1; /* not sure when this function would 'fail' */
 }
