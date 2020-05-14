@@ -40,7 +40,7 @@ BOOL IsValidPS3Drive(
 	PDEVICE pDevice
 );
 
-BOOL IsValidAsusDrive(
+BOOL IsValid0xF1SupportedDrive(
 	PDEVICE pDevice
 );
 

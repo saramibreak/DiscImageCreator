@@ -112,13 +112,27 @@ BOOL IsValidPS3Drive(
 	return FALSE;
 }
 
-BOOL IsValidAsusDrive(
+BOOL IsValid0xF1SupportedDrive(
 	PDEVICE pDevice
 ) {
 	if (!strncmp(pDevice->szVendorId, "ASUS    ", DRIVE_VENDOR_ID_SIZE)) {
 		if (!strncmp(pDevice->szProductId, "BW-16D1HT       ", DRIVE_PRODUCT_ID_SIZE)) {
 			if (!strncmp(pDevice->szProductRevisionLevel, "3.02", DRIVE_VERSION_ID_SIZE)) {
-				pDevice->byAsusDrive = TRUE;
+				pDevice->by0xF1Drive = TRUE;
+				return TRUE;
+			}
+		}
+	}
+	else if (!strncmp(pDevice->szVendorId, "HL-DT-ST", DRIVE_VENDOR_ID_SIZE)) {
+		if (!strncmp(pDevice->szProductId, "DVDRAM GH24NSD1 ", DRIVE_PRODUCT_ID_SIZE)) {
+			if (!strncmp(pDevice->szProductRevisionLevel, "LG00", DRIVE_VERSION_ID_SIZE)) {
+				pDevice->by0xF1Drive = TRUE;
+				return TRUE;
+			}
+		}
+		else if (!strncmp(pDevice->szProductId, "WH16NS60        ", DRIVE_PRODUCT_ID_SIZE)) {
+			if (!strncmp(pDevice->szProductRevisionLevel, "1.00", DRIVE_VERSION_ID_SIZE)) {
+				pDevice->by0xF1Drive = TRUE;
 				return TRUE;
 			}
 		}

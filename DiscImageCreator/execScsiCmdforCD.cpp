@@ -307,7 +307,7 @@ BOOL ProcessReadCD(
 			}
 			if (!IsValidProtectedSector(pDisc, nLBA, GetReadErrorFileIdx(pExtArg, pDisc, nLBA))) {
 				if (pDiscPerSector->data.next != NULL && 1 <= pExtArg->uiSubAddionalNum) {
-					if (!(pDevice->byAsusDrive && pDisc->SCSI.nAllLength - 1 <= nLBA)) {
+					if (!(pDevice->by0xF1Drive && pDisc->SCSI.nAllLength - 1 <= nLBA)) {
 						ExecReadCDForC2(pExecType, pExtArg, pDevice, lpCmd,
 							nLBA + 1, pDiscPerSector->data.next, _T(__FUNCTION__), __LINE__);
 						AlignRowSubcode(pDiscPerSector->subcode.next, pDiscPerSector->data.next + pDevice->TRANSFER.uiBufSubOffset);
@@ -963,7 +963,7 @@ BOOL ReadCDAll(
 			}
 
 			pDiscPerSector->bReturnCode = FALSE;
-			if (pDevice->byAsusDrive && pDisc->SCSI.nAllLength <= nLBA) {
+			if (pDevice->by0xF1Drive && pDisc->SCSI.nAllLength <= nLBA) {
 				memcpy(pDiscPerSector->data.current, pDisc->lpCachedBuf, 2352);
 				memcpy(pDiscPerSector->data.current + 2352, pDisc->lpCachedBuf + 0x9A4, 294);
 				memcpy(pDiscPerSector->data.current + 2352 + 294, pDisc->lpCachedBuf + 2352, 96);
@@ -1312,7 +1312,7 @@ BOOL ReadCDAll(
 	}
 	FcloseAndNull(fpImg);
 	FcloseAndNull(fpSub);
-	if (pDevice->byAsusDrive) {
+	if (pDevice->by0xF1Drive) {
 		FreeAndNull(pDisc->lpCachedBuf);
 	}
 	FreeAndNull(pBuf);

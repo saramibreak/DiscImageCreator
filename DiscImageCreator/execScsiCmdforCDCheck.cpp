@@ -22,6 +22,7 @@
 #include "execScsiCmdforCDCheck.h"
 #include "execScsiCmdforFileSystem.h"
 #include "get.h"
+#include "init.h"
 #include "output.h"
 #include "outputScsiCmdLogforCD.h"
 #include "set.h"
@@ -706,7 +707,7 @@ BOOL ReadCDForCheckingReadInOut(
 		}
 		else if (0 < pDisc->MAIN.nCombinedOffset) {
 			OutputLog(standardOut | fileDrive, "This drive can't read the lead-out\n");
-			if (IsValidAsusDrive(pDevice)) {
+			if (IsValid0xF1SupportedDrive(pDevice)) {
 				if (!ExecReadCD(pExtArg, pDevice, lpCmd, nLBA - 1, aBuf,
 					CD_RAW_SECTOR_SIZE, _T(__FUNCTION__), __LINE__)
 					|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
@@ -2235,6 +2236,9 @@ BOOL ReadCDCheck(
 					pDisc->PROTECT.byExist == PROTECT_TYPE_CD::no) {
 					OutputString(
 						"[INFO] Protection can't be detected. /sf, /ss is ignored.\n");
+					if (pExtArg->byScanProtectViaFile) {
+						TerminateProtectData(&pDisc);
+					}
 					pExtArg->byScanProtectViaFile = FALSE;
 					pExtArg->byScanProtectViaSector = FALSE;
 				}

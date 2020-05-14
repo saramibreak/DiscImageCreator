@@ -229,7 +229,7 @@ typedef struct _DEVICE {
 	CHAR szProductId[16];
 	CHAR szProductRevisionLevel[4];
 	BYTE byPlxtrDrive;
-	BYTE byAsusDrive;
+	BYTE by0xF1Drive;
 	BYTE byLoadingMechanism;
 #ifdef _WIN32
 	BYTE byDriveLetter;
