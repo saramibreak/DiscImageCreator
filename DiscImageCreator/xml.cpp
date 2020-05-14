@@ -390,17 +390,25 @@ BOOL ReadWriteDat(
 	}
 #else
 	CHAR szDefaultDat[_MAX_PATH] = {};
-	if (!GetModuleFileName(NULL, szDefaultDat, sizeof(szDefaultDat) / sizeof(szDefaultDat[0]))) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return FALSE;
+	if (PathFileExists("/usr/local/share/DiscImageCreator/default.dat")) {
+		PathSet(szDefaultDat, "/usr/local/share/DiscImageCreator/default.dat");
 	}
-	if (!PathRemoveFileSpec(szDefaultDat)) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return FALSE;
+	else if (PathFileExists("/usr/share/DiscImageCreator/default.dat")) {
+		PathSet(szDefaultDat, "/usr/share/DiscImageCreator/default.dat");
 	}
-	if (!PathAppend(szDefaultDat, "default.dat")) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return FALSE;
+	else {
+		if (!GetModuleFileName(NULL, szDefaultDat, sizeof(szDefaultDat) / sizeof(szDefaultDat[0]))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			return FALSE;
+		}
+		if (!PathRemoveFileSpec(szDefaultDat)) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			return FALSE;
+		}
+		if (!PathAppend(szDefaultDat, "default.dat")) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			return FALSE;
+		}
 	}
 
 	XMLDocument xmlReader;

@@ -83,4 +83,13 @@ buildDateTime:
 	$(shell date +%H%M%S | tr -d '\n' >>buildDateTime.h)
 	$(shell /usr/bin/env echo "\"" >>buildDateTime.h)
 
+ifeq ($(PREFIX),)
+    PREFIX := /usr/local
+endif
+
+install:
+	install -d $(DESTDIR)$(PREFIX)/DiscImageCreator/
+	install -Dm 0644 ../Release_ANSI/default.dat $(DESTDIR)$(PREFIX)/share/DiscImageCreator/default.dat
+	install -m 755 $(TARGET) $(DESTDIR)$(PREFIX)/bin/
+
 .PHONY: clean clean-objs buildDateTime
