@@ -78,7 +78,7 @@ BOOL ReadCDForSubChannelOffset(
 			}
 		}
 		if (bCheckSubQAllZero) {
-			OutputDiscLog("SubQ is all zero... (BufLen: %d)\n", uiBufLen);
+			OutputDiscLog("SubQ is all zero... (BufLen: %u)\n", uiBufLen);
 			break;
 		}
 
@@ -141,14 +141,14 @@ BOOL CheckFrameOfVideoNowColorOrXp(
 				if (n1stHeaderOfs == 0) {
 					n1stHeaderOfs = m;
 					OutputLog(standardOut | fileDisc, "1stHeader (81,e3,e3,c7,c7,81,81,e3...) Ofs: %d (0x%x)\n"
-						, n1stHeaderOfs, n1stHeaderOfs);
+						, n1stHeaderOfs, (UINT)n1stHeaderOfs);
 					m += nHeaderOfs;
 					break;
 				}
 				else {
 					n2ndHeaderOfs = m;
 					OutputLog(standardOut | fileDisc, "2ndHeader (81,e3,e3,c7,c7,81,81,e3...) Ofs: %d (0x%x)\n"
-						, n2ndHeaderOfs, n2ndHeaderOfs);
+						, n2ndHeaderOfs, (UINT)n2ndHeaderOfs);
 					OutputLog(standardOut | fileDisc
 						, "Empty bytes which are needed in this disc: %d [%d - (%d - %d)]\n"
 						, nImcompFrmSize - (n2ndHeaderOfs - n1stHeaderOfs)
@@ -187,7 +187,7 @@ BOOL ExecSearchingOffset(
 	if (!bRet) {
 		if (*pExecType == gd) {
 			OutputErrorString(
-				"Couldn't read data sectors at scrambled state [OpCode: %#02x, C2flag: %x, SubCode: %x]\n"
+				"Couldn't read data sectors at scrambled state [OpCode: %#02x, C2flag: %d, SubCode: %x]\n"
 				, lpCmd[0], (lpCmd[9] & 0x6) >> 1, lpCmd[10]);
 		}
 		else {
@@ -197,7 +197,7 @@ BOOL ExecSearchingOffset(
 			}
 			else {
 				OutputErrorString(
-					"This drive can't read data sectors at scrambled state [OpCode: %#02x, C2flag: %x, SubCode: %x]\n"
+					"This drive can't read data sectors at scrambled state [OpCode: %#02x, C2flag: %d, SubCode: %x]\n"
 					, lpCmd[0], (lpCmd[9] & 0x6) >> 1, lpCmd[10]);
 			}
 		}
@@ -211,7 +211,7 @@ BOOL ExecSearchingOffset(
 		else {
 			if (*pExecType != data) {
 				OutputLog(standardOut | fileDrive,
-					"This drive can read data sectors at scrambled state [OpCode: %#02x, C2flag: %x, SubCode: %x]\n"
+					"This drive can read data sectors at scrambled state [OpCode: %#02x, C2flag: %d, SubCode: %x]\n"
 					, lpCmd[0], (lpCmd[9] & 0x6) >> 1, lpCmd[10]);
 			}
 		}
@@ -532,7 +532,7 @@ BOOL ReadCDForSearchingOffset(
 				}
 				StartStopUnit(pExtArg, pDevice, STOP_UNIT_CODE, STOP_UNIT_CODE);
 				UINT milliseconds = 10000;
-				OutputErrorString("Retry %d/10 after %d milliseconds\n", n, milliseconds);
+				OutputErrorString("Retry %d/10 after %u milliseconds\n", n, milliseconds);
 				Sleep(milliseconds);
 				continue;
 			}
@@ -654,7 +654,7 @@ BOOL ReadCDForSearchingOffset(
 					}
 					StartStopUnit(pExtArg, pDevice, STOP_UNIT_CODE, STOP_UNIT_CODE);
 					UINT milliseconds = 10000;
-					OutputErrorString("Retry %d/10 after %d milliseconds\n", n, milliseconds);
+					OutputErrorString("Retry %d/10 after %u milliseconds\n", n, milliseconds);
 					Sleep(milliseconds);
 					continue;
 				}
@@ -1123,7 +1123,7 @@ BOOL ReadCDForCheckingSubRtoW(
 			bRet = bErr;
 		}
 		OutputString(
-			"\rChecking SubRtoW (Track) %2u/%2u", i + 1, pDisc->SCSI.toc.LastTrack);
+			"\rChecking SubRtoW (Track) %2d/%2u", i + 1, pDisc->SCSI.toc.LastTrack);
 	}
 	OutputString("\n");
 	FreeAndNull(pBuf);
@@ -1143,7 +1143,7 @@ BOOL IsImageSig(
 
 BOOL IsSecuromDllSig(
 	LPBYTE lpBuf,
-	INT i
+	UINT i
 ) {
 	if (lpBuf[0 + i] == 0xca && lpBuf[1 + i] == 0xdd && lpBuf[2 + i] == 0xdd && lpBuf[3 + i] == 0xac &&
 		lpBuf[4 + i] == 0x03 && lpBuf[5 + i] == 0xca && lpBuf[6 + i] == 0xdd && lpBuf[7 + i] == 0x00) {
@@ -1154,7 +1154,7 @@ BOOL IsSecuromDllSig(
 
 LONG GetOfsOfSecuromDllSig(
 	LPBYTE lpBuf,
-	INT i
+	UINT i
 ) {
 	return MAKELONG(MAKEWORD(lpBuf[i + 82], lpBuf[i + 83]), MAKEWORD(lpBuf[i + 84], lpBuf[i + 85]));
 }
@@ -1245,14 +1245,14 @@ BOOL ReadExeFromFile(
 				OutputImportDirectory(lpBuf, bufsize, dwImportVirtualAddress, 0);
 			}
 			if (bSecurom) {
-				INT nSecuromReadSize = DISC_MAIN_DATA_SIZE * 2;
+				UINT uiSecuromReadSize = DISC_MAIN_DATA_SIZE * 2;
 				fseek(fp, -4, SEEK_END);
 				UINT uiOfsOfSecuRomDll = 0;
 				fread(&uiOfsOfSecuRomDll, sizeof(UINT), 1, fp);
 				if (uiOfsOfSecuRomDll) {
 					fseek(fp, (LONG)uiOfsOfSecuRomDll, SEEK_SET);
-					fread(lpBuf, sizeof(BYTE), (size_t)nSecuromReadSize, fp);
-					OutputCDMain(fileMainInfo, lpBuf, 0, nSecuromReadSize);
+					fread(lpBuf, sizeof(BYTE), (size_t)uiSecuromReadSize, fp);
+					OutputCDMain(fileMainInfo, lpBuf, 0, uiSecuromReadSize);
 
 					UINT uiOfsOf16 = 0;
 					UINT uiOfsOf32 = 0;
@@ -1262,27 +1262,27 @@ BOOL ReadExeFromFile(
 					OutputSint16(lpBuf, uiOfsOf16, uiOfsOfSecuRomDll, idx);
 
 					fseek(fp, (LONG)uiOfsOf32, SEEK_SET);
-					fread(lpBuf, sizeof(BYTE), (size_t)nSecuromReadSize, fp);
-					OutputCDMain(fileMainInfo, lpBuf, 0, nSecuromReadSize);
+					fread(lpBuf, sizeof(BYTE), (size_t)uiSecuromReadSize, fp);
+					OutputCDMain(fileMainInfo, lpBuf, 0, uiSecuromReadSize);
 					OutputSint32(lpBuf, 0, FALSE);
 
 					fseek(fp, (LONG)uiOfsOfNT, SEEK_SET);
-					fread(lpBuf, sizeof(BYTE), (size_t)nSecuromReadSize, fp);
-					OutputCDMain(fileMainInfo, lpBuf, 0, nSecuromReadSize);
+					fread(lpBuf, sizeof(BYTE), (size_t)uiSecuromReadSize, fp);
+					OutputCDMain(fileMainInfo, lpBuf, 0, uiSecuromReadSize);
 					OutputSintNT(lpBuf, 0, FALSE);
 				}
 				else if (pExtArg->byIntentionalSub) {
 					rewind(fp);
-					fread(lpBuf, sizeof(BYTE), (size_t)nSecuromReadSize, fp);
+					fread(lpBuf, sizeof(BYTE), (size_t)uiSecuromReadSize, fp);
 					BOOL bFound = FALSE;
 					while (!feof(fp) && !ferror(fp)) {
-						for (INT i = 0; i < nSecuromReadSize - 8; i++) {
+						for (UINT i = 0; i < uiSecuromReadSize - 8; i++) {
 							if (IsSecuromDllSig(lpBuf, i)) {
-								LONG lSigPos = ftell(fp) - nSecuromReadSize + i;
+								LONG lSigPos = (LONG)(ftell(fp) - uiSecuromReadSize + i);
 								LONG lSigOfs = GetOfsOfSecuromDllSig(lpBuf, i);
 								if (lSigPos == lSigOfs) {
 									OutputSecuRomDll4_87Header(lpBuf, i);
-									OutputCDMain(fileMainInfo, lpBuf, 0, nSecuromReadSize);
+									OutputCDMain(fileMainInfo, lpBuf, 0, uiSecuromReadSize);
 									bFound = TRUE;
 									break;
 								}
@@ -1292,7 +1292,7 @@ BOOL ReadExeFromFile(
 							break;
 						}
 						else {	
-							fread(lpBuf, sizeof(BYTE), (size_t)nSecuromReadSize, fp);
+							fread(lpBuf, sizeof(BYTE), (size_t)uiSecuromReadSize, fp);
 						}
 					}
 				}
@@ -1578,7 +1578,7 @@ BOOL ReadCDForCheckingExe(
 				PIMAGE_DOS_HEADER pIDh = (PIMAGE_DOS_HEADER)&lpBuf[0];
 				if (dwSize < (DWORD)pIDh->e_lfanew) {
 					if (pDevice->dwMaxTransferLength < (DWORD)pIDh->e_lfanew) {
-						OutputVolDescLog("%" CHARWIDTH "s: offset is very big (%lu). read skip [TODO]\n"
+						OutputVolDescLog("%" CHARWIDTH "s: offset is very big (%ld). read skip [TODO]\n"
 							, pDisc->PROTECT.pNameForExe[n], pIDh->e_lfanew);
 					}
 					else {
@@ -1593,7 +1593,7 @@ BOOL ReadCDForCheckingExe(
 					dwSize = DISC_MAIN_DATA_SIZE;
 				}
 				OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA
-					, pDisc->PROTECT.pExtentPosForExe[n], pDisc->PROTECT.pExtentPosForExe[n], pDisc->PROTECT.pNameForExe[n]);
+					, pDisc->PROTECT.pExtentPosForExe[n], (UINT)pDisc->PROTECT.pExtentPosForExe[n], pDisc->PROTECT.pNameForExe[n]);
 				OutputFsImageDosHeader(pIDh);
 
 				if (IsImageSig(&lpBuf[pIDh->e_lfanew], IMAGE_NT_SIGNATURE)) {
@@ -1621,7 +1621,7 @@ BOOL ReadCDForCheckingExe(
 					}
 					if (dwImportSize > 0) {
 						if (dwSize > pDevice->dwMaxTransferLength) {
-							OutputVolDescLog(STR_LBA "Skip Reading ImportDirectory\n", pDisc->PROTECT.pExtentPosForExe[n], pDisc->PROTECT.pExtentPosForExe[n]);
+							OutputVolDescLog(STR_LBA "Skip Reading ImportDirectory\n", pDisc->PROTECT.pExtentPosForExe[n], (UINT)pDisc->PROTECT.pExtentPosForExe[n]);
 						}
 						else {
 							INT nImpSection = pDisc->PROTECT.pExtentPosForExe[n] + (INT)dwImportPointerToRawData / DISC_MAIN_DATA_SIZE;
@@ -1631,7 +1631,7 @@ BOOL ReadCDForCheckingExe(
 							}
 							OutputMainInfoLog("dwImportVirtualAddress: 0x%lx, dwImportSize: 0x%lx, dwImportDataOfs: 0x%lx\n"
 								, dwImportVirtualAddress, dwImportSize, dwImportDataOfs);
-							OutputCDMain(fileMainInfo, lpBuf, nImpSection, (INT)dwSize);
+							OutputCDMain(fileMainInfo, lpBuf, nImpSection, dwSize);
 							OutputImportDirectory(lpBuf, dwSize, dwImportVirtualAddress, dwImportDataOfs);
 						}
 					}
@@ -1677,7 +1677,7 @@ BOOL ReadCDForCheckingExe(
 								if (!ExecReadCD(pExtArg, pDevice, pCdb, n2ndSector, lpBuf, dwSize, _T(__FUNCTION__), __LINE__)) {
 									continue;
 								}
-								OutputCDMain(fileMainInfo, lpBuf, n2ndSector, (INT)dwSize);
+								OutputCDMain(fileMainInfo, lpBuf, n2ndSector, dwSize);
 								INT nOfsOf32dll = (INT)(uiOfsOf32 - uiOfsOfSecuRomDll) % DISC_MAIN_DATA_SIZE;
 
 								OutputSint32(lpBuf, nOfsOf32dll, FALSE);
@@ -1687,7 +1687,7 @@ BOOL ReadCDForCheckingExe(
 								if (!ExecReadCD(pExtArg, pDevice, pCdb, n3rdSector, lpBuf, dwSize, _T(__FUNCTION__), __LINE__)) {
 									continue;
 								}
-								OutputCDMain(fileMainInfo, lpBuf, n3rdSector, (INT)dwSize);
+								OutputCDMain(fileMainInfo, lpBuf, n3rdSector, dwSize);
 								INT nOfsOfNTdll = (INT)(uiOfsOfNT - uiOfsOfSecuRomDll) % DISC_MAIN_DATA_SIZE;
 
 								OutputSintNT(lpBuf, nOfsOfNTdll, FALSE);
@@ -1702,13 +1702,13 @@ BOOL ReadCDForCheckingExe(
 									, pDisc->PROTECT.pExtentPosForExe[n] + j, lpBuf, dwSize, _T(__FUNCTION__), __LINE__)) {
 									continue;
 								}
-								for (INT i = 0; i < (INT)dwSize - 8; i++) {
+								for (UINT i = 0; i < dwSize - 8; i++) {
 									if (IsSecuromDllSig(lpBuf, i)) {
-										LONG lSigPos = (LONG)dwSize * j + i;
+										LONG lSigPos = (LONG)(dwSize * j + i);
 										LONG lSigOfs = GetOfsOfSecuromDllSig(lpBuf, i);
 										if (lSigPos == lSigOfs) {
 											OutputSecuRomDll4_87Header(lpBuf, i);
-											OutputCDMain(fileMainInfo, lpBuf, pDisc->PROTECT.pExtentPosForExe[n] + j, (INT)dwSize);
+											OutputCDMain(fileMainInfo, lpBuf, pDisc->PROTECT.pExtentPosForExe[n] + j, dwSize);
 											bFound = TRUE;
 											break;
 										}
@@ -1735,7 +1735,7 @@ BOOL ReadCDForCheckingExe(
 										"Please wait until all files are extracted. This is needed to search protection\n"
 										, pDisc->PROTECT.pFullNameForExe[n]
 									);
-									OutputCDMain(fileMainInfo, lpBuf, i, (INT)dwSize);
+									OutputCDMain(fileMainInfo, lpBuf, i, dwSize);
 
 									_TCHAR szTmpPath[_MAX_PATH] = {};
 									if (!GetCurrentDirectory(sizeof(szTmpPath) / sizeof(szTmpPath[0]), szTmpPath)) {
@@ -1864,13 +1864,13 @@ VOID ReadCDForScanningPsxAntiMod(
 		for (INT i = 0; i < DISC_MAIN_DATA_SIZE; i++) {
 			if (!memcmp(&buf[i], antiModStrEn, sizeof(antiModStrEn))) {
 				OutputLog(fileDisc | standardOut
-					, "\nDetected anti-mod string (en): LBA %d, offset %d(0x%03x)", nLBA, i, i);
+					, "\nDetected anti-mod string (en): LBA %d, offset %d(0x%03x)", nLBA, i, (UINT)i);
 				OutputCDMain(fileMainInfo, buf, nLBA, DISC_MAIN_DATA_SIZE);
 				bRet += TRUE;
 			}
 			if (!memcmp(&buf[i], antiModStrJp, sizeof(antiModStrJp))) {
 				OutputLog(fileDisc | standardOut
-					, "\nDetected anti-mod string (jp): LBA %d, offset %d(0x%03x)\n", nLBA, i, i);
+					, "\nDetected anti-mod string (jp): LBA %d, offset %d(0x%03x)\n", nLBA, i, (UINT)i);
 				if (!bRet) {
 					OutputCDMain(fileMainInfo, buf, nLBA, DISC_MAIN_DATA_SIZE);
 				}
@@ -2084,7 +2084,7 @@ BOOL ExecCheckingByteOrder(
 	if (!ExecReadCD(pExtArg, pDevice, lpCmd, 0, lpBuf
 		, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE, _T(__FUNCTION__), __LINE__)) {
 		OutputLog(standardError | fileDrive,
-			"This drive doesn't support [OpCode: %#02x, C2flag: %x, SubCode: %x]\n"
+			"This drive doesn't support [OpCode: %#02x, C2flag: %d, SubCode: %x]\n"
 			, lpCmd[0], (lpCmd[9] & 0x6) >> 1, lpCmd[10]);
 		bRet = FALSE;
 	}
@@ -2271,7 +2271,7 @@ BOOL ReadGDForCheckingSubQAdr(
 			return FALSE;
 		}
 		OutputString(
-			"\rChecking SubQ adr (Track) %2u/%2u", i + 1, pDisc->SCSI.toc.LastTrack);
+			"\rChecking SubQ adr (Track) %2d/%2u", i + 1, pDisc->SCSI.toc.LastTrack);
 	}
 	OutputString("\n");
 	return TRUE;

@@ -420,7 +420,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 									bRet = ReadDVDReverse(pExtArg, &device, pszFullPath, (INT)s_nStartLBA, (INT)s_nEndLBA);
 								}
 								else {
-									CONST size_t bufSize = 5;
+									CONST size_t bufSize = 12;
 									_TCHAR szBuf[bufSize] = {};
 #ifdef _WIN32
 									_sntprintf(szBuf, bufSize, _T("%c:\\*"), device.byDriveLetter);
@@ -431,7 +431,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 									UINT64 uiDiscSize = 0;
 									bRet = GetDiscSize(szBuf, &uiDiscSize);
 									if (bRet && uiDiscSize > 8547991552) {
-										OutputLog(standardOut | fileDisc, "Detected disguised file size: %lld\n", uiDiscSize);
+										OutputLog(standardOut | fileDisc, "Detected disguised file size: %llu\n", uiDiscSize);
 									}
 									AnalyzeIfoFile(&device);
 									bRet = ReadDVD(pExecType, pExtArg, &device, &discData, pszFullPath);
@@ -717,7 +717,7 @@ int SetOptionNss(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	}
 	else {
 		pExtArg->uiMaxRereadNum = 100;
-		OutputString("/nss val was omitted. set [%d]\n", pExtArg->uiMaxRereadNum);
+		OutputString("/nss val was omitted. set [%u]\n", pExtArg->uiMaxRereadNum);
 	}
 	return TRUE;
 }
@@ -759,7 +759,7 @@ int SetOptionSk(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	}
 	else {
 		pExtArg->uiSkipSectors = 0;
-		OutputString("/sk val was omitted. set [%d]\n", pExtArg->uiSkipSectors);
+		OutputString("/sk val was omitted. set [%u]\n", pExtArg->uiSkipSectors);
 	}
 	return TRUE;
 }
@@ -776,7 +776,7 @@ int SetOptionS(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	}
 	else {
 		pExtArg->uiSubAddionalNum = 1;
-		OutputString("/s val was omitted. set [%d]\n", pExtArg->uiSubAddionalNum);
+		OutputString("/s val was omitted. set [%u]\n", pExtArg->uiSubAddionalNum);
 	}
 	return TRUE;
 }

@@ -1294,7 +1294,7 @@ BOOL ContainsC2Error(
 					bRet = RETURNED_EXIST_C2_ERROR;
 					(*lpuiC2errorNum)++;
 					if (bOutputLog) {
-						OutputC2ErrorLog("%x, ", wC2ErrorPos * 8 + n);
+						OutputC2ErrorLog("%x, ", (UINT)(wC2ErrorPos * 8 + n));
 						bErr = TRUE;
 					}
 				}
@@ -1313,7 +1313,7 @@ BOOL AnalyzeIfoFile(
 	PDEVICE pDevice
 ) {
 	BOOL bRet = TRUE;
-	CONST size_t bufSize = 25;
+	CONST size_t bufSize = 40;
 	_TCHAR szBuf[bufSize] = {};
 #ifdef _WIN32
 	_sntprintf(szBuf, bufSize, _T("%c:\\VIDEO_TS\\VIDEO_TS.IFO"), pDevice->byDriveLetter);
@@ -1351,15 +1351,15 @@ BOOL AnalyzeIfoFile(
 				BYTE byNumOfTitleSetTitleNumber = pSector[0xf + 12 * v];
 				UINT uiStartSector = MAKEUINT(MAKEWORD(pSector[0x13 + 12 * v], pSector[0x12 + 12 * v])
 					, MAKEWORD(pSector[0x11 + 12 * v], pSector[0x10 + 12 * v]));
-				OutputDiscLog("\tTitle %2d, VTS_%02d, TitleNumber %2d, NumberOfChapters: %2d, StartSector: %d\n"
+				OutputDiscLog("\tTitle %2d, VTS_%02d, TitleNumber %2d, NumberOfChapters: %2d, StartSector: %u\n"
 					, v + 1, byNumOfTitleSet, byNumOfTitleSetTitleNumber, wNumOfChapters, uiStartSector);
 			}
 			INT nPgcCnt = 0;
 			for (WORD w = 1; w <= wNumOfTitleSets; w++) {
 #ifdef _WIN32
-				_sntprintf(szBuf, bufSize, _T("%c:\\VIDEO_TS\\VTS_%02d_0.IFO"), pDevice->byDriveLetter, w);
+				_sntprintf(szBuf, bufSize, _T("%c:\\VIDEO_TS\\VTS_%.02d_0.IFO"), pDevice->byDriveLetter, w);
 #else
-				_sntprintf(szBuf, bufSize, _T("%s/VIDEO_TS/VTS_%02d_0.IFO"), pDevice->drivepath, w);
+				_sntprintf(szBuf, bufSize, _T("%s/VIDEO_TS/VTS_%.02d_0.IFO"), pDevice->drivepath, w);
 #endif
 				if (PathFileExists(szBuf)) {
 					FILE* fpVts = CreateOrOpenFile(szBuf, NULL, NULL, szFnameAndExt, NULL, _T(".IFO"), _T("rb"), 0, 0);
@@ -1391,11 +1391,11 @@ BOOL AnalyzeIfoFile(
 							, MAKEWORD(pSector[0xd + 8 * x], pSector[0xc + 8 * x]));
 						INT nNumOfPrograms = pSector[uiPgciStartByte[x] + 2];
 						INT nNumOfCells = pSector[uiPgciStartByte[x] + 3];
-						INT nPlayBackTimeH = pSector[uiPgciStartByte[x] + 4];
-						INT nPlayBackTimeM = pSector[uiPgciStartByte[x] + 5];
-						INT nPlayBackTimeS = pSector[uiPgciStartByte[x] + 6];
+						UINT uiPlayBackTimeH = pSector[uiPgciStartByte[x] + 4];
+						UINT uiPlayBackTimeM = pSector[uiPgciStartByte[x] + 5];
+						UINT uiPlayBackTimeS = pSector[uiPgciStartByte[x] + 6];
 						OutputDiscLog("%s, ProgramChain %2d, NumberOfPrograms %2d, NumberOfCells %2d, PlayBackTime -- %02x:%02x:%02x\n"
-							, szFnameAndExt, x + 1, nNumOfPrograms, nNumOfCells, nPlayBackTimeH, nPlayBackTimeM, nPlayBackTimeS);
+							, szFnameAndExt, x + 1, nNumOfPrograms, nNumOfCells, uiPlayBackTimeH, uiPlayBackTimeM, uiPlayBackTimeS);
 						nPgcCnt++;
 					}
 				}

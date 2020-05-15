@@ -40,7 +40,7 @@ VOID OutputFsImageDosHeader(
 		"\t                   Overlay number: %04x\n"
 		"\t   OEM identifier (for e_oeminfo): %04x\n"
 		"\tOEM information; e_oemid specific: %04x\n"
-		"\t   File address of new exe header: %08lx\n"
+		"\t   File address of new exe header: %08ld\n"
 		, sizeof(IMAGE_DOS_HEADER)
 		, pIdh->e_magic, pIdh->e_cblp, pIdh->e_cp, pIdh->e_crlc, pIdh->e_cparhdr
 		, pIdh->e_minalloc, pIdh->e_maxalloc, pIdh->e_ss, pIdh->e_sp, pIdh->e_csum
@@ -55,17 +55,17 @@ VOID OutputFsImageOS2Header(
 	OutputVolDescLog(
 		"\t========== Image OS/2 .EXE header (%zu byte) ==========\n"
 		"\t                      Magic number: %04x\n"
-		"\t                    Version number: %02x\n"
-		"\t                   Revision number: %02x\n"
+		"\t                    Version number: %02d\n"
+		"\t                   Revision number: %02d\n"
 		"\t             Offset of Entry Table: %04x\n"
 		"\t    Number of bytes in Entry Table: %04x\n"
-		"\t            Checksum of whole file: %08lx\n"
+		"\t            Checksum of whole file: %08ld\n"
 		"\t                         Flag word: %04x\n"
 		"\t     Automatic data segment number: %04x\n"
 		"\t           Initial heap allocation: %04x\n"
 		"\t          Initial stack allocation: %04x\n"
-		"\t             Initial CS:IP setting: %08lx\n"
-		"\t             Initial SS:SP setting: %08lx\n"
+		"\t             Initial CS:IP setting: %08ld\n"
+		"\t             Initial SS:SP setting: %08ld\n"
 		"\t            Count of file segments: %04x\n"
 		"\t Entries in Module Reference Table: %04x\n"
 		"\t   Size of non-resident name table: %04x\n"
@@ -74,7 +74,7 @@ VOID OutputFsImageOS2Header(
 		"\t     Offset of resident name table: %04x\n"
 		"\t  Offset of Module Reference Table: %04x\n"
 		"\t    Offset of Imported Names Table: %04x\n"
-		"\tOffset of Non-resident Names Table: %08lx\n"
+		"\tOffset of Non-resident Names Table: %08ld\n"
 		"\t          Count of movable entries: %04x\n"
 		"\t     Segment alignment shift count: %04x\n"
 		"\t        Count of resource segments: %04x\n"
@@ -769,7 +769,7 @@ VOID OutputFsImageSectionHeader(
 
 VOID OutputSecuRomDll4_87Header(
 	LPBYTE lpBuf,
-	INT i
+	UINT i
 ) {
 	BYTE scrTbl[] = {
 		      0x00, 0x02,
@@ -821,14 +821,14 @@ VOID OutputSecuRomDll4_87Header(
 	);
 	for (INT k = 3, j = 0; k < 12; k++, j += 2) {
 		OutputVolDescLog(
-			"\t\tSecuROM Sector[%02d]: %5d (%04x)\n"
+			"\t\tSecuROM Sector[%02d]: %5u (%04x)\n"
 			, k, MAKEWORD(lpBuf[20 + i + j] ^ scrTbl[20 + j], lpBuf[21 + i + j] ^ scrTbl[21 + j])
 			, MAKEWORD(lpBuf[20 + i + j] ^ scrTbl[20 + j], lpBuf[21 + i + j] ^ scrTbl[21 + j])
 		);
 	};
 	for (INT m = 0, j = 0; m < 13; m++, j += 2) {
 		OutputVolDescLog(
-			"\t\tUnknown Value: %5d (%04x)\n"
+			"\t\tUnknown Value: %5u (%04x)\n"
 			, MAKEWORD(lpBuf[38 + i + j] ^ scrTbl[38 + j], lpBuf[39 + i + j] ^ scrTbl[39 + j])
 			, MAKEWORD(lpBuf[38 + i + j] ^ scrTbl[38 + j], lpBuf[39 + i + j] ^ scrTbl[39 + j])
 		);
@@ -841,13 +841,13 @@ VOID OutputSecuRomDll4_87Header(
 		"\t\tUnknown String: %.10" CHARWIDTH "s\n", &str[0]
 	);
 	OutputVolDescLog(
-		"\t\tOffset of SecuROM DLL Header: %5d (%04x)\n"
+		"\t\tOffset of SecuROM DLL Header: %5u (%04x)\n"
 		, MAKEUINT(MAKEWORD(lpBuf[82 + i], lpBuf[83 + i]), MAKEWORD(lpBuf[84 + i], lpBuf[85 + i]))
 		, MAKEUINT(MAKEWORD(lpBuf[82 + i], lpBuf[83 + i]), MAKEWORD(lpBuf[84 + i], lpBuf[85 + i]))
 	);
 	for (INT m = 0, j = 0; m < 20; m++, j += 2) {
 		OutputVolDescLog(
-			"\t\tUnknown Value: %5d (%04x)\n"
+			"\t\tUnknown Value: %5u (%04x)\n"
 			, MAKEWORD(lpBuf[86 + i + j], lpBuf[87 + i + j])
 			, MAKEWORD(lpBuf[86 + i + j], lpBuf[87 + i + j])
 		);
@@ -1041,7 +1041,7 @@ VOID OutputTocWithPregap(
 ) {
 	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("TOC with pregap"));
 	for (INT i = pDisc->SCSI.toc.FirstTrack - 1; i < pDisc->SCSI.toc.LastTrack; i++) {
-		OutputDiscLog("\tTrack %2u, Ctl %u, Mode %u", i + 1,
+		OutputDiscLog("\tTrack %2d, Ctl %u, Mode %u", i + 1,
 			pDisc->SUB.lpCtlList[i], pDisc->MAIN.lpModeList[i]);
 
 		for (UINT j = 0; j < MAXIMUM_NUMBER_INDEXES; j++) {
@@ -1057,7 +1057,7 @@ VOID OutputTocWithPregap(
 	if (pDisc->SUB.byDesync) {
 		OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("TOC with pregap on desync"));
 		for (INT i = pDisc->SCSI.toc.FirstTrack - 1; i < pDisc->SCSI.toc.LastTrack; i++) {
-			OutputDiscLog("\tTrack %2u, Ctl %u, Mode %u", i + 1,
+			OutputDiscLog("\tTrack %2d, Ctl %u, Mode %u", i + 1,
 				pDisc->SUB.lpCtlList[i], pDisc->MAIN.lpModeList[i]);
 
 			for (UINT j = 0; j < MAXIMUM_NUMBER_INDEXES; j++) {
@@ -1139,9 +1139,9 @@ VOID OutputCDC2Error296(
 	UNREFERENCED_PARAMETER(type);
 #endif
 	OutputLog(type, OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("C2 error")
-		"       +0 +1 +2 +3 +4 +5 +6 +7\n", nLBA, nLBA);
+		"       +0 +1 +2 +3 +4 +5 +6 +7\n", nLBA, (UINT)nLBA);
 
-	for (INT i = 0; i < CD_RAW_READ_C2_SIZE; i += 8) {
+	for (UINT i = 0; i < CD_RAW_READ_C2_SIZE; i += 8) {
 		OutputLog(type, "%04X : %02X %02X %02X %02X %02X %02X %02X %02X\n"
 			, i, lpBuf[i], lpBuf[i + 1], lpBuf[i + 2], lpBuf[i + 3]
 			, lpBuf[i + 4], lpBuf[i + 5], lpBuf[i + 6], lpBuf[i + 7]);
@@ -1152,18 +1152,18 @@ VOID OutputCDMain(
 	LOG_TYPE type,
 	LPBYTE lpBuf,
 	INT nLBA,
-	INT nSize
+	DWORD dwSize
 ) {
 #ifdef _DEBUG
 	UNREFERENCED_PARAMETER(type);
 #endif
 	OutputLog(type, OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Main Channel")
-		"       +0 +1 +2 +3 +4 +5 +6 +7  +8 +9 +A +B +C +D +E +F\n", nLBA, nLBA);
+		"       +0 +1 +2 +3 +4 +5 +6 +7  +8 +9 +A +B +C +D +E +F\n", nLBA, (UINT)nLBA);
 
-	for (INT i = 0; i < nSize; i += 16) {
-		if (16 > nSize - i) {
-			OutputLog(type, "%04X : ", i);
-			for (INT j = 0; j < nSize - i; j++) {
+	for (DWORD i = 0; i < dwSize; i += 16) {
+		if (16 > dwSize - i) {
+			OutputLog(type, "%04lX : ", i);
+			for (DWORD j = 0; j < dwSize - i; j++) {
 				if (j == 8) {
 					OutputLog(type, " ");
 				}
@@ -1172,7 +1172,7 @@ VOID OutputCDMain(
 		}
 		else {
 			OutputLog(type,
-				"%04X : %02X %02X %02X %02X %02X %02X %02X %02X  %02X %02X %02X %02X %02X %02X %02X %02X   "
+				"%04lX : %02X %02X %02X %02X %02X %02X %02X %02X  %02X %02X %02X %02X %02X %02X %02X %02X   "
 				, i, lpBuf[i], lpBuf[i + 1], lpBuf[i + 2], lpBuf[i + 3], lpBuf[i + 4], lpBuf[i + 5]
 				, lpBuf[i + 6], lpBuf[i + 7], lpBuf[i + 8], lpBuf[i + 9], lpBuf[i + 10], lpBuf[i + 11]
 				, lpBuf[i + 12], lpBuf[i + 13], lpBuf[i + 14], lpBuf[i + 15]);
@@ -1194,7 +1194,7 @@ VOID OutputCDSub96Align(
 	UNREFERENCED_PARAMETER(type);
 #endif
 	OutputLog(type, OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Sub Channel")
-		"\t  +0 +1 +2 +3 +4 +5 +6 +7 +8 +9 +A +B\n", nLBA, nLBA);
+		"\t  +0 +1 +2 +3 +4 +5 +6 +7 +8 +9 +A +B\n", nLBA, (UINT)nLBA);
 
 	for (INT i = 0, ch = 0x50; i < CD_RAW_READ_SUBCODE_SIZE; i += 12, ch++) {
 		OutputLog(type,
@@ -1214,9 +1214,9 @@ VOID OutputCDSub96Raw(
 #endif
 	OutputLog(type,
 		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Sub Channel(Raw)")
-		"       +0 +1 +2 +3 +4 +5 +6 +7  +8 +9 +A +B +C +D +E +F\n", nLBA, nLBA);
+		"       +0 +1 +2 +3 +4 +5 +6 +7  +8 +9 +A +B +C +D +E +F\n", nLBA, (UINT)nLBA);
 
-	for (INT i = 0; i < CD_RAW_READ_SUBCODE_SIZE; i += 16) {
+	for (UINT i = 0; i < CD_RAW_READ_SUBCODE_SIZE; i += 16) {
 		OutputLog(type,
 			"%04X : %02X %02X %02X %02X %02X %02X %02X %02X  %02X %02X %02X %02X %02X %02X %02X %02X\n"
 			, i, lpBuf[i], lpBuf[i + 1], lpBuf[i + 2], lpBuf[i + 3], lpBuf[i + 4], lpBuf[i + 5]
@@ -1233,7 +1233,7 @@ VOID OutputCDSubToLog(
 ) {
 	OutputSubReadableLog(
 		STR_LBA "P[%02x], Q[%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x]{"
-		, nLBA, nLBA, pDiscPerSector->subcode.current[0], pDiscPerSector->subcode.current[12]
+		, nLBA, (UINT)nLBA, pDiscPerSector->subcode.current[0], pDiscPerSector->subcode.current[12]
 		, pDiscPerSector->subcode.current[13], pDiscPerSector->subcode.current[14]
 		, pDiscPerSector->subcode.current[15], pDiscPerSector->subcode.current[16]
 		, pDiscPerSector->subcode.current[17], pDiscPerSector->subcode.current[18]

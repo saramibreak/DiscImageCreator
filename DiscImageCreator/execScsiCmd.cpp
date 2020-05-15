@@ -909,12 +909,12 @@ BOOL SetStreaming(
 		"\t               Exact: %s\n"
 		"\t     RestoreDefaults: %s\n"
 		"\tWriteRotationControl: %s\n"
-		"\t            StartLba: %d (%x)\n"
-		"\t              EndLba: %d (%x)\n"
-		"\t            ReadSize: %d (%x)\n"
-		"\t            ReadTime: %d (%x)\n"
-		"\t           WriteSize: %d (%x)\n"
-		"\t           WriteTime: %d (%x)\n"
+		"\t            StartLba: %u (%x)\n"
+		"\t              EndLba: %u (%x)\n"
+		"\t            ReadSize: %u (%x)\n"
+		"\t            ReadTime: %u (%x)\n"
+		"\t           WriteSize: %u (%x)\n"
+		"\t           WriteTime: %u (%x)\n"
 		, BOOLEAN_TO_STRING_YES_NO(pd.RandomAccess)
 		, BOOLEAN_TO_STRING_YES_NO(pd.Exact)
 		, BOOLEAN_TO_STRING_YES_NO(pd.RestoreDefaults)

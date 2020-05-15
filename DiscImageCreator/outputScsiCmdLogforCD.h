@@ -44,7 +44,7 @@ VOID OutputImportDirectory(
 
 VOID OutputSecuRomDll4_87Header(
 	LPBYTE lpBuf,
-	INT i
+	UINT i
 );
 
 VOID OutputSecuRomDllHeader(
@@ -97,7 +97,7 @@ VOID OutputCDMain(
 	LOG_TYPE type,
 	LPBYTE lpBuf,
 	INT nLBA,
-	INT nSize
+	DWORD dwSize
 );
 
 VOID OutputCDSub96Align(

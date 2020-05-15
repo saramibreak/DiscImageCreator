@@ -242,8 +242,8 @@ VOID SetAndOutputToc(
 		if (i == pDisc->SCSI.toc.FirstTrack && pDisc->SCSI.lp1stLBAListOnToc[tIdx] > 0) {
 			if (pDisc->SCSI.byFormat != DISK_TYPE_CDI) {
 				pDisc->SCSI.nAllLength += pDisc->SCSI.lp1stLBAListOnToc[tIdx];
-				OutputDiscLog("\tPregap Track   , LBA %8u - %8u, Length %8u\n",
-					0, pDisc->SCSI.lp1stLBAListOnToc[tIdx] - 1, pDisc->SCSI.lp1stLBAListOnToc[tIdx]);
+				OutputDiscLog("\tPregap Track   , LBA 0 - %8d, Length %8d\n"
+					, pDisc->SCSI.lp1stLBAListOnToc[tIdx] - 1, pDisc->SCSI.lp1stLBAListOnToc[tIdx]);
 				if (trkType == TRACK_TYPE::dataExist) {
 					trkType = TRACK_TYPE::pregapDataIn1stTrack;
 				}
@@ -256,7 +256,7 @@ VOID SetAndOutputToc(
 		if (pDisc->SCSI.byFormat == DISK_TYPE_CDI && pDisc->SCSI.toc.LastTrack > 1) {
 			if (i == pDisc->SCSI.toc.FirstTrack) {
 				OutputDiscLog(
-					"\t Audio Track %2u, LBA %8u - \n", i,	0);
+					"\t Audio Track %2u, LBA 0 - \n", i);
 				pDisc->SCSI.n1stLBAofDataTrk = 0;
 				pDisc->SCSI.by1stDataTrkNum = 1;
 				pDisc->SCSI.byLastDataTrkNum = 1;
@@ -265,7 +265,7 @@ VOID SetAndOutputToc(
 			idx = i + 1;
 		}
 		OutputDiscLog(
-			"\t%s Track %2u, LBA %8u - %8u, Length %8u\n", strType, idx,
+			"\t%s Track %2d, LBA %8d - %8d, Length %8d\n", strType, idx,
 			pDisc->SCSI.lp1stLBAListOnToc[tIdx], pDisc->SCSI.lpLastLBAListOnToc[tIdx],
 			pDisc->SCSI.lpLastLBAListOnToc[tIdx] - pDisc->SCSI.lp1stLBAListOnToc[tIdx] + 1);
 	}
@@ -274,7 +274,7 @@ VOID SetAndOutputToc(
 		pDisc->SCSI.nAllLength += pDisc->SCSI.lp1stLBAListOnToc[1];
 	}
 	OutputDiscLog(
-		"\t                                          Total  %8u\n", pDisc->SCSI.nAllLength);
+		"\t                                          Total  %8d\n", pDisc->SCSI.nAllLength);
 	pDisc->SCSI.trkType = trkType;
 }
 
@@ -326,7 +326,7 @@ VOID SetAndOutputTocForGD(
 			pDisc->SCSI.byLastDataTrkNum = i;
 		}
 		OutputDiscLog(
-			"\t%s Track %2u, LBA %6u - %6u, Length %6u\n", strType, i,
+			"\t%s Track %2u, LBA %6d - %6d, Length %6d\n", strType, i,
 			pDisc->SCSI.lp1stLBAListOnToc[tIdx], pDisc->SCSI.lpLastLBAListOnToc[tIdx],
 			pDisc->SCSI.lpLastLBAListOnToc[tIdx] - pDisc->SCSI.lp1stLBAListOnToc[tIdx] + 1);
 	}
@@ -389,7 +389,7 @@ VOID SetAndOutputTocFull(
 				MSFtoLBA(pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]) - 150;
 			OutputDiscLog(
 				"      Lead-out, AMSF %02u:%02u:%02u (LBA[%06d, %#07x])\n"
-				, pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2], nTmpLBA, nTmpLBA);
+				, pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2], nTmpLBA, (UINT)nTmpLBA);
 			if (fullToc->LastCompleteSession > 1) {
 				// Rayman (USA) [SS], Wolfchild (Europe) [MCD]
 				// Last LBA is corrupt, so this doesn't use in single session disc.
@@ -409,9 +409,9 @@ VOID SetAndOutputTocFull(
 				"\t                    Outermost Lead-out of the disc, AMSF %02u:%02u:%02u (LBA[%06d, %#07x])\n" 
 				"\t                         Num of pointers in Mode 5, %02u\n"
 				, pTocData[a].MsfExtra[0], pTocData[a].MsfExtra[1], pTocData[a].MsfExtra[2]
-				, nTmpLBAExt, nTmpLBAExt
+				, nTmpLBAExt, (UINT)nTmpLBAExt
 				, pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]
-				, nTmpLBA, nTmpLBA, pTocData[a].Zero);
+				, nTmpLBA, (UINT)nTmpLBA, pTocData[a].Zero);
 			// set this by ReadTOCFull
 //			pDisc->SCSI.n1stLBAof2ndSession = nTmpLBAExt + 150;
 			break;
@@ -456,7 +456,7 @@ VOID SetAndOutputTocFull(
 					"\t                         First Lead-in of the disc, AMSF %02u:%02u:%02u (LBA[%06d, %#07x])\n"
 					, pTocData[a].MsfExtra[0], pTocData[a].MsfExtra[1], pTocData[a].MsfExtra[2]
 					, pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]
-					, nTmpLBA, nTmpLBA);
+					, nTmpLBA, (UINT)nTmpLBA);
 			}
 			break;
 		case 0xc1:
@@ -466,6 +466,7 @@ VOID SetAndOutputTocFull(
 				, pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]);
 			// Ecma 394
 			// 4.4.4 Additional Information 1 : M1,S1,F1 = 001
+#if 0
 			CDROM_TOC_ATIP_DATA_BLOCK atip;
 			if (pDisc->SCSI.wCurrentMedia == ProfileCdRewritable) {
 				atip.IsCdrw = TRUE;
@@ -474,7 +475,6 @@ VOID SetAndOutputTocFull(
 			atip.A1Values[0] = (UCHAR)(pTocData[a].MsfExtra[0] >> 1);
 			atip.A1Values[1] = (UCHAR)(pTocData[a].MsfExtra[1] >> 1);
 			atip.A1Values[2] = (UCHAR)(pTocData[a].MsfExtra[2] >> 1 | 0x80);
-#if 0
 			OutputCDAtipAI1(&atip);
 #endif
 			break;
@@ -484,7 +484,7 @@ VOID SetAndOutputTocFull(
 					MSFtoLBA(pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]) - 150;
 				OutputDiscLog(
 					"      Track %2u, AMSF %02u:%02u:%02u (LBA[%06d, %#07x])\n"
-					, pTocData[a].Point, pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2], nTmpLBA, nTmpLBA);
+					, pTocData[a].Point, pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2], nTmpLBA, (UINT)nTmpLBA);
 				if (fullToc->LastCompleteSession > 1) {
 #if 0
 					// Rayman (USA) [SS], Wolfchild (Europe) [MCD]
@@ -522,8 +522,8 @@ VOID SetAndOutputTocFull(
 				OutputDiscLog(
 					"\t              Skipped interval end time, MSF %02u:%02u:%02u (LBA[%06d, %#07x])\n"
 					"\t              Skipped interval start time on playback, AMSF %02u:%02u:%02u (LBA[%06d, %#07x])\n"
-					, pTocData[a].MsfExtra[0], pTocData[a].MsfExtra[1], pTocData[a].MsfExtra[2], nTmpLBAExt, nTmpLBAExt
-					, pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2], nTmpLBA, nTmpLBA);
+					, pTocData[a].MsfExtra[0], pTocData[a].MsfExtra[1], pTocData[a].MsfExtra[2], nTmpLBAExt, (UINT)nTmpLBAExt
+					, pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2], nTmpLBA, (UINT)nTmpLBA);
 			}
 			break;
 		}
@@ -574,7 +574,7 @@ VOID SetAndOutputTocCDText(
 				OutputDiscLog("\tAlbum Name: %" CHARWIDTH "s\n", pTmpText + uiTxtIdx);
 			}
 			else {
-				OutputDiscLog("\t Song Name[%d]: %" CHARWIDTH "s\n", i, pTmpText + uiTxtIdx);
+				OutputDiscLog("\t Song Name[%u]: %" CHARWIDTH "s\n", i, pTmpText + uiTxtIdx);
 			}
 			if (bUnicode) {
 				uiTxtIdx += 2;
@@ -599,7 +599,7 @@ VOID SetAndOutputTocCDText(
 				OutputDiscLog("\tAlbum Performer: %" CHARWIDTH "s\n", pTmpText + uiTxtIdx);
 			}
 			else {
-				OutputDiscLog("\t Song Performer[%d]: %" CHARWIDTH "s\n", i, pTmpText + uiTxtIdx);
+				OutputDiscLog("\t Song Performer[%u]: %" CHARWIDTH "s\n", i, pTmpText + uiTxtIdx);
 			}
 			if (bUnicode) {
 				uiTxtIdx += 2;
@@ -624,7 +624,7 @@ VOID SetAndOutputTocCDText(
 				OutputDiscLog("\tAlbum SongWriter: %" CHARWIDTH "s\n", pTmpText + uiTxtIdx);
 			}
 			else {
-				OutputDiscLog("\t      SongWriter[%d]: %" CHARWIDTH "s\n", i, pTmpText + uiTxtIdx);
+				OutputDiscLog("\t      SongWriter[%u]: %" CHARWIDTH "s\n", i, pTmpText + uiTxtIdx);
 			}
 			if (bUnicode) {
 				uiTxtIdx += 2;
@@ -648,7 +648,7 @@ VOID SetAndOutputTocCDText(
 				OutputDiscLog("\tAlbum Composer: %" CHARWIDTH "s\n", pTmpText + uiTxtIdx);
 			}
 			else {
-				OutputDiscLog("\t      Composer[%d]: %" CHARWIDTH "s\n", i, pTmpText + uiTxtIdx);
+				OutputDiscLog("\t      Composer[%u]: %" CHARWIDTH "s\n", i, pTmpText + uiTxtIdx);
 			}
 			if (bUnicode) {
 				uiTxtIdx += 2;
@@ -672,7 +672,7 @@ VOID SetAndOutputTocCDText(
 				OutputDiscLog("\tAlbum Arranger: %" CHARWIDTH "s\n", pTmpText + uiTxtIdx);
 			}
 			else {
-				OutputDiscLog("\t      Arranger[%d]: %" CHARWIDTH "s\n", i, pTmpText + uiTxtIdx);
+				OutputDiscLog("\t      Arranger[%u]: %" CHARWIDTH "s\n", i, pTmpText + uiTxtIdx);
 			}
 			if (bUnicode) {
 				uiTxtIdx += 2;
@@ -696,7 +696,7 @@ VOID SetAndOutputTocCDText(
 				OutputDiscLog("\tAlbum Messages: %" CHARWIDTH "s\n", pTmpText + uiTxtIdx);
 			}
 			else {
-				OutputDiscLog("\t      Messages[%d]: %" CHARWIDTH "s\n", i, pTmpText + uiTxtIdx);
+				OutputDiscLog("\t      Messages[%u]: %" CHARWIDTH "s\n", i, pTmpText + uiTxtIdx);
 			}
 			if (bUnicode) {
 				uiTxtIdx += 2;
@@ -724,7 +724,7 @@ VOID SetAndOutputTocCDText(
 			memcpy(pTmpText + 12 * t, (pDesc[tEnt].Text), 12);
 		}
 		OutputDiscLog("\tGenre code: 0x%02x%02x"
-			, *(pTmpText + uiTxtIdx), *(pTmpText + uiTxtIdx + 1));
+			, (UINT)*(pTmpText + uiTxtIdx), (UINT)*(pTmpText + uiTxtIdx + 1));
 		if (*(pTmpText + uiTxtIdx + 1) != 0) {
 			OutputDiscLog(" %" CHARWIDTH "s", pTmpText + uiTxtIdx + 2);
 		}
@@ -743,7 +743,7 @@ VOID SetAndOutputTocCDText(
 				OutputDiscLog("\tAlbum UpcEan: %" CHARWIDTH "s\n", pTmpText + uiTxtIdx);
 			}
 			else {
-				OutputDiscLog("\t      UpcEan[%d]: %" CHARWIDTH "s\n", i, pTmpText + uiTxtIdx);
+				OutputDiscLog("\t      UpcEan[%u]: %" CHARWIDTH "s\n", i, pTmpText + uiTxtIdx);
 			}
 			uiTxtIdx += len;
 			uiTxtIdx++;
@@ -900,7 +900,7 @@ VOID SetTrackAttribution(
 					OutputSubInfoWithLBALog(
 						"Subchannel & TOC doesn't sync. LBA on TOC[%d, %#x], index[%02u]\n",
 						nLBA, tmpCurrentTrackNum, pDisc->SCSI.lp1stLBAListOnToc[tIdx],
-						pDisc->SCSI.lp1stLBAListOnToc[tIdx], tmpCurrentIndex);
+						(UINT)pDisc->SCSI.lp1stLBAListOnToc[tIdx], tmpCurrentIndex);
 
 					pDisc->SUB.lp1stLBAListOnSub[tIdx][1] = pDisc->SCSI.lp1stLBAListOnToc[tIdx];
 					if (pDisc->SUB.lp1stLBAListOnSub[tIdx][0] == pDisc->SUB.lp1stLBAListOnSub[tIdx][1]) {
@@ -973,7 +973,7 @@ VOID SetTrackAttribution(
 						OutputSubInfoWithLBALog(
 							"Subchannel & TOC doesn't sync. LBA on TOC[%d, %#x], prevIndex[%02u]\n",
 							nLBA, tmpCurrentTrackNum, pDisc->SCSI.lp1stLBAListOnToc[tIdx],
-							pDisc->SCSI.lp1stLBAListOnToc[tIdx], tmpPrevIndex);
+							(UINT)pDisc->SCSI.lp1stLBAListOnToc[tIdx], tmpPrevIndex);
 					}
 					if (*pExecType != gd && *pExecType != swap) {
 						pDisc->SUB.byDesync = TRUE;

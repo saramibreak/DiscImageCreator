@@ -550,7 +550,7 @@ BOOL OutputHash(
 		// TODO: This code can more speed up! if reduce calling fread()
 		for (UINT64 i = 1; i <= ui64SectorSizeAll; i++) {
 			if (fread(data, sizeof(BYTE), uiSectorSizeOne, fp) < uiSectorSizeOne) {
-				OutputErrorString("Failed to read: read size %d [F:%s][L:%d]\n", uiSectorSizeOne, _T(__FUNCTION__), __LINE__);
+				OutputErrorString("Failed to read: read size %u [F:%s][L:%d]\n", uiSectorSizeOne, _T(__FUNCTION__), __LINE__);
 				return FALSE;
 			};
 			nRet = CalcHash(&crc32, &context, &sha, data, uiSectorSizeOne);

@@ -642,7 +642,7 @@ VOID FixSubQ(
 					}
 					else if (pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->byTrackNum] < nLBA) {
 						pDiscPerSector->subch.current.byTrackNum = (BYTE)(pDiscPerSector->subch.prev.byTrackNum + 1);
-						OutputSubErrorLog("[%02u], [L:%d]\n", pDiscPerSector->subch.prev.byTrackNum + 1, __LINE__);
+						OutputSubErrorLog("[%02d], [L:%d]\n", pDiscPerSector->subch.prev.byTrackNum + 1, __LINE__);
 						bFix = TRUE;
 					}
 					else if (pDiscPerSector->subch.current.byIndex == 0 && IsValidPregapSector(pDisc, &pDiscPerSector->subch, nLBA)) {
@@ -651,7 +651,7 @@ VOID FixSubQ(
 						// LBA[202408, 0x316a8], Audio, 2ch, Copy NG, Pre-emphasis No, Track[16], Idx[00], RMSF[00:01:74], AMSF[45:00:58], RtoW[0, 0, 0, 0]
 						// LBA[202409, 0x316a9], Audio, 2ch, Copy NG, Pre-emphasis No, Track[14], Idx[00], RMSF[00:01:73], AMSF[45:00:59], RtoW[0, 0, 0, 0]
 						pDiscPerSector->subch.current.byTrackNum = (BYTE)(pDiscPerSector->subch.prev.byTrackNum + 1);
-						OutputSubErrorLog("[%02u], [L:%d]\n", pDiscPerSector->subch.prev.byTrackNum + 1, __LINE__);
+						OutputSubErrorLog("[%02d], [L:%d]\n", pDiscPerSector->subch.prev.byTrackNum + 1, __LINE__);
 						bFix = TRUE;
 					}
 				}
@@ -663,7 +663,7 @@ VOID FixSubQ(
 							// LBA[106403, 0x19FA3], Audio, 2ch, Copy NG, Pre-emphasis No, Track[79], Idx[01], RMSF[00:00:00], AMSF[21:40:53], RtoW[0, 0, 0, 0]
 							// LBA[106404, 0x19FA4], Audio, 2ch, Copy NG, Pre-emphasis No, Track[71], Idx[01], RMSF[00:00:01], AMSF[23:40:54], RtoW[0, 0, 0, 0]
 							pDiscPerSector->subch.current.byTrackNum = (BYTE)(pDiscPerSector->subch.prev.byTrackNum + 1);
-							OutputSubErrorLog("[%02u], [L:%d]\n", pDiscPerSector->subch.prev.byTrackNum + 1, __LINE__);
+							OutputSubErrorLog("[%02d], [L:%d]\n", pDiscPerSector->subch.prev.byTrackNum + 1, __LINE__);
 						}
 						else {
 							if (pDiscPerSector->subch.prev.byAdr == ADR_ENCODES_CURRENT_POSITION) {

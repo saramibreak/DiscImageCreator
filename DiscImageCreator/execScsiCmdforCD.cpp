@@ -119,7 +119,7 @@ BOOL ExecReadGD(
 			}
 			StartStopUnit(pExtArg, pDevice, STOP_UNIT_CODE, STOP_UNIT_CODE);
 			UINT milliseconds = 10000;
-			OutputErrorString("Retry %d/10 after %d milliseconds\n", n, milliseconds);
+			OutputErrorString("Retry %d/10 after %u milliseconds\n", n, milliseconds);
 			Sleep(milliseconds);
 			bRet = FALSE;
 		}
@@ -235,8 +235,8 @@ BOOL ProcessReadCD(
 				if (pDisc->SCSI.n1stLBAof2ndSession == nLBA + 1) {
 					OutputMainInfoLog(
 						"Skip from Leadout of Session 1 [%d, %#x] to Leadin of Session 2 [%d, %#x]\n",
-						pDisc->SCSI.n1stLBAofLeadout, pDisc->SCSI.n1stLBAofLeadout,
-						pDisc->SCSI.n1stLBAof2ndSession - 1, pDisc->SCSI.n1stLBAof2ndSession - 1);
+						pDisc->SCSI.n1stLBAofLeadout, (UINT)pDisc->SCSI.n1stLBAofLeadout,
+						pDisc->SCSI.n1stLBAof2ndSession - 1, (UINT)pDisc->SCSI.n1stLBAof2ndSession - 1);
 					pDiscPerSector->subch.prev.nAbsoluteTime = nLBA - SESSION_TO_SESSION_SKIP_LBA - 150;
 					return RETURNED_SKIP_LBA;
 				}
@@ -245,8 +245,8 @@ BOOL ProcessReadCD(
 				if (pDisc->MAIN.nFixFirstLBAofLeadout == nLBA) {
 					OutputMainInfoLog(
 						"Skip from Leadout of Session 1 [%d, %#x] to Leadin of Session 2 [%d, %#x]\n",
-						pDisc->SCSI.n1stLBAofLeadout, pDisc->SCSI.n1stLBAofLeadout,
-						pDisc->SCSI.n1stLBAof2ndSession - 1, pDisc->SCSI.n1stLBAof2ndSession - 1);
+						pDisc->SCSI.n1stLBAofLeadout, (UINT)pDisc->SCSI.n1stLBAofLeadout,
+						pDisc->SCSI.n1stLBAof2ndSession - 1, (UINT)pDisc->SCSI.n1stLBAof2ndSession - 1);
 					if (pDisc->MAIN.nCombinedOffset > 0) {
 						pDiscPerSector->subch.prev.nAbsoluteTime =
 							nLBA + SESSION_TO_SESSION_SKIP_LBA + 150 - pDisc->MAIN.nAdjustSectorNum - 1;
@@ -349,7 +349,7 @@ BOOL ReadCDForRereadingSectorType1(
 		for (INT m = 0; m < pDisc->MAIN.nC2ErrorCnt; m++) {
 			INT nLBA = pDisc->MAIN.lpAllLBAOfC2Error[m];
 			for (UINT i = 0; i < pExtArg->uiMaxRereadNum; i++) {
-				OutputString("\rNeed to reread sector: %6d rereading times: %4d/%4d"
+				OutputString("\rNeed to reread sector: %6d rereading times: %4u/%4u"
 					, nLBA, i + 1, pExtArg->uiMaxRereadNum);
 				if (!ExecReadCD(pExtArg, pDevice, lpCmd, nLBA, lpBuf
 					, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * 2, _T(__FUNCTION__), __LINE__)) {
@@ -359,7 +359,7 @@ BOOL ReadCDForRereadingSectorType1(
 				GetCrc32(&dwTmpCrc32, lpBuf, CD_RAW_SECTOR_SIZE);
 //				OutputC2ErrorWithLBALogA("to [%06d] crc32[%03ld]: 0x%08lx "
 //					, nLBA - pDisc->MAIN.nOffsetStart - 1, nLBA - pDisc->MAIN.nOffsetStart, i, dwTmpCrc32);
-				OutputC2ErrorWithLBALog("crc32[%03d]: 0x%08lx ", nLBA, i, dwTmpCrc32);
+				OutputC2ErrorWithLBALog("crc32[%03u]: 0x%08lx ", nLBA, i, dwTmpCrc32);
 
 				LPBYTE lpNextBuf = lpBuf + CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE;
 				if (ContainsC2Error(pDevice, lpNextBuf, &pDiscPerSector->uiC2errorNum, FALSE) == RETURNED_NO_C2_ERROR_1ST) {
@@ -372,8 +372,8 @@ BOOL ReadCDForRereadingSectorType1(
 					fseek(fpC2, lSeekC2, SEEK_SET);
 					WriteC2(pExtArg, pDisc, lpNextBuf + pDevice->TRANSFER.uiBufC2Offset, nLBA, fpC2);
 					OutputC2ErrorLog("good. Rewrote .scm[%ld-%ld(%lx-%lx)] .c2[%ld-%ld(%lx-%lx)]\n"
-						, lSeekMain, lSeekMain + 2351, lSeekMain, lSeekMain + 2351
-						, lSeekC2, lSeekC2 + 293, lSeekC2, lSeekC2 + 293);
+						, lSeekMain, lSeekMain + 2351, (ULONG)lSeekMain, (ULONG)lSeekMain + 2351
+						, lSeekC2, lSeekC2 + 293, (ULONG)lSeekC2, (ULONG)lSeekC2 + 293);
 					break;
 				}
 				else {
@@ -521,7 +521,7 @@ BOOL ReadCDForRereadingSectorType2(
 					if (lpCrc32RereadSector[k]) {
 						for (UINT j = 0; j <= i; j++) {
 							if (dwTmpCrc32 == lpCrc32RereadSector[k][j]) {
-								OutputC2ErrorLog("[%03d]:0x%08lx, %d ", i, dwTmpCrc32, bC2);
+								OutputC2ErrorLog("[%03u]:0x%08lx, %d ", i, dwTmpCrc32, bC2);
 								lpRepeatedNum[k][j] += 1;
 								lpContainsC2[k][j] += bC2;
 								bMatch = TRUE;
@@ -888,7 +888,7 @@ BOOL ReadCDAll(
 			SetTmpSubchFromBuffer(&pDiscPerSector->subch.prev, pDiscPerSector->subcode.current);
 		}
 		OutputSubInfoWithLBALog("Q[%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x]\n"
-			, -1, -1, pDiscPerSector->subcode.current[12]
+			, -1, 0, pDiscPerSector->subcode.current[12]
 			, pDiscPerSector->subcode.current[13], pDiscPerSector->subcode.current[14]
 			, pDiscPerSector->subcode.current[15], pDiscPerSector->subcode.current[16]
 			, pDiscPerSector->subcode.current[17], pDiscPerSector->subcode.current[18]
@@ -993,7 +993,7 @@ BOOL ReadCDAll(
 #endif
 				// C2 error points the current LBA - 1 (offset?)
 				OutputLog(standardError | fileC2Error,
-					" LBA[%06d, %#07x] Detected C2 error %d bit\n", nLBA, nLBA, pDiscPerSector->uiC2errorNum);
+					" LBA[%06d, %#07x] Detected C2 error %u bit\n", nLBA, (UINT)nLBA, pDiscPerSector->uiC2errorNum);
 				if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
 					if (!(IsValidIntentionalC2error(pDisc, pDiscPerSector, nLBA, GetC2ErrorFileIdx(pExtArg, pDisc, nLBA)))) {
 						pDisc->MAIN.lpAllLBAOfC2Error[pDisc->MAIN.nC2ErrorCnt++] = nLBA;
@@ -1159,7 +1159,7 @@ BOOL ReadCDAll(
 								FlushLog();
 								if (nRetryCnt++ == 0) {
 									OutputErrorString(
-										"\n" STR_LBA "Failed to reread because crc16 of subQ is 0. Read back 100 sector\n", nLBA, nLBA);
+										"\n" STR_LBA "Failed to reread because crc16 of subQ is 0. Read back 100 sector\n", nLBA, (UINT)nLBA);
 									FlushDriveCache(pExtArg, pDevice, nLBA);
 									SetDiscSpeed(pExecType, pExtArg, pDevice, 24);
 									continue;
@@ -1176,7 +1176,7 @@ BOOL ReadCDAll(
 										"1. If your disc has scratches, it needs to be polished\n"
 										"2. Try to dump with different drive speed\n"
 										"3. Try to dump with different drive\n"
-										, nLBA, nLBA);
+										, nLBA, (UINT)nLBA);
 									throw FALSE;
 								}
 							}
@@ -1263,7 +1263,7 @@ BOOL ReadCDAll(
 			}
 			if (bErr) {
 				OutputErrorString(
-					"[L:%ld] Internal error. Failed to analyze the subchannel. Track[%02u]/[%02u]\n",
+					"[L:%ld] Internal error. Failed to analyze the subchannel. Track[%02d]/[%02u]\n",
 					lLine, i + 1, pDisc->SCSI.toc.LastTrack);
 				throw FALSE;
 			}
@@ -1410,7 +1410,7 @@ BOOL ReadCDForSwap(
 				bC2Error = TRUE;
 				// C2 error points the current LBA - 1 (offset?)
 				OutputLog(standardError | fileC2Error,
-					"\rLBA[%06d, %#07x] Detected C2 error %d bit\n", nLBA, nLBA, pDiscPerSector->uiC2errorNum);
+					"\rLBA[%06d, %#07x] Detected C2 error %u bit\n", nLBA, (UINT)nLBA, pDiscPerSector->uiC2errorNum);
 				if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
 					if (!(IsValidIntentionalC2error(pDisc, pDiscPerSector, nLBA, GetC2ErrorFileIdx(pExtArg, pDisc, nLBA)))) {
 						pDisc->MAIN.lpAllLBAOfC2Error[pDisc->MAIN.nC2ErrorCnt++] = nLBA;
@@ -1496,7 +1496,7 @@ BOOL ReadCDForSwap(
 									"1. If your disc has scratches, it needs to be polished\n"
 									"2. Try to dump with different drive speed\n"
 									"3. Try to dump with different drive\n"
-									, nLBA, nLBA);
+									, nLBA, (UINT)nLBA);
 								throw FALSE;
 							}
 							// fix raw subchannel
@@ -1935,7 +1935,7 @@ BOOL ReadCDPartial(
 				bC2Error = TRUE;
 				// C2 error points the current LBA - 1 (offset?)
 				OutputLog(standardError | fileC2Error,
-					" LBA[%06d, %#07x] Detected C2 error %d bit\n", nLBA, nLBA, pDiscPerSector->uiC2errorNum);
+					" LBA[%06d, %#07x] Detected C2 error %u bit\n", nLBA, (UINT)nLBA, pDiscPerSector->uiC2errorNum);
 				if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
 					if (!(IsValidIntentionalC2error(pDisc, pDiscPerSector, nLBA, GetC2ErrorFileIdx(pExtArg, pDisc, nLBA)))) {
 						pDisc->MAIN.lpAllLBAOfC2Error[pDisc->MAIN.nC2ErrorCnt++] = nLBA;
@@ -1987,7 +1987,7 @@ BOOL ReadCDPartial(
 					ProcessReturnedContinue(pExecType, pExtArg, pDevice, pDisc, pDiscPerSector
 						, nLBA, nMainDataType, nPadType, fpBin, fpSub, fpC2);
 					nRetryCnt = 1;
-					OutputLog(standardOut | fileMainError, "LBA[%06d, %#07x] Reread NG\n", nLBA, nLBA);
+					OutputLog(standardOut | fileMainError, "LBA[%06d, %#07x] Reread NG\n", nLBA, (UINT)nLBA);
 				}
 			}
 			else if (pDiscPerSector->bReturnCode == RETURNED_FALSE) {
@@ -2033,7 +2033,7 @@ BOOL ReadCDPartial(
 			if (pDiscPerSector->bReturnCode != RETURNED_CONTINUE &&
 				pDiscPerSector->bReturnCode != RETURNED_SKIP_LBA) {
 				if (nRetryCnt > 1) {
-					OutputLog(standardOut | fileMainError, "LBA[%06d, %#07x] Reread OK\n", nLBA, nLBA);
+					OutputLog(standardOut | fileMainError, "LBA[%06d, %#07x] Reread OK\n", nLBA, (UINT)nLBA);
 					nRetryCnt = 1;
 				}
 				if (pDisc->PROTECT.byExist == laserlock) {
@@ -2086,7 +2086,7 @@ BOOL ReadCDPartial(
 									"1. If your disc has scratches, it needs to be polished\n"
 									"2. Try to dump with different drive speed\n"
 									"3. Try to dump with different drive\n"
-									, nLBA, nLBA);
+									, nLBA, (UINT)nLBA);
 								throw FALSE;
 							}
 							// fix raw subchannel
@@ -2160,7 +2160,7 @@ BOOL ReadCDPartial(
 				}
 				if (bErr) {
 					OutputErrorString(
-						"[L:%ld] Internal error. Failed to analyze the subchannel. Track[%02u]/[%02u]\n",
+						"[L:%ld] Internal error. Failed to analyze the subchannel. Track[%02d]/[%02u]\n",
 						lLine, i + 1, pDisc->SCSI.toc.LastTrack);
 					throw FALSE;
 				}

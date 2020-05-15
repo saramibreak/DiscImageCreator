@@ -25,7 +25,7 @@ VOID OutputDVDHeader(
 ) {
 	OutputRawReadableLog(
 		STR_LBA "SectorInfo[%02x]{Layer %d, %s, "
-		, nLBA, nLBA, lpBuf[0], lpBuf[0] & 0x01
+		, nLBA, (UINT)nLBA, lpBuf[0], lpBuf[0] & 0x01
 		, (lpBuf[0] & 0x02) == 0 ? _T("read-only") : _T("other")
 	);
 	switch ((lpBuf[0] & 0x0c) >> 2) {
@@ -46,7 +46,7 @@ VOID OutputDVDHeader(
 	}
 	UINT gotSectorNum = MAKEUINT(MAKEWORD(lpBuf[3], lpBuf[2]), MAKEWORD(lpBuf[1], 0));
 	OutputRawReadableLog(
-		"%s}, SectorNumber[%06x (%d)], IED[%04x], CPR_MAI[%02x%02x%02x%02x%02x%02x], "
+		"%s}, SectorNumber[%06x (%u)], IED[%04x], CPR_MAI[%02x%02x%02x%02x%02x%02x], "
 		, (lpBuf[0] & 0x20) == 0 ? _T("greater than 40%") : _T("40% max")
 		, gotSectorNum, gotSectorNum, MAKEWORD(lpBuf[5], lpBuf[4])
 		, lpBuf[6], lpBuf[7], lpBuf[8], lpBuf[9], lpBuf[10], lpBuf[11]
@@ -318,10 +318,10 @@ VOID OutputDVDMinusRLayerDescriptor(
 			"\t                                    Number of layers: %d\n"
 			"\t                                 Average track pitch: %s\n"
 			"\t                                  Channel bit length: %s\n"
-			"\t              First Physical Sector of the Data Zone: %d (0x%x)\n"
-			"\t       Sector of the last Rzone in the Bordered Area: %d (0x%x)\n"
-			"\tSector of the first sector of the current Border Out: %d (0x%x)\n"
-			"\t    Sector of the first sector of the next Border In: %d (0x%x)\n"
+			"\t              First Physical Sector of the Data Zone: %u (0x%06x)\n"
+			"\t       Sector of the last Rzone in the Bordered Area: %u (0x%06x)\n"
+			"\tSector of the first sector of the current Border Out: %u (0x%08x)\n"
+			"\t    Sector of the first sector of the next Border In: %u (0x%08x)\n"
 			, (lpBuf[1] & 0xf0) == 0 ? _T("120mm") : _T("80mm")
 			, (lpBuf[2] & 0x0f) == 0x02 ? _T("disk contains Recordable user data Zone(s)") : _T("other")
 			, (lpBuf[2] & 0x10) == 0 ? _T("Parallel") : _T("other")
@@ -350,11 +350,11 @@ VOID OutputDVDMinusRLayerDescriptor(
 			"\t                                                       Number of layers: %d\n"
 			"\t                                                    Average track pitch: %s\n"
 			"\t                                                     Channel bit length: %s\n"
-			"\t                                 First Physical Sector of the Data Zone: %d (0x%x)\n"
-			"\t                                    Outer limit of Data Recordable Zone: %d (0x%x)\n"
+			"\t                                 First Physical Sector of the Data Zone: %u (0x%06x)\n"
+			"\t                                    Outer limit of Data Recordable Zone: %u (0x%06x)\n"
 			"\t                                                                   NBCA: %s\n"
-			"\t                       Start sector of Current RMD in Extra Border Zone: %d (0x%x)\n"
-			"\tStart sector of Physical format information blocks in Extra Border Zone: %d (0x%x)\n"
+			"\t                       Start sector of Current RMD in Extra Border Zone: %u (0x%08x)\n"
+			"\tStart sector of Physical format information blocks in Extra Border Zone: %u (0x%08x)\n"
 			, lpBuf[0] & 0x0f
 			, (lpBuf[0] & 0xf0) == 0x10 ? _T("Recordable disk") : _T("other")
 			, (lpBuf[1] & 0x0f) == 0x0f ? _T("Not specified") : _T("other")
@@ -390,39 +390,39 @@ VOID OutputDVDPlusRLayerDescriptor(
 		"\t                                                            Recording layer(s): %s\n"
 		"\t                                                            Channel bit length: %s\n"
 		"\t                                                           Average track pitch: %s\n"
-		"\t                                        First Physical Sector of the Data Zone: %d (0x%x)\n"
-		"\t                                Last possible Physical Sector of the Data Zone: %d (0x%x)\n"
+		"\t                                        First Physical Sector of the Data Zone: %u (0x%06x)\n"
+		"\t                                Last possible Physical Sector of the Data Zone: %u (0x%06x)\n"
 		"\t                                                             General Flag bits: %s\n"
 		"\t                                                         Disk Application Code: %s\n"
 		"\t                                                    Extended Information block: %d\n"
 		"\t                                                          Disk Manufacturer ID: %8" CHARWIDTH "s\n"
 		"\t                                                                 Media Type ID: %3" CHARWIDTH "s\n"
-		"\t                                                       Product revision number: %d\n"
-		"\t                    number of Physical format information bytes in use in ADIP: %d\n"
-		"\t                       Primary recording velocity for the basic write strategy: %d (0x%x)\n"
-		"\t                         Upper recording velocity for the basic write strategy: %d (0x%x)\n"
-		"\t                                                                    Wavelength: %d (0x%x)\n"
-		"\t                               Normalized Write power dependency on Wavelength: %d (0x%x)\n"
-		"\t                                    Maximum read power, Pr at Primary velocity: %d (0x%x)\n"
-		"\t                                                      PIND at Primary velocity: %d (0x%x)\n"
-		"\t                                                   Btarget at Primary velocity: %d (0x%x)\n"
-		"\t                                      Maximum read power, Pr at Upper velocity: %d (0x%x)\n"
-		"\t                                                        PIND at Upper velocity: %d (0x%x)\n"
-		"\t                                                     Btarget at Upper velocity: %d (0x%x)\n"
-		"\t    Ttop (>=4T) first pulse duration for current mark >=4T at Primary velocity: %d (0x%x)\n"
-		"\t      Ttop (=3T) first pulse duration for current mark =3T at Primary velocity: %d (0x%x)\n"
-		"\t                                  Tmp multi pulse duration at Primary velocity: %d (0x%x)\n"
-		"\t                                   Tlp last pulse duration at Primary velocity: %d (0x%x)\n"
-		"\t  dTtop (>=4T) first pulse lead time for current mark >=4T at Primary velocity: %d (0x%x)\n"
-		"\t    dTtop (=3T) first pulse lead time for current mark =3T at Primary velocity: %d (0x%x)\n"
-		"\tdTle first pulse leading edge shift for previous space =3T at Primary velocity: %d (0x%x)\n"
-		"\t      Ttop (>=4T) first pulse duration for current mark >=4T at Upper velocity: %d (0x%x)\n"
-		"\t         Ttop (3T) first pulse duration for current mark =3T at Upper velocity: %d (0x%x)\n"
-		"\t                                    Tmp multi pulse duration at Upper velocity: %d (0x%x)\n"
-		"\t                                     Tlp last pulse duration at Upper velocity: %d (0x%x)\n"
-		"\t    dTtop (>=4T) first pulse lead time for current mark >=4T at Upper velocity: %d (0x%x)\n"
-		"\t      dTtop (=3T) first pulse lead time for current mark =3T at Upper velocity: %d (0x%x)\n"
-		"\t  dTle first pulse leading edge shift for previous space =3T at Upper velocity: %d (0x%x)\n"
+		"\t                                                       Product revision number: %u\n"
+		"\t                    number of Physical format information bytes in use in ADIP: %u\n"
+		"\t                       Primary recording velocity for the basic write strategy: %u (0x%x)\n"
+		"\t                         Upper recording velocity for the basic write strategy: %u (0x%x)\n"
+		"\t                                                                    Wavelength: %u (0x%x)\n"
+		"\t                               Normalized Write power dependency on Wavelength: %u (0x%x)\n"
+		"\t                                    Maximum read power, Pr at Primary velocity: %u (0x%x)\n"
+		"\t                                                      PIND at Primary velocity: %u (0x%x)\n"
+		"\t                                                   Btarget at Primary velocity: %u (0x%x)\n"
+		"\t                                      Maximum read power, Pr at Upper velocity: %u (0x%x)\n"
+		"\t                                                        PIND at Upper velocity: %u (0x%x)\n"
+		"\t                                                     Btarget at Upper velocity: %u (0x%x)\n"
+		"\t    Ttop (>=4T) first pulse duration for current mark >=4T at Primary velocity: %u (0x%x)\n"
+		"\t      Ttop (=3T) first pulse duration for current mark =3T at Primary velocity: %u (0x%x)\n"
+		"\t                                  Tmp multi pulse duration at Primary velocity: %u (0x%x)\n"
+		"\t                                   Tlp last pulse duration at Primary velocity: %u (0x%x)\n"
+		"\t  dTtop (>=4T) first pulse lead time for current mark >=4T at Primary velocity: %u (0x%x)\n"
+		"\t    dTtop (=3T) first pulse lead time for current mark =3T at Primary velocity: %u (0x%x)\n"
+		"\tdTle first pulse leading edge shift for previous space =3T at Primary velocity: %u (0x%x)\n"
+		"\t      Ttop (>=4T) first pulse duration for current mark >=4T at Upper velocity: %u (0x%x)\n"
+		"\t         Ttop (3T) first pulse duration for current mark =3T at Upper velocity: %u (0x%x)\n"
+		"\t                                    Tmp multi pulse duration at Upper velocity: %u (0x%x)\n"
+		"\t                                     Tlp last pulse duration at Upper velocity: %u (0x%x)\n"
+		"\t    dTtop (>=4T) first pulse lead time for current mark >=4T at Upper velocity: %u (0x%x)\n"
+		"\t      dTtop (=3T) first pulse lead time for current mark =3T at Upper velocity: %u (0x%x)\n"
+		"\t  dTle first pulse leading edge shift for previous space =3T at Upper velocity: %u (0x%x)\n"
 		, (lpBuf[0] & 0x80) == 0x80 ? _T("+R/+RW Format") : _T("other")
 		, (lpBuf[0] & 0x40) == 0 ? _T("single layer") : _T("other")
 		, (lpBuf[0] & 0x20) == 0x20 ? _T("+R disk") : _T("other")
@@ -769,7 +769,7 @@ VOID OutputDVDMediaKeyBlock(
 		" -> it seems it's always random\n"
 		"\tMedia Key Block\n"
 	);
-	OutputCDMain(fileDisc, lpFormat + 16, 0, (INT)(wFormatLength  - 16));
+	OutputCDMain(fileDisc, lpFormat + 16, 0, (UINT)(wFormatLength  - 16));
 }
 
 VOID OutputDiscDefinitionStructure(
@@ -788,12 +788,12 @@ VOID OutputDiscDefinitionStructure(
 			"\t                            Formatting: %s\n"
 			"\t                           The disk has %s certified by a user\n"
 			"\t                           The disk has %s certified by a manufacturer\n"
-			"\t                  DDS/PDL Update Count: %d\n"
-			"\t                      Number of Groups: %d\n"
-			"\t                       Number of Zones: %d\n"
-			"\tFirst sector in the Primary spare area: %7u (%#x)\n"
-			"\t Last sector in the Primary spare area: %7u (%#x)\n"
-			"\t                  First logical sector: %7u (%#x)\n"
+			"\t                  DDS/PDL Update Count: %u\n"
+			"\t                      Number of Groups: %u\n"
+			"\t                       Number of Zones: %u\n"
+			"\tFirst sector in the Primary spare area: %7u (%#08x)\n"
+			"\t Last sector in the Primary spare area: %7u (%#08x)\n"
+			"\t                  First logical sector: %7u (%#08x)\n"
 			, lpFormat[0], lpFormat[1]
 			, (lpFormat[3] & 0x80) == 0x80 ? _T("in process") : _T("has been completed")
 			, (lpFormat[3] & 0x10) == 0x10 ? _T("been") : _T("not been")
@@ -891,7 +891,7 @@ VOID OutputDVDRecordingManagementAreaData(
 		, dvdRecordingMan->LastRecordedRMASectorNumber[0]))
 	);
 	OutputCDMain(fileDisc, dvdRecordingMan->RMDBytes, 0
-		, (INT)(wFormatLength - sizeof(DVD_RECORDING_MANAGEMENT_AREA_DATA)));
+		, wFormatLength - sizeof(DVD_RECORDING_MANAGEMENT_AREA_DATA));
 }
 
 VOID OutputDVDPreRecordedInformation(
@@ -1430,7 +1430,7 @@ VOID OutputBDPhysicalAddressControl(
 			OutputDiscLog(
 				"\t                       PAC ID: %.3" CHARWIDTH "s\n"
 				"\t            PAC format number: %02x\n"
-				"\t             PAC Update Count: %d\n"
+				"\t             PAC Update Count: %u\n"
 				"\t            Unknown PAC Rules: %02x %02x %02x %02x\n"
 				"\tUnknown PAC Entire Disc Flags: %d\n"
 				"\t           Number of Segments: %d\n"
@@ -1464,7 +1464,7 @@ VOID OutputBDPhysicalAddressControl(
 	}
 	else {
 		OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("PacData"));
-		OutputCDMain(fileDisc, lpFormat, 0, (INT)wFormatLength);
+		OutputCDMain(fileDisc, lpFormat, 0, wFormatLength);
 	}
 }
 

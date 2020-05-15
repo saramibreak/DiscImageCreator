@@ -141,7 +141,7 @@ BOOL ReadDirectoryRecord(
 							"%s       LDIR_Attr: 0x%02x\n"
 							"%s       LDIR_Type: 0x%02x\n"
 							"%s     LDIR_Chksum: 0x%02x\n"
-							"%s  LDIR_FstClusLO: %d\n\n" 
+							"%s  LDIR_FstClusLO: %u\n\n" 
 							, &pTab[0], fname
 							, &pTab[0], lpBuf[11 + i]
 							, &pTab[0], lpBuf[12 + i]
@@ -154,16 +154,16 @@ BOOL ReadDirectoryRecord(
 						OutputVolDescLog(
 							"%s        DIR_Name: %.11" CHARWIDTH "s\n"
 							"%s        DIR_Attr: 0x%02x\n"
-							"%s       DIR_NTRes: %d\n"
-							"%sDIR_CrtTimeTenth: %d\n"
+							"%s       DIR_NTRes: %u\n"
+							"%sDIR_CrtTimeTenth: %u\n"
 							"%s     DIR_CrtTime: %02d:%02d:%02d\n"
 							"%s     DIR_CrtDate: %04d-%02d-%02d\n"
 							"%s  DIR_LstAccDate: %04d-%02d-%02d\n"
-							"%s   DIR_FstClusHI: %d\n"
+							"%s   DIR_FstClusHI: %u\n"
 							"%s     DIR_WrtTime: %02d:%02d:%02d\n"
 							"%s     DIR_WrtDate: %04d-%02d-%02d\n"
-							"%s   DIR_FstClusLO: %d\n"
-							"%s    DIR_FileSize: %d\n\n"
+							"%s   DIR_FstClusLO: %u\n"
+							"%s    DIR_FileSize: %u\n\n"
 							, &pTab[0], &lpBuf[i]
 							, &pTab[0], lpBuf[11 + i]
 							, &pTab[0], lpBuf[12 + i]
@@ -194,7 +194,7 @@ BOOL ReadDirectoryRecord(
 			}
 			else {
 				OutputErrorString(
-					"Read size is different. NumberOfBytesToRead: %ld, NumberOfBytesRead: %ld\n"
+					"Read size is different. NumberOfBytesToRead: %lu, NumberOfBytesRead: %lu\n"
 					, dwBytesPerSector, dwBytesRead);
 			}
 		}
@@ -227,7 +227,7 @@ BOOL ReadFileSystem(
 				_TCHAR szTab[256] = {};
 				szTab[0] = _T('\t');
 				OutputVolDescLog("%s", szTab);
-				OutputVolDescWithLBALog1("DirectoryEntry", fat.RootDirStartSector);
+				OutputVolDescWithLBALog1("DirectoryEntry", (INT)fat.RootDirStartSector);
 				LARGE_INTEGER seekPos;
 				seekPos.QuadPart = fat.RootDirStartSector * dwBytesPerSector;
 				ReadDirectoryRecord(handle, seekPos, dwBytesPerSector, &fat, szTab);
@@ -258,7 +258,7 @@ BOOL ReadFileSystem(
 		}
 		else {
 			OutputErrorString(
-				"Read size is different. NumberOfBytesToRead: %ld, NumberOfBytesRead: %ld\n"
+				"Read size is different. NumberOfBytesToRead: %lu, NumberOfBytesRead: %lu\n"
 				, dwBytesPerSector, dwBytesRead);
 		}
 	}
@@ -296,7 +296,7 @@ BOOL ReadDisk(
 		DWORD dwRoopCntPlus = 0;
 		DWORD coef = pDevice->dwMaxTransferLength / dwBytesPerSector;
 		OutputString(
-			"DiskSize: %lld bytes, BytesPerSector: %ld, BlockSize: %ld\n", dwDiskSize, dwBytesPerSector, dwBlkSize);
+			"DiskSize: %llu bytes, BytesPerSector: %lu, BlockSize: %lu\n", dwDiskSize, dwBytesPerSector, dwBlkSize);
 		if (*pExecType == disk) {
 			dwReadSize = dwBytesPerSector * coef;
 			dwRoopCnt = dwBlkSize / coef;
@@ -321,7 +321,7 @@ BOOL ReadDisk(
 				}
 				else {
 					OutputErrorString(
-						"[%ld] Read size is different. NumberOfBytesToRead: %ld, NumberOfBytesRead: %ld\n"
+						"[%lu] Read size is different. NumberOfBytesToRead: %lu, NumberOfBytesRead: %lu\n"
 						, dwRoopCnt * coef + i, dwReadSize, dwBytesRead);
 				}
 			}
@@ -330,7 +330,7 @@ BOOL ReadDisk(
 				break;
 			}
 			if (*pExecType == disk) {
-				OutputString("\rCreating .bin (Blocks) %6ld/%6ld", (i + 1) * coef, dwBlkSize);
+				OutputString("\rCreating .bin (Blocks) %6lu/%6lu", (i + 1) * coef, dwBlkSize);
 			}
 		}
 		for (DWORD i = 0; i < dwRoopCntPlus; i++) {
@@ -341,7 +341,7 @@ BOOL ReadDisk(
 				}
 				else {
 					OutputErrorString(
-						"[%ld] Read size is different. NumberOfBytesToRead: %ld, NumberOfBytesRead: %ld\n"
+						"[%lu] Read size is different. NumberOfBytesToRead: %lu, NumberOfBytesRead: %lu\n"
 						, dwRoopCnt * coef + i, dwBytesPerSector, dwBytesRead);
 				}
 			}
@@ -349,7 +349,7 @@ BOOL ReadDisk(
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				break;
 			}
-			OutputString("\rCreating .bin (Blocks) %6ld/%6ld", dwRoopCnt * coef + i + 1, dwBlkSize);
+			OutputString("\rCreating .bin (Blocks) %6lu/%6lu", dwRoopCnt * coef + i + 1, dwBlkSize);
 		}
 		OutputString("\n");
 		FreeAndNull(lpBuf);
@@ -501,7 +501,7 @@ BOOL ScsiPassThroughDirect(
 			}
 			OutputLog(standardError | fileMainError
 				, "\rLBA[%06d, %#07x]: [F:%s][L:%ld]\n\tOpcode: %#02x\n"
-				, nLBA, nLBA, pszFuncName, lLineNum, swb.io_hdr.cmdp[0]);
+				, nLBA, (UINT)nLBA, pszFuncName, lLineNum, swb.io_hdr.cmdp[0]);
 			OutputScsiStatus(swb.io_hdr.status);
 #endif
 			OutputSenseData(&swb.SenseData);
@@ -553,14 +553,18 @@ BOOL StorageQueryProperty(
 		, sizeof(STORAGE_PROPERTY_QUERY), adapterDescriptor, header.Size, &dwReturned, FALSE);
 	if (bRet) {
 		OutputStorageAdaptorDescriptor(adapterDescriptor, lpBusTypeUSB);
+#if 0
 		if (adapterDescriptor->MaximumTransferLength > 65536) {
 			pDevice->dwMaxTransferLength = 65536;
 			OutputDriveLog("dwMaxTransferLength changed [%lu] -> [%lu]\n"
 				, adapterDescriptor->MaximumTransferLength, pDevice->dwMaxTransferLength);
 		}
 		else {
+#endif
 			pDevice->dwMaxTransferLength = adapterDescriptor->MaximumTransferLength;
+#if 0
 		}
+#endif
 		pDevice->AlignmentMask = (UINT_PTR)(adapterDescriptor->AlignmentMask);
 	}
 	else {

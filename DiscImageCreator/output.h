@@ -23,9 +23,9 @@
 #define STR_DOUBLE_HYPHEN_E	" ==========\n"
 #define STR_LBA				"LBA[%06d, %#07x]: "
 #define STR_OPCODE			"OpCode[%#02x]: "
-#define STR_C2FLAG			"C2flag[%x]: "
+#define STR_C2FLAG			"C2flag[%d]: "
 #define STR_SUBCODE			"SubCode[%x]: "
-#define STR_TRACK			"Track[%02u]: "
+#define STR_TRACK			"Track[%02d]: "
 #define STR_SUB				"Sub"
 #define STR_NO_SUPPORT		" doesn't support on this drive\n"
 
@@ -130,16 +130,16 @@ extern _LOG_FILE g_LogFile;
 #define OutputDiscLog(str, ...)			_ftprintf(g_LogFile.fpDisc, _T(str), ##__VA_ARGS__);
 #define OutputDiscLogWithT(str, ...)	_ftprintf(g_LogFile.fpDisc, str, ##__VA_ARGS__);
 #define OutputDiscWithLBALog(str, nLBA, ...) \
-	_ftprintf(g_LogFile.fpDisc, _T(STR_LBA str), nLBA, nLBA, ##__VA_ARGS__);
+	_ftprintf(g_LogFile.fpDisc, _T(STR_LBA str), nLBA, (UINT)nLBA, ##__VA_ARGS__);
 #define OutputDiscWithLBALogWithT(str, nLBA, ...) \
-	fwprintf(g_LogFile.fpDisc, STR_LBA str, nLBA, nLBA, ##__VA_ARGS__);
+	fwprintf(g_LogFile.fpDisc, STR_LBA str, nLBA, (UINT)nLBA, ##__VA_ARGS__);
 
 #define OutputVolDescLog(str, ...)		_ftprintf(g_LogFile.fpVolDesc, _T(str), ##__VA_ARGS__);
 #define OutputVolDescLogWithT(str, ...)	_ftprintf(g_LogFile.fpVolDesc, str, ##__VA_ARGS__);
 #define OutputVolDescWithLBALog1(str1, nLBA, ...) \
-	_ftprintf(g_LogFile.fpVolDesc, _T(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(str1)), nLBA, nLBA, ##__VA_ARGS__);
+	_ftprintf(g_LogFile.fpVolDesc, _T(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(str1)), nLBA, (UINT)nLBA, ##__VA_ARGS__);
 #define OutputVolDescWithLBALog2(str1, str2, nLBA, ...) \
-	_ftprintf(g_LogFile.fpVolDesc, _T(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(str1)) str2, nLBA, nLBA, ##__VA_ARGS__);
+	_ftprintf(g_LogFile.fpVolDesc, _T(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F(str1)) str2, nLBA, (UINT)nLBA, ##__VA_ARGS__);
 
 #define OutputDriveLog(str, ...)		_ftprintf(g_LogFile.fpDrive, _T(str), ##__VA_ARGS__);
 #define OutputDriveLogWithT(str, ...)	_ftprintf(g_LogFile.fpDrive, str, ##__VA_ARGS__);
@@ -149,23 +149,23 @@ extern _LOG_FILE g_LogFile;
 #define OutputMainInfoLog(str, ...)			_ftprintf(g_LogFile.fpMainInfo, _T(str), ##__VA_ARGS__);
 #define OutputMainInfoLogWithT(str, ...)	_ftprintf(g_LogFile.fpMainInfo, str, ##__VA_ARGS__);
 #define OutputMainInfoWithLBALog(str, nLBA, track, ...) \
-	_ftprintf(g_LogFile.fpMainInfo, _T(STR_LBA STR_TRACK str), nLBA, nLBA, track, ##__VA_ARGS__);
+	_ftprintf(g_LogFile.fpMainInfo, _T(STR_LBA STR_TRACK str), nLBA, (UINT)nLBA, track, ##__VA_ARGS__);
 #define OutputMainInfoWithLBALogWithT(str, nLBA, track, ...) \
-	_ftprintf(g_LogFile.fpMainInfo, STR_LBA STR_TRACK str, nLBA, nLBA, track, ##__VA_ARGS__);
+	_ftprintf(g_LogFile.fpMainInfo, STR_LBA STR_TRACK str, nLBA, (UINT)nLBA, track, ##__VA_ARGS__);
 
 #define OutputMainErrorLog(str, ...)		_ftprintf(g_LogFile.fpMainError, _T(str), ##__VA_ARGS__);
 #define OutputMainErrorLogWithT(str, ...)	_ftprintf(g_LogFile.fpMainError, str, ##__VA_ARGS__);
 #define OutputMainErrorWithLBALog(str, nLBA, track, ...) \
-	_ftprintf(g_LogFile.fpMainError, _T(STR_LBA STR_TRACK str), nLBA, nLBA, track, ##__VA_ARGS__);
+	_ftprintf(g_LogFile.fpMainError, _T(STR_LBA STR_TRACK str), nLBA, (UINT)nLBA, track, ##__VA_ARGS__);
 #define OutputMainErrorWithLBALogWithT(str, nLBA, track, ...) \
-	_ftprintf(g_LogFile.fpMainError, STR_LBA STR_TRACK str, nLBA, nLBA, track, ##__VA_ARGS__);
+	_ftprintf(g_LogFile.fpMainError, STR_LBA STR_TRACK str, nLBA, (UINT)nLBA, track, ##__VA_ARGS__);
 
 #define OutputSubInfoLog(str, ...)		_ftprintf(g_LogFile.fpSubInfo, _T(str), ##__VA_ARGS__);
 #define OutputSubInfoLogWithT(str, ...)	_ftprintf(g_LogFile.fpSubInfo, str, ##__VA_ARGS__);
 #define OutputSubInfoWithLBALog(str, nLBA, track, ...) \
-	_ftprintf(g_LogFile.fpSubInfo, _T(STR_LBA STR_TRACK str), nLBA, nLBA, track, ##__VA_ARGS__);
+	_ftprintf(g_LogFile.fpSubInfo, _T(STR_LBA STR_TRACK str), nLBA, (UINT)nLBA, track, ##__VA_ARGS__);
 #define OutputSubInfoWithLBALogWithT(str, nLBA, track, ...) \
-	_ftprintf(g_LogFile.fpSubInfo, STR_LBA STR_TRACK str, nLBA, nLBA, track, ##__VA_ARGS__);
+	_ftprintf(g_LogFile.fpSubInfo, STR_LBA STR_TRACK str, nLBA, (UINT)nLBA, track, ##__VA_ARGS__);
 
 #define OutputSubIntentionalLog(str, ...)		_ftprintf(g_LogFile.fpSubIntention, _T(str), ##__VA_ARGS__);
 #define OutputSubIntentionalLogWithT(str, ...)	_ftprintf(g_LogFile.fpSubIntention, str, ##__VA_ARGS__);
@@ -175,16 +175,16 @@ extern _LOG_FILE g_LogFile;
 #define OutputSubErrorLog(str, ...)			_ftprintf(g_LogFile.fpSubError, _T(str), ##__VA_ARGS__);
 #define OutputSubErrorLogWithT(str, ...)	_ftprintf(g_LogFile.fpSubError, str, ##__VA_ARGS__);
 #define OutputSubErrorWithLBALog(str, nLBA, track, ...) \
-	_ftprintf(g_LogFile.fpSubError, _T(STR_LBA STR_TRACK STR_SUB str), nLBA, nLBA, track, ##__VA_ARGS__);
+	_ftprintf(g_LogFile.fpSubError, _T(STR_LBA STR_TRACK STR_SUB str), nLBA, (UINT)nLBA, track, ##__VA_ARGS__);
 #define OutputSubErrorWithLBALogWithT(str, nLBA, track, ...) \
-	_ftprintf(g_LogFile.fpSubError, STR_LBA STR_TRACK STR_SUB str, nLBA, nLBA, track, ##__VA_ARGS__);
+	_ftprintf(g_LogFile.fpSubError, STR_LBA STR_TRACK STR_SUB str, nLBA, (UINT)nLBA, track, ##__VA_ARGS__);
 
 #define OutputC2ErrorLog(str, ...)		_ftprintf(g_LogFile.fpC2Error, _T(str), ##__VA_ARGS__);
 #define OutputC2ErrorLogWithT(str, ...)	_ftprintf(g_LogFile.fpC2Error, str, ##__VA_ARGS__);
 #define OutputC2ErrorWithLBALog(str, nLBA, ...) \
-	_ftprintf(g_LogFile.fpC2Error, _T(STR_LBA str), nLBA, nLBA, ##__VA_ARGS__);
+	_ftprintf(g_LogFile.fpC2Error, _T(STR_LBA str), nLBA, (UINT)nLBA, ##__VA_ARGS__);
 #define OutputC2ErrorWithLBALogWithT(str, nLBA, ...) \
-	_ftprintf(g_LogFile.fpC2Error, STR_LBA str, nLBA, nLBA, ##__VA_ARGS__);
+	_ftprintf(g_LogFile.fpC2Error, STR_LBA str, nLBA, (UINT)nLBA, ##__VA_ARGS__);
 
 #define OutputRawReadableLog(str, ...)		_ftprintf(g_LogFile.fpRawReadable, _T(str), ##__VA_ARGS__);
 

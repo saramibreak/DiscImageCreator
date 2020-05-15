@@ -105,7 +105,7 @@ VOID OutputFsDirectoryRecord(
 		"\t\tExtended Attribute Record Length: %u\n"
 		"\t\t              Location of Extent: %u\n"
 		"\t\t                     Data Length: %u\n"
-		"\t\t         Recording Date and Time: %u-%02u-%02uT%02u:%02u:%02u%+03d:%02u\n"
+		"\t\t         Recording Date and Time: %d-%02u-%02uT%02u:%02u:%02u%+03d:%02d\n"
 		"\t\t                      File Flags: %u (%" CHARWIDTH "s)\n"
 		"\t\t                  File Unit Size: %u\n"
 		"\t\t             Interleave Gap Size: %u\n"
@@ -611,7 +611,7 @@ BOOL OutputFsPathTableRecord(
 	LPUINT uiDirPosNum
 ) {
 	OutputVolDescLog(
-		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Path Table Record"), (INT)uiPathTblPos, (INT)uiPathTblPos);
+		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Path Table Record"), (INT)uiPathTblPos, uiPathTblPos);
 	for (UINT i = 0; i < uiPathTblSize;) {
 		if (*uiDirPosNum > PATH_TABLE_RECORD_SIZE) {
 			OutputErrorString("Directory Record is over %d\n", PATH_TABLE_RECORD_SIZE);
@@ -683,18 +683,18 @@ VOID OutputFileAllocationTable(
 		OUTPUT_DHYPHEN_PLUS_STR("FileAllocationTable")
 		"\t        BS_JmpBoot: %#02x %#02x %#02x\n"
 		"\t        BS_OEMName: %.8" CHARWIDTH "s\n"
-		"\t    BPB_BytsPerSec: %d\n"
-		"\t    BPB_SecPerClus: %d\n"
-		"\t    BPB_RsvdSecCnt: %d\n"
-		"\t       BPB_NumFATs: %d\n"
-		"\t    BPB_RootEntCnt: %d\n"
-		"\t      BPB_TotSec16: %d\n"
+		"\t    BPB_BytsPerSec: %u\n"
+		"\t    BPB_SecPerClus: %u\n"
+		"\t    BPB_RsvdSecCnt: %u\n"
+		"\t       BPB_NumFATs: %u\n"
+		"\t    BPB_RootEntCnt: %u\n"
+		"\t      BPB_TotSec16: %u\n"
 		"\t         BPB_Media: %#x\n"
-		"\t       BPB_FATSz16: %d\n"
-		"\t     BPB_SecPerTrk: %d\n"
-		"\t      BPB_NumHeads: %d\n"
-		"\t       BPB_HiddSec: %d\n"
-		"\t      BPB_TotSec32: %d\n"
+		"\t       BPB_FATSz16: %u\n"
+		"\t     BPB_SecPerTrk: %u\n"
+		"\t      BPB_NumHeads: %u\n"
+		"\t       BPB_HiddSec: %u\n"
+		"\t      BPB_TotSec32: %u\n"
 		, lpBuf[0], lpBuf[1], lpBuf[2]
 		, &lpBuf[3]
 		, BytsPerSec
@@ -714,12 +714,12 @@ VOID OutputFileAllocationTable(
 	if (fat->RootEntCnt == 0 && FATSz == 0) {
 		FATSz = MAKEUINT(MAKEWORD(lpBuf[36], lpBuf[37]), MAKEWORD(lpBuf[38], lpBuf[39]));
 		OutputVolDescLog(
-			"\t       BPB_FATSz32: %d\n"
+			"\t       BPB_FATSz32: %u\n"
 			"\t      BPB_ExtFlags: %#04x\n"
 			"\t         BPB_FSVer: %#04x\n"
-			"\t      BPB_RootClus: %d\n"
-			"\t        BPB_FSInfo: %d\n"
-			"\t     BPB_BkBootSec: %d\n"
+			"\t      BPB_RootClus: %u\n"
+			"\t        BPB_FSInfo: %u\n"
+			"\t     BPB_BkBootSec: %u\n"
 			, FATSz
 			, MAKEWORD(lpBuf[40], lpBuf[41])
 			, MAKEWORD(lpBuf[42], lpBuf[43])
@@ -731,7 +731,7 @@ VOID OutputFileAllocationTable(
 	}
 	OutputVolDescLog(
 		"\t         BS_DrvNum: %#x\n"
-		"\t      BS_Reserved1: %d\n"
+		"\t      BS_Reserved1: %u\n"
 		"\t        BS_BootSig: %#x\n"
 		"\t          BS_VolID: %#08x\n"
 		"\t         BS_VolLab: %.11" CHARWIDTH "s\n"
@@ -763,13 +763,13 @@ VOID OutputFileAllocationTable(
 	UINT DataSectorSize = TotSec - fat->DataStartSector;
 	UINT CountofClusters = DataSectorSize / fat->SecPerClus;
 	OutputVolDescLog(
-		"\t    FatStartSector: %d\n"
-		"\t     FatSectorSize: %d\n"
-		"\tRootDirStartSector: %d\n"
-		"\t RootDirSectorSize: %d\n"
-		"\t   DataStartSector: %d\n"
-		"\t    DataSectorSize: %d\n"
-		"\t   CountofClusters: %d "
+		"\t    FatStartSector: %u\n"
+		"\t     FatSectorSize: %u\n"
+		"\tRootDirStartSector: %u\n"
+		"\t RootDirSectorSize: %u\n"
+		"\t   DataStartSector: %u\n"
+		"\t    DataSectorSize: %u\n"
+		"\t   CountofClusters: %u "
 		, FatStartSector, FatSectorSize
 		, fat->RootDirStartSector, RootDirSectorSize
 		, fat->DataStartSector, DataSectorSize
@@ -793,9 +793,9 @@ VOID OutputDriveDescriptorRecord(
 	OutputVolDescLog(
 		OUTPUT_DHYPHEN_PLUS_STR("DriverDescriptorRecord")
 		"\t                   device signature: %.2" CHARWIDTH "s\n"
-		"\t           block size of the device: %d\n"
-		"\t     number of blocks on the device: %d\n"
-		"\tnumber of driver descriptor entries: %d\n"
+		"\t           block size of the device: %u\n"
+		"\t     number of blocks on the device: %u\n"
+		"\tnumber of driver descriptor entries: %u\n"
 		, &lpBuf[0]
 		, MAKEWORD(lpBuf[3], lpBuf[2])
 		, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], lpBuf[4]))
@@ -810,19 +810,19 @@ VOID OutputPartitionMap(
 	OutputVolDescLog(
 		OUTPUT_DHYPHEN_PLUS_STR("PartitionMap")
 		"\t              partition signature: %.2" CHARWIDTH "s\n"
-		"\tnumber of blocks in partition map: %d\n"
-		"\tfirst physical block of partition: %d\n"
-		"\t    number of blocks in partition: %d\n"
+		"\tnumber of blocks in partition map: %u\n"
+		"\tfirst physical block of partition: %u\n"
+		"\t    number of blocks in partition: %u\n"
 		"\t                   partition name: %.32" CHARWIDTH "s\n"
 		"\t                   partition type: %.32" CHARWIDTH "s\n"
-		"\t first logical block of data area: %d\n"
-		"\t    number of blocks in data area: %d\n"
+		"\t first logical block of data area: %u\n"
+		"\t    number of blocks in data area: %u\n"
 		"\t     partition status information: 0x%08x\n"
-		"\t first logical block of boot code: %d\n"
-		"\t      size of boot code, in bytes: %d\n"
-		"\t           boot code load address: %d\n"
-		"\t            boot code entry point: %d\n"
-		"\t               boot code checksum: %d\n"
+		"\t first logical block of boot code: %u\n"
+		"\t      size of boot code, in bytes: %u\n"
+		"\t           boot code load address: %u\n"
+		"\t            boot code entry point: %u\n"
+		"\t               boot code checksum: %u\n"
 		"\t                   processor type: %.16" CHARWIDTH "s\n"
 		, &lpBuf[0]
 		, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], lpBuf[4]))
@@ -873,27 +873,27 @@ VOID OutputFsMasterDirectoryBlocks(
 
 	OutputVolDescWithLBALog2("Master Directory Blocks",
 		"\t                       volume signature: %04x\n"
-		"\t       date and time of volume creation: %lld (%s)\n"
-		"\t     date and time of last modification: %lld (%s)\n"
+		"\t       date and time of volume creation: %llu (%s)\n"
+		"\t     date and time of last modification: %llu (%s)\n"
 		"\t                      volume attributes: %04x\n"
-		"\t      number of files in root directory: %d\n"
-		"\t           first block of volume bitmap: %d\n"
-		"\t        start of next allocation search: %d\n"
-		"\t  number of allocation blocks in volume: %d\n"
-		"\t   size (in bytes) of allocation blocks: %d\n"
-		"\t                     default clump size: %d\n"
-		"\t       first allocation block in volume: %d\n"
-		"\t            next unused catalog node ID: %d\n"
-		"\t     number of unused allocation blocks: %d\n"
+		"\t      number of files in root directory: %u\n"
+		"\t           first block of volume bitmap: %u\n"
+		"\t        start of next allocation search: %u\n"
+		"\t  number of allocation blocks in volume: %u\n"
+		"\t   size (in bytes) of allocation blocks: %u\n"
+		"\t                     default clump size: %u\n"
+		"\t       first allocation block in volume: %u\n"
+		"\t            next unused catalog node ID: %u\n"
+		"\t     number of unused allocation blocks: %u\n"
 		"\t                            volume name: %.27" CHARWIDTH "s\n"
-		"\t           date and time of last backup: %lld (%s)\n"
-		"\t          volume backup sequence number: %d\n"
-		"\t                     volume write count: %d\n"
-		"\t   clump size for extents overflow file: %d\n"
-		"\t            clump size for catalog file: %d\n"
-		"\tnumber of directories in root directory: %d\n"
-		"\t              number of files in volume: %d\n"
-		"\t        number of directories in volume: %d\n"
+		"\t           date and time of last backup: %llu (%s)\n"
+		"\t          volume backup sequence number: %u\n"
+		"\t                     volume write count: %u\n"
+		"\t   clump size for extents overflow file: %u\n"
+		"\t            clump size for catalog file: %u\n"
+		"\tnumber of directories in root directory: %u\n"
+		"\t              number of files in volume: %u\n"
+		"\t        number of directories in volume: %u\n"
 		, nLBA, MAKEWORD(lpBuf[1], lpBuf[0])
 		, creationTime, szBufc
 		, modificationTime, szBufm
@@ -918,33 +918,33 @@ VOID OutputFsMasterDirectoryBlocks(
 		, MAKEUINT(MAKEWORD(lpBuf[91], lpBuf[90]), MAKEWORD(lpBuf[89], lpBuf[88]))
 	);
 	OutputVolDescLog(
-		"\t         information used by the Finder: %d\n"
-		"\t         information used by the Finder: %d\n"
-		"\t         information used by the Finder: %d\n"
-		"\t         information used by the Finder: %d\n"
-		"\t         information used by the Finder: %d\n"
-		"\t         information used by the Finder: %d\n"
-		"\t         information used by the Finder: %d\n"
-		"\t         information used by the Finder: %d\n"
-		"\t       size (in blocks) of volume cache: %d\n"
-		"\tsize (in blocks) of volume bitmap cache: %d\n"
-		"\tsize (in blocks) of common volume cache: %d\n"
-		"\t          size of extents overflow file: %d\n"
+		"\t         information used by the Finder: %u\n"
+		"\t         information used by the Finder: %u\n"
+		"\t         information used by the Finder: %u\n"
+		"\t         information used by the Finder: %u\n"
+		"\t         information used by the Finder: %u\n"
+		"\t         information used by the Finder: %u\n"
+		"\t         information used by the Finder: %u\n"
+		"\t         information used by the Finder: %u\n"
+		"\t       size (in blocks) of volume cache: %u\n"
+		"\tsize (in blocks) of volume bitmap cache: %u\n"
+		"\tsize (in blocks) of common volume cache: %u\n"
+		"\t          size of extents overflow file: %u\n"
 		"\textent record for extents overflow file\n"
-		"\t\t               first allocation block: %d\n"
-		"\t\t           number of allocation block: %d\n"
-		"\t\t               first allocation block: %d\n"
-		"\t\t           number of allocation block: %d\n"
-		"\t\t               first allocation block: %d\n"
-		"\t\t           number of allocation block: %d\n"
-		"\t                   size of catalog file: %d\n"
+		"\t\t               first allocation block: %u\n"
+		"\t\t           number of allocation block: %u\n"
+		"\t\t               first allocation block: %u\n"
+		"\t\t           number of allocation block: %u\n"
+		"\t\t               first allocation block: %u\n"
+		"\t\t           number of allocation block: %u\n"
+		"\t                   size of catalog file: %u\n"
 		"\t         extent record for catalog file:\n"
-		"\t\t               first allocation block: %d\n"
-		"\t\t           number of allocation block: %d\n"
-		"\t\t               first allocation block: %d\n"
-		"\t\t           number of allocation block: %d\n"
-		"\t\t               first allocation block: %d\n"
-		"\t\t           number of allocation block: %d\n"
+		"\t\t               first allocation block: %u\n"
+		"\t\t           number of allocation block: %u\n"
+		"\t\t               first allocation block: %u\n"
+		"\t\t           number of allocation block: %u\n"
+		"\t\t               first allocation block: %u\n"
+		"\t\t           number of allocation block: %u\n"
 		, MAKEUINT(MAKEWORD(lpBuf[95], lpBuf[94]), MAKEWORD(lpBuf[93], lpBuf[92]))
 		, MAKEUINT(MAKEWORD(lpBuf[99], lpBuf[98]), MAKEWORD(lpBuf[97], lpBuf[96]))
 		, MAKEUINT(MAKEWORD(lpBuf[103], lpBuf[102]), MAKEWORD(lpBuf[101], lpBuf[100]))
@@ -1087,7 +1087,7 @@ VOID OutputFsPceStuff(
 	INT nLBA
 ) {
 	OutputVolDescLog(
-		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("PCE Warning msg & all stuff"), nLBA, nLBA);
+		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("PCE Warning msg & all stuff"), nLBA, (UINT)nLBA);
 	CHAR str[39] = {};
 	size_t len = 0;
 	for (size_t idx = 0; idx < 805; idx += len) {
@@ -1280,7 +1280,7 @@ VOID OutputFsVolumeStructureDescriptorFormat(
 		"\tStructure Type: %u\n"
 		"\tStandard Identifier: %.5" CHARWIDTH "s\n"
 		"\tStructure Version: %u\n"
-		, nLBA, nLBA, lpBuf[0], &lpBuf[1], lpBuf[6]);
+		, nLBA, (UINT)nLBA, lpBuf[0], &lpBuf[1], lpBuf[6]);
 }
 
 VOID OutputFsVolumeRecognitionSequence(
@@ -1373,8 +1373,8 @@ VOID OutputFsLongAllocationDescriptor(
 	OutputVolDescLog(
 		"\t\tImplementation Use\n"
 		"\t\t\tADImpUse\n"
-		"\t\t\t\tFlags: %d\n"
-		"\t\t\t\tUnique Id: %d\n"
+		"\t\t\t\tFlags: %u\n"
+		"\t\t\t\tUnique Id: %u\n"
 		, MAKEWORD(lpBuf[10], lpBuf[11])
 		, MAKEUINT(MAKEWORD(lpBuf[12], lpBuf[13]), MAKEWORD(lpBuf[14], lpBuf[15]))
 	);
@@ -1613,7 +1613,7 @@ VOID OutputFsLogicalVolumeIntegrityDescriptor(
 
 	OutputVolDescLog(
 		"\tLogical Volume Header Descriptor\n"
-		"\t\tUnique ID: %#lld\n"
+		"\t\tUnique ID: %llu\n"
 		, MAKEUINT64(MAKEUINT(MAKEWORD(lpBuf[40], lpBuf[41]), MAKEWORD(lpBuf[42], lpBuf[43]))
 			, MAKEUINT(MAKEWORD(lpBuf[44], lpBuf[45]), MAKEWORD(lpBuf[46], lpBuf[47])))
 	);
@@ -1648,8 +1648,8 @@ VOID OutputFsLogicalVolumeIntegrityDescriptor(
 			"\t\t\tflags: %d\n"
 			"\t\t\tid: %.23" CHARWIDTH "s\n"
 			"\t\t\tsuffix: %.8" CHARWIDTH "s\n"
-			"\t\tNumber of Files: %d\n"
-			"\t\tNumber of Directories: %d\n"
+			"\t\tNumber of Files: %u\n"
+			"\t\tNumber of Directories: %u\n"
 			"\t\tMinimum UDF Read Revision: %#04x\n"
 			"\t\tMinimum UDF Write Revision: %#04x\n"
 			"\t\tMaximum UDF Write Revision: %#04x\n"
@@ -1978,95 +1978,95 @@ VOID OutputFsVolumeDescriptorSequence(
 	}
 	switch (wTagId) {
 	case 1:
-		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Primary Volume Descriptor"), nLBA, nLBA);
+		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Primary Volume Descriptor"), nLBA, (UINT)nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		OutputFsPrimaryVolumeDescriptorForUDF(lpBuf);
 		break;
 	case 2:
-		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Anchor Volume Descriptor Pointer"), nLBA, nLBA);
+		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Anchor Volume Descriptor Pointer"), nLBA, (UINT)nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		OutputFsAnchorVolumeDescriptorPointer(lpBuf, pUDF);
 		break;
 	case 3:
-		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Volume Descriptor Pointer"), nLBA, nLBA);
+		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Volume Descriptor Pointer"), nLBA, (UINT)nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		OutputFsVolumeDescriptorPointer(lpBuf);
 		break;
 	case 4:
-		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Implementation Use Volume Descriptor"), nLBA, nLBA);
+		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Implementation Use Volume Descriptor"), nLBA, (UINT)nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		OutputFsImplementationUseVolumeDescriptor(lpBuf);
 		break;
 	case 5:
-		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Partition Descriptor"), nLBA, nLBA);
+		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Partition Descriptor"), nLBA, (UINT)nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		OutputFsPartitionDescriptor(lpBuf, pUDF);
 		break;
 	case 6:
-		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Logical Volume Descriptor"), nLBA, nLBA);
+		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Logical Volume Descriptor"), nLBA, (UINT)nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		OutputFsLogicalVolumeDescriptor(lpBuf, pUDF);
 		break;
 	case 7:
-		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Unallocated Space Descriptor"), nLBA, nLBA);
+		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Unallocated Space Descriptor"), nLBA, (UINT)nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		OutputFsUnallocatedSpaceDescriptor(lpBuf);
 		break;
 	case 8:
-		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Terminating Descriptor"), nLBA, nLBA);
+		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Terminating Descriptor"), nLBA, (UINT)nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		OutputFsTerminatingDescriptor(lpBuf);
 		break;
 	case 9:
-		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Logical Volume Integrity Descriptor"), nLBA, nLBA);
+		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Logical Volume Integrity Descriptor"), nLBA, (UINT)nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		OutputFsLogicalVolumeIntegrityDescriptor(lpBuf);
 		break;
 	case 256:
-		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("File Set Descriptor"), nLBA, nLBA);
+		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("File Set Descriptor"), nLBA, (UINT)nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		OutputFsFileSetDescriptor(lpBuf, pUDF);
 		break;
 	case 257:
-		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("File Identifier Descriptor"), nLBA, nLBA);
+		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("File Identifier Descriptor"), nLBA, (UINT)nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		OutputFsFileIdentifierDescriptor(lpBuf);
 		break;
 	case 258:
-		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Allocation Extent Descriptor"), nLBA, nLBA);
+		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Allocation Extent Descriptor"), nLBA, (UINT)nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		break;
 	case 259:
-		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Indirect Entry"), nLBA, nLBA);
+		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Indirect Entry"), nLBA, (UINT)nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		break;
 	case 260:
-		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Terminal Entry"), nLBA, nLBA);
+		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Terminal Entry"), nLBA, (UINT)nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		break;
 	case 261:
-		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("File Entry"), nLBA, nLBA);
+		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("File Entry"), nLBA, (UINT)nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		OutputFsFileEntry(lpBuf);
 		break;
 	case 262:
-		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Extended Attribute Header Descriptor"), nLBA, nLBA);
+		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Extended Attribute Header Descriptor"), nLBA, (UINT)nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		break;
 	case 263:
-		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Unallocated Space Entry"), nLBA, nLBA);
+		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Unallocated Space Entry"), nLBA, (UINT)nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		break;
 	case 264:
-		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Space Bitmap Descriptor"), nLBA, nLBA);
+		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Space Bitmap Descriptor"), nLBA, (UINT)nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		break;
 	case 265:
-		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Partition Integrity Entry"), nLBA, nLBA);
+		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Partition Integrity Entry"), nLBA, (UINT)nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		break;
 	case 266:
-		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Extended File Entry"), nLBA, nLBA);
+		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Extended File Entry"), nLBA, (UINT)nLBA);
 		OutputFsDescriptorTag(lpBuf);
 		break;
 	default:

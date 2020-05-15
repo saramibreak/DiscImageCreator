@@ -78,7 +78,7 @@ BOOL ReadDVDReverse(
 				throw FALSE;
 			}
 			fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_MAIN_DATA_SIZE, fpRev);
-			OutputString("\rCreating iso(LBA) %8u/%8u", nLBA, nLastLBA);
+			OutputString("\rCreating iso(LBA) %8d/%8d", nLBA, nLastLBA);
 		}
 		OutputString("\n");
 		FcloseAndNull(fpRev);
@@ -154,21 +154,22 @@ BOOL ReadDVD(
 				"\t+      L1 Middle: %7lu (%#lx)\n"
 				"\t+       L1 Video: %7lu (%#lx)\n"
 				"\t------------------------------------\n"
-				, nAllLength, nAllLength
+				, nAllLength, (UINT)nAllLength
 				, dwLayer1MiddleZone, dwLayer1MiddleZone
-				, pDisc->DVD.dwLayer1SectorLength, pDisc->DVD.dwLayer1SectorLength);
+				, pDisc->DVD.dwLayer1SectorLength, pDisc->DVD.dwLayer1SectorLength
+			);
 			nAllLength += (INT)(dwLayer1MiddleZone + pDisc->DVD.dwLayer1SectorLength);
 			OutputDiscLog(
-				"\t                  %7u (%#x)\n", nAllLength, nAllLength);
+				"\t                  %7d (%#x)\n", nAllLength, (UINT)nAllLength);
 #if 1
 			if (nAllLength > 4000000) {
 				INT nAdditional = 4096;
 				nAllLength += nAdditional;
 				OutputDiscLog(
-						"\t+     Additional: %7u (%#x)\n"
+						"\t+     Additional: %7d (%#x)\n"
 						"\t------------------------------------\n"
-						"\t                  %7u (%#x)\n"
-						, nAdditional, nAdditional, nAllLength, nAllLength
+						"\t                  %7d (%#x)\n"
+						, nAdditional, (UINT)nAdditional, nAllLength, (UINT)nAllLength
 				);
 			}
 #endif
@@ -326,7 +327,7 @@ BOOL ReadDVD(
 						nLastErrorLBA <= nLBA && nLBA <= (INT)pDisc->DVD.securitySectorRange[i][1]) {
 						if (++uiErrorForwardTimes <= pExtArg->uiMaxRereadNum) {
 							OutputLog(standardOut | fileMainError
-								, "Reread this sector: %d/%d\n"
+								, "Reread this sector: %u/%u\n"
 								, uiErrorForwardTimes, pExtArg->uiMaxRereadNum);
 							nLBA--;
 							continue;
@@ -344,7 +345,7 @@ BOOL ReadDVD(
 						if (nFirstErrorLBA == 0) {
 							if (++uiErrorForwardTimes <= pExtArg->uiMaxRereadNum) {
 								OutputLog(standardOut | fileMainError
-									, "Reread this 1st error sector: %d/%d\n"
+									, "Reread this 1st error sector: %u/%u\n"
 									, uiErrorForwardTimes, pExtArg->uiMaxRereadNum);
 								nLBA--;
 								continue;
@@ -392,7 +393,7 @@ BOOL ReadDVD(
 				uiErrorForwardTimes = 0;
 			}
 			if (bErrorBack) {
-				OutputLog(standardOut | fileMainError, STR_LBA "Read back a sector\n", nLBA, nLBA);
+				OutputLog(standardOut | fileMainError, STR_LBA "Read back a sector\n", nLBA, (UINT)nLBA);
 				nLBA -= 2;
 				uiErrorBackTimes = 0;
 				continue;
@@ -402,7 +403,7 @@ BOOL ReadDVD(
 				nRetryCnt = 0;
 			}
 			fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_MAIN_DATA_SIZE * dwTransferLen, fp);
-			OutputString("\rCreating iso(LBA) %8lu/%8u", nLBA + dwTransferLen, nAllLength);
+			OutputString("\rCreating iso(LBA) %8lu/%8d", nLBA + dwTransferLen, nAllLength);
 		}
 
 		if (*pExecType == xbox) {
@@ -422,7 +423,7 @@ BOOL ReadDVD(
 					dwTransferLen = dwEndOfMiddle - j;
 				}
 				fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_MAIN_DATA_SIZE * dwTransferLen, fp);
-				OutputString("\rCreating iso(LBA) %8lu/%8u", j + dwTransferLen, nAllLength);
+				OutputString("\rCreating iso(LBA) %8lu/%8d", j + dwTransferLen, nAllLength);
 			}
 
 			dwTransferLen = dwTransferLenOrg;
@@ -441,7 +442,7 @@ BOOL ReadDVD(
 					throw FALSE;
 				}
 				fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_MAIN_DATA_SIZE * dwTransferLen, fp);
-				OutputString("\rCreating iso(LBA) %8lu/%8u"
+				OutputString("\rCreating iso(LBA) %8lu/%8d"
 					, dwEndOfMiddle + pDisc->DVD.dwLayer1SectorLength, nAllLength);
 			}
 		}
@@ -976,7 +977,7 @@ BOOL ReadDVDRaw(
 					}
 				}
 			}
-			OutputString("\rCreating raw(LBA) %7u/%7u"
+			OutputString("\rCreating raw(LBA) %7d/%7d"
 				, nLBA + (INT)transferAndMemSize, pDisc->SCSI.nAllLength);
 			if (pExtArg->byFix) {
 				if (nLBA == (INT)pDisc->DVD.fixNum * 16 + 16) {
@@ -1053,7 +1054,7 @@ BOOL ReadDVDForCMI(
 				(PDVD_COPYRIGHT_MANAGEMENT_DESCRIPTOR)(pBuf + sizeof(DVD_DESCRIPTOR_HEADER)), nLBA);
 		}
 		OutputString(
-			"\rWriting CMI log(LBA) %8u/%8u", nLBA, pDisc->SCSI.nAllLength - 1);
+			"\rWriting CMI log(LBA) %8d/%8d", nLBA, pDisc->SCSI.nAllLength - 1);
 	}
 	OutputString("\n");
 	return bRet;
@@ -1302,7 +1303,7 @@ BOOL ReadDiscStructure(
 		}
 		wFormatLen = (WORD)(MAKEWORD(lpFormat[1], lpFormat[0]) + 2); // 2 is size of "DVD_DESCRIPTOR_HEADER::Length" itself
 		REVERSE_BYTES_SHORT(&cdb.AllocationLength, &wFormatLen);
-		OutputDiscLog("FormatLength: %d\n", wFormatLen);
+		OutputDiscLog("FormatLength: %u\n", wFormatLen);
 
 		if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH,
 			lpFormat, direction, wFormatLen, &byScsiStatus, _T(__FUNCTION__), __LINE__) ||
@@ -1455,7 +1456,7 @@ BOOL ReadCapacity(
 	UINT len = MAKEUINT(MAKEWORD(buf[3], buf[2]), MAKEWORD(buf[1], buf[0]));
 	OutputDiscLog(
 		OUTPUT_DHYPHEN_PLUS_STR("ReadCapacity")
-		"\tMax LBA + 1: %d (0x%x)\n", len + 1, len + 1);
+		"\tMax LBA + 1: %u (0x%x)\n", len + 1, len + 1);
 	return TRUE;
 }
 
@@ -1839,7 +1840,7 @@ BOOL ReadXboxDVDBySwap(
 		if (pDisc->DVD.dwLayer0SectorLength < XBOX_LAYER_BREAK) {
 			OutputErrorString(
 				"Short of length of DVD\n"
-				"\tYour DVD length: %ld\n"
+				"\tYour DVD length: %lu\n"
 				"\tXbox LayerBreak: %d\n"
 				, dwDvdAllLen, XBOX_LAYER_BREAK);
 			return FALSE;
@@ -1849,8 +1850,8 @@ BOOL ReadXboxDVDBySwap(
 		if (dwXboxAllLen > dwDvdAllLen) {
 			OutputErrorString(
 				"Short of length of DVD\n"
-				"\t  Your DVD length: %ld\n"
-				"\tNeeded DVD length: (DVD L0[%ld] - Xbox LayerBreak[%d]) * 2 + Xbox Length[%d] = %ld\n"
+				"\t  Your DVD length: %lu\n"
+				"\tNeeded DVD length: (DVD L0[%lu] - Xbox LayerBreak[%d]) * 2 + Xbox Length[%d] = %lu\n"
 				, dwDvdAllLen, pDisc->DVD.dwLayer0SectorLength, XBOX_LAYER_BREAK, XBOX_SIZE, dwXboxAllLen);
 			return FALSE;
 		}
@@ -1859,7 +1860,7 @@ BOOL ReadXboxDVDBySwap(
 		if (pDisc->DVD.dwLayer0SectorLength < XGD2_LAYER_BREAK) {
 			OutputErrorString(
 				"Short of length of DVD\n"
-				"\tYour DVD length: %ld\n"
+				"\tYour DVD length: %lu\n"
 				"\tXGD2 LayerBreak: %d\n"
 				, dwDvdAllLen, XGD2_LAYER_BREAK);
 			return FALSE;
@@ -1869,8 +1870,8 @@ BOOL ReadXboxDVDBySwap(
 		if (dwXboxAllLen > dwDvdAllLen) {
 			OutputErrorString(
 				"Short of length of DVD\n"
-				"\t  Your DVD length: %ld\n"
-				"\tNeeded DVD length: (DVD L0[%ld] - XGD2 LayerBreak[%d]) * 2 + XGD2 Length[%d] = %ld\n"
+				"\t  Your DVD length: %lu\n"
+				"\tNeeded DVD length: (DVD L0[%lu] - XGD2 LayerBreak[%d]) * 2 + XGD2 Length[%d] = %lu\n"
 				, dwDvdAllLen, pDisc->DVD.dwLayer0SectorLength, XGD2_LAYER_BREAK, pExtArg->nAllSectors, dwXboxAllLen);
 			return FALSE;
 		}
@@ -1879,7 +1880,7 @@ BOOL ReadXboxDVDBySwap(
 		if (pDisc->DVD.dwLayer0SectorLength < XGD3_LAYER_BREAK) {
 			OutputErrorString(
 				"Short of length of DVD\n"
-				"\tYour DVD length: %ld\n"
+				"\tYour DVD length: %lu\n"
 				"\tXGD3 LayerBreak: %d\n"
 				, dwDvdAllLen, XGD3_LAYER_BREAK);
 			return FALSE;
@@ -1889,8 +1890,8 @@ BOOL ReadXboxDVDBySwap(
 		if (dwXboxAllLen > dwDvdAllLen) {
 			OutputErrorString(
 				"Short of length of DVD\n"
-				"\t  Your DVD length: %ld\n"
-				"\tNeeded DVD length: (DVD L0[%ld] - XGD3 LayerBreak[%d]) * 2 + XGD3 Length[%d] = %ld\n"
+				"\t  Your DVD length: %lu\n"
+				"\tNeeded DVD length: (DVD L0[%lu] - XGD3 LayerBreak[%d]) * 2 + XGD3 Length[%d] = %lu\n"
 				, dwDvdAllLen, pDisc->DVD.dwLayer0SectorLength, XGD3_LAYER_BREAK, pExtArg->nAllSectors, dwXboxAllLen);
 			return FALSE;
 		}
@@ -1970,7 +1971,7 @@ BOOL ReadSACD(
 			}
 
 			fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_MAIN_DATA_SIZE * dwTransferLen, fp);
-			OutputString("\rCreating iso(LBA) %8lu/%8u", nLBA + dwTransferLen, pDisc->SCSI.nAllLength);
+			OutputString("\rCreating iso(LBA) %8lu/%8d", nLBA + dwTransferLen, pDisc->SCSI.nAllLength);
 		}
 		OutputString("\n");
 	}

@@ -138,7 +138,7 @@ VOID WriteCcdForDisc(
 			_T("[Disc]\n")
 			_T("TocEntries=%u\n")
 			_T("Sessions=%u\n")
-			_T("DataTracksScrambled=%u\n"),
+			_T("DataTracksScrambled=%d\n"),
 			wTocEntries,
 			LastCompleteSession,
 			0); // TODO
@@ -194,9 +194,9 @@ VOID WriteCcdForCDTextEntry(
 				_T("Entry %u=%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n"),
 				t,
 				pDesc[t].PackType,
-				pDesc[t].TrackNumber | (pDesc[t].ExtensionFlag << 7),
+				(UINT)(pDesc[t].TrackNumber | (pDesc[t].ExtensionFlag << 7)),
 				pDesc[t].SequenceNumber,
-				pDesc[t].CharacterPosition | (pDesc[t].BlockNumber << 4) | (pDesc[t].Unicode << 7),
+				(UINT)(pDesc[t].CharacterPosition | (pDesc[t].BlockNumber << 4) | (pDesc[t].Unicode << 7)),
 				pDesc[t].Text[0], pDesc[t].Text[1], pDesc[t].Text[2], pDesc[t].Text[3],
 				pDesc[t].Text[4], pDesc[t].Text[5], pDesc[t].Text[6], pDesc[t].Text[7],
 				pDesc[t].Text[8], pDesc[t].Text[9], pDesc[t].Text[10], pDesc[t].Text[11]);
@@ -213,7 +213,7 @@ VOID WriteCcdForSession(
 		_ftprintf(fpCcd,
 			_T("[Session %u]\n")
 			_T("PreGapMode=%u\n")
-			_T("PreGapSubC=%u\n"),
+			_T("PreGapSubC=%d\n"),
 			SessionNumber,
 			byMode,
 			SessionNumber == 1 ? byMode : 0); // TODO
@@ -829,7 +829,7 @@ VOID WriteErrorBuffer(
 		}
 	}
 	OutputLog(fileMainError,
-		"LBA[%06d, %#07x] Read error. padding [%ubyte]\n", nLBA, nLBA, uiSize);
+		STR_LBA "Read error. padding [%ubyte]\n", nLBA, (UINT)nLBA, uiSize);
 
 	if (*pExecType != swap || (*pExecType == swap && nLBA < SECOND_ERROR_OF_LEADOUT)) {
 		BYTE lpSubcodeRaw[CD_RAW_READ_SUBCODE_SIZE] = {};
@@ -1088,14 +1088,14 @@ BOOL WriteParsingMdsfile(
 		_ftprintf(fpParse,
 			_T(OUTPUT_DHYPHEN_PLUS_STR("Header")
 			"                  id: %.16" CHARWIDTH "s\n"
-			"             unknown: %d\n"
-			"           mediaType: %d\n"
-			"          sessionNum: %d\n"
-			"             unknown: %d\n"
-			"            LenOfBca: %d\n"
-			"            ofsToBca: %d\n"
-			"  ofsTo1stSessionBlk: %d\n"
-			"            ofsToDpm: %d\n")
+			"             unknown: %u\n"
+			"           mediaType: %u\n"
+			"          sessionNum: %u\n"
+			"             unknown: %u\n"
+			"            LenOfBca: %u\n"
+			"            ofsToBca: %u\n"
+			"  ofsTo1stSessionBlk: %u\n"
+			"            ofsToDpm: %u\n")
 			, h.fileId, h.unknown1, h.mediaType, h.sessionNum
 			, h.unknown2, h.lenOfBca, h.ofsToBca
 			, h.ofsTo1stSessionBlk, h.ofsToDpm
@@ -1135,7 +1135,7 @@ BOOL WriteParsingMdsfile(
 				_T("0.353um/bit"), _T("Reserved"), _T("Reserved"), _T("Reserved"),
 				_T("Reserved"), _T("Reserved"), _T("Reserved"), _T("Reserved")
 			};
-			for (INT i = 0; i < layer; i++) {
+			for (UINT i = 0; i < layer; i++) {
 				if (dvd) {
 					_ftprintf(fpParse, _T(OUTPUT_DHYPHEN_PLUS_STR("BCA")));
 					for (size_t k = 0; k < sizeof(dvd[i].bca); k += 16) {
@@ -1197,14 +1197,14 @@ BOOL WriteParsingMdsfile(
 		for (INT i = 0; i < h.sessionNum; i++) {
 			_ftprintf(fpParse,
 				OUTPUT_DHYPHEN_PLUS_STR("SessionBlock")
-				_T("         startSector: %d\n")
-				_T("           endSector: %d\n")
-				_T("          sessionNum: %d\n")
-				_T("     totalDataBlkNum: %d\n")
-				_T("          DataBlkNum: %d\n")
-				_T("       firstTrackNum: %d\n")
-				_T("        lastTrackNum: %d\n")
-				_T("     ofsTo1stDataBlk: %d\n")
+				_T("         startSector: %u\n")
+				_T("           endSector: %u\n")
+				_T("          sessionNum: %u\n")
+				_T("     totalDataBlkNum: %u\n")
+				_T("          DataBlkNum: %u\n")
+				_T("       firstTrackNum: %u\n")
+				_T("        lastTrackNum: %u\n")
+				_T("     ofsTo1stDataBlk: %u\n")
 				, psb[i].startSector, psb[i].endSector, psb[i].sessionNum
 				, psb[i].totalDataBlkNum, psb[i].DataBlkNum, psb[i].firstTrackNum
 				, psb[i].lastTrackNum, psb[i].ofsTo1stDataBlk
@@ -1213,20 +1213,20 @@ BOOL WriteParsingMdsfile(
 		for (INT i = 0; i < tdb; i++) {
 			_ftprintf(fpParse,
 				OUTPUT_DHYPHEN_PLUS_STR("DataBlock")
-				_T("           trackMode: %d\n")
-				_T("          numOfSubch: %d\n")
-				_T("              adrCtl: %d\n")
-				_T("            trackNum: %d\n")
-				_T("               point: %d\n")
-				_T("                 msf: %02d:%02d:%02d\n")
-				_T("       ofsToIndexBlk: %d\n")
-				_T("          sectorSize: %d\n")
-				_T("             unknown: %d\n")
-				_T("    trackStartSector: %d\n")
-				_T("   ofsFromHeadToIdx1: %d\n")
-				_T("             unknown: %d\n")
-				_T("          NumOfFname: %d\n")
-				_T("          OfsToFname: %d\n")
+				_T("           trackMode: %u\n")
+				_T("          numOfSubch: %u\n")
+				_T("              adrCtl: %u\n")
+				_T("            trackNum: %u\n")
+				_T("               point: %u\n")
+				_T("                 msf: %02u:%02u:%02u\n")
+				_T("       ofsToIndexBlk: %u\n")
+				_T("          sectorSize: %u\n")
+				_T("             unknown: %u\n")
+				_T("    trackStartSector: %u\n")
+				_T("   ofsFromHeadToIdx1: %u\n")
+				_T("             unknown: %u\n")
+				_T("          NumOfFname: %u\n")
+				_T("          OfsToFname: %u\n")
 				, db[i].trackMode, db[i].numOfSubch, db[i].adrCtl, db[i].trackNum
 				, db[i].point, db[i].m, db[i].s, db[i].f, db[i].ofsToIndexBlk
 				, db[i].sectorSize, db[i].unknown1, db[i].trackStartSector
@@ -1237,8 +1237,8 @@ BOOL WriteParsingMdsfile(
 			for (INT i = 0; i < tdb; i++) {
 				_ftprintf(fpParse,
 					OUTPUT_DHYPHEN_PLUS_STR("IndexBlock")
-					_T("           NumOfIdx0: %d\n")
-					_T("           NumOfIdx1: %d\n")
+					_T("           NumOfIdx0: %u\n")
+					_T("           NumOfIdx1: %u\n")
 					, ib[i].NumOfIdx0, ib[i].NumOfIdx1
 				);
 			}
@@ -1250,19 +1250,19 @@ BOOL WriteParsingMdsfile(
 		}
 		_ftprintf(fpParse,
 			_T(OUTPUT_DHYPHEN_PLUS_STR("Fname")
-			"          ofsToFname: %d\n"
-			"            fnameFmt: %d\n"
+			"          ofsToFname: %u\n"
+			"            fnameFmt: %u\n"
 			"         fnameString: %" CHARWIDTH "s\n")
 			, fb.ofsToFname, fb.fnameFmt, fname
 		);
 		if (pdb && h.ofsToDpm > 0) {
 			_ftprintf(fpParse,
 				OUTPUT_DHYPHEN_PLUS_STR("DPM")
-				_T("      dpmBlkTotalNum: %d\n")
+				_T("      dpmBlkTotalNum: %u\n")
 				, pdb->dpmBlkTotalNum);
 			for (UINT i = 0; i < pdb->dpmBlkTotalNum; i++) {
 				_ftprintf(fpParse,
-					_T("        ofsToDpmInfo: %d\n"), pdb->ofsToDpmBlk[i]);
+					_T("        ofsToDpmInfo: %u\n"), pdb->ofsToDpmBlk[i]);
 			}
 			for (UINT i = 0; i < pdb->dpmBlkTotalNum; i++) {
 				LPUINT diff = NULL;
@@ -1271,14 +1271,14 @@ BOOL WriteParsingMdsfile(
 					throw FALSE;
 				}
 				_ftprintf(fpParse,
-					_T("           dpmBlkNum: %d\n")
-					_T("            unknown1: %d\n")
-					_T("          resolution: %d\n")
-					_T("               entry: %d\n")
+					_T("           dpmBlkNum: %u\n")
+					_T("            unknown1: %u\n")
+					_T("          resolution: %u\n")
+					_T("               entry: %u\n")
 					, pddb[i]->dpmBlkNum, pddb[i]->unknown1, pddb[i]->resolution, pddb[i]->entry
 				);
 				_ftprintf(fpParse,
-					_T("       0    readTime:                       %5d ms\n"), pddb[i]->readTime[0]);
+					_T("       0    readTime:                       %5u ms\n"), pddb[i]->readTime[0]);
 				diff[0] = pddb[i]->readTime[0];
 
 				BOOL bStart = FALSE;
@@ -1301,7 +1301,7 @@ BOOL WriteParsingMdsfile(
 						}
 					}
 					_ftprintf(fpParse,
-						_T("%8d    readTime: %8d - %8d = %5d ms [%d]")
+						_T("%8u    readTime: %8u - %8u = %5u ms [%d]")
 						, pddb[i]->resolution * k, pddb[i]->readTime[k], pddb[i]->readTime[k - 1], diff[k], diffAndDiff);
 //					prevDiffAndDiff = diffAndDiff;
 					if (pddb[i]->resolution == 50 || pddb[i]->resolution == 256) {
@@ -1468,26 +1468,26 @@ BOOL CreateBinCueForGD(
 		_ftprintf(fpGdi, _T("%u\n"), byMaxTrackNum);
 		if (byMaxTrackNum <= 9 && lMaxLBA <= 99999) {
 			_ftprintf(fpGdi,
-				_T("1 %5d 4 2352 \"%s (Track %u).bin\" 0\n")
-				_T("2 [fix] 0 2352 \"%s (Track %u).bin\" 0\n"),
+				_T("1 %5d 4 2352 \"%s (Track %d).bin\" 0\n")
+				_T("2 [fix] 0 2352 \"%s (Track %d).bin\" 0\n"),
 				0, pszFname, 1,	pszFname, 2);
 		}
 		else if (10 <= byMaxTrackNum && lMaxLBA <= 99999) {
 			_ftprintf(fpGdi,
-				_T(" 1 %5d 4 2352 \"%s (Track %02u).bin\" 0\n")
-				_T(" 2 [fix] 0 2352 \"%s (Track %02u).bin\" 0\n"),
+				_T(" 1 %5d 4 2352 \"%s (Track %02d).bin\" 0\n")
+				_T(" 2 [fix] 0 2352 \"%s (Track %02d).bin\" 0\n"),
 				0, pszFname, 1, pszFname, 2);
 		}
 		else if (byMaxTrackNum <= 9 && 100000 <= lMaxLBA) {
 			_ftprintf(fpGdi,
-				_T("1 %6d 4 2352 \"%s (Track %u).bin\" 0\n")
-				_T("2  [fix] 0 2352 \"%s (Track %u).bin\" 0\n"),
+				_T("1 %6d 4 2352 \"%s (Track %d).bin\" 0\n")
+				_T("2  [fix] 0 2352 \"%s (Track %d).bin\" 0\n"),
 				0, pszFname, 1,	pszFname, 2);
 		}
 		else if (10 <= byMaxTrackNum && 100000 <= lMaxLBA) {
 			_ftprintf(fpGdi,
-				_T(" 1 %6d 4 2352 \"%s (Track %02u).bin\" 0\n")
-				_T(" 2  [fix] 0 2352 \"%s (Track %02u).bin\" 0\n"),
+				_T(" 1 %6d 4 2352 \"%s (Track %02d).bin\" 0\n")
+				_T(" 2  [fix] 0 2352 \"%s (Track %02d).bin\" 0\n"),
 				0, pszFname, 1,	pszFname, 2);
 		}
 
@@ -1509,19 +1509,19 @@ BOOL CreateBinCueForGD(
 				}
 			}
 			if (byMaxTrackNum <= 9 && lMaxLBA <= 99999) {
-				_ftprintf(fpGdi, _T("%u %5d %u 2352 \"%s (Track %u).bin\" 0\n"),
+				_ftprintf(fpGdi, _T("%u %5u %u 2352 \"%s (Track %u).bin\" 0\n"),
 					byTrackNum, lpToc[byTrackNum - 3], byCtl, pszFname, byTrackNum);
 			}
 			else if (10 <= byMaxTrackNum && lMaxLBA <= 99999) {
-				_ftprintf(fpGdi, _T("%2u %5d %u 2352 \"%s (Track %02u).bin\" 0\n"),
+				_ftprintf(fpGdi, _T("%2u %5u %u 2352 \"%s (Track %02u).bin\" 0\n"),
 					byTrackNum, lpToc[byTrackNum - 3], byCtl, pszFname, byTrackNum);
 			}
 			else if (byMaxTrackNum <= 9 && 100000 <= lMaxLBA) {
-				_ftprintf(fpGdi, _T("%u %6d %u 2352 \"%s (Track %u).bin\" 0\n"),
+				_ftprintf(fpGdi, _T("%u %6u %u 2352 \"%s (Track %u).bin\" 0\n"),
 					byTrackNum, lpToc[byTrackNum - 3], byCtl, pszFname, byTrackNum);
 			}
 			else if (10 <= byMaxTrackNum && 100000 <= lMaxLBA) {
-				_ftprintf(fpGdi, _T("%2u %6d %u 2352 \"%s (Track %02u).bin\" 0\n"),
+				_ftprintf(fpGdi, _T("%2u %6u %u 2352 \"%s (Track %02u).bin\" 0\n"),
 					byTrackNum, lpToc[byTrackNum - 3], byCtl, pszFname, byTrackNum);
 			}
 		}
@@ -1641,8 +1641,8 @@ VOID DescrambleMainChannelAll(
 		INT nFirstLBA = pDisc->SUB.lp1stLBAListOfDataTrackOnSub[k];
 		if (nFirstLBA != -1) {
 			INT nLastLBA = pDisc->SUB.lpLastLBAListOfDataTrackOnSub[k];
-			OutputDiscLog("\tTrack %2u Data Sector: %6d - %6d (%#07x - %#07x)\n",
-				k + 1, nFirstLBA, nLastLBA, nFirstLBA, nLastLBA);
+			OutputDiscLog("\tTrack %2d Data Sector: %6d - %6d (%#07x - %#07x)\n",
+				k + 1, nFirstLBA, nLastLBA, (UINT)nFirstLBA, (UINT)nLastLBA);
 			if (!pExtArg->byMultiSession && pDisc->SCSI.lpSessionNumList[k] >= 2) {
 				INT nSkipLBA = (SESSION_TO_SESSION_SKIP_LBA * (INT)(pDisc->SCSI.lpSessionNumList[k] - 1));
 				nFirstLBA -= nSkipLBA;
@@ -1665,7 +1665,7 @@ VOID DescrambleMainChannelAll(
 				fseek(fpImg, lSeekPtr * CD_RAW_SECTOR_SIZE, SEEK_SET);
 				if (fread(aSrcBuf, sizeof(BYTE), sizeof(aSrcBuf), fpImg) < sizeof(aSrcBuf)) {
 					OutputErrorString("LBA[%06d, %#07x]: Failed to read [F:%s][L:%d]\n"
-						, nFirstLBA, nFirstLBA, _T(__FUNCTION__), __LINE__);
+						, nFirstLBA, (UINT)nFirstLBA, _T(__FUNCTION__), __LINE__);
 					break;
 				}
 				if (IsValidMainDataHeader(aSrcBuf)) {
@@ -1858,11 +1858,11 @@ BOOL CreateBin(
 	if (!lpBuf) {
 		OutputString("\n");
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString("bufSize: %zd", stBufSize);
+		OutputErrorString("bufSize: %zu", stBufSize);
 		return FALSE;
 	}
 	if (fread(lpBuf, sizeof(BYTE), stBufSize, fpImg) < stBufSize) {
-		OutputErrorString("Failed to read: read size %zd [F:%s][L:%d]\n", stBufSize, _T(__FUNCTION__), __LINE__);
+		OutputErrorString("Failed to read: read size %zu [F:%s][L:%d]\n", stBufSize, _T(__FUNCTION__), __LINE__);
 		FreeAndNull(lpBuf);
 		return FALSE;
 	}
@@ -2253,7 +2253,7 @@ VOID OutputLastErrorNumAndString(
 
 	LocalFree(lpMsgBuf);
 #else
-	OutputErrorString("[F:%s][L:%lu] GetLastError: %lu, %s\n",
+	OutputErrorString("[F:%s][L:%ld] GetLastError: %d, %s\n",
 		pszFuncName, lLineNum, GetLastError(), strerror(GetLastError()));
 #endif
 }
@@ -2718,7 +2718,7 @@ BOOL OutputMergedFile(
 	}
 	BYTE buf[2352] = {};
 	if (fread(buf, sizeof(BYTE), sizeof(buf), fpSrc2) < sizeof(buf)) {
-		OutputErrorString("Failed to read: read size %zd [F:%s][L:%d]\n", sizeof(buf), _T(__FUNCTION__), __LINE__);
+		OutputErrorString("Failed to read: read size %zu [F:%s][L:%d]\n", sizeof(buf), _T(__FUNCTION__), __LINE__);
 		FcloseAndNull(fpSrc1);
 		FcloseAndNull(fpSrc2);
 		FcloseAndNull(fpDst);
@@ -2729,7 +2729,7 @@ BOOL OutputMergedFile(
 
 	for (INT i = 0; i < nLBA; i++) {
 		if (fread(buf, sizeof(BYTE), sizeof(buf), fpSrc1) < sizeof(buf)) {
-			OutputErrorString("Failed to read: read size %zd [F:%s][L:%d]\n", sizeof(buf), _T(__FUNCTION__), __LINE__);
+			OutputErrorString("Failed to read: read size %zu [F:%s][L:%d]\n", sizeof(buf), _T(__FUNCTION__), __LINE__);
 			FcloseAndNull(fpSrc1);
 			FcloseAndNull(fpSrc2);
 			FcloseAndNull(fpDst);
@@ -2739,7 +2739,7 @@ BOOL OutputMergedFile(
 	}
 
 	if (fread(buf, sizeof(BYTE), sizeof(buf), fpSrc2) < sizeof(buf)) {
-		OutputErrorString("Failed to read: read size %zd [F:%s][L:%d]\n", sizeof(buf), _T(__FUNCTION__), __LINE__);
+		OutputErrorString("Failed to read: read size %zu [F:%s][L:%d]\n", sizeof(buf), _T(__FUNCTION__), __LINE__);
 		FcloseAndNull(fpSrc1);
 		FcloseAndNull(fpSrc2);
 		FcloseAndNull(fpDst);
@@ -2749,7 +2749,7 @@ BOOL OutputMergedFile(
 	while (!feof(fpSrc2) && !ferror(fpSrc2)) {
 		fwrite(buf, sizeof(BYTE), sizeof(buf), fpDst);
 		if (fread(buf, sizeof(BYTE), sizeof(buf), fpSrc2) < sizeof(buf)) {
-			OutputErrorString("Failed to read: read size %zd [F:%s][L:%d]\n", sizeof(buf), _T(__FUNCTION__), __LINE__);
+			OutputErrorString("Failed to read: read size %zu [F:%s][L:%d]\n", sizeof(buf), _T(__FUNCTION__), __LINE__);
 			FcloseAndNull(fpSrc1);
 			FcloseAndNull(fpSrc2);
 			FcloseAndNull(fpDst);
@@ -2760,7 +2760,7 @@ BOOL OutputMergedFile(
 	fseek(fpSrc1, -2352, SEEK_CUR);
 
 	if (fread(buf, sizeof(BYTE), sizeof(buf), fpSrc1) < sizeof(buf)) {
-		OutputErrorString("Failed to read: read size %zd [F:%s][L:%d]\n", sizeof(buf), _T(__FUNCTION__), __LINE__);
+		OutputErrorString("Failed to read: read size %zu [F:%s][L:%d]\n", sizeof(buf), _T(__FUNCTION__), __LINE__);
 		FcloseAndNull(fpSrc1);
 		FcloseAndNull(fpSrc2);
 		FcloseAndNull(fpDst);
@@ -2769,7 +2769,7 @@ BOOL OutputMergedFile(
 	while (!feof(fpSrc1) && !ferror(fpSrc1)) {
 		fwrite(buf, sizeof(BYTE), sizeof(buf), fpDst);
 		if (fread(buf, sizeof(BYTE), sizeof(buf), fpSrc1) < sizeof(buf)) {
-			OutputErrorString("Failed to read: read size %zd [F:%s][L:%d]\n", sizeof(buf), _T(__FUNCTION__), __LINE__);
+			OutputErrorString("Failed to read: read size %zu [F:%s][L:%d]\n", sizeof(buf), _T(__FUNCTION__), __LINE__);
 			FcloseAndNull(fpSrc1);
 			FcloseAndNull(fpSrc2);
 			FcloseAndNull(fpDst);

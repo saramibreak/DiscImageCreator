@@ -457,7 +457,7 @@ VOID OutputGetConfigurationFeatureIncrementalStreamingWritable(
 		BOOLEAN_TO_STRING_YES_NO(pIncremental->AddressModeReservation),
 		BOOLEAN_TO_STRING_YES_NO(pIncremental->TrackRessourceInformation),
 		pIncremental->NumberOfLinkSizes);
-	for (INT i = 0; i < pIncremental->NumberOfLinkSizes; i++) {
+	for (UINT i = 0; i < pIncremental->NumberOfLinkSizes; i++) {
 		OutputDriveLog(
 			"\t\tLinkSize%u: %u\n", i, pIncremental->LinkSize[i]);
 	}
@@ -672,7 +672,7 @@ VOID OutputGetConfigurationFeatureLayerJumpRecording(
 		"\tFeatureLayerJumpRecording\n"
 		"\t\tNumberOfLinkSizes: %u\n",
 		pLayerJumpRec->NumberOfLinkSizes);
-	for (INT i = 0; i < pLayerJumpRec->NumberOfLinkSizes; i++) {
+	for (UINT i = 0; i < pLayerJumpRec->NumberOfLinkSizes; i++) {
 		OutputDriveLog(
 			"\t\tLinkSize %u: %u\n", i, pLayerJumpRec->LinkSizes[i]);
 	}
@@ -1551,7 +1551,7 @@ VOID OutputGetConfigurationFeatureDiscControlBlocks(
 	PFEATURE_DATA_DISC_CONTROL_BLOCKS pDiscCtrlBlk
 ) {
 	OutputDriveLog("\tFeatureDiscControlBlocks\n");
-	for (INT i = 0; i < pDiscCtrlBlk->Header.AdditionalLength; i++) {
+	for (UINT i = 0; i < pDiscCtrlBlk->Header.AdditionalLength; i++) {
 		OutputDriveLog(
 			"\t\tContentDescriptor %02u: %08ld\n", i,
 			MAKELONG(
@@ -2858,7 +2858,7 @@ VOID OutputModeParmeterHeader10(
 
 VOID OutputCDVDCapabilitiesPage(
 	PCDVD_CAPABILITIES_PAGE cdvd,
-	INT perKb
+	UINT perKb
 ) {
 	OutputDriveLog(
 		OUTPUT_DHYPHEN_PLUS_STR("CDVD Capabilities & Mechanism Status Page")
@@ -2982,8 +2982,7 @@ VOID OutputCDVDCapabilitiesPage(
 		, BOOLEAN_TO_STRING_YES_NO(cdvd->SideChangeCapable)
 		, BOOLEAN_TO_STRING_YES_NO(cdvd->RWInLeadInReadable)
 		, rsm, rsm / perKb
-		, MAKEWORD(cdvd->NumberVolumeLevels[1],
-			cdvd->NumberVolumeLevels[0])
+		, MAKEWORD(cdvd->NumberVolumeLevels[1],	cdvd->NumberVolumeLevels[0])
 		, bs
 		, rsc, rsc / perKb
 		, BOOLEAN_TO_STRING_YES_NO(cdvd->BCK)
@@ -3007,8 +3006,8 @@ VOID OutputPageCDvdInactivity(
 		"\t               PageLength: %u\n"
 		"\t                     SWPP: %s\n"
 		"\t                     DISP: %s\n"
-		"\t   GroupOneMinimumTimeout: %d\n"
-		"\t   GroupTwoMinimumTimeout: %d\n"
+		"\t   GroupOneMinimumTimeout: %u\n"
+		"\t   GroupTwoMinimumTimeout: %u\n"
 		, inactivity->PageCode
 		, BOOLEAN_TO_STRING_YES_NO(inactivity->PSBit)
 		, inactivity->PageLength
@@ -3031,8 +3030,8 @@ VOID OutputPagePowerCondition(
 		"\t               PageLength: %u\n"
 		"\t                  Standby: %s\n"
 		"\t                     Idle: %s\n"
-		"\t                IdleTimer: %d\n"
-		"\t             StandbyTimer: %d\n"
+		"\t                IdleTimer: %u\n"
+		"\t             StandbyTimer: %u\n"
 		, power->PageCode
 		, BOOLEAN_TO_STRING_YES_NO(power->PSBit)
 		, power->PageLength
@@ -3187,19 +3186,19 @@ VOID OutputPageWriteParameters(
 		"\t                TestWrite: %s\n"
 		"\t            LinkSizeValid: %s\n"
 		"\tBufferUnderrunFreeEnabled: %s\n"
-		"\t                TrackMode: %d\n"
+		"\t                TrackMode: %u\n"
 		"\t                     Copy: %s\n"
 		"\t              FixedPacket: %s\n"
-		"\t             MultiSession: %d\n"
-		"\t            DataBlockType: %d\n"
-		"\t                 LinkSize: %d\n"
-		"\t      HostApplicationCode: %d\n"
-		"\t            SessionFormat: %d\n"
-		"\t               PacketSize: %d\n"
-		"\t         AudioPauseLength: %d\n"
+		"\t             MultiSession: %u\n"
+		"\t            DataBlockType: %u\n"
+		"\t                 LinkSize: %u\n"
+		"\t      HostApplicationCode: %u\n"
+		"\t            SessionFormat: %u\n"
+		"\t               PacketSize: %u\n"
+		"\t         AudioPauseLength: %u\n"
 		"\t       MediaCatalogNumber: %16" CHARWIDTH "s\n"
 		"\t                     ISRC: %16" CHARWIDTH "s\n"
-		"\t            SubHeaderData: %d\n"
+		"\t            SubHeaderData: %u\n"
 		, wparam->PageCode
 		, BOOLEAN_TO_STRING_YES_NO(wparam->PageSavable)
 		, wparam->PageLength
@@ -3235,15 +3234,15 @@ VOID OutputPageRigidGeometry(
 		"\t                PageCode: %#04x\n"
 		"\t             PageSavable: %s\n"
 		"\t              PageLength: %u\n"
-		"\t       NumberOfCylinders: %d\n"
-		"\t           NumberOfHeads: %d\n"
-		"\t        StartWritePrecom: %d\n"
-		"\t     StartReducedCurrent: %d\n"
-		"\t           DriveStepRate: %d\n"
-		"\t       LandZoneCyclinder: %d\n"
+		"\t       NumberOfCylinders: %u\n"
+		"\t           NumberOfHeads: %u\n"
+		"\t        StartWritePrecom: %u\n"
+		"\t     StartReducedCurrent: %u\n"
+		"\t           DriveStepRate: %u\n"
+		"\t       LandZoneCyclinder: %u\n"
 		"\t  RotationalPositionLock: %s\n"
-		"\t          RotationOffset: %d\n"
-		"\t            RoataionRate: %d\n"
+		"\t          RotationOffset: %u\n"
+		"\t            RoataionRate: %u\n"
 		, geom->PageCode
 		, BOOLEAN_TO_STRING_YES_NO(geom->PageSavable)
 		, geom->PageLength
@@ -3350,7 +3349,7 @@ VOID OutputPageUnknown(
 	size_t pcOfs,
 	LPCTSTR str
 ) {
-	int len = *(modesense + pcOfs + 1);
+	UINT len = *(modesense + pcOfs + 1);
 	OutputDriveLog(
 		OUTPUT_DHYPHEN_PLUS_STR("%s")
 		"\t                 PageCode: %#04x\n"
@@ -3362,7 +3361,7 @@ VOID OutputPageUnknown(
 		, BOOLEAN_TO_STRING_YES_NO((*(modesense + pcOfs) >> 7) & 0x01)
 		, len
 	);
-	for (int t = 0; t < len; t++) {
+	for (UINT t = 0; t < len; t++) {
 		OutputDriveLog("%02x", *(modesense + pcOfs + t));
 	}
 	OutputDriveLog("\n");
@@ -3484,7 +3483,7 @@ VOID OutputModeSense(
 			PCDVD_CAPABILITIES_PAGE capabilities = (PCDVD_CAPABILITIES_PAGE)(modesense + pcOfs);
 			WORD rsm = MAKEWORD(capabilities->ReadSpeedMaximum[1],
 				capabilities->ReadSpeedMaximum[0]);
-			INT perKb = 176;
+			UINT perKb = 176;
 			if (IsDVDBasedDisc(pDisc)) {
 				perKb = 1385;
 			}
@@ -3545,7 +3544,7 @@ VOID OutputEepromUnknownByte(
 	UINT endIdx
 ) {
 	if (startIdx <= endIdx) {
-		OutputDriveLog("\t   Unknown[%03d]: ", startIdx);
+		OutputDriveLog("\t   Unknown[%03u]: ", startIdx);
 		for (UINT i = startIdx; i <= endIdx; i++) {
 			OutputDriveLog("%02x ", pBuf[i]);
 		}
@@ -3653,20 +3652,20 @@ VOID OutputEepromOverPX712(
 		break;
 	}
 
-	LONG ucr = 
-		MAKELONG(MAKEWORD(pBuf[37], pBuf[36]), MAKEWORD(pBuf[35], pBuf[34]));
-	LONG ucw = 
-		MAKELONG(MAKEWORD(pBuf[41], pBuf[40]), MAKEWORD(pBuf[39], pBuf[38]));
-	LONG udr = 
-		MAKELONG(MAKEWORD(pBuf[45], pBuf[44]), MAKEWORD(pBuf[43], pBuf[42]));
-	LONG udw = 
-		MAKELONG(MAKEWORD(pBuf[49], pBuf[48]), MAKEWORD(pBuf[47], pBuf[46]));
+	UINT ucr =
+		MAKEUINT(MAKEWORD(pBuf[37], pBuf[36]), MAKEWORD(pBuf[35], pBuf[34]));
+	UINT ucw =
+		MAKEUINT(MAKEWORD(pBuf[41], pBuf[40]), MAKEWORD(pBuf[39], pBuf[38]));
+	UINT udr =
+		MAKEUINT(MAKEWORD(pBuf[45], pBuf[44]), MAKEWORD(pBuf[43], pBuf[42]));
+	UINT udw = 
+		MAKEUINT(MAKEWORD(pBuf[49], pBuf[48]), MAKEWORD(pBuf[47], pBuf[46]));
 	OutputDriveLog(
 		"\tDisc load count: %u\n"
-		"\t   CD read time: %02lu:%02lu:%02lu\n"
-		"\t  CD write time: %02lu:%02lu:%02lu\n"
-		"\t  DVD read time: %02lu:%02lu:%02lu\n"
-		"\t DVD write time: %02lu:%02lu:%02lu\n"
+		"\t   CD read time: %02u:%02u:%02u\n"
+		"\t  CD write time: %02u:%02u:%02u\n"
+		"\t  DVD read time: %02u:%02u:%02u\n"
+		"\t DVD write time: %02u:%02u:%02u\n"
 		, MAKEWORD(pBuf[33], pBuf[32])
 		, ucr / 3600, ucr / 60 % 60, ucr % 60
 		, ucw / 3600, ucw / 60 % 60, ucw % 60
@@ -3748,25 +3747,25 @@ VOID OutputEeprom(
 		case PLXTR_DRIVE_TYPE::PX704A:
 		{
 			OutputEepromUnknownByte(pBuf, 108, 114);
-			LONG ucr = MAKELONG(MAKEWORD(pBuf[120], pBuf[119]), MAKEWORD(pBuf[118], pBuf[117]));
-			LONG ucw = MAKELONG(MAKEWORD(pBuf[125], pBuf[124]), MAKEWORD(pBuf[123], pBuf[122]));
+			UINT ucr = MAKEUINT(MAKEWORD(pBuf[120], pBuf[119]), MAKEWORD(pBuf[118], pBuf[117]));
+			UINT ucw = MAKEUINT(MAKEWORD(pBuf[125], pBuf[124]), MAKEWORD(pBuf[123], pBuf[122]));
 			OutputDriveLog(
 				"\tDisc load count: %u\n"
-				"\t   CD read time: %02lu:%02lu:%02lu\n"
+				"\t   CD read time: %02u:%02u:%02u\n"
 				"\t        Unknown: %02x\n"
-				"\t  CD write time: %02lu:%02lu:%02lu\n"
+				"\t  CD write time: %02u:%02u:%02u\n"
 				, MAKEWORD(pBuf[116], pBuf[115])
 				, ucr / 3600, ucr / 60 % 60, ucr % 60
 				, pBuf[121]
 				, ucw / 3600, ucw / 60 % 60, ucw % 60);
 			OutputEepromUnknownByte(pBuf, 126, 211);
-			LONG udr =
-				MAKELONG(MAKEWORD(pBuf[215], pBuf[214]), MAKEWORD(pBuf[213], pBuf[212]));
-			LONG udw =
-				MAKELONG(MAKEWORD(pBuf[219], pBuf[218]), MAKEWORD(pBuf[217], pBuf[216]));
+			UINT udr =
+				MAKEUINT(MAKEWORD(pBuf[215], pBuf[214]), MAKEWORD(pBuf[213], pBuf[212]));
+			UINT udw =
+				MAKEUINT(MAKEWORD(pBuf[219], pBuf[218]), MAKEWORD(pBuf[217], pBuf[216]));
 			OutputDriveLog(
-				"\t  DVD read time: %02lu:%02lu:%02lu\n"
-				"\t DVD write time: %02lu:%02lu:%02lu\n"
+				"\t  DVD read time: %02u:%02u:%02u\n"
+				"\t DVD write time: %02u:%02u:%02u\n"
 				, udr / 3600, udr / 60 % 60, udr % 60
 				, udw / 3600, udw / 60 % 60, udw % 60);
 			OutputEepromUnknownByte(pBuf, 220, 255);
@@ -3775,15 +3774,15 @@ VOID OutputEeprom(
 		case PLXTR_DRIVE_TYPE::PX320A:
 		{
 			OutputEepromUnknownByte(pBuf, 108, 123);
-			LONG ucr = MAKELONG(MAKEWORD(pBuf[127], pBuf[126]), MAKEWORD(pBuf[125], pBuf[124]));
+			UINT ucr = MAKEUINT(MAKEWORD(pBuf[127], pBuf[126]), MAKEWORD(pBuf[125], pBuf[124]));
 			OutputDriveLog(
-				"\t   CD read time: %02lu:%02lu:%02lu\n"
+				"\t   CD read time: %02u:%02u:%02u\n"
 				, ucr / 3600, ucr / 60 % 60, ucr % 60);
 			OutputEepromUnknownByte(pBuf, 128, 187);
-			LONG udr =
-				MAKELONG(MAKEWORD(pBuf[191], pBuf[190]), MAKEWORD(pBuf[189], pBuf[188]));
+			UINT udr =
+				MAKEUINT(MAKEWORD(pBuf[191], pBuf[190]), MAKEWORD(pBuf[189], pBuf[188]));
 			OutputDriveLog(
-				"\t  DVD read time: %02lu:%02lu:%02lu\n"
+				"\t  DVD read time: %02u:%02u:%02u\n"
 				, udr / 3600, udr / 60 % 60, udr % 60);
 			OutputEepromUnknownByte(pBuf, 192, 226);
 			OutputDriveLog(
@@ -3799,13 +3798,13 @@ VOID OutputEeprom(
 		case PLXTR_DRIVE_TYPE::PXW4012A:
 		case PLXTR_DRIVE_TYPE::PXW4012S:
 		{
-			LONG ucr = MAKELONG(MAKEWORD(pBuf[111], pBuf[110]), MAKEWORD(pBuf[109], pBuf[108]));
-			LONG ucw = MAKELONG(MAKEWORD(pBuf[125], pBuf[124]), MAKEWORD(pBuf[123], pBuf[122]));
+			UINT ucr = MAKEUINT(MAKEWORD(pBuf[111], pBuf[110]), MAKEWORD(pBuf[109], pBuf[108]));
+			UINT ucw = MAKEUINT(MAKEWORD(pBuf[125], pBuf[124]), MAKEWORD(pBuf[123], pBuf[122]));
 			OutputDriveLog(
-				"\t   CD read time: %02lu:%02lu:%02lu\n"
+				"\t   CD read time: %02u:%02u:%02u\n"
 				"\t        Unknown: %02x %02x %02x %02x %02x %02x %02x %02x\n"
 				"\tDisc load count: %u\n"
-				"\t  CD write time: %02lu:%02lu:%02lu\n"
+				"\t  CD write time: %02u:%02u:%02u\n"
 				, ucr / 3600, ucr / 60 % 60, ucr % 60
 				, pBuf[112], pBuf[113], pBuf[114], pBuf[115], pBuf[116], pBuf[117], pBuf[118], pBuf[119]
 				, MAKEWORD(pBuf[121], pBuf[120])
@@ -3820,10 +3819,10 @@ VOID OutputEeprom(
 		case PLXTR_DRIVE_TYPE::PXW1210S:
 		{
 			OutputEepromUnknownByte(pBuf, 108, 119);
-			LONG ucw = MAKELONG(MAKEWORD(pBuf[125], pBuf[124]), MAKEWORD(pBuf[123], pBuf[122]));
+			UINT ucw = MAKEUINT(MAKEWORD(pBuf[125], pBuf[124]), MAKEWORD(pBuf[123], pBuf[122]));
 			OutputDriveLog(
 				"\tDisc load count: %u\n"
-				"\t  CD write time: %02lu:%02lu:%02lu\n"
+				"\t  CD write time: %02u:%02u:%02u\n"
 				, MAKEWORD(pBuf[121], pBuf[120])
 				, ucw / 3600, ucw / 60 % 60, ucw % 60);
 			OutputEepromUnknownByte(pBuf, 126, 127);
@@ -3836,9 +3835,9 @@ VOID OutputEeprom(
 		case PLXTR_DRIVE_TYPE::PXR820T:
 		{
 			OutputEepromUnknownByte(pBuf, 108, 121);
-			LONG ucw = MAKELONG(MAKEWORD(pBuf[125], pBuf[124]), MAKEWORD(pBuf[123], pBuf[122]));
+			UINT ucw = MAKEUINT(MAKEWORD(pBuf[125], pBuf[124]), MAKEWORD(pBuf[123], pBuf[122]));
 			OutputDriveLog(
-				"\t  CD write time: %02lu:%02lu:%02lu\n"
+				"\t  CD write time: %02u:%02u:%02u\n"
 				, ucw / 3600, ucw / 60 % 60, ucw % 60);
 			OutputEepromUnknownByte(pBuf, 126, 127);
 			break;

@@ -234,7 +234,7 @@ typedef struct _DEVICE {
 #ifdef _WIN32
 	BYTE byDriveLetter;
 #else
-	CHAR drivepath[15];
+	CHAR drivepath[9];
 #endif
 	WORD wMaxReadSpeed;
 	BYTE bySuccessReadToc;

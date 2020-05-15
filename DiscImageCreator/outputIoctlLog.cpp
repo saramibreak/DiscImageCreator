@@ -3615,7 +3615,7 @@ VOID OutputDeviceType(
 		OutputDiscLog("PMI\n");
 		break;
 	default:
-		OutputDiscLog("Unknown Device: %ld\n", deviceType);
+		OutputDiscLog("Unknown Device: %lu\n", deviceType);
 		break;
 	}
 }
@@ -3659,9 +3659,9 @@ VOID OutputDiskGeometryEx(
 	PDISK_DETECTION_INFO detection = DiskGeometryGetDetect(pGeom);
 	OutputDiscLog(
 		OUTPUT_DHYPHEN_PLUS_STR("DISK_GEOMETRY_EX")
-		"\t            DiskSize: %llu (Bytes)\n"
+		"\t            DiskSize: %lld (Bytes)\n"
 		"\t SizeOfPartitionInfo: %lu\n"
-		"\t      PartitionStyle: %u "
+		"\t      PartitionStyle: %d "
 		, pGeom->DiskSize.QuadPart
 		, partition->SizeOfPartitionInfo
 		, partition->PartitionStyle
@@ -3704,7 +3704,7 @@ VOID OutputDiskGeometryEx(
 
 	OutputDiscLog(
 		"\t    SizeOfDetectInfo: %lu\n"
-		"\t       DetectionType: %u "
+		"\t       DetectionType: %d "
 		, detection->SizeOfDetectInfo
 		, detection->DetectionType
 	);
@@ -3766,13 +3766,13 @@ VOID OutputRemovableDiskInfo(
 	);
 	OutputDeviceType(pMedia->DeviceType);
 	OutputDiscLog(
-		"\t      MediaInfoCount: %ld\n"
+		"\t      MediaInfoCount: %lu\n"
 		, pMedia->MediaInfoCount
 	);
 	for (DWORD i = 0; i < pMedia->MediaInfoCount; i++) {
 		// TODO: pMedia->MediaInfo[i].DeviceSpecific.TapeInfo
 		OutputDiscLog(
-			"\t           Cylinders: %ld\n"
+			"\t           Cylinders: %lu\n"
 			"\t           MediaType: "
 			, pMedia->MediaInfo[i].DeviceSpecific.RemovableDiskInfo.Cylinders.u.LowPart
 		);
@@ -3786,10 +3786,10 @@ VOID OutputRemovableDiskInfo(
 
 		DWORD mc = pMedia->MediaInfo[i].DeviceSpecific.RemovableDiskInfo.MediaCharacteristics;
 		OutputDiscLog(
-			"\t   TracksPerCylinder: %ld\n"
-			"\t     SectorsPerTrack: %ld\n"
-			"\t      BytesPerSector: %ld\n"
-			"\t    NumberMediaSides: %ld\n"
+			"\t   TracksPerCylinder: %lu\n"
+			"\t     SectorsPerTrack: %lu\n"
+			"\t      BytesPerSector: %lu\n"
+			"\t    NumberMediaSides: %lu\n"
 			"\tMediaCharacteristics:"
 			, pMedia->MediaInfo[i].DeviceSpecific.RemovableDiskInfo.TracksPerCylinder
 			, pMedia->MediaInfo[i].DeviceSpecific.RemovableDiskInfo.SectorsPerTrack
