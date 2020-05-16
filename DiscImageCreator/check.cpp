@@ -122,6 +122,12 @@ BOOL IsValid0xF1SupportedDrive(
 				return TRUE;
 			}
 		}
+		else if (!strncmp(pDevice->szProductId, "BW-12B1ST   a   ", DRIVE_PRODUCT_ID_SIZE)) {
+			if (!strncmp(pDevice->szProductRevisionLevel, "1.00", DRIVE_VERSION_ID_SIZE)) {
+				pDevice->by0xF1Drive = TRUE;
+				return TRUE;
+			}
+		}
 	}
 	else if (!strncmp(pDevice->szVendorId, "HL-DT-ST", DRIVE_VENDOR_ID_SIZE)) {
 		if (!strncmp(pDevice->szProductId, "DVDRAM GH24NSD1 ", DRIVE_PRODUCT_ID_SIZE)) {
