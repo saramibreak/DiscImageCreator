@@ -88,8 +88,7 @@ ifeq ($(PREFIX),)
 endif
 
 install:
-	install -d $(DESTDIR)$(PREFIX)/DiscImageCreator/
 	install -Dm 0644 ../Release_ANSI/default.dat $(DESTDIR)$(PREFIX)/share/DiscImageCreator/default.dat
-	install -m 755 $(TARGET) $(DESTDIR)$(PREFIX)/bin/
+	install -Dm 0755 $(TARGET) $(DESTDIR)$(PREFIX)/bin/$(TARGET)
 
 .PHONY: clean clean-objs buildDateTime
