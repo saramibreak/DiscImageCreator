@@ -18,6 +18,7 @@
 BOOL ReadDisk(
 	PEXEC_TYPE pExecType,
 	PDEVICE pDevice,
+	PDISC pDisc,
 	LPCTSTR pszPath
 );
 

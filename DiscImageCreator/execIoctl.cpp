@@ -23,8 +23,8 @@
 // ref: http://www.ioctls.net/
 BOOL DiskGetMediaTypes(
 	PDEVICE pDevice,
-	PDWORD64 pDiskSize,
-	LPDWORD pBytePerSector
+	PDISC pDisc,
+	PDWORD64 pDiskSize
 ) {
 	DISK_GEOMETRY geom[20] = {};
 	DWORD dwReturned = 0;
@@ -42,15 +42,15 @@ BOOL DiskGetMediaTypes(
 		OutputDiskGeometry(geom, 1);
 		*pDiskSize = geom[0].Cylinders.u.LowPart *
 			geom[0].TracksPerCylinder * geom[0].SectorsPerTrack * geom[0].BytesPerSector;
-		*pBytePerSector = geom[0].BytesPerSector;
+		pDisc->dwBytesPerSector = geom[0].BytesPerSector;
 	}
 	return bRet;
 }
 
 BOOL StorageGetMediaTypesEx(
 	PDEVICE pDevice,
-	PDWORD64 pDiskSize,
-	LPDWORD pBytePerSector
+	PDISC pDisc,
+	PDWORD64 pDiskSize
 ) {
 	GET_MEDIA_TYPES mediaTypes = {};
 	DWORD dwReturned = 0;
@@ -77,9 +77,49 @@ BOOL StorageGetMediaTypesEx(
 //		OutputDiskGeometry((PDISK_GEOMETRY)lpBuf, 1);
 		OutputDiskGeometryEx(pGeom);
 		*pDiskSize = (DWORD64)pGeom->DiskSize.QuadPart;
-		*pBytePerSector = pGeom->Geometry.BytesPerSector;
+		pDisc->dwBytesPerSector = pGeom->Geometry.BytesPerSector;
 	}
 	return bRet;
+}
+
+BOOL Read10(
+	PDEVICE pDevice,
+	PDISC pDisc,
+	LPBYTE lpBuf,
+	DWORD dwBlkSize,
+	FILE* fp
+) {
+	CDB::_CDB10 cdb = {};
+	cdb.OperationCode = SCSIOP_READ;
+	DWORD dwTransferLen = pDevice->dwMaxTransferLength / pDisc->dwBytesPerSector;
+	cdb.TransferBlocksLsb = (UCHAR)dwTransferLen;
+
+#ifdef _WIN32
+	INT direction = SCSI_IOCTL_DATA_IN;
+#else
+	INT direction = SG_DXFER_FROM_DEV;
+#endif
+	BYTE byScsiStatus = 0;
+
+	for (DWORD dwLBA = 0; dwLBA < dwBlkSize; dwLBA += dwTransferLen) {
+		if (dwTransferLen > (DWORD)(dwBlkSize - dwLBA)) {
+			dwTransferLen = (DWORD)(dwBlkSize - dwLBA);
+			cdb.TransferBlocksLsb = (UCHAR)dwTransferLen;
+		}
+		cdb.LogicalBlockByte0 = (UCHAR)(dwLBA >> 24);
+		cdb.LogicalBlockByte1 = (UCHAR)(dwLBA >> 16);
+		cdb.LogicalBlockByte2 = (UCHAR)(dwLBA >> 8);
+		cdb.LogicalBlockByte3 = (UCHAR)dwLBA;
+		if (!ScsiPassThroughDirect(NULL, pDevice, &cdb, CDB10GENERIC_LENGTH, lpBuf,
+			direction, pDisc->dwBytesPerSector * dwTransferLen, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+			return FALSE;
+		}
+		fwrite(lpBuf, sizeof(BYTE), pDisc->dwBytesPerSector * dwTransferLen, fp);
+		OutputString("\rCreating bin (Block) %lu/%lu", dwLBA + dwTransferLen, dwBlkSize);
+	}
+	OutputString("\n");
+	return TRUE;
 }
 
 BOOL ReadDirectoryRecord(
@@ -207,21 +247,17 @@ BOOL ReadDirectoryRecord(
 }
 
 BOOL ReadFileSystem(
-#ifdef _WIN32
-	HANDLE handle,
-#else
-	int handle,
-#endif
-	LPBYTE lpBuf,
-	DWORD dwBytesPerSector
+	PDEVICE pDevice,
+	PDISC pDisc,
+	LPBYTE lpBuf
 ) {
 	DWORD dwBytesRead = 0;
 	FAT fat = {};
 	BOOL bHfs = FALSE;
 	LONG firstPartition = 0;
-	BOOL bRet = ReadFile(handle, lpBuf, dwBytesPerSector, &dwBytesRead, 0);
+	BOOL bRet = ReadFile(pDevice->hDevice, lpBuf, pDisc->dwBytesPerSector, &dwBytesRead, 0);
 	if (bRet) {
-		if (dwBytesPerSector == dwBytesRead) {
+		if (pDisc->dwBytesPerSector == dwBytesRead) {
 			if (IsFat(lpBuf)) {
 				OutputFileAllocationTable(lpBuf, &fat);
 				_TCHAR szTab[256] = {};
@@ -229,13 +265,13 @@ BOOL ReadFileSystem(
 				OutputVolDescLog("%s", szTab);
 				OutputVolDescWithLBALog1("DirectoryEntry", (INT)fat.RootDirStartSector);
 				LARGE_INTEGER seekPos;
-				seekPos.QuadPart = fat.RootDirStartSector * dwBytesPerSector;
-				ReadDirectoryRecord(handle, seekPos, dwBytesPerSector, &fat, szTab);
+				seekPos.QuadPart = fat.RootDirStartSector * pDisc->dwBytesPerSector;
+				ReadDirectoryRecord(pDevice->hDevice, seekPos, pDisc->dwBytesPerSector, &fat, szTab);
 			}
 			else if (IsDriverDescriptorRecord(lpBuf)) {
 				OutputDriveDescriptorRecord(lpBuf);
-				while (ReadFile(handle, lpBuf, dwBytesPerSector, &dwBytesRead, 0)) {
-					if (dwBytesPerSector == dwBytesRead) {
+				while (ReadFile(pDevice->hDevice, lpBuf, pDisc->dwBytesPerSector, &dwBytesRead, 0)) {
+					if (pDisc->dwBytesPerSector == dwBytesRead) {
 						if (IsApplePartionMap(lpBuf)) {
 							OutputPartitionMap(lpBuf, &bHfs);
 							if (bHfs && firstPartition == 0) {
@@ -248,7 +284,7 @@ BOOL ReadFileSystem(
 						}
 						else {
 							if (bHfs) {
-								SetFilePointer(handle, firstPartition * (LONG)dwBytesPerSector, NULL, FILE_BEGIN);
+								SetFilePointer(pDevice->hDevice, firstPartition * (LONG)pDisc->dwBytesPerSector, NULL, FILE_BEGIN);
 								bHfs = FALSE;
 							}
 						}
@@ -259,19 +295,20 @@ BOOL ReadFileSystem(
 		else {
 			OutputErrorString(
 				"Read size is different. NumberOfBytesToRead: %lu, NumberOfBytesRead: %lu\n"
-				, dwBytesPerSector, dwBytesRead);
+				, pDisc->dwBytesPerSector, dwBytesRead);
 		}
 	}
 	else {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 	}
-	SetFilePointer(handle, 0, NULL, FILE_BEGIN);
+	SetFilePointer(pDevice->hDevice, 0, NULL, FILE_BEGIN);
 	return bRet;
 }
 
 BOOL ReadDisk(
 	PEXEC_TYPE pExecType,
 	PDEVICE pDevice,
+	PDISC pDisc,
 	LPCTSTR pszPath
 ) {
 	FILE* fp = CreateOrOpenFile(
@@ -282,25 +319,21 @@ BOOL ReadDisk(
 	}
 	BOOL bRet = FALSE;
 	DWORD64 dwDiskSize = 0;
-	DWORD dwBytesPerSector = 0;
 	if (*pExecType == fd) {
-		bRet = DiskGetMediaTypes(pDevice, &dwDiskSize, &dwBytesPerSector);
+		bRet = DiskGetMediaTypes(pDevice, pDisc, &dwDiskSize);
 	}
 	else if (*pExecType == disk) {
-		bRet = StorageGetMediaTypesEx(pDevice, &dwDiskSize, &dwBytesPerSector);
+		bRet = StorageGetMediaTypesEx(pDevice, pDisc, &dwDiskSize);
 	}
 	if (bRet) {
 		DWORD dwReadSize = (DWORD)dwDiskSize;
-		DWORD dwBlkSize = (DWORD)(dwDiskSize / dwBytesPerSector);
-		DWORD dwRoopCnt = 1;
-		DWORD dwRoopCntPlus = 0;
-		DWORD coef = pDevice->dwMaxTransferLength / dwBytesPerSector;
+		DWORD dwBlkSize = (DWORD)(dwDiskSize / pDisc->dwBytesPerSector);
+
 		OutputString(
-			"DiskSize: %llu bytes, BytesPerSector: %lu, BlockSize: %lu\n", dwDiskSize, dwBytesPerSector, dwBlkSize);
+			"DiskSize: %llu bytes, BytesPerSector: %lu, BlockSize: %lu\n"
+			, dwDiskSize, pDisc->dwBytesPerSector, dwBlkSize);
 		if (*pExecType == disk) {
-			dwReadSize = dwBytesPerSector * coef;
-			dwRoopCnt = dwBlkSize / coef;
-			dwRoopCntPlus = dwBlkSize % coef;
+			dwReadSize = pDevice->dwMaxTransferLength;
 		}
 		LPBYTE lpBuf = (LPBYTE)calloc(dwReadSize, sizeof(BYTE));
 		if (!lpBuf) {
@@ -308,50 +341,10 @@ BOOL ReadDisk(
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
 		}
-		ReadFileSystem(pDevice->hDevice, lpBuf, dwBytesPerSector);
+		ReadFileSystem(pDevice, pDisc, lpBuf);
 		FlushLog();
 
-		DWORD dwBytesRead = 0;
-		for (DWORD i = 0; i < dwRoopCnt; i++) {
-			// unassigned partition can't read.
-			bRet = ReadFile(pDevice->hDevice, lpBuf, dwReadSize, &dwBytesRead, 0);
-			if (bRet) {
-				if (dwReadSize == dwBytesRead) {
-					fwrite(lpBuf, sizeof(BYTE), (size_t)dwReadSize, fp);
-				}
-				else {
-					OutputErrorString(
-						"[%lu] Read size is different. NumberOfBytesToRead: %lu, NumberOfBytesRead: %lu\n"
-						, dwRoopCnt * coef + i, dwReadSize, dwBytesRead);
-				}
-			}
-			else {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				break;
-			}
-			if (*pExecType == disk) {
-				OutputString("\rCreating .bin (Blocks) %6lu/%6lu", (i + 1) * coef, dwBlkSize);
-			}
-		}
-		for (DWORD i = 0; i < dwRoopCntPlus; i++) {
-			bRet = ReadFile(pDevice->hDevice, lpBuf, dwBytesPerSector, &dwBytesRead, 0);
-			if (bRet) {
-				if (dwBytesPerSector == dwBytesRead) {
-					fwrite(lpBuf, sizeof(BYTE), (size_t)dwBytesPerSector, fp);
-				}
-				else {
-					OutputErrorString(
-						"[%lu] Read size is different. NumberOfBytesToRead: %lu, NumberOfBytesRead: %lu\n"
-						, dwRoopCnt * coef + i, dwBytesPerSector, dwBytesRead);
-				}
-			}
-			else {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				break;
-			}
-			OutputString("\rCreating .bin (Blocks) %6lu/%6lu", dwRoopCnt * coef + i + 1, dwBlkSize);
-		}
-		OutputString("\n");
+		bRet = Read10(pDevice, pDisc, lpBuf, dwBlkSize, fp);
 		FreeAndNull(lpBuf);
 	}
 	else {
@@ -454,15 +447,17 @@ BOOL ScsiPassThroughDirect(
 		, IOCTL_SCSI_PASS_THROUGH_DIRECT, &swb, dwLength, &swb, dwLength, &dwReturned, NULL)) {
 		OutputLastErrorNumAndString(pszFuncName, lLineNum);
 		bRet = FALSE;
-		if (!pExtArg->byScanProtectViaFile && /*!_tcscmp(_T("SetDiscSpeed"), pszFuncName) &&*/
-			!pExtArg->byMultiSession) {
-			// When semaphore time out occurred, if doesn't execute sleep,
-			// UNIT_ATTENSION errors occurs next ScsiPassThroughDirect executing.
-			UINT milliseconds = 25000;
-			OutputErrorString(
-				"Please wait for %u milliseconds until the device is returned\n", milliseconds);
-			Sleep(milliseconds);
-			pDevice->FEATURE.bySetCDSpeed = FALSE;
+		if (pExtArg) {
+			if (!pExtArg->byScanProtectViaFile && /*!_tcscmp(_T("SetDiscSpeed"), pszFuncName) &&*/
+				!pExtArg->byMultiSession) {
+				// When semaphore time out occurred, if doesn't execute sleep,
+				// UNIT_ATTENSION errors occurs next ScsiPassThroughDirect executing.
+				UINT milliseconds = 25000;
+				OutputErrorString(
+					"Please wait for %u milliseconds until the device is returned\n", milliseconds);
+				Sleep(milliseconds);
+				pDevice->FEATURE.bySetCDSpeed = FALSE;
+			}
 		}
 	}
 	else {
@@ -484,7 +479,7 @@ BOOL ScsiPassThroughDirect(
 					+ swb.ScsiPassThroughDirect.Cdb[5];
 			}
 			OutputLog(standardError | fileMainError
-				, "\rLBA[%06d, %#07x]: [F:%s][L:%ld]\n\tOpcode: %#02x\n"
+				, "\r" STR_LBA "[F:%s][L:%ld]\n\tOpcode: %#02x\n"
 				, nLBA, nLBA, pszFuncName, lLineNum, swb.ScsiPassThroughDirect.Cdb[0]);
 			OutputScsiStatus(swb.ScsiPassThroughDirect.ScsiStatus);
 #else

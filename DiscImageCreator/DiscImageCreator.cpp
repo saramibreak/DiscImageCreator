@@ -216,7 +216,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 				}
 				make_crc_table();
 				if (*pExecType == fd || *pExecType == disk) {
-					bRet = ReadDisk(pExecType, &device, pszFullPath);
+					bRet = ReadDisk(pExecType, &device, pDisc, pszFullPath);
 				}
 				else {
 					if (*pExecType == cd || *pExecType == swap || *pExecType == gd || *pExecType == data || *pExecType == audio) {

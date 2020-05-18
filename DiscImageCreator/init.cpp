@@ -329,6 +329,14 @@ BOOL InitLogFile(
 		if (setvbuf(g_LogFile.fpDrive, NULL, _IONBF, 0) != 0) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		}
+		if (NULL == (g_LogFile.fpMainError = CreateOrOpenFile(
+			szFullPath, _T("_mainError"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			throw FALSE;
+		}
+		if (setvbuf(g_LogFile.fpMainError, NULL, _IONBF, 0) != 0) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		}
 		if (pExtArg->byRawDump) {
 			if (NULL == (g_LogFile.fpRawReadable = CreateOrOpenFile(
 				szFullPath, _T("_rawReadable"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
@@ -356,14 +364,6 @@ BOOL InitLogFile(
 				throw FALSE;
 			}
 			if (setvbuf(g_LogFile.fpMainInfo, NULL, _IONBF, 0) != 0) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-			}
-			if (NULL == (g_LogFile.fpMainError = CreateOrOpenFile(
-				szFullPath, _T("_mainError"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				throw FALSE;
-			}
-			if (setvbuf(g_LogFile.fpMainError, NULL, _IONBF, 0) != 0) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			}
 			if (*pExecType != dvd && *pExecType != bd && *pExecType != sacd &&

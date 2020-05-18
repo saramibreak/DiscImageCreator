@@ -37,6 +37,7 @@ BOOL OutputHash(
 	XMLElement* pWriter,
 #endif
 	_TCHAR* pszFullPath,
+	DWORD dwBytesPerSector,
 	LPCTSTR szExt,
 	UCHAR uiTrack,
 	UCHAR uiLastTrack,

@@ -388,6 +388,7 @@ typedef struct _DISC {
 		INT nLBAForParamSfo;
 	} BD;
 	LPBYTE lpCachedBuf; // for Asus 0xF1 opcode
+	DWORD dwBytesPerSector; // only use by disk command
 } DISC, *PDISC;
 
 typedef struct _VOLUME_DESCRIPTOR {

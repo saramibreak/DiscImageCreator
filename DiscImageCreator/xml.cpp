@@ -40,7 +40,7 @@ BOOL OutputGameHash(
 	BOOL bDesync
 ) {
 	if (*pExecType == fd || *pExecType == disk) {
-		if (!OutputHash(pWriter, pszFullPath, _T(".bin"), 1, 1, FALSE)) {
+		if (!OutputHash(pWriter, pszFullPath, pDisc->dwBytesPerSector, _T(".bin"), 1, 1, FALSE)) {
 			return FALSE;
 		}
 	}
@@ -56,7 +56,7 @@ BOOL OutputGameHash(
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 					return FALSE;
 				}
-				if (!OutputHash(pWriter, szPath, _T(".bin"), 1, 1, FALSE)) {
+				if (!OutputHash(pWriter, szPath, pDisc->dwBytesPerSector, _T(".bin"), 1, 1, FALSE)) {
 					return FALSE;
 				}
 			}
@@ -69,7 +69,7 @@ BOOL OutputGameHash(
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				return FALSE;
 			}
-			if (!OutputHash(pWriter, szPath, _T(".bin"), 1, 1, FALSE)) {
+			if (!OutputHash(pWriter, szPath, pDisc->dwBytesPerSector, _T(".bin"), 1, 1, FALSE)) {
 				return FALSE;
 			}
 
@@ -81,15 +81,15 @@ BOOL OutputGameHash(
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				return FALSE;
 			}
-			if (!OutputHash(pWriter, szPath, _T(".bin"), 1, 1, FALSE)) {
+			if (!OutputHash(pWriter, szPath, pDisc->dwBytesPerSector, _T(".bin"), 1, 1, FALSE)) {
 				return FALSE;
 			}
 		}
-		if (!OutputHash(pWriter, pszFullPath, _T(".iso"), 1, 1, FALSE)) {
+		if (!OutputHash(pWriter, pszFullPath, pDisc->dwBytesPerSector, _T(".iso"), 1, 1, FALSE)) {
 			return FALSE;
 		}
 		if (pExtArg->byRawDump) {
-			if (!OutputHash(pWriter, pszFullPath, _T(".raw"), 1, 1, FALSE)) {
+			if (!OutputHash(pWriter, pszFullPath, pDisc->dwBytesPerSector, _T(".raw"), 1, 1, FALSE)) {
 				return FALSE;
 			}
 		}
@@ -99,16 +99,16 @@ BOOL OutputGameHash(
 			OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("Hash(Whole image)"));
 			if (pDisc->SCSI.trkType == TRACK_TYPE::dataExist ||
 				pDisc->SCSI.trkType == TRACK_TYPE::pregapDataIn1stTrack) {
-				if (!OutputHash(pWriter, pszFullPath, _T(".scm"), 1, 1, FALSE)) {
+				if (!OutputHash(pWriter, pszFullPath, pDisc->dwBytesPerSector, _T(".scm"), 1, 1, FALSE)) {
 					return FALSE;
 				}
 			}
-			if (!OutputHash(pWriter, pszFullPath, _T(".img"), 1, 1, FALSE)) {
+			if (!OutputHash(pWriter, pszFullPath, pDisc->dwBytesPerSector, _T(".img"), 1, 1, FALSE)) {
 				return FALSE;
 			}
 		}
 		for (UCHAR i = pDisc->SCSI.toc.FirstTrack; i <= pDisc->SCSI.toc.LastTrack; i++) {
-			if (!OutputHash(pWriter, pszFullPath, _T(".bin"), i, pDisc->SCSI.toc.LastTrack, bDesync)) {
+			if (!OutputHash(pWriter, pszFullPath, pDisc->dwBytesPerSector, _T(".bin"), i, pDisc->SCSI.toc.LastTrack, bDesync)) {
 				return FALSE;
 			}
 		}
@@ -506,6 +506,7 @@ BOOL OutputHash(
 	XMLElement* pWriter,
 #endif
 	_TCHAR* pszFullPath,
+	DWORD dwBytesPerSector,
 	LPCTSTR szExt,
 	UCHAR uiTrack,
 	UCHAR uiLastTrack,
@@ -528,13 +529,19 @@ BOOL OutputHash(
 		return FALSE;
 	}
 	UINT64 ui64FileSize = GetFileSize64(0, fp);
-	UINT uiSectorSizeOne = CD_RAW_SECTOR_SIZE;
-	if (!_tcsncmp(szExt, _T(".iso"), 4) ||
+	UINT uiSectorSizeOne = 0;
+	if (dwBytesPerSector) {
+		uiSectorSizeOne = (UINT)dwBytesPerSector;
+	}
+	else if (!_tcsncmp(szExt, _T(".iso"), 4) ||
 		!_tcsncmp(pszFnameAndExt, _T("SS.bin"), 6) ||
 		!_tcsncmp(pszFnameAndExt, _T("PFI.bin"), 7) ||
 		!_tcsncmp(pszFnameAndExt, _T("DMI.bin"), 7) ||
 		ui64FileSize % DISC_MAIN_DATA_SIZE == 0) {
 		uiSectorSizeOne = DISC_MAIN_DATA_SIZE;
+	}
+	else {
+		uiSectorSizeOne = CD_RAW_SECTOR_SIZE;
 	}
 
 	UINT64 ui64SectorSizeAll = ui64FileSize / (UINT64)uiSectorSizeOne;
