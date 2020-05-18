@@ -193,7 +193,7 @@ BOOL ReadDirectoryRecordDetail(
 					// 		              Location of Extent: 200204
 					// 		                     Data Length: 4096
 					OutputVolDescLog(
-						"LBA %d, ofs %d: Data length is incorrect. Skip this sector\n", nLBA, uiOfs);
+						"LBA %d, ofs %u: Data length is incorrect. Skip this sector\n", nLBA, uiOfs);
 					nSectorNum++;
 					break;
 				}
@@ -232,7 +232,7 @@ BOOL ReadDirectoryRecordDetail(
 					// 0040 :             2A 00 1E FF  FF FF 00 FF FF FF FF FF   ....*...........
 					// 0050 : FF FF FF FF 30 00 73 03  1F 16 23 29 08 00 00 00   ....0.s...#)....
 					// 0060 : 01 00 00 01 08 31 38 2E  44 41 54 3B 31 00
-					OutputVolDescLog("LBA %d, ofs %d: Data length is incorrect\n", nLBA, uiOfs);
+					OutputVolDescLog("LBA %d, ofs %u: Data length is incorrect\n", nLBA, uiOfs);
 				}
 				OutputFsDirectoryRecord(
 					pExtArg, pDisc, lpDirRec, uiExtentPos, uiDataLen, szCurDirName, pPathTblRec, uiPathTblIdx);
@@ -280,7 +280,7 @@ BOOL ReadDirectoryRecordDetail(
 						// 0060 : 01 00 00 01 0D 41 52 65  78 78 2D 53 63 72 69 70   .....ARexx-Scrip
 						// 0070 : 74 73                                              ts
 						OutputVolDescLog(
-							"LBA %d: Direcory Record is corrupt. Skip reading from %d to %d byte\n"
+							"LBA %d: Direcory Record is corrupt. Skip reading from %u to %u byte\n"
 							, nLBA, uiOfs, uiOfs + MIN_LEN_DR - 1);
 						uiOfs += MIN_LEN_DR;
 						break;
@@ -381,7 +381,7 @@ BOOL ReadDirectoryRecord(
 				continue;
 			}
 		}
-		OutputString("\rReading DirectoryRecord %4d/%4d", uiPathTblIdx + 1, uiDirPosNum);
+		OutputString("\rReading DirectoryRecord %4u/%4u", uiPathTblIdx + 1, uiDirPosNum);
 	}
 	OutputString("\n");
 	return TRUE;
@@ -848,8 +848,13 @@ BOOL ReadDVDForFileSystem(
 		FreeAndNull(pPathTblRec);
 		if (pDisc->PROTECT.byExist && !pExtArg->byNoSkipSS) {
 			OutputLog(standardOut | fileDisc, "Detected protection [%" CHARWIDTH "s]. LBA %d to %d\n"
-				, pDisc->PROTECT.name, pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0]
+				, pDisc->PROTECT.name[0], pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0]
 				, pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] + pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0]);
+			for (INT j = 1; j < pExtArg->FILE.readErrCnt; j++) {
+				OutputLog(standardOut | fileDisc, ", [%" CHARWIDTH "s]. LBA %d to %d"
+					, pDisc->PROTECT.name[j], pDisc->PROTECT.ERROR_SECTOR.nExtentPos[j]
+					, pDisc->PROTECT.ERROR_SECTOR.nExtentPos[j] + pDisc->PROTECT.ERROR_SECTOR.nSectorSize[j]);
+			}
 		}
 	}
 
@@ -928,7 +933,7 @@ BOOL ReadDVDForFileSystem(
 						//   Logical Sector 256. 
 						//   Logical Sector (N - 256). 
 						//   N
-						OutputDiscLog("Detected Anchor Volume Descriptor Pointer: LBA %u\n", nLBA);
+						OutputDiscLog("Detected Anchor Volume Descriptor Pointer: LBA %d\n", nLBA);
 						nLastLBAOfAVDP = nLBA;
 						if (++nCnt == 2) {
 							break;
@@ -1050,10 +1055,10 @@ BOOL OutputXDVDFsDirectoryRecord(
 	UINT startSector = MAKEUINT(MAKEWORD(lpBuf[4], lpBuf[5]), MAKEWORD(lpBuf[6], lpBuf[7]));
 	UINT fileSize = MAKEUINT(MAKEWORD(lpBuf[8], lpBuf[9]), MAKEWORD(lpBuf[10], lpBuf[11]));
 	OutputVolDescLog(
-		"%s Offset to left sub-tree entry: %d(0x%x)\n"
-		"%sOffset to right sub-tree entry: %d(0x%x)\n"
-		"%s       Starting sector of file: %d(0x%x)\n"
-		"%s               Total file size: %d(0x%x)\n"
+		"%s Offset to left sub-tree entry: %u (0x%04x)\n"
+		"%sOffset to right sub-tree entry: %u (0x%04x)\n"
+		"%s       Starting sector of file: %u (0x%08x)\n"
+		"%s               Total file size: %u (0x%08x)\n"
 		"%s               File attributes: "
 		, &pTab[0], ofsLeft, ofsLeft
 		, &pTab[0], ofsRight, ofsRight
@@ -1086,7 +1091,7 @@ BOOL OutputXDVDFsDirectoryRecord(
 	}
 	BYTE lenOfFile = lpBuf[13];
 	OutputVolDescLog(
-		"%s            Length of filename: %d\n"
+		"%s            Length of filename: %u\n"
 		"%s                      Filename: "
 		, &pTab[0], lenOfFile
 		, &pTab[0]
@@ -1136,38 +1141,56 @@ BOOL ReadXBOXDirectoryRecord(
 #else
 	INT direction = SG_DXFER_FROM_DEV;
 #endif
-	pCdb->TransferLength[3] = (UCHAR)(uiDirTblSize / DISC_MAIN_DATA_SIZE);
-	REVERSE_BYTES(pCdb->LogicalBlock, &uiDirPos);
+	OutputMainInfoLog("uiDirTblSize: %u ", uiDirTblSize);
+	UINT uiReadSize = uiDirTblSize;
+	UINT nRoopCnt = uiReadSize / (UINT)pDevice->dwMaxTransferLength + 1;
+	if (uiDirTblSize > (UINT)pDevice->dwMaxTransferLength) {
+		uiReadSize = (UINT)pDevice->dwMaxTransferLength;
+		OutputMainInfoLog("--> %u ", uiReadSize);
+	}
+	for (UINT i = 0; i < nRoopCnt; i++) {
+		pCdb->TransferLength[3] = (UCHAR)(uiReadSize / DISC_MAIN_DATA_SIZE);
+		REVERSE_BYTES(pCdb->LogicalBlock, &uiDirPos);
 
-	if (!ScsiPassThroughDirect(pExtArg, pDevice, pCdb, CDB12GENERIC_LENGTH, lpBuf,
-		direction, uiDirTblSize, &byScsiStatus, _T(__FUNCTION__), __LINE__)
-		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-		FreeAndNull(pBuf);
-		return FALSE;
-	}
-	for (UCHAR c = 0; c < pCdb->TransferLength[3]; c++) {
-		OutputCDMain(fileMainInfo, lpBuf + DISC_MAIN_DATA_SIZE * c, (INT)uiDirPos + c, DISC_MAIN_DATA_SIZE);
-	}
-	OutputVolDescLog("%s"
-		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("DIRECTORY ENTRY")
-		, &pTab[0], (INT)uiDirPos, (INT)uiDirPos
-	);
-	BOOL bEnd = FALSE;
-	UINT uiSize = 0;
-	UINT uiCoeff = 1;
-	for (UINT uiOfs = 0; uiSize < uiDirTblSize;) {
-		if (!OutputXDVDFsDirectoryRecord(pExtArg, pDevice, pCdb
-			, lpBuf + uiSize, &uiOfs, uiStartLBA, pTab, &bEnd)) {
+		OutputMainInfoLog("uiDirPos: %u, TransferLength: %u\n", uiDirPos, pCdb->TransferLength[3]);
+		if (!ScsiPassThroughDirect(pExtArg, pDevice, pCdb, CDB12GENERIC_LENGTH, lpBuf,
+			direction, uiReadSize, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+			FreeAndNull(pBuf);
 			return FALSE;
 		}
-		if (bEnd) {
-			break;
+		for (UCHAR c = 0; c < pCdb->TransferLength[3]; c++) {
+			OutputCDMain(fileMainInfo, lpBuf + DISC_MAIN_DATA_SIZE * c, (INT)uiDirPos + c, DISC_MAIN_DATA_SIZE);
 		}
-		else {
-			uiSize += uiOfs;
-			if (uiSize > DISC_MAIN_DATA_SIZE * uiCoeff - 15) {
-				uiSize += DISC_MAIN_DATA_SIZE * uiCoeff - uiSize;
-				uiCoeff++;
+		OutputVolDescLog("%s"
+			OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("DIRECTORY ENTRY")
+			, &pTab[0], (INT)uiDirPos, uiDirPos
+		);
+		BOOL bEnd = FALSE;
+		UINT uiSize = 0;
+		UINT uiCoeff = 1;
+		for (UINT uiOfs = 0; uiSize < uiReadSize;) {
+			if (!OutputXDVDFsDirectoryRecord(pExtArg, pDevice, pCdb
+				, lpBuf + uiSize, &uiOfs, uiStartLBA, pTab, &bEnd)) {
+				return FALSE;
+			}
+			if (bEnd) {
+				break;
+			}
+			else {
+				uiSize += uiOfs;
+				if (uiSize > DISC_MAIN_DATA_SIZE * uiCoeff - 15) {
+					uiSize += DISC_MAIN_DATA_SIZE * uiCoeff - uiSize;
+					uiCoeff++;
+				}
+			}
+		}
+		if (nRoopCnt > 1) {
+			uiDirTblSize -= (UINT)pDevice->dwMaxTransferLength;
+			uiDirPos += uiReadSize / DISC_MAIN_DATA_SIZE;
+			uiReadSize = uiDirTblSize;
+			if (uiDirTblSize > pDevice->dwMaxTransferLength) {
+				uiReadSize = (UINT)pDevice->dwMaxTransferLength;
 			}
 		}
 	}
@@ -1215,11 +1238,11 @@ BOOL ReadXBOXFileSystem(
 		OUTPUT_DHYPHEN_PLUS_STR("XDVDFS")
 		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("VOLUME DESCRIPTOR")
 		"\t                        Header: %.20" CHARWIDTH "s\n"
-		"\tSector of root directory table: %d(%#x)\n"
-		"\t  Size of root directory table: %d(%#x)\n"
+		"\tSector of root directory table: %u (%#08x)\n"
+		"\t  Size of root directory table: %u (%#08x)\n"
 		"\t           Image creation time: %.20" CHARWIDTH "s\n"
 		"\t                        Footer: %.20" CHARWIDTH "s\n"
-		, nLBA, nLBA
+		, nLBA, (UINT)nLBA
 		, &lpBuf[0]
 		, uiDirPos, uiDirPos
 		, uiDirTblSize, uiDirTblSize
@@ -1230,6 +1253,7 @@ BOOL ReadXBOXFileSystem(
 	}
 	_TCHAR szTab[256] = {};
 	szTab[0] = _T('\t');
+	OutputString("Reading XBOX DirectoryRecord\n");
 	if (!ReadXBOXDirectoryRecord(
 		pExtArg, pDevice, &cdb, uiDirPos + (UINT)dwStartLBA, uiDirTblSize, (UINT)dwStartLBA, szTab)) {
 		FreeAndNull(pBuf);
@@ -1294,15 +1318,15 @@ BOOL ReadNintendoFileSystem(
 	UINT ofsOfFst = MAKEUINT(MAKEWORD(buf[39], buf[38]), MAKEWORD(buf[37], buf[36]));
 	UINT sizeOfFst = MAKEUINT(MAKEWORD(buf[43], buf[42]), MAKEWORD(buf[41], buf[40]));
 	OutputVolDescLog(
-		"\t      offset of debug monitor (dh.bin) ?: %d(%#x)\n"
-		"\t        addr (?) to load debug monitor ?: %#x\n"
-		"\toffset of main executable DOL (bootfile): %d(%#x)\n"
-		"\t             offset of the FST (fst.bin): %d(%#x)\n"
-		"\t                             size of FST: %d(%#x)\n"
-		"\t                     maximum size of FST: %d(%#x)\n"
-		"\t                       user position (?): %#x\n"
-		"\t                         user length (?): %d(%#x)\n"
-		"\t                                 unknown: %d(%#x)\n"
+		"\t      offset of debug monitor (dh.bin) ?: %u (%#08x)\n"
+		"\t        addr (?) to load debug monitor ?: %#08x\n"
+		"\toffset of main executable DOL (bootfile): %u (%#08x)\n"
+		"\t             offset of the FST (fst.bin): %u (%#08x)\n"
+		"\t                             size of FST: %u (%#08x)\n"
+		"\t                     maximum size of FST: %u (%#08x)\n"
+		"\t                       user position (?): %#08x\n"
+		"\t                         user length (?): %u (%#08x)\n"
+		"\t                                 unknown: %u (%#08x)\n"
 		, MAKEUINT(MAKEWORD(buf[3], buf[2]), MAKEWORD(buf[1], buf[0]))
 		, MAKEUINT(MAKEWORD(buf[3], buf[2]), MAKEWORD(buf[1], buf[0]))
 		, MAKEUINT(MAKEWORD(buf[7], buf[6]), MAKEWORD(buf[5], buf[4]))
@@ -1332,8 +1356,8 @@ BOOL ReadNintendoFileSystem(
 		OUTPUT_DHYPHEN_PLUS_STR("Apploader")
 		"\tdate (version) of the apploader: %" CHARWIDTH "s\n"
 		"\t           apploader entrypoint: %#x\n"
-		"\t          size of the apploader: %d(%#x)\n"
-		"\t                   trailer size: %d(%#x)\n"
+		"\t          size of the apploader: %u (%#08x)\n"
+		"\t                   trailer size: %u (%#08x)\n"
 		, &buf[0]
 		, MAKEUINT(MAKEWORD(buf[19], buf[18]), MAKEWORD(buf[17], buf[16]))
 		, MAKEUINT(MAKEWORD(buf[23], buf[22]), MAKEWORD(buf[21], buf[20]))
@@ -1354,14 +1378,14 @@ BOOL ReadNintendoFileSystem(
 		FcloseAndNull(fp);
 		return FALSE;
 	};
-	OutputCDMain(fileMainInfo, lpBuf, (INT)ofsOfFst / 0x800, (INT)sizeOfFst);
+	OutputCDMain(fileMainInfo, lpBuf, (INT)ofsOfFst / 0x800, sizeOfFst);
 	UINT numOfEntries = MAKEUINT(MAKEWORD(lpBuf[11], lpBuf[10]), MAKEWORD(lpBuf[9], lpBuf[8]));
 	OutputVolDescLog(
 		OUTPUT_DHYPHEN_PLUS_STR("Root Directory Entry")
 		"\t                   flags: %d\n"
-		"\toffset into string table: %d(%#x)\n"
-		"\t           parent_offset: %d(%#x)\n"
-		"\t             num_entries: %d\n\n"
+		"\toffset into string table: %u (%#08x)\n"
+		"\t           parent_offset: %u (%#08x)\n"
+		"\t             num_entries: %u \n\n"
 		, lpBuf[0]
 		, MAKEUINT(MAKEWORD(lpBuf[3], lpBuf[2]), MAKEWORD(lpBuf[1], 0))
 		, MAKEUINT(MAKEWORD(lpBuf[3], lpBuf[2]), MAKEWORD(lpBuf[1], 0))
@@ -1378,14 +1402,14 @@ BOOL ReadNintendoFileSystem(
 			UINT ofsString = MAKEUINT(MAKEWORD(lpBuf[3 + i], lpBuf[2 + i]), MAKEWORD(lpBuf[1 + i], 0));
 			OutputVolDescLog(
 				"\t                   flags: %d\n"
-				"\toffset into string table: %d(%#x)\n"
+				"\toffset into string table: %u (%#08x)\n"
 				, lpBuf[0 + i], ofsString, ofsString
 			);
 			if (lpBuf[0 + i] == 0) {
 				OutputVolDescLog(
 					"\t               file_name: %" CHARWIDTH "s\n"
-					"\t             file_offset: %d(%#x)\n"
-					"\t             file_length: %d(%#x)\n\n"
+					"\t             file_offset: %u (%#08x)\n"
+					"\t             file_length: %u (%#08x)\n\n"
 					, &lpBuf[posOfString + ofsString]
 					, MAKEUINT(MAKEWORD(lpBuf[7 + i], lpBuf[6 + i]), MAKEWORD(lpBuf[5 + i], lpBuf[4 + i]))
 					, MAKEUINT(MAKEWORD(lpBuf[7 + i], lpBuf[6 + i]), MAKEWORD(lpBuf[5 + i], lpBuf[4 + i]))
@@ -1396,8 +1420,8 @@ BOOL ReadNintendoFileSystem(
 			else if (lpBuf[0 + i] == 1) {
 				OutputVolDescLog(
 					"\t                dir_name: %" CHARWIDTH "s\n"
-					"\t           parent_offset: %d(%#x)\n"
-					"\t             next_offset: %d(%#x)\n\n"
+					"\t           parent_offset: %u (%#08x)\n"
+					"\t             next_offset: %u (%#08x)\n\n"
 					, &lpBuf[posOfString + ofsString]
 					, MAKEUINT(MAKEWORD(lpBuf[7 + i], lpBuf[6 + i]), MAKEWORD(lpBuf[5 + i], lpBuf[4 + i]))
 					, MAKEUINT(MAKEWORD(lpBuf[7 + i], lpBuf[6 + i]), MAKEWORD(lpBuf[5 + i], lpBuf[4 + i]))
@@ -1433,8 +1457,8 @@ BOOL ReadPartitionTblEntry(
 		ofsOfPartion[idx][i] = MAKEUINT(MAKEWORD(buf[3], buf[2]), MAKEWORD(buf[1], buf[0]));
 		OutputVolDescLog(
 			OUTPUT_DHYPHEN_PLUS_STR("Partition table entry")
-			"\t           Partition offset: %#x\n"
-			"\t                       Type: %d\n"
+			"\t           Partition offset: %#08x\n"
+			"\t                       Type: %u\n"
 			, ofsOfPartion[idx][i], MAKEUINT(MAKEWORD(buf[7], buf[6]), MAKEWORD(buf[5], buf[4]))
 		);
 	}
@@ -1471,14 +1495,14 @@ BOOL ReadWiiPartition(
 
 	OutputVolDescLog(
 		OUTPUT_DHYPHEN_PLUS_STR("Partitions information")
-		"\t       Total 1st partitions: %d\n"
-		"\tPartition info table offset: %#x\n"
-		"\t       Total 2nd partitions: %d\n"
-		"\tPartition info table offset: %#x\n"
-		"\t       Total 3rd partitions: %d\n"
-		"\tPartition info table offset: %#x\n"
-		"\t       Total 4th partitions: %d\n"
-		"\tPartition info table offset: %#x\n"
+		"\t       Total 1st partitions: %u\n"
+		"\tPartition info table offset: %#08x\n"
+		"\t       Total 2nd partitions: %u\n"
+		"\tPartition info table offset: %#08x\n"
+		"\t       Total 3rd partitions: %u\n"
+		"\tPartition info table offset: %#08x\n"
+		"\t       Total 4th partitions: %u\n"
+		"\tPartition info table offset: %#08x\n"
 		, numOfPartition[0], ofsOfPart1, numOfPartition[1], ofsOfPart2
 		, numOfPartition[2], ofsOfPart3, numOfPartition[3], ofsOfPart4
 	);
@@ -1503,23 +1527,23 @@ BOOL ReadWiiPartition(
 	OutputCDMain(fileMainInfo, buf, 0x4e000 / 0x800, 0x20);
 	OutputVolDescLog(
 		OUTPUT_DHYPHEN_PLUS_STR("Region setting")
-		"\t                     Region byte: %d\n"
-		"\tAge Rating byte for Japan/Taiwan: %d(%#x)\n"
-		"\tAge Rating byte for USA         : %d(%#x)\n"
-		"\tAge Rating byte for ------------: %d(%#x)\n"
-		"\tAge Rating byte for Germany     : %d(%#x)\n"
-		"\tAge Rating byte for PEGI        : %d(%#x)\n"
-		"\tAge Rating byte for Finland     : %d(%#x)\n"
-		"\tAge Rating byte for Portugal    : %d(%#x)\n"
-		"\tAge Rating byte for Britain     : %d(%#x)\n"
-		"\tAge Rating byte for Australia   : %d(%#x)\n"
-		"\tAge Rating byte for Korea       : %d(%#x)\n"
-		"\tAge Rating byte for ------------: %d(%#x)\n"
-		"\tAge Rating byte for ------------: %d(%#x)\n"
-		"\tAge Rating byte for ------------: %d(%#x)\n"
-		"\tAge Rating byte for ------------: %d(%#x)\n"
-		"\tAge Rating byte for ------------: %d(%#x)\n"
-		"\tAge Rating byte for ------------: %d(%#x)\n"
+		"\t                     Region byte: %u\n"
+		"\tAge Rating byte for Japan/Taiwan: %d (%#02x)\n"
+		"\tAge Rating byte for USA         : %d (%#02x)\n"
+		"\tAge Rating byte for ------------: %d (%#02x)\n"
+		"\tAge Rating byte for Germany     : %d (%#02x)\n"
+		"\tAge Rating byte for PEGI        : %d (%#02x)\n"
+		"\tAge Rating byte for Finland     : %d (%#02x)\n"
+		"\tAge Rating byte for Portugal    : %d (%#02x)\n"
+		"\tAge Rating byte for Britain     : %d (%#02x)\n"
+		"\tAge Rating byte for Australia   : %d (%#02x)\n"
+		"\tAge Rating byte for Korea       : %d (%#02x)\n"
+		"\tAge Rating byte for ------------: %d (%#02x)\n"
+		"\tAge Rating byte for ------------: %d (%#02x)\n"
+		"\tAge Rating byte for ------------: %d (%#02x)\n"
+		"\tAge Rating byte for ------------: %d (%#02x)\n"
+		"\tAge Rating byte for ------------: %d (%#02x)\n"
+		"\tAge Rating byte for ------------: %d (%#02x)\n"
 		, MAKEUINT(MAKEWORD(buf[3], buf[2]), MAKEWORD(buf[1], buf[0]))
 		, buf[16], buf[16], buf[17], buf[17], buf[18], buf[18], buf[19], buf[19]
 		, buf[20], buf[20], buf[21], buf[21], buf[22], buf[22], buf[23], buf[23]
@@ -1598,15 +1622,15 @@ BOOL ReadWiiPartition(
 			OutputVolDescLog(
 				"\n"
 				"\t                         Unknown: %#02x\n"
-				"\t                       ticket_id: %#llx\n"
-				"\t                      Console ID: %#x\n"
-				"\t                        Title ID: %#llx\n"
+				"\t                       ticket_id: %#16llx\n"
+				"\t                      Console ID: %#08x\n"
+				"\t                        Title ID: %#16llx\n"
 				"\t                         Unknown: %#04x\n"
-				"\t            Ticket title version: %#x\n"
-				"\t           Permitted Titles Mask: %#x\n"
-				"\t                     Permit mask: %#x\n"
-				"\t                    Title Export: %#x\n"
-				"\t                Common Key index: %#x\n"
+				"\t            Ticket title version: %#04x\n"
+				"\t           Permitted Titles Mask: %#08x\n"
+				"\t                     Permit mask: %#08x\n"
+				"\t                    Title Export: %#02x\n"
+				"\t                Common Key index: %#02x\n"
 				"\t                         Unknown: "
 				, buf[0x01CF]
 				, MAKEUINT64(MAKEUINT(MAKEWORD(buf[0x01D7], buf[0x01D6]), MAKEWORD(buf[0x01D5], buf[0x01D4]))
@@ -1635,8 +1659,8 @@ BOOL ReadWiiPartition(
 				UINT enable = MAKEUINT(MAKEWORD(buf[0x0267 + i], buf[0x0266 + i]), MAKEWORD(buf[0x0265 + i], buf[0x0264 + i]));
 				if (enable) {
 					OutputVolDescLog(
-						"\t               Enable time limit: %d\n"
-						"\t            Time limit (Seconds): %d\n"
+						"\t               Enable time limit: %u\n"
+						"\t            Time limit (Seconds): %u\n"
 						, enable
 						, MAKEUINT(MAKEWORD(buf[0x026B + i], buf[0x026A + i]), MAKEWORD(buf[0x0269 + i], buf[0x0268 + i]))
 					);
@@ -1644,13 +1668,13 @@ BOOL ReadWiiPartition(
 			}
 			UINT dataSize = MAKEUINT(MAKEWORD(buf[0x02BF], buf[0x02BE]), MAKEWORD(buf[0x02BD], buf[0x02BC]));
 			OutputVolDescLog(
-				"\t                        TMD size: %d(%#x)\n"
-				"\t                      TMD offset: %#x\n"
-				"\t                 Cert chain size: %d(%#x)\n"
-				"\t               Cert chain offset: %#x\n"
-				"\t          Offset to the H3 table: %#x\n"
-				"\t                     Data offset: %#x\n"
-				"\t                       Data size: %d(%#x)\n"
+				"\t                        TMD size: %u (%#08x)\n"
+				"\t                      TMD offset: %#08x\n"
+				"\t                 Cert chain size: %u (%#08x)\n"
+				"\t               Cert chain offset: %#08x\n"
+				"\t          Offset to the H3 table: %#08x\n"
+				"\t                     Data offset: %#08x\n"
+				"\t                       Data size: %u (%#08x)\n"
 				, MAKEUINT(MAKEWORD(buf[0x02A7], buf[0x02A6]), MAKEWORD(buf[0x02A5], buf[0x02A4]))
 				, MAKEUINT(MAKEWORD(buf[0x02A7], buf[0x02A6]), MAKEWORD(buf[0x02A5], buf[0x02A4]))
 				, MAKEUINT(MAKEWORD(buf[0x02AB], buf[0x02AA]), MAKEWORD(buf[0x02A9], buf[0x02A8]))
@@ -1692,15 +1716,15 @@ BOOL ReadWiiPartition(
 			OutputVolDescLog(
 				"\n"
 				"\t                          Issuer: %" CHARWIDTH "s\n"
-				"\t                         Version: %x\n"
-				"\t                  ca_crl_version: %x\n"
-				"\t              signer_crl_version: %x\n"
-				"\t               Padding modulo 64: %x\n"
-				"\t                  System Version: %llx\n"
-				"\t                        Title ID: %llx\n"
-				"\t                      Title type: %x\n"
-				"\t                        Group ID: %x\n"
-				"\t                          Region: %x\n"
+				"\t                         Version: %02x\n"
+				"\t                  ca_crl_version: %02x\n"
+				"\t              signer_crl_version: %02x\n"
+				"\t               Padding modulo 64: %02x\n"
+				"\t                  System Version: %16llx\n"
+				"\t                        Title ID: %16llx\n"
+				"\t                      Title type: %08x\n"
+				"\t                        Group ID: %04x\n"
+				"\t                          Region: %04x\n"
 				"\t                         Ratings: "
 				, &buf[0x140], buf[0x180], buf[0x181], buf[0x182], buf[0x183]
 				, MAKEUINT64(MAKEUINT(MAKEWORD(buf[0x18B], buf[0x18A]), MAKEWORD(buf[0x189], buf[0x188]))
@@ -1724,8 +1748,8 @@ BOOL ReadWiiPartition(
 			WORD numOfContents = MAKEWORD(buf[0x1DF], buf[0x1DE]);
 			OutputVolDescLog(
 				"\n"
-				"\t                   Access rights: %x\n"
-				"\t                   Title version: %x\n"
+				"\t                   Access rights: %08x\n"
+				"\t                   Title version: %04x\n"
 				"\t              Number of contents: %d\n"
 				, MAKEUINT(MAKEWORD(buf[0x1DB], buf[0x1DA]), MAKEWORD(buf[0x1D9], buf[0x1D8]))
 				, MAKEWORD(buf[0x1DD], buf[0x1DC]), numOfContents
@@ -1747,13 +1771,13 @@ BOOL ReadWiiPartition(
 				FcloseAndNull(fp);
 				return FALSE;
 			};
-			OutputCDMain(fileMainInfo, buf, (INT)realOfsOfPartion / 0x800, 36 * numOfContents);
+			OutputCDMain(fileMainInfo, buf, (INT)realOfsOfPartion / 0x800, (UINT)(36 * numOfContents));
 			for (size_t i = 0; i < contentsSize; i += 36) {
 				OutputVolDescLog(
-					"\t                      Content ID: %d\n"
-					"\t                           Index: %d\n"
-					"\t                            Type: %d\n"
-					"\t                            Size: %lld(%#llx)\n"
+					"\t                      Content ID: %u\n"
+					"\t                           Index: %u\n"
+					"\t                            Type: %u\n"
+					"\t                            Size: %llu (%#16llx)\n"
 					"\t                       SHA1 hash: "
 					, MAKEUINT(MAKEWORD(buf[3], buf[2]), MAKEWORD(buf[1], buf[0]))
 					, MAKEWORD(buf[5], buf[4])
@@ -1806,7 +1830,7 @@ BOOL ReadWiiPartition(
 				OutputVolDescLog(
 					"\n"
 					"\t                          Issuer: %" CHARWIDTH "s\n"
-					"\t                             Tag: %x\n"
+					"\t                             Tag: %08x\n"
 					"\t                            Name: %" CHARWIDTH "s\n"
 					"\t                             Key: "
 					, &buf[ofs]
@@ -1892,10 +1916,10 @@ BOOL ReadBDForParamSfo(
 	OutputDiscLog(
 		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("PARAM.SFO")
 		"\tmagic: %c%c%c\n"
-		"\tversion: %d.%02d\n"
-		, pDisc->BD.nLBAForParamSfo, pDisc->BD.nLBAForParamSfo
-		, ((header->magic >> 8) & 0x000000ff)
-		, ((header->magic >> 16) & 0x000000ff), ((header->magic >> 24) & 0x000000ff)
+		"\tversion: %u.%02u\n"
+		, pDisc->BD.nLBAForParamSfo, (UINT)pDisc->BD.nLBAForParamSfo
+		, (CHAR)((header->magic >> 8) & 0x000000ff)
+		, (CHAR)((header->magic >> 16) & 0x000000ff), (CHAR)((header->magic >> 24) & 0x000000ff)
 		, (header->version & 0x000000ff), ((header->version >> 8) & 0x000000ff)
 	);
 
@@ -2013,27 +2037,27 @@ BOOL ReadSACDFileSystem(
 		OUTPUT_DHYPHEN_PLUS_STR("Master_TOC")
 		"\t Master_TOC_Signature: %.8" CHARWIDTH "s\n"
 		"\t         Spec_Version: %d.%02d\n"
-		"\t       Album_Set_Size: %d\n"
-		"\tAlbum_Sequence_Number: %d\n"
+		"\t       Album_Set_Size: %u\n"
+		"\tAlbum_Sequence_Number: %u\n"
 		"\t Album_Catalog_Number: %.16" CHARWIDTH "s\n"
 		"\t         Album_Genre1: %02x %02x %02x %02x\n"
 		"\t         Album_Genre2: %02x %02x %02x %02x\n"
 		"\t         Album_Genre3: %02x %02x %02x %02x\n"
 		"\t         Album_Genre4: %02x %02x %02x %02x\n"
-		"\t  TWOCH_TOC_1_Address: %d (%#x)\n"
-		"\t  TWOCH_TOC_2_Address: %d (%#x)\n"
-		"\t     MC_TOC_1_Address: %d (%#x)\n"
-		"\t     MC_TOC_2_Address: %d (%#x)\n"
-		"\t    Disc_Flags_Hybrid: %d\n"
-		"\t        TWOCH_TOC_Len: %d (%#x)\n"
-		"\t           MC_TOC_Len: %d (%#x)\n"
+		"\t  TWOCH_TOC_1_Address: %u (%#08x)\n"
+		"\t  TWOCH_TOC_2_Address: %u (%#08x)\n"
+		"\t     MC_TOC_1_Address: %u (%#08x)\n"
+		"\t     MC_TOC_2_Address: %u (%#08x)\n"
+		"\t    Disc_Flags_Hybrid: %u\n"
+		"\t        TWOCH_TOC_Len: %u (%#08x)\n"
+		"\t           MC_TOC_Len: %u (%#08x)\n"
 		"\t  Disc_Catalog_Number: %.16" CHARWIDTH "s\n"
 		"\t          Disc_Genre1: %02x %02x %02x %02x\n"
 		"\t          Disc_Genre2: %02x %02x %02x %02x\n"
 		"\t          Disc_Genre3: %02x %02x %02x %02x\n"
 		"\t          Disc_Genre4: %02x %02x %02x %02x\n"
-		"\t            Disc_Date: %d/%02d/%02d\n"
-		"\t    Max_Text_Channels: %d\n"
+		"\t            Disc_Date: %u-%02u-%02u\n"
+		"\t    Max_Text_Channels: %u\n"
 		, &mToc.Master_TOC_Signature[0]
 		, mToc.Major_Version, mToc.Minor_Version
 		, mToc.Album_Set_Size
@@ -2067,7 +2091,7 @@ BOOL ReadSACDFileSystem(
 			"\t     Language_Code[%d]: %.2" CHARWIDTH "s\n"
 			"\tCharacter_Set_Code[%d]: %s\n"
 			, i + 1, &mToc.Txt_Ch.locale[i].Language_Code[0]
-			, i + 1, &Lang[mToc.Txt_Ch.locale[i].Character_Set_Code]
+			, i + 1, &Lang[mToc.Txt_Ch.locale[i].Character_Set_Code][0]
 		);
 	}
 
@@ -2291,16 +2315,16 @@ BOOL ReadSACDFileSystem(
 			OUTPUT_DHYPHEN_PLUS_STR("Area_TOC")
 			"\t    Area_TOC_Signature: %.8" CHARWIDTH "s\n"
 			"\t          Spec_Version: %d.%02d\n"
-			"\t       Area_TOC_Length: %d (%#02x)\n"
-			"\t               Unknown: %d (%#02x)\n"
-			"\t               Unknown: %d (%#02x)\n"
+			"\t       Area_TOC_Length: %u (%#02x)\n"
+			"\t               Unknown: %u (%#02x)\n"
+			"\t               Unknown: %u (%#02x)\n"
 			"\t          Frame_Format: %d\n"
 			"\t            N_Channels: %d\n"
 			"\t             Total MSF: %02d:%02d:%02d\n"
 			"\t               Unknown: %d\n"
 			"\t     Last_Track_Number: %d\n"
-			"\t   Audio_Start_Address: %d (%#02x)\n"
-			"\t     Audio_End_Address: %d (%#02x)\n"
+			"\t   Audio_Start_Address: %u (%#02x)\n"
+			"\t     Audio_End_Address: %u (%#02x)\n"
 			"\t     Max_Text_Channels: %d\n"
 			, &lpBuf[0]
 			, aToc.Major_Version, aToc.Minor_Version
@@ -2320,7 +2344,7 @@ BOOL ReadSACDFileSystem(
 				"\t      Language_Code[%d]: %.2" CHARWIDTH "s\n"
 				"\t Character_Set_Code[%d]: %s\n"
 				, i + 1, &aToc.Txt_Ch.locale[i].Language_Code[0]
-				, i + 1, &Lang[aToc.Txt_Ch.locale[i].Character_Set_Code]
+				, i + 1, &Lang[aToc.Txt_Ch.locale[i].Character_Set_Code][0]
 			);
 		}
 		REVERSE_BYTES_SHORT(&aToc.Track_Text_Ptr, &lpBuf[0x80]);
@@ -2328,10 +2352,10 @@ BOOL ReadSACDFileSystem(
 		REVERSE_BYTES_SHORT(&aToc.Access_List_Ptr, &lpBuf[0x84]);
 		REVERSE_BYTES_SHORT(&aToc.Track_WebLink_List_Ptr, &lpBuf[0x88]);
 		OutputVolDescLog(
-			"\t        Track_Text_Ptr: %d (%#02x)\n"
-			"\t        Index_List_Ptr: %d (%#02x)\n"
-			"\t       Access_List_Ptr: %d (%#02x)\n"
-			"\tTrack_WebLink_List_Ptr: %d (%#02x)\n"
+			"\t        Track_Text_Ptr: %u (%#02x)\n"
+			"\t        Index_List_Ptr: %u (%#02x)\n"
+			"\t       Access_List_Ptr: %u (%#02x)\n"
+			"\tTrack_WebLink_List_Ptr: %u (%#02x)\n"
 			, aToc.Track_Text_Ptr, aToc.Track_Text_Ptr
 			, aToc.Index_List_Ptr, aToc.Index_List_Ptr
 			, aToc.Access_List_Ptr, aToc.Access_List_Ptr
@@ -2364,14 +2388,14 @@ BOOL ReadSACDFileSystem(
 			for (INT i = 0; i < aToc.Last_Track_Number; i++) {
 				REVERSE_BYTES(&tList.Track_Start_Address[i], &lpBuf[0x8 + sizeof(UINT) * i]);
 				OutputVolDescLog(
-					"\tTrack_Start_Address[%02d]: %9d (%#02x)\n"
+					"\tTrack_Start_Address[%02d]: %9u (%#02x)\n"
 					, i + 1, tList.Track_Start_Address[i], tList.Track_Start_Address[i]
 				);
 			}
 			for (INT i = 0; i < aToc.Last_Track_Number; i++) {
 				REVERSE_BYTES(&tList.Track_Length[i], &lpBuf[0x404 + sizeof(UINT) * i]);
 				OutputVolDescLog(
-					"\t       Track_Length[%02d]: %9d (%#02x)\n"
+					"\t       Track_Length[%02d]: %9u (%#02x)\n"
 					, i + 1, tList.Track_Length[i], tList.Track_Length[i]
 				);
 			}
