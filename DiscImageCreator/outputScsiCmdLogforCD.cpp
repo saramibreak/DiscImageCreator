@@ -481,7 +481,7 @@ VOID OutputImportDirectory(
 				"\t\tOriginalFirstThunk: %08lx\n"
 				"\t\t     TimeDateStamp: %08lx\n"
 				"\t\t    ForwarderChain: %08lx\n"
-				"\t\t              Name: %08lx (%s)\n"
+				"\t\t              Name: %08lx (%" CHARWIDTH "s)\n"
 				"\t\t        FirstThunk: %08lx\n"
 				, nDllNum + 1, imp->OriginalFirstThunk, imp->TimeDateStamp
 				, imp->ForwarderChain, imp->Name
@@ -515,7 +515,7 @@ VOID OutputImportDirectory(
 						OutputVolDescLog(
 							"\t\t\t========== IMAGE_IMPORT_BY_NAME ==========\n"
 							"\t\t\t\tHint: %04x\n"
-							"\t\t\t\tName: %s\n"
+							"\t\t\t\tName: %" CHARWIDTH "s\n"
 							, byname->Hint, byname->Name
 						);
 					}
