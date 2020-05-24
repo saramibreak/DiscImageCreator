@@ -3791,7 +3791,7 @@ VOID OutputRemovableDiskInfo(
 			"\t     SectorsPerTrack: %lu\n"
 			"\t      BytesPerSector: %lu\n"
 			"\t    NumberMediaSides: %lu\n"
-			"\tMediaCharacteristics: %lu ("
+			"\tMediaCharacteristics: 0x%08lx ("
 			, pMedia->MediaInfo[i].DeviceSpecific.RemovableDiskInfo.TracksPerCylinder
 			, pMedia->MediaInfo[i].DeviceSpecific.RemovableDiskInfo.SectorsPerTrack
 			, pMedia->MediaInfo[i].DeviceSpecific.RemovableDiskInfo.BytesPerSector
