@@ -337,25 +337,13 @@ BOOL InitLogFile(
 		if (setvbuf(g_LogFile.fpMainError, NULL, _IONBF, 0) != 0) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		}
-		if (pExtArg->byRawDump) {
-			if (NULL == (g_LogFile.fpRawReadable = CreateOrOpenFile(
-				szFullPath, _T("_rawReadable"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				throw FALSE;
-			}
-			if (setvbuf(g_LogFile.fpRawReadable, NULL, _IONBF, 0) != 0) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-			}
+		if (NULL == (g_LogFile.fpVolDesc = CreateOrOpenFile(
+			szFullPath, _T("_volDesc"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			throw FALSE;
 		}
-		else {
-			if (NULL == (g_LogFile.fpVolDesc = CreateOrOpenFile(
-				szFullPath, _T("_volDesc"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				throw FALSE;
-			}
-			if (setvbuf(g_LogFile.fpVolDesc, NULL, _IONBF, 0) != 0) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-			}
+		if (setvbuf(g_LogFile.fpVolDesc, NULL, _IONBF, 0) != 0) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		}
 		if (*pExecType != fd && * pExecType != disk) {
 			if (NULL == (g_LogFile.fpMainInfo = CreateOrOpenFile(
@@ -365,6 +353,16 @@ BOOL InitLogFile(
 			}
 			if (setvbuf(g_LogFile.fpMainInfo, NULL, _IONBF, 0) != 0) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			}
+			if (pExtArg->byRawDump) {
+				if (NULL == (g_LogFile.fpRawReadable = CreateOrOpenFile(
+					szFullPath, _T("_rawReadable"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					throw FALSE;
+				}
+				if (setvbuf(g_LogFile.fpRawReadable, NULL, _IONBF, 0) != 0) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				}
 			}
 			if (*pExecType != dvd && *pExecType != bd && *pExecType != sacd &&
 				*pExecType != xbox && *pExecType != xboxswap &&
@@ -505,10 +503,13 @@ VOID TerminateLogFile(
 ) {
 	FcloseAndNull(g_LogFile.fpDisc);
 	FcloseAndNull(g_LogFile.fpDrive);
+	FcloseAndNull(g_LogFile.fpMainError);
 	FcloseAndNull(g_LogFile.fpVolDesc);
 	if (*pExecType != fd && *pExecType != disk) {
 		FcloseAndNull(g_LogFile.fpMainInfo);
-		FcloseAndNull(g_LogFile.fpMainError);
+		if (pExtArg->byRawDump) {
+			FcloseAndNull(g_LogFile.fpRawReadable);
+		}
 		if (*pExecType != dvd && *pExecType != bd &&
 			*pExecType != xbox && *pExecType != xboxswap &&
 			*pExecType != xgd2swap && *pExecType != xgd3swap) {
