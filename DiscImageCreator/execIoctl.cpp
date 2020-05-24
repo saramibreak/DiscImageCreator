@@ -113,6 +113,14 @@ BOOL Read10(
 		if (!ScsiPassThroughDirect(NULL, pDevice, &cdb, CDB10GENERIC_LENGTH, lpBuf,
 			direction, pDisc->dwBytesPerSector * dwTransferLen, &byScsiStatus, _T(__FUNCTION__), __LINE__)
 			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+			if (GetLastError() == 87) {
+				OutputString("Change the transfer length: %lu -> ", dwTransferLen);
+				dwTransferLen--;
+				OutputString("%lu\n", dwTransferLen);
+				cdb.TransferBlocksLsb = (UCHAR)dwTransferLen;
+				dwLBA -= dwTransferLen;
+				continue;
+			}
 			return FALSE;
 		}
 		fwrite(lpBuf, sizeof(BYTE), pDisc->dwBytesPerSector * dwTransferLen, fp);
