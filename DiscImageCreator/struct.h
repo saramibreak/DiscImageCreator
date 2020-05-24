@@ -381,6 +381,8 @@ typedef struct _DISC {
 		DWORD dwXboxStartPsn;
 		DWORD dwLayer0SectorLength;
 		DWORD dwLayer1SectorLength;
+		DWORD dwXboxLayer0SectorLength;
+		DWORD dwXboxLayer1SectorLength;
 		DWORD securitySectorRange[23][2]; // for Xbox
 		DWORD dwXboxSwapOfs;
 	} DVD;

@@ -581,8 +581,14 @@ VOID OutputDVDLayerDescriptor(
 		if (pDisc->DVD.dwLayer0SectorLength == 0) {
 			pDisc->DVD.dwLayer0SectorLength = dwEndLayerZeroSectorLen;
 		}
+		else {
+			pDisc->DVD.dwXboxLayer0SectorLength = dwEndLayerZeroSectorLen;
+		}
 		if (pDisc->DVD.dwLayer1SectorLength == 0) {
 			pDisc->DVD.dwLayer1SectorLength = dwEndLayerOneSectorLen;
+		}
+		else {
+			pDisc->DVD.dwXboxLayer1SectorLength = dwEndLayerOneSectorLen;
 		}
 	}
 	else {

@@ -145,8 +145,9 @@ BOOL ReadDVD(
 			cdb.ForceUnitAccess = TRUE;
 		}
 
-		DWORD dwLayer1MiddleZone =
+		DWORD dwLayer0MiddleZone =
 			pDisc->DVD.dwXboxStartPsn - pDisc->DVD.dwDVDStartPsn - pDisc->DVD.dwLayer0SectorLength;
+		DWORD dwLayer1MiddleZone = dwLayer0MiddleZone;
 		INT nAllLength = pDisc->SCSI.nAllLength;
 		if (*pExecType == xbox) {
 			OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("TotalLength")
@@ -173,6 +174,10 @@ BOOL ReadDVD(
 				);
 			}
 #endif
+			OutputDiscLog("\tLayerBreak: %7lu (L0 Video: %lu, L0 Middle: %lu, L0 Game: %lu)\n"
+				, pDisc->DVD.dwLayer0SectorLength + dwLayer0MiddleZone + pDisc->DVD.dwXboxLayer0SectorLength
+				, pDisc->DVD.dwLayer0SectorLength, dwLayer0MiddleZone, pDisc->DVD.dwXboxLayer0SectorLength
+			);
 		}
 		else if (*pExecType == xboxswap) {
 			pDisc->SCSI.nAllLength = XBOX_SIZE + (INT)pDisc->DVD.dwXboxSwapOfs;
@@ -484,6 +489,7 @@ BOOL IsSupported0xE7Type3(
 ) {
 	if (!strncmp(pDevice->szProductId, "CDRW/DVD GCC4244", DRIVE_PRODUCT_ID_SIZE) ||
 		!strncmp(pDevice->szProductId, "CDRW/DVD GCC4247", DRIVE_PRODUCT_ID_SIZE) ||
+		!strncmp(pDevice->szProductId, "DVD-ROM GDR8083N", DRIVE_PRODUCT_ID_SIZE) ||
 		!strncmp(pDevice->szProductId, "DVD-ROM GDR8084N", DRIVE_PRODUCT_ID_SIZE) ||
 		!strncmp(pDevice->szProductId, "RW/DVD GCC-4243N", DRIVE_PRODUCT_ID_SIZE) ||
 		!strncmp(pDevice->szProductId, "RW/DVD GCC-4244N", DRIVE_PRODUCT_ID_SIZE) ||
@@ -520,7 +526,6 @@ BOOL IsSupported0xE7Type4(
 		!strncmp(pDevice->szProductId, "DVD-ROM GDR-R10N", DRIVE_PRODUCT_ID_SIZE) ||
 		!strncmp(pDevice->szProductId, "DVD-ROM GDR-T20N", DRIVE_PRODUCT_ID_SIZE) ||
 		!strncmp(pDevice->szProductId, "DVD-ROM GDR3120L", DRIVE_PRODUCT_ID_SIZE) ||
-		!strncmp(pDevice->szProductId, "DVD-ROM GDR8083N", DRIVE_PRODUCT_ID_SIZE) ||
 		!strncmp(pDevice->szProductId, "DVD-ROM GDR8085N", DRIVE_PRODUCT_ID_SIZE) ||
 		!strncmp(pDevice->szProductId, "DVD-ROM GDR8087N", DRIVE_PRODUCT_ID_SIZE) ||
 		!strncmp(pDevice->szProductId, "DVD-ROM GDRH10N ", DRIVE_PRODUCT_ID_SIZE) ||
@@ -583,7 +588,8 @@ BOOL ReadDVDRaw(
 	else if (pExtArg->byFix) {
 		memcpy(szMode, _T("rb+"), 3);
 	}
-	if (NULL == (fp = CreateOrOpenFile(pszFullPath, NULL, NULL, NULL, NULL, _T(".raw"), szMode, 0, 0))) {
+	_TCHAR pszOutPath[_MAX_PATH] = {};
+	if (NULL == (fp = CreateOrOpenFile(pszFullPath, NULL, pszOutPath, NULL, NULL, _T(".raw"), szMode, 0, 0))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
@@ -623,8 +629,10 @@ BOOL ReadDVDRaw(
 					nCmdType = 1;
 				}
 				else if (IsSupported0xE7Type2(pDevice)) {
-					transferLen = 8;
-					baseAddr -= 0x4080;
+//					transferLen = 8;
+//					baseAddr -= 0x4080;
+					transferLen = 4;
+					baseAddr -= 0x2040;
 //					transferLen = 1;
 //					baseAddr -= 0x810;
 					nCmdType = 2;
@@ -851,7 +859,7 @@ BOOL ReadDVDRaw(
 				for (UINT j = 0; j < transferLen; j++) {
 					DWORD dwOfs3 = dwOfs2 + dwOfs[j];
 //					OutputCDMain(fileMainInfo, lpBuf + dwOfs3, nLBA + j, DVD_RAW_SECTOR_SIZE);
-					OutputDVDHeader(lpBuf + dwOfs3, dwSectorSize, nLBA + (INT)j);
+					OutputDVDHeader(lpBuf + dwOfs3, dwSectorSize, nLBA + (INT)(j + i * transferLen));
 					id = lpBuf[dwOfs3];
 					gotSectorNum = MAKEUINT(MAKEWORD(lpBuf[3 + dwOfs3]
 						, lpBuf[2 + dwOfs3]), MAKEWORD(lpBuf[1 + dwOfs3], 0));
@@ -995,7 +1003,7 @@ BOOL ReadDVDRaw(
 
 	if (bRet && IsNintendoDisc(pDisc) && IsSupported0xE7(pDevice)) {
 		_TCHAR str[_MAX_PATH * 3] = {};
-		if (GetUnscCmd(str, pszFullPath)) {
+		if (GetUnscCmd(str, pszOutPath)) {
 			bRet = _tsystem(str);
 			// unscrambler error code
 			// 0 == no error
