@@ -456,7 +456,7 @@ VOID SetAndOutputTocFull(
 					"\t                         First Lead-in of the disc, AMSF %02u:%02u:%02u (LBA[%06d, %#07x])\n"
 					, pTocData[a].MsfExtra[0], pTocData[a].MsfExtra[1], pTocData[a].MsfExtra[2]
 					, pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]
-					, nTmpLBA, (UINT)nTmpLBA);
+					, nTmpLBA - 450150, (UINT)nTmpLBA - 450150);
 			}
 			break;
 		case 0xc1:

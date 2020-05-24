@@ -303,22 +303,18 @@ VOID WriteCcdForEntry(
 			_T("PMin=%u\n")
 			_T("PSec=%u\n")
 			_T("PFrame=%u\n")
-			_T("PLBA=%d\n"),
-			a,
-			toc[a].SessionNumber,
-			toc[a].Point,
-			toc[a].Adr,
-			toc[a].Control,
-			toc[a].Reserved1,
-			toc[a].MsfExtra[0],
-			toc[a].MsfExtra[1],
-			toc[a].MsfExtra[2],
-			MSFtoLBA(toc[a].MsfExtra[0], toc[a].MsfExtra[1], toc[a].MsfExtra[2]) - 150,
-			toc[a].Zero,
-			toc[a].Msf[0],
-			toc[a].Msf[1],
-			toc[a].Msf[2],
-			MSFtoLBA(toc[a].Msf[0], toc[a].Msf[1], toc[a].Msf[2]) - 150);
+			, a, toc[a].SessionNumber, toc[a].Point, toc[a].Adr, toc[a].Control
+			, toc[a].Reserved1, toc[a].MsfExtra[0], toc[a].MsfExtra[1], toc[a].MsfExtra[2]
+			, MSFtoLBA(toc[a].MsfExtra[0], toc[a].MsfExtra[1], toc[a].MsfExtra[2]) - 150
+			, toc[a].Zero, toc[a].Msf[0], toc[a].Msf[1], toc[a].Msf[2]
+		);
+		INT LBA = MSFtoLBA(toc[a].Msf[0], toc[a].Msf[1], toc[a].Msf[2]);
+		INT diff = 150;
+		if (LBA >= 404850) {
+			diff = 450150;
+		}
+		_ftprintf(fpCcd,
+			_T("PLBA=%d\n"), LBA - diff);
 	}
 }
 
@@ -1994,6 +1990,7 @@ BOOL CreateBinCueCcd(
 					if (j == 0) {
 						WriteCueForUnderFileDirective(pDisc, bCanCDText, j, i, fpCueSyncForImg);
 					}
+					WriteCueForMultiSessionMultiBin(pDisc, i, fpCueSync);
 					WriteCueForFileDirective(pszFnameSync, fpCueSync);
 					WriteCueForUnderFileDirective(pDisc, bCanCDText, j, i, fpCueSync);
 				}
