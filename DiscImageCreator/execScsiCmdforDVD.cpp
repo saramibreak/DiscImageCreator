@@ -472,12 +472,21 @@ BOOL IsSupported0xE7Type1(
 	return FALSE;
 }
 
-BOOL IsSupported0xE7Type2(
+BOOL IsSupported0xE7Type2_1(
 	PDEVICE pDevice
 ) {
 	if (!strncmp(pDevice->szProductId, "RW/DVD GCC-4241N", DRIVE_PRODUCT_ID_SIZE) ||
-		!strncmp(pDevice->szProductId, "RW/DVD_GCC-4241N", DRIVE_PRODUCT_ID_SIZE) ||
-		!strncmp(pDevice->szProductId, "RW/DVD GCC-4242N", DRIVE_PRODUCT_ID_SIZE)
+		!strncmp(pDevice->szProductId, "RW/DVD_GCC-4241N", DRIVE_PRODUCT_ID_SIZE)
+		) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
+BOOL IsSupported0xE7Type2_2(
+	PDEVICE pDevice
+) {
+	if (!strncmp(pDevice->szProductId, "RW/DVD GCC-4242N", DRIVE_PRODUCT_ID_SIZE)
 		) {
 		return TRUE;
 	}
@@ -546,7 +555,8 @@ BOOL IsSupported0xE7(
 	PDEVICE pDevice
 ) {
 	if (IsSupported0xE7Type1(pDevice) ||
-		IsSupported0xE7Type2(pDevice) ||
+		IsSupported0xE7Type2_1(pDevice) ||
+		IsSupported0xE7Type2_2(pDevice) ||
 		IsSupported0xE7Type3(pDevice) ||
 		IsSupported0xE7Type4(pDevice)) {
 		return TRUE;
@@ -628,13 +638,13 @@ BOOL ReadDVDRaw(
 					baseAddr = 0xa13000;
 					nCmdType = 1;
 				}
-				else if (IsSupported0xE7Type2(pDevice)) {
-//					transferLen = 8;
-//					baseAddr -= 0x4080;
+				else if (IsSupported0xE7Type2_1(pDevice)) {
 					transferLen = 4;
-					baseAddr -= 0x2040;
-//					transferLen = 1;
-//					baseAddr -= 0x810;
+					baseAddr -= 0x810 * transferLen;
+					nCmdType = 2;
+				}
+				else if (IsSupported0xE7Type2_2(pDevice)) {
+					baseAddr -= 0x810 * transferLen;
 					nCmdType = 2;
 				}
 				else if (IsSupported0xE7Type3(pDevice) || IsSupported0xE7Type4(pDevice)) {
@@ -858,8 +868,6 @@ BOOL ReadDVDRaw(
 
 				for (UINT j = 0; j < transferLen; j++) {
 					DWORD dwOfs3 = dwOfs2 + dwOfs[j];
-//					OutputCDMain(fileMainInfo, lpBuf + dwOfs3, nLBA + j, DVD_RAW_SECTOR_SIZE);
-					OutputDVDHeader(lpBuf + dwOfs3, dwSectorSize, nLBA + (INT)(j + i * transferLen));
 					id = lpBuf[dwOfs3];
 					gotSectorNum = MAKEUINT(MAKEWORD(lpBuf[3 + dwOfs3]
 						, lpBuf[2 + dwOfs3]), MAKEWORD(lpBuf[1 + dwOfs3], 0));
@@ -877,6 +885,8 @@ BOOL ReadDVDRaw(
 						break;
 					}
 					prevId = id;
+//					OutputCDMain(fileMainInfo, lpBuf + dwOfs3, nLBA + j, DVD_RAW_SECTOR_SIZE);
+					OutputDVDHeader(lpBuf + dwOfs3, dwSectorSize, nLBA + (INT)(j + i * transferLen));
 				}
 
 				if (!bCheckSectorNum) {
@@ -891,7 +901,7 @@ BOOL ReadDVDRaw(
 			else {
 				if (++nRereadNum == 40) {
 					OutputString("Max Reread %d. LBA: %7d\n", nRereadNum, nLBA);
-					if (!bRetry && IsSupported0xE7Type2(pDevice)) {
+					if (!bRetry && (IsSupported0xE7Type2_1(pDevice) || IsSupported0xE7Type2_2(pDevice))) {
 						transferLen = 1;
 						transferAndMemSize = transferLen * memBlkSize;
 						dwReadSize = (DWORD)DISC_MAIN_DATA_SIZE * transferLen;
@@ -915,7 +925,8 @@ BOOL ReadDVDRaw(
 			}
 			if (nRereadNum || IsNintendoDisc(pDisc)) {
 				if (IsSupported0xE7Type1(pDevice) ||
-					IsSupported0xE7Type2(pDevice) ||
+					IsSupported0xE7Type2_1(pDevice) ||
+					IsSupported0xE7Type2_2(pDevice) ||
 					IsSupported0xE7Type3(pDevice)) {
 					INT tmp = nLBA - (INT)transferAndMemSize;
 					if (bReadErr) {
@@ -926,7 +937,9 @@ BOOL ReadDVDRaw(
 						if (IsSupported0xE7Type1(pDevice)) {
 							tmp = 16;
 						}
-						else if (IsSupported0xE7Type2(pDevice) || IsSupported0xE7Type3(pDevice)) {
+						else if (IsSupported0xE7Type2_1(pDevice) ||
+							IsSupported0xE7Type2_2(pDevice) ||
+							IsSupported0xE7Type3(pDevice)) {
 							tmp = 0;
 						}
 					}
@@ -1082,7 +1095,8 @@ BOOL ExecReadingKey(
 		_TCHAR str[_MAX_PATH + 10] = {};
 		INT ret = 0;
 		if (GetCssCmd(pDevice, str, protect, pszPath)) {
-			if ((ret = _tsystem(str)) == 1) {
+			ret = _tsystem(str);
+			if (ret == 1) {
 				throw FALSE;
 			}
 		}
@@ -1136,7 +1150,7 @@ BOOL ReadDiscStructure(
 	WORD wEntrySize = (WORD)(wDataSize / sizeof(DVD_STRUCTURE_LIST_ENTRY));
 
 	_TCHAR szPath[_MAX_PATH] = {};
-	_tcsncpy(szPath, pszFullPath, _MAX_PATH);
+	_tcsncpy(szPath, pszFullPath, sizeof(szPath) / sizeof(szPath[0]) - 1);
 	if (!PathRemoveFileSpec(szPath)) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
@@ -1478,7 +1492,7 @@ BOOL ExtractSecuritySector(
 	LPCTSTR pszFullPath
 ) {
 	_TCHAR szPath[_MAX_PATH] = {};
-	_tcsncpy(szPath, pszFullPath, _MAX_PATH);
+	_tcsncpy(szPath, pszFullPath, sizeof(szPath) / sizeof(szPath[0]) - 1);
 	if (!PathRemoveFileSpec(szPath)) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
