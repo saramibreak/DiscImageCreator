@@ -79,7 +79,7 @@ void _splitpath(const char* Path, char* Drive, char* Directory, char* Filename, 
 	if (Filename != NULL) {
 		// Filename is the part behind the last slahs
 		strcpy(Filename, CopyOfPath -= Rest);
-		strncpy(pExt, Filename, strlen(Filename));
+		strncpy(pExt, Filename, sizeof(ext) - 1);
 		PathRemoveExtension(Filename);
 	}
 	if (Extension != NULL) {
@@ -94,7 +94,7 @@ void _splitpath(const char* Path, char* Drive, char* Directory, char* Filename, 
 				while (*pExt != '\0')
 				{
 //					*Extension = *Filename;
-					strncpy(Extension, pExt, 4);
+					strncpy(Extension, pExt, sizeof(ext));
 //					*Filename = '\0';
 					break;
 //					Extension++;
@@ -240,7 +240,7 @@ int PathRemoveExtension(char* path)
 int PathRenameExtension(char* path, const char* ext)
 {
 	PathRemoveExtension(path);
-	strncat(path, ext, strlen(ext));
+	strncat(path, ext, strlen(path));
 	return 1;
 }
 
@@ -365,7 +365,8 @@ int GetLastError(void)
 int CloseHandle(int fd)
 {
 	int ret = close(fd);
-	return ret = ret != -1 ? TRUE : FALSE;
+	ret = ret != -1 ? TRUE : FALSE;
+	return ret;
 }
 
 int DeviceIoControl(int fd, unsigned long ioCtlCode, void* inbuf, unsigned long a, void* b, unsigned long c, unsigned long* d, void* e)
@@ -378,7 +379,8 @@ int DeviceIoControl(int fd, unsigned long ioCtlCode, void* inbuf, unsigned long 
 	PSCSI_PASS_THROUGH_DIRECT_WITH_BUFFER p = (PSCSI_PASS_THROUGH_DIRECT_WITH_BUFFER)inbuf;
 	int ret = ioctl(fd, ioCtlCode, &(p->io_hdr));
 	memcpy(&(p->SenseData), p->Dummy, 18);
-	return ret = ret != -1 ? TRUE : FALSE;
+	ret = ret != -1 ? TRUE : FALSE;
+	return ret;
 }
 
 int ReadFile(int fd, void* inbuf, unsigned long size, unsigned long* d, void* e)
@@ -386,7 +388,8 @@ int ReadFile(int fd, void* inbuf, unsigned long size, unsigned long* d, void* e)
 	UNREFERENCED_PARAMETER(e);
 	int ret = 0;
 	*d = read(fd, inbuf, size);
-	return ret = ret != -1 ? TRUE : FALSE;
+	ret = ret != -1 ? TRUE : FALSE;
+	return ret;
 }
 
 off_t SetFilePointer(int fd, off_t pos, void* a, int origin)
