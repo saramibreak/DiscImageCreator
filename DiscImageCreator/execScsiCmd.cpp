@@ -590,13 +590,15 @@ BOOL GetConfiguration(
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		pDisc->SCSI.wCurrentMedia = ProfileCdrom;
 		// not false. because undefined mmc1..
+		OutputDriveNoSupportLog("GET_CONFIGURATION");
 		if (pDevice->byPlxtrDrive == PLXTR_DRIVE_TYPE::PX40TS ||
+			pDevice->byPlxtrDrive == PLXTR_DRIVE_TYPE::PX32TS ||
 			pDevice->byPlxtrDrive == PLXTR_DRIVE_TYPE::PX20TS
 			) {
 			pDevice->FEATURE.byCanCDText = TRUE;
 			pDevice->FEATURE.byC2ErrorData = TRUE;
+			OutputLog(standardOut | fileDrive, "But this drive supports to read CDText and C2 Error\n");
 		}
-		OutputDriveNoSupportLog("GET_CONFIGURATION");
 	}
 	else {
 		pDisc->SCSI.wCurrentMedia =
