@@ -234,7 +234,7 @@ typedef struct _DEVICE {
 #ifdef _WIN32
 	BYTE byDriveLetter;
 #else
-	CHAR drivepath[9];
+	CHAR drivepath[10];
 #endif
 	WORD wMaxReadSpeed;
 	BYTE bySuccessReadToc;
@@ -353,6 +353,7 @@ typedef struct _DISC {
 		BYTE reserved;
 		CHAR name[MAX_READ_ERROR_FILE_COUNT][MAX_FNAME_FOR_VOLUME];
 		CHAR name2[MAX_FNAME_FOR_VOLUME]; // for Der KorsaR, DVD Region X
+		CHAR padding[3];
 		// for skipping unreadable file
 		struct _ERROR_SECTOR {
 			INT nExtentPos[MAX_READ_ERROR_FILE_COUNT];
@@ -415,6 +416,7 @@ typedef struct _PATH_TABLE_RECORD {
 	UINT uiPosOfDir;
 	UINT uiNumOfUpperDir;
 	CHAR szDirName[MAX_FNAME_FOR_VOLUME];
+	CHAR padding[3];
 	UINT uiDirSize; // This is actually DIRECTORY RECORD info
 } PATH_TABLE_RECORD, *PPATH_TABLE_RECORD;
 

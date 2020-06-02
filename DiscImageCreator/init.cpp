@@ -199,7 +199,7 @@ BOOL InitProtectData(
 				throw FALSE;
 			}
 			if (NULL == ((*pDisc)->PROTECT.pFullNameForExe[h] =
-				(LPCH)calloc(MAX_FNAME_FOR_VOLUME, sizeof(CHAR)))) {
+				(LPCH)calloc(_MAX_PATH, sizeof(CHAR)))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}

@@ -1338,8 +1338,8 @@ BOOL ProcessDirectory(
 			if (_tcscmp(fd.cFileName, _T(".")) &&
 				_tcscmp(fd.cFileName, _T(".."))) {
 				_TCHAR szFoundFilePathName[_MAX_PATH];
-				_tcsncpy(szFoundFilePathName, szExtractdir, _MAX_PATH);
-				_tcsncat(szFoundFilePathName, fd.cFileName, _MAX_PATH);
+				_tcsncpy(szFoundFilePathName, szExtractdir, sizeof(szFoundFilePathName) / sizeof(szFoundFilePathName[0]));
+				_tcsncat(szFoundFilePathName, fd.cFileName, sizeof(szFoundFilePathName) / sizeof(szFoundFilePathName[0]) - _tcslen(szFoundFilePathName));
 
 				if (!(FILE_ATTRIBUTE_DIRECTORY & fd.dwFileAttributes)) {
 					if (FILE_ATTRIBUTE_READONLY & fd.dwFileAttributes) {
@@ -1392,7 +1392,8 @@ VOID GetFullPathWithDrive(
 	PDEVICE pDevice,
 	PDISC pDisc,
 	INT nIdx,
-	_TCHAR* FullPathWithDrive
+	_TCHAR* FullPathWithDrive,
+	size_t FullPathWithDriveLen
 ) {
 	CHAR FullPathTmp[_MAX_PATH] = {};
 	CHAR drive[_MAX_DRIVE] = {};
@@ -1409,9 +1410,9 @@ VOID GetFullPathWithDrive(
 
 #ifdef UNICODE
 	MultiByteToWideChar(CP_ACP, 0,
-		FullPathTmp, sizeof(FullPathTmp), FullPathWithDrive, (INT)_tcslen(FullPathWithDrive));
+		FullPathTmp, sizeof(FullPathTmp), FullPathWithDrive, (INT)FullPathWithDriveLen);
 #else
-	strncpy(FullPathWithDrive, FullPathTmp, sizeof(FullPathTmp));
+	strncpy(FullPathWithDrive, FullPathTmp, FullPathWithDriveLen);
 #endif
 }
 
@@ -1436,7 +1437,7 @@ BOOL ReadCDForCheckingExe(
 		}
 		BOOL bCab = FALSE;
 		_TCHAR FullPathWithDrive[_MAX_PATH] = {};
-		GetFullPathWithDrive(pDevice, pDisc, n, FullPathWithDrive);
+		GetFullPathWithDrive(pDevice, pDisc, n, FullPathWithDrive, sizeof(FullPathWithDrive));
 #ifdef _WIN32
 		if (strcasestrW(FullPathWithDrive, _T("directx"))) {
 			continue;
@@ -1484,7 +1485,7 @@ BOOL ReadCDForCheckingExe(
 
 				if (bRet && PathFileExists(szPathIsc)) {
 					_TCHAR szTmpFullPath[_MAX_PATH] = {};
-					_tcsncpy(szTmpFullPath, szTmpPath, sizeof(_MAX_PATH) / sizeof(_TCHAR));
+					_tcsncpy(szTmpFullPath, szTmpPath, sizeof(szTmpFullPath) / sizeof(szTmpFullPath[0]));
 					_tcscat(szTmpPath, _T("\\!exelist.txt"));
 
 					CONST INT nStrSize = _MAX_PATH * 2;
@@ -1500,6 +1501,9 @@ BOOL ReadCDForCheckingExe(
 						_sntprintf(str, nStrSize,
 							_T("\"\"%s\" l -o \"%s\"\" 2> NUL | findstr /e /i %s > %s")
 							, szPathIsc, FullPathWithDrive, szSearchList[i], szTmpPath);
+#ifdef _DEBUG
+						OutputString("%s\n", str);
+#endif
 						_tsystem(str);
 
 						FILE* fp = _tfopen(szTmpPath, _T("r"));
@@ -1743,7 +1747,7 @@ BOOL ReadCDForCheckingExe(
 										return FALSE;
 									}
 									_tcscat(szTmpPath, _T("\\!extracted\\"));
-									GetFullPathWithDrive(pDevice, pDisc, n, FullPathWithDrive);
+									GetFullPathWithDrive(pDevice, pDisc, n, FullPathWithDrive, sizeof(FullPathWithDrive));
 									ProcessDirectory(pExtArg, pDisc, szTmpPath, FILE_CREATE);
 
 									_TCHAR szPathWise[_MAX_PATH] = {};

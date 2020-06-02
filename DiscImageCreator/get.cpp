@@ -501,8 +501,8 @@ BOOL GetCssCmd(
 		OutputErrorString("Path too long\n");
 		return FALSE;
 	}
-	_tcsncpy(keyPath, szFname, _tcslen(szFname));
-	_tcsncat(keyPath, keyFile, _tcslen(keyFile));
+	_tcsncpy(keyPath, szFname, sizeof(keyPath) / sizeof(keyPath[0]));
+	_tcsncat(keyPath, keyFile, sizeof(keyPath) / sizeof(keyPath[0]) - _tcslen(keyPath) - 1);
 	_tmakepath(szPathForKey, szDrive, szDir, keyPath, _T("txt"));
 
 	_TCHAR szPathForCss[_MAX_PATH] = {};

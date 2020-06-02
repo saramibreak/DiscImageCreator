@@ -512,7 +512,7 @@ BOOL OutputHash(
 	UCHAR uiLastTrack,
 	BOOL bDesync
 ) {
-	_TCHAR pszFnameAndExt[_MAX_PATH] = {};
+	_TCHAR pszFnameAndExt[_MAX_FNAME + _MAX_EXT] = {};
 	_TCHAR pszOutPath[_MAX_PATH] = {};
 	FILE* fp = NULL;
 	if (bDesync) {
@@ -595,7 +595,7 @@ BOOL OutputHash(
 					OutputErrorString("Dat error: %08.8lx\n", hr);
 					return FALSE;
 				}
-				WCHAR wszFnameAndExt[_MAX_PATH] = {};
+				WCHAR wszFnameAndExt[_MAX_FNAME + _MAX_EXT] = {};
 #ifndef UNICODE
 				if (!MultiByteToWideChar(CP_ACP, 0
 					, pszFnameAndExt, sizeof(pszFnameAndExt) / sizeof(pszFnameAndExt[0])

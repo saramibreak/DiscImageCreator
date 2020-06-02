@@ -68,7 +68,7 @@
 // 1バイト文字で128文字までの長いファイル名を記録できる。
 // Joliet Extensions
 // Unicodeで64文字までの長いファイル名を記録できる。
-#define MAX_FNAME_FOR_VOLUME (128)
+#define MAX_FNAME_FOR_VOLUME (128 + 1)
 #define MIN_LEN_DR (34)
 
 #define MAX_READ_ERROR_FILE_COUNT (16)

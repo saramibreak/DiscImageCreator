@@ -308,7 +308,7 @@ BOOL FixSubQAdrISRC(
 					, pDiscPerSector->subcode.current[20] & 0x0f, pDisc->SUB.pszISRC[pDiscPerSector->byTrackNum - 1]);
 
 				CHAR tmpISRC[META_ISRC_SIZE] = {};
-				strncpy(tmpISRC, pDisc->SUB.pszISRC[pDiscPerSector->byTrackNum - 1], sizeof(tmpISRC) / sizeof(tmpISRC[0]));
+				strncpy(tmpISRC, pDisc->SUB.pszISRC[pDiscPerSector->byTrackNum - 1], sizeof(tmpISRC) / sizeof(tmpISRC[0]) - 1);
 				pDiscPerSector->subcode.current[13] = (BYTE)(((tmpISRC[0] - 0x30) << 2) | ((tmpISRC[1] - 0x30) >> 4));
 				pDiscPerSector->subcode.current[14] = (BYTE)(((tmpISRC[1] - 0x30) << 4) | ((tmpISRC[2] - 0x30) >> 2));
 				pDiscPerSector->subcode.current[15] = (BYTE)(((tmpISRC[2] - 0x30) << 6) | (tmpISRC[3] - 0x30));
