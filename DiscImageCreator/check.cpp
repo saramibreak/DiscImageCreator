@@ -128,6 +128,12 @@ BOOL IsValid0xF1SupportedDrive(
 				return TRUE;
 			}
 		}
+		else if (!strncmp(pDevice->szProductId, "BC-12D2HT       ", DRIVE_PRODUCT_ID_SIZE)) {
+			if (!strncmp(pDevice->szProductRevisionLevel, "3.01", DRIVE_VERSION_ID_SIZE)) {
+				pDevice->by0xF1Drive = TRUE;
+				return TRUE;
+			}
+		}
 	}
 	else if (!strncmp(pDevice->szVendorId, "HL-DT-ST", DRIVE_VENDOR_ID_SIZE)) {
 		if (!strncmp(pDevice->szProductId, "DVDRAM GH24NSD1 ", DRIVE_PRODUCT_ID_SIZE)) {
@@ -1328,7 +1334,7 @@ BOOL AnalyzeIfoFile(
 #endif
 
 	if (PathFileExists(szBuf)) {
-		_TCHAR szFnameAndExt[_MAX_FNAME] = {};
+		_TCHAR szFnameAndExt[_MAX_FNAME + _MAX_EXT] = {};
 		FILE* fp = CreateOrOpenFile(szBuf, NULL, NULL, szFnameAndExt, NULL, _T(".IFO"), _T("rb"), 0, 0);
 		if (!fp) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
