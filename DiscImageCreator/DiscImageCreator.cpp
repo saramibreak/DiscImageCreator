@@ -153,7 +153,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 #ifdef _WIN32
 		device.byDriveLetter = (BYTE)(argv[2][0]);
 #else
-		strncpy(device.drivepath, argv[2], sizeof(device.drivepath));
+		strncpy(device.drivepath, argv[2], sizeof(device.drivepath) - 1);
 #endif
 		if (!GetHandle(&device)) {
 			return FALSE;
@@ -595,8 +595,8 @@ void splitPath(const _TCHAR* path, _TCHAR* drive, _TCHAR* dir, _TCHAR* fname, _T
 #endif
 int appendExtIfNotExt(_TCHAR* szPathFromArg, size_t pathLen, _TCHAR* szTmpPath)
 {
-	_TCHAR ext[4] = {};
-	_tcsncpy(ext, &szPathFromArg[pathLen - 4], sizeof(ext) / sizeof(ext[0]));
+	_TCHAR ext[5] = {};
+	_tcsncpy(ext, &szPathFromArg[pathLen - 4], sizeof(ext) / sizeof(ext[0]) - 1);
 	if (_tcsncmp(ext, _T(".bin"), sizeof(ext) / sizeof(ext[0])) != 0 &&
 		_tcsncmp(ext, _T(".iso"), sizeof(ext) / sizeof(ext[0])) != 0 &&
 		_tcsncmp(ext, _T(".sub"), sizeof(ext) / sizeof(ext[0])) != 0 &&
@@ -617,12 +617,11 @@ int appendExtIfNotExt(_TCHAR* szPathFromArg, size_t pathLen, _TCHAR* szTmpPath)
 	return TRUE;
 }
 
-int printAndSetPath(_TCHAR* szPathFromArg, _TCHAR* pszFullPath)
+int printAndSetPath(_TCHAR* szPathFromArg, _TCHAR* pszFullPath, size_t stFullPathlen)
 {
-	_TCHAR szTmpPath[_MAX_PATH + 1] = {};
-	size_t len = _tcslen(szPathFromArg);
-	_tcsncpy(szTmpPath, szPathFromArg, len);
-	appendExtIfNotExt(szPathFromArg, len, szTmpPath);
+	_TCHAR szTmpPath[_MAX_PATH] = {};
+	_tcsncpy(szTmpPath, szPathFromArg, sizeof(szTmpPath) - 1);
+	appendExtIfNotExt(szPathFromArg, _tcslen(szPathFromArg), szTmpPath);
 
 	if (!GetCurrentDirectory(sizeof(s_szCurrentdir) / sizeof(s_szCurrentdir[0]), s_szCurrentdir)) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -635,8 +634,8 @@ int printAndSetPath(_TCHAR* szPathFromArg, _TCHAR* pszFullPath)
 #endif
 
 	if (!s_szDrive[0] || !s_szDir[0]) {
-		_tcsncpy(pszFullPath, s_szCurrentdir, _MAX_PATH);
-		pszFullPath[_MAX_PATH] = 0;
+		_tcsncpy(pszFullPath, s_szCurrentdir, stFullPathlen);
+		pszFullPath[stFullPathlen - 1] = 0;
 		if (s_szDir[0]) {
 			if (!PathAppend(pszFullPath, s_szDir)) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -666,13 +665,13 @@ int printAndSetPath(_TCHAR* szPathFromArg, _TCHAR* pszFullPath)
 #else
 		_tsplitpath(pszFullPath, s_szDrive, s_szDir, NULL, NULL);
 #endif
-		if (s_szExt[0] && _tcslen(pszFullPath) + _tcslen(s_szExt) < _MAX_PATH) {
-			_tcsncat(pszFullPath, s_szExt, _tcslen(s_szExt));
+		if (s_szExt[0] && _tcslen(pszFullPath) + _tcslen(s_szExt) < stFullPathlen) {
+			_tcsncat(pszFullPath, s_szExt, stFullPathlen - _tcslen(pszFullPath));
 		}
 	}
 	else {
-		_tcsncpy(pszFullPath, s_szDrive, _tcslen(s_szDrive));
-		_tcsncat(pszFullPath, s_szDir, _tcslen(s_szDir));
+		_tcsncpy(pszFullPath, s_szDrive, stFullPathlen);
+		_tcsncat(pszFullPath, s_szDir, stFullPathlen - _tcslen(pszFullPath));
 		if (!PathFileExists(pszFullPath)) {
 			OutputErrorString("%s doesn't exist, so create.\n", pszFullPath);
 #ifdef UNICODE
@@ -687,7 +686,7 @@ int printAndSetPath(_TCHAR* szPathFromArg, _TCHAR* pszFullPath)
 			}
 #endif
 		}
-		_tcsncpy(pszFullPath, szTmpPath, _MAX_PATH);
+		_tcsncpy(pszFullPath, szTmpPath, stFullPathlen);
 	}
 	OutputString(
 		"CurrentDirectory\n"
@@ -918,7 +917,7 @@ int SetOptionA(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	return TRUE;
 }
 
-int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath)
+int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, size_t stFullPathlen)
 {
 	_TCHAR* endptr = NULL;
 	size_t cmdLen = 0;
@@ -1037,7 +1036,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					return FALSE;
 				}
 			}
-			printAndSetPath(argv[3], pszFullPath);
+			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
 		}
 		else if (argc >= 5 && cmdLen == 2 && !_tcsncmp(argv[1], _T("gd"), 2)) {
 			*pExecType = gd;
@@ -1090,7 +1089,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					return FALSE;
 				}
 			}
-			printAndSetPath(argv[3], pszFullPath);
+			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
 		}
 		else if (argc >= 7 && ((cmdLen == 4 && !_tcsncmp(argv[1], _T("data"), 4)) ||
 			(cmdLen == 5 && !_tcsncmp(argv[1], _T("audio"), 5)))) {
@@ -1186,7 +1185,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					return FALSE;
 				}
 			}
-			printAndSetPath(argv[3], pszFullPath);
+			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
 		}
 		else if (argc >= 5 && cmdLen == 3 && !_tcsncmp(argv[1], _T("dvd"), 3)) {
 			*pExecType = dvd;
@@ -1242,7 +1241,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					return FALSE;
 				}
 			}
-			printAndSetPath(argv[3], pszFullPath);
+			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
 		}
 		else if (argc >= 5 && ((cmdLen == 2 && !_tcsncmp(argv[1], _T("bd"), 2)) ||
 			(cmdLen == 4 && !_tcsncmp(argv[1], _T("xbox"), 4)))) {
@@ -1277,7 +1276,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					return FALSE;
 				}
 			}
-			printAndSetPath(argv[3], pszFullPath);
+			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
 		}
 		else if (argc >= 5 && (cmdLen == 4 && !_tcsncmp(argv[1], _T("sacd"), 4))) {
 			*pExecType = sacd;
@@ -1286,7 +1285,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					pExtArg->byQuiet = TRUE;
 				}
 			}
-			printAndSetPath(argv[3], pszFullPath);
+			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
 		}
 		else if (argc >= 21 && ((cmdLen == 8 && !_tcsncmp(argv[1], _T("xboxswap"), 8)))) {
 			*pExecType = xboxswap;
@@ -1322,7 +1321,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					return FALSE;
 				}
 			}
-			printAndSetPath(argv[3], pszFullPath);
+			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
 		}
 		else if (argc >= 8 && ((cmdLen == 8 && (!_tcsncmp(argv[1], _T("xgd2swap"), 8) || !_tcsncmp(argv[1], _T("xgd3swap"), 8))))) {
 			pExtArg->nAllSectors = (INT)_tcstoul(argv[5], &endptr, 10);
@@ -1368,21 +1367,21 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					return FALSE;
 				}
 			}
-			printAndSetPath(argv[3], pszFullPath);
+			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
 		}
 		else if (argc == 4) {
 			cmdLen = _tcslen(argv[1]);
 			if (cmdLen == 2 && !_tcsncmp(argv[1], _T("fd"), 2)) {
 				*pExecType = fd;
-				printAndSetPath(argv[3], pszFullPath);
+				printAndSetPath(argv[3], pszFullPath, stFullPathlen);
 			}
 			else if (cmdLen == 4 && !_tcsncmp(argv[1], _T("disk"), 4)) {
 				*pExecType = disk;
-				printAndSetPath(argv[3], pszFullPath);
+				printAndSetPath(argv[3], pszFullPath, stFullPathlen);
 			}
 			else if (cmdLen == 5 && !_tcsncmp(argv[1], _T("merge"), 5)) {
 				*pExecType = merge;
-				printAndSetPath(argv[2], pszFullPath);
+				printAndSetPath(argv[2], pszFullPath, stFullPathlen);
 			}
 			else {
 				OutputErrorString("Invalid argument\n");
@@ -1411,11 +1410,11 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			}
 			else if (cmdLen == 3 && !_tcsncmp(argv[1], _T("sub"), 3)) {
 				*pExecType = sub;
-				printAndSetPath(argv[2], pszFullPath);
+				printAndSetPath(argv[2], pszFullPath, stFullPathlen);
 			}
 			else if (cmdLen == 3 && !_tcsncmp(argv[1], _T("mds"), 3)) {
 				*pExecType = mds;
-				printAndSetPath(argv[2], pszFullPath);
+				printAndSetPath(argv[2], pszFullPath, stFullPathlen);
 			}
 			else {
 				OutputErrorString("Invalid argument\n");
@@ -1435,15 +1434,14 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 int createCmdFile(int argc, _TCHAR* argv[], _TCHAR* pszFullPath, LPTSTR pszDateTime)
 {
 	if (argc >= 4) {
+		_TCHAR date[17] = {};
+		_sntprintf(date, sizeof(date) / sizeof(_TCHAR), _T("_%s"), pszDateTime);
 		FILE* fpCmd = CreateOrOpenFile(
-			pszFullPath, _T("_cmd"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0);
+			pszFullPath, date, NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0);
 		if (!fpCmd) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
 		}
-
-		_ftprintf(fpCmd, _T("%s"), pszDateTime);
-
 		for (int i = 0; i < argc; i++) {
 			_ftprintf(fpCmd, _T("%s "), argv[i]);
 		}
@@ -1649,8 +1647,8 @@ int printSeveralInfo(LPTSTR pszDateTime, size_t dateTimeSize)
 #else
 	OutputString("AnsiBuild, ");
 #endif
-	_sntprintf(pszDateTime, dateTimeSize, _T("%s %s\n"), _T(BUILD_DATE), _T(BUILD_TIME));
-	OutputString("%s", pszDateTime);
+	_sntprintf(pszDateTime, dateTimeSize, _T("%sT%s"), _T(BUILD_DATE), _T(BUILD_TIME));
+	OutputString("%s\n", pszDateTime);
 	return TRUE;
 }
 
@@ -1683,8 +1681,8 @@ int main(int argc, char* argv[])
 		EXEC_TYPE execType;
 		EXT_ARG extArg = {};
 		extArg.uiCacheDelNum = DEFAULT_CACHE_DELETE_VAL;
-		_TCHAR szFullPath[_MAX_PATH + 1] = {};
-		if (!checkArg(argc, argv, &execType, &extArg, szFullPath)) {
+		_TCHAR szFullPath[_MAX_PATH] = {};
+		if (!checkArg(argc, argv, &execType, &extArg, szFullPath, sizeof(szFullPath) / sizeof(szFullPath[0]))) {
 			if (argc == 1) {
 				printUsage();
 			}
@@ -1721,6 +1719,7 @@ int main(int argc, char* argv[])
 #ifdef _DEBUG
 	_tsystem(_T("pause"));
 #endif
-	return nRet = nRet == TRUE ? EXIT_SUCCESS : EXIT_FAILURE;
+	nRet = nRet == TRUE ? EXIT_SUCCESS : EXIT_FAILURE;
+	return nRet;
 }
 
