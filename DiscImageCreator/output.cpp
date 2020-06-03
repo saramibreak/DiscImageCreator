@@ -49,13 +49,12 @@ FILE* CreateOrOpenFile(
 
 	_tsplitpath(pszPath, szDrive, szDir, szFname, szExt);
 	if (pszPlusFname) {
-		size_t plusFnameLen = _tcslen(pszPlusFname);
-		UINT pathSize = UINT(_tcslen(szDir) + _tcslen(szFname) + plusFnameLen + _tcslen(pszExt));
+		UINT pathSize = UINT(_tcslen(szDir) + _tcslen(szFname) + _tcslen(pszPlusFname) + _tcslen(pszExt));
 		if (pathSize > _MAX_FNAME) {
-			OutputErrorString("File Size is too long: %u\n", pathSize);
+			OutputErrorString("Path size is too long: %u\n", pathSize);
 			return NULL;
 		}
-		_tcsncat(szFname, pszPlusFname, plusFnameLen);
+		_tcsncat(szFname, pszPlusFname, sizeof(szFname) - _tcslen(szFname) - 1);
 	}
 	if (byMaxTrackNum <= 1) {
 		_sntprintf(szDstPath, sizeof(szDstPath) / sizeof(szDstPath[0]),
@@ -72,10 +71,10 @@ FILE* CreateOrOpenFile(
 	szDstPath[_MAX_PATH - 1] = 0;
 
 	if (pszFnameAndExt) {
-		// size of pszFnameAndExt must be _MAX_FNAME.
-		ZeroMemory(pszFnameAndExt, _MAX_FNAME);
+		// size of pszFnameAndExt must be _MAX_FNAME + _MAX_EXT.
+		ZeroMemory(pszFnameAndExt, _MAX_FNAME + _MAX_EXT);
 		_tsplitpath(szDstPath, NULL, NULL, szFname, szExt);
-		_sntprintf(pszFnameAndExt, _MAX_FNAME, _T("%s%s"), szFname, szExt);
+		_sntprintf(pszFnameAndExt, _MAX_FNAME + _MAX_EXT, _T("%s%s"), szFname, szExt);
 	}
 	if (pszFname) {
 		// size of pszFname must be _MAX_FNAME.
@@ -112,7 +111,7 @@ FILE* OpenProgrammabledFile(
 #endif
 	if (p) {
 		p[0] = 0;
-		_TCHAR szFullPathName[_MAX_PATH] = {};
+		_TCHAR szFullPathName[_MAX_PATH + _MAX_FNAME] = {};
 #ifdef _WIN32
 		_sntprintf(szFullPathName
 			, sizeof(szFullPathName) / sizeof(szFullPathName[0]), _T("%s\\%s"), szFullPath, pszFname);
@@ -120,7 +119,7 @@ FILE* OpenProgrammabledFile(
 		_sntprintf(szFullPathName
 			, sizeof(szFullPathName) / sizeof(szFullPathName[0]), _T("%s/%s"), szFullPath, pszFname);
 #endif
-		szFullPathName[_MAX_PATH - 1] = 0;
+		szFullPathName[_MAX_PATH + _MAX_FNAME - 1] = 0;
 		fp = _tfopen(szFullPathName, pszMode);
 	}
 	return fp;
@@ -336,7 +335,7 @@ VOID WriteCcdForTrack(
 				, pDisc->SUB.pszISRC[byTrackNum - 1], META_ISRC_SIZE
 				, szISRC, sizeof(szISRC) / sizeof(szISRC[0]));
 #else
-			strncpy(szISRC, pDisc->SUB.pszISRC[byTrackNum - 1], sizeof(szISRC) / sizeof(szISRC[0]));
+			strncpy(szISRC, pDisc->SUB.pszISRC[byTrackNum - 1], sizeof(szISRC) / sizeof(szISRC[0]) - 1);
 #endif
 			_ftprintf(fpCcd, _T("ISRC=%s\n"), szISRC);
 		}
@@ -391,7 +390,7 @@ VOID WriteCueForSongWriter(
 			, pDisc->SCSI.CDTEXT[n].pszSongWriter[byIdx], META_CDTEXT_SIZE
 			, szSongWriter, sizeof(szSongWriter) / sizeof(szSongWriter[0]));
 #else
-		strncpy(szSongWriter, pDisc->SCSI.CDTEXT[n].pszSongWriter[byIdx], sizeof(szSongWriter) / sizeof(szSongWriter[0]));
+		strncpy(szSongWriter, pDisc->SCSI.CDTEXT[n].pszSongWriter[byIdx], sizeof(szSongWriter) / sizeof(szSongWriter[0]) - 1);
 #endif
 		if (byIdx == 0) {
 			_ftprintf(fpCue, _T("SONGWRITER \"%s\"\n"), szSongWriter);
@@ -415,7 +414,7 @@ VOID WriteCueForPerformer(
 			, pDisc->SCSI.CDTEXT[n].pszPerformer[byIdx], META_CDTEXT_SIZE
 			, szPerformer, sizeof(szPerformer) / sizeof(szPerformer[0]));
 #else
-		strncpy(szPerformer, pDisc->SCSI.CDTEXT[n].pszPerformer[byIdx], sizeof(szPerformer) / sizeof(szPerformer[0]));
+		strncpy(szPerformer, pDisc->SCSI.CDTEXT[n].pszPerformer[byIdx], sizeof(szPerformer) / sizeof(szPerformer[0]) - 1);
 #endif
 		if (byIdx == 0) {
 			_ftprintf(fpCue, _T("PERFORMER \"%s\"\n"), szPerformer);
@@ -439,7 +438,7 @@ VOID WriteCueForTitle(
 			, pDisc->SCSI.CDTEXT[n].pszTitle[byIdx], META_CDTEXT_SIZE
 			, szTitle, sizeof(szTitle) / sizeof(szTitle[0]));
 #else
-		strncpy(szTitle, pDisc->SCSI.CDTEXT[n].pszTitle[byIdx], sizeof(szTitle) / sizeof(szTitle[0]));
+		strncpy(szTitle, pDisc->SCSI.CDTEXT[n].pszTitle[byIdx], sizeof(szTitle) / sizeof(szTitle[0]) - 1);
 #endif
 		if(byIdx == 0) {
 			_ftprintf(fpCue, _T("TITLE \"%s\"\n"), szTitle);
@@ -534,7 +533,7 @@ VOID WriteCueForISRC(
 			, pDisc->SUB.pszISRC[nIdx], META_ISRC_SIZE
 			, szISRC, sizeof(szISRC) / sizeof(szISRC[0]));
 #else
-		strncpy(szISRC, pDisc->SUB.pszISRC[nIdx], sizeof(szISRC) / sizeof(szISRC[0]));
+		strncpy(szISRC, pDisc->SUB.pszISRC[nIdx], sizeof(szISRC) / sizeof(szISRC[0]) - 1);
 #endif
 		_ftprintf(fpCue, _T("    ISRC %s\n"), szISRC);
 	}
@@ -1141,12 +1140,15 @@ BOOL WriteParsingMdsfile(
 							, dvd[i].bca[k + 6], dvd[i].bca[k + 7], dvd[i].bca[k + 8], dvd[i].bca[k + 9], dvd[i].bca[k + 10], dvd[i].bca[k + 11]
 							, dvd[i].bca[k + 12], dvd[i].bca[k + 13], dvd[i].bca[k + 14], dvd[i].bca[k + 15]);
 					}
-					DWORD dwStartingDataSector = dvd[i].layer.commonHeader.StartingDataSector;
-					DWORD dwEndDataSector = dvd[i].layer.commonHeader.EndDataSector;
-					DWORD dwEndLayerZeroSector = dvd[i].layer.commonHeader.EndLayerZeroSector;
-					REVERSE_LONG(&dwStartingDataSector);
-					REVERSE_LONG(&dwEndDataSector);
-					REVERSE_LONG(&dwEndLayerZeroSector);
+					FOUR_BYTE StartingDataSector;
+					StartingDataSector.AsULong = dvd[i].layer.commonHeader.StartingDataSector;
+					FOUR_BYTE EndDataSector;
+					EndDataSector.AsULong = dvd[i].layer.commonHeader.EndDataSector;
+					FOUR_BYTE EndLayerZeroSector;
+					EndLayerZeroSector.AsULong = dvd[i].layer.commonHeader.EndLayerZeroSector;
+					REVERSE_LONG(&StartingDataSector);
+					REVERSE_LONG(&EndDataSector);
+					REVERSE_LONG(&EndLayerZeroSector);
 					_ftprintf(fpParse,
 						_T(OUTPUT_DHYPHEN_PLUS_STR("DVD Structure")
 							"\t       BookVersion: %u\n"
@@ -1172,9 +1174,9 @@ BOOL WriteParsingMdsfile(
 						dvd[i].layer.commonHeader.NumberOfLayers == 0 ? _T("Single Layer") : _T("Double Layer"),
 						lpTrackDensity[dvd[i].layer.commonHeader.TrackDensity],
 						lpLinearDensity[dvd[i].layer.commonHeader.LinearDensity],
-						dwStartingDataSector, dwStartingDataSector,
-						dwEndDataSector, dwEndDataSector,
-						dwEndLayerZeroSector, dwEndLayerZeroSector,
+						StartingDataSector.AsULong, StartingDataSector.AsULong,
+						EndDataSector.AsULong, EndDataSector.AsULong,
+						EndLayerZeroSector.AsULong, EndLayerZeroSector.AsULong,
 						dvd[i].layer.commonHeader.BCAFlag == 0 ? _T("No") : _T("Exist")
 					);
 					for (size_t j = 0; j < sizeof(dvd[i].layer.MediaSpecific); j += 16) {
@@ -1231,12 +1233,14 @@ BOOL WriteParsingMdsfile(
 		}
 		if (h.mediaType != 0x10) {
 			for (INT i = 0; i < tdb; i++) {
-				_ftprintf(fpParse,
-					OUTPUT_DHYPHEN_PLUS_STR("IndexBlock")
-					_T("           NumOfIdx0: %u\n")
-					_T("           NumOfIdx1: %u\n")
-					, ib[i].NumOfIdx0, ib[i].NumOfIdx1
-				);
+				if (ib) {
+					_ftprintf(fpParse,
+						OUTPUT_DHYPHEN_PLUS_STR("IndexBlock")
+						_T("           NumOfIdx0: %u\n")
+						_T("           NumOfIdx1: %u\n")
+						, ib[i].NumOfIdx0, ib[i].NumOfIdx1
+					);
+				}
 			}
 		}
 		char fname[12];
@@ -1397,7 +1401,7 @@ BOOL CreateBinCueForGD(
 	LPCTSTR pszPath
 ) {
 	BOOL bRet = TRUE;
-	_TCHAR pszImgName[_MAX_FNAME] = {};
+	_TCHAR pszImgName[_MAX_FNAME + _MAX_EXT] = {};
 	_TCHAR pszFname[_MAX_PATH] = {};
 	FILE* fpImg = CreateOrOpenFile(pszPath, NULL,
 		NULL, pszImgName, pszFname, _T(".img"), _T("rb"), 0, 0);
@@ -1528,7 +1532,7 @@ BOOL CreateBinCueForGD(
 
 		rewind(fpImg);
 		WriteCueForFileDirective(pszImgName, fpCueForImg);
-		_TCHAR pszBinFname[_MAX_PATH] = {};
+		_TCHAR pszBinFname[_MAX_FNAME + _MAX_EXT] = {};
 
 		for (BYTE i = 3; i <= byMaxTrackNum; i++) {
 			OutputString("\rCreating bin, cue (Track) %2u/%2u", i, byMaxTrackNum);
@@ -1916,7 +1920,7 @@ BOOL CreateBinCueCcd(
 			WriteCueForFirst(pDisc, bCanCDText, 0, fpCueSync);
 		}
 
-		_TCHAR pszFname[_MAX_FNAME] = {};
+		_TCHAR pszFname[_MAX_FNAME + _MAX_EXT] = {};
 		_TCHAR pszAltCueStr[][6] = {
 			_T(""), _T("_alt"), _T("_alt2"), _T("_alt3"), _T("_alt4"), _T("_alt5"), _T("_alt6"), _T("_alt7")
 		};
@@ -1976,7 +1980,7 @@ BOOL CreateBinCueCcd(
 					WriteCcdForTrack(pDisc, i, fpCcd);
 				}
 
-				_TCHAR pszFnameSync[_MAX_FNAME] = {};
+				_TCHAR pszFnameSync[_MAX_FNAME + _MAX_EXT] = {};
 				if (pDisc->SUB.byDesync) {
 					// This fpBin is dummy
 					if (NULL == (fpBinSync = CreateOrOpenFile(pszPath, _T(" (Subs indexes)"), out,

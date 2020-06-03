@@ -740,27 +740,27 @@ VOID OutputFsImageSectionHeader(
 	if (pDisc != NULL) {
 		if (!strncmp((LPCCH)pIsh->Name, "icd1", 4)) {
 			pDisc->PROTECT.byExist = codelock;
-			strncpy(pDisc->PROTECT.name[0], (LPCCH)pIsh->Name, sizeof(pIsh->Name));
+			strncpy(pDisc->PROTECT.name[0], (LPCCH)pIsh->Name, sizeof(pDisc->PROTECT.name[0]));
 			pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] = pDisc->PROTECT.nNextLBAOfLastVolDesc;
 			pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0] =
 				pDisc->PROTECT.nPrevLBAOfPathTablePos - pDisc->PROTECT.nNextLBAOfLastVolDesc;
 		}
 		else if (!strncmp((LPCCH)pIsh->Name, ".vob.pcd", 8)) {
 			pDisc->PROTECT.byExist = protectCDVOB;
-			strncpy(pDisc->PROTECT.name[0], (LPCCH)pIsh->Name, sizeof(pIsh->Name));
+			strncpy(pDisc->PROTECT.name[0], (LPCCH)pIsh->Name, sizeof(pDisc->PROTECT.name[0]));
 		}
 		else if (!strncmp((LPCCH)pIsh->Name, ".cms_t", 6) || !strncmp((LPCCH)pIsh->Name, ".cms_d", 6)
 			) {
 			// This string exists SecuROM OLD "Re-Volt (Europe)" and SecuROM NEW "Supreme Snowboarding (Europe) and "Beam Breakers (Europe) etc"
 			pDisc->PROTECT.byExist = securomTmp;
-			strncpy(pDisc->PROTECT.name[0], (LPCCH)pIsh->Name, sizeof(pIsh->Name));
+			strncpy(pDisc->PROTECT.name[0], (LPCCH)pIsh->Name, sizeof(pDisc->PROTECT.name[0]));
 			*bSecurom = TRUE;
 		}
 		else if (pExtArg != NULL && pExtArg->byIntentionalSub && !IsKnownSectionName((LPCCH)pIsh->Name)) {
 			// some SecuROM discs have random section names
 			if (pDisc->PROTECT.byExist == no) {
 				pDisc->PROTECT.byExist = securomTmp;
-				strncpy(pDisc->PROTECT.name[0], (LPCCH)pIsh->Name, sizeof(pIsh->Name));
+				strncpy(pDisc->PROTECT.name[0], (LPCCH)pIsh->Name, sizeof(pDisc->PROTECT.name[0]));
 			}
 			*bSecurom = TRUE;
 		}
@@ -861,7 +861,7 @@ VOID OutputSecuRomDllHeader(
 	LPUINT uiOfsOfNT,
 	LPINT idx
 ) {
-	OutputString("\nDetected SecuROM %.8" CHARWIDTH "s\n", &lpBuf[8]);
+	OutputLog(standardOut | fileDisc, "\nDetected SecuROM %.8" CHARWIDTH "s\n", &lpBuf[8]);
 	OutputVolDescLog(
 		"\t" OUTPUT_DHYPHEN_PLUS_STR("SecuROM DLL Header")
 		"\t\t         Signature: %.4" CHARWIDTH "s\n"
@@ -1349,11 +1349,16 @@ VOID OutputCDSubToLog(
 				, pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
 
 			if (pDisc->SCSI.bMultiSession && pDiscPerSector->subcode.current[13] > 1) {
-				if (pDiscPerSector->subcode.prev[13] == 0 &&
+				if ((pDiscPerSector->subcode.prev[13] == 0 &&
 					(pDiscPerSector->subcode.prev[14] == 0xa0 ||
 					pDiscPerSector->subcode.prev[14] == 0xa1 ||
-					pDiscPerSector->subcode.prev[14] == 0xa2)
-					) {
+					pDiscPerSector->subcode.prev[14] == 0xa2)) ||
+					(((pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) &&
+					pDiscPerSector->subcode.current[14] == 0 && pDiscPerSector->subcode.current[15] == 0 &&
+					pDiscPerSector->subcode.current[16] == 1 && pDiscPerSector->subcode.current[17] == 0x74)) {
+					if (pDisc->MAIN.nAdjustSectorNum < 0) {
+						nLBA += pDisc->MAIN.nAdjustSectorNum;
+					}
 					pDisc->SCSI.nLeadinLenOf2ndSession = nLBA - pDisc->SCSI.n1stLBAofLeadin;
 					OutputLog(standardOut | fileDisc
 						, " Lead-in length of 2nd session: %d\n", pDisc->SCSI.nLeadinLenOf2ndSession);
@@ -1391,7 +1396,7 @@ VOID OutputCDSubToLog(
 			MultiByteToWideChar(CP_ACP, 0
 				, pDisc->SUB.pszISRC[pDiscPerSector->byTrackNum - 1], META_ISRC_SIZE, szISRC, sizeof(szISRC));
 #else
-			strncpy(szISRC, pDisc->SUB.pszISRC[pDiscPerSector->byTrackNum - 1], sizeof(szISRC) / sizeof(szISRC[0]));
+			strncpy(szISRC, pDisc->SUB.pszISRC[pDiscPerSector->byTrackNum - 1], sizeof(szISRC) / sizeof(szISRC[0]) - 1);
 #endif
 			OutputSubReadableLog(
 				"ItnStdRecordingCode [%12s], AMSF[     :%02x]", szISRC, pDiscPerSector->subcode.current[21]);
