@@ -1453,13 +1453,13 @@ LG Electronics - CD-RW GCE-8524B	+689	3	100%
 LG Electronics - CD-RW GCE-8525B	+6	229	100%
 LG Electronics - CD-RW GCE-8526B	+6	204	100%
 LG Electronics - CD-RW GCE-8527B	+6	142	100%
-LG Electronics - CDRW-DVD GCC4244	+102	235	100%
-LG Electronics - CDRW-DVD GCC4247	+102	7	100%
-LG Electronics - CDRW-DVD GCC4482	+6	96	100%
-LG Electronics - CDRW-DVD GCCH10N	+6	45	100%
-LG Electronics - CDRW-DVD GCCH30N	+6	8	100%
-LG Electronics - CDRW-DVD GCCT10N	+102	65	100%
-LG Electronics - CDRW-DVD GCCT20N	+102	2	100%
+LG Electronics - CDRW/DVD GCC4244	+102	235	100%
+LG Electronics - CDRW/DVD GCC4247	+102	7	100%
+LG Electronics - CDRW/DVD GCC4482	+6	96	100%
+LG Electronics - CDRW/DVD GCCH10N	+6	45	100%
+LG Electronics - CDRW/DVD GCCH30N	+6	8	100%
+LG Electronics - CDRW/DVD GCCT10N	+102	65	100%
+LG Electronics - CDRW/DVD GCCT20N	+102	2	100%
 LG Electronics - CDRWDVD MU10N	+102	35	100%
 LG Electronics - DVD RAM GSA-T20L	+667	1	100%
 LG Electronics - DVD+-RW GA10N	+667	65	100%
@@ -1867,41 +1867,41 @@ LG Electronics - DVDRWBD CT40N	+102	61	100%
 LG Electronics - DVDRWBD GBC-H20N	+667	62	100%
 LG Electronics - GCE-8483B	0	2	100%
 LG Electronics - LENOVO BURNER	+102	7	100%
-LG Electronics - RW-DVD GCC-4080N	+733	6	100%
-LG Electronics - RW-DVD GCC-4120B	+733	39	100%
-LG Electronics - RW-DVD GCC-4160N	+102	15	100%
-LG Electronics - RW-DVD GCC-4240N	+102	218	100%
-LG Electronics - RW-DVD GCC-4241N	+102	298	100%
-LG Electronics - RW-DVD GCC-4242N	+102	295	100%
-LG Electronics - RW-DVD GCC-4243N	+102	160	100%
-LG Electronics - RW-DVD GCC-4244N	+102	185	100%
-LG Electronics - RW-DVD GCC-4246N	+102	67	100%
-LG Electronics - RW-DVD GCC-4247N	+102	197	100%
-LG Electronics - RW-DVD GCC-4320B	+6	99	100%
-LG Electronics - RW-DVD GCC-4480B	+6	293	100%
-LG Electronics - RW-DVD GCC-4481B	+6	228	100%
-LG Electronics - RW-DVD GCC-4482B	+6	102	100%
-LG Electronics - RW-DVD GCC-4520B	+6	66	100%
-LG Electronics - RW-DVD GCC-4521B	+6	102	100%
-LG Electronics - RW-DVD GCC-4522B	+6	40	100%
-LG Electronics - RW-DVD GCC-4522C	+6	2	100%
-LG Electronics - RW-DVD GCC-5241P	+102	1	100%
-LG Electronics - RW-DVD GCC-C10N	+102	20	100%
-LG Electronics - RW-DVD GCC-C20N	+102	1	100%
-LG Electronics - RW-DVD GCC-H10N	+6	14	100%
-LG Electronics - RW-DVD GCC-H20N	+6	12	100%
-LG Electronics - RW-DVD GCC-H21N	+6	9	100%
-LG Electronics - RW-DVD GCC-H23N	+6	6	100%
-LG Electronics - RW-DVD GCC-H30N	+6	16	100%
-LG Electronics - RW-DVD GCC-H31N	+6	1	100%
-LG Electronics - RW-DVD GCC-M10N	+102	54	100%
-LG Electronics - RW-DVD GCC-T10N	+102	40	100%
-LG Electronics - RW-DVD GCC-T20N	+102	7	100%
-LG Electronics - RW-DVD MU10N	+102	61	100%
-LG Electronics - RW-DVD_GCC-4241N	+102	1	100%
-LG Electronics - RW-DVD_GCC-4244N	+102	2	100%
-LG Electronics - RW-DVD_GCC-4480B	+6	1	100%
-LG Electronics - RW-DVD_GCC-T10N	+102	5	100%
+LG Electronics - RW/DVD GCC-4080N	+733	6	100%
+LG Electronics - RW/DVD GCC-4120B	+733	39	100%
+LG Electronics - RW/DVD GCC-4160N	+102	15	100%
+LG Electronics - RW/DVD GCC-4240N	+102	218	100%
+LG Electronics - RW/DVD GCC-4241N	+102	298	100%
+LG Electronics - RW/DVD GCC-4242N	+102	295	100%
+LG Electronics - RW/DVD GCC-4243N	+102	160	100%
+LG Electronics - RW/DVD GCC-4244N	+102	185	100%
+LG Electronics - RW/DVD GCC-4246N	+102	67	100%
+LG Electronics - RW/DVD GCC-4247N	+102	197	100%
+LG Electronics - RW/DVD GCC-4320B	+6	99	100%
+LG Electronics - RW/DVD GCC-4480B	+6	293	100%
+LG Electronics - RW/DVD GCC-4481B	+6	228	100%
+LG Electronics - RW/DVD GCC-4482B	+6	102	100%
+LG Electronics - RW/DVD GCC-4520B	+6	66	100%
+LG Electronics - RW/DVD GCC-4521B	+6	102	100%
+LG Electronics - RW/DVD GCC-4522B	+6	40	100%
+LG Electronics - RW/DVD GCC-4522C	+6	2	100%
+LG Electronics - RW/DVD GCC-5241P	+102	1	100%
+LG Electronics - RW/DVD GCC-C10N	+102	20	100%
+LG Electronics - RW/DVD GCC-C20N	+102	1	100%
+LG Electronics - RW/DVD GCC-H10N	+6	14	100%
+LG Electronics - RW/DVD GCC-H20N	+6	12	100%
+LG Electronics - RW/DVD GCC-H21N	+6	9	100%
+LG Electronics - RW/DVD GCC-H23N	+6	6	100%
+LG Electronics - RW/DVD GCC-H30N	+6	16	100%
+LG Electronics - RW/DVD GCC-H31N	+6	1	100%
+LG Electronics - RW/DVD GCC-M10N	+102	54	100%
+LG Electronics - RW/DVD GCC-T10N	+102	40	100%
+LG Electronics - RW/DVD GCC-T20N	+102	7	100%
+LG Electronics - RW/DVD MU10N	+102	61	100%
+LG Electronics - RW/DVD_GCC-4241N	+102	1	100%
+LG Electronics - RW/DVD_GCC-4244N	+102	2	100%
+LG Electronics - RW/DVD_GCC-4480B	+6	1	100%
+LG Electronics - RW/DVD_GCC-T10N	+102	5	100%
 LGHL-04P - LG HL-04P MT8575	+6	2	100%
 LGHL-05P - LG HL-05P MT8575	+6	3	100%
 Lite-ON - DVD-ROM LTD-165H	+12	49	100%

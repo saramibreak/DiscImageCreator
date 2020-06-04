@@ -642,3 +642,32 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - fixed: Log of DISK_GEOMETRY_EX and FAT32
 - fixed: PS2 unlicensed discs can't dump from 20191223
 - fixed: Linux can't dump CD with CDTEXT
+
+*2020-06-04
+- added: support for make install command (Linux only) (thanks pseiler)
+- added: support multi-session disc that the combined offset is minus
+- added: new 0xf1 drive (thanks olofolleola4)
+          -> ASUS BW-12B1ST   a   1.00
+          -> ASUS BC-12D2HT 3.01
+          -> HL-DT-ST BD-RE  WH16NS60 1.00
+- added: extract MicroSoft Cabinet File (.cab) for searching protection (Windows only)
+- added: extract InterShield Cabinet File (ISc) to detect protection using i6comp.exe (Windows only)
+- added: extract Wise Installation to detect protection using E_WISE_W.EXE (Windows only)
+- added: output log of SecuROM DLL Header (AddD, CA DD DD AC) to _volDesc.txt
+- added: output fullpath of file to _volDesc.txt
+- added: output import directory log to _volDesc.txt
+- added: output ISRC country, owner, year, serial to _disc.txt
+- added: output layerbreak to _disc.txt (only xbox or xbox 360)
+- added: output log of cdg instruction to _subReadable.txt
+- added: output DVD header of the raw dump to _rawReadable.txt
+- added: REM LEAD-OUT, LEAD-IN, REM PREGAP in Subs indexes cue
+- changed: Data and Time format (ISO8601 is used)
+- changed: _cmd.txt to _[BuildData].txt
+- fixed: BD-ROM also uses "Anchor Volume Descriptor Pointer", not TOC length
+- fixed: dat is empty if current directory is root
+- fixed: detecting 1st lead-in sector of 2nd session
+- fixed: detecting psx anti-mod string when the string across sector boundary
+- fixed: disk dumping (use Read10, not ReadFile)
+- fixed: raw dump of GCC-4241N & GCC-4242N
+- fixed: PLBA of ccd if LBA is over 404850
+- fixed: XBOX dumping (failed to dump if transfer length is over max)

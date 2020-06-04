@@ -3,11 +3,16 @@ Vendor					Model(*1)				Firmware(*2)	MinusLBA		Lead-out		Scrambled	GD-ROM(*4)			
 ASUS					BC-12D2HT				3.01			Part(from -145)	No				Yes			No					No
 HITACHI-LG(HL-DT-ST)	GCC-4160N				0012			Part(from -145)	No				No			No					Yes
 HITACHI-LG(HL-DT-ST)	GCC-4240N				D110			Part(from -144)	No				No			No					Yes
+HITACHI-LG(HL-DT-ST)	GCC-4241N				0N30			Part(from -145)	No				No			No					Yes
+HITACHI-LG(HL-DT-ST)	GCC-4241N				1.04			Part(from -145)	No				No			No					Yes
 HITACHI-LG(HL-DT-ST)	GCC-4242N				0201			Part(from -145)	No				No			No					Yes
 HITACHI-LG(HL-DT-ST)	GCC-4243N				1.00			Part(from -146)	No				No			No					Yes
+HITACHI-LG(HL-DT-ST)	GCC-4244N				B101			Part(from -146)	No				No			No					Yes
 HITACHI-LG(HL-DT-ST)	GCC-4247N				1.02			Part(from -147)	No				No			No					Yes
 LG(HL-DT-ST)			GCC-4320B				1.00			No				No				Yes			No					No
 HITACHI-LG(HL-DT-ST)	GDR-8082N				0106			No				No				No			No					Yes
+HITACHI-LG(HL-DT-ST)	GDR-8083N				0K03			No				No				No			No					Yes
+HITACHI-LG(HL-DT-ST)	GDR-8084N				1.00			No				No				No			No					Yes
 HITACHI(HL-DT-ST)		GDR-8160B				0011			Part(from -146)	No				No			No					No
 HITACHI(HL-DT-ST)		GDR-8161B				0045			No				No				No			No					Yes
 HP(HL-DT-ST)			GDR-8163B				0B26			No				No				No			No					Yes
@@ -42,6 +47,7 @@ Optiarc					AD-7203S				1-B0			No				No				No			No					No
 Philips&Lite-on(ATAPI)	DH16AAS					JL34			Part(from -140)	No				No			No					No
 PLEXTOR					PX-12TS					1.01			Yes				Part(100sector)	Yes			No					No
 PLEXTOR					PX-20TS					1.00			Yes				Part(100sector)	Yes			No					No
+PLEXTOR					PX-32TS					1.03			Yes				Part(100sector)	Yes			No					No
 PLEXTOR					PX-40TS					1.14			Yes				Part(100sector)	Yes			No					No
 PLEXTOR					PX-R412C				1.07			Yes				Part(100sector)	Yes(*4)		No					No
 PLEXTOR					PX-R820Ti				1.08			Yes				Part(100sector)	Yes(*4)		No					No
@@ -61,12 +67,12 @@ PLEXTOR					PREMIUM					1.07			Yes				Part(100sector)	Yes			No					No
 PLEXTOR					PREMIUM2				1.04			Yes				Part(100sector)	Yes			No					No
 PLEXTOR					PX-320A					1.06			Yes				Part(100sector)	Yes(*4)		No					No
 PLEXTOR					PX-504A					1.02			No				No				No			No					No
-PLEXTOR					PX-708A(PX-708UF)		1.12			Yes				Yes(100sector)	Yes			No					No
-PLEXTOR					PX-712SA(PX-712A)		1.09			Yes				Yes(100sector)	Yes			Part(79:59:74)(*5)	No
-PLEXTOR					PX-716A					1.11			Yes				Yes(100sector)	Yes			No					No
+PLEXTOR					PX-708A(PX-708UF)		1.12			Yes				Part(100sector)	Yes			No					No
+PLEXTOR					PX-712SA(PX-712A)		1.09			Yes				Part(100sector)	Yes			Part(79:59:74)(*5)	No
+PLEXTOR					PX-716A					1.11			Yes				Part(100sector)	Yes			No					No
 PLEXTOR					PX-750A					1.03			No				No				No			No					No
-PLEXTOR					PX-755SA(PX-755A)		1.08			Yes				Yes(100sector)	Yes			Part(79:59:74)(*5)	No
-PLEXTOR					PX-760A					1.07			Yes				Yes(100sector)	Yes			No					No
+PLEXTOR					PX-755SA(PX-755A)		1.08			Yes				Part(100sector)	Yes			Part(79:59:74)(*5)	No
+PLEXTOR					PX-760A					1.07			Yes				Part(100sector)	Yes			No					No
 Slimtype				DS8A3S					HAT9			No				No				Yes			No					No
 SONY					CRX200E					1.0f			No				No				Yes			No					No
 TOSHIBA					SD-H802A				TS06			Part(from -126)	No				No			No					No

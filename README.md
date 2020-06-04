@@ -48,9 +48,10 @@
 - DVD: All supported drive
 - GC/Wii
    - Hitachi-LG
-     - GDR-8082N, GDR-8084N, GDR-8161B, GDR-8162B, GDR-8163B, GDR-8164B  
+     - GDR-8082N, GDR-8083N, GDR-8084N  
+       GDR-8161B, GDR-8162B, GDR-8163B, GDR-8164B  
        GCC-4160N, GCC-4240N, GCC-4243N, GCC-4244N, GCC-4247N  
-       (GDR-8083N, GDR-8085N, GDR-8087N and GCC-4246N haven't tested yet, but probably supports to dump.)  
+       (GDR-8085N, GDR-8087N and GCC-4246N haven't tested yet, but probably supports to dump.)  
        (GCC-4241N and GCC-4242N supports to dump but many errors occurred.) 
 - XBOX, XBOX 360
    - TSSTcorp
@@ -62,7 +63,7 @@
 - BD: All supported drive (PS3 is only supported by [some mediatek drive](https://rpcs3.net/quickstart) or PS3 drive)
     - You need to get the [3k3y ripper](https://web.archive.org/web/20150212063714/http://www.3k3y.com/) if you want to dump the data1/data2
 - Other: Comfirmed device below
-   - FD, MD, MO, USB, ZIP
+   - FD, PD, MD, MO, SparQ, USB, ZIP
 
 ### Not recommend
 - CD: (Because it can't read lead-in and/or lead-out and can't exec 0xd8 opcode)
