@@ -2240,7 +2240,7 @@ BOOL ReadCDCheck(
 					pDisc->PROTECT.byExist == PROTECT_TYPE_CD::no) {
 					OutputString(
 						"[INFO] Protection can't be detected. /sf, /ss is ignored.\n");
-					if (pExtArg->byScanProtectViaFile) {
+					if (pExtArg->byScanProtectViaFile && !pExtArg->byIntentionalSub) {
 						TerminateProtectData(&pDisc);
 					}
 					pExtArg->byScanProtectViaFile = FALSE;
