@@ -222,7 +222,8 @@ See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)
 ## Development Tool
 - Visual Studio 2019 (Visual C++ 2019)
   - Windows build
-    - [Windows Driver Kit (WDK) 7.1.0](https://www.microsoft.com/en-us/download/details.aspx?id=11800)
+    - [Windows Driver Kit (WDK) 7.1.0](https://www.microsoft.com/en-us/download/details.aspx?id=11800)  
+    - [Visual Leak Detector](https://kinddragon.github.io/vld/) (DEBUG build only)
 
   - Linux build on Windows  
     - Windows Subsystem for Linux (WSL)  
