@@ -439,16 +439,22 @@ VOID TerminateTocTextData(
 ) {
 	size_t dwTrackAllocSize =
 		(*pExecType == gd || *pExecType == swap) ? MAXIMUM_NUMBER_TRACKS : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
-	for (size_t i = 0; i < dwTrackAllocSize; i++) {
-		FreeAndNull((*pDisc)->SUB.pszISRC[i]);
+	if ((*pDisc)->SUB.pszISRC) {
+		for (size_t i = 0; i < dwTrackAllocSize; i++) {
+			FreeAndNull((*pDisc)->SUB.pszISRC[i]);
+		}
 	}
 	FreeAndNull((*pDisc)->SUB.pszISRC);
 	if (pDevice->FEATURE.byCanCDText || *pExecType == gd || *pExecType == swap) {
 		for (INT j = 0; j < MAX_CDTEXT_LANG; j++) {
-			for (size_t i = 0; i < dwTrackAllocSize; i++) {
-				FreeAndNull((*pDisc)->SCSI.CDTEXT[j].pszTitle[i]);
-				FreeAndNull((*pDisc)->SCSI.CDTEXT[j].pszPerformer[i]);
-				FreeAndNull((*pDisc)->SCSI.CDTEXT[j].pszSongWriter[i]);
+			if ((*pDisc)->SCSI.CDTEXT[j].pszTitle &&
+				(*pDisc)->SCSI.CDTEXT[j].pszPerformer &&
+				(*pDisc)->SCSI.CDTEXT[j].pszSongWriter) {
+				for (size_t i = 0; i < dwTrackAllocSize; i++) {
+					FreeAndNull((*pDisc)->SCSI.CDTEXT[j].pszTitle[i]);
+					FreeAndNull((*pDisc)->SCSI.CDTEXT[j].pszPerformer[i]);
+					FreeAndNull((*pDisc)->SCSI.CDTEXT[j].pszSongWriter[i]);
+				}
 			}
 		}
 		for (INT j = 0; j < MAX_CDTEXT_LANG; j++) {
@@ -462,9 +468,11 @@ VOID TerminateTocTextData(
 VOID TerminateProtectData(
 	PDISC* pDisc
 ) {
-	for (size_t h = 0; h < EXELBA_STORE_SIZE; h++) {
-		FreeAndNull((*pDisc)->PROTECT.pNameForExe[h]);
-		FreeAndNull((*pDisc)->PROTECT.pFullNameForExe[h]);
+	if ((*pDisc)->PROTECT.pNameForExe && (*pDisc)->PROTECT.pFullNameForExe) {
+		for (size_t h = 0; h < EXELBA_STORE_SIZE; h++) {
+			FreeAndNull((*pDisc)->PROTECT.pNameForExe[h]);
+			FreeAndNull((*pDisc)->PROTECT.pFullNameForExe[h]);
+		}
 	}
 	FreeAndNull((*pDisc)->PROTECT.pNameForExe);
 	FreeAndNull((*pDisc)->PROTECT.pFullNameForExe);
