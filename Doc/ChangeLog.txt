@@ -671,3 +671,6 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - fixed: raw dump of GCC-4241N & GCC-4242N
 - fixed: PLBA of ccd if LBA is over 404850
 - fixed: XBOX dumping (failed to dump if transfer length is over max)
+
+*2020-06-20
+- fixed: crash when both /sf and /ns are used
