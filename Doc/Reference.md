@@ -6,7 +6,7 @@
   https://standards.iso.org/ittf/PubliclyAvailableStandards/
 
 - IEC (International Electrotechnical Commission)  
-  https://www.iec.ch/dyn/www/f?p=103:22:990006348562::::FSP_ORG_ID,FSP_LANG_ID:3397,25
+  https://www.iec.ch/dyn/www/f?p=103:22:990006348562::::FSP_ORG_ID,FSP_LANG_ID:3397,25  
   https://www.iec.ch/dyn/www/f?p=103:22:0::::FSP_ORG_ID:1297
 
 - UDF  
@@ -30,7 +30,7 @@
 - IOCTL (Linux)  
   http://man7.org/linux/man-pages/man2/ioctl_list.2.html  
   https://www.kernel.org/doc/html/latest/ioctl/cdrom.html  
-  /usr/include/scsi/sg.h
+  /usr/include/scsi/sg.h  
   /usr/include/linux/cdrom.h
 
 - SCSI Command (MMC, SPC etc)  
