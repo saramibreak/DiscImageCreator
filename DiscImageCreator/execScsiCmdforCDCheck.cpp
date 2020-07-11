@@ -1220,93 +1220,100 @@ BOOL ReadExeFromFile(
 		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR("%s"), szFileName);
 		OutputFsImageDosHeader(pIDh);
 
-		if (IsImageSig(&lpBuf[pIDh->e_lfanew], IMAGE_NT_SIGNATURE)) {
-			PIMAGE_NT_HEADERS32 pINH = (PIMAGE_NT_HEADERS32)&lpBuf[pIDh->e_lfanew];
-			OutputFsImageNtHeader(pINH);
+		if (pIDh->e_lfanew >= bufsize) {
+			OutputVolDescLog("File address of new exe header is too big. Skip reading Image NT Header etc.\n");
+		}
+		else {
+			if (IsImageSig(&lpBuf[pIDh->e_lfanew], IMAGE_NT_SIGNATURE)) {
+				PIMAGE_NT_HEADERS32 pINH = (PIMAGE_NT_HEADERS32)&lpBuf[pIDh->e_lfanew];
+				OutputFsImageNtHeader(pINH);
 
-			DWORD dwImportVirtualAddress = pINH->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress;
-			DWORD dwImportSize = pINH->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].Size;
-			DWORD dwImportPointerToRawData = 0;
-			ULONG nOfs = pIDh->e_lfanew + sizeof(IMAGE_NT_HEADERS32);
-			BOOL bSecurom = FALSE;
-			for (INT i = 0; i < pINH->FileHeader.NumberOfSections; i++) {
-				PIMAGE_SECTION_HEADER pISH = (PIMAGE_SECTION_HEADER)&lpBuf[nOfs];
-				OutputFsImageSectionHeader(pExtArg, pDisc, pISH, &bSecurom);
-				nOfs += sizeof(IMAGE_SECTION_HEADER);
-				if (pISH->VirtualAddress <= dwImportVirtualAddress && dwImportVirtualAddress <= pISH->VirtualAddress + pISH->Misc.VirtualSize) {
-					dwImportPointerToRawData = pISH->PointerToRawData + dwImportVirtualAddress - pISH->VirtualAddress;
+				DWORD dwImportVirtualAddress = pINH->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress;
+				DWORD dwImportSize = pINH->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].Size;
+				DWORD dwImportPointerToRawData = 0;
+				ULONG nOfs = pIDh->e_lfanew + sizeof(IMAGE_NT_HEADERS32);
+				BOOL bSecurom = FALSE;
+				for (INT i = 0; i < pINH->FileHeader.NumberOfSections; i++) {
+					PIMAGE_SECTION_HEADER pISH = (PIMAGE_SECTION_HEADER)&lpBuf[nOfs];
+					OutputFsImageSectionHeader(pExtArg, pDisc, pISH, &bSecurom);
+					nOfs += sizeof(IMAGE_SECTION_HEADER);
+					if (pISH->VirtualAddress <= dwImportVirtualAddress && dwImportVirtualAddress <= pISH->VirtualAddress + pISH->Misc.VirtualSize) {
+						dwImportPointerToRawData = pISH->PointerToRawData + dwImportVirtualAddress - pISH->VirtualAddress;
+					}
 				}
-			}
-			if (dwImportSize > 0) {
-				fseek(fp, (LONG)dwImportPointerToRawData, SEEK_SET);
-				fread(lpBuf, sizeof(BYTE), bufsize, fp);
-				OutputMainInfoLog("dwImportVirtualAddress: 0x%lx, dwImportSize: 0x%lx\n", dwImportVirtualAddress, dwImportSize);
-				OutputCDMain(fileMainInfo, lpBuf, 0, DISC_MAIN_DATA_SIZE);
-				OutputImportDirectory(lpBuf, bufsize, dwImportVirtualAddress, 0);
-			}
-			if (bSecurom) {
-				UINT uiSecuromReadSize = DISC_MAIN_DATA_SIZE * 2;
-				fseek(fp, -4, SEEK_END);
-				UINT uiOfsOfSecuRomDll = 0;
-				fread(&uiOfsOfSecuRomDll, sizeof(UINT), 1, fp);
-				if (uiOfsOfSecuRomDll) {
-					fseek(fp, (LONG)uiOfsOfSecuRomDll, SEEK_SET);
-					fread(lpBuf, sizeof(BYTE), (size_t)uiSecuromReadSize, fp);
-					OutputCDMain(fileMainInfo, lpBuf, 0, uiSecuromReadSize);
-
-					UINT uiOfsOf16 = 0;
-					UINT uiOfsOf32 = 0;
-					UINT uiOfsOfNT = 0;
-					INT idx = 0;
-					OutputSecuRomDllHeader(lpBuf, &uiOfsOf16, &uiOfsOf32, &uiOfsOfNT, &idx);
-					OutputSint16(lpBuf, uiOfsOf16, uiOfsOfSecuRomDll, idx);
-
-					fseek(fp, (LONG)uiOfsOf32, SEEK_SET);
-					fread(lpBuf, sizeof(BYTE), (size_t)uiSecuromReadSize, fp);
-					OutputCDMain(fileMainInfo, lpBuf, 0, uiSecuromReadSize);
-					OutputSint32(lpBuf, 0, FALSE);
-
-					fseek(fp, (LONG)uiOfsOfNT, SEEK_SET);
-					fread(lpBuf, sizeof(BYTE), (size_t)uiSecuromReadSize, fp);
-					OutputCDMain(fileMainInfo, lpBuf, 0, uiSecuromReadSize);
-					OutputSintNT(lpBuf, 0, FALSE);
+				if (dwImportSize > 0) {
+					fseek(fp, (LONG)dwImportPointerToRawData, SEEK_SET);
+					fread(lpBuf, sizeof(BYTE), bufsize, fp);
+					OutputMainInfoLog("dwImportVirtualAddress: 0x%lx, dwImportSize: 0x%lx\n", dwImportVirtualAddress, dwImportSize);
+					OutputCDMain(fileMainInfo, lpBuf, 0, DISC_MAIN_DATA_SIZE);
+					OutputImportDirectory(lpBuf, bufsize, dwImportVirtualAddress, 0);
 				}
-				else if (pExtArg->byIntentionalSub) {
-					rewind(fp);
-					fread(lpBuf, sizeof(BYTE), (size_t)uiSecuromReadSize, fp);
-					BOOL bFound = FALSE;
-					while (!feof(fp) && !ferror(fp)) {
-						for (UINT i = 0; i < uiSecuromReadSize - 8; i++) {
-							if (IsSecuromDllSig(lpBuf, i)) {
-								LONG lSigPos = (LONG)(ftell(fp) - uiSecuromReadSize + i);
-								LONG lSigOfs = GetOfsOfSecuromDllSig(lpBuf, i);
-								if (lSigPos == lSigOfs) {
-									OutputSecuRomDll4_87Header(lpBuf, i);
-									OutputCDMain(fileMainInfo, lpBuf, 0, uiSecuromReadSize);
-									bFound = TRUE;
-									break;
+				if (bSecurom) {
+					UINT uiSecuromReadSize = DISC_MAIN_DATA_SIZE * 2;
+					fseek(fp, -4, SEEK_END);
+					UINT uiOfsOfSecuRomDll = 0;
+					fread(&uiOfsOfSecuRomDll, sizeof(UINT), 1, fp);
+					if (uiOfsOfSecuRomDll) {
+						fseek(fp, (LONG)uiOfsOfSecuRomDll, SEEK_SET);
+						fread(lpBuf, sizeof(BYTE), (size_t)uiSecuromReadSize, fp);
+						if (!strncmp((LPCH)lpBuf, "AddD", 4)) {
+							OutputCDMain(fileMainInfo, lpBuf, 0, uiSecuromReadSize);
+
+							UINT uiOfsOf16 = 0;
+							UINT uiOfsOf32 = 0;
+							UINT uiOfsOfNT = 0;
+							INT idx = 0;
+							OutputSecuRomDllHeader(lpBuf, &uiOfsOf16, &uiOfsOf32, &uiOfsOfNT, &idx);
+							OutputSint16(lpBuf, uiOfsOf16, uiOfsOfSecuRomDll, idx);
+
+							fseek(fp, (LONG)uiOfsOf32, SEEK_SET);
+							fread(lpBuf, sizeof(BYTE), (size_t)uiSecuromReadSize, fp);
+							OutputCDMain(fileMainInfo, lpBuf, 0, uiSecuromReadSize);
+							OutputSint32(lpBuf, 0, FALSE);
+
+							fseek(fp, (LONG)uiOfsOfNT, SEEK_SET);
+							fread(lpBuf, sizeof(BYTE), (size_t)uiSecuromReadSize, fp);
+							OutputCDMain(fileMainInfo, lpBuf, 0, uiSecuromReadSize);
+							OutputSintNT(lpBuf, 0, FALSE);
+						}
+					}
+					else if (pExtArg->byIntentionalSub) {
+						rewind(fp);
+						fread(lpBuf, sizeof(BYTE), (size_t)uiSecuromReadSize, fp);
+						BOOL bFound = FALSE;
+						while (!feof(fp) && !ferror(fp)) {
+							for (UINT i = 0; i < uiSecuromReadSize - 8; i++) {
+								if (IsSecuromDllSig(lpBuf, i)) {
+									LONG lSigPos = (LONG)(ftell(fp) - uiSecuromReadSize + i);
+									LONG lSigOfs = GetOfsOfSecuromDllSig(lpBuf, i);
+									if (lSigPos == lSigOfs) {
+										OutputSecuRomDll4_87Header(lpBuf, i);
+										OutputCDMain(fileMainInfo, lpBuf, 0, uiSecuromReadSize);
+										bFound = TRUE;
+										break;
+									}
 								}
 							}
-						}
-						if (bFound) {
-							break;
-						}
-						else {	
-							fread(lpBuf, sizeof(BYTE), (size_t)uiSecuromReadSize, fp);
+							if (bFound) {
+								break;
+							}
+							else {
+								fread(lpBuf, sizeof(BYTE), (size_t)uiSecuromReadSize, fp);
+							}
 						}
 					}
 				}
 			}
-		}
-		else if (IsImageSig(&lpBuf[pIDh->e_lfanew], IMAGE_OS2_SIGNATURE)) {
-			OutputFsImageOS2Header((PIMAGE_OS2_HEADER)&lpBuf[pIDh->e_lfanew]);
-		}
-		else if (IsImageSig(&lpBuf[pIDh->e_lfanew], IMAGE_OS2_SIGNATURE_LE)) {
-			// TODO
-		}
-		else {
-			OutputVolDescLog(
-				"%s: ImageNT,NE,LEHeader doesn't exist\n", szFileName);
+			else if (IsImageSig(&lpBuf[pIDh->e_lfanew], IMAGE_OS2_SIGNATURE)) {
+				OutputFsImageOS2Header((PIMAGE_OS2_HEADER)&lpBuf[pIDh->e_lfanew]);
+			}
+			else if (IsImageSig(&lpBuf[pIDh->e_lfanew], IMAGE_OS2_SIGNATURE_LE)) {
+				// TODO
+			}
+			else {
+				OutputVolDescLog(
+					"%s: ImageNT,NE,LEHeader doesn't exist\n", szFileName);
+			}
 		}
 	}
 	FreeAndNull(lpBuf);

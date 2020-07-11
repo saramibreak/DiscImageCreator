@@ -544,12 +544,27 @@ BOOL IsKnownSectionName(
 		strcasestr(lpName, "debug") ||
 		strcasestr(lpName, "drectve") ||
 		strcasestr(lpName, "msvcjmc") ||
+		strcasestr(lpName, "biosdll") ||
+		strcasestr(lpName, "olebrk") ||
+		strcasestr(lpName, "EDTQ") ||
+		strcasestr(lpName, "H26xColo") ||
 		strcasestr(lpName, "PAGE") ||
+		strcasestr(lpName, "POOL") ||
 		strcasestr(lpName, "INIT") ||
-		strcasestr(lpName, "PAGE") ||
+		strcasestr(lpName, "SHARED") ||
+		strcasestr(lpName, "STL") ||
+		strcasestr(lpName, "CRT") ||
+		strcasestr(lpName, "GLOBAL_I") ||
+		strcasestr(lpName, "LOCKMEM") ||
+		strcasestr(lpName, "PNP") ||
+		strcasestr(lpName, "MONITOR") ||
+		strcasestr(lpName, "MISYSPTE") ||
+		strcasestr(lpName, "MMX") ||
+		strcasestr(lpName, "SECUR") ||
 		strcasestr(lpName, "SEG") ||
 		strcasestr(lpName, "UPX") ||
 		strcasestr(lpName, "ENGINE") ||
+		strcasestr(lpName, "_PARA_DA") ||
 		strcasestr(lpName, "MSSMIXER")
 		) {
 		return TRUE;
