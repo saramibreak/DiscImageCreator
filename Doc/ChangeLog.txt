@@ -674,3 +674,6 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 
 *2020-06-20
 - fixed: crash when both /sf and /ns are used
+
+*2020-07-11
+- fixed: crash when /ns is used by some disc
