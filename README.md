@@ -62,8 +62,6 @@
 - HD-DVD: All supported drive
 - BD: All supported drive (PS3 is only supported by [some mediatek drive](https://rpcs3.net/quickstart) or PS3 drive)
     - You need to get the [3k3y ripper](https://web.archive.org/web/20150212063714/http://www.3k3y.com/) if you want to dump the data1/data2
-- Other: Comfirmed device below
-   - FD, PD, MD, MO, SparQ, USB, ZIP100, ZIP250
 
 ### Not recommend
 - CD: (Because it can't read lead-in and/or lead-out and can't exec 0xd8 opcode)
@@ -156,6 +154,9 @@ See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)
   - Microsoft Xbox One
   - Sony PlayStation 3
   - Sony PlayStation 4
+
+  Other
+  - FD, PD, MD, MO, SparQ, SuperDisk(120), USB, ZIP(100, 250)
 
 ## Probably Unsupported Disc
   Protected Disc
