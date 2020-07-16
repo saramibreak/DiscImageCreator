@@ -677,3 +677,7 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 
 *2020-07-11
 - fixed: crash when /ns is used by some disc
+
+*2020-07-16
+- added: /mscf flag for cd command
+- added: /avdp flag for dvd or bd command
