@@ -80,6 +80,7 @@
     <ClCompile Include="execScsiCmdforCDCheck.cpp" />
     <ClCompile Include="execScsiCmdforDVD.cpp" />
     <ClCompile Include="execScsiCmdforFileSystem.cpp" />
+    <ClCompile Include="execTapeCmd.cpp" />
     <ClCompile Include="fix.cpp" />
     <ClCompile Include="get.cpp" />
     <ClCompile Include="init.cpp" />
@@ -120,6 +121,7 @@
     <ClInclude Include="execScsiCmdforCDCheck.h" />
     <ClInclude Include="execScsiCmdforDVD.h" />
     <ClInclude Include="execScsiCmdforFileSystem.h" />
+    <ClInclude Include="execTapeCmd.h" />
     <ClInclude Include="fix.h" />
     <ClInclude Include="forwardDeclaration.h" />
     <ClInclude Include="get.h" />

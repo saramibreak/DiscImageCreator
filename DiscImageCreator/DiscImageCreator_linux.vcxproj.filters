@@ -120,6 +120,9 @@
     <ClCompile Include="_external\NonStandardFunction.cpp">
       <Filter>_external</Filter>
     </ClCompile>
+    <ClCompile Include="execTapeCmd.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="calcHash.h">
@@ -262,6 +265,9 @@
     </ClInclude>
     <ClInclude Include="_external\NonStandardFunction.h">
       <Filter>_external</Filter>
+    </ClInclude>
+    <ClInclude Include="execTapeCmd.h">
+      <Filter>header</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

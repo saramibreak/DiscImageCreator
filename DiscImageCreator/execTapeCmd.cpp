@@ -203,5 +203,8 @@ BOOL ReadTape(
 	}
 	FreeAndNull(buff);
 	return bRet;
+#else
+	UNREFERENCED_PARAMETER(pszFullPath);
+	return TRUE;
 #endif
 }

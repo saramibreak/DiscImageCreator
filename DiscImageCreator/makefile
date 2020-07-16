@@ -28,6 +28,7 @@ SOURCES_CXX := \
   execScsiCmdforCDCheck.o \
   execScsiCmdforDVD.o \
   execScsiCmdforFileSystem.o \
+  execTapeCmd.o \
   fix.o \
   get.o \
   init.o \
