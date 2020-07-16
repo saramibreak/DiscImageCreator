@@ -956,13 +956,7 @@ BOOL ReadDVDForFileSystem(
 					}
 				}
 				if (nCnt) {
-					if (pDisc->SCSI.wCurrentMedia == ProfileDvdRewritable ||
-						pDisc->SCSI.wCurrentMedia == ProfileBDRom ||
-						pDisc->SCSI.wCurrentMedia == ProfileBDRSequentialWritable ||
-						pDisc->SCSI.wCurrentMedia == ProfileBDRewritable ||
-						pDisc->SCSI.wCurrentMedia == ProfilePlaystation3BDRom ||
-						pDisc->SCSI.wCurrentMedia == ProfilePlaystation4BDRom
-						) {
+					if (pExtArg->byAnchorVolumeDescriptorPointer) {
 						// Because TOC length of -R, -RW, a part of BD-ROM disc is used as the full disc size
 						OutputDiscLog(" => Updated TOC length to %d\n", nLastLBAOfAVDP + 1);
 						pDisc->SCSI.nAllLength = nLastLBAOfAVDP + 1;

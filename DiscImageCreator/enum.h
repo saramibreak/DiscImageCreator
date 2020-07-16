@@ -30,6 +30,7 @@ typedef enum _EXEC_TYPE {
 	sacd,
 	fd,
 	disk,
+	tape,
 	stop,
 	start,
 	ejecttray,

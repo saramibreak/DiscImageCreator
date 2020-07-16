@@ -195,7 +195,9 @@ typedef struct _EXT_ARG {
 	BYTE byVideoNowXp;
 	BYTE byNoSkipSS;
 	BYTE byAtari;
-	BYTE padding[3];
+	BYTE byAnchorVolumeDescriptorPointer;
+	BYTE byMicroSoftCabFile;
+	BYTE padding;
 	INT nAudioCDOffsetNum;
 	UINT uiMaxRereadNum;
 	INT nAllSectors;	// use for xbox360

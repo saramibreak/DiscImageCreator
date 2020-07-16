@@ -337,69 +337,71 @@ BOOL InitLogFile(
 		if (setvbuf(g_LogFile.fpMainError, NULL, _IONBF, 0) != 0) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		}
-		if (NULL == (g_LogFile.fpVolDesc = CreateOrOpenFile(
-			szFullPath, _T("_volDesc"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
-			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-			throw FALSE;
-		}
-		if (setvbuf(g_LogFile.fpVolDesc, NULL, _IONBF, 0) != 0) {
-			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		}
-		if (*pExecType != fd && * pExecType != disk) {
-			if (NULL == (g_LogFile.fpMainInfo = CreateOrOpenFile(
-				szFullPath, _T("_mainInfo"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
+		if (*pExecType != tape) {
+			if (NULL == (g_LogFile.fpVolDesc = CreateOrOpenFile(
+				szFullPath, _T("_volDesc"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
-			if (setvbuf(g_LogFile.fpMainInfo, NULL, _IONBF, 0) != 0) {
+			if (setvbuf(g_LogFile.fpVolDesc, NULL, _IONBF, 0) != 0) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			}
-			if (pExtArg->byRawDump) {
-				if (NULL == (g_LogFile.fpRawReadable = CreateOrOpenFile(
-					szFullPath, _T("_rawReadable"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
+			if (*pExecType != fd && *pExecType != disk) {
+				if (NULL == (g_LogFile.fpMainInfo = CreateOrOpenFile(
+					szFullPath, _T("_mainInfo"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 					throw FALSE;
 				}
-				if (setvbuf(g_LogFile.fpRawReadable, NULL, _IONBF, 0) != 0) {
+				if (setvbuf(g_LogFile.fpMainInfo, NULL, _IONBF, 0) != 0) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				}
-			}
-			if (*pExecType != dvd && *pExecType != bd && *pExecType != sacd &&
-				*pExecType != xbox && *pExecType != xboxswap &&
-				*pExecType != xgd2swap && *pExecType != xgd3swap) {
-				if (NULL == (g_LogFile.fpSubInfo = CreateOrOpenFile(
-					szFullPath, _T("_subInfo"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					throw FALSE;
-				}
-				if (setvbuf(g_LogFile.fpSubInfo, NULL, _IONBF, 0) != 0) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				}
-				if (NULL == (g_LogFile.fpSubError = CreateOrOpenFile(
-					szFullPath, _T("_subError"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					throw FALSE;
-				}
-				if (NULL == (g_LogFile.fpSubReadable = CreateOrOpenFile(
-					szFullPath, _T("_subReadable"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					throw FALSE;
-				}
-				if (pExtArg->byC2) {
-					if (NULL == (g_LogFile.fpC2Error = CreateOrOpenFile(
-						szFullPath, _T("_c2Error"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
+				if (pExtArg->byRawDump) {
+					if (NULL == (g_LogFile.fpRawReadable = CreateOrOpenFile(
+						szFullPath, _T("_rawReadable"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
 						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 						throw FALSE;
 					}
+					if (setvbuf(g_LogFile.fpRawReadable, NULL, _IONBF, 0) != 0) {
+						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					}
 				}
-				if (pExtArg->byIntentionalSub || pExtArg->byLibCrypt) {
-					if (NULL == (g_LogFile.fpSubIntention = CreateOrOpenFile(
-						szFullPath, _T("_subIntention"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
+				if (*pExecType != dvd && *pExecType != bd && *pExecType != sacd &&
+					*pExecType != xbox && *pExecType != xboxswap &&
+					*pExecType != xgd2swap && *pExecType != xgd3swap) {
+					if (NULL == (g_LogFile.fpSubInfo = CreateOrOpenFile(
+						szFullPath, _T("_subInfo"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
 						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 						throw FALSE;
 					}
-					if (setvbuf(g_LogFile.fpSubIntention, NULL, _IONBF, 0) != 0) {
+					if (setvbuf(g_LogFile.fpSubInfo, NULL, _IONBF, 0) != 0) {
 						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					}
+					if (NULL == (g_LogFile.fpSubError = CreateOrOpenFile(
+						szFullPath, _T("_subError"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
+						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+						throw FALSE;
+					}
+					if (NULL == (g_LogFile.fpSubReadable = CreateOrOpenFile(
+						szFullPath, _T("_subReadable"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
+						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+						throw FALSE;
+					}
+					if (pExtArg->byC2) {
+						if (NULL == (g_LogFile.fpC2Error = CreateOrOpenFile(
+							szFullPath, _T("_c2Error"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
+							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+							throw FALSE;
+						}
+					}
+					if (pExtArg->byIntentionalSub || pExtArg->byLibCrypt) {
+						if (NULL == (g_LogFile.fpSubIntention = CreateOrOpenFile(
+							szFullPath, _T("_subIntention"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
+							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+							throw FALSE;
+						}
+						if (setvbuf(g_LogFile.fpSubIntention, NULL, _IONBF, 0) != 0) {
+							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+						}
 					}
 				}
 			}
@@ -512,23 +514,25 @@ VOID TerminateLogFile(
 	FcloseAndNull(g_LogFile.fpDisc);
 	FcloseAndNull(g_LogFile.fpDrive);
 	FcloseAndNull(g_LogFile.fpMainError);
-	FcloseAndNull(g_LogFile.fpVolDesc);
-	if (*pExecType != fd && *pExecType != disk) {
-		FcloseAndNull(g_LogFile.fpMainInfo);
-		if (pExtArg->byRawDump) {
-			FcloseAndNull(g_LogFile.fpRawReadable);
-		}
-		if (*pExecType != dvd && *pExecType != bd &&
-			*pExecType != xbox && *pExecType != xboxswap &&
-			*pExecType != xgd2swap && *pExecType != xgd3swap) {
-			FcloseAndNull(g_LogFile.fpSubInfo);
-			FcloseAndNull(g_LogFile.fpSubError);
-			FcloseAndNull(g_LogFile.fpSubReadable);
-			if (pExtArg->byC2) {
-				FcloseAndNull(g_LogFile.fpC2Error);
+	if (*pExecType != tape) {
+		FcloseAndNull(g_LogFile.fpVolDesc);
+		if (*pExecType != fd && *pExecType != disk) {
+			FcloseAndNull(g_LogFile.fpMainInfo);
+			if (pExtArg->byRawDump) {
+				FcloseAndNull(g_LogFile.fpRawReadable);
 			}
-			if (pExtArg->byIntentionalSub || pExtArg->byLibCrypt) {
-				FcloseAndNull(g_LogFile.fpSubIntention);
+			if (*pExecType != dvd && *pExecType != bd &&
+				*pExecType != xbox && *pExecType != xboxswap &&
+				*pExecType != xgd2swap && *pExecType != xgd3swap) {
+				FcloseAndNull(g_LogFile.fpSubInfo);
+				FcloseAndNull(g_LogFile.fpSubError);
+				FcloseAndNull(g_LogFile.fpSubReadable);
+				if (pExtArg->byC2) {
+					FcloseAndNull(g_LogFile.fpC2Error);
+				}
+				if (pExtArg->byIntentionalSub || pExtArg->byLibCrypt) {
+					FcloseAndNull(g_LogFile.fpSubIntention);
+				}
 			}
 		}
 	}

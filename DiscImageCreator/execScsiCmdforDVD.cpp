@@ -192,13 +192,7 @@ BOOL ReadDVD(
 		if (!ReadDVDForFileSystem(pExecType, pExtArg, pDevice, pDisc, &cdb, lpBuf)) {
 			throw FALSE;
 		}
-		if (pDisc->SCSI.wCurrentMedia == ProfileDvdRewritable ||
-			pDisc->SCSI.wCurrentMedia == ProfileBDRom ||
-			pDisc->SCSI.wCurrentMedia == ProfileBDRSequentialWritable ||
-			pDisc->SCSI.wCurrentMedia == ProfileBDRewritable ||
-			pDisc->SCSI.wCurrentMedia == ProfilePlaystation3BDRom ||
-			pDisc->SCSI.wCurrentMedia == ProfilePlaystation4BDRom
-			) {
+		if (pExtArg->byAnchorVolumeDescriptorPointer) {
 			nAllLength = pDisc->SCSI.nAllLength;
 		}
 
