@@ -971,7 +971,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 						return FALSE;
 					}
 					if (pExtArg->byPre) {
-						OutputErrorString("/c2 can't use with /p. /c2 was disabled");
+						OutputErrorString("/c2 can't use with /p. /c2 was disabled\n");
 						pExtArg->byC2 = FALSE;
 					}
 				}
@@ -983,7 +983,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/p"), 2)) {
 					pExtArg->byPre = TRUE;
 					if (pExtArg->byC2) {
-						OutputErrorString("/p can't use with /c2. /p was disabled");
+						OutputErrorString("/p can't use with /c2. /p was disabled\n");
 						pExtArg->byPre = FALSE;
 					}
 				}
