@@ -150,9 +150,11 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 		bRet = OutputMergedFile(pszFullPath, argv[3]);
 	}
 	else if (*pExecType == tape) {
+#ifndef _DEBUG
 		if (!InitLogFile(pExecType, pExtArg, pszFullPath)) {
 			return FALSE;
 		}
+#endif
 		bRet = ReadTape(pszFullPath);
 	}
 	else {
