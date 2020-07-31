@@ -253,18 +253,28 @@ BOOL ExecSearchingOffset(
 	}
 	else {
 		if (pDisc->SCSI.trkType != TRACK_TYPE::audioOnly || *pExecType == swap) {
-			BYTE aBuf[CD_RAW_SECTOR_SIZE * 2] = {};
-			memcpy(aBuf, lpBuf, CD_RAW_SECTOR_SIZE);
-
-			if (!ExecReadCD(pExtArg, pDevice, lpCmd, nLBA + 1
-				, lpBuf, uiBufSize, _T(__FUNCTION__), __LINE__)) {
+			// http://forum.redump.org/post/81925/#p81925
+			INT nSectorNum = 5;
+			LPBYTE pBuf2 = NULL;
+			LPBYTE lpBuf2 = NULL;
+			if (!GetAlignedCallocatedBuffer(pDevice, &pBuf2,
+				CD_RAW_SECTOR_SIZE * (UINT)nSectorNum, &lpBuf2, _T(__FUNCTION__), __LINE__)) {
 				return FALSE;
 			}
-			OutputCDMain(fileDisc, lpBuf, nLBA + 1, CD_RAW_SECTOR_SIZE);
+			memcpy(lpBuf2, lpBuf, CD_RAW_SECTOR_SIZE);
+			BYTE aBuf[CD_RAW_SECTOR_WITH_C2_AND_SUBCODE_SIZE] = {};
 
-			memcpy(aBuf + CD_RAW_SECTOR_SIZE, lpBuf, CD_RAW_SECTOR_SIZE);
+			for (INT i = 1; i < nSectorNum; i++) {
+				if (!ExecReadCD(pExtArg, pDevice, lpCmd, nLBA + i
+					, aBuf, uiBufSize, _T(__FUNCTION__), __LINE__)) {
+					return FALSE;
+				}
+				OutputCDMain(fileDisc, aBuf, nLBA + i, CD_RAW_SECTOR_SIZE);
+				memcpy(lpBuf2 + CD_RAW_SECTOR_SIZE * i, aBuf, CD_RAW_SECTOR_SIZE);
+			}
+
 			if (pDisc->SCSI.trkType != TRACK_TYPE::audioOnly || *pExecType == swap) {
-				if (!GetWriteOffset(pDisc, aBuf)) {
+				if (!GetWriteOffset(pDisc, lpBuf2, nSectorNum)) {
 					if (pDisc->SCSI.trkType == TRACK_TYPE::dataExist ||
 						pDisc->SCSI.trkType == TRACK_TYPE::pregapDataIn1stTrack) {
 						OutputLog(standardError | fileDisc, "Failed to get write-offset\n");
@@ -275,6 +285,7 @@ BOOL ExecSearchingOffset(
 					pDisc->SCSI.trkType = TRACK_TYPE::audioOnly;
 				}
 			}
+			FreeAndNull(pBuf2);
 		}
 		else if (pDisc->SCSI.trkType == TRACK_TYPE::audioOnly &&
 			(pExtArg->byVideoNow || pExtArg->byVideoNowColor || pExtArg->byVideoNowXp)) {

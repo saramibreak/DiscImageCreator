@@ -360,10 +360,11 @@ BYTE GetMode(
 
 BOOL GetWriteOffset(
 	PDISC pDisc,
-	LPBYTE lpBuf
+	LPBYTE lpBuf,
+	INT nSectorNum
 ) {
 	BOOL bRet = FALSE;
-	for (INT i = 0; i < CD_RAW_SECTOR_SIZE * 2; i++) {
+	for (INT i = 0; i < CD_RAW_SECTOR_SIZE * nSectorNum; i++) {
 		if (IsValidMainDataHeader(lpBuf + i)) {
 			BYTE sm = BcdToDec((BYTE)(lpBuf[i + 12] ^ 0x01));
 			BYTE ss = BcdToDec((BYTE)(lpBuf[i + 13] ^ 0x80));
