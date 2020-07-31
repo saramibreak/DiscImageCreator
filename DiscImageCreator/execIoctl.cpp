@@ -159,8 +159,8 @@ BOOL ReadDirectoryRecord(
 		bRet = ReadFile(handle, lpBuf, dwReadSize, &dwBytesRead, 0);
 		if (bRet) {
 			if (dwReadSize == dwBytesRead) {
-				for (UINT i = 0; i < cnt; i += 32) {
-					if (lpBuf[i] == 0) {
+				for (UINT i = 0; i <= cnt; i += 32) {
+					if (lpBuf[i] == 0 || i == cnt) {
 						bRoop = FALSE;
 						break;
 					}
@@ -168,14 +168,14 @@ BOOL ReadDirectoryRecord(
 						OutputVolDescLog("%sDeleted Entry\n", &pTab[0]);
 					}
 					else if ((lpBuf[11 + i] & 0x0f) == 0x0f) {
-						WCHAR fname[_MAX_FNAME] = {};
+						WCHAR fnameW[_MAX_FNAME] = {};
 						OutputVolDescLog("%s        LDIR_Ord: ", &pTab[0]);
 						if ((lpBuf[i] & 0x40) == 0x40) {
 							INT nCnt = (lpBuf[i] & 0x1f) - 1;
 							for (INT h = 0, j = 32 * nCnt, k = 0; h <= nCnt; h++, j -= 32, k += 13) {
-								memcpy(fname + k, (LPWCH)&lpBuf[1 + i + j], 10);
-								memcpy(fname + 5 + k, (LPWCH)&lpBuf[14 + i + j], 12);
-								memcpy(fname + 11 + k, (LPWCH)&lpBuf[28 + i + j], 4);
+								memcpy(fnameW + k, (LPWCH)&lpBuf[1 + i + j], 10);
+								memcpy(fnameW + 5 + k, (LPWCH)&lpBuf[14 + i + j], 12);
+								memcpy(fnameW + 11 + k, (LPWCH)&lpBuf[28 + i + j], 4);
 								OutputVolDescLog("0x%02x ", lpBuf[i + j]);
 							}
 							OutputVolDescLog("\n");
@@ -184,8 +184,17 @@ BOOL ReadDirectoryRecord(
 						else {
 							OutputVolDescLog("%#02x\n", lpBuf[i]);
 						}
+						_TCHAR fname[_MAX_FNAME] = {};
+#ifndef UNICODE
+						if (!WideCharToMultiByte(CP_ACP, 0,
+							fnameW, (INT)wcslen(fnameW), fname, sizeof(fname), NULL, NULL)) {
+							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+						}
+#else
+						memcpy(fname, fnameW, sizeof(fname));
+#endif
 						OutputVolDescLog(
-							"%s       LDIR_Name: %ls\n"
+							"%s       LDIR_Name: %s\n"
 							"%s       LDIR_Attr: 0x%02x\n"
 							"%s       LDIR_Type: 0x%02x\n"
 							"%s     LDIR_Chksum: 0x%02x\n"
@@ -198,9 +207,18 @@ BOOL ReadDirectoryRecord(
 						);
 					}
 					else {
+						_TCHAR fname[_MAX_FNAME] = {};
+#ifdef UNICODE
+						if (!MultiByteToWideChar(CP_ACP, 0,
+							(LPCSTR)&lpBuf[i], (INT)strlen((LPCSTR)&lpBuf[i]), fname, sizeof(fname))) {
+							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+						}
+#else
+						memcpy(fname, &lpBuf[i], strlen((LPCSTR)&lpBuf[i]));
+#endif
 						DWORD FstClus = MAKEDWORD(MAKEWORD(lpBuf[26 + i], lpBuf[27 + i]), MAKEWORD(lpBuf[20 + i], lpBuf[21 + i]));
 						OutputVolDescLog(
-							"%s        DIR_Name: %.11" CHARWIDTH "s\n"
+							"%s        DIR_Name: %.11s\n"
 							"%s        DIR_Attr: 0x%02x\n"
 							"%s       DIR_NTRes: %u\n"
 							"%sDIR_CrtTimeTenth: %u\n"
@@ -212,7 +230,7 @@ BOOL ReadDirectoryRecord(
 							"%s     DIR_WrtDate: %04d-%02d-%02d\n"
 							"%s   DIR_FstClusLO: %u\n"
 							"%s    DIR_FileSize: %u\n\n"
-							, &pTab[0], &lpBuf[i]
+							, &pTab[0], fname
 							, &pTab[0], lpBuf[11 + i]
 							, &pTab[0], lpBuf[12 + i]
 							, &pTab[0], lpBuf[13 + i]
