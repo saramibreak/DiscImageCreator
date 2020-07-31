@@ -629,7 +629,7 @@ int appendExtIfNotExt(_TCHAR* szPathFromArg, size_t pathLen, _TCHAR* szTmpPath)
 int printAndSetPath(_TCHAR* szPathFromArg, _TCHAR* pszFullPath, size_t stFullPathlen)
 {
 	_TCHAR szTmpPath[_MAX_PATH] = {};
-	_tcsncpy(szTmpPath, szPathFromArg, sizeof(szTmpPath) - 1);
+	_tcsncpy(szTmpPath, szPathFromArg, sizeof(szTmpPath) / sizeof(szTmpPath[0]) - 1);
 	appendExtIfNotExt(szPathFromArg, _tcslen(szPathFromArg), szTmpPath);
 
 	if (!GetCurrentDirectory(sizeof(s_szCurrentdir) / sizeof(s_szCurrentdir[0]), s_szCurrentdir)) {

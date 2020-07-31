@@ -55,14 +55,14 @@ BOOL ReadTape(
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
-		OutputDiscLog(_T(
+		OutputDiscLog(
 			"TAPE_GET_MEDIA_PARAMETERS\n"
 			"          Size: %lu\n"
 			"      Capacity: %lld bytes\n"
 			"     Remaining: %lld bytes\n"
 			"     BlockSize: %lu\n"
 			"PartitionCount: %lu\n"
-			"WriteProtected: %s\n")
+			"WriteProtected: %s\n"
 			, dwSize
 			, tapemedia.Capacity.QuadPart
 			, tapemedia.Remaining.QuadPart
@@ -78,7 +78,7 @@ BOOL ReadTape(
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
-		OutputDriveLog(_T(
+		OutputDriveLog(
 			"TAPE_GET_DRIVE_PARAMETERS\n"
 			"                 Size: %lu\n"
 			"                  ECC: %s\n"
@@ -91,7 +91,7 @@ BOOL ReadTape(
 			"MaximumPartitionCount: %lu\n"
 			"          FeaturesLow: 0x%08lx\n"
 			"         FeaturesHigh: 0x%08lx\n"
-			"   EOTWarningZoneSize: %lu\n")
+			"   EOTWarningZoneSize: %lu\n"
 			, dwSize
 			, BOOLEAN_TO_STRING_YES_NO(tapedrive.ECC)
 			, BOOLEAN_TO_STRING_YES_NO(tapedrive.Compression)
