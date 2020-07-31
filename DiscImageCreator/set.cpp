@@ -883,10 +883,17 @@ VOID SetTrackAttribution(
 		INT tIdx = pDiscPerSector->byTrackNum - 1;
 		BYTE tmpPrevTrackNum = pDiscPerSector->subch.prev.byTrackNum;
 		BYTE tmpPrevIndex = pDiscPerSector->subch.prev.byIndex;
-		if (pDiscPerSector->subch.prev.byAdr != ADR_ENCODES_CURRENT_POSITION &&
-			nLBA - 1 != pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->byTrackNum - 1]) {
-			tmpPrevTrackNum = pDiscPerSector->subch.prevPrev.byTrackNum;
-			tmpPrevIndex = pDiscPerSector->subch.prevPrev.byIndex;
+		if (pDiscPerSector->subch.prev.byAdr != ADR_ENCODES_CURRENT_POSITION) {
+			if (nLBA - 1 != pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->byTrackNum - 1]) {
+				tmpPrevTrackNum = pDiscPerSector->subch.prevPrev.byTrackNum;
+				tmpPrevIndex = pDiscPerSector->subch.prevPrev.byIndex;
+			}
+			else if (nLBA == 1) {
+				// LBA[000000, 0000000]: P[ff], Q[42000000000000000000536f]{ Data,      Copy NG,                  MediaCatalogNumber [0000000000000], AMSF[     :00]}, RtoW[Unknown, Unknown, Unknown, Unknown]
+				// LBA[000001, 0x00001]: P[00], Q[410101000001000002019242]{ Data,      Copy NG,                  Track[01], Idx[01], RMSF[00:00:01], AMSF[00:02:01]}, RtoW[Unknown, Unknown, Unknown, Unknown]
+				tmpPrevTrackNum = 1;
+				tmpPrevIndex = 1;
+			}
 		}
 		// preserve the 1st LBA of the changed trackNum
 		if (tmpPrevTrackNum + 1 == tmpCurrentTrackNum) {
