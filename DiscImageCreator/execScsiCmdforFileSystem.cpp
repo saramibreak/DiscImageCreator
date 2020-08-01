@@ -184,7 +184,11 @@ BOOL ReadDirectoryRecordDetail(
 			CHAR szCurDirName[MAX_FNAME_FOR_VOLUME] = {};
 			LPBYTE lpDirRec = lpBuf + uiOfs;
 			if (lpDirRec[0] >= MIN_LEN_DR) {
+#if 0
+				// Due to this code, other disc can't dump.
+				// http://forum.redump.org/post/81822/#p81822
 				if (lpDirRec[0] == MIN_LEN_DR && uiOfs > 0 && uiOfs % DISC_MAIN_DATA_SIZE == 0) {
+					// http://forum.redump.org/post/56490/#p56490
 					// [PC] SimCity 3000 (USA)
 					// Data Length should be 2048 because LBA 200205 is joliet
 					// ========== LBA[200204, 0x30e0c]: Directory Record ==========
@@ -194,9 +198,11 @@ BOOL ReadDirectoryRecordDetail(
 					// 		                     Data Length: 4096
 					OutputVolDescLog(
 						"LBA %d, ofs %u: Data length is incorrect. Skip this sector\n", nLBA, uiOfs);
+					OutputCDMain(fileVolDesc, lpBuf, nLBA, DISC_MAIN_DATA_SIZE);
 					nSectorNum++;
 					break;
 				}
+#endif
 				// a DVD "DTM Race Driver 3"
 				// Path table is irregular. (L type and M type is perhaps the reverse.)
 				// ========== LBA[000019, 0x00013]: Main Channel ==========
