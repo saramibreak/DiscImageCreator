@@ -82,7 +82,8 @@
 ## How to use
 See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)
 
-## Supported Disc
+## Supported Media
+### Optical disc
   CD
   - Apple Macintosh
   - Atari Jaguar CD
@@ -122,6 +123,8 @@ See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)
   - Sega Chihiro
   - Sega Naomi
  
+  PD
+
   DVD
   - DVD-Video
   - IBM PC compatible
@@ -134,6 +137,13 @@ See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)
   - Wii
   
   XBOX, XBOX 360
+
+  HD-DVD
+
+  BD
+  - Microsoft Xbox One
+  - Sony PlayStation 3
+  - Sony PlayStation 4
 
   Protected Disc
   - Cactus Data Shield 100 [fake TOC]
@@ -150,13 +160,14 @@ See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)
   - SecuROM(v1 - v3) [unique data on subchannel]
   - SmartE [duplicated msf]
 
-  BD
-  - Microsoft Xbox One
-  - Sony PlayStation 3
-  - Sony PlayStation 4
+### Magnetic storage media
+  - FD(3.5inch), SparQ, SuperDisk(120MB), ZIP(100MB, 250MB)
 
-  Other
-  - FD, PD, MD, MO, SparQ, SuperDisk(120), USB, ZIP(100, 250)
+### Magneto-Optical disk
+  - MD(Hi-MD format), MO(128MB, 230MB, 640MB)
+
+### Memory card
+  - CompactFlash, Memory Stick, Secure Digital(SD) card, USB flash drive
 
 ## Probably Unsupported Disc
   Protected Disc
