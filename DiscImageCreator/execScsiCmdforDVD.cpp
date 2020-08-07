@@ -313,7 +313,7 @@ BOOL ReadDVD(
 				if (IsXbox(pExecType) && !(pDisc->DVD.securitySectorRange[i][0] <= (DWORD)nLBA &&
 					(DWORD)nLBA <= pDisc->DVD.securitySectorRange[i][1] + 1)) {
 					if (++nRetryCnt <= 5) {
-						nLBA--;
+						nLBA -= (INT)transferLen.AsULong;
 						OutputLog(standardOut | fileMainError,
 							"This sector is out of the ss ranges. Read retry %d/5\n", nRetryCnt);
 						continue;
