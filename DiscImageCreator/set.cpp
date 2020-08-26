@@ -953,7 +953,9 @@ VOID SetTrackAttribution(
 			}
 		}
 		// preserve mode, ctl
-		if (nLBA == pDisc->SCSI.lp1stLBAListOnToc[tIdx]) {
+		// +10 => some discs have subs and toc desync http://forum.redump.org/post/82442/#p82442
+		//        and double offset [FMT] Sangokushi IV, Lip 3: Lipstick Adventure, Gulf War: Soukouden
+		if (nLBA == pDisc->SCSI.lp1stLBAListOnToc[tIdx] + 10) {
 			pDisc->SUB.lpCtlList[tIdx] = pDiscPerSector->subch.current.byCtl;
 			pDisc->MAIN.lpModeList[tIdx] = GetMode(pDiscPerSector, unscrambled);
 			OutputSubInfoWithLBALog("Set Ctl: %d, Mode: %d\n"

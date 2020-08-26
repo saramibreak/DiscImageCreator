@@ -236,7 +236,7 @@ BOOL ExecSearchingOffset(
 
 	if (pDisc->SCSI.trkType != TRACK_TYPE::audioOnly || *pExecType == swap) {
 		if (*pExecType != data) {
-			OutputCDMain(fileDisc, lpBuf, nLBA, CD_RAW_SECTOR_SIZE);
+			OutputCDMain(fileMainInfo, lpBuf, nLBA, CD_RAW_SECTOR_SIZE);
 		}
 	}
 	if (uiBufSize == CD_RAW_SECTOR_WITH_SUBCODE_SIZE ||
@@ -264,25 +264,62 @@ BOOL ExecSearchingOffset(
 			memcpy(lpBuf2, lpBuf, CD_RAW_SECTOR_SIZE);
 			BYTE aBuf[CD_RAW_SECTOR_WITH_C2_AND_SUBCODE_SIZE] = {};
 
-			for (INT i = 1; i < nSectorNum; i++) {
-				if (!ExecReadCD(pExtArg, pDevice, lpCmd, nLBA + i
-					, aBuf, uiBufSize, _T(__FUNCTION__), __LINE__)) {
-					return FALSE;
-				}
-				OutputCDMain(fileDisc, aBuf, nLBA + i, CD_RAW_SECTOR_SIZE);
-				memcpy(lpBuf2 + CD_RAW_SECTOR_SIZE * i, aBuf, CD_RAW_SECTOR_SIZE);
-			}
-
-			if (pDisc->SCSI.trkType != TRACK_TYPE::audioOnly || *pExecType == swap) {
-				if (!GetWriteOffset(pDisc, lpBuf2, nSectorNum)) {
-					if (pDisc->SCSI.trkType == TRACK_TYPE::dataExist ||
-						pDisc->SCSI.trkType == TRACK_TYPE::pregapDataIn1stTrack) {
-						OutputLog(standardError | fileDisc, "Failed to get write-offset\n");
+			INT nTmpCombinedOffset = 0;
+			for (INT k = 0; k < 2; k++) {
+				for (INT i = 1; i < nSectorNum; i++) {
+					if (!ExecReadCD(pExtArg, pDevice, lpCmd, nLBA + i
+						, aBuf, uiBufSize, _T(__FUNCTION__), __LINE__)) {
 						return FALSE;
 					}
-					OutputLog(standardOut | fileDisc,
-						"There isn't data sector in pregap sector of track 1\n");
-					pDisc->SCSI.trkType = TRACK_TYPE::audioOnly;
+					OutputCDMain(fileMainInfo, aBuf, nLBA + i, CD_RAW_SECTOR_SIZE);
+					memcpy(lpBuf2 + CD_RAW_SECTOR_SIZE * i, aBuf, CD_RAW_SECTOR_SIZE);
+				}
+
+				if (pDisc->SCSI.trkType != TRACK_TYPE::audioOnly || *pExecType == swap) {
+					if (!GetWriteOffset(pDisc, lpBuf2, nSectorNum, nLBA)) {
+						if (pDisc->SCSI.trkType == TRACK_TYPE::dataExist ||
+							pDisc->SCSI.trkType == TRACK_TYPE::pregapDataIn1stTrack) {
+							OutputLog(standardError | fileDisc, "Failed to get write-offset\n");
+							return FALSE;
+						}
+						OutputLog(standardOut | fileDisc,
+							"There isn't data sector in pregap sector of track 1\n");
+						pDisc->SCSI.trkType = TRACK_TYPE::audioOnly;
+						break;
+					}
+					else {
+						if (pDisc->MAIN.nCombinedOffset > 0) {
+							INT nOverRead = pDisc->MAIN.nCombinedOffset / CD_RAW_SECTOR_SIZE;
+							// [FMT] Sangokushi IV http://forum.redump.org/post/82784/#p82784
+							// [FMT] Lip 3: Lipstick Adventure 3 http://forum.redump.org/post/80180/#p80180
+							// [FMT] Gulf War: Soukouden http://forum.redump.org/topic/16418/addedfmt-5-new-dumps/
+							if (nOverRead > 3) {
+								if (k == 0) {
+									OutputCDOffset(pExtArg, pDisc, bGetDriveOffset
+										, nDriveSampleOffset, nDriveOffset, pDisc->SUB.nSubChannelOffset);
+									nTmpCombinedOffset = pDisc->MAIN.nCombinedOffset;
+									nLBA += nOverRead;
+									if (!ExecReadCD(pExtArg, pDevice, lpCmd, nLBA
+										, aBuf, uiBufSize, _T(__FUNCTION__), __LINE__)) {
+										return FALSE;
+									}
+									OutputCDMain(fileMainInfo, aBuf, nLBA, CD_RAW_SECTOR_SIZE);
+									memcpy(lpBuf2, aBuf, CD_RAW_SECTOR_SIZE);
+								}
+								else if (k == 1) {
+									if (nTmpCombinedOffset != pDisc->MAIN.nCombinedOffset) {
+										OutputDiscLog("There is a different combined offset\n");
+									}
+								}
+							}
+							else {
+								break;
+							}
+						}
+						else {
+							break;
+						}
+					}
 				}
 			}
 			FreeAndNull(pBuf2);
@@ -384,7 +421,7 @@ BOOL ExecSearchingOffset(
 				}
 				if (bRet) {
 					pDisc->MAIN.nCombinedOffset = i - pExtArg->nAudioCDOffsetNum;
-					OutputCDMain(fileDisc, lpBuf2 + CD_RAW_SECTOR_SIZE * nSector, nLBA + nSector, CD_RAW_SECTOR_SIZE);
+					OutputCDMain(fileMainInfo, lpBuf2 + CD_RAW_SECTOR_SIZE * nSector, nLBA + nSector, CD_RAW_SECTOR_SIZE);
 					break;
 				}
 				else if (i == CD_RAW_SECTOR_SIZE * nSector - 1) {
@@ -439,7 +476,7 @@ BOOL ExecSearchingOffset(
 					}
 					if (bRet) {
 						pDisc->MAIN.nCombinedOffset = i - 2 + CD_RAW_SECTOR_SIZE * nSector;
-						OutputCDMain(fileDisc, lpBuf, nLBA, CD_RAW_SECTOR_SIZE);
+						OutputCDMain(fileMainInfo, lpBuf, nLBA, CD_RAW_SECTOR_SIZE);
 						break;
 					}
 				}
@@ -809,8 +846,8 @@ BOOL ReadCDForCheckingSubQAdr(
 	OutputDiscLog(
 		OUTPUT_DHYPHEN_PLUS_STR_WITH_TRACK_F("Check MCN and/or ISRC")
 		, lpCmd[0], lpCmd[10], byIdxOfTrack + 1);
-	for (INT nLBA = nTmpLBA; nLBA < nTmpLBA + 400; nLBA++) {
-		if (400 > nTmpNextLBA) {
+	for (INT nLBA = nTmpLBA; nLBA < nTmpLBA + 500; nLBA++) {
+		if (500 > nTmpNextLBA) {
 			bCheckMCN = FALSE;
 			bCheckISRC = FALSE;
 			break;
@@ -990,7 +1027,13 @@ BOOL ReadCDForCheckingSubRtoW(
 				case 10: // MODE 1, ITEM 2
 					bCDEG = TRUE;
 					break;
-				case 20: // MODE 2, ITEM 4
+				case 17: // MODE 2, ITEM 1,2,3,5,6,7 or MODE 4
+				case 18:
+				case 19:
+				case 21:
+				case 22:
+				case 23:
+				case 32:
 					break;
 				case 24: // MODE 3, ITEM 0
 					break;

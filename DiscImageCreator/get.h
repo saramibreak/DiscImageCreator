@@ -99,7 +99,8 @@ BYTE GetMode(
 BOOL GetWriteOffset(
 	PDISC pDisc,
 	LPBYTE lpBuf,
-	INT nSectorNum
+	INT nSectorNum,
+	INT nLBA
 );
 
 BOOL GetCmd(

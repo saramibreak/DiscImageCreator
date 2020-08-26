@@ -1729,7 +1729,13 @@ VOID OutputCDSubToLog(
 				break;
 			}
 			break;
-		case 20: // MODE 2, ITEM 4
+		case 17: // MODE 2, ITEM 1,2,3,5,6,7 or MODE 4
+		case 18:
+		case 19:
+		case 21:
+		case 22:
+		case 23:
+		case 32:
 			OutputSubReadableLog("CD TEXT");
 			break;
 		case 24: // MODE 3, ITEM 0
@@ -1739,7 +1745,7 @@ VOID OutputCDSubToLog(
 			OutputSubReadableLog("USER");
 			break;
 		default:
-			OutputSubReadableLog("Unknown");
+			OutputSubReadableLog("Unknown[%02d]", scRW[i].command);
 			break;
 		}
 
