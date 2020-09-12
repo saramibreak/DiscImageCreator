@@ -924,10 +924,7 @@ BOOL ReadDVDRaw(
 				OutputString("Reread %d. LBA: %7d\n", nRereadNum, nLBA);
 			}
 			if (nRereadNum || IsNintendoDisc(pDisc)) {
-				if (IsSupported0xE7Type1(pDevice) ||
-					IsSupported0xE7Type2_1(pDevice) ||
-					IsSupported0xE7Type2_2(pDevice) ||
-					IsSupported0xE7Type3(pDevice)) {
+				if (IsSupported0xE7(pDevice)) {
 					INT tmp = nLBA - (INT)transferAndMemSize;
 					if (bReadErr) {
 						tmp = nLBA;
