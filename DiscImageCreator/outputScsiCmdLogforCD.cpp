@@ -546,6 +546,7 @@ BOOL IsKnownSectionName(
 		strcasestr(lpName, "msvcjmc") ||
 		strcasestr(lpName, "biosdll") ||
 		strcasestr(lpName, "olebrk") ||
+		strcasestr(lpName, "Process") ||
 		strcasestr(lpName, "EDTQ") ||
 		strcasestr(lpName, "H26xColo") ||
 		strcasestr(lpName, "PAGE") ||
