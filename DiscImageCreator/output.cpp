@@ -238,7 +238,7 @@ BOOL WriteCcdFirst(
 		LPBYTE lpBuf = NULL;
 		BYTE lpCmd[CDB12GENERIC_LENGTH] = {};
 		INT nOfs = 0;
-		UINT uiBufLen = (CD_RAW_SECTOR_SIZE + CD_RAW_READ_SUBCODE_SIZE) * 2;
+		UINT uiBufLen = CD_RAW_SECTOR_WITH_SUBCODE_SIZE * 2;
 		if (!ReadCDForCheckingSubQAdrFirst(pExtArg
 			, pDevice, pDisc, &pBuf, &lpBuf, lpCmd, &uiBufLen, &nOfs)) {
 			FreeAndNull(pBuf);

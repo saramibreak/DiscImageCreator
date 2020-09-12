@@ -24,7 +24,7 @@
 #ifdef _WIN32
 #pragma pack(push, sensedata, 1)
 typedef struct _SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER {
-	SCSI_PASS_THROUGH_DIRECT ScsiPassThroughDirect;
+	SCSI_PASS_THROUGH_DIRECT Sptd;
 	SENSE_DATA SenseData;
 } SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER, *PSCSI_PASS_THROUGH_DIRECT_WITH_BUFFER;
 #pragma pack(pop, sensedata)
@@ -241,7 +241,8 @@ typedef struct _DEVICE {
 	WORD wMaxReadSpeed;
 	BYTE bySuccessReadToc;
 	BYTE bySuccessReadTocFull;
-	_CDFLAG::_READ_CD::_ERROR_FLAGS supportedC2Type;
+	CDFLAG::_READ_CD::_ERROR_FLAGS supportedC2Type;
+	CDFLAG::_READ_CD::_SUB_CHANNEL_SELECTION sub;
 	DWORD dwTimeOutValue;
 	DRIVE_DATA_ORDER driveOrder;
 	struct _TRANSFER {

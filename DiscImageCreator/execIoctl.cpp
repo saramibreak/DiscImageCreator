@@ -439,19 +439,19 @@ BOOL ScsiPassThroughDirect(
 ) {
 	SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER swb = {};
 #ifdef _WIN32
-	swb.ScsiPassThroughDirect.Length = sizeof(SCSI_PASS_THROUGH_DIRECT);
-	swb.ScsiPassThroughDirect.PathId = pDevice->address.PathId;
-	swb.ScsiPassThroughDirect.TargetId = pDevice->address.TargetId;
-	swb.ScsiPassThroughDirect.Lun = pDevice->address.Lun;
-	swb.ScsiPassThroughDirect.CdbLength = byCdbLength;
-	swb.ScsiPassThroughDirect.SenseInfoLength = SENSE_BUFFER_SIZE;
-	swb.ScsiPassThroughDirect.DataIn = (UCHAR)nDataDirection;
-	swb.ScsiPassThroughDirect.DataTransferLength = dwBufferLength;
-	swb.ScsiPassThroughDirect.TimeOutValue = pDevice->dwTimeOutValue;
-	swb.ScsiPassThroughDirect.DataBuffer = pvBuffer;
-	swb.ScsiPassThroughDirect.SenseInfoOffset = 
+	swb.Sptd.Length = sizeof(SCSI_PASS_THROUGH_DIRECT);
+	swb.Sptd.PathId = pDevice->address.PathId;
+	swb.Sptd.TargetId = pDevice->address.TargetId;
+	swb.Sptd.Lun = pDevice->address.Lun;
+	swb.Sptd.CdbLength = byCdbLength;
+	swb.Sptd.SenseInfoLength = SENSE_BUFFER_SIZE;
+	swb.Sptd.DataIn = (UCHAR)nDataDirection;
+	swb.Sptd.DataTransferLength = dwBufferLength;
+	swb.Sptd.TimeOutValue = pDevice->dwTimeOutValue;
+	swb.Sptd.DataBuffer = pvBuffer;
+	swb.Sptd.SenseInfoOffset =
 		offsetof(SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER, SenseData);
-	memcpy(swb.ScsiPassThroughDirect.Cdb, lpCdb, byCdbLength);
+	memcpy(swb.Sptd.Cdb, lpCdb, byCdbLength);
 #else
 	swb.io_hdr.interface_id = 'S';
 	swb.io_hdr.dxfer_direction = nDataDirection;
@@ -479,8 +479,8 @@ BOOL ScsiPassThroughDirect(
 				// When semaphore time out occurred, if doesn't execute sleep,
 				// UNIT_ATTENSION errors occurs next ScsiPassThroughDirect executing.
 				UINT milliseconds = 25000;
-				OutputErrorString(
-					"Please wait for %u milliseconds until the device is returned\n", milliseconds);
+				OutputLog(standardError | fileMainError
+					, "Please wait for %u milliseconds until the device is returned\n", milliseconds);
 				Sleep(milliseconds);
 				pDevice->FEATURE.bySetCDSpeed = FALSE;
 			}
@@ -493,21 +493,21 @@ BOOL ScsiPassThroughDirect(
 			bNoSense = TRUE;
 		}
 #ifdef _WIN32
-		if (swb.ScsiPassThroughDirect.ScsiStatus >= SCSISTAT_CHECK_CONDITION && !bNoSense) {
+		if (swb.Sptd.ScsiStatus >= SCSISTAT_CHECK_CONDITION && !bNoSense) {
 			INT nLBA = 0;
-			if (swb.ScsiPassThroughDirect.Cdb[0] == 0xa8 ||
-				swb.ScsiPassThroughDirect.Cdb[0] == 0xad ||
-				swb.ScsiPassThroughDirect.Cdb[0] == 0xbe ||
-				swb.ScsiPassThroughDirect.Cdb[0] == 0xd8) {
-				nLBA = (swb.ScsiPassThroughDirect.Cdb[2] << 24)
-					+ (swb.ScsiPassThroughDirect.Cdb[3] << 16)
-					+ (swb.ScsiPassThroughDirect.Cdb[4] << 8)
-					+ swb.ScsiPassThroughDirect.Cdb[5];
+			if (swb.Sptd.Cdb[0] == 0xa8 ||
+				swb.Sptd.Cdb[0] == 0xad ||
+				swb.Sptd.Cdb[0] == 0xbe ||
+				swb.Sptd.Cdb[0] == 0xd8) {
+				nLBA = (swb.Sptd.Cdb[2] << 24)
+					+ (swb.Sptd.Cdb[3] << 16)
+					+ (swb.Sptd.Cdb[4] << 8)
+					+ swb.Sptd.Cdb[5];
 			}
 			OutputLog(standardError | fileMainError
 				, "\r" STR_LBA "[F:%s][L:%ld]\n\tOpcode: %#02x\n"
-				, nLBA, nLBA, pszFuncName, lLineNum, swb.ScsiPassThroughDirect.Cdb[0]);
-			OutputScsiStatus(swb.ScsiPassThroughDirect.ScsiStatus);
+				, nLBA, nLBA, pszFuncName, lLineNum, swb.Sptd.Cdb[0]);
+			OutputScsiStatus(swb.Sptd.ScsiStatus);
 #else
 		if (swb.io_hdr.status >= SCSISTAT_CHECK_CONDITION && !bNoSense) {
 			INT nLBA = 0;
@@ -528,8 +528,8 @@ BOOL ScsiPassThroughDirect(
 			OutputSenseData(&swb.SenseData);
 			if (swb.SenseData.SenseKey == SCSI_SENSE_UNIT_ATTENTION) {
 				UINT milliseconds = 40000;
-				OutputErrorString(
-					"Please wait for %u milliseconds until the device is returned\n", milliseconds);
+				OutputLog(standardError | fileMainError
+					, "Please wait for %u milliseconds until the device is returned\n", milliseconds);
 				Sleep(milliseconds);
 			}
 		}
@@ -539,7 +539,7 @@ BOOL ScsiPassThroughDirect(
 	}
 	else {
 #ifdef _WIN32
-		*byScsiStatus = swb.ScsiPassThroughDirect.ScsiStatus;
+		*byScsiStatus = swb.Sptd.ScsiStatus;
 #else
 		*byScsiStatus = swb.io_hdr.status;
 #endif

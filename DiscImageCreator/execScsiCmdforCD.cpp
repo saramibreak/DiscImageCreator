@@ -350,7 +350,7 @@ BOOL ReadCDForRereadingSectorType1(
 	BOOL bRet = TRUE;
 	try {
 		SetReadDiscCommand(pExecType, pExtArg, pDevice, 2
-			, CDFLAG::_READ_CD::byte294, CDFLAG::_READ_CD::_SUB_CHANNEL_SELECTION::Raw, lpCmd, FALSE);
+			, CDFLAG::_READ_CD::byte294, CDFLAG::_READ_CD::Raw, lpCmd, FALSE);
 
 		for (INT m = 0; m < pDisc->MAIN.nC2ErrorCnt; m++) {
 			INT nLBA = pDisc->MAIN.lpAllLBAOfC2Error[m];
@@ -476,7 +476,7 @@ BOOL ReadCDForRereadingSectorType2(
 			}
 		}
 		SetReadDiscCommand(pExecType, pExtArg, pDevice, (BYTE)dwTransferLen
-			, CDFLAG::_READ_CD::byte294, CDFLAG::_READ_CD::_SUB_CHANNEL_SELECTION::Raw, lpCmd, FALSE);
+			, CDFLAG::_READ_CD::byte294, CDFLAG::_READ_CD::Raw, lpCmd, FALSE);
 
 		INT nLBA = nStartLBA;
 		INT nLastLBA = nEndLBA;
@@ -874,7 +874,7 @@ BOOL ReadCDAll(
 			}
 		}
 		BYTE lpCmd[CDB12GENERIC_LENGTH] = {};
-		SetReadDiscCommand(pExecType, pExtArg, pDevice, byTransferLen, c2, CDFLAG::_READ_CD::Raw, lpCmd, TRUE);
+		SetReadDiscCommand(pExecType, pExtArg, pDevice, byTransferLen, c2, pDevice->sub, lpCmd, TRUE);
 
 		BYTE lpPrevSubcode[CD_RAW_READ_SUBCODE_SIZE] = {};
 		// to get prevSubQ
@@ -981,7 +981,7 @@ BOOL ReadCDAll(
 					nMainDataType = scrambled;
 					pDisc->MAIN.lpModeList[pDisc->SCSI.by1stMultiSessionTrkNum - 1] = pDiscPerSector->mainHeader.current[15];
 					nSecondSessionLBA = nLBA;
-					SetReadDiscCommand(pExecType, pExtArg, pDevice, byTransferLen, c2, CDFLAG::_READ_CD::Raw, lpCmd, FALSE);
+					SetReadDiscCommand(pExecType, pExtArg, pDevice, byTransferLen, c2, pDevice->sub, lpCmd, FALSE);
 				}
 			}
 			else if (pDisc->PROTECT.byExist == laserlock || pDisc->PROTECT.byExist == proring ||
@@ -1522,7 +1522,7 @@ BOOL ReadCDForSwap(
 			throw FALSE;
 		}
 		BYTE lpCmd[CDB12GENERIC_LENGTH] = {};
-		SetReadDiscCommand(pExecType, pExtArg, pDevice, byTransferLen, c2, CDFLAG::_READ_CD::Raw, lpCmd, TRUE);
+		SetReadDiscCommand(pExecType, pExtArg, pDevice, byTransferLen, c2, pDevice->sub, lpCmd, TRUE);
 		SetCDOffset(pExecType, pExtArg->byBe, pDevice->byPlxtrDrive, pDisc, nStart, nEnd);
 		pDiscPerSector->byTrackNum = 1;
 
@@ -1947,7 +1947,7 @@ BOOL ReadCDPartial(
 			}
 		}
 		BYTE lpCmd[CDB12GENERIC_LENGTH] = {};
-		SetReadDiscCommand(pExecType, pExtArg, pDevice, byTransferLen, c2, CDFLAG::_READ_CD::Raw, lpCmd, TRUE);
+		SetReadDiscCommand(pExecType, pExtArg, pDevice, byTransferLen, c2, pDevice->sub, lpCmd, TRUE);
 
 		BYTE lpPrevSubcode[CD_RAW_READ_SUBCODE_SIZE] = {};
 		if (pDisc->SUB.nSubChannelOffset) { // confirmed PXS88T, TS-H353A

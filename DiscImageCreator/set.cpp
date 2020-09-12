@@ -71,16 +71,16 @@ VOID SetReadDiscCommand(
 	_TCHAR szSubCode[5] = {};
 	if ((pExtArg->byD8 || pDevice->byPlxtrDrive) && !pExtArg->byBe && !pExtArg->byReverse) {
 		CDB::_PLXTR_READ_CDDA cdb = {};
-		if (tmpsub == CDFLAG::_READ_CD::NoSub) {
+		if (pDevice->sub == CDFLAG::_READ_CD::NoSub || tmpsub == CDFLAG::_READ_CD::NoSub) {
 			SetReadD8Command(pDevice, &cdb, byTransferLen, CDFLAG::_PLXTR_READ_CDDA::NoSub);
 		}
-		else if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
-			_tcsncpy(szSubCode, _T("Raw"), sizeof(szSubCode) / sizeof(szSubCode[0]));
-			SetReadD8Command(pDevice, &cdb, byTransferLen, CDFLAG::_PLXTR_READ_CDDA::MainC2Raw);
-		}
-		else {
+		else if (pDevice->sub == CDFLAG::_READ_CD::Pack || tmpsub == CDFLAG::_READ_CD::Pack) {
 			_tcsncpy(szSubCode, _T("Pack"), sizeof(szSubCode) / sizeof(szSubCode[0]));
 			SetReadD8Command(pDevice, &cdb, byTransferLen, CDFLAG::_PLXTR_READ_CDDA::MainPack);
+		}
+		else if (pDevice->sub == CDFLAG::_READ_CD::Raw || tmpsub == CDFLAG::_READ_CD::Raw) {
+			_tcsncpy(szSubCode, _T("Raw"), sizeof(szSubCode) / sizeof(szSubCode[0]));
+			SetReadD8Command(pDevice, &cdb, byTransferLen, CDFLAG::_PLXTR_READ_CDDA::MainC2Raw);
 		}
 		memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
 	}
@@ -92,10 +92,11 @@ VOID SetReadDiscCommand(
 			type = CDFLAG::_READ_CD::All;
 		}
 		CDFLAG::_READ_CD::_SUB_CHANNEL_SELECTION sub = tmpsub;
-		_tcsncpy(szSubCode, _T("Raw"), sizeof(szSubCode) / sizeof(szSubCode[0]));
-		if (pExtArg->byPack) {
-			sub = CDFLAG::_READ_CD::Pack;
+		if (pExtArg->byPack || tmpsub == CDFLAG::_READ_CD::Pack) {
 			_tcsncpy(szSubCode, _T("Pack"), sizeof(szSubCode) / sizeof(szSubCode[0]));
+		}
+		else if (pExtArg->byRaw || tmpsub == CDFLAG::_READ_CD::Raw) {
+			_tcsncpy(szSubCode, _T("Raw"), sizeof(szSubCode) / sizeof(szSubCode[0]));
 		}
 		SetReadCDCommand(pDevice, &cdb, type, byTransferLen, c2, sub);
 		memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
@@ -161,16 +162,19 @@ VOID SetBufferSizeForReadCD(
 		pDevice->TRANSFER.uiBufLen = CD_RAW_SECTOR_WITH_SUBCODE_SIZE;
 		pDevice->TRANSFER.uiBufC2Offset = 0;
 		pDevice->TRANSFER.uiBufSubOffset = CD_RAW_SECTOR_SIZE;
+		pDevice->sub = CDFLAG::_READ_CD::Pack;
 	}
 	else if (order == DRIVE_DATA_ORDER::MainC2Sub) {
 		pDevice->TRANSFER.uiBufLen = CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE;
 		pDevice->TRANSFER.uiBufC2Offset = CD_RAW_SECTOR_SIZE;
 		pDevice->TRANSFER.uiBufSubOffset = CD_RAW_SECTOR_WITH_C2_294_SIZE;
+		pDevice->sub = CDFLAG::_READ_CD::Raw;
 	}
 	else if (order == DRIVE_DATA_ORDER::MainSubC2) {
 		pDevice->TRANSFER.uiBufLen = CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE;
 		pDevice->TRANSFER.uiBufSubOffset = CD_RAW_SECTOR_SIZE;
 		pDevice->TRANSFER.uiBufC2Offset = CD_RAW_SECTOR_WITH_SUBCODE_SIZE;
+		pDevice->sub = CDFLAG::_READ_CD::Raw;
 	}
 }
 
