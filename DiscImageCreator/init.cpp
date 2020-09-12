@@ -356,8 +356,12 @@ BOOL InitLogFile(
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				}
 				if (pExtArg->byRawDump) {
+					_TCHAR szMode[4] = _T(WFLAG);
+					if (pExtArg->byResume) {
+						memcpy(szMode, _T("a+"), 2);
+					}
 					if (NULL == (g_LogFile.fpRawReadable = CreateOrOpenFile(
-						szFullPath, _T("_rawReadable"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
+						szFullPath, _T("_rawReadable"), NULL, NULL, NULL, _T(".txt"), szMode, 0, 0))) {
 						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 						throw FALSE;
 					}
