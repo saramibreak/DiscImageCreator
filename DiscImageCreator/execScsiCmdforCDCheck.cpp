@@ -222,7 +222,7 @@ BOOL ExecSearchingOffset(
 			// because check only
 			return TRUE;
 		}
-		OutputDiscLog(
+		OutputLog(fileDisc | fileMainInfo, 
 			OUTPUT_DHYPHEN_PLUS_STR_WITH_SUBCH_F("Check Drive + CD offset"), lpCmd[0], lpCmd[10]);
 	}
 	else if ((!pExtArg->byD8 && !pDevice->byPlxtrDrive) || pExtArg->byBe) {
@@ -230,7 +230,7 @@ BOOL ExecSearchingOffset(
 			// because check only
 			return TRUE;
 		}
-		OutputDiscLog(
+		OutputLog(fileDisc | fileMainInfo,
 			OUTPUT_DHYPHEN_PLUS_STR_WITH_C2_SUBCH_F("Check Drive + CD offset"), lpCmd[0], (lpCmd[9] & 0x6) >> 1, lpCmd[10]);
 	}
 
@@ -726,6 +726,54 @@ BOOL ReadCDForSearchingOffset(
 	return bRet;
 }
 
+BOOL ReadCDForCheckingPregapSync(
+	PEXEC_TYPE pExecType,
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice
+) {
+	BYTE lpCmd[CDB12GENERIC_LENGTH] = {};
+	SetReadDiscCommand(pExecType, pExtArg, pDevice, 1, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::Pack, lpCmd, FALSE);
+
+	BYTE aBuf[CD_RAW_SECTOR_WITH_SUBCODE_SIZE] = {};
+	BYTE byScsiStatus = 0;
+	BOOL bFound = FALSE;
+	INT nSyncPos = 0;
+
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("Check Pregap Sync"));
+	for (INT nLBA = PREGAP_START_LBA; nLBA < -1150; nLBA++) {
+		if (!ExecReadCD(pExtArg, pDevice, lpCmd, nLBA, aBuf,
+			CD_RAW_SECTOR_WITH_SUBCODE_SIZE, _T(__FUNCTION__), __LINE__)
+			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+			return FALSE;
+		}
+		if (!bFound) {
+			for (INT i = 0; i < CD_RAW_SECTOR_SIZE; i++) {
+				if (IsValidMainDataHeader(aBuf + i)) {
+					nSyncPos = i;
+					bFound = TRUE;
+					break;
+				}
+			}
+			if (!bFound) {
+				OutputString("\rChecking Pregap Sync (LBA) %6d", nLBA);
+				continue;
+			}
+		}
+		OutputDiscLog("\t%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n"
+			, aBuf[nSyncPos], aBuf[nSyncPos + 1], aBuf[nSyncPos + 2], aBuf[nSyncPos + 3]
+			, aBuf[nSyncPos + 4], aBuf[nSyncPos + 5], aBuf[nSyncPos + 6], aBuf[nSyncPos + 7]
+			, aBuf[nSyncPos + 8], aBuf[nSyncPos + 9], aBuf[nSyncPos + 10], aBuf[nSyncPos + 11]
+			, aBuf[nSyncPos + 12], aBuf[nSyncPos + 13], aBuf[nSyncPos + 14], aBuf[nSyncPos + 15]
+		);
+		OutputString("\rChecking Pregap Sync (LBA) %6d", nLBA);
+		if (aBuf[nSyncPos + 12] == 0x01 && aBuf[nSyncPos + 13] == 0x81 && aBuf[nSyncPos + 14] == 0x74) {
+			break;
+		}
+	}
+	OutputString("\n");
+	return TRUE;
+}
+
 BOOL ReadCDForCheckingReadInOut(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
@@ -795,11 +843,13 @@ BOOL ReadCDForCheckingSubQAdrFirst(
 		return FALSE;
 	}
 	CDFLAG::_READ_CD::_ERROR_FLAGS c2 = CDFLAG::_READ_CD::NoC2;
+	CDFLAG::_READ_CD::_SUB_CHANNEL_SELECTION flg = CDFLAG::_READ_CD::Pack;
 	if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
-		c2 = CDFLAG::_READ_CD::byte294;
 		*uiBufLen = CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * 2;
+		c2 = CDFLAG::_READ_CD::byte294;
+		flg = CDFLAG::_READ_CD::Raw;
 	}
-	SetReadDiscCommand(NULL, pExtArg, pDevice, 2, c2, CDFLAG::_READ_CD::Raw, lpCmd, FALSE);
+	SetReadDiscCommand(NULL, pExtArg, pDevice, 2, c2, flg, lpCmd, FALSE);
 	*nOfs = pDisc->MAIN.nCombinedOffset % CD_RAW_SECTOR_SIZE;
 	if (pDisc->MAIN.nCombinedOffset < 0) {
 		*nOfs = CD_RAW_SECTOR_SIZE + *nOfs;
@@ -843,9 +893,8 @@ BOOL ReadCDForCheckingSubQAdr(
 		nSubOfs = CD_RAW_SECTOR_WITH_C2_294_SIZE;
 	}
 
-	OutputDiscLog(
-		OUTPUT_DHYPHEN_PLUS_STR_WITH_TRACK_F("Check MCN and/or ISRC")
-		, lpCmd[0], lpCmd[10], byIdxOfTrack + 1);
+	OutputLog(fileDisc | fileMainInfo, 
+		OUTPUT_DHYPHEN_PLUS_STR_WITH_TRACK_F("Check MCN and/or ISRC"), lpCmd[0], lpCmd[10], byIdxOfTrack + 1);
 	for (INT nLBA = nTmpLBA; nLBA < nTmpLBA + 500; nLBA++) {
 		if (500 > nTmpNextLBA) {
 			bCheckMCN = FALSE;
@@ -947,6 +996,9 @@ BOOL ReadCDForCheckingSubQAdr(
 				}
 			}
 		}
+		else {
+			OutputMainInfoWithLBALog("No MCN, ISRC sector\n", nLBA, byIdxOfTrack + 1);
+		}
 	}
 	if (bCheckMCN) {
 		SetLBAForFirstAdr(pDisc->SUB.nFirstLBAForMCN, pDisc->SUB.nRangeLBAForMCN,
@@ -977,11 +1029,13 @@ BOOL ReadCDForCheckingSubRtoW(
 	BYTE lpCmd[CDB12GENERIC_LENGTH] = {};
 	UINT uiBufLen = CD_RAW_SECTOR_SIZE + CD_RAW_READ_SUBCODE_SIZE;
 	CDFLAG::_READ_CD::_ERROR_FLAGS c2 = CDFLAG::_READ_CD::NoC2;
+	CDFLAG::_READ_CD::_SUB_CHANNEL_SELECTION flg = CDFLAG::_READ_CD::Pack;
 	if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
-		c2 = CDFLAG::_READ_CD::byte294;
 		uiBufLen = CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE;
+		c2 = CDFLAG::_READ_CD::byte294;
+		flg = CDFLAG::_READ_CD::Raw;
 	}
-	SetReadDiscCommand(NULL, pExtArg, pDevice, 1, c2, CDFLAG::_READ_CD::Raw, lpCmd, FALSE);
+	SetReadDiscCommand(NULL, pExtArg, pDevice, 1, c2, flg, lpCmd, FALSE);
 
 	for (BYTE i = (BYTE)(pDisc->SCSI.toc.FirstTrack - 1); i < pDisc->SCSI.toc.LastTrack; i++) {
 		try {
@@ -1966,11 +2020,13 @@ BOOL ReadCDForScanningProtectViaSector(
 	BYTE lpCmd[CDB12GENERIC_LENGTH] = {};
 	DWORD dwBufLen = CD_RAW_SECTOR_SIZE + CD_RAW_READ_SUBCODE_SIZE;
 	CDFLAG::_READ_CD::_ERROR_FLAGS c2 = CDFLAG::_READ_CD::NoC2;
+	CDFLAG::_READ_CD::_SUB_CHANNEL_SELECTION flg = CDFLAG::_READ_CD::Pack;
 	if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
 		dwBufLen = CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE;
 		c2 = CDFLAG::_READ_CD::byte294;
+		flg = CDFLAG::_READ_CD::Raw;
 	}
-	SetReadDiscCommand(NULL, pExtArg, pDevice, 1, c2, CDFLAG::_READ_CD::Raw, lpCmd, FALSE);
+	SetReadDiscCommand(NULL, pExtArg, pDevice, 1, c2, flg, lpCmd, FALSE);
 
 	BYTE aBuf[CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE] = {};
 	BYTE byScsiStatus = 0;
@@ -2279,6 +2335,7 @@ BOOL ReadCDCheck(
 			else {
 				if (pDisc->SCSI.by1stDataTrkNum == 1) {
 					ReadCDForSegaDisc(pExtArg, pDevice);
+					ReadCDForCheckingPregapSync(pExecType, pExtArg, pDevice);
 				}
 				if (pExtArg->byLibCrypt) {
 					// PSX PAL only
