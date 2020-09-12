@@ -1239,8 +1239,17 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					pExtArg->byRawDump = TRUE;
 				}
 				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/fix"), 4)) {
-					pExtArg->byFix = TRUE;
-					s_uiFix = (UINT)_tcstoul(argv[i++], &endptr, 10);
+					if (argc > i && _tcsncmp(argv[i], _T("/"), 1)) {
+						pExtArg->byFix = TRUE;
+						s_uiFix = (UINT)_tcstoul(argv[i++], &endptr, 10);
+						if (*endptr) {
+							OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
+							return FALSE;
+						}
+					}
+					else {
+						OutputErrorString("/fix val was omitted. Please input integer.\n");
+					}
 				}
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/re"), 3)) {
 					pExtArg->byResume = TRUE;
