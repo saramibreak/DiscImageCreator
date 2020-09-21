@@ -266,10 +266,10 @@ extern _LOG_FILE g_LogFile;
 
 #ifdef UNICODE
 #define WFLAG "w, ccs=UTF-8"
-#define AFLAG "a, ccs=UTF-8"
+#define APLUSFLAG "a+, ccs=UTF-8"
 #else
 #define WFLAG "w"
-#define AFLAG "a"
+#define APLUSFLAG "a+"
 #endif
 
 #define FcloseAndNull(fp) \
