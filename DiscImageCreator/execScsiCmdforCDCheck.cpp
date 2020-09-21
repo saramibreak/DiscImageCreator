@@ -1547,7 +1547,9 @@ BOOL ReadCDForCheckingExe(
 	BYTE byRoopLen = byTransferLen;
 	SetCommandForTransferLength(pExecType, pDevice, pCdb, dwSize, &byTransferLen, &byRoopLen);
 
+#ifdef _WIN32
 	BOOL bIscCab = FALSE;
+#endif
 	for (INT n = 0; pDisc->PROTECT.pExtentPosForExe[n] != 0; n++) {
 		if (!ExecReadCD(pExtArg, pDevice, pCdb, pDisc->PROTECT.pExtentPosForExe[n],
 			lpBuf, dwSize, _T(__FUNCTION__), __LINE__)) {
@@ -1648,7 +1650,7 @@ BOOL ReadCDForCheckingExe(
 							}
 							// File size is over 0
 							if (_tcscmp(pTrimBuf[4], _T("0"))) {
-								OutputVolDescLog("Extracted from %s\n", pDisc->PROTECT.pFullNameForExe[n]);
+								OutputVolDescLog("Extracted from %" CHARWIDTH "s\n", pDisc->PROTECT.pFullNameForExe[n]);
 								// extract .exe or .dll from .cab
 								_sntprintf(str, nStrSize,
 									_T("\"\"%s\" e -o \"%s\" %s\" 2> NUL"), szPathIsc, FullPathWithDrive, pTrimBuf[5]);
