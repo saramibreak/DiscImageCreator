@@ -738,8 +738,9 @@ BOOL ReadCDForCheckingPregapSync(
 	BYTE byScsiStatus = 0;
 	BOOL bFound = FALSE;
 	INT nSyncPos = 0;
+	INT nSectorNum = 0;
 
-	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("Check Pregap Sync"));
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("Check Pregap sync, msf, mode"));
 	for (INT nLBA = PREGAP_START_LBA; nLBA < -1150; nLBA++) {
 		if (!ExecReadCD(pExtArg, pDevice, lpCmd, nLBA, aBuf,
 			CD_RAW_SECTOR_WITH_SUBCODE_SIZE, _T(__FUNCTION__), __LINE__)
@@ -748,24 +749,25 @@ BOOL ReadCDForCheckingPregapSync(
 		}
 		if (!bFound) {
 			for (INT i = 0; i < CD_RAW_SECTOR_SIZE; i++) {
-				if (IsValidMainDataHeader(aBuf + i)) {
+				if (IsValidMainDataHeader(aBuf + i) &&
+					aBuf[i + 12] == 0x01 && aBuf[i + 13] == 0x80 && aBuf[i + 14] == 0) {
 					nSyncPos = i;
 					bFound = TRUE;
 					break;
 				}
 			}
 			if (!bFound) {
-				OutputString("\rChecking Pregap Sync (LBA) %6d", nLBA);
+				OutputString("\rChecking Pregap sync, msf, mode (LBA) %6d", nLBA);
 				continue;
 			}
 		}
-		OutputDiscLog("\t%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n"
-			, aBuf[nSyncPos], aBuf[nSyncPos + 1], aBuf[nSyncPos + 2], aBuf[nSyncPos + 3]
+		OutputDiscLog("\t%3d : %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n"
+			, ++nSectorNum, aBuf[nSyncPos], aBuf[nSyncPos + 1], aBuf[nSyncPos + 2], aBuf[nSyncPos + 3]
 			, aBuf[nSyncPos + 4], aBuf[nSyncPos + 5], aBuf[nSyncPos + 6], aBuf[nSyncPos + 7]
 			, aBuf[nSyncPos + 8], aBuf[nSyncPos + 9], aBuf[nSyncPos + 10], aBuf[nSyncPos + 11]
 			, aBuf[nSyncPos + 12], aBuf[nSyncPos + 13], aBuf[nSyncPos + 14], aBuf[nSyncPos + 15]
 		);
-		OutputString("\rChecking Pregap Sync (LBA) %6d", nLBA);
+		OutputString("\rChecking Pregap sync, msf, mode (LBA) %6d", nLBA);
 		if (aBuf[nSyncPos + 12] == 0x01 && aBuf[nSyncPos + 13] == 0x81 && aBuf[nSyncPos + 14] == 0x74) {
 			break;
 		}
@@ -1545,6 +1547,7 @@ BOOL ReadCDForCheckingExe(
 	BYTE byRoopLen = byTransferLen;
 	SetCommandForTransferLength(pExecType, pDevice, pCdb, dwSize, &byTransferLen, &byRoopLen);
 
+	BOOL bIscCab = FALSE;
 	for (INT n = 0; pDisc->PROTECT.pExtentPosForExe[n] != 0; n++) {
 		if (!ExecReadCD(pExtArg, pDevice, pCdb, pDisc->PROTECT.pExtentPosForExe[n],
 			lpBuf, dwSize, _T(__FUNCTION__), __LINE__)) {
@@ -1593,10 +1596,16 @@ BOOL ReadCDForCheckingExe(
 #ifdef _WIN32
 				OutputString(
 					"\nDetected InterShield Cabinet File: %" CHARWIDTH "s\n"
-					"Please wait until all files are extracted. This is needed to search protection\n"
 					, pDisc->PROTECT.pFullNameForExe[n]
 				);
-				bCab = TRUE;
+				if (!bIscCab) {
+					OutputString(
+						"Please wait until all files are extracted. This is needed to search protection\n"
+					);
+				}
+				else {
+					continue;
+				}
 				_TCHAR szPathIsc[_MAX_PATH] = {};
 				bRet = GetCmd(szPathIsc, _T("i6comp"), _T("exe"));
 
@@ -1639,6 +1648,7 @@ BOOL ReadCDForCheckingExe(
 							}
 							// File size is over 0
 							if (_tcscmp(pTrimBuf[4], _T("0"))) {
+								OutputVolDescLog("Extracted from %s\n", pDisc->PROTECT.pFullNameForExe[n]);
 								// extract .exe or .dll from .cab
 								_sntprintf(str, nStrSize,
 									_T("\"\"%s\" e -o \"%s\" %s\" 2> NUL"), szPathIsc, FullPathWithDrive, pTrimBuf[5]);
@@ -1687,6 +1697,8 @@ BOOL ReadCDForCheckingExe(
 						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 						OutputErrorString("Failed to DeleteFile %s\n", szTmpPath);
 					}
+					bIscCab = TRUE;
+					bCab = TRUE;
 				}
 #else
 				// TODO: linux doesn't support yet

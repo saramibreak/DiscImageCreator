@@ -569,6 +569,7 @@ BOOL ReadVolumeDescriptor(
 				}
 				*lpReadVD = TRUE;
 			}
+			OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("Check Volume Descriptor"));
 			OutputCDMain(fileMainInfo, lpBuf, nTmpLBA, DISC_MAIN_DATA_SIZE);
 			OutputFsVolumeDescriptor(pExtArg, pDisc, lpBuf, pVolDesc, nTmpLBA++);
 		}
