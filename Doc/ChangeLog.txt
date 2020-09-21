@@ -681,3 +681,12 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 *2020-07-16
 - added: /mscf flag for cd command
 - added: /avdp flag for dvd or bd command
+
+*2020-09-21
+- added: support double offsets disc [mainly FMTowns disc]
+- added: checking pregap sync, msf, mode [mainly +588 and +1176 US-mastered Saturn discs]
+- changed: reading sector num to calc the offsets
+- changed: 1st cab or hdr file is only extracted [windows only]
+- fixed: fail to get the correct subch when MCN sector exists in LBA 0
+- fixed: output filename of FAT
+- fixed: seek position when reading error occurs [xbox only]

@@ -1,5 +1,5 @@
 ========================= Drive information (I tested) ========================
-Vendor					Model(*1)				Firmware(*2)	MinusLBA		Lead-out		Scrambled	GD-ROM(*4)			GC/Wii-ROM(*6)
+Vendor					Model(*1)				Firmware(*2)	MinusLBA		Lead-out		Scrambled	GD-ROM(*3)			GC/Wii-ROM(*6)
 ASUS					BC-12D2HT				3.01			Part(from -145)	No				Yes			No					No
 HITACHI-LG(HL-DT-ST)	GCC-4160N				0012			Part(from -145)	No				No			No					Yes
 HITACHI-LG(HL-DT-ST)	GCC-4240N				D110			Part(from -144)	No				No			No					Yes
@@ -16,6 +16,7 @@ HITACHI-LG(HL-DT-ST)	GDR-8084N				1.00			No				No				No			No					Yes
 HITACHI(HL-DT-ST)		GDR-8160B				0011			Part(from -146)	No				No			No					No
 HITACHI(HL-DT-ST)		GDR-8161B				0045			No				No				No			No					Yes
 HP(HL-DT-ST)			GDR-8163B				0B26			No				No				No			No					Yes
+HITACHI-LG(HL-DT-ST)	GDR-8163B				0D20			No				No				No			No					Yes
 HITACHI-LG(HL-DT-ST)	GDR-8163B				0S24			No				No				No			No					Yes
 HITACHI-LG(HL-DT-ST)	GWA-8164B(GDR8164B)		0M08			No				No				No			No					Yes
 HITACHI-LG(HL-DT-ST)	GDR-H20N				0D04			No				No				No			No					No
@@ -45,6 +46,7 @@ NEC						CDR-3001A(28F)			3.32			No				No				No			No					No
 Optiarc					AD-7170A				1.04			No				No				No			No					No
 Optiarc					AD-7203S				1-B0			No				No				No			No					No
 Philips&Lite-on(ATAPI)	DH16AAS					JL34			Part(from -140)	No				No			No					No
+PLEXTOR					PX-6XCS					1.00			No				No				Yes(*7)		No					No
 PLEXTOR					PX-12TS					1.01			Yes				Part(100sector)	Yes			No					No
 PLEXTOR					PX-20TS					1.00			Yes				Part(100sector)	Yes			No					No
 PLEXTOR					PX-32TS					1.03			Yes				Part(100sector)	Yes			No					No
@@ -144,3 +146,6 @@ TSSTcorp				TS-H652C(TS-H652D)		TI06			No				No				No			No					No
  
  Offset of Renesas R8J and HITACHI HD chip is +667 (HITACHI-LG etc.)
  I haven't confirmed yet.
+
+*7
+ Not supported the SubRtoW and C2 error report on READ D8 command
