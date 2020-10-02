@@ -470,58 +470,63 @@ VOID OutputImportDirectory(
 	INT nDllNum = 0;
 	size_t stDescOfs = 0;
 	for (;;) {
+		if (dwBufSize <= dwOfs + stDescOfs) {
+			break;
+		}
 		PIMAGE_IMPORT_DESCRIPTOR imp = (PIMAGE_IMPORT_DESCRIPTOR)&lpBuf[dwOfs + stDescOfs];
 		if (imp->OriginalFirstThunk == 0 && imp->TimeDateStamp == 0 &&
 			imp->ForwarderChain == 0 && imp->Name == 0 && imp->FirstThunk == 0) {
 			break;
 		}
 		else {
-			OutputVolDescLog(
-				"\t========== IMAGE_IMPORT_DESCRIPTOR %d ==========\n"
-				"\t\tOriginalFirstThunk: %08lx\n"
-				"\t\t     TimeDateStamp: %08lx\n"
-				"\t\t    ForwarderChain: %08lx\n"
-				"\t\t              Name: %08lx (%" CHARWIDTH "s)\n"
-				"\t\t        FirstThunk: %08lx\n"
-				, nDllNum + 1, imp->OriginalFirstThunk, imp->TimeDateStamp
-				, imp->ForwarderChain, imp->Name
-				, &lpBuf[dwOfs + imp->Name - dwImportVirtualAddress]
-				, imp->FirstThunk
-			);
-			size_t stThunkOfs = 0;
-			for (;;) {
-				PIMAGE_THUNK_DATA32 thunk = 0;
-				if (imp->OriginalFirstThunk) {
-					thunk = (PIMAGE_THUNK_DATA32)&lpBuf[dwOfs + imp->OriginalFirstThunk - dwImportVirtualAddress + stThunkOfs];
-				}
-				else if (imp->FirstThunk) {
-					thunk = (PIMAGE_THUNK_DATA32)&lpBuf[dwOfs + imp->FirstThunk - dwImportVirtualAddress + stThunkOfs];
-				}
-				else {
-					break;
-				}
-
-				if (thunk->u1.AddressOfData == 0) {
-					break;
-				}
-				else {
-					OutputVolDescLog(
-						"\t\t========== IMAGE_THUNK_DATA ==========\n"
-						"\t\t\tAddressOfData: %08lx\n", thunk->u1.AddressOfData
-					);
-					if (dwBufSize >= dwOfs + thunk->u1.AddressOfData - dwImportVirtualAddress) {
-						PIMAGE_IMPORT_BY_NAME byname =
-							(PIMAGE_IMPORT_BY_NAME)&lpBuf[dwOfs + thunk->u1.AddressOfData - dwImportVirtualAddress];
-						OutputVolDescLog(
-							"\t\t\t========== IMAGE_IMPORT_BY_NAME ==========\n"
-							"\t\t\t\tHint: %04x\n"
-							"\t\t\t\tName: %" CHARWIDTH "s\n"
-							, byname->Hint, byname->Name
-						);
+			if (dwBufSize > dwOfs + imp->Name - dwImportVirtualAddress) {
+				OutputVolDescLog(
+					"\t========== IMAGE_IMPORT_DESCRIPTOR %d ==========\n"
+					"\t\tOriginalFirstThunk: %08lx\n"
+					"\t\t     TimeDateStamp: %08lx\n"
+					"\t\t    ForwarderChain: %08lx\n"
+					"\t\t              Name: %08lx (%" CHARWIDTH "s)\n"
+					"\t\t        FirstThunk: %08lx\n"
+					, nDllNum + 1, imp->OriginalFirstThunk, imp->TimeDateStamp
+					, imp->ForwarderChain, imp->Name
+					, &lpBuf[dwOfs + imp->Name - dwImportVirtualAddress]
+					, imp->FirstThunk
+				);
+				size_t stThunkOfs = 0;
+				for (;;) {
+					PIMAGE_THUNK_DATA32 thunk = 0;
+					if (imp->OriginalFirstThunk && dwBufSize > dwOfs + imp->OriginalFirstThunk - dwImportVirtualAddress + stThunkOfs) {
+						thunk = (PIMAGE_THUNK_DATA32)&lpBuf[dwOfs + imp->OriginalFirstThunk - dwImportVirtualAddress + stThunkOfs];
 					}
-				}
+					else if (imp->FirstThunk && dwBufSize > dwOfs + imp->FirstThunk - dwImportVirtualAddress + stThunkOfs) {
+						thunk = (PIMAGE_THUNK_DATA32)&lpBuf[dwOfs + imp->FirstThunk - dwImportVirtualAddress + stThunkOfs];
+					}
+					else {
+						break;
+					}
 
-				stThunkOfs += sizeof(IMAGE_THUNK_DATA32);
+					if (thunk->u1.AddressOfData == 0) {
+						break;
+					}
+					else {
+						OutputVolDescLog(
+							"\t\t========== IMAGE_THUNK_DATA ==========\n"
+							"\t\t\tAddressOfData: %08lx\n", thunk->u1.AddressOfData
+						);
+						if (dwBufSize > dwOfs + thunk->u1.AddressOfData - dwImportVirtualAddress) {
+							PIMAGE_IMPORT_BY_NAME byname =
+								(PIMAGE_IMPORT_BY_NAME)&lpBuf[dwOfs + thunk->u1.AddressOfData - dwImportVirtualAddress];
+							OutputVolDescLog(
+								"\t\t\t========== IMAGE_IMPORT_BY_NAME ==========\n"
+								"\t\t\t\tHint: %04x\n"
+								"\t\t\t\tName: %" CHARWIDTH "s\n"
+								, byname->Hint, byname->Name
+							);
+						}
+					}
+
+					stThunkOfs += sizeof(IMAGE_THUNK_DATA32);
+				}
 			}
 			stDescOfs += sizeof(IMAGE_IMPORT_DESCRIPTOR);
 			nDllNum++;
