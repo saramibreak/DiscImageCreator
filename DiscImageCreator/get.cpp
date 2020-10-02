@@ -504,19 +504,18 @@ BOOL GetCssCmd(
 	}
 	_tcsncpy(keyPath, szFname, sizeof(keyPath) / sizeof(keyPath[0]));
 	_tcsncat(keyPath, keyFile, sizeof(keyPath) / sizeof(keyPath[0]) - _tcslen(keyPath) - 1);
-	_tmakepath(szPathForKey, szDrive, szDir, keyPath, _T("txt"));
 
 	_TCHAR szPathForCss[_MAX_PATH] = {};
 #ifdef _WIN32
+	_tmakepath(szPathForKey, szDrive, szDir, keyPath, _T("txt"));
 	BOOL bRet = GetCmd(szPathForCss, _T("DVDAuth"), _T("exe"));
 #else
-	UNREFERENCED_PARAMETER(protect);
-	BOOL bRet = GetCmd(szPathForCss, _T("./css-auth"), _T(".out"));
+	_tmakepath(szPathForKey, szDrive, szDir, keyPath, _T(".txt"));
+	BOOL bRet = GetCmd(szPathForCss, _T("./DVDAuth_linux"), _T(".out"));
 #endif
-	OutputString("%s\n", szPathForCss);
 	if (bRet && PathFileExists(szPathForCss)) {
-		size_t size = _tcslen(szPathForCss) + _tcslen(szPathForKey) + 9 + 4;
 #ifdef _WIN32
+		size_t size = _tcslen(szPathForCss) + _tcslen(szDrive) + _tcslen(szPathForKey) + 9 + 4;
 		if (protect == css) {
 			_sntprintf(pszStr, size,
 				_T("\"\"%s\" %c css \"%s\"\""), szPathForCss, pDevice->byDriveLetter, szPathForKey);
@@ -525,9 +524,18 @@ BOOL GetCssCmd(
 			_sntprintf(pszStr, size,
 				_T("\"\"%s\" %c cprm \"%s\"\""), szPathForCss, pDevice->byDriveLetter, szPathForKey);
 		}
+		OutputString("%s\n", pszStr);
 #else
-		_sntprintf(pszStr, size,
-			_T("%s %s"), szPathForCss, pDevice->drivepath/*, szPathForKey*/);
+		size_t size = _tcslen(szPathForCss) + _tcslen(pDevice->drivepath) + _tcslen(szPathForKey) + 9 + 4;
+		if (protect == css) {
+			_sntprintf(pszStr, size,
+				_T("%s %s css %s"), szPathForCss, pDevice->drivepath, szPathForKey);
+		}
+		else if (protect == cprm) {
+			_sntprintf(pszStr, size,
+				_T("%s %s cprm %s"), szPathForCss, pDevice->drivepath, szPathForKey);
+		}
+		OutputString("%s\n", pszStr);
 #endif
 	}
 	else {
