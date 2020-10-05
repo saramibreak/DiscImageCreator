@@ -635,6 +635,7 @@ VOID OutputDVDCopyrightDescriptor(
 	case 1:
 		OutputDiscLog("CSS/CPPM\n");
 		*pProtect = css;
+		// cppm is set by ReadDirectoryRecordDetail of execScsiCmdforFileSystem.cpp
 		break;
 	case 2:
 		OutputDiscLog("CPRM\n");

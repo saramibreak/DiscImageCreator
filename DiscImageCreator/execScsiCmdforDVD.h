@@ -23,6 +23,12 @@ BOOL ReadDVDReverse(
 	INT nLastLBA
 );
 
+BOOL ExecReadingKey(
+	PDEVICE pDevice,
+	_PROTECT_TYPE_DVD protect,
+	LPCTSTR pszPath
+);
+
 BOOL ReadDVD(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,

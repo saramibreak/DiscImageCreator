@@ -104,6 +104,7 @@ typedef enum _PROTECT_TYPE_CD {
 typedef enum _PROTECT_TYPE_DVD {
 	noProtect,
 	css,
+	cppm,
 	cprm,
 	aacs
 } PROTECT_TYPE_DVD, *PPROTECT_TYPE_DVD;

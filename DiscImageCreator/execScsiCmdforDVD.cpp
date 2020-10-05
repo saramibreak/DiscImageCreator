@@ -192,6 +192,16 @@ BOOL ReadDVD(
 		if (!ReadDVDForFileSystem(pExecType, pExtArg, pDevice, pDisc, &cdb, lpBuf)) {
 			throw FALSE;
 		}
+
+		if (pDisc->DVD.protect != noProtect) {
+			if (ExecReadingKey(pDevice, pDisc->DVD.protect, pszFullPath)) {
+				OutputDiscLog("Outputted to _xxxKey.txt\n\n");
+			}
+			else {
+				OutputDiscLog("Failed to get _xxxKey.txt\n\n");
+			}
+		}
+
 		if (pExtArg->byAnchorVolumeDescriptorPointer) {
 			nAllLength = pDisc->SCSI.nAllLength;
 		}
@@ -1095,7 +1105,7 @@ BOOL ExecReadingKey(
 	try {
 		_TCHAR str[_MAX_PATH + 10] = {};
 		INT ret = 0;
-		if (GetCssCmd(pDevice, str, protect, pszPath)) {
+		if (GetDVDProtectionCmd(pDevice, str, protect, pszPath)) {
 			ret = _tsystem(str);
 			if (ret == 1) {
 				throw FALSE;
@@ -1220,18 +1230,6 @@ BOOL ReadDiscStructure(
 				break;
 			}
 			else if (pEntry->FormatCode == 0x02) {
-				if (pDisc->DVD.protect == css) {
-					if (ExecReadingKey(pDevice, css, pszFullPath)) {
-						OutputDiscLog("Outputted to _CSSKey.txt\n\n");
-					}
-					else {
-						OutputDiscLog("Failed to run DVDAuth.exe\n\n");
-						return FALSE;
-					}
-				}
-				else {
-					OutputDiscLog("Skiped because of DVD with CSS only\n\n");
-				}
 				continue; // skip output because disc key is random data
 			}
 			else if (pEntry->FormatCode == 0x03 && !pDisc->DVD.ucBca) {
@@ -1244,18 +1242,7 @@ BOOL ReadDiscStructure(
 			}
 			else if (pEntry->FormatCode == 0x06 || pEntry->FormatCode == 0x07) {
 				if (pDisc->DVD.protect == cprm) {
-					if (pEntry->FormatCode == 0x06) {
-						if (ExecReadingKey(pDevice, cprm, pszFullPath)) {
-							OutputDiscLog("Outputted to _CPRMKey.txt\n\n");
-						}
-						else {
-							OutputDiscLog("Failed to run DVDAuth.exe\n\n");
-							return FALSE;
-						}
-					}
-					else if (pEntry->FormatCode == 0x07) {
-						continue;
-					}
+					continue;
 				}
 				else {
 					OutputDiscLog("Skiped because of DVD with CPRM only\n\n");

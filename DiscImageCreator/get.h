@@ -123,7 +123,7 @@ BOOL GetUnscCmd(
 	LPCTSTR pszPath
 );
 
-BOOL GetCssCmd(
+BOOL GetDVDProtectionCmd(
 	PDEVICE pDevice,
 	LPTSTR pszStr,
 	_PROTECT_TYPE_DVD protect,

@@ -477,7 +477,7 @@ BOOL GetUnscCmd(
 	return bRet;
 }
 
-BOOL GetCssCmd(
+BOOL GetDVDProtectionCmd(
 	PDEVICE pDevice,
 	LPTSTR pszStr,
 	_PROTECT_TYPE_DVD protect,
@@ -493,6 +493,9 @@ BOOL GetCssCmd(
 	_TCHAR keyFile[10] = {}; 
 	if (protect == css) {
 		_tcsncpy(keyFile, _T("_CSSKey"), 8);
+	}
+	else if (protect == cppm) {
+		_tcsncpy(keyFile, _T("_CPPMKey"), 9);
 	}
 	else if (protect == cprm) {
 		_tcsncpy(keyFile, _T("_CPRMKey"), 9);
@@ -520,6 +523,10 @@ BOOL GetCssCmd(
 			_sntprintf(pszStr, size,
 				_T("\"\"%s\" %c css \"%s\"\""), szPathForCss, pDevice->byDriveLetter, szPathForKey);
 		}
+		else if (protect == cppm) {
+			_sntprintf(pszStr, size,
+				_T("\"\"%s\" %c cppm \"%s\"\""), szPathForCss, pDevice->byDriveLetter, szPathForKey);
+}
 		else if (protect == cprm) {
 			_sntprintf(pszStr, size,
 				_T("\"\"%s\" %c cprm \"%s\"\""), szPathForCss, pDevice->byDriveLetter, szPathForKey);
@@ -530,6 +537,10 @@ BOOL GetCssCmd(
 		if (protect == css) {
 			_sntprintf(pszStr, size,
 				_T("%s %s css %s"), szPathForCss, pDevice->drivepath, szPathForKey);
+		}
+		else if (protect == cppm) {
+			_sntprintf(pszStr, size,
+				_T("%s %s cppm %s"), szPathForCss, pDevice->drivepath, szPathForKey);
 		}
 		else if (protect == cprm) {
 			_sntprintf(pszStr, size,

@@ -18,6 +18,7 @@
 #include "convert.h"
 #include "execScsiCmdforCD.h"
 #include "execScsiCmdforCDCheck.h"
+#include "execScsiCmdforDVD.h"
 #include "execScsiCmdforFileSystem.h"
 #include "execIoctl.h"
 #include "get.h"
@@ -242,6 +243,9 @@ BOOL ReadDirectoryRecordDetail(
 				}
 				OutputFsDirectoryRecord(
 					pExtArg, pDisc, lpDirRec, uiExtentPos, uiDataLen, szCurDirName, pPathTblRec, uiPathTblIdx);
+				if (!strncmp(szCurDirName, "DVDAUDIO.MKB", 12)) {
+					pDisc->DVD.protect = cppm;
+				}
 				uiOfs += lpDirRec[0];
 
 				// not upper and current directory
