@@ -129,7 +129,7 @@ BOOL IsValid0xF1SupportedDrive(
 			}
 		}
 		else if (!strncmp(pDevice->szProductId, "BC-12D2HT       ", DRIVE_PRODUCT_ID_SIZE)) {
-			if (!strncmp(pDevice->szProductRevisionLevel, "3.01", DRIVE_VERSION_ID_SIZE)) {
+			if (!strncmp(pDevice->szProductRevisionLevel, "3.00", DRIVE_VERSION_ID_SIZE)) {
 				pDevice->by0xF1Drive = TRUE;
 				return TRUE;
 			}
