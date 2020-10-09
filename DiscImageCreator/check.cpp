@@ -142,6 +142,12 @@ BOOL IsValid0xF1SupportedDrive(
 				return TRUE;
 			}
 		}
+		else if (!strncmp(pDevice->szProductId, "BD-RE  WH14NS40 ", DRIVE_PRODUCT_ID_SIZE)) {
+			if (!strncmp(pDevice->szProductRevisionLevel, "1.01", DRIVE_VERSION_ID_SIZE)) {
+				pDevice->by0xF1Drive = TRUE;
+				return TRUE;
+			}
+		}
 		else if (!strncmp(pDevice->szProductId, "BD-RE  WH16NS60 ", DRIVE_PRODUCT_ID_SIZE)) {
 			if (!strncmp(pDevice->szProductRevisionLevel, "1.00", DRIVE_VERSION_ID_SIZE)) {
 				pDevice->by0xF1Drive = TRUE;
