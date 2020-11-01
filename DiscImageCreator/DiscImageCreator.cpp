@@ -235,6 +235,9 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 #else
 							__attribute__((aligned(4))) CDROM_TOC_FULL_TOC_DATA fullToc = {};
 #endif
+							if (!ReadCDForCheckingSubQ1stIndex(pExecType, pExtArg, &device, &discData)) {
+								throw FALSE;
+							}
 							PCDROM_TOC_FULL_TOC_DATA_BLOCK pTocData = NULL;
 							WORD wTocEntries = 0;
 							if (*pExecType != swap && *pExecType != gd) {
@@ -712,6 +715,41 @@ int printAndSetPath(_TCHAR* szPathFromArg, _TCHAR* pszFullPath, size_t stFullPat
 	return TRUE;
 }
 
+int SetOptionPs(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
+{
+	_TCHAR* endptr = NULL;
+	pExtArg->byPadSector = TRUE;
+	if (argc > * i && _tcsncmp(argv[*i], _T("/"), 1)) {
+		pExtArg->uiPadNum = (UINT)_tcstoul(argv[(*i)++], &endptr, 10);
+		if (*endptr) {
+			OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
+			return FALSE;
+		}
+	}
+	else {
+		OutputString("/ps val was omitted. set [%u]\n", pExtArg->uiPadNum);
+	}
+	return TRUE;
+}
+
+int SetOptionFix(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
+{
+	_TCHAR* endptr = NULL;
+	if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
+		pExtArg->byFix = TRUE;
+		s_uiFix = (UINT)_tcstoul(argv[(*i)++], &endptr, 10);
+		if (*endptr) {
+			OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
+			return FALSE;
+		}
+	}
+	else {
+		OutputErrorString("/fix val was omitted. Please input integer.\n");
+		return FALSE;
+	}
+	return TRUE;
+}
+
 int SetOptionNss(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 {
 	_TCHAR* endptr = NULL;
@@ -935,8 +973,8 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 	}
 	else {
 		cmdLen = _tcslen(argv[1]);
-		if (argc >= 5 && ((cmdLen == 2 && !_tcsncmp(argv[1], _T("cd"), 2)) ||
-			(cmdLen == 4 && !_tcsncmp(argv[1], _T("swap"), 4)))) {
+		if (argc >= 5 && ((cmdLen == 2 && !_tcsncmp(argv[1], _T("cd"), cmdLen)) ||
+			(cmdLen == 4 && !_tcsncmp(argv[1], _T("swap"), cmdLen)))) {
 			if (cmdLen == 2) {
 				*pExecType = cd;
 			}
@@ -951,24 +989,24 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			pExtArg->uiSubAddionalNum = 1;
 			for (INT i = 6; i <= argc; i++) {
 				cmdLen = _tcslen(argv[i - 1]);
-				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), 2)) {
+				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), cmdLen)) {
 					pExtArg->byQuiet = TRUE;
 				}
-				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/a"), 2)) {
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/a"), cmdLen)) {
 					if (!SetOptionA(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/be"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/be"), cmdLen)) {
 					if (!SetOptionBe(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/d8"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/d8"), cmdLen)) {
 					pExtArg->byBe = FALSE;
 					pExtArg->byD8 = TRUE;
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/c2"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/c2"), cmdLen)) {
 					if (!SetOptionC2(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
@@ -977,70 +1015,70 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 						pExtArg->byC2 = FALSE;
 					}
 				}
-				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/f"), 2)) {
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/f"), cmdLen)) {
 					if (!SetOptionF(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
 				}
-				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/p"), 2)) {
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/p"), cmdLen)) {
 					pExtArg->byPre = TRUE;
 					if (pExtArg->byC2) {
 						OutputErrorString("/p can't use with /c2. /p was disabled\n");
 						pExtArg->byPre = FALSE;
 					}
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/sf"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/sf"), cmdLen)) {
 					if (!SetOptionSf(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/ss"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/ss"), cmdLen)) {
 					pExtArg->byScanProtectViaSector = TRUE;
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/am"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/am"), cmdLen)) {
 					pExtArg->byScanAntiModStr = TRUE;
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/ms"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/ms"), cmdLen)) {
 					pExtArg->byMultiSession = TRUE;
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/vn"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/vn"), cmdLen)) {
 					if (!SetOptionVn(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
 				}
-				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/vnc"), 4)) {
+				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/vnc"), cmdLen)) {
 					pExtArg->byVideoNowColor = TRUE;
 				}
-				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/vnx"), 4)) {
+				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/vnx"), cmdLen)) {
 					pExtArg->byVideoNowXp = TRUE;
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/aj"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/aj"), cmdLen)) {
 					pExtArg->byAtari = TRUE;
 				}
-				else if (cmdLen == 5 && !_tcsncmp(argv[i - 1], _T("/mscf"), 5)) {
+				else if (cmdLen == 5 && !_tcsncmp(argv[i - 1], _T("/mscf"), cmdLen)) {
 					pExtArg->byMicroSoftCabFile = TRUE;
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/np"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/np"), cmdLen)) {
 					pExtArg->bySkipSubP = TRUE;
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/nq"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/nq"), cmdLen)) {
 					pExtArg->bySkipSubQ = TRUE;
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/nr"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/nr"), cmdLen)) {
 					pExtArg->bySkipSubRtoW = TRUE;
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/nl"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/nl"), cmdLen)) {
 					pExtArg->byLibCrypt = TRUE;
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/ns"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/ns"), cmdLen)) {
 					pExtArg->byIntentionalSub = TRUE;
 				}
-				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/s"), 2)) {
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/s"), cmdLen)) {
 					if (!SetOptionS(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
 				}
-				else if (*pExecType == swap && cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/74"), 3)) {
+				else if (*pExecType == swap && cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/74"), cmdLen)) {
 					pExtArg->by74Min = TRUE;
 				}
 				else {
@@ -1050,7 +1088,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			}
 			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
 		}
-		else if (argc >= 5 && cmdLen == 2 && !_tcsncmp(argv[1], _T("gd"), 2)) {
+		else if (argc >= 5 && cmdLen == 2 && !_tcsncmp(argv[1], _T("gd"), cmdLen)) {
 			*pExecType = gd;
 			s_uiSpeed = (UINT)_tcstoul(argv[4], &endptr, 10);
 			if (*endptr) {
@@ -1060,38 +1098,38 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			pExtArg->uiSubAddionalNum = 0;
 			for (INT i = 6; i <= argc; i++) {
 				cmdLen = _tcslen(argv[i - 1]);
-				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), 2)) {
+				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), cmdLen)) {
 					pExtArg->byQuiet = TRUE;
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/be"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/be"), cmdLen)) {
 					if (!SetOptionBe(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/d8"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/d8"), cmdLen)) {
 					pExtArg->byBe = FALSE;
 					pExtArg->byD8 = TRUE;
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/c2"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/c2"), cmdLen)) {
 					if (!SetOptionC2(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
 				}
-				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/f"), 2)) {
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/f"), cmdLen)) {
 					if (!SetOptionF(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/np"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/np"), cmdLen)) {
 					pExtArg->bySkipSubP = TRUE;
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/nq"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/nq"), cmdLen)) {
 					pExtArg->bySkipSubQ = TRUE;
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/nr"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/nr"), cmdLen)) {
 					pExtArg->bySkipSubRtoW = TRUE;
 				}
-				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/s"), 2)) {
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/s"), cmdLen)) {
 					if (!SetOptionS(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
@@ -1103,8 +1141,8 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			}
 			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
 		}
-		else if (argc >= 7 && ((cmdLen == 4 && !_tcsncmp(argv[1], _T("data"), 4)) ||
-			(cmdLen == 5 && !_tcsncmp(argv[1], _T("audio"), 5)))) {
+		else if (argc >= 7 && ((cmdLen == 4 && !_tcsncmp(argv[1], _T("data"), cmdLen)) ||
+			(cmdLen == 5 && !_tcsncmp(argv[1], _T("audio"), cmdLen)))) {
 			if (cmdLen == 4) {
 				*pExecType = data;
 			}
@@ -1129,65 +1167,65 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			pExtArg->uiSubAddionalNum = 1;
 			for (INT i = 8; i <= argc; i++) {
 				cmdLen = _tcslen(argv[i - 1]);
-				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), 2)) {
+				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), cmdLen)) {
 					pExtArg->byQuiet = TRUE;
 				}
-				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/a"), 2)) {
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/a"), cmdLen)) {
 					if (!SetOptionA(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/be"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/be"), cmdLen)) {
 					if (!SetOptionBe(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/d8"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/d8"), cmdLen)) {
 					pExtArg->byBe = FALSE;
 					pExtArg->byD8 = TRUE;
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/c2"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/c2"), cmdLen)) {
 					if (!SetOptionC2(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
 				}
-				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/f"), 2)) {
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/f"), cmdLen)) {
 					if (!SetOptionF(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
 				}
-				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/r"), 2)) {
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/r"), cmdLen)) {
 					pExtArg->byReverse = TRUE;
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/sf"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/sf"), cmdLen)) {
 					if (!SetOptionSf(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/ss"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/ss"), cmdLen)) {
 					pExtArg->byScanProtectViaSector = TRUE;
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/am"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/am"), cmdLen)) {
 					pExtArg->byScanAntiModStr = TRUE;
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/ms"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/ms"), cmdLen)) {
 					pExtArg->byMultiSession = TRUE;
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/np"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/np"), cmdLen)) {
 					pExtArg->bySkipSubP = TRUE;
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/nq"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/nq"), cmdLen)) {
 					pExtArg->bySkipSubQ = TRUE;
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/nr"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/nr"), cmdLen)) {
 					pExtArg->bySkipSubRtoW = TRUE;
 				}
-				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/s"), 2)) {
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/s"), cmdLen)) {
 					if (!SetOptionS(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/sk"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/sk"), cmdLen)) {
 					if (!SetOptionSk(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
@@ -1199,7 +1237,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			}
 			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
 		}
-		else if (argc >= 5 && cmdLen == 3 && !_tcsncmp(argv[1], _T("dvd"), 3)) {
+		else if (argc >= 5 && cmdLen == 3 && !_tcsncmp(argv[1], _T("dvd"), cmdLen)) {
 			*pExecType = dvd;
 			s_uiSpeed = (UINT)_tcstoul(argv[4], &endptr, 10);
 			if (*endptr) {
@@ -1208,15 +1246,15 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			}
 			for (INT i = 6; i <= argc; i++) {
 				cmdLen = _tcslen(argv[i - 1]);
-				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/c"), 2)) {
+				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/c"), cmdLen)) {
 					pExtArg->byCmi = TRUE;
 				}
-				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/f"), 2)) {
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/f"), cmdLen)) {
 					if (!SetOptionF(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
 				}
-				else if (argc >= 8 && cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/r"), 2)) {
+				else if (argc >= 8 && cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/r"), cmdLen)) {
 					pExtArg->byReverse = TRUE;
 					s_nStartLBA = _tcstol(argv[i], &endptr, 10);
 					if (*endptr) {
@@ -1230,35 +1268,28 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					}
 					i += 2;
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/sf"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/sf"), cmdLen)) {
 					if (!SetOptionSf(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
 				}
-				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/raw"), 4)) {
+				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/raw"), cmdLen)) {
 					pExtArg->byRawDump = TRUE;
 				}
-				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/fix"), 4)) {
-					if (argc > i && _tcsncmp(argv[i], _T("/"), 1)) {
-						pExtArg->byFix = TRUE;
-						s_uiFix = (UINT)_tcstoul(argv[i++], &endptr, 10);
-						if (*endptr) {
-							OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
-							return FALSE;
-						}
-					}
-					else {
-						OutputErrorString("/fix val was omitted. Please input integer.\n");
-					}
+				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/fix"), cmdLen)) {
+					SetOptionFix(argc, argv, pExtArg, &i);
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/re"), 3)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/re"), cmdLen)) {
 					pExtArg->byResume = TRUE;
 				}
-				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), 2)) {
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), cmdLen)) {
 					pExtArg->byQuiet = TRUE;
 				}
-				else if (cmdLen == 5 && !_tcsncmp(argv[i - 1], _T("/avdp"), 5)) {
+				else if (cmdLen == 5 && !_tcsncmp(argv[i - 1], _T("/avdp"), cmdLen)) {
 					pExtArg->byAnchorVolumeDescriptorPointer = TRUE;
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/ps"), cmdLen)) {
+					SetOptionPs(argc, argv, pExtArg, &i);
 				}
 				else {
 					OutputErrorString("Unknown option: [%s]\n", argv[i - 1]);
@@ -1267,7 +1298,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			}
 			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
 		}
-		else if (argc >= 5 && ((cmdLen == 2 && !_tcsncmp(argv[1], _T("bd"), 2)) ||
+		else if (argc >= 5 && ((cmdLen == 2 && !_tcsncmp(argv[1], _T("bd"), cmdLen)) ||
 			(cmdLen == 4 && !_tcsncmp(argv[1], _T("xbox"), 4)))) {
 			if (cmdLen == 2) {
 				*pExecType = bd;
@@ -1282,20 +1313,20 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			}
 			for (INT i = 6; i <= argc; i++) {
 				cmdLen = _tcslen(argv[i - 1]);
-				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/f"), 2)) {
+				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/f"), cmdLen)) {
 					if (!SetOptionF(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
 				}
-				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), 2)) {
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), cmdLen)) {
 					pExtArg->byQuiet = TRUE;
 				}
-				else if (*pExecType == xbox && cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/nss"), 4)) {
+				else if (*pExecType == xbox && cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/nss"), cmdLen)) {
 					if (!SetOptionNss(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
 				}
-				else if (cmdLen == 5 && !_tcsncmp(argv[i - 1], _T("/avdp"), 5)) {
+				else if (cmdLen == 5 && !_tcsncmp(argv[i - 1], _T("/avdp"), cmdLen)) {
 					pExtArg->byAnchorVolumeDescriptorPointer = TRUE;
 				}
 				else {
@@ -1305,7 +1336,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			}
 			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
 		}
-		else if (argc >= 5 && (cmdLen == 4 && !_tcsncmp(argv[1], _T("sacd"), 4))) {
+		else if (argc >= 5 && (cmdLen == 4 && !_tcsncmp(argv[1], _T("sacd"), cmdLen))) {
 			*pExecType = sacd;
 			for (INT i = 6; i <= argc; i++) {
 				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), 2)) {
@@ -1314,7 +1345,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			}
 			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
 		}
-		else if (argc >= 21 && ((cmdLen == 8 && !_tcsncmp(argv[1], _T("xboxswap"), 8)))) {
+		else if (argc >= 21 && ((cmdLen == 8 && !_tcsncmp(argv[1], _T("xboxswap"), cmdLen)))) {
 			*pExecType = xboxswap;
 			s_uiSpeed = (UINT)_tcstoul(argv[4], &endptr, 10);
 			if (*endptr) {
@@ -1330,15 +1361,15 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			}
 			for (INT i = 22; i <= argc; i++) {
 				cmdLen = _tcslen(argv[i - 1]);
-				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/f"), 2)) {
+				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/f"), cmdLen)) {
 					if (!SetOptionF(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
 				}
-				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), 2)) {
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), cmdLen)) {
 					pExtArg->byQuiet = TRUE;
 				}
-				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/nss"), 4)) {
+				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/nss"), cmdLen)) {
 					if (!SetOptionNss(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
@@ -1350,7 +1381,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			}
 			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
 		}
-		else if (argc >= 8 && ((cmdLen == 8 && (!_tcsncmp(argv[1], _T("xgd2swap"), 8) || !_tcsncmp(argv[1], _T("xgd3swap"), 8))))) {
+		else if (argc >= 8 && ((cmdLen == 8 && (!_tcsncmp(argv[1], _T("xgd2swap"), cmdLen) || !_tcsncmp(argv[1], _T("xgd3swap"), cmdLen))))) {
 			pExtArg->nAllSectors = (INT)_tcstoul(argv[5], &endptr, 10);
 			if (*endptr) {
 				OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
@@ -1376,15 +1407,15 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			}
 			for (INT i = 9; i <= argc; i++) {
 				cmdLen = _tcslen(argv[i - 1]);
-				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/f"), 2)) {
+				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/f"), cmdLen)) {
 					if (!SetOptionF(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
 				}
-				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), 2)) {
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), cmdLen)) {
 					pExtArg->byQuiet = TRUE;
 				}
-				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/nss"), 4)) {
+				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/nss"), cmdLen)) {
 					if (!SetOptionNss(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
@@ -1398,15 +1429,15 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 		}
 		else if (argc == 4) {
 			cmdLen = _tcslen(argv[1]);
-			if (cmdLen == 2 && !_tcsncmp(argv[1], _T("fd"), 2)) {
+			if (cmdLen == 2 && !_tcsncmp(argv[1], _T("fd"), cmdLen)) {
 				*pExecType = fd;
 				printAndSetPath(argv[3], pszFullPath, stFullPathlen);
 			}
-			else if (cmdLen == 4 && !_tcsncmp(argv[1], _T("disk"), 4)) {
+			else if (cmdLen == 4 && !_tcsncmp(argv[1], _T("disk"), cmdLen)) {
 				*pExecType = disk;
 				printAndSetPath(argv[3], pszFullPath, stFullPathlen);
 			}
-			else if (cmdLen == 5 && !_tcsncmp(argv[1], _T("merge"), 5)) {
+			else if (cmdLen == 5 && !_tcsncmp(argv[1], _T("merge"), cmdLen)) {
 				*pExecType = merge;
 				printAndSetPath(argv[2], pszFullPath, stFullPathlen);
 			}
@@ -1417,33 +1448,33 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 		}
 		else if (argc == 3) {
 			cmdLen = _tcslen(argv[1]);
-			if (cmdLen == 4 && !_tcsncmp(argv[1], _T("stop"), 4)) {
+			if (cmdLen == 4 && !_tcsncmp(argv[1], _T("stop"), cmdLen)) {
 				*pExecType = stop;
 			}
-			else if (cmdLen == 5 && !_tcsncmp(argv[1], _T("start"), 5)) {
+			else if (cmdLen == 5 && !_tcsncmp(argv[1], _T("start"), cmdLen)) {
 				*pExecType = start;
 			}
-			else if (cmdLen == 5 && !_tcsncmp(argv[1], _T("eject"), 5)) {
+			else if (cmdLen == 5 && !_tcsncmp(argv[1], _T("eject"), cmdLen)) {
 				*pExecType = ejecttray;
 			}
-			else if (cmdLen == 5 && !_tcsncmp(argv[1], _T("close"), 5)) {
+			else if (cmdLen == 5 && !_tcsncmp(argv[1], _T("close"), cmdLen)) {
 				*pExecType = closetray;
 			}
-			else if (cmdLen == 5 && !_tcsncmp(argv[1], _T("reset"), 5)) {
+			else if (cmdLen == 5 && !_tcsncmp(argv[1], _T("reset"), cmdLen)) {
 				*pExecType = reset;
 			}
-			else if (cmdLen == 2 && !_tcsncmp(argv[1], _T("ls"), 2)) {
+			else if (cmdLen == 2 && !_tcsncmp(argv[1], _T("ls"), cmdLen)) {
 				*pExecType = drivespeed;
 			}
-			else if (cmdLen == 3 && !_tcsncmp(argv[1], _T("sub"), 3)) {
+			else if (cmdLen == 3 && !_tcsncmp(argv[1], _T("sub"), cmdLen)) {
 				*pExecType = sub;
 				printAndSetPath(argv[2], pszFullPath, stFullPathlen);
 			}
-			else if (cmdLen == 3 && !_tcsncmp(argv[1], _T("mds"), 3)) {
+			else if (cmdLen == 3 && !_tcsncmp(argv[1], _T("mds"), cmdLen)) {
 				*pExecType = mds;
 				printAndSetPath(argv[2], pszFullPath, stFullPathlen);
 			}
-			else if (cmdLen == 4 && !_tcsncmp(argv[1], _T("tape"), 4)) {
+			else if (cmdLen == 4 && !_tcsncmp(argv[1], _T("tape"), cmdLen)) {
 				*pExecType = tape;
 				printAndSetPath(argv[2], pszFullPath, stFullPathlen);
 			}
@@ -1523,7 +1554,7 @@ void printUsage(void)
 		"\t   [/c2 (val1) (val2) (val3) (val4)] [/np] [/nq] [/nr] [/s (val)]\n"
 		"\t\tDump a HD area of GD from A to Z\n"
 		"\tdvd <DriveLetter> <Filename> <DriveSpeed(0-16)> [/c] [/f (val)] [/raw] [/q]\n"
-		"\t    [/r (startLBA) (EndLBA)] [/avdp]\n"
+		"\t    [/r (startLBA) (EndLBA)] [/avdp] [/ps]\n"
 		"\t\tDump a DVD from A to Z\n"
 		"\txbox <DriveLetter> <Filename> <DriveSpeed(0-16)> [/f (val)] [/q]\n"
 		"\t\tDump a xbox disc from A to Z\n"
@@ -1570,10 +1601,10 @@ void printUsage(void)
 		"\t\tmerge the two files (for physical error protection)\n"
 		"Option (generic)\n"
 		"\t/f\tUse 'Force Unit Access' flag to delete the drive cache\n"
-		"\t\t\tval\tdelete per specified value (default: 1)\n"
 	);
 	stopMessage();
 	OutputString(
+		"\t\t\tval\tdelete per specified value (default: 1)\n"
 		"\t/q\tDisable beep\n"
 		"Option (for CD read mode)\n"
 		"\t/a\tAdd CD offset manually (Only Audio CD)\n"
@@ -1597,10 +1628,10 @@ void printUsage(void)
 		"\t\t\tFor Alpha-Disc, Tages (very slow)\n"
 		"\t/ms\tRead the lead-out of 1st session and the lead-in of 2nd session\n"
 		"\t\t\tFor Multi-session\n"
-		"\t/74\tRead the lead-out about 74:00:00\n"
 	);
 	stopMessage();
 	OutputString(
+		"\t/74\tRead the lead-out about 74:00:00\n"
 		"\t\t\tFor ring data (a.k.a Saturn Ring) of Sega Saturn\n"
 		"\t/sf\tScan file to detect protect. If reading error exists,\n"
 		"\t   \tcontinue reading and ignore c2 error on specific sector\n"
@@ -1651,7 +1682,14 @@ void printUsage(void)
 		"\t\t\t               Hitachi-LG GDR, GCC\n"
 		"\t\t\t -> GDR (8082N, 8161B to 8164B) and GCC (4160N, 4240N to 4247N)\n"
 		"\t\t\t    supports GC/Wii dumping\n"
+	);
+	stopMessage();
+	OutputString(
 		"\t/avdp\tUse Anchor Volume Descriptor Pointer as file length\n"
+		"\t/ps\tThe sector is padded when reading error occurs\n"
+		"\t\t\tval\t0: Padded by 0x00\n"
+		"\t\t\tval\t1: Padded by 0xAA\n"
+		"See also -> https://github.com/saramibreak/DiscImageCreator/wiki \n"
 	);
 	stopMessage();
 }

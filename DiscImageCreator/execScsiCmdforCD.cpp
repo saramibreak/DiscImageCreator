@@ -295,7 +295,7 @@ BOOL ProcessReadCD(
 				AlignRowSubcode(pDiscPerSector->subcode.next, pDiscPerSector->data.next + pDevice->TRANSFER.uiBufSubOffset);
 					
 				if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
-					bRet = ContainsC2Error(pDevice, pDiscPerSector->data.next, &pDiscPerSector->uiC2errorNum, TRUE);
+					bRet = ContainsC2Error(pDevice, pDiscPerSector->data.next, &pDiscPerSector->uiC2errorNum, nLBA, TRUE);
 				}
 				if (pDiscPerSector->data.nextNext != NULL && 2 <= pExtArg->uiSubAddionalNum) {
 					ExecReadCDForC2(pExecType, pExtArg, pDevice, lpCmd,
@@ -309,7 +309,7 @@ BOOL ProcessReadCD(
 		if (bRet == RETURNED_NO_C2_ERROR_1ST) {
 			AlignRowSubcode(pDiscPerSector->subcode.current, pDiscPerSector->data.current + pDevice->TRANSFER.uiBufSubOffset);
 			if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
-				bRet = ContainsC2Error(pDevice, pDiscPerSector->data.current, &pDiscPerSector->uiC2errorNum, TRUE);
+				bRet = ContainsC2Error(pDevice, pDiscPerSector->data.current, &pDiscPerSector->uiC2errorNum, nLBA, TRUE);
 			}
 			if (!IsValidProtectedSector(pDisc, nLBA, GetReadErrorFileIdx(pExtArg, pDisc, nLBA))) {
 				if (pDiscPerSector->data.next != NULL && 1 <= pExtArg->uiSubAddionalNum) {
@@ -368,7 +368,7 @@ BOOL ReadCDForRereadingSectorType1(
 				OutputC2ErrorWithLBALog("crc32[%03u]: 0x%08lx ", nLBA, i, dwTmpCrc32);
 
 				LPBYTE lpNextBuf = lpBuf + CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE;
-				if (ContainsC2Error(pDevice, lpNextBuf, &pDiscPerSector->uiC2errorNum, FALSE) == RETURNED_NO_C2_ERROR_1ST) {
+				if (ContainsC2Error(pDevice, lpNextBuf, &pDiscPerSector->uiC2errorNum, nLBA, FALSE) == RETURNED_NO_C2_ERROR_1ST) {
 					LONG lSeekMain = CD_RAW_SECTOR_SIZE * (LONG)nLBA - nStart - pDisc->MAIN.nCombinedOffset;
 					fseek(fpImg, lSeekMain, SEEK_SET);
 					// Write track to scrambled again

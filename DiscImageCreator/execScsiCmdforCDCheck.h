@@ -35,6 +35,13 @@ BOOL ReadCDForCheckingReadInOut(
 	PDISC pDisc
 );
 
+BOOL ReadCDForCheckingSubQ1stIndex(
+	PEXEC_TYPE pExecType,
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	PDISC pDisc
+);
+
 BOOL ReadCDForCheckingSubQAdrFirst(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,

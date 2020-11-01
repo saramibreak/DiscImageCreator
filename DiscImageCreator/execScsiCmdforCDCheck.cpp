@@ -293,7 +293,7 @@ BOOL ExecSearchingOffset(
 							// [FMT] Sangokushi IV http://forum.redump.org/post/82784/#p82784
 							// [FMT] Lip 3: Lipstick Adventure 3 http://forum.redump.org/post/80180/#p80180
 							// [FMT] Gulf War: Soukouden http://forum.redump.org/topic/16418/addedfmt-5-new-dumps/
-							if (nOverRead > 3) {
+							if (nOverRead > 0) {
 								if (k == 0) {
 									OutputCDOffset(pExtArg, pDisc, bGetDriveOffset
 										, nDriveSampleOffset, nDriveOffset, pDisc->SUB.nSubChannelOffset);
@@ -308,7 +308,7 @@ BOOL ExecSearchingOffset(
 								}
 								else if (k == 1) {
 									if (nTmpCombinedOffset != pDisc->MAIN.nCombinedOffset) {
-										OutputDiscLog("There is a different combined offset\n");
+										OutputDiscLog("There is a different combined offset. See also _mainInfo.txt\n");
 									}
 								}
 							}
@@ -826,6 +826,48 @@ BOOL ReadCDForCheckingReadInOut(
 	}
 #if 0
 	OutputCDMain(fileMainInfo, aBuf, nLBA, CD_RAW_SECTOR_SIZE);
+#endif
+	return TRUE;
+}
+
+BOOL ReadCDForCheckingSubQ1stIndex(
+	PEXEC_TYPE pExecType,
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	PDISC pDisc
+) {
+	BYTE lpCmd[CDB12GENERIC_LENGTH] = {};
+	if (pExtArg->byD8 || pDevice->byPlxtrDrive) {
+		pDevice->sub = CDFLAG::_READ_CD::Pack;
+		SetReadDiscCommand(pExecType, pExtArg, pDevice, 1, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::Pack, lpCmd, FALSE);
+	}
+	else {
+		SetReadDiscCommand(pExecType, pExtArg, pDevice, 1, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::Raw, lpCmd, FALSE);
+	}
+
+	INT nLBA = 0;
+	BYTE lpSubcode[CD_RAW_READ_SUBCODE_SIZE] = {};
+	BYTE aBuf[CD_RAW_SECTOR_WITH_SUBCODE_SIZE] = {};
+	BYTE byScsiStatus = 0;
+	do {
+		if (!ExecReadCD(pExtArg, pDevice, lpCmd, nLBA, aBuf,
+			CD_RAW_SECTOR_WITH_SUBCODE_SIZE, _T(__FUNCTION__), __LINE__)
+			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+			return FALSE;
+		}
+		else {
+			AlignRowSubcode(lpSubcode, aBuf + CD_RAW_SECTOR_SIZE);
+			if ((BYTE)(lpSubcode[12] & 0x0f) == ADR_ENCODES_CURRENT_POSITION) {
+				pDisc->SUB.nIdxOfLBA0 = BcdToDec(lpSubcode[14]);
+				break;
+			}
+			else {
+				nLBA++;
+			}
+		}
+	} while (1);
+#if 0
+	OutputCDMain(fileMainInfo, aBuf, nLBA, CD_RAW_SECTOR_WITH_SUBCODE_SIZE);
 #endif
 	return TRUE;
 }
@@ -2349,7 +2391,9 @@ BOOL ReadCDCheck(
 			else {
 				if (pDisc->SCSI.by1stDataTrkNum == 1) {
 					ReadCDForSegaDisc(pExtArg, pDevice);
-					ReadCDForCheckingPregapSync(pExecType, pExtArg, pDevice);
+					if (IsPregapOfTrack1ReadableDrive(pDevice)) {
+						ReadCDForCheckingPregapSync(pExecType, pExtArg, pDevice);
+					}
 				}
 				if (pExtArg->byLibCrypt) {
 					// PSX PAL only

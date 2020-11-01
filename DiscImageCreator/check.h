@@ -48,6 +48,10 @@ BOOL IsValidPlextorDrive(
 	PDEVICE pDevice
 );
 
+BOOL IsPregapOfTrack1ReadableDrive(
+	PDEVICE pDevice
+);
+
 VOID SupportIndex0InTrack1(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice
@@ -194,6 +198,7 @@ BOOL ContainsC2Error(
 	PDEVICE pDevice,
 	LPBYTE lpBuf,
 	LPUINT lpuiC2errorNum,
+	INT nLBA,
 	BOOL bOutputLog
 );
 

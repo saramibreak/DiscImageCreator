@@ -154,6 +154,12 @@ BOOL IsValid0xF1SupportedDrive(
 				return TRUE;
 			}
 		}
+		else if (!strncmp(pDevice->szProductId, "BDDVDRW UH12NS40", DRIVE_PRODUCT_ID_SIZE)) {
+			if (!strncmp(pDevice->szProductRevisionLevel, "1.00", DRIVE_VERSION_ID_SIZE)) {
+				pDevice->by0xF1Drive = TRUE;
+				return TRUE;
+			}
+		}
 	}
 	return FALSE;
 }
@@ -339,10 +345,10 @@ BOOL IsValidPlextorDrive(
 	return FALSE;
 }
 
-VOID SupportIndex0InTrack1(
-	PEXT_ARG pExtArg,
+BOOL IsPregapOfTrack1ReadableDrive(
 	PDEVICE pDevice
 ) {
+	BOOL bRet = TRUE;
 	if (pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PX760A &&
 		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PX755A &&
 		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PX716AL &&
@@ -363,6 +369,16 @@ VOID SupportIndex0InTrack1(
 		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PXW8220T &&
 		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PXR820T
 		) {
+		bRet = FALSE;
+	}
+	return bRet;
+}
+
+VOID SupportIndex0InTrack1(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice
+) {
+	if (!IsPregapOfTrack1ReadableDrive(pDevice)) {
 		OutputString(
 			"This drive doesn't support to rip from 00:00:00 to 00:01:74 AMSF. /p option was ignored\n");
 		pExtArg->byPre = FALSE;
@@ -1280,6 +1296,7 @@ BOOL ContainsC2Error(
 	PDEVICE pDevice,
 	LPBYTE lpBuf,
 	LPUINT lpuiC2errorNum,
+	INT nLBA,
 	BOOL bOutputLog
 ) {
 	BOOL bRet = RETURNED_NO_C2_ERROR_1ST;
@@ -1290,10 +1307,14 @@ BOOL ContainsC2Error(
 		if (wC2ErrorPos < CD_RAW_READ_C2_294_SIZE - 10 &&
 			lpBuf[uiPos] == 0xf0 && lpBuf[uiPos + 1] == 0xf0 && lpBuf[uiPos + 2] == 0xf0 &&
 			lpBuf[uiPos + 3] == 0 && lpBuf[uiPos + 4] == 0 && lpBuf[uiPos + 5] == 0 &&
-			lpBuf[uiPos + 6] == 0x0f && lpBuf[uiPos + 7] == 0x0f && lpBuf[uiPos + 8] == 0x0f && lpBuf[uiPos + 9] == 0x0f) {
+			lpBuf[uiPos + 6] == 0x0f && lpBuf[uiPos + 7] == 0x0f && lpBuf[uiPos + 8] == 0x0f) {
 			if (bOutputLog) {
-				OutputC2ErrorLog("Detected F0 F0 F0 00 00 00 0F 0F 0F 0F\n");
+				OutputLog(standardError | fileC2Error,
+					"\n LBA[%06d, %#07x] Detected C2 error \"F0 F0 F0 00 00 00 0F 0F 0F\"\n"
+					"This error can't be fixed by plextor drive. Needs to dump it by non-plextor drive and replace it\n"
+					, nLBA, (UINT)nLBA);
 			}
+			wC2ErrorPos += 8;
 		}
 		else if (lpBuf[uiPos] != 0) {
 			// Ricoh based drives (+97 read offset, like the Aopen CD-RW CRW5232)
