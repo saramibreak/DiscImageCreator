@@ -690,3 +690,17 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - fixed: fail to get the correct subch when MCN sector exists in LBA 0
 - fixed: output filename of FAT
 - fixed: seek position when reading error occurs [xbox only]
+
+*2020-11-01
+- added: detect cppm
+- added: /ps flag for dvd command (for [PS2] Katamari Damacy (USA))
+- added: support HL-DT-ST UH12NS40 1.00 and HL-DT-ST WH14NS40 1.01 as 0xF1 drive (thanks olofolleola4)
+- added: if TOC is weird, fix it (for [CD-i] Op Jacht Naar Vernuft (Netherlands))
+- added: output TOC (binary) to _mainInfo.txt
+- added: output P-channel and Q-channel gaps to _subInfo.txt
+- added: execute "ad 00 00 00 00 00 00 03 00 c0 00 00" forcibly when the drive recognizes Nintendo disc
+- changed: css-auth to DVDAuth_linux
+- fixed: firmware version of BC-12D2HT
+- fixed: output incorrect pregap when Q-channel's pregap is 00:01:74 and the adr of 00:01:74 is 2(MCN) or 3(ISRC)
+- fixed: escape the c2 error "F0 F0 F0 00 00 00 0F 0F 0F"
+- fixed: check the offset twice when the combined offset is over 1 sector.
