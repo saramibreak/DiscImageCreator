@@ -592,7 +592,8 @@ BOOL ReadCDForFileSystem(
 ) {
 	BOOL bRet = TRUE;
 	for (BYTE i = 0; i < pDisc->SCSI.toc.LastTrack; i++) {
-		if ((pDisc->SCSI.toc.TrackData[i].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+		if ((pDisc->SCSI.toc.TrackData[i].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK ||
+			i == 0 && pDisc->SCSI.byFormat == DISK_TYPE_CDI) {
 			// for Label Gate CD, XCP
 			if (i > 1 && pDisc->SCSI.lpLastLBAListOnToc[i] - pDisc->SCSI.lp1stLBAListOnToc[i] + 1 <= 750) {
 				return TRUE;
