@@ -459,7 +459,7 @@ BOOL ScsiPassThroughDirect(
 	swb.io_hdr.mx_sb_len = sizeof(swb.Dummy);
 	swb.io_hdr.dxfer_len = (unsigned int)dwBufferLength;
 	swb.io_hdr.dxferp = pvBuffer;
-	swb.io_hdr.cmdp = (unsigned char *)lpCdb;
+	swb.io_hdr.cmdp = (unsigned char*)lpCdb;
 	swb.io_hdr.sbp = swb.Dummy;
 	swb.io_hdr.timeout = (unsigned int)pDevice->dwTimeOutValue;
 //	swb.io_hdr.flags = SG_FLAG_DIRECT_IO;
@@ -495,14 +495,10 @@ BOOL ScsiPassThroughDirect(
 #ifdef _WIN32
 		if (swb.Sptd.ScsiStatus >= SCSISTAT_CHECK_CONDITION && !bNoSense) {
 			INT nLBA = 0;
-			if (swb.Sptd.Cdb[0] == 0xa8 ||
-				swb.Sptd.Cdb[0] == 0xad ||
-				swb.Sptd.Cdb[0] == 0xbe ||
-				swb.Sptd.Cdb[0] == 0xd8) {
-				nLBA = (swb.Sptd.Cdb[2] << 24)
-					+ (swb.Sptd.Cdb[3] << 16)
-					+ (swb.Sptd.Cdb[4] << 8)
-					+ swb.Sptd.Cdb[5];
+			if (swb.Sptd.Cdb[0] == 0xa8 || swb.Sptd.Cdb[0] == 0xad ||
+				swb.Sptd.Cdb[0] == 0xbe || swb.Sptd.Cdb[0] == 0xd8) {
+				nLBA = (swb.Sptd.Cdb[2] << 24) + (swb.Sptd.Cdb[3] << 16)
+					+ (swb.Sptd.Cdb[4] << 8) + swb.Sptd.Cdb[5];
 			}
 			OutputLog(standardError | fileMainError
 				, "\r" STR_LBA "[F:%s][L:%ld]\n\tOpcode: %#02x\n"
@@ -511,14 +507,10 @@ BOOL ScsiPassThroughDirect(
 #else
 		if (swb.io_hdr.status >= SCSISTAT_CHECK_CONDITION && !bNoSense) {
 			INT nLBA = 0;
-			if (swb.io_hdr.cmdp[0] == 0xa8 ||
-				swb.io_hdr.cmdp[0] == 0xad ||
-				swb.io_hdr.cmdp[0] == 0xbe ||
-				swb.io_hdr.cmdp[0] == 0xd8) {
-				nLBA = (swb.io_hdr.cmdp[2] << 24)
-					+ (swb.io_hdr.cmdp[3] << 16)
-					+ (swb.io_hdr.cmdp[4] << 8)
-					+ swb.io_hdr.cmdp[5];
+			if (swb.io_hdr.cmdp[0] == 0xa8 || swb.io_hdr.cmdp[0] == 0xad ||
+				swb.io_hdr.cmdp[0] == 0xbe || swb.io_hdr.cmdp[0] == 0xd8) {
+				nLBA = (swb.io_hdr.cmdp[2] << 24) + (swb.io_hdr.cmdp[3] << 16)
+					+ (swb.io_hdr.cmdp[4] << 8) + swb.io_hdr.cmdp[5];
 			}
 			OutputLog(standardError | fileMainError
 				, "\rLBA[%06d, %#07x]: [F:%s][L:%ld]\n\tOpcode: %#02x\n"
