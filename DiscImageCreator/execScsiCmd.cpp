@@ -190,6 +190,9 @@ BOOL ReadTOC(
 			return FALSE;
 		}
 	}
+	OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("TOC (Binary)"));
+	OutputCDMain(fileMainInfo, (LPBYTE)&pDisc->SCSI.toc, 0, size.AsUShort);
+
 	if (pDisc->SCSI.toc.FirstTrack < 1 || 99 < pDisc->SCSI.toc.FirstTrack ||
 		pDisc->SCSI.toc.LastTrack < 1 || 99 < pDisc->SCSI.toc.LastTrack) {
 		OutputErrorString("Invalid TOC\n");
@@ -301,6 +304,11 @@ BOOL ReadTOCFull(
 			case 0xa0:
 				pDisc->SCSI.byFormat = (*pTocData + a)->Msf[1];
 				break;
+			case 0xa2:
+				if ((*pTocData + a)->SessionNumber == 1) {
+					pDisc->SCSI.n1stLBAofLeadout = 
+						MSFtoLBA((*pTocData + a)->Msf[0], (*pTocData + a)->Msf[1], (*pTocData + a)->Msf[2]) - 150;
+				}
 			case 0xb0: // (multi-session disc)
 				/* single-session disc, but 0xb0 exists
 				FirstCompleteSession: 1
@@ -1183,7 +1191,10 @@ BOOL ReadDriveInformation(
 		// 4th: check PLEXTOR or not here (because use modesense and from there)
 		if (IsValidPlextorDrive(pDevice)) {
 			if ((PLXTR_DRIVE_TYPE)pDevice->byPlxtrDrive == PLXTR_DRIVE_TYPE::NotLatest) {
-				OutputErrorString("[ERROR] This drive isn't latest firmware. Please update.\n");
+				OutputErrorString(
+					"[ERROR] This drive isn't latest firmware. Please update\n"
+					" -> https://web.archive.org/web/20200128060702/http://www.skcj.co.jp/discon/download/index.html \n"
+				);
 				return FALSE;
 			}
 			if ((PLXTR_DRIVE_TYPE)pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::Other) {
