@@ -333,6 +333,7 @@ BOOL ReadDVD(
 						throw FALSE;
 					}
 				}
+				
 				if (pDisc->PROTECT.byExist == physicalErr || pDisc->PROTECT.byExist == ripGuard) {
 					if (IsXbox(pExecType) && bSetErrorSectorRange &&
 						nLastErrorLBA <= nLBA && nLBA <= (INT)pDisc->DVD.securitySectorRange[i][1]) {
@@ -384,14 +385,35 @@ BOOL ReadDVD(
 						continue;
 					}
 				}
-				else if (++nRetryCnt <= 5) {
+				else if (++nRetryCnt <= 1) {
+					OutputLog(standardOut | fileMainError, "Read retry from %d\n", nLBA);
+					if (pExtArg->byPadSector) {
+						if (transferLen.AsULong != 1) {
+							OutputLog(standardOut | fileMainError,
+								"Change the transfer length to 1\n");
+							transferLen.AsULong = 1;
+							REVERSE_BYTES(&cdb.TransferLength, &transferLen);
+						}
+					}
 					nLBA -= (INT)transferLen.AsULong;
-					OutputString("Read retry %d/5\n", nRetryCnt);
 					continue;
 				}
 				else {
-					OutputString("Retry NG\n");
-					throw FALSE;
+					if (pExtArg->byPadSector) {
+						if (pExtArg->uiPadNum == 0) {
+							OutputLog(standardOut | fileMainError, "Padded by 0x00\n");
+							ZeroMemory(lpBuf, DISC_MAIN_DATA_SIZE);
+						}
+						else if (pExtArg->uiPadNum == 1) {
+							OutputLog(standardOut | fileMainError, "Padded by 0xAA\n");
+							FillMemory(lpBuf, DISC_MAIN_DATA_SIZE, 0xaa);
+						}
+						nRetryCnt = 0;
+					}
+					else {
+						OutputString("Retry NG\n");
+						throw FALSE;
+					}
 				}
 			}
 
@@ -410,7 +432,7 @@ BOOL ReadDVD(
 				continue;
 			}
 			if (nRetryCnt) {
-				OutputString("Retry OK\n");
+				OutputLog(standardOut | fileMainError, "Retry OK of %d\n", nLBA);
 				nRetryCnt = 0;
 			}
 			fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_MAIN_DATA_SIZE * transferLen.AsULong, fp);
@@ -1312,7 +1334,13 @@ BOOL ReadDiscStructure(
 		if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, 
 			lpFormat, direction, formatLen.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__) ||
 			byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-			OutputLog(standardError | fileDisc, "FormatCode: %02x failed\n", pEntry->FormatCode);
+			OutputLog(standardError | fileDisc
+				, "FormatCode: %02x failed\n"
+				"cdb: %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x\n"
+				, pEntry->FormatCode, cdb.OperationCode, cdb.Reserved1 << 5 | cdb.Lun
+				, cdb.RMDBlockNumber[0], cdb.RMDBlockNumber[1], cdb.RMDBlockNumber[2], cdb.RMDBlockNumber[3]
+				, cdb.LayerNumber, cdb.Format, cdb.AllocationLength[0], cdb.AllocationLength[1]
+				, cdb.Reserved3 << 6 | cdb.AGID, cdb.Control);
 			continue;
 		}
 		formatLen.AsUShort = (WORD)(MAKEWORD(lpFormat[1], lpFormat[0]) + 2); // 2 is size of "DVD_DESCRIPTOR_HEADER::Length" itself
@@ -1437,6 +1465,37 @@ BOOL ReadDiscStructure(
 			pDisc->SCSI.nAllLength = WII_SL_SIZE;
 		}
 	}
+
+	if (pDisc->DVD.disc == DISC_TYPE::gamecube || pDisc->DVD.disc == DISC_TYPE::wii) {
+		BYTE bca[0xc0] = {};
+		cdb.Reserved1 = 0;
+		cdb.Lun = 0;
+		cdb.RMDBlockNumber[0] = 0;
+		cdb.RMDBlockNumber[1] = 0;
+		cdb.RMDBlockNumber[2] = 0;
+		cdb.RMDBlockNumber[3] = 0;
+		cdb.LayerNumber = 0;
+		cdb.Format = 0x03;
+		cdb.AllocationLength[0] = 0;
+		cdb.AllocationLength[1] = 0xc0;
+		cdb.Reserved3 = 0;
+		cdb.AGID = 0;
+		cdb.Control = 0;
+		if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH,
+			bca, direction, 0x0c0, &byScsiStatus, _T(__FUNCTION__), __LINE__) ||
+			byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+			OutputLog(standardError | fileDisc
+				, "Failed to read BCA. cdb: %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x\n"
+				, cdb.OperationCode, cdb.Reserved1 << 5 | cdb.Lun
+				, cdb.RMDBlockNumber[0], cdb.RMDBlockNumber[1], cdb.RMDBlockNumber[2], cdb.RMDBlockNumber[3]
+				, cdb.LayerNumber, cdb.Format, cdb.AllocationLength[0], cdb.AllocationLength[1]
+				, cdb.Reserved3 << 6 | cdb.AGID, cdb.Control);
+		}
+		else {
+			OutputCDMain(fileDisc, bca, 0, 0xc0);
+		}
+	}
+
 	if (*pExecType == dvd || *pExecType == xbox) {
 		FcloseAndNull(fpPfi);
 		FcloseAndNull(fpDmi);
