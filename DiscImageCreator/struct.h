@@ -197,7 +197,7 @@ typedef struct _EXT_ARG {
 	BYTE byAtari;
 	BYTE byAnchorVolumeDescriptorPointer;
 	BYTE byMicroSoftCabFile;
-	BYTE padding;
+	BYTE byPadSector;
 	INT nAudioCDOffsetNum;
 	UINT uiMaxRereadNum;
 	INT nAllSectors;	// use for xbox360
@@ -210,6 +210,7 @@ typedef struct _EXT_ARG {
 	UINT uiSubAddionalNum;
 	UINT uiSkipSectors;
 	UINT uiSkipSectors2; // for some LaserLock
+	UINT uiPadNum;
 	struct _FILE {
 		CHAR readError[MAX_READ_ERROR_FILE_COUNT][MAX_FNAME_FOR_VOLUME];
 		INT readErrCnt;
@@ -348,6 +349,9 @@ typedef struct _DISC {
 		LPBYTE lpRtoWList;
 		INT nCorruptCrcH;
 		INT nCorruptCrcL;
+		INT nIdxOfLBA0;
+		INT n1stRmsfOfTrk;
+		INT n1stPchannelOfTrk;
 	} SUB;
 	struct _PROTECT {
 		BYTE byExist;
