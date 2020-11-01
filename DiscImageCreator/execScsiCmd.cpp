@@ -309,6 +309,7 @@ BOOL ReadTOCFull(
 					pDisc->SCSI.n1stLBAofLeadout = 
 						MSFtoLBA((*pTocData + a)->Msf[0], (*pTocData + a)->Msf[1], (*pTocData + a)->Msf[2]) - 150;
 				}
+				break;
 			case 0xb0: // (multi-session disc)
 				/* single-session disc, but 0xb0 exists
 				FirstCompleteSession: 1
@@ -328,6 +329,7 @@ BOOL ReadTOCFull(
 						MSFtoLBA((*pTocData + a)->MsfExtra[0], (*pTocData + a)->MsfExtra[1], (*pTocData + a)->MsfExtra[2]) - 150;
 					pDisc->SCSI.n1stLBAof2ndSession = nTmpLBAExt + 150;
 				}
+				break;
 			default:
 				break;
 			}

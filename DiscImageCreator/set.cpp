@@ -202,7 +202,6 @@ VOID SetAndOutputToc(
 	CONST INT typeSize = 7 * sizeof(_TCHAR);
 	_TCHAR strType[typeSize] = {};
 	BOOL bFirstData = TRUE;
-	BOOL bCorruptTOC = FALSE;
 	TRACK_TYPE trkType = TRACK_TYPE::audioOnly;
 	// for swap command
 	pDisc->SCSI.nAllLength = 0;
@@ -213,7 +212,6 @@ VOID SetAndOutputToc(
 		if (pDisc->SCSI.toc.TrackData[i - 1].TrackNumber == 0xff) {
 			OutputLog(standardOut | fileDisc
 				, "Detected corrupt TOC in Track%d. Fixed it\n", pDisc->SCSI.toc.TrackData[i].TrackNumber - 1);
-			bCorruptTOC = TRUE;
 			for (INT k = i; k <= pDisc->SCSI.toc.LastTrack; k++) {
 				memcpy(&pDisc->SCSI.toc.TrackData[k - 1], &pDisc->SCSI.toc.TrackData[k], sizeof(TRACK_DATA));
 			}

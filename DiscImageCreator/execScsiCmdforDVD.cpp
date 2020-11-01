@@ -1337,10 +1337,10 @@ BOOL ReadDiscStructure(
 			OutputLog(standardError | fileDisc
 				, "FormatCode: %02x failed\n"
 				"cdb: %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x\n"
-				, pEntry->FormatCode, cdb.OperationCode, cdb.Reserved1 << 5 | cdb.Lun
+				, pEntry->FormatCode, cdb.OperationCode, (UCHAR)(cdb.Reserved1 << 5 | cdb.Lun)
 				, cdb.RMDBlockNumber[0], cdb.RMDBlockNumber[1], cdb.RMDBlockNumber[2], cdb.RMDBlockNumber[3]
 				, cdb.LayerNumber, cdb.Format, cdb.AllocationLength[0], cdb.AllocationLength[1]
-				, cdb.Reserved3 << 6 | cdb.AGID, cdb.Control);
+				, (UCHAR)(cdb.Reserved3 << 6 | cdb.AGID), cdb.Control);
 			continue;
 		}
 		formatLen.AsUShort = (WORD)(MAKEWORD(lpFormat[1], lpFormat[0]) + 2); // 2 is size of "DVD_DESCRIPTOR_HEADER::Length" itself
@@ -1486,10 +1486,10 @@ BOOL ReadDiscStructure(
 			byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 			OutputLog(standardError | fileDisc
 				, "Failed to read BCA. cdb: %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x\n"
-				, cdb.OperationCode, cdb.Reserved1 << 5 | cdb.Lun
+				, cdb.OperationCode, (UCHAR)(cdb.Reserved1 << 5 | cdb.Lun)
 				, cdb.RMDBlockNumber[0], cdb.RMDBlockNumber[1], cdb.RMDBlockNumber[2], cdb.RMDBlockNumber[3]
 				, cdb.LayerNumber, cdb.Format, cdb.AllocationLength[0], cdb.AllocationLength[1]
-				, cdb.Reserved3 << 6 | cdb.AGID, cdb.Control);
+				, (UCHAR)(cdb.Reserved3 << 6 | cdb.AGID), cdb.Control);
 		}
 		else {
 			OutputCDMain(fileDisc, bca, 0, 0xc0);
