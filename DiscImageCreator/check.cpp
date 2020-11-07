@@ -515,7 +515,7 @@ BOOL IsValidPregapSector(
 	INT nLBA
 ) {
 	BOOL bRet = FALSE;
-	if ((pSubch->current.byCtl & AUDIO_DATA_TRACK) == 0 &&
+	if (/*(pSubch->current.byCtl & AUDIO_DATA_TRACK) == 0 &&*/
 		(pSubch->next.byCtl & AUDIO_DATA_TRACK) == 0 &&
 		pSubch->next.byIndex == 0) {
 		if (nLBA == pDisc->SCSI.lp1stLBAListOnToc[pSubch->prev.byTrackNum] - 225 ||

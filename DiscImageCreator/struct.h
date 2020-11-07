@@ -490,6 +490,7 @@ typedef struct _DISC_PER_SECTOR {
 	UINT uiC2errorNum;
 	BYTE byTrackNum;
 	BYTE padding[3];
+	BOOL bNextTrk;
 	BOOL bLibCrypt;
 	BOOL bSecuRom;
 	BOOL bReturnCode;

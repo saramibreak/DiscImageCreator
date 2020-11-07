@@ -1276,6 +1276,13 @@ BOOL ReadCDAll(
 		FlushLog();
 
 		for (INT i = 0; i < pDisc->SCSI.toc.LastTrack; i++) {
+			INT i2 = i;
+			if (pDisc->SCSI.byFormat == DISK_TYPE_CDI && pDisc->SCSI.toc.LastTrack > 1) {
+				i2 -= 1;
+				if (i2 < 0) {
+					continue;
+				}
+			}
 			if (pDisc->PROTECT.byExist == cds300 && i == pDisc->SCSI.toc.LastTrack - 1) {
 				break;
 			}
@@ -1289,7 +1296,7 @@ BOOL ReadCDAll(
 				bErr = TRUE;
 				lLine = __LINE__;
 			}
-			else if ((pDisc->SCSI.toc.TrackData[i].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+			else if ((pDisc->SCSI.toc.TrackData[i2].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 				if (pDisc->SUB.lp1stLBAListOfDataTrackOnSub[i] == -1) {
 					bErr = TRUE;
 					lLine = __LINE__;
@@ -1300,7 +1307,7 @@ BOOL ReadCDAll(
 				}
 			}
 			if (bErr) {
-				OutputErrorString(
+				OutputLog(standardError | fileSubError,
 					"[L:%ld] Internal error. Failed to analyze the subchannel. Track[%02d]/[%02u]\n",
 					lLine, i + 1, pDisc->SCSI.toc.LastTrack);
 				throw FALSE;

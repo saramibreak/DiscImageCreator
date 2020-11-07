@@ -247,10 +247,10 @@ VOID SetAndOutputToc(
 		pDisc->SCSI.nAllLength += 
 			pDisc->SCSI.lpLastLBAListOnToc[tIdx] - pDisc->SCSI.lp1stLBAListOnToc[tIdx] + 1;
 
-		if ((pDisc->SCSI.toc.TrackData[tIdx].Control & AUDIO_DATA_TRACK) == 0) {
+		if ((pDisc->SCSI.toc.TrackData[i - 1].Control & AUDIO_DATA_TRACK) == 0) {
 			_tcsncpy(strType, _T(" Audio"), typeSize);
 		}
-		else if ((pDisc->SCSI.toc.TrackData[tIdx].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+		else if ((pDisc->SCSI.toc.TrackData[i - 1].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 			_tcsncpy(strType, _T("  Data"), typeSize);
 			if (bFirstData) {
 				pDisc->SCSI.n1stLBAofDataTrk = pDisc->SCSI.lp1stLBAListOnToc[tIdx];
@@ -888,13 +888,16 @@ VOID SetTrackAttribution(
 	if (pDiscPerSector->subch.current.byAdr != ADR_ENCODES_CURRENT_POSITION) {
 		if (pDiscPerSector->subch.current.byP == 0x00 && pDiscPerSector->subch.next.byP == 0xff &&
 			pDiscPerSector->subch.prev.byTrackNum + 1 == pDiscPerSector->subch.next.byTrackNum) {
-			if (pDisc->SUB.n1stRmsfOfTrk == 149 || pDisc->SUB.n1stRmsfOfTrk == 224) {
+			if (pDisc->SUB.n1stRmsfOfTrk == 149 || pDisc->SUB.n1stRmsfOfTrk == 224 || pDiscPerSector->subch.next.byTrackNum == 2) {
 				// [PCE] Cosmic Fantasy 3 - Bouken Shounen Rei (Japan)
 				// LBA[261585, 0x3fdd1]: P[00], Q[01950100136900580960087c]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[95], Idx[01], RMSF[00:13:69], AMSF[58:09:60]}, RtoW[0, 0, 0, 0]
 				// LBA[261586, 0x3fdd2]: P[00], Q[020000000000000000615df2]{Audio, 2ch, Copy NG, Pre-emphasis No, MediaCatalogNumber [0000000000000], AMSF[     :61]}, RtoW[0, 0, 0, 0]
 				// LBA[261587, 0x3fdd3]: P[ff], Q[019600000273005809625f79]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[96], Idx[00], RMSF[00:02:73], AMSF[58:09:62]}, RtoW[0, 0, 0, 0]
 				tmpCurrentTrackNum = pDiscPerSector->subch.next.byTrackNum;
 				tmpCurrentIndex = pDiscPerSector->subch.next.byIndex;
+				OutputSubInfoWithLBALog("Set track[%d], index[%d] using next subch\n"
+					, nLBA, tmpCurrentTrackNum, pDiscPerSector->subch.next.byTrackNum, pDiscPerSector->subch.next.byIndex);
+				pDiscPerSector->bNextTrk = TRUE;
 			}
 			else {
 				// [IBM PC] Quake (Canada)
@@ -910,6 +913,8 @@ VOID SetTrackAttribution(
 				// LBA[050682, 0x0c5fa]: P[ff], Q[1104000001720011175740c3]{Audio, 2ch, Copy NG, Pre-emphasis Yes, Track[04], Idx[00], RMSF[00:01:72], AMSF[11:17:57]}, RtoW[0, 0, 0, 0]
 				tmpCurrentTrackNum = pDiscPerSector->subch.prev.byTrackNum;
 				tmpCurrentIndex = pDiscPerSector->subch.prev.byIndex;
+				OutputSubInfoWithLBALog("Set track[%d], index[%d] using prev subch\n"
+					, nLBA, tmpCurrentTrackNum, pDiscPerSector->subch.prev.byTrackNum, pDiscPerSector->subch.prev.byIndex);
 			}
 		}
 		else if (pDiscPerSector->subch.current.byP == 0xff && pDiscPerSector->subch.next.byP == 0x00) {
@@ -919,6 +924,9 @@ VOID SetTrackAttribution(
 				// LBA[183032, 0x2caf8]: P[ff], Q[020000000000000000323764]{Audio, 2ch, Copy NG, Pre-emphasis No, MediaCatalogNumber [0000000000000], AMSF[     :32]}, RtoW[0, 0, 0, 0]
 				// LBA[183033, 0x2caf9]: P[00], Q[012201000001004042336c90]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[22], Idx[01], RMSF[00:00:01], AMSF[40:42:33]}, RtoW[0, 0, 0, 0]
 				tmpCurrentTrackNum = pDiscPerSector->subch.next.byTrackNum;
+				OutputSubInfoWithLBALog("Set track[%d] using next subch\n"
+					, nLBA, tmpCurrentTrackNum, pDiscPerSector->subch.next.byTrackNum);
+				pDiscPerSector->bNextTrk = TRUE;
 			}
 			else if (pDiscPerSector->subch.prev.byIndex + 1 == pDiscPerSector->subch.next.byIndex) {
 				// [PCE] Cosmic Fantasy 3 - Bouken Shounen Rei (Japan)
@@ -926,6 +934,9 @@ VOID SetTrackAttribution(
 				// LBA[142874, 0x22e1a]: P[ff], Q[420000000000000000746d7c]{ Data,      Copy NG,                  MediaCatalogNumber [0000000000000], AMSF[     :74]}, RtoW[0, 0, 0, 0]
 				// LBA[142875, 0x22e1b]: P[00], Q[413701000001003147002c45]{ Data,      Copy NG,                  Track[37], Idx[01], RMSF[00:00:01], AMSF[31:47:00]}, RtoW[0, 0, 0, 0]
 				tmpCurrentIndex = pDiscPerSector->subch.next.byIndex;
+				OutputSubInfoWithLBALog("Set index[%d] using next subch\n"
+					, nLBA, tmpCurrentTrackNum, pDiscPerSector->subch.next.byIndex);
+				pDiscPerSector->bNextTrk = TRUE;
 			}
 		}
 		else {
@@ -935,25 +946,32 @@ VOID SetTrackAttribution(
 	}
 	if (0 <= nLBA && nLBA < pDisc->SCSI.nAllLength &&
 		0 < tmpCurrentTrackNum && tmpCurrentTrackNum <= pDiscPerSector->byTrackNum + 1) {
+		pDiscPerSector->byTrackNum = tmpCurrentTrackNum;
 		INT tIdx = pDiscPerSector->byTrackNum - 1;
 		BYTE tmpPrevTrackNum = pDiscPerSector->subch.prev.byTrackNum;
 		BYTE tmpPrevIndex = pDiscPerSector->subch.prev.byIndex;
 
 		if (pDiscPerSector->subch.prev.byAdr != ADR_ENCODES_CURRENT_POSITION) {
-			if (nLBA - 1 != pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->byTrackNum - 1]) {
-				tmpPrevTrackNum = pDiscPerSector->subch.prevPrev.byTrackNum;
-				tmpPrevIndex = pDiscPerSector->subch.prevPrev.byIndex;
-			}
-			else if (nLBA == 1) {
+			if (nLBA == 1) {
 				// LBA[000000, 0000000]: P[ff], Q[42000000000000000000536f]{ Data,      Copy NG,                  MediaCatalogNumber [0000000000000], AMSF[     :00]}, RtoW[Unknown, Unknown, Unknown, Unknown]
 				// LBA[000001, 0x00001]: P[00], Q[410101000001000002019242]{ Data,      Copy NG,                  Track[01], Idx[01], RMSF[00:00:01], AMSF[00:02:01]}, RtoW[Unknown, Unknown, Unknown, Unknown]
 				tmpPrevTrackNum = 1;
 				tmpPrevIndex = 1;
 			}
+			else if (pDiscPerSector->bNextTrk) {
+				tmpPrevTrackNum = pDiscPerSector->subch.current.byTrackNum;
+				tmpPrevIndex = pDiscPerSector->subch.current.byIndex;
+				pDiscPerSector->bNextTrk = FALSE;
+			}
+			else {
+				tmpPrevTrackNum = pDiscPerSector->subch.prevPrev.byTrackNum;
+				tmpPrevIndex = pDiscPerSector->subch.prevPrev.byIndex;
+			}
 		}
 
 		if (pDiscPerSector->subch.current.byP == 0x00 && pDiscPerSector->subch.next.byP == 0xff) {
-			OutputSubInfoWithLBALog("P-channel is changed from 0x00 to 0xff\n", nLBA, tmpCurrentTrackNum);
+			OutputSubInfoWithLBALog("P-channel is changed from 0x00 to 0xff. Adr: [%02d]\n"
+				, nLBA, tmpCurrentTrackNum, pDiscPerSector->subch.current.byAdr);
 			pDisc->SUB.n1stPchannelOfTrk = nLBA;
 		}
 		else if (pDiscPerSector->subch.current.byP == 0xff && pDiscPerSector->subch.next.byP == 0x00) {
@@ -978,7 +996,7 @@ VOID SetTrackAttribution(
 		// preserve the 1st LBA of the changed trackNum
 		if (tmpPrevTrackNum + 1 == tmpCurrentTrackNum) {
 			pDiscPerSector->byTrackNum = tmpCurrentTrackNum;
-			tIdx = pDiscPerSector->byTrackNum - 1;
+//			tIdx = pDiscPerSector->byTrackNum - 1;
 
 			if (pDisc->SCSI.byFormat == DISK_TYPE_CDI && pDisc->SCSI.toc.LastTrack > 1) {
 				if ((pDiscPerSector->subch.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
@@ -988,6 +1006,8 @@ VOID SetTrackAttribution(
 			}
 
 			if (pDiscPerSector->subch.current.nRelativeTime != 0) {
+				OutputSubInfoWithLBALog("1st RMSF of this track: [%d]\n"
+					, nLBA, tmpCurrentTrackNum, pDiscPerSector->subch.current.nRelativeTime);
 				pDisc->SUB.n1stRmsfOfTrk = pDiscPerSector->subch.current.nRelativeTime;
 			}
 
@@ -1121,13 +1141,20 @@ VOID SetTrackAttribution(
 #endif
 		}
 
+		INT tIdx2 = tIdx;
+		if (pDisc->SCSI.byFormat == DISK_TYPE_CDI && pDisc->SCSI.toc.LastTrack > 1) {
+			tIdx2 -= 1;
+			if (tIdx2 < 0) {
+				return;
+			}
+		}
 		if (!(pDisc->SCSI.byFormat == DISK_TYPE_CDI && pDisc->SCSI.toc.LastTrack > 1)) {
-			if ((pDisc->SCSI.toc.TrackData[tIdx].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK &&
+			if ((pDisc->SCSI.toc.TrackData[tIdx2].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK &&
 				(pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == 0) {
 				OutputMainInfoWithLBALog(
 					"Data track, but this sector is audio\n", nLBA, tmpCurrentTrackNum);
 			}
-			else if ((pDisc->SCSI.toc.TrackData[tIdx].Control & AUDIO_DATA_TRACK) == 0 &&
+			else if ((pDisc->SCSI.toc.TrackData[tIdx2].Control & AUDIO_DATA_TRACK) == 0 &&
 				(pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 				OutputMainInfoWithLBALog(
 					"Audio track, but this sector is data\n", nLBA, tmpCurrentTrackNum);
@@ -1142,14 +1169,14 @@ VOID SetTrackAttribution(
 					pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tIdx] = pDisc->SCSI.nLastLBAofDataTrk;
 				}
 			}
-			else if ((pDisc->SCSI.toc.TrackData[tIdx].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+			else if ((pDisc->SCSI.toc.TrackData[tIdx2].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 				pDisc->SUB.lp1stLBAListOfDataTrackOnSub[tIdx] = nLBA;
 			}
 		}
 		else {
 			// preserve first LBA per data track
 			if (pDisc->SUB.lp1stLBAListOfDataTrackOnSub[tIdx] == -1 &&
-				(pDisc->SCSI.toc.TrackData[tIdx].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+				(pDisc->SCSI.toc.TrackData[tIdx2].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 				OutputSubInfoWithLBALog("1st LBA of this data track\n", nLBA, tmpCurrentTrackNum);
 				pDisc->SUB.lp1stLBAListOfDataTrackOnSub[tIdx] = nLBA;
 			}
@@ -1536,8 +1563,8 @@ VOID UpdateTmpSubchForMCN(
 					// pattern 1-1-1-1-1: change index. (pregap sector is 0)
 					pDiscPerSector->subch.current.byIndex = 0;
 					OutputSubInfoWithLBALog(
-						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d) [L:%d]\n",
-						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subch.current.byTrackNum, pDiscPerSector->subch.prev.byTrackNum, __LINE__);
+						"The 1st pregap sector of Audio Track %02d is replaced with EAN sector (in this case it's NOT the last sector of Audio Track %02d)\n"
+						, nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subch.current.byTrackNum, pDiscPerSector->subch.prev.byTrackNum);
 				}
 				else {
 					// pattern 1-1-1-2: not change track.
@@ -1568,8 +1595,8 @@ VOID UpdateTmpSubchForMCN(
 					// pattern 1-1-2-1-1: change index. (pregap sector is 0)
 					pDiscPerSector->subch.current.byIndex = 0;
 					OutputSubInfoWithLBALog(
-						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d) [L:%d]\n",
-						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subch.current.byTrackNum, pDiscPerSector->subch.prev.byTrackNum, __LINE__);
+						"The 1st pregap sector of Data Track %02d is replaced with EAN sector (in this case it's NOT the last sector of Audio Track %02d)\n"
+						, nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subch.current.byTrackNum, pDiscPerSector->subch.prev.byTrackNum);
 				}
 				else {
 					// pattern 1-1-2-2: not change track.
@@ -1611,8 +1638,8 @@ VOID UpdateTmpSubchForMCN(
 					// pattern 1-2-1-1-1: change index. (pregap sector is 0)
 					pDiscPerSector->subch.current.byIndex = 0;
 					OutputSubInfoWithLBALog(
-						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d) [L:%d]\n",
-						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subch.current.byTrackNum, pDiscPerSector->subch.prev.byTrackNum, __LINE__);
+						"The 1st pregap sector of Audio Track %02d is replaced with EAN sector (in this case it's NOT the last sector of Data Track %02d)\n"
+						, nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subch.current.byTrackNum, pDiscPerSector->subch.prev.byTrackNum);
 				}
 				else {
 					// pattern 1-2-1-2: not change track.
@@ -1629,6 +1656,13 @@ VOID UpdateTmpSubchForMCN(
 						bValidPre = TRUE;
 					}
 					else if (nLBA == pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->subch.prev.byTrackNum] - 150) {
+						// [IBM-PC] Hexen: Beyond Heretic (USA)
+						// LBA[021026, 0x05222]: P[00], Q[41010104402600044226d37d]{ Data,      Copy NG,                  Track[01], Idx[01], RMSF[04:40:26], AMSF[04:42:26]}, RtoW[0, 0, 0, 0]
+						// LBA[021027, 0x05223]: P[00], Q[4200000000000000002707ea]{ Data,      Copy NG,                  MediaCatalogNumber [0000000000000], AMSF[     :27]}, RtoW[0, 0, 0, 0]
+						// LBA[021028, 0x05224]: P[ff], Q[0102000001740004422895f9]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[02], Idx[00], RMSF[00:01:74], AMSF[04:42:28]}, RtoW[0, 0, 0, 0]
+						//  :
+						// LBA[021176, 0x052b8]: P[ff], Q[01020000000100044426a5e0]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[02], Idx[00], RMSF[00:00:01], AMSF[04:44:26]}, RtoW[0, 0, 0, 0]
+						// LBA[021177, 0x052b9]: P[ff], Q[010201000000000444275843]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[02], Idx[01], RMSF[00:00:00], AMSF[04:44:27]}, RtoW[0, 0, 0, 0]
 						pDiscPerSector->subch.current.nRelativeTime = 149;
 						bValidPre = TRUE;
 					}
@@ -1643,8 +1677,8 @@ VOID UpdateTmpSubchForMCN(
 					// pattern 1-2-2-1-1: change index. (pregap sector is 0)
 					pDiscPerSector->subch.current.byIndex = 0;
 					OutputSubInfoWithLBALog(
-						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d) [L:%d]\n",
-						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subch.current.byTrackNum, pDiscPerSector->subch.prev.byTrackNum, __LINE__);
+						"The 1st pregap sector of Data Track %02d is replaced with EAN sector (in this case it's NOT the last sector of Data Track %02d)\n"
+						, nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subch.current.byTrackNum, pDiscPerSector->subch.prev.byTrackNum);
 				}
 				else {
 					// pattern 1-2-2-2: not change track.
@@ -1674,8 +1708,8 @@ VOID UpdateTmpSubchForMCN(
 					// pattern 2-1-1-1-2: not change index.
 					pDiscPerSector->subch.current.byIndex = pDiscPerSector->subch.prev.byIndex;
 					OutputSubInfoWithLBALog(
-						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d) [L:%d]\n",
-						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subch.current.byTrackNum, pDiscPerSector->subch.prev.byTrackNum, __LINE__);
+						"The 1st sector of Audio Track %02d is replaced with EAN sector (in this case it's NOT the last sector of Audio Track %02d)\n"
+						, nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subch.current.byTrackNum, pDiscPerSector->subch.prev.byTrackNum);
 				}
 				// 1st next index of same tracks
 				else if (pDiscPerSector->subch.prev.byIndex == 0 && pDiscPerSector->subch.prev.nRelativeTime == 0) {
@@ -1740,8 +1774,8 @@ VOID UpdateTmpSubchForMCN(
 					// pattern 2-1-2-1-2: not change index.
 					pDiscPerSector->subch.current.byIndex = pDiscPerSector->subch.prev.byIndex;
 					OutputSubInfoWithLBALog(
-						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d) [L:%d]\n",
-						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subch.current.byTrackNum, pDiscPerSector->subch.prev.byTrackNum, __LINE__);
+						"The 1st sector of Data Track %02d is replaced with EAN sector (in this case it's NOT the last sector of Audio Track %02d)\n"
+						, nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subch.current.byTrackNum, pDiscPerSector->subch.prev.byTrackNum);
 				}
 				// 1st next index of same tracks
 				else if (pDiscPerSector->subch.prev.byIndex == 0 && pDiscPerSector->subch.prev.nRelativeTime == 0) {
@@ -1779,8 +1813,8 @@ VOID UpdateTmpSubchForMCN(
 					// pattern 2-2-1-1-2: not change index.
 					pDiscPerSector->subch.current.byIndex = pDiscPerSector->subch.prev.byIndex;
 					OutputSubInfoWithLBALog(
-						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d) [L:%d]\n",
-						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subch.current.byTrackNum, pDiscPerSector->subch.prev.byTrackNum, __LINE__);
+						"The 1st sector of Audio Track %02d is replaced with EAN sector (in this case it's NOT the last sector of Data Track %02d)\n"
+						, nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subch.current.byTrackNum, pDiscPerSector->subch.prev.byTrackNum);
 				}
 				// 1st next index of same tracks
 				else if (pDiscPerSector->subch.prev.byIndex == 0 && pDiscPerSector->subch.prev.nRelativeTime == 0) {
@@ -1819,8 +1853,8 @@ VOID UpdateTmpSubchForMCN(
 					// pattern 2-2-2-1-2: not change index.
 					pDiscPerSector->subch.current.byIndex = pDiscPerSector->subch.prev.byIndex;
 					OutputSubInfoWithLBALog(
-						"The first sector of Track %d is replaced with EAN sector (in this case it's NOT the last sector of Track %d) [L:%d]\n",
-						nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subch.current.byTrackNum, pDiscPerSector->subch.prev.byTrackNum, __LINE__);
+						"The 1st sector of Data Track %02d is replaced with EAN sector (in this case it's NOT the last sector of Data Track %02d)\n"
+						, nLBA, pDiscPerSector->byTrackNum + 1, pDiscPerSector->subch.current.byTrackNum, pDiscPerSector->subch.prev.byTrackNum);
 				}
 				// 1st next index of same tracks
 				else if (pDiscPerSector->subch.prev.byIndex == 0 && pDiscPerSector->subch.prev.nRelativeTime == 0) {
