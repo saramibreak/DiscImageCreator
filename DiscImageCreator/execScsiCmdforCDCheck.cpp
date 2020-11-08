@@ -806,27 +806,59 @@ BOOL ReadCDForCheckingReadInOut(
 		else if (0 < pDisc->MAIN.nCombinedOffset) {
 			OutputLog(standardOut | fileDrive, "This drive can't read the lead-out\n");
 			if (IsValid0xF1SupportedDrive(pDevice)) {
-				if (!ExecReadCD(pExtArg, pDevice, lpCmd, nLBA - 1, aBuf,
-					CD_RAW_SECTOR_SIZE, _T(__FUNCTION__), __LINE__)
-					|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+				OutputLog(standardOut | fileDrive, "But 0xF1 is supported\n");
+				INT ct = 20;
+				OutputLog(standardOut | fileDisc
+					, OUTPUT_DHYPHEN_PLUS_STR("Reading %u - %u INTO CACHE")
+					, nLBA - 1 - ct, nLBA - 1);
+
+				BYTE aLastSector[CD_RAW_SECTOR_SIZE] = {};
+				for (INT x = nLBA - 1 - ct; x <= nLBA - 1; ++x) {
+					if (!ExecReadCD(pExtArg, pDevice, lpCmd, x, aBuf,
+						CD_RAW_SECTOR_SIZE, _T(__FUNCTION__), __LINE__)
+						|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+						break;
+					}
+					if (x == nLBA - 1) {
+						memcpy(aLastSector, aBuf, CD_RAW_SECTOR_SIZE);
+						OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("Last Sector"));
+						OutputCDMain(fileMainInfo, aLastSector, nLBA - 1, CD_RAW_SECTOR_SIZE);
+					}
 				}
-//				OutputCDMain(fileMainInfo, aBuf, nLBA - 1, CD_RAW_SECTOR_SIZE);
-				if (ReadCacheForLgAsus(pExtArg, pDevice, pDisc, 1)) {
-					OutputLog(standardOut | fileDrive, "But 0xF1 is supported\n");
-					return TRUE;
+
+				LPBYTE lpOutBuf = NULL;
+				if (!GetAlignedCallocatedBuffer(pDevice, &pDisc->lpCachedBuf
+					, (UINT)F1_BUFFER_SIZE * 100, &lpOutBuf, _T(__FUNCTION__), __LINE__)) {
+					return FALSE;
+				}
+
+				INT nStartLBA = nLBA - 1 - ct;
+				INT nCacheLine = 0;
+				BOOL bCached = FALSE;
+				INT nSectorNumFromLast = -1;
+				for (INT nLineNum = 0; nLineNum < 120; ++nLineNum) {
+					if (!ReadCacheForLgAsus(pExtArg, pDevice, pDisc, lpOutBuf, &nSectorNumFromLast, aLastSector, nLineNum, nStartLBA + nLineNum, &nCacheLine, &bCached)) {
+						return FALSE;
+					}
+					if (bCached) {
+						break;
+					}
+				}
+				if (!bCached) {
+					FreeAndNull(pDisc->lpCachedBuf);
+					return FALSE;
 				}
 			}
+			else {
+				return FALSE;
+			}
 		}
-		return FALSE;
 	}
 	else {
 		if (nLBA != 0) {
 			OutputLog(standardOut | fileDrive, "OK\n");
 		}
 	}
-#if 0
-	OutputCDMain(fileMainInfo, aBuf, nLBA, CD_RAW_SECTOR_SIZE);
-#endif
 	return TRUE;
 }
 

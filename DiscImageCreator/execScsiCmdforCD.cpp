@@ -996,15 +996,26 @@ BOOL ReadCDAll(
 			}
 
 			pDiscPerSector->bReturnCode = FALSE;
-			if (pDevice->by0xF1Drive && pDisc->SCSI.nAllLength <= nLBA) {
-				memcpy(pDiscPerSector->data.current, pDisc->lpCachedBuf, 2352);
-				memcpy(pDiscPerSector->data.current + 2352, pDisc->lpCachedBuf + 0x9A4, 294);
-				memcpy(pDiscPerSector->data.current + 2352 + 294, pDisc->lpCachedBuf + 2352, 96);
-				AlignRowSubcode(pDiscPerSector->subcode.current, pDisc->lpCachedBuf + 2352);
+			if (pDevice->by0xF1Drive && nLBA >= pDisc->SCSI.nAllLength) {
+				INT nOfs = F1_BUFFER_SIZE * (nLBA - pDisc->SCSI.nAllLength);
+				// main
+				memcpy(pDiscPerSector->data.current, pDisc->lpCachedBuf + nOfs, CD_RAW_SECTOR_SIZE);
+				// c2
+				memcpy(pDiscPerSector->data.current + CD_RAW_SECTOR_SIZE, pDisc->lpCachedBuf + nOfs + 0x9A4, CD_RAW_READ_C2_294_SIZE);
+				// sub
+				memcpy(pDiscPerSector->data.current + CD_RAW_SECTOR_WITH_C2_294_SIZE, pDisc->lpCachedBuf + nOfs + CD_RAW_SECTOR_SIZE, CD_RAW_READ_SUBCODE_SIZE);
+				AlignRowSubcode(pDiscPerSector->subcode.current, pDisc->lpCachedBuf + nOfs + CD_RAW_SECTOR_SIZE);
 #ifdef _DEBUG
 				OutputCDMain(fileMainInfo, pDiscPerSector->data.current, nLBA, CD_RAW_SECTOR_SIZE);
 				OutputCDSub96Align(fileMainInfo, pDiscPerSector->subcode.current, nLBA);
 				OutputCDC2Error296(fileC2Error, pDiscPerSector->data.current + pDevice->TRANSFER.uiBufC2Offset, nLBA);
+
+				BYTE buf[CD_RAW_READ_SUBCODE_SIZE] = {};
+				for (INT i = 0; i < 20; i++) {
+					OutputCDMain(fileMainInfo, pDisc->lpCachedBuf + 0xb00 * i, nLBA + i, CD_RAW_SECTOR_SIZE);
+					AlignRowSubcode(buf, pDisc->lpCachedBuf + 0xb00 * i + CD_RAW_SECTOR_SIZE);
+					OutputCDSub96Align(fileMainInfo, buf, nLBA + i);
+				}
 #endif
 				pDiscPerSector->bReturnCode = TRUE;
 			}
