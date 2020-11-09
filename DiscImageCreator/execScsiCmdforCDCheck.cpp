@@ -794,7 +794,7 @@ BOOL ReadCDForCheckingReadInOut(
 		OutputLog(standardOut | fileDrive, "Checking reading lead-out -> ");
 		nLBA = pDisc->SCSI.nAllLength;
 	}
-	// buffer is unused but buf null and size zero is semaphore error...
+	BOOL bRet = TRUE;
 	BYTE aBuf[CD_RAW_SECTOR_SIZE] = {};
 	BYTE byScsiStatus = 0;
 	if (!ExecReadCD(pExtArg, pDevice, lpCmd, nLBA, aBuf,
@@ -817,7 +817,7 @@ BOOL ReadCDForCheckingReadInOut(
 					if (!ExecReadCD(pExtArg, pDevice, lpCmd, x, aBuf,
 						CD_RAW_SECTOR_SIZE, _T(__FUNCTION__), __LINE__)
 						|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-						break;
+						return FALSE;
 					}
 					if (x == nLBA - 1) {
 						memcpy(aLastSector, aBuf, CD_RAW_SECTOR_SIZE);
@@ -825,28 +825,34 @@ BOOL ReadCDForCheckingReadInOut(
 						OutputCDMain(fileMainInfo, aLastSector, nLBA - 1, CD_RAW_SECTOR_SIZE);
 					}
 				}
-
 				LPBYTE lpOutBuf = NULL;
 				if (!GetAlignedCallocatedBuffer(pDevice, &pDisc->lpCachedBuf
 					, (UINT)F1_BUFFER_SIZE * 100, &lpOutBuf, _T(__FUNCTION__), __LINE__)) {
 					return FALSE;
 				}
-
-				INT nStartLBA = nLBA - 1 - ct;
-				INT nCacheLine = 0;
-				BOOL bCached = FALSE;
-				INT nSectorNumFromLast = -1;
-				for (INT nLineNum = 0; nLineNum < 120; ++nLineNum) {
-					if (!ReadCacheForLgAsus(pExtArg, pDevice, pDisc, lpOutBuf, &nSectorNumFromLast, aLastSector, nLineNum, nStartLBA + nLineNum, &nCacheLine, &bCached)) {
-						return FALSE;
+				try {
+					INT nStartLBA = nLBA - 1 - ct;
+					BOOL bCached = FALSE;
+					INT nLeadOutCnt = 0;
+					for (INT nLineNum = 0; nLineNum < 120; ++nLineNum) {
+						if (!ReadCacheForLgAsus(pExtArg, pDevice, pDisc, lpOutBuf, nLineNum, nStartLBA + nLineNum, &bCached, &nLeadOutCnt)) {
+							throw FALSE;
+						}
+						if (bCached) {
+							break;
+						}
 					}
-					if (bCached) {
-						break;
+					if (!bCached) {
+						throw FALSE;
+					}
+					else if (nLeadOutCnt < pDisc->MAIN.nAdjustSectorNum) {
+						OutputErrorString("Cache is short. Try again\n");
+						throw FALSE;
 					}
 				}
-				if (!bCached) {
+				catch (BOOL bErr) {
+					bRet = bErr;
 					FreeAndNull(pDisc->lpCachedBuf);
-					return FALSE;
 				}
 			}
 			else {
@@ -859,7 +865,7 @@ BOOL ReadCDForCheckingReadInOut(
 			OutputLog(standardOut | fileDrive, "OK\n");
 		}
 	}
-	return TRUE;
+	return bRet;
 }
 
 BOOL ReadCDForCheckingSubQ1stIndex(

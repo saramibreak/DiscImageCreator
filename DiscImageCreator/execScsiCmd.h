@@ -126,12 +126,10 @@ BOOL ReadCacheForLgAsus(
 	PDEVICE pDevice,
 	PDISC pDisc,
 	LPBYTE lpOutBuf,
-	LPINT lpnSectorNumFromLast,
-	LPBYTE lpLastSector,
 	INT nLineNum,
 	INT nLBA,
-	LPINT nCacheLine,
-	LPBOOL lpbCached
+	LPBOOL lpbCached,
+	LPINT lpbLeadOutCnt
 );
 
 BOOL ReadDriveInformation(

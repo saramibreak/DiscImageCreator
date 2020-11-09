@@ -1121,15 +1121,13 @@ BOOL ReadCacheForLgAsus(
 	PDEVICE pDevice,
 	PDISC pDisc,
 	LPBYTE lpOutBuf,
-	LPINT lpnSectorNumFromLast,
-	LPBYTE lpLastSector,
 	INT nLineNum,
 	INT nLBA,
-	LPINT nCacheLine,
-	LPBOOL lpbCached
+	LPBOOL lpbCached,
+	LPINT lpbLeadOutCnt
 ) {
-	BYTE aBuf[F1_BUFFER_SIZE * 2] = {};
-	DWORD dwSize = F1_BUFFER_SIZE * 2;
+	CONST DWORD dwBufSize = F1_BUFFER_SIZE * F1_READ_SECTOR_SIZE;
+	BYTE aBuf[dwBufSize] = {};
 	// http://forum.redump.org/post/72629/#p72629
 	// F1 06 xx xx xx xx yy yy yy yy
 	// xx - address to read
@@ -1148,10 +1146,10 @@ BOOL ReadCacheForLgAsus(
 	cdb.LogicalBlockByte1 = BYTE((0xb00 * nLineNum >> 16) & 0xff);
 	cdb.LogicalBlockByte2 = BYTE((0xb00 * nLineNum >> 8) & 0xff);
 	cdb.LogicalBlockByte3 = BYTE(0xb00 * nLineNum & 0xff);
-	cdb.Reserved2 = BYTE((dwSize >> 24) & 0xff);
-	cdb.TransferBlocksMsb = BYTE((dwSize >> 16) & 0xff);
-	cdb.TransferBlocksLsb = BYTE((dwSize >> 8) & 0xff);
-	cdb.Control = BYTE(dwSize & 0xff);
+	cdb.Reserved2 = BYTE((dwBufSize >> 24) & 0xff);
+	cdb.TransferBlocksMsb = BYTE((dwBufSize >> 16) & 0xff);
+	cdb.TransferBlocksLsb = BYTE((dwBufSize >> 8) & 0xff);
+	cdb.Control = BYTE(dwBufSize & 0xff);
 #ifdef _WIN32
 	INT direction = SCSI_IOCTL_DATA_IN;
 #else
@@ -1159,31 +1157,31 @@ BOOL ReadCacheForLgAsus(
 #endif
 	BYTE byScsiStatus = 0;
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB10GENERIC_LENGTH
-		, aBuf, direction, dwSize, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		, aBuf, direction, dwBufSize, &byScsiStatus, _T(__FUNCTION__), __LINE__)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		return FALSE;
 	}
-	BOOL bHeader = FALSE;
-	BYTE aMainBuf[CD_RAW_SECTOR_SIZE * 2] = {};
-	memcpy(aMainBuf, aBuf, CD_RAW_SECTOR_SIZE);
-	memcpy(aMainBuf + CD_RAW_SECTOR_SIZE, aBuf + F1_BUFFER_SIZE, CD_RAW_SECTOR_SIZE);
 
+	BYTE aMainBuf[CD_RAW_SECTOR_SIZE * F1_READ_SECTOR_SIZE] = {};
+	BYTE aSubBuf[CD_RAW_READ_SUBCODE_SIZE * F1_READ_SECTOR_SIZE] = {};
+	for (INT i = 0; i < F1_READ_SECTOR_SIZE; i++) {
+		memcpy(aMainBuf + CD_RAW_SECTOR_SIZE * i, aBuf + F1_BUFFER_SIZE * i, CD_RAW_SECTOR_SIZE);
+		AlignRowSubcode(aSubBuf + CD_RAW_READ_SUBCODE_SIZE * i, aBuf + F1_BUFFER_SIZE * i + CD_RAW_SECTOR_SIZE);
+	}
 	OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("Cached Main Channel"));
 	OutputCDMain(fileMainInfo, aMainBuf, nLBA, CD_RAW_SECTOR_SIZE);
 
 	if (nLBA >= pDisc->SCSI.nAllLength) {
-		for (DWORD x = 0; x < CD_RAW_SECTOR_SIZE * 2 - 16; ++x) {
+		for (INT x = 0; x < CD_RAW_SECTOR_SIZE * pDisc->MAIN.nAdjustSectorNum - 16; ++x) {
 			if (IsValidMainDataHeader(aMainBuf + x)) {
-				bHeader = TRUE;
 				BYTE m = (BYTE)(aMainBuf[x + 0x0c] ^ 0x01);
 				BYTE s = (BYTE)(aMainBuf[x + 0x0d] ^ 0x80);
 				BYTE f = (BYTE)(aMainBuf[x + 0x0e]);
-				BYTE mode = (BYTE)(aMainBuf[x + 0xf] ^ 0x60);
 
 				BYTE md = BcdToDec(m);
 				BYTE sd = BcdToDec(s);
 				BYTE fd = BcdToDec(f);
-				INT tmpLBA = MSFtoLBA(md, sd, fd) - 150;
+				INT tmpLBA = MSFtoLBA(md, sd, fd) - 150 + x / CD_RAW_SECTOR_SIZE;
 				if (tmpLBA == nLineNum ||
 					(pDisc->SCSI.toc.TrackData[0].Control & AUDIO_DATA_TRACK) == 0) {
 					OutputLog(standardOut | fileDisc,
@@ -1196,113 +1194,27 @@ BOOL ReadCacheForLgAsus(
 				}
 				break;
 			}
+			else if (aSubBuf[13] != 0xaa) {
+				OutputLog(standardOut | fileDisc,
+					"-----------------------------------------------------\n"
+					"Cache SIZE: %u (This size is different every running)\n"
+					"-----------------------------------------------------\n"
+					, nLineNum
+				);
+				*lpbCached = TRUE;
+			}
 		}
 		if (!*lpbCached) {
-			OutputLog(standardOut | fileDisc, "%02u Cache LBA %06u Lead-out\n", nLineNum + 1, nLBA);
+			OutputLog(standardOut | fileDisc, "%02u Cache LBA %06u, SubQ Trk %02x, AMSF %02x:%02x:%02x [Lead-out]\n"
+				, nLineNum + 1, nLBA, aSubBuf[13], aSubBuf[19], aSubBuf[20], aSubBuf[21]);
 			memcpy(lpOutBuf + F1_BUFFER_SIZE * (nLBA - pDisc->SCSI.nAllLength), aBuf, F1_BUFFER_SIZE);
+			(*lpbLeadOutCnt)++;
 		}
 	}
 	else {
-		OutputLog(standardOut | fileDisc, "%02u Cache LBA %06u\n", nLineNum + 1, nLBA);
+		OutputLog(standardOut | fileDisc, "%02u Cache LBA %06u, SubQ Trk %02x, AMSF %02x:%02x:%02x\n"
+			, nLineNum + 1, nLBA, aSubBuf[13], aSubBuf[19], aSubBuf[20], aSubBuf[21]);
 	}
-
-#if 0
-	if ((pDisc->SCSI.toc.TrackData[pDisc->SCSI.toc.LastTrack - 1].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
-		for (DWORD x = 0; x < F1_BUFFER_SIZE - 16; ++x) {
-			if (IsValidMainDataHeader(aMainBuf + x)) {
-				bHeader = TRUE;
-				BYTE m = (BYTE)(aMainBuf[x + 0x0c] ^ 0x01);
-				BYTE s = (BYTE)(aMainBuf[x + 0x0d] ^ 0x80);
-				BYTE f = (BYTE)(aMainBuf[x + 0x0e]);
-				BYTE mode = (BYTE)(aMainBuf[x + 0xf] ^ 0x60);
-
-				BYTE md = BcdToDec(m);
-				BYTE sd = BcdToDec(s);
-				BYTE fd = BcdToDec(f);
-				INT tmpLBA = MSFtoLBA(md, sd, fd) - 150;
-				if (!*nCacheLine || tmpLBA == *nCacheLine + 1) {
-					*nCacheLine = tmpLBA;
-					if (!memcmp(lpLastSector, aMainBuf + x, CD_RAW_SECTOR_SIZE)) {
-						*lpnSectorNumFromLast = 0;
-					}
-					INT nOfs = tmpLBA + pDisc->MAIN.nAdjustSectorNum - 1;
-					if (nOfs >= pDisc->SCSI.nAllLength) {
-						memcpy(lpOutBuf + F1_BUFFER_SIZE * (nOfs - pDisc->SCSI.nAllLength), aBuf, F1_BUFFER_SIZE);
-					}
-					OutputLog(standardOut | fileDisc, "%02u Cache LBA %06u (MSF %02x:%02x:%02x) MODE %02x", nLineNum + 1, tmpLBA, m, s, f, mode);
-					if (tmpLBA >= pDisc->SCSI.nAllLength) {
-						OutputLog(standardOut | fileDisc, " Lead-out\n");
-						*lpbCached = TRUE;
-					}
-					else if (nOfs >= pDisc->SCSI.nAllLength) {
-						OutputLog(standardOut | fileDisc, " Data in Lead-out\n");
-						*lpbCached = TRUE;
-					}
-					else {
-						OutputLog(standardOut | fileDisc, "\n");
-					}
-				}
-				else if (tmpLBA == nLineNum) {
-					OutputLog(standardOut | fileDisc,
-						"-----------------------------------------------------\n"
-						"Cache SIZE: %u (This size is different every running)\n"
-						"-----------------------------------------------------\n"
-						, nLineNum
-					);
-					if (*nCacheLine + 1 < pDisc->SCSI.nAllLength) {
-						OutputLog(standardOut | fileDisc, "Couldn't read the lead-out\n");
-					}
-					*nCacheLine = tmpLBA;
-					return FALSE;
-				}
-				else {
-					OutputLog(standardOut | fileDisc, "%02u Cache LBA %06u (MSF %02x:%02x:%02x) MODE %02x\n", nLineNum + 1, tmpLBA, m, s, f, mode);
-				}
-				break;
-			}
-		}
-//		if (!bHeader) {
-//			OutputCDMain(fileMainInfo, aBuf, nLBA, CD_RAW_SECTOR_SIZE);
-//		}
-	}
-	else {
-		if (nLBA >= pDisc->SCSI.nAllLength) {
-			for (DWORD x = 0; x < CD_RAW_SECTOR_SIZE * 2 - 16; ++x) {
-				if (IsValidMainDataHeader(aMainBuf + x)) {
-//					OutputCDMain(fileMainInfo, aBuf, nLBA, CD_RAW_SECTOR_SIZE);
-					bHeader = TRUE;
-					BYTE m = (BYTE)(aMainBuf[x + 0x0c] ^ 0x01);
-					BYTE s = (BYTE)(aMainBuf[x + 0x0d] ^ 0x80);
-					BYTE f = (BYTE)(aMainBuf[x + 0x0e]);
-
-					BYTE md = BcdToDec(m);
-					BYTE sd = BcdToDec(s);
-					BYTE fd = BcdToDec(f);
-					INT tmpLBA = MSFtoLBA(md, sd, fd) - 150;
-					if (tmpLBA == nLineNum ||
-						(pDisc->SCSI.toc.TrackData[0].Control & AUDIO_DATA_TRACK) == 0) {
-						OutputLog(standardOut | fileDisc,
-							"-----------------------------------------------------\n"
-							"Cache SIZE: %u (This size is different every running)\n"
-							"-----------------------------------------------------\n"
-							, nLineNum
-						);
-					}
-					if (!*lpbCached) {
-						OutputLog(standardOut | fileDisc, "Couldn't read the lead-out\n");
-					}
-					return FALSE;
-				}
-			}
-			if (!bHeader){
-				OutputLog(standardOut | fileDisc, "%02u Cache Lead-out\n", nLineNum + 1);
-				memcpy(lpOutBuf + F1_BUFFER_SIZE * (nLBA - pDisc->SCSI.nAllLength), aBuf, F1_BUFFER_SIZE);
-				*lpbCached = TRUE;
-				*nCacheLine = nLBA;
-			}
-		}
-	}
-#endif
 	return TRUE;
 }
 
