@@ -495,7 +495,7 @@ BOOL ScsiPassThroughDirect(
 #ifdef _WIN32
 		if (swb.Sptd.ScsiStatus >= SCSISTAT_CHECK_CONDITION && !bNoSense) {
 			INT nLBA = 0;
-			if (swb.Sptd.Cdb[0] == 0xa8 || swb.Sptd.Cdb[0] == 0xad ||
+			if (swb.Sptd.Cdb[0] == 0x28 || swb.Sptd.Cdb[0] == 0xa8 || swb.Sptd.Cdb[0] == 0xad ||
 				swb.Sptd.Cdb[0] == 0xbe || swb.Sptd.Cdb[0] == 0xd8) {
 				nLBA = (swb.Sptd.Cdb[2] << 24) + (swb.Sptd.Cdb[3] << 16)
 					+ (swb.Sptd.Cdb[4] << 8) + swb.Sptd.Cdb[5];
