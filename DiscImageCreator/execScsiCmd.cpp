@@ -1191,8 +1191,8 @@ BOOL ReadCacheForLgAsus(
 						, nLineNum
 					);
 					*lpbCached = TRUE;
+					break;
 				}
-				break;
 			}
 			else if (aSubBuf[13] != 0xaa) {
 				OutputLog(standardOut | fileDisc,
@@ -1202,6 +1202,7 @@ BOOL ReadCacheForLgAsus(
 					, nLineNum
 				);
 				*lpbCached = TRUE;
+				break;
 			}
 		}
 		if (!*lpbCached) {
