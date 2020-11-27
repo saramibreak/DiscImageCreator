@@ -70,8 +70,8 @@ BOOL InitTocFullData(
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
-	(*pDisc)->SCSI.n1stLBAofLeadout = -1;
 	// init this by ReadTOCFull
+//	(*pDisc)->SCSI.n1stLBAofLeadout = -1;
 //	(*pDisc)->SCSI.n1stLBAof2ndSession = -1;
 	return TRUE;
 }

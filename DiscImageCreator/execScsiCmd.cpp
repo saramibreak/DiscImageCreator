@@ -266,6 +266,7 @@ BOOL ReadTOCFull(
 	*wTocEntries = (WORD)(wTocEntriesAll / sizeof(CDROM_TOC_FULL_TOC_DATA_BLOCK));
 
 	pDisc->SCSI.bMultiSession = pFullTocData->LastCompleteSession > 1 ? TRUE : FALSE;
+	pDisc->SCSI.n1stLBAofLeadout = -1;
 	pDisc->SCSI.n1stLBAof2ndSession = -1;
 
 	WORD wFullTocLenFix = (WORD)(wTocEntriesAll + sizeof(CDROM_TOC_FULL_TOC_DATA));

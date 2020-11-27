@@ -963,21 +963,31 @@ BOOL ReadCDAll(
 
 		while (nFirstLBA < nLastLBA) {
 			if (pExtArg->byMultiSession && lpCmd[0] == 0xbe) {
-				if (!bDupsRead && pDisc->MAIN.nAdjustSectorNum < 0 && pDisc->SCSI.n1stLBAof2ndSession == nLBA) {
-					pDiscPerSector->bReturnCode = ProcessReadCD(pExecType, pExtArg, pDevice, pDisc, pDiscPerSector, lpCmd, nLBA);
-					BYTE lpSubcodeRaw[CD_RAW_READ_SUBCODE_SIZE] = {};
-					AlignColumnSubcode(lpSubcodeRaw, pDiscPerSector->subcode.current);
-					WriteSubChannel(pDisc, pDiscPerSector, lpSubcodeRaw, nLBA, fpSub);
-					for (INT n = 0; n < CD_RAW_SECTOR_SIZE; n++) {
-						pDiscPerSector->data.current[n] ^= scrambled_table[n];
+				if (!bDupsRead && pDisc->MAIN.nAdjustSectorNum < 0) {
+					if (((pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) && nLBA == pDisc->SCSI.n1stLBAof2ndSession) {
+						// Multi-session: combined offset minus disc
+						pDiscPerSector->bReturnCode = ProcessReadCD(pExecType, pExtArg, pDevice, pDisc, pDiscPerSector, lpCmd, nLBA);
+						BYTE lpSubcodeRaw[CD_RAW_READ_SUBCODE_SIZE] = {};
+						AlignColumnSubcode(lpSubcodeRaw, pDiscPerSector->subcode.current);
+						WriteSubChannel(pDisc, pDiscPerSector, lpSubcodeRaw, nLBA, fpSub);
+						for (INT n = 0; n < CD_RAW_SECTOR_SIZE; n++) {
+							pDiscPerSector->data.current[n] ^= scrambled_table[n];
+						}
+						WriteMainChannel(pExecType, pExtArg, pDisc, pDiscPerSector->data.current, nLBA, fpScm);
+#ifdef _DEBUG
+						OutputCDMain(fileMainInfo, pDiscPerSector->data.current, nLBA, CD_RAW_SECTOR_SIZE);
+#endif
+						bDupsRead = TRUE;
+						continue;
 					}
-					WriteMainChannel(pExecType, pExtArg, pDisc, pDiscPerSector->data.current, nLBA, fpScm);
-					bDupsRead = TRUE;
-//					OutputCDMain(fileMainInfo, pDiscPerSector->data.current, nLBA, CD_RAW_SECTOR_SIZE);
-					continue;
+					else if ((pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == 0 && nLBA == pDisc->MAIN.nFixFirstLBAof2ndSession) {
+						// Multi-session: combined offset minus disc (audio only e.g. atari jaguar CD)
+						BYTE zero[CD_RAW_SECTOR_SIZE] = {};
+						fwrite(zero, sizeof(BYTE), CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize, fpScm);
+						bDupsRead = TRUE;
+					}
 				}
-				else if ((pDisc->MAIN.nAdjustSectorNum >= 0 && pDisc->MAIN.nFixFirstLBAof2ndSession <= nLBA) ||
-					(pDisc->MAIN.nAdjustSectorNum < 0 && pDisc->SCSI.n1stLBAof2ndSession <= nLBA)) {
+				else if (pDisc->SCSI.n1stLBAof2ndSession <= nLBA) {
 					nMainDataType = scrambled;
 					pDisc->MAIN.lpModeList[pDisc->SCSI.by1stMultiSessionTrkNum - 1] = pDiscPerSector->mainHeader.current[15];
 					nSecondSessionLBA = nLBA;
@@ -1068,7 +1078,6 @@ BOOL ReadCDAll(
 						OutputCDMain(fileMainError, pDiscPerSector->data.current, nLBA, 2352);
 #endif
 						nFirstErrLBA[0] = nLBA;
-						BYTE ctl = pDiscPerSector->subch.current.byCtl;
 						for (INT i = nLBA; i <= pDisc->MAIN.nFixFirstLBAof2ndSession - 150; i++) {
 							ProcessReturnedContinue(pExecType, pExtArg, pDevice, pDisc
 								, pDiscPerSector, nLBA, nMainDataType, padByPrevSector, fpScm, fpSub, fpC2);
@@ -1083,7 +1092,7 @@ BOOL ReadCDAll(
 							nFirstLBAForSub = nLBA - pDisc->MAIN.nAdjustSectorNum;
 						}
 						INT idx = pDisc->SCSI.by1stMultiSessionTrkNum - 1;
-						if ((ctl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+						if ((pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 							pDisc->SUB.lpLastLBAListOfDataTrackOnSub[idx - 1] = nLBA - 1;
 							pDisc->SUB.lp1stLBAListOfDataTrackOnSub[idx] = pDisc->SCSI.n1stLBAof2ndSession;
 						}
@@ -1240,16 +1249,19 @@ BOOL ReadCDAll(
 						}
 					}
 					// Write track to scrambled
-					if (pExtArg->byMultiSession && nSecondSessionLBA == nLBA) {
+					if (pExtArg->byMultiSession && nSecondSessionLBA == nLBA &&
+						(pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 						fwrite(pDiscPerSector->data.current + pDisc->MAIN.uiMainDataSlideSize
 							, sizeof(BYTE), CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize, fpScm);
-#if 0
-						OutputCDMain(fileMainInfo, pDiscPerSector->data.current, nLBA, CD_RAW_SECTOR_SIZE);
-#endif
 					}
 					else {
 						WriteMainChannel(pExecType, pExtArg, pDisc, pDiscPerSector->data.current, nLBA, fpScm);
 					}
+#ifdef _DEBUG
+					if (nLBA == pDisc->MAIN.nFixFirstLBAof2ndSession || nSecondSessionLBA == nLBA) {
+						OutputCDMain(fileMainInfo, pDiscPerSector->data.current, nLBA, CD_RAW_SECTOR_SIZE);
+					}
+#endif
 
 					if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
 						if (pExtArg->byD8 || pDevice->byPlxtrDrive) {
@@ -1363,7 +1375,6 @@ BOOL ReadCDAll(
 			throw FALSE;
 		}
 		if (pExtArg->byMultiSession) {
-#if 1
 			OutputString("Trimming lead-out, lead-in, pregap of 1st track of 2nd session\n");
 			_TCHAR pszOutImgFile[_MAX_PATH] = {};
 			_tcsncpy(pszOutImgFile, pszPath, sizeof(pszOutImgFile) / sizeof(pszOutImgFile[0]) - 1);
@@ -1414,19 +1425,6 @@ BOOL ReadCDAll(
 				OutputErrorString("%s\n", pszOutScmFile);
 				return FALSE;
 			}
-			_TCHAR pszOutScmFileTmp[_MAX_PATH] = {};
-			if (NULL == (fpScm = CreateOrOpenFile(pszPath, NULL
-				, pszOutScmFileTmp, NULL, NULL, _T(".scmtmp"), _T("rb"), 0, 0))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				OutputErrorString("%s\n", pszOutScmFile);
-				return FALSE;
-			}
-			FILE* fpScm2 = NULL;
-			if (NULL == (fpScm2 = CreateOrOpenFile(pszPath, NULL
-				, NULL, NULL, NULL, _T(".scm"), _T("wb"), 0, 0))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				return FALSE;
-			}
 			if (NULL == (fpSub = CreateOrOpenFile(pszPath, NULL
 				, pszOutSubFileTmp, NULL, NULL, _T(".subtmp"), _T("rb"), 0, 0))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -1439,31 +1437,50 @@ BOOL ReadCDAll(
 				throw FALSE;
 			}
 			BYTE main[CD_RAW_SECTOR_SIZE] = {};
-			BYTE mainScm[CD_RAW_SECTOR_SIZE] = {};
 			BYTE sub[CD_RAW_READ_SUBCODE_SIZE] = {};
 			size_t readMainSize = 0;
-			size_t readMainScmSize = 0;
 			size_t readSubSize = 0;
 			for (INT i = 0; i < pDisc->SCSI.nAllLength; i++) {
 				readMainSize = fread(main, sizeof(BYTE), sizeof(main), fpImg);
-				readMainScmSize = fread(mainScm, sizeof(BYTE), sizeof(mainScm), fpScm);
 				readSubSize = fread(sub, sizeof(BYTE), sizeof(sub), fpSub);
 				if (i < pDisc->SCSI.n1stLBAofLeadout || pDisc->SCSI.n1stLBAof2ndSession <= i) {
 					fwrite(main, sizeof(BYTE), readMainSize, fpImg2);
-					fwrite(mainScm, sizeof(BYTE), readMainScmSize, fpScm2);
 					fwrite(sub, sizeof(BYTE), readSubSize, fpSub2);
 				}
 			}
 			FcloseAndNull(fpImg);
-			FcloseAndNull(fpScm);
 			FcloseAndNull(fpSub);
 			_tremove(pszOutImgFileTmp);
-			_tremove(pszOutScmFileTmp);
 			_tremove(pszOutSubFileTmp);
 			FcloseAndNull(fpImg2);
-			FcloseAndNull(fpScm2);
 			FcloseAndNull(fpSub2);
-#endif
+
+			if (pDisc->SCSI.trkType != TRACK_TYPE::audioOnly) {
+				_TCHAR pszOutScmFileTmp[_MAX_PATH] = {};
+				if (NULL == (fpScm = CreateOrOpenFile(pszPath, NULL
+					, pszOutScmFileTmp, NULL, NULL, _T(".scmtmp"), _T("rb"), 0, 0))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					OutputErrorString("%s\n", pszOutScmFile);
+					return FALSE;
+				}
+				FILE* fpScm2 = NULL;
+				if (NULL == (fpScm2 = CreateOrOpenFile(pszPath, NULL
+					, NULL, NULL, NULL, _T(".scm"), _T("wb"), 0, 0))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					return FALSE;
+				}
+				BYTE mainScm[CD_RAW_SECTOR_SIZE] = {};
+				size_t readMainScmSize = 0;
+				for (INT i = 0; i < pDisc->SCSI.nAllLength; i++) {
+					readMainScmSize = fread(mainScm, sizeof(BYTE), sizeof(mainScm), fpScm);
+					if (i < pDisc->SCSI.n1stLBAofLeadout || pDisc->SCSI.n1stLBAof2ndSession <= i) {
+						fwrite(mainScm, sizeof(BYTE), readMainScmSize, fpScm2);
+					}
+				}
+				FcloseAndNull(fpScm);
+				_tremove(pszOutScmFileTmp);
+				FcloseAndNull(fpScm2);
+			}
 		}
 	}
 	catch (BOOL ret) {
