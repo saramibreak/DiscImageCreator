@@ -136,7 +136,7 @@ VOID OutputFsDirectoryRecord(
 	if (pPathTblRec &&
 		!(lpBuf[32] == 1 && fname[0] == 0) &&
 		!(lpBuf[32] == 1 && fname[0] == 1)) {
-		LPCH pName[8] = {};
+		LPCH pName[_MAX_FNAME] = {};
 		INT fullIdx = 0;
 		pName[fullIdx++] = fname;
 
