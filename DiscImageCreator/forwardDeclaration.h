@@ -49,7 +49,7 @@
 #define MAINHEADER_MODE1_SIZE	(SYNC_SIZE + HEADER_SIZE)
 #define SUBHEADER_SIZE			(8)
 
-#define ADR_ENCODES_CDTV_SPECIFIC	(0x06)
+#define ADR_ENCODES_6	(0x06)
 
 #define PATH_TABLE_RECORD_SIZE	(65535)
 #define THREEDO_DIR_HEADER_SIZE	(20)
@@ -57,6 +57,7 @@
 
 #define META_CATALOG_SIZE		(13 + 1)
 #define META_ISRC_SIZE			(12 + 1)
+#define META_ADR6_SIZE			(16 + 1)
 #define META_CDTEXT_SIZE		(160 + 1)
 #define MAX_CDTEXT_LANG         (8)
 

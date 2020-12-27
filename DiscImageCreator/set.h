@@ -111,6 +111,13 @@ VOID SetTrackAttribution(
 	INT nLBA
 );
 
+VOID SetAdr6ToString(
+	PDISC pDisc,
+	LPBYTE lpSubcode,
+	LPSTR pszOutString,
+	BOOL bCopy
+);
+
 VOID SetISRCToString(
 	PDISC pDisc,
 	PDISC_PER_SECTOR pDiscPerSector,
@@ -161,7 +168,7 @@ VOID UpdateTmpSubchForISRC(
 	PSUBCH pSubch
 );
 
-VOID UpdateTmpSubchForCDTV(
+VOID UpdateTmpSubchForAdr6(
 	PDISC pDisc,
 	PDISC_PER_SECTOR pDiscPerSector,
 	INT nLBA

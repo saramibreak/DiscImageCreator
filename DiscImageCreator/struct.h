@@ -324,6 +324,9 @@ typedef struct _DISC {
 		BYTE byDesync;
 		BYTE byCatalog;
 		CHAR szCatalog[META_CATALOG_SIZE];
+		BYTE byAdr6;
+		CHAR szAdr6[META_ADR6_SIZE];
+		BYTE padding[2];
 		INT nFirstLBAForISRC[3][2];
 		INT nRangeLBAForISRC[3][2];
 		INT nPrevISRCSector;

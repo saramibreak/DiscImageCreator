@@ -374,6 +374,25 @@ BOOL IsPregapOfTrack1ReadableDrive(
 	return bRet;
 }
 
+BOOL IsPrextorDVDDrive(
+	PDEVICE pDevice
+) {
+	BOOL bRet = TRUE;
+	if (pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PX760A &&
+		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PX755A &&
+		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PX716AL &&
+		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PX716A &&
+		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PX714A &&
+		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PX712A &&
+		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PX708A2 &&
+		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PX708A &&
+		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PX704A
+		) {
+		bRet = FALSE;
+	}
+	return bRet;
+}
+
 VOID SupportIndex0InTrack1(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice

@@ -955,8 +955,10 @@ BOOL ReadCDForCheckingSubQAdr(
 ) {
 	BOOL bCheckMCN = FALSE;
 	BOOL bCheckISRC = FALSE;
+	BOOL bCheckAdr6 = FALSE;
 	CHAR szTmpCatalog[META_CATALOG_SIZE] = {};
 	CHAR szTmpISRC[META_ISRC_SIZE] = {};
+	CHAR szTmpAdr6[META_ADR6_SIZE] = {};
 	INT nMCNIdx = 0;
 	INT nISRCIdx = 0;
 	INT nTmpMCNLBAList[25] = { -1 };
@@ -981,6 +983,7 @@ BOOL ReadCDForCheckingSubQAdr(
 		if (500 > nTmpNextLBA) {
 			bCheckMCN = FALSE;
 			bCheckISRC = FALSE;
+			bCheckAdr6 = FALSE;
 			break;
 		}
 		if (!ExecReadCD(pExtArg, pDevice, lpCmd, nLBA, lpBuf,
@@ -1075,6 +1078,23 @@ BOOL ReadCDForCheckingSubQAdr(
 							, szISRC, szISRC, &szISRC[2], &szISRC[5], &szISRC[7]
 						);
 					}
+				}
+			}
+		}
+		else if (byAdr == ADR_ENCODES_6) {
+			BOOL bAdr6 = TRUE;
+			CHAR szAdr6[META_ADR6_SIZE] = {};
+			if (!bCheckAdr6) {
+				SetAdr6ToString(pDisc, pDiscPerSector->subcode.current, szAdr6, FALSE);
+				strncpy(szTmpAdr6, szAdr6, sizeof(szTmpAdr6) / sizeof(szTmpAdr6[0]));
+				szTmpAdr6[META_ADR6_SIZE - 1] = 0;
+				bCheckAdr6 = bAdr6;
+			}
+			else if (!pDisc->SUB.byAdr6) {
+				SetAdr6ToString(pDisc, pDiscPerSector->subcode.current, szAdr6, FALSE);
+				if (!strncmp(szTmpAdr6, szAdr6, sizeof(szTmpAdr6) / sizeof(szTmpAdr6[0]))) {
+					strncpy(pDisc->SUB.szAdr6, szAdr6, sizeof(pDisc->SUB.szAdr6) / sizeof(pDisc->SUB.szAdr6[0]));
+					pDisc->SUB.byAdr6 = (BYTE)bAdr6;
 				}
 			}
 		}
@@ -2415,6 +2435,11 @@ BOOL ReadCDCheck(
 	}
 
 	if (!pExtArg->byReverse) {
+		if (pExtArg->byMultiSession && pDevice->byPlxtrDrive && !IsPrextorDVDDrive(pDevice)) {
+			OutputLog(standardOut | fileDisc,
+				"[ERROR] This program doesn't support to dump the multi-session disc by the plextor CD Drive\n");
+			return FALSE;
+		}
 		// Typically, CD+G data is included in audio only disc
 		// But exceptionally, WonderMega Collection (SCD)(mixed disc) exists CD+G data.
 		if (!ReadCDForCheckingSubRtoW(pExtArg, pDevice, pDisc)) {

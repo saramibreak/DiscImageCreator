@@ -1481,9 +1481,9 @@ VOID OutputCDSubToLog(
 				, pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
 		}
 		break;
-	case ADR_ENCODES_CDTV_SPECIFIC:
+	case ADR_ENCODES_6:
 		OutputSubReadableLog(
-			"CDTV Specific   [%02x%02x%02x%02x%02x%02x%02x%02x], AMSF[     :%02x]"
+			"Unknown Data    [%02x%02x%02x%02x%02x%02x%02x%02x], AMSF[     :%02x]"
 			, pDiscPerSector->subcode.current[13], pDiscPerSector->subcode.current[14]
 			, pDiscPerSector->subcode.current[15], pDiscPerSector->subcode.current[16]
 			, pDiscPerSector->subcode.current[17], pDiscPerSector->subcode.current[18]

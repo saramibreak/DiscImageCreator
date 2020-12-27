@@ -52,6 +52,10 @@ BOOL IsPregapOfTrack1ReadableDrive(
 	PDEVICE pDevice
 );
 
+BOOL IsPrextorDVDDrive(
+	PDEVICE pDevice
+);
+
 VOID SupportIndex0InTrack1(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice

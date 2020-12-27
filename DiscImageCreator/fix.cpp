@@ -366,6 +366,45 @@ BOOL FixSubQAdrISRC(
 	return bRet;
 }
 
+BOOL FixSubQAdr6(
+	PDISC pDisc,
+	PDISC_PER_SECTOR pDiscPerSector,
+	INT nLBA
+) {
+	if (!pDisc->SUB.byAdr6) {
+		return FALSE;
+	}
+	else if (pDiscPerSector->subch.current.byAdr == ADR_ENCODES_6) {
+		CHAR szAdr6[META_ADR6_SIZE] = {};
+		SetAdr6ToString(pDisc, pDiscPerSector->subcode.current, szAdr6, FALSE);
+
+		if (!strncmp(pDisc->SUB.szAdr6, szAdr6, META_ADR6_SIZE)) {
+			return TRUE;
+		}
+	}
+
+	if (pDiscPerSector->subch.current.byAdr != ADR_ENCODES_6 &&
+		pDiscPerSector->subch.prev.byAdr != ADR_ENCODES_6) {
+		OutputSubErrorWithLBALog("Q[12]:Adr[%d] -> [0x06]\n"
+			, nLBA, pDiscPerSector->byTrackNum, pDiscPerSector->subch.current.byAdr);
+		pDiscPerSector->subch.current.byAdr = ADR_ENCODES_6;
+		pDiscPerSector->subcode.current[12] =
+			(BYTE)(pDiscPerSector->subch.current.byCtl << 4 | pDiscPerSector->subch.current.byAdr);
+	}
+	if (pDiscPerSector->subch.current.byAdr == ADR_ENCODES_6) {
+		CHAR szAdr6[META_ADR6_SIZE] = {};
+		SetAdr6ToString(pDisc, pDiscPerSector->subcode.current, szAdr6, FALSE);
+
+		if (strncmp(pDisc->SUB.szAdr6, szAdr6, META_ADR6_SIZE)) {
+			OutputSubErrorWithLBALog(
+				"Q[13-19]:Adr6[%16" CHARWIDTH "s] -> [%16" CHARWIDTH "s]\n"
+				, nLBA, pDiscPerSector->byTrackNum, szAdr6, pDisc->SUB.szAdr6);
+			SetBufferFromTmpSubch(pDiscPerSector->subcode.current, pDiscPerSector->subch.current, TRUE, TRUE);
+		}
+	}
+	return TRUE;
+}
+
 WORD RecalcSubQCrc(
 	PDISC pDisc,
 	PDISC_PER_SECTOR pDiscPerSector
@@ -424,16 +463,6 @@ VOID FixSubQ(
 		pDiscPerSector->subch.current.byTrackNum == 110) {
 		// skip lead-out
 		if (nLBA > pDisc->SCSI.nAllLength - 10) {
-			return;
-		}
-		else if (pDisc->SCSI.lpSessionNumList[pDiscPerSector->byTrackNum] >= 2) {
-			// Wild Romance [Kyosuke Himuro]
-			// LBA[043934, 0x0ab9e], Audio, 2ch, Copy NG, Pre-emphasis No, Track[02], Idx[01], RMSF[04:19:39], AMSF[09:47:59], RtoW[0, 0, 0, 0]
-			// LBA[055335, 0x0d827], Audio, 2ch, Copy NG, Pre-emphasis No, Track[110], Idx[01], RMSF[00:00:01], AMSF[09:47:61], RtoW[0, 0, 0, 0]
-			// LBA[055336, 0x0d828],  Data,      Copy NG,                  Track[03], Idx[01], RMSF[00:00:01], AMSF[12:19:61], RtoW[0, 0, 0, 0]
-			pDiscPerSector->subch.current.byCtl = AUDIO_DATA_TRACK;
-			pDiscPerSector->subch.current.byTrackNum = (BYTE)(pDiscPerSector->byTrackNum + 1);
-			pDiscPerSector->subch.current.nRelativeTime = 0;
 			return;
 		}
 		else if (pDiscPerSector->subcode.current[13] != 0xaa) {
@@ -511,7 +540,9 @@ VOID FixSubQ(
 				if (!FixSubQAdrMCN(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA)) {
 					// Next check adr:3
 					if (!FixSubQAdrISRC(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA)) {
-						bAdrCurrent = TRUE;
+						if (!FixSubQAdr6(pDisc, pDiscPerSector, nLBA)) {
+							bAdrCurrent = TRUE;
+						}
 					}
 				}
 			}
@@ -523,7 +554,9 @@ VOID FixSubQ(
 					if (!FixSubQAdrISRC(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA)) {
 						// Next check adr:2
 						if (!FixSubQAdrMCN(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA)) {
-							bAdrCurrent = TRUE;
+							if (!FixSubQAdr6(pDisc, pDiscPerSector, nLBA)) {
+								bAdrCurrent = TRUE;
+							}
 						}
 					}
 				}
@@ -532,7 +565,9 @@ VOID FixSubQ(
 					if (!FixSubQAdrMCN(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA)) {
 						// Next check adr:3
 						if (!FixSubQAdrISRC(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA)) {
-							bAdrCurrent = TRUE;
+							if (!FixSubQAdr6(pDisc, pDiscPerSector, nLBA)) {
+								bAdrCurrent = TRUE;
+							}
 						}
 					}
 				}
@@ -584,6 +619,24 @@ VOID FixSubQ(
 					, nLBA, pDiscPerSector->byTrackNum, pDiscPerSector->subch.current.byAdr);
 
 				pDiscPerSector->subch.current.byAdr = ADR_ENCODES_ISRC;
+				pDiscPerSector->subcode.current[12] =
+					(BYTE)(pDiscPerSector->subch.current.byCtl << 4 | pDiscPerSector->subch.current.byAdr);
+
+				RecalcSubQCrc(pDisc, pDiscPerSector);
+				if (!pDisc->SUB.nCorruptCrcH && !pDisc->SUB.nCorruptCrcL) {
+					return;
+				}
+			}
+		}
+		if (pDisc->SUB.byAdr6) {
+			CHAR szAdr6[META_ADR6_SIZE] = {};
+			SetAdr6ToString(pDisc, pDiscPerSector->subcode.current, szAdr6, FALSE);
+
+			if (!strncmp(pDisc->SUB.szAdr6, szAdr6, META_ADR6_SIZE)) {
+				OutputSubErrorWithLBALog("Q[12]:Adr[%d] -> [0x06]\n"
+					, nLBA, pDiscPerSector->byTrackNum, pDiscPerSector->subch.current.byAdr);
+
+				pDiscPerSector->subch.current.byAdr = ADR_ENCODES_6;
 				pDiscPerSector->subcode.current[12] =
 					(BYTE)(pDiscPerSector->subch.current.byCtl << 4 | pDiscPerSector->subch.current.byAdr);
 
@@ -1271,8 +1324,8 @@ BOOL FixSubChannel(
 						SetISRCToString(pDisc, pDiscPerSector, szISRC, TRUE);
 					}
 				}
-				else if (pDiscPerSector->subch.current.byAdr == ADR_ENCODES_CDTV_SPECIFIC) {
-					UpdateTmpSubchForCDTV(pDisc, pDiscPerSector, nLBA);
+				else if (pDiscPerSector->subch.current.byAdr == ADR_ENCODES_6) {
+					UpdateTmpSubchForAdr6(pDisc, pDiscPerSector, nLBA);
 				}
 
 				if (*bReread) {
@@ -1343,8 +1396,8 @@ BOOL FixSubChannel(
 					else if (pDiscPerSector->subch.current.byAdr == ADR_ENCODES_ISRC) {
 						UpdateTmpSubchForISRC(&pDiscPerSector->subch);
 					}
-					else if (pDiscPerSector->subch.current.byAdr == ADR_ENCODES_CDTV_SPECIFIC) {
-						UpdateTmpSubchForCDTV(pDisc, pDiscPerSector, nLBA);
+					else if (pDiscPerSector->subch.current.byAdr == ADR_ENCODES_6) {
+						UpdateTmpSubchForAdr6(pDisc, pDiscPerSector, nLBA);
 					}
 //				}
 			}
@@ -1375,8 +1428,8 @@ BOOL FixSubChannel(
 		else if (pDiscPerSector->subch.current.byAdr == ADR_ENCODES_ISRC) {
 			UpdateTmpSubchForISRC(&pDiscPerSector->subch);
 		}
-		else if (pDiscPerSector->subch.current.byAdr == ADR_ENCODES_CDTV_SPECIFIC) {
-			UpdateTmpSubchForCDTV(pDisc, pDiscPerSector, nLBA);
+		else if (pDiscPerSector->subch.current.byAdr == ADR_ENCODES_6) {
+			UpdateTmpSubchForAdr6(pDisc, pDiscPerSector, nLBA);
 		}
 #endif
 	}

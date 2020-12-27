@@ -1229,6 +1229,26 @@ VOID SetTrackAttribution(
 	}
 }
 
+VOID SetAdr6ToString(
+	PDISC pDisc,
+	LPBYTE lpSubcode,
+	LPSTR pszOutString,
+	BOOL bCopy
+) {
+#ifdef _WIN32
+	size_t size = META_ADR6_SIZE - 1;
+#else
+	size_t size = META_ADR6_SIZE;
+#endif
+	_snprintf(pszOutString, size, "%02x%02x%02x%02x%02x%02x%02x%02x"
+		, lpSubcode[13], lpSubcode[14], lpSubcode[15], lpSubcode[16]
+		, lpSubcode[17], lpSubcode[18], lpSubcode[19], lpSubcode[20]);
+	pszOutString[META_ADR6_SIZE - 1] = 0;
+	if (bCopy) {
+		strncpy(pDisc->SUB.szAdr6, pszOutString, sizeof(pDisc->SUB.szAdr6) - 1);
+	}
+}
+
 VOID SetISRCToString(
 	PDISC pDisc,
 	PDISC_PER_SECTOR pDiscPerSector,
@@ -1903,7 +1923,7 @@ VOID UpdateTmpSubchForISRC(
 	}
 }
 
-VOID UpdateTmpSubchForCDTV(
+VOID UpdateTmpSubchForAdr6(
 	PDISC pDisc,
 	PDISC_PER_SECTOR pDiscPerSector,
 	INT nLBA
