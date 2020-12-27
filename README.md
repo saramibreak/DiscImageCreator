@@ -6,7 +6,7 @@
   
   This program works on Windows PC (WinXP or higher) and Linux.
   
-  [DICUI](https://github.com/SabreTools/DICUI) can work this program with GUI.
+  [MPF](https://github.com/SabreTools/MPF) can work this program with GUI.
 
 ## Bug report
  To: http://forum.redump.org/topic/10483/discimagecreator/  
@@ -33,7 +33,8 @@
          See Doc/Firmware&Tool.md if you want to download above firmware or useful tool
    - ASUS
      - BC-12D2HT (Combined offset minus disc only), BW-16D1HT (ditto)
-       - BW-16D1HT Firmware 3.02 supports the combined offset plus disc
+       - BW-16D1HT Firmware 3.02 supports the combined offset plus disc  
+       See also http://wiki.redump.org/index.php?title=DiscImageCreator:_Optical_Disc_Drive_Compatibility#Recommended_Non-Plextor_ODDs
    - Hitachi-LG
      - UH12NS30 (Combined offset minus disc only)
 - CD: (Swappable drive) (This is the comfirmed drive list. Actually, many drive perhaps supports to swap)
@@ -161,7 +162,7 @@ See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)
   - SmartE [duplicated msf]
 
 ### Magnetic storage media
-  - FD(3.5inch), SparQ, SuperDisk(120MB), ZIP(100MB, 250MB)
+  - FD(3.5inch), SparQ, SuperDisk(120MB), ZIP(100MB, 250MB), jaz
 
 ### Magneto-Optical disk
   - MD(Hi-MD format), MO(128MB, 230MB, 640MB)
@@ -243,7 +244,7 @@ See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)
       https://docs.microsoft.com/en-us/windows/wsl/install-win10
 
 - Linux
-  - gcc, make, [css_auth](http://www.cs.cmu.edu/~dst/DeCSS/) (if you dump a DVD with DRM)
+  - gcc, make
 
 ## License & Copyright
 See LICENSE  
