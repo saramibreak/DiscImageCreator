@@ -888,14 +888,19 @@ VOID SetTrackAttribution(
 	if (pDiscPerSector->subch.current.byAdr != ADR_ENCODES_CURRENT_POSITION) {
 		if (pDiscPerSector->subch.current.byP == 0x00 && pDiscPerSector->subch.next.byP == 0xff &&
 			pDiscPerSector->subch.prev.byTrackNum + 1 == pDiscPerSector->subch.next.byTrackNum) {
-			if (pDisc->SUB.n1stRmsfOfTrk == 149 || pDisc->SUB.n1stRmsfOfTrk == 224 || pDiscPerSector->subch.next.byTrackNum == 2) {
+			if (pDisc->SUB.n1stRmsfOfTrk == 149 || pDisc->SUB.n1stRmsfOfTrk == 150 ||
+				pDisc->SUB.n1stRmsfOfTrk == 224 || pDiscPerSector->subch.next.byTrackNum == 2) {
+				// [FMT] Winning Post (Japan)
+				// LBA[007949, 0x01f0d]: P[00], Q[01030100207400014774c6dd]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[03], Idx[01], RMSF[00:20:74], AMSF[01:47:74]}, RtoW[0, 0, 0, 0]
+				// LBA[007950, 0x01f0e]: P[00], Q[020000000000000000002175]{Audio, 2ch, Copy NG, Pre-emphasis No, MediaCatalogNumber [0000000000000], AMSF[     :00]}, RtoW[0, 0, 0, 0]
+				// LBA[007951, 0x01f0f]: P[ff], Q[010400000174000148017e01]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[04], Idx[00], RMSF[00:01:74], AMSF[01:48:01]}, RtoW[0, 0, 0, 0]
 				// [PCE] Cosmic Fantasy 3 - Bouken Shounen Rei (Japan)
 				// LBA[261585, 0x3fdd1]: P[00], Q[01950100136900580960087c]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[95], Idx[01], RMSF[00:13:69], AMSF[58:09:60]}, RtoW[0, 0, 0, 0]
 				// LBA[261586, 0x3fdd2]: P[00], Q[020000000000000000615df2]{Audio, 2ch, Copy NG, Pre-emphasis No, MediaCatalogNumber [0000000000000], AMSF[     :61]}, RtoW[0, 0, 0, 0]
 				// LBA[261587, 0x3fdd3]: P[ff], Q[019600000273005809625f79]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[96], Idx[00], RMSF[00:02:73], AMSF[58:09:62]}, RtoW[0, 0, 0, 0]
 				tmpCurrentTrackNum = pDiscPerSector->subch.next.byTrackNum;
 				tmpCurrentIndex = pDiscPerSector->subch.next.byIndex;
-				OutputSubInfoWithLBALog("Set track[%d], index[%d] using next subch\n"
+				OutputSubInfoWithLBALog("Set Track[%02d], Index[%02d] using next subch\n"
 					, nLBA, tmpCurrentTrackNum, pDiscPerSector->subch.next.byTrackNum, pDiscPerSector->subch.next.byIndex);
 				pDiscPerSector->bNextTrk = TRUE;
 			}
@@ -913,7 +918,7 @@ VOID SetTrackAttribution(
 				// LBA[050682, 0x0c5fa]: P[ff], Q[1104000001720011175740c3]{Audio, 2ch, Copy NG, Pre-emphasis Yes, Track[04], Idx[00], RMSF[00:01:72], AMSF[11:17:57]}, RtoW[0, 0, 0, 0]
 				tmpCurrentTrackNum = pDiscPerSector->subch.prev.byTrackNum;
 				tmpCurrentIndex = pDiscPerSector->subch.prev.byIndex;
-				OutputSubInfoWithLBALog("Set track[%d], index[%d] using prev subch\n"
+				OutputSubInfoWithLBALog("Set Track[%02d], Index[%02d] using prev subch\n"
 					, nLBA, tmpCurrentTrackNum, pDiscPerSector->subch.prev.byTrackNum, pDiscPerSector->subch.prev.byIndex);
 			}
 		}
@@ -924,7 +929,7 @@ VOID SetTrackAttribution(
 				// LBA[183032, 0x2caf8]: P[ff], Q[020000000000000000323764]{Audio, 2ch, Copy NG, Pre-emphasis No, MediaCatalogNumber [0000000000000], AMSF[     :32]}, RtoW[0, 0, 0, 0]
 				// LBA[183033, 0x2caf9]: P[00], Q[012201000001004042336c90]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[22], Idx[01], RMSF[00:00:01], AMSF[40:42:33]}, RtoW[0, 0, 0, 0]
 				tmpCurrentTrackNum = pDiscPerSector->subch.next.byTrackNum;
-				OutputSubInfoWithLBALog("Set track[%d] using next subch\n"
+				OutputSubInfoWithLBALog("Set Track[%02d] using next subch\n"
 					, nLBA, tmpCurrentTrackNum, pDiscPerSector->subch.next.byTrackNum);
 				pDiscPerSector->bNextTrk = TRUE;
 			}
@@ -934,7 +939,7 @@ VOID SetTrackAttribution(
 				// LBA[142874, 0x22e1a]: P[ff], Q[420000000000000000746d7c]{ Data,      Copy NG,                  MediaCatalogNumber [0000000000000], AMSF[     :74]}, RtoW[0, 0, 0, 0]
 				// LBA[142875, 0x22e1b]: P[00], Q[413701000001003147002c45]{ Data,      Copy NG,                  Track[37], Idx[01], RMSF[00:00:01], AMSF[31:47:00]}, RtoW[0, 0, 0, 0]
 				tmpCurrentIndex = pDiscPerSector->subch.next.byIndex;
-				OutputSubInfoWithLBALog("Set index[%d] using next subch\n"
+				OutputSubInfoWithLBALog("Set Index[%02d] using next subch\n"
 					, nLBA, tmpCurrentTrackNum, pDiscPerSector->subch.next.byIndex);
 				pDiscPerSector->bNextTrk = TRUE;
 			}
@@ -970,7 +975,7 @@ VOID SetTrackAttribution(
 		}
 
 		if (pDiscPerSector->subch.current.byP == 0x00 && pDiscPerSector->subch.next.byP == 0xff) {
-			OutputSubInfoWithLBALog("P-channel is changed from 0x00 to 0xff. Adr: [%02d]\n"
+			OutputSubInfoWithLBALog("P-channel is changed from 0x00 to 0xff. Adr[%02d]\n"
 				, nLBA, tmpCurrentTrackNum, pDiscPerSector->subch.current.byAdr);
 			pDisc->SUB.n1stPchannelOfTrk = nLBA;
 		}
@@ -1006,7 +1011,7 @@ VOID SetTrackAttribution(
 			}
 
 			if (pDiscPerSector->subch.current.nRelativeTime != 0) {
-				OutputSubInfoWithLBALog("1st RMSF of this track: [%d]\n"
+				OutputSubInfoWithLBALog("1st RMSF of this track[%d]\n"
 					, nLBA, tmpCurrentTrackNum, pDiscPerSector->subch.current.nRelativeTime);
 				pDisc->SUB.n1stRmsfOfTrk = pDiscPerSector->subch.current.nRelativeTime;
 			}
@@ -1069,7 +1074,7 @@ VOID SetTrackAttribution(
 		if (nLBA == pDisc->SCSI.lp1stLBAListOnToc[tIdx] + 10) {
 			pDisc->SUB.lpCtlList[tIdx] = pDiscPerSector->subch.current.byCtl;
 			pDisc->MAIN.lpModeList[tIdx] = GetMode(pDiscPerSector, unscrambled);
-			OutputSubInfoWithLBALog("Set Ctl: [%02d], Mode: [%02d]\n"
+			OutputSubInfoWithLBALog("Set Ctl[%02d], Mode[%02d]\n"
 				, nLBA, tmpCurrentTrackNum, pDisc->SUB.lpCtlList[tIdx], pDisc->MAIN.lpModeList[tIdx]);
 		}
 		// preserve the 1st LBA of the changed index 
