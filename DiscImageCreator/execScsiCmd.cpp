@@ -1169,8 +1169,6 @@ BOOL ReadCacheForLgAsus(
 		memcpy(aMainBuf + CD_RAW_SECTOR_SIZE * i, aBuf + F1_BUFFER_SIZE * i, CD_RAW_SECTOR_SIZE);
 		AlignRowSubcode(aSubBuf + CD_RAW_READ_SUBCODE_SIZE * i, aBuf + F1_BUFFER_SIZE * i + CD_RAW_SECTOR_SIZE);
 	}
-	OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("Cached Main Channel"));
-	OutputCDMain(fileMainInfo, aMainBuf, nLBA, CD_RAW_SECTOR_SIZE);
 
 	if (nLBA >= pDisc->SCSI.nAllLength) {
 		for (INT x = 0; x < CD_RAW_SECTOR_SIZE * pDisc->MAIN.nAdjustSectorNum - 16; ++x) {
@@ -1209,6 +1207,8 @@ BOOL ReadCacheForLgAsus(
 		if (!*lpbCached) {
 			OutputLog(standardOut | fileDisc, "%02u Cache LBA %06u, SubQ Trk %02x, AMSF %02x:%02x:%02x [Lead-out]\n"
 				, nLineNum + 1, nLBA, aSubBuf[13], aSubBuf[19], aSubBuf[20], aSubBuf[21]);
+			OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("Cached Main Channel [Lead-out]"));
+			OutputCDMain(fileMainInfo, aBuf, nLBA, CD_RAW_SECTOR_SIZE);
 			memcpy(lpOutBuf + F1_BUFFER_SIZE * (nLBA - pDisc->SCSI.nAllLength), aBuf, F1_BUFFER_SIZE);
 			(*lpbLeadOutCnt)++;
 		}
