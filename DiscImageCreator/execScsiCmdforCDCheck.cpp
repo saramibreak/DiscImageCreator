@@ -813,7 +813,7 @@ BOOL ReadCDForCheckingReadInOut(
 				OutputLog(standardOut | fileDrive, "But 0xF1 is supported\n");
 				INT ct = 20;
 				OutputLog(standardOut | fileDisc
-					, OUTPUT_DHYPHEN_PLUS_STR("Reading %u - %u INTO CACHE")
+					, OUTPUT_DHYPHEN_PLUS_STR("Reading %d - %d INTO CACHE")
 					, nLBA - 1 - ct, nLBA - 1);
 
 				BYTE aLastSector[CD_RAW_SECTOR_SIZE] = {};

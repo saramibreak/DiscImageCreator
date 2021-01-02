@@ -1185,7 +1185,7 @@ BOOL ReadCacheForLgAsus(
 					(pDisc->SCSI.toc.TrackData[0].Control & AUDIO_DATA_TRACK) == 0) {
 					OutputLog(standardOut | fileDisc,
 						"-----------------------------------------------------\n"
-						"Cache SIZE: %u (This size is different every running)\n"
+						"Cache SIZE: %d (This size is different every running)\n"
 						"-----------------------------------------------------\n"
 						, nLineNum
 					);
@@ -1196,7 +1196,7 @@ BOOL ReadCacheForLgAsus(
 			else if (aSubBuf[13] != 0xaa) {
 				OutputLog(standardOut | fileDisc,
 					"-----------------------------------------------------\n"
-					"Cache SIZE: %u (This size is different every running)\n"
+					"Cache SIZE: %d (This size is different every running)\n"
 					"-----------------------------------------------------\n"
 					, nLineNum
 				);
@@ -1205,7 +1205,7 @@ BOOL ReadCacheForLgAsus(
 			}
 		}
 		if (!*lpbCached) {
-			OutputLog(standardOut | fileDisc, "%02u Cache LBA %06u, SubQ Trk %02x, AMSF %02x:%02x:%02x [Lead-out]\n"
+			OutputLog(standardOut | fileDisc, "%02d Cache LBA %06d, SubQ Trk %02x, AMSF %02x:%02x:%02x [Lead-out]\n"
 				, nLineNum + 1, nLBA, aSubBuf[13], aSubBuf[19], aSubBuf[20], aSubBuf[21]);
 			OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("Cached Main Channel [Lead-out]"));
 			OutputCDMain(fileMainInfo, aBuf, nLBA, CD_RAW_SECTOR_SIZE);
@@ -1214,7 +1214,7 @@ BOOL ReadCacheForLgAsus(
 		}
 	}
 	else {
-		OutputLog(standardOut | fileDisc, "%02u Cache LBA %06u, SubQ Trk %02x, AMSF %02x:%02x:%02x\n"
+		OutputLog(standardOut | fileDisc, "%02d Cache LBA %06d, SubQ Trk %02x, AMSF %02x:%02x:%02x\n"
 			, nLineNum + 1, nLBA, aSubBuf[13], aSubBuf[19], aSubBuf[20], aSubBuf[21]);
 	}
 	return TRUE;
