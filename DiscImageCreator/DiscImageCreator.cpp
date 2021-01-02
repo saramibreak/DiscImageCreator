@@ -1058,6 +1058,9 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				else if (cmdLen == 5 && !_tcsncmp(argv[i - 1], _T("/mscf"), cmdLen)) {
 					pExtArg->byMicroSoftCabFile = TRUE;
 				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/mr"), cmdLen)) {
+					pExtArg->byMultiSectorReading = TRUE;
+				}
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/np"), cmdLen)) {
 					pExtArg->bySkipSubP = TRUE;
 				}

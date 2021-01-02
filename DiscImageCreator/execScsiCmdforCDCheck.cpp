@@ -806,6 +806,10 @@ BOOL ReadCDForCheckingReadInOut(
 		else if (0 < pDisc->MAIN.nCombinedOffset) {
 			OutputLog(standardOut | fileDrive, "This drive can't read the lead-out\n");
 			if (IsValid0xF1SupportedDrive(pDevice)) {
+				if (1 < pDisc->MAIN.nAdjustSectorNum && !pExtArg->byMultiSectorReading) {
+					OutputErrorString("Multi sector reading isn't supported now even if 0xf1 is supported\n");
+					return FALSE;
+				}
 				OutputLog(standardOut | fileDrive, "But 0xF1 is supported\n");
 				INT ct = 20;
 				OutputLog(standardOut | fileDisc

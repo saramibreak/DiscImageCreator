@@ -198,6 +198,8 @@ typedef struct _EXT_ARG {
 	BYTE byAnchorVolumeDescriptorPointer;
 	BYTE byMicroSoftCabFile;
 	BYTE byPadSector;
+	BYTE byMultiSectorReading; // for 0xF1 supported drive
+	BYTE byPadding[3];
 	INT nAudioCDOffsetNum;
 	UINT uiMaxRereadNum;
 	INT nAllSectors;	// use for xbox360
