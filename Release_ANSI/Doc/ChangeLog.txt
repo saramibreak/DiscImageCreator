@@ -704,3 +704,12 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - fixed: output incorrect pregap when Q-channel's pregap is 00:01:74 and the adr of 00:01:74 is 2(MCN) or 3(ISRC)
 - fixed: escape the c2 error "F0 F0 F0 00 00 00 0F 0F 0F"
 - fixed: check the offset twice when the combined offset is over 1 sector.
+
+*2021-01-02
+- added: support the multi-track CD-i (1st track is data, others audio)
+- added: show the error message when multi-session disc is dumped by the plextor cdrom drive
+- added: show the error message (Multi sector reading isn't supported now even if 0xf1 is supported)
+- fixed: subQ when there is MCN or ISRC in the 1st pregap sector or last sector of the track
+- fixed: failed to dump the multi-session disc from 20200604
+- fixed: buf size to store the fullpath
+- improved: subQ Adr 6
