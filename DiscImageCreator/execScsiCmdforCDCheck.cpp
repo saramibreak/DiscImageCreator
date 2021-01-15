@@ -2194,14 +2194,12 @@ BOOL ReadCDForCheckingSecuROM(
 #endif
 	if (pExtArg->byIntentionalSub && pDisc->PROTECT.byExist != securomV1 &&
 		(pDiscPerSector->subcode.current[12] == 0x41 || pDiscPerSector->subcode.current[12] == 0x61)) {
-//		WORD crc16 = (WORD)GetCrc16CCITT(10, &pDiscPerSector->subcode.current[12]);
-//		WORD bufcrc = MAKEWORD(pDiscPerSector->subcode.current[23], pDiscPerSector->subcode.current[22]);
+
 		INT nRLBA = MSFtoLBA(BcdToDec(pDiscPerSector->subcode.current[15])
 			, BcdToDec(pDiscPerSector->subcode.current[16]), BcdToDec(pDiscPerSector->subcode.current[17]));
 		INT nALBA = MSFtoLBA(BcdToDec(pDiscPerSector->subcode.current[19])
 			, BcdToDec(pDiscPerSector->subcode.current[20]), BcdToDec(pDiscPerSector->subcode.current[21]));
 
-//		if (crc16 != bufcrc) {
 		if ((nRLBA == 3000 || nRLBA == 3001) && nALBA == 299) { // 3001(00:40:01), 299(00:03:74)
 			OutputSubInfoWithLBALog(
 				"Detected intentional error. CRC-16 is original:[%02x%02x] and XORed with 0x8001:[%02x%02x] "
@@ -2212,7 +2210,7 @@ BOOL ReadCDForCheckingSecuROM(
 				, pDiscPerSector->subcode.current[15], pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17]
 				, pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
 
-			OutputLog(standardOut | fileDisc, "Detected intentional subchannel in LBA -1 => SecuROM Type 4 (a.k.a. NEW)\n");
+			OutputLog(standardOut | fileDisc, "Detected intentional subchannel in LBA -1 => SecuROM 4th version (a.k.a. NEW)\n");
 			OutputIntentionalSubchannel(-1, &pDiscPerSector->subcode.current[12]);
 			pDisc->PROTECT.byExist = securomV4;
 			pDiscPerSector->subch.prev.nRelativeTime = -1;
@@ -2224,15 +2222,15 @@ BOOL ReadCDForCheckingSecuROM(
 				, -1, 0, pDiscPerSector->subcode.current[15], pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17]
 				, pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
 
-			// Colin McRae Rally 2.0 http://redump.org/disc/31587/
 			if (nRLBA == 167295) {
-				OutputLog(standardOut | fileDisc, "Detected intentional subchannel in LBA -1 => SecuROM Type 3_1 (a.k.a. NEW)\n");
+				// Colin McRae Rally 2.0 (Europe) http://redump.org/disc/31587/
+				OutputLog(standardOut | fileDisc, "Detected intentional subchannel in LBA -1 => SecuROM 3rd version type 1 (a.k.a. NEW)\n");
 				pDisc->PROTECT.byExist = securomV3_1;
 			}
-			// Empire Earth http://redump.org/disc/45559/
-			// Diablo II: Lord of Destruction (Expansion Set) http://redump.org/disc/58232/
 			else if (nRLBA == 0) {
-				OutputLog(standardOut | fileDisc, "Detected intentional subchannel in LBA -1 => SecuROM Type 3_2 (a.k.a. NEW)\n");
+				// Empire Earth (USA) http://redump.org/disc/45559/
+				// Diablo II: Lord of Destruction (Expansion Set) (USA) http://redump.org/disc/58232/
+				OutputLog(standardOut | fileDisc, "Detected intentional subchannel in LBA -1 => SecuROM 3rd version type 2 (a.k.a. NEW)\n");
 				pDisc->PROTECT.byExist = securomV3_2;
 			}
 			OutputIntentionalSubchannel(-1, &pDiscPerSector->subcode.current[12]);
@@ -2252,6 +2250,7 @@ BOOL ReadCDForCheckingSecuROM(
 				byTransferLen = lpCmd[8];
 				lpCmd[8] = 1;
 			}
+
 			if (!ExecReadCD(pExtArg, pDevice, lpCmd, 5000, pDiscPerSector->data.current,
 				pDevice->TRANSFER.uiBufLen, _T(__FUNCTION__), __LINE__)) {
 				return FALSE;
@@ -2261,26 +2260,27 @@ BOOL ReadCDForCheckingSecuROM(
 				, BcdToDec(pDiscPerSector->subcode.current[16]), BcdToDec(pDiscPerSector->subcode.current[17]));
 			nALBA = MSFtoLBA(BcdToDec(pDiscPerSector->subcode.current[19])
 				, BcdToDec(pDiscPerSector->subcode.current[20]), BcdToDec(pDiscPerSector->subcode.current[21]));
+
 			if (nRLBA == 5001 && nALBA == 5151) { // 5001(01:06:51), 5151(01:08:51)
-				OutputLog(standardOut | fileDisc, "Detected intentional subchannel in LBA 5000 => SecuROM Type 2 (a.k.a. NEW)\n");
+				// Supreme Snowboarding (Europe) http://redump.org/disc/32182/
+				OutputLog(standardOut | fileDisc, "Detected intentional subchannel in LBA 5000 => SecuROM 2nd version (a.k.a. NEW)\n");
 				pDisc->PROTECT.byExist = securomV2;
 			}
 			else if (pDisc->PROTECT.byExist == securomTmp) {
-				pDisc->PROTECT.byExist = securomV1;
-			}
-			else {
 				for (INT nTmpLBA = 40000; nTmpLBA < 45800; nTmpLBA++) {
 					if (pDisc->SCSI.nAllLength > nTmpLBA) {
 						if (!ExecReadCD(pExtArg, pDevice, lpCmd, nTmpLBA, pDiscPerSector->data.current,
 							pDevice->TRANSFER.uiBufLen, _T(__FUNCTION__), __LINE__)) {
 							return FALSE;
 						}
+						AlignRowSubcode(pDiscPerSector->subcode.current, pDiscPerSector->data.current + pDevice->TRANSFER.uiBufSubOffset);
 						WORD reCalcCrc16 = (WORD)GetCrc16CCITT(10, &pDiscPerSector->subcode.current[12]);
 						WORD reCalcXorCrc16 = (WORD)(reCalcCrc16 ^ 0x0080);
 						if (pDiscPerSector->subcode.current[22] == HIBYTE(reCalcXorCrc16) &&
 							pDiscPerSector->subcode.current[23] == LOBYTE(reCalcXorCrc16)) {
+							// FIFA 99 (Europe) http://redump.org/disc/23791/
 							OutputLog(standardOut | fileDisc
-								, "Detected intentional subchannel in LBA %d => SecuROM Type 1 (a.k.a. OLD)\n", nTmpLBA);
+								, "Detected intentional subchannel in LBA %d => SecuROM 1st version (a.k.a. OLD)\n", nTmpLBA);
 							pDisc->PROTECT.byExist = securomV1;
 							break;
 						}

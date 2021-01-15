@@ -263,12 +263,13 @@ VOID OutputFsDirectoryRecord(
 
 		if (pExtArg->byIntentionalSub) {
 			if (!strncmp(fnameForProtect, "CMS16.DLL", 9) && pDisc->PROTECT.byExist == no) {
-				pDisc->PROTECT.byExist = securomV1;
+				// Shadow Man (Italian) isn't securomV1
+//				pDisc->PROTECT.byExist = securomV1;
 				strncpy(pDisc->PROTECT.name[0], fnameForProtect, sizeof(pDisc->PROTECT.name[0]));
 			}
 			else if ((!strncmp(fnameForProtect, "cms32_95.dll", 12) || !strncmp(fnameForProtect, "CMS32_NT.DLL", 12))
 				&& pDisc->PROTECT.byExist == no) {
-				pDisc->PROTECT.byExist = securomV1;
+//				pDisc->PROTECT.byExist = securomV1;
 				strncpy(pDisc->PROTECT.name[0], fnameForProtect, sizeof(pDisc->PROTECT.name[0]));
 			}
 		}
