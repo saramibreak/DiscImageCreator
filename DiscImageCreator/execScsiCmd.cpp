@@ -75,6 +75,8 @@ BOOL Inquiry(
 		(LPCCH)&inquiryData.ProductId, sizeof(pDevice->szProductId));
 	strncpy(pDevice->szProductRevisionLevel,
 		(LPCCH)&inquiryData.ProductRevisionLevel, sizeof(pDevice->szProductRevisionLevel));
+	strncpy(pDevice->szVendorSpecific,
+		(LPCCH)&inquiryData.VendorSpecific, sizeof(pDevice->szVendorSpecific));
 
 	if (*pExecType != drivespeed) {
 		OutputInquiry(&inquiryData);

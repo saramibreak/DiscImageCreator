@@ -91,7 +91,7 @@ BOOL IsBDBasedDisc(
 	return FALSE;
 }
 
-BOOL IsCDRDrive(
+BOOL IsCDR(
 	PDISC pDisc
 ) {
 	if (pDisc->SCSI.wCurrentMedia == ProfileCdRecordable ||
@@ -117,21 +117,19 @@ BOOL IsValid0xF1SupportedDrive(
 ) {
 	if (!strncmp(pDevice->szVendorId, "ASUS    ", DRIVE_VENDOR_ID_SIZE)) {
 		if (!strncmp(pDevice->szProductId, "BW-16D1HT       ", DRIVE_PRODUCT_ID_SIZE)) {
-			if (!strncmp(pDevice->szProductRevisionLevel, "3.02", DRIVE_VERSION_ID_SIZE)) {
+			if (!strncmp(pDevice->szProductRevisionLevel, "3.00", DRIVE_VERSION_ID_SIZE) ||
+				!strncmp(pDevice->szProductRevisionLevel, "3.02", DRIVE_VERSION_ID_SIZE)) {
 				pDevice->by0xF1Drive = TRUE;
-				return TRUE;
 			}
 		}
 		else if (!strncmp(pDevice->szProductId, "BW-12B1ST   a   ", DRIVE_PRODUCT_ID_SIZE)) {
 			if (!strncmp(pDevice->szProductRevisionLevel, "1.00", DRIVE_VERSION_ID_SIZE)) {
 				pDevice->by0xF1Drive = TRUE;
-				return TRUE;
 			}
 		}
 		else if (!strncmp(pDevice->szProductId, "BC-12D2HT       ", DRIVE_PRODUCT_ID_SIZE)) {
 			if (!strncmp(pDevice->szProductRevisionLevel, "3.00", DRIVE_VERSION_ID_SIZE)) {
 				pDevice->by0xF1Drive = TRUE;
-				return TRUE;
 			}
 		}
 	}
@@ -139,27 +137,80 @@ BOOL IsValid0xF1SupportedDrive(
 		if (!strncmp(pDevice->szProductId, "DVDRAM GH24NSD1 ", DRIVE_PRODUCT_ID_SIZE)) {
 			if (!strncmp(pDevice->szProductRevisionLevel, "LG00", DRIVE_VERSION_ID_SIZE)) {
 				pDevice->by0xF1Drive = TRUE;
-				return TRUE;
-			}
-		}
-		else if (!strncmp(pDevice->szProductId, "BD-RE  WH14NS40 ", DRIVE_PRODUCT_ID_SIZE)) {
-			if (!strncmp(pDevice->szProductRevisionLevel, "1.01", DRIVE_VERSION_ID_SIZE)) {
-				pDevice->by0xF1Drive = TRUE;
-				return TRUE;
-			}
-		}
-		else if (!strncmp(pDevice->szProductId, "BD-RE  WH16NS60 ", DRIVE_PRODUCT_ID_SIZE)) {
-			if (!strncmp(pDevice->szProductRevisionLevel, "1.00", DRIVE_VERSION_ID_SIZE)) {
-				pDevice->by0xF1Drive = TRUE;
-				return TRUE;
 			}
 		}
 		else if (!strncmp(pDevice->szProductId, "BDDVDRW UH12NS40", DRIVE_PRODUCT_ID_SIZE)) {
 			if (!strncmp(pDevice->szProductRevisionLevel, "1.00", DRIVE_VERSION_ID_SIZE)) {
 				pDevice->by0xF1Drive = TRUE;
-				return TRUE;
 			}
 		}
+		else if (!strncmp(pDevice->szProductId, "BD-RE  BH14NS40 ", DRIVE_PRODUCT_ID_SIZE)) {
+			if (!strncmp(pDevice->szProductRevisionLevel, "1.00", DRIVE_VERSION_ID_SIZE)) {
+				if (!strncmp(pDevice->szVendorSpecific, "N1A11A1", 7)) {
+					pDevice->by0xF1Drive = TRUE;
+				}
+			}
+		}
+		else if (!strncmp(pDevice->szProductId, "BD-RE  BH14NS58 ", DRIVE_PRODUCT_ID_SIZE)) {
+			if (!strncmp(pDevice->szProductRevisionLevel, "1.00", DRIVE_VERSION_ID_SIZE)) {
+				pDevice->by0xF1Drive = TRUE;
+			}
+		}
+		else if (!strncmp(pDevice->szProductId, "BD-RE  BH16NS40 ", DRIVE_PRODUCT_ID_SIZE)) {
+			if (!strncmp(pDevice->szProductRevisionLevel, "1.00", DRIVE_VERSION_ID_SIZE)) {
+				if (!strncmp(pDevice->szVendorSpecific, "N1A29A2", 7)) {
+					pDevice->by0xF1Drive = TRUE;
+				}
+			}
+			else if (!strncmp(pDevice->szProductRevisionLevel, "1.02", DRIVE_VERSION_ID_SIZE)) {
+				if (!strncmp(pDevice->szVendorSpecific, "N000200", 7)) {
+					pDevice->by0xF1Drive = TRUE;
+				}
+			}
+		}
+		else if (!strncmp(pDevice->szProductId, "BD-RE  BH16NS55 ", DRIVE_PRODUCT_ID_SIZE)) {
+			if (!strncmp(pDevice->szProductRevisionLevel, "1.00", DRIVE_VERSION_ID_SIZE) ||
+				!strncmp(pDevice->szProductRevisionLevel, "1.01", DRIVE_VERSION_ID_SIZE) ||
+				!strncmp(pDevice->szProductRevisionLevel, "1.02", DRIVE_VERSION_ID_SIZE)) {
+				pDevice->by0xF1Drive = TRUE;
+			}
+		}
+		else if (!strncmp(pDevice->szProductId, "BD-RE  BH16NS58 ", DRIVE_PRODUCT_ID_SIZE)) {
+			if (!strncmp(pDevice->szProductRevisionLevel, "1.00", DRIVE_VERSION_ID_SIZE)) {
+				pDevice->by0xF1Drive = TRUE;
+			}
+		}
+		else if (!strncmp(pDevice->szProductId, "BD-RE  WH14NS40 ", DRIVE_PRODUCT_ID_SIZE)) {
+			if (!strncmp(pDevice->szProductRevisionLevel, "1.00", DRIVE_VERSION_ID_SIZE)) {
+				if (!strncmp(pDevice->szVendorSpecific, "N001401", 7)) {
+					pDevice->by0xF1Drive = TRUE;
+				}
+			}
+			else if (!strncmp(pDevice->szProductRevisionLevel, "1.01", DRIVE_VERSION_ID_SIZE)) {
+				pDevice->by0xF1Drive = TRUE;
+			}
+			else if (!strncmp(pDevice->szProductRevisionLevel, "1.02", DRIVE_VERSION_ID_SIZE)) {
+				if (!strncmp(pDevice->szVendorSpecific, "N000100", 7)) {
+					pDevice->by0xF1Drive = TRUE;
+				}
+			}
+		}
+		else if (!strncmp(pDevice->szProductId, "BD-RE  WH16NS40 ", DRIVE_PRODUCT_ID_SIZE)) {
+			if (!strncmp(pDevice->szProductRevisionLevel, "1.02", DRIVE_VERSION_ID_SIZE)) {
+				if (!strncmp(pDevice->szVendorSpecific, "N001401", 7)) {
+					pDevice->by0xF1Drive = TRUE;
+				}
+			}
+		}
+		else if (!strncmp(pDevice->szProductId, "BD-RE  WH16NS60 ", DRIVE_PRODUCT_ID_SIZE)) {
+			if (!strncmp(pDevice->szProductRevisionLevel, "1.00", DRIVE_VERSION_ID_SIZE)) {
+				pDevice->by0xF1Drive = TRUE;
+			}
+		}
+	}
+
+	if (pDevice->by0xF1Drive) {
+		return TRUE;
 	}
 	return FALSE;
 }
@@ -550,7 +601,6 @@ BOOL IsValidLibCryptSector(
 	BOOL bLibCrypt,
 	INT nLBA
 ) {
-#if 1
 	BOOL bRet = FALSE;
 	if (bLibCrypt) {
 		if ((10000 <= nLBA && nLBA < 20000) || (40000 <= nLBA && nLBA < 50000)) {
@@ -558,11 +608,6 @@ BOOL IsValidLibCryptSector(
 		}
 	}
 	return bRet;
-#else
-	UNREFERENCED_PARAMETER(bLibCrypt);
-	UNREFERENCED_PARAMETER(nLBA);
-	return TRUE;
-#endif
 }
 
 BOOL IsValidSecuRomSector(

@@ -385,7 +385,7 @@ BOOL ReadCDForRereadingSectorType1(
 				else {
 					if (i == pExtArg->uiMaxRereadNum - 1 && !pDisc->PROTECT.byExist) {
 						OutputLog(standardError | fileC2Error, "\nbad all. need to reread more\n");
-						if (IsCDRDrive(pDisc) && pExtArg->uiMaxRereadNum >= 10000) {
+						if (IsCDR(pDisc) && pExtArg->uiMaxRereadNum >= 10000) {
 							throw TRUE;
 						}
 						else {

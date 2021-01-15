@@ -32,7 +32,7 @@ BOOL IsBDBasedDisc(
 	PDISC pDisc
 );
 
-BOOL IsCDRDrive(
+BOOL IsCDR(
 	PDISC pDisc
 );
 

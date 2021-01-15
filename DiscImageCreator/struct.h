@@ -233,6 +233,7 @@ typedef struct _DEVICE {
 	CHAR szVendorId[8];
 	CHAR szProductId[16];
 	CHAR szProductRevisionLevel[4];
+	CHAR szVendorSpecific[20];
 	BYTE byPlxtrDrive;
 	BYTE by0xF1Drive;
 	BYTE byLoadingMechanism;
