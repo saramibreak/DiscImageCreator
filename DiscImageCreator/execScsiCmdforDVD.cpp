@@ -1848,25 +1848,10 @@ BOOL ReadXboxDVD(
 		return FALSE;
 	}
 
-	if (!SetLockState(pExtArg, pDevice, 1)) {
-		return FALSE;
-	}
-	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("Unlock 1 state(xtreme)"));
-	if (!ReadCapacity(pExtArg, pDevice)) {
-		return FALSE;
-	}
-	if (!ReadTOC(pExtArg, pExecType, pDevice, pDisc)) {
-		return FALSE;
-	}
-
-	if (!ExtractSecuritySector(pExtArg, pDevice, pDisc, pszFullPath)) {
-		return FALSE;
-	}
-
 	if (!SetLockState(pExtArg, pDevice, 2)) {
 		return FALSE;
 	}
-	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("Unlock 2 state(wxripper)"));
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("Unlock state 2 (wxripper)"));
 	if (!ReadCapacity(pExtArg, pDevice)) {
 		return FALSE;
 	}
