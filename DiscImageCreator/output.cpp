@@ -22,6 +22,7 @@
 #include "output.h"
 #include "outputScsiCmdLog.h"
 #include "outputScsiCmdLogforCD.h"
+#include "outputScsiCmdLogforDVD.h"
 #include "set.h"
 
 #ifdef _DEBUG
@@ -965,13 +966,13 @@ BOOL WriteParsingMdsfile(
 	LPCTSTR pszMdsfile
 ) {
 	BOOL bRet = TRUE;
-	FILE* fpParse = CreateOrOpenFile(
-		pszMdsfile, _T("_mdsReadable"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0);
-	if (!fpParse) {
+#ifndef DEBUG
+	if (NULL == (g_LogFile.fpMdsReadable = CreateOrOpenFile(
+		pszMdsfile, _T("_mdsReadable"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
-
+#endif
 	FILE* fpMds = NULL;
 	LPBYTE data = NULL;
 	try {
@@ -993,24 +994,33 @@ BOOL WriteParsingMdsfile(
 		FcloseAndNull(fpMds);
 
 		MDS_HEADER h = {};
-		size_t nOfs = 0;
-		size_t size = sizeof(MDS_HEADER);
-		memcpy(&h, data, size);
-		nOfs += size;
+		memcpy(&h, data, sizeof(MDS_HEADER));
+		size_t nOfs = sizeof(MDS_HEADER);
 
-		PMDS_FOR_DVD_BLK dvd = {};
-		BYTE layer = 1;
+		MDS_FOR_DVD_BLK dvd[2] = {};
+		BYTE layerNumber = 1;
 		if (h.mediaType == 0x10) {
 			if ((data[nOfs + 2054] >> 5 & 0x03) == 1) {
-				layer = 2;
+				layerNumber = 2;
 			}
-			if (NULL == (dvd = (PMDS_FOR_DVD_BLK)calloc(layer, sizeof(MDS_FOR_DVD_BLK)))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				throw FALSE;
+			for (BYTE i = 0; i < layerNumber; i++) {
+				if (h.ofsToBca) {
+					if (NULL == (dvd[i].bca = (PDVD_BCA_DESCRIPTOR)calloc(layerNumber, 2048))) {
+						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+						throw FALSE;
+					}
+					memcpy(dvd[i].bca, data + nOfs, h.lenOfBca);
+					nOfs += h.lenOfBca;
+				}
+				memcpy(&dvd[i].copyright, data + nOfs, sizeof(dvd[i].copyright));
+				nOfs += sizeof(dvd[i].copyright);
+
+				memcpy(&dvd[i].dmi, data + nOfs, sizeof(dvd[i].dmi));
+				nOfs += sizeof(dvd[i].dmi);
+
+				memcpy(&dvd[i].layer, data + nOfs, sizeof(dvd[i].layer));
+				nOfs += sizeof(dvd[i].layer);
 			}
-			size = layer * sizeof(MDS_FOR_DVD_BLK);
-			memcpy(dvd, data + nOfs, size);
-			nOfs += size;
 		}
 
 		PMDS_SESSION_BLK psb = NULL;
@@ -1018,7 +1028,7 @@ BOOL WriteParsingMdsfile(
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
-		size = h.sessionNum * sizeof(MDS_SESSION_BLK);
+		size_t size = h.sessionNum * sizeof(MDS_SESSION_BLK);
 		memcpy(psb, data + nOfs, size);
 		nOfs += size;
 
@@ -1080,151 +1090,67 @@ BOOL WriteParsingMdsfile(
 				nOfs += size;
 			}
 		}
-		_ftprintf(fpParse,
-			_T(OUTPUT_DHYPHEN_PLUS_STR("Header")
-			"                  id: %.16" CHARWIDTH "s\n"
-			"             unknown: %u\n"
-			"           mediaType: %u\n"
-			"          sessionNum: %u\n"
-			"             unknown: %u\n"
-			"            LenOfBca: %u\n"
-			"            ofsToBca: %u\n"
-			"  ofsTo1stSessionBlk: %u\n"
-			"            ofsToDpm: %u\n")
+		OutputMdsReadableLog(
+			OUTPUT_DHYPHEN_PLUS_STR("Header")
+			"                     ID: %.16" CHARWIDTH "s\n"
+			"                Unknown: %u\n"
+			"              MediaType: %u\n"
+			"             SessionNum: %u\n"
+			"                Unknown: %u\n"
+			"            LengthOfBca: %u\n"
+			"            OffsetToBca: %u\n"
+			" OffsetToDiscStructures: %u\n"
+			"OffsetTo1stSessionBlock: %u\n"
+			"            OffsetToDpm: %u\n"
 			, h.fileId, h.unknown1, h.mediaType, h.sessionNum
-			, h.unknown2, h.lenOfBca, h.ofsToBca
+			, h.unknown2, h.lenOfBca, h.ofsToBca, h.ofsToDiscStructures
 			, h.ofsTo1stSessionBlk, h.ofsToDpm
 		);
 		if (h.mediaType == 0x10) {
-			LPCTSTR lpBookType[] = {
-				_T("DVD-ROM"), _T("DVD-RAM"), _T("DVD-R"), _T("DVD-RW"),
-				_T("HD DVD-ROM"), _T("HD DVD-RAM"), _T("HD DVD-R"), _T("Reserved"),
-				_T("Reserved"), _T("DVD+RW"), _T("DVD+R"), _T("Reserved"),
-				_T("Reserved"), _T("DVD+RW DL"), _T("DVD+R DL"), _T("Reserved")
-			};
-
-			LPCTSTR lpMaximumRate[] = {
-				_T("2.52 Mbps"), _T("5.04 Mbps"), _T("10.08 Mbps"), _T("20.16 Mbps"),
-				_T("30.24 Mbps"), _T("Reserved"), _T("Reserved"), _T("Reserved"),
-				_T("Reserved"), _T("Reserved"), _T("Reserved"), _T("Reserved"),
-				_T("Reserved"), _T("Reserved"), _T("Reserved"), _T("Not Specified")
-			};
-
-			LPCTSTR lpLayerType[] = {
-				_T("Unknown"), _T("Layer contains embossed data"), _T("Layer contains recordable data"), _T("Unknown"),
-				_T("Layer contains rewritable data"), _T("Unknown"), _T("Unknown"), _T("Unknown"),
-				_T("Reserved"), _T("Unknown"), _T("Unknown"), _T("Unknown"),
-				_T("Unknown"), _T("Unknown"), _T("Unknown"), _T("Unknown")
-			};
-
-			LPCTSTR lpTrackDensity[] = {
-				_T("0.74um/track"), _T("0.80um/track"), _T("0.615um/track"), _T("0.40um/track"),
-				_T("0.34um/track"), _T("Reserved"), _T("Reserved"), _T("Reserved"),
-				_T("Reserved"), _T("Reserved"), _T("Reserved"), _T("Reserved"),
-				_T("Reserved"), _T("Reserved"), _T("Reserved"), _T("Reserved")
-			};
-
-			LPCTSTR lpLinearDensity[] = {
-				_T("0.267um/bit"), _T("0.293um/bit"), _T("0.409 to 0.435um/bit"), _T("Reserved"),
-				_T("0.280 to 0.291um/bit"), _T("0.153um/bit"), _T("0.130 to 0.140um/bit"), _T("Reserved"),
-				_T("0.353um/bit"), _T("Reserved"), _T("Reserved"), _T("Reserved"),
-				_T("Reserved"), _T("Reserved"), _T("Reserved"), _T("Reserved")
-			};
-			for (UINT i = 0; i < layer; i++) {
-				if (dvd) {
-					_ftprintf(fpParse, _T(OUTPUT_DHYPHEN_PLUS_STR("BCA")));
-					for (size_t k = 0; k < sizeof(dvd[i].bca); k += 16) {
-						_ftprintf(fpParse,
-							_T("%04zX : %02X %02X %02X %02X %02X %02X %02X %02X  %02X %02X %02X %02X %02X %02X %02X %02X\n")
-							, k, dvd[i].bca[k], dvd[i].bca[k + 1], dvd[i].bca[k + 2], dvd[i].bca[k + 3], dvd[i].bca[k + 4], dvd[i].bca[k + 5]
-							, dvd[i].bca[k + 6], dvd[i].bca[k + 7], dvd[i].bca[k + 8], dvd[i].bca[k + 9], dvd[i].bca[k + 10], dvd[i].bca[k + 11]
-							, dvd[i].bca[k + 12], dvd[i].bca[k + 13], dvd[i].bca[k + 14], dvd[i].bca[k + 15]);
-					}
-					FOUR_BYTE StartingDataSector;
-					StartingDataSector.AsULong = dvd[i].layer.commonHeader.StartingDataSector;
-					FOUR_BYTE EndDataSector;
-					EndDataSector.AsULong = dvd[i].layer.commonHeader.EndDataSector;
-					FOUR_BYTE EndLayerZeroSector;
-					EndLayerZeroSector.AsULong = dvd[i].layer.commonHeader.EndLayerZeroSector;
-					REVERSE_LONG(&StartingDataSector);
-					REVERSE_LONG(&EndDataSector);
-					REVERSE_LONG(&EndLayerZeroSector);
-					_ftprintf(fpParse,
-						_T(OUTPUT_DHYPHEN_PLUS_STR("DVD Structure")
-							"\t       BookVersion: %u\n"
-							"\t          BookType: %s\n"
-							"\t       MinimumRate: %s\n"
-							"\t          DiskSize: %s\n"
-							"\t         LayerType: %s\n"
-							"\t         TrackPath: %s\n"
-							"\t    NumberOfLayers: %s\n"
-							"\t      TrackDensity: %s\n"
-							"\t     LinearDensity: %s\n"
-							"\tStartingDataSector: %7lu (%#lx)\n"
-							"\t     EndDataSector: %7lu (%#lx)\n"
-							"\tEndLayerZeroSector: %7lu (%#lx)\n"
-							"\t           BCAFlag: %s\n"
-							"\t     MediaSpecific: \n"),
-						dvd[i].layer.commonHeader.BookVersion,
-						lpBookType[dvd[i].layer.commonHeader.BookType],
-						lpMaximumRate[dvd[i].layer.commonHeader.MinimumRate],
-						dvd[i].layer.commonHeader.DiskSize == 0 ? _T("120mm") : _T("80mm"),
-						lpLayerType[dvd[i].layer.commonHeader.LayerType],
-						dvd[i].layer.commonHeader.TrackPath == 0 ? _T("Parallel Track Path") : _T("Opposite Track Path"),
-						dvd[i].layer.commonHeader.NumberOfLayers == 0 ? _T("Single Layer") : _T("Double Layer"),
-						lpTrackDensity[dvd[i].layer.commonHeader.TrackDensity],
-						lpLinearDensity[dvd[i].layer.commonHeader.LinearDensity],
-						StartingDataSector.AsULong, StartingDataSector.AsULong,
-						EndDataSector.AsULong, EndDataSector.AsULong,
-						EndLayerZeroSector.AsULong, EndLayerZeroSector.AsULong,
-						dvd[i].layer.commonHeader.BCAFlag == 0 ? _T("No") : _T("Exist")
-					);
-					for (size_t j = 0; j < sizeof(dvd[i].layer.MediaSpecific); j += 16) {
-						_ftprintf(fpParse,
-							_T("%04X : %02X %02X %02X %02X %02X %02X %02X %02X  %02X %02X %02X %02X %02X %02X %02X %02X\n")
-							, i, dvd[i].layer.MediaSpecific[j], dvd[i].layer.MediaSpecific[j + 1], dvd[i].layer.MediaSpecific[j + 2]
-							, dvd[i].layer.MediaSpecific[j + 3], dvd[i].layer.MediaSpecific[j + 4], dvd[i].layer.MediaSpecific[j + 5]
-							, dvd[i].layer.MediaSpecific[j + 6], dvd[i].layer.MediaSpecific[j + 7], dvd[i].layer.MediaSpecific[j + 8]
-							, dvd[i].layer.MediaSpecific[j + 9], dvd[i].layer.MediaSpecific[j + 10], dvd[i].layer.MediaSpecific[j + 11]
-							, dvd[i].layer.MediaSpecific[j + 12], dvd[i].layer.MediaSpecific[j + 13], dvd[i].layer.MediaSpecific[j + 14]
-							, dvd[i].layer.MediaSpecific[j + 15]);
-					}
+			DISC disc;
+			for (UINT i = 0; i < layerNumber; i++) {
+				OutputDVDCopyrightDescriptor(&dvd[i].copyright, &(disc.DVD.protect), fileMds);
+				if (h.lenOfBca) {
+					OutputDiscBCADescriptor(&disc, dvd[i].bca, h.lenOfBca, fileMds);
 				}
+				OutputDVDManufacturerDescriptor(&dvd[i].dmi, &(disc.DVD.disc), fileMds);
+				DWORD dwSectorLength = 0;
+				OutputDVDLayerDescriptor(&disc, &dvd[i].layer, &dwSectorLength, layerNumber, fileMds);
 			}
 		}
 		for (INT i = 0; i < h.sessionNum; i++) {
-			_ftprintf(fpParse,
+			OutputMdsReadableLog(
 				OUTPUT_DHYPHEN_PLUS_STR("SessionBlock")
-				_T("         startSector: %u\n")
-				_T("           endSector: %u\n")
-				_T("          sessionNum: %u\n")
-				_T("     totalDataBlkNum: %u\n")
-				_T("          DataBlkNum: %u\n")
-				_T("       firstTrackNum: %u\n")
-				_T("        lastTrackNum: %u\n")
-				_T("     ofsTo1stDataBlk: %u\n")
+				"         startSector: %u\n"
+				"           endSector: %u\n"
+				"          sessionNum: %u\n"
+				"     totalDataBlkNum: %u\n"
+				"          DataBlkNum: %u\n"
+				"       firstTrackNum: %u\n"
+				"        lastTrackNum: %u\n"
+				"     ofsTo1stDataBlk: %u\n"
 				, psb[i].startSector, psb[i].endSector, psb[i].sessionNum
 				, psb[i].totalDataBlkNum, psb[i].DataBlkNum, psb[i].firstTrackNum
 				, psb[i].lastTrackNum, psb[i].ofsTo1stDataBlk
 			);
 		}
 		for (INT i = 0; i < tdb; i++) {
-			_ftprintf(fpParse,
+			OutputMdsReadableLog(
 				OUTPUT_DHYPHEN_PLUS_STR("DataBlock")
-				_T("           trackMode: %u\n")
-				_T("          numOfSubch: %u\n")
-				_T("              adrCtl: %u\n")
-				_T("            trackNum: %u\n")
-				_T("               point: %u\n")
-				_T("                 msf: %02u:%02u:%02u\n")
-				_T("       ofsToIndexBlk: %u\n")
-				_T("          sectorSize: %u\n")
-				_T("             unknown: %u\n")
-				_T("    trackStartSector: %u\n")
-				_T("   ofsFromHeadToIdx1: %u\n")
-				_T("             unknown: %u\n")
-				_T("          NumOfFname: %u\n")
-				_T("          OfsToFname: %u\n")
+				"           trackMode: %u\n"
+				"          numOfSubch: %u\n"
+				"              adrCtl: %u\n"
+				"            trackNum: %u\n"
+				"               point: %u\n"
+				"                 msf: %02u:%02u:%02u\n"
+				"       ofsToIndexBlk: %u\n"
+				"          sectorSize: %u\n"
+				"             unknown: %u\n"
+				"    trackStartSector: %u\n"
+				"   ofsFromHeadToIdx1: %u\n"
+				"             unknown: %u\n"
+				"          NumOfFname: %u\n"
+				"          OfsToFname: %u\n"
 				, db[i].trackMode, db[i].numOfSubch, db[i].adrCtl, db[i].trackNum
 				, db[i].point, db[i].m, db[i].s, db[i].f, db[i].ofsToIndexBlk
 				, db[i].sectorSize, db[i].unknown1, db[i].trackStartSector
@@ -1234,10 +1160,10 @@ BOOL WriteParsingMdsfile(
 		if (h.mediaType != 0x10) {
 			for (INT i = 0; i < tdb; i++) {
 				if (ib) {
-					_ftprintf(fpParse,
+					OutputMdsReadableLog(
 						OUTPUT_DHYPHEN_PLUS_STR("IndexBlock")
-						_T("           NumOfIdx0: %u\n")
-						_T("           NumOfIdx1: %u\n")
+						"           NumOfIdx0: %u\n"
+						"           NumOfIdx1: %u\n"
 						, ib[i].NumOfIdx0, ib[i].NumOfIdx1
 					);
 				}
@@ -1248,21 +1174,21 @@ BOOL WriteParsingMdsfile(
 			fb.fnameString, 6, fname, sizeof(fname), NULL, NULL)) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		}
-		_ftprintf(fpParse,
-			_T(OUTPUT_DHYPHEN_PLUS_STR("Fname")
+		OutputMdsReadableLog(
+			OUTPUT_DHYPHEN_PLUS_STR("Fname")
 			"          ofsToFname: %u\n"
 			"            fnameFmt: %u\n"
-			"         fnameString: %" CHARWIDTH "s\n")
+			"         fnameString: %" CHARWIDTH "s\n"
 			, fb.ofsToFname, fb.fnameFmt, fname
 		);
 		if (pdb && h.ofsToDpm > 0) {
-			_ftprintf(fpParse,
+			OutputMdsReadableLog(
 				OUTPUT_DHYPHEN_PLUS_STR("DPM")
-				_T("      dpmBlkTotalNum: %u\n")
+				"      dpmBlkTotalNum: %u\n"
 				, pdb->dpmBlkTotalNum);
 			for (UINT i = 0; i < pdb->dpmBlkTotalNum; i++) {
-				_ftprintf(fpParse,
-					_T("        ofsToDpmInfo: %u\n"), pdb->ofsToDpmBlk[i]);
+				OutputMdsReadableLog(
+					"        ofsToDpmInfo: %u\n", pdb->ofsToDpmBlk[i]);
 			}
 			for (UINT i = 0; i < pdb->dpmBlkTotalNum; i++) {
 				LPUINT diff = NULL;
@@ -1270,15 +1196,15 @@ BOOL WriteParsingMdsfile(
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 					throw FALSE;
 				}
-				_ftprintf(fpParse,
-					_T("           dpmBlkNum: %u\n")
-					_T("            unknown1: %u\n")
-					_T("          resolution: %u\n")
-					_T("               entry: %u\n")
+				OutputMdsReadableLog(
+					"           dpmBlkNum: %u\n"
+					"            unknown1: %u\n"
+					"          resolution: %u\n"
+					"               entry: %u\n"
 					, pddb[i]->dpmBlkNum, pddb[i]->unknown1, pddb[i]->resolution, pddb[i]->entry
 				);
-				_ftprintf(fpParse,
-					_T("       0    readTime:                       %5u ms\n"), pddb[i]->readTime[0]);
+				OutputMdsReadableLog(
+					"       0    readTime:                       %5u ms\n", pddb[i]->readTime[0]);
 				diff[0] = pddb[i]->readTime[0];
 
 				BOOL bStart = FALSE;
@@ -1292,22 +1218,22 @@ BOOL WriteParsingMdsfile(
 						INT orgDiff = prevDiff - (INT)diff[k];
 						if (((pddb[i]->resolution == 50 && abs(orgDiff) < 10) ||
 							(pddb[i]->resolution == 256 && abs(orgDiff) < 15)) && bStart && !bEnd) {
-							_ftprintf(fpParse, _T(" end changing\n"));
+							OutputMdsReadableLog(" end changing\n");
 							bStart = FALSE;
 							bEnd = TRUE;
 						}
 						else if (k > 1) {
-							_ftprintf(fpParse, _T("\n"));
+							OutputMdsReadableLog("\n");
 						}
 					}
-					_ftprintf(fpParse,
-						_T("%8u    readTime: %8u - %8u = %5u ms [%d]")
+					OutputMdsReadableLog(
+						"%8u    readTime: %8u - %8u = %5u ms [%d]"
 						, pddb[i]->resolution * k, pddb[i]->readTime[k], pddb[i]->readTime[k - 1], diff[k], diffAndDiff);
 //					prevDiffAndDiff = diffAndDiff;
 					if (pddb[i]->resolution == 50 || pddb[i]->resolution == 256) {
 						// SecuROM
 						if (9 < diffAndDiff && diffAndDiff < 35 && !bStart && bEnd) {
-							_ftprintf(fpParse, _T(" start changing"));
+							OutputMdsReadableLog(" start changing");
 							bStart = TRUE;
 							bEnd = FALSE;
 						}
@@ -1317,13 +1243,13 @@ BOOL WriteParsingMdsfile(
 					}
 					else if (pddb[i]->resolution == 500 || pddb[i]->resolution == 2048) {
 						// Starforce
-						_ftprintf(fpParse, _T("\n"));
+						OutputMdsReadableLog("\n");
 					}
 					else {
-						_ftprintf(fpParse, _T("\n"));
+						OutputMdsReadableLog("\n");
 					}
 				}
-				_ftprintf(fpParse, _T("\n"));
+				OutputMdsReadableLog("\n");
 				FreeAndNull(diff);
 			}
 		}
@@ -1331,7 +1257,8 @@ BOOL WriteParsingMdsfile(
 		FreeAndNull(psb);
 		FreeAndNull(ib);
 		FreeAndNull(db);
-		FreeAndNull(dvd);
+		FreeAndNull(dvd[0].bca);
+		FreeAndNull(dvd[1].bca);
 		if (pdb) {
 			for (UINT i = 0; i < pdb->dpmBlkTotalNum; i++) {
 				FreeAndNull(pddb[i]);
@@ -1343,7 +1270,9 @@ BOOL WriteParsingMdsfile(
 	catch (BOOL bErr) {
 		bRet = bErr;
 	}
-	FcloseAndNull(fpParse);
+#ifndef DEBUG
+	FcloseAndNull(g_LogFile.fpMdsReadable);
+#endif
 	FcloseAndNull(fpMds);
 	return bRet;
 }

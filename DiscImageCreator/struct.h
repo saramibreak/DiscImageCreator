@@ -163,6 +163,7 @@ typedef struct _LOG_FILE {
 	FILE* fpSubError;
 	FILE* fpC2Error;
 	FILE* fpRawReadable;
+	FILE* fpMdsReadable;
 } LOG_FILE, *PLOG_FILE;
 
 typedef struct _EXT_ARG {
@@ -522,7 +523,7 @@ typedef struct _MDS_HEADER {
 	UCHAR zero1[8];
 	UINT ofsToBca;
 	UCHAR zero2[24];
-	UINT ofsToDS;
+	UINT ofsToDiscStructures;
 	UCHAR zero3[12];
 	UINT ofsTo1stSessionBlk;
 	UINT ofsToDpm;
@@ -530,8 +531,9 @@ typedef struct _MDS_HEADER {
 } MDS_HEADER, *PMDS_HEADER;
 
 typedef struct _MDS_FOR_DVD_BLK {
-	UCHAR bca[2048];
-	UINT zero;
+	PDVD_BCA_DESCRIPTOR bca;
+	DVD_COPYRIGHT_DESCRIPTOR copyright;
+	DVD_MANUFACTURER_DESCRIPTOR dmi;
 	DVD_FULL_LAYER_DESCRIPTOR layer;
 } MDS_FOR_DVD_BLK, *PMDS_FOR_DVD_BLK;
 

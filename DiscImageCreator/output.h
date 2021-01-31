@@ -106,6 +106,7 @@ extern _TCHAR logBuffer[DISC_MAIN_DATA_SIZE];
 	OutputDebugStringWithLBAEx2(STR_LBA str, nLBA, ##__VA_ARGS__);
 
 #define OutputRawReadableLog(str, ...)		OutputDebugStringEx(str, ##__VA_ARGS__)
+#define OutputMdsReadableLog(str, ...)		OutputDebugStringEx(str, ##__VA_ARGS__)
 
 #define OutputLog(type, str, ...)		OutputDebugStringEx(str, ##__VA_ARGS__)
 #else
@@ -187,6 +188,7 @@ extern _LOG_FILE g_LogFile;
 	_ftprintf(g_LogFile.fpC2Error, STR_LBA str, nLBA, (UINT)nLBA, ##__VA_ARGS__);
 
 #define OutputRawReadableLog(str, ...)		_ftprintf(g_LogFile.fpRawReadable, _T(str), ##__VA_ARGS__);
+#define OutputMdsReadableLog(str, ...)		_ftprintf(g_LogFile.fpMdsReadable, _T(str), ##__VA_ARGS__);
 
 #define OutputLog(type, str, ...) \
 { \
@@ -223,6 +225,9 @@ extern _LOG_FILE g_LogFile;
 	} \
 	if ((t & fileC2Error) == fileC2Error) { \
 		OutputC2ErrorLog(str, ##__VA_ARGS__); \
+	} \
+	if ((t & fileMds) == fileMds) { \
+		OutputMdsReadableLog(str, ##__VA_ARGS__); \
 	} \
 }
 #define OutputLogWithT(type, str, ...) \

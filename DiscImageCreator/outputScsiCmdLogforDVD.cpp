@@ -474,7 +474,8 @@ VOID OutputDVDLayerDescriptor(
 	PDISC pDisc,
 	PDVD_FULL_LAYER_DESCRIPTOR dvdLayer,
 	LPDWORD lpdwSectorLength,
-	UCHAR layerNumber
+	UCHAR layerNumber,
+	LOG_TYPE type
 ) {
 	// Nintendo optical discs output "Reserved5"
 	LPCTSTR lpBookType[] = {
@@ -531,7 +532,7 @@ VOID OutputDVDLayerDescriptor(
 		pDisc->DVD.dwXboxStartPsn = dwStartingDataSector;
 	}
 
-	OutputDiscLog(
+	OutputLog(type,
 		OUTPUT_DHYPHEN_PLUS_STR("PhysicalFormatInformation")
 		"\t       BookVersion: %u\n"
 		"\t          BookType: %s\n"
@@ -563,13 +564,13 @@ VOID OutputDVDLayerDescriptor(
 	);
 	pDisc->DVD.ucBca = dvdLayer->commonHeader.BCAFlag;
 
-	OutputCDMain(fileDisc, dvdLayer->MediaSpecific, 0, sizeof(dvdLayer->MediaSpecific));
+	OutputCDMain(type, dvdLayer->MediaSpecific, 0, sizeof(dvdLayer->MediaSpecific));
 
 	if (dvdLayer->commonHeader.TrackPath) {
 		DWORD dwEndLayerZeroSectorLen = dwEndLayerZeroSector - dwStartingDataSector + 1;
 		DWORD dwEndLayerOneSectorLen = dwEndLayerZeroSector - (~dwEndDataSector & 0xffffff) + 1;
 		*lpdwSectorLength = dwEndLayerZeroSectorLen + dwEndLayerOneSectorLen;
-		OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("SectorLength")
+		OutputLog(type, OUTPUT_DHYPHEN_PLUS_STR("SectorLength")
 			"\t LayerZeroSector: %7lu (%#lx)\n"
 			"\t+ LayerOneSector: %7lu (%#lx)\n"
 			"\t------------------------------------\n"
@@ -595,14 +596,14 @@ VOID OutputDVDLayerDescriptor(
 		if (layerNumber == 0) {
 			*lpdwSectorLength = dwEndDataSector - dwStartingDataSector + 1;
 			pDisc->DVD.dwLayer0SectorLength = *lpdwSectorLength;
-			OutputDiscLog(
+			OutputLog(type,
 				OUTPUT_DHYPHEN_PLUS_STR("SectorLength")
 				"\tLayerZeroSector: %7lu (%#lx)\n"
 				, *lpdwSectorLength, *lpdwSectorLength);
 		}
 		else if (layerNumber == 1) {
 			*lpdwSectorLength = dwEndDataSector - dwStartingDataSector + 1;
-			OutputDiscLog(
+			OutputLog(type,
 				OUTPUT_DHYPHEN_PLUS_STR("SectorLength")
 				"\tLayerOneSector: %7lu (%#lx)\n"
 				, *lpdwSectorLength, *lpdwSectorLength);
@@ -613,69 +614,60 @@ VOID OutputDVDLayerDescriptor(
 VOID OutputDVDRegion(
 	UCHAR ucRMI,
 	UCHAR ucFlag,
-	CONST _TCHAR* region
+	CONST _TCHAR* region,
+	LOG_TYPE type
 ) {
 	if ((ucRMI & ucFlag) == 0) {
-		OutputDiscLog("%s", region);
+		OutputLog(type, "%s", region);
 	}
 }
 
 VOID OutputDVDCopyrightDescriptor(
 	PDVD_COPYRIGHT_DESCRIPTOR dvdCopyright,
-	PPROTECT_TYPE_DVD pProtect
+	PPROTECT_TYPE_DVD pProtect,
+	LOG_TYPE type
 ) {
-	OutputDiscLog(
+	OutputLog(type,
 		OUTPUT_DHYPHEN_PLUS_STR("CopyrightInformation")
 		"\t    CopyrightProtectionType: ");
 	switch (dvdCopyright->CopyrightProtectionType) {
 	case 0:
-		OutputDiscLog("No\n");
+		OutputLog(type, "No\n");
 		*pProtect = noProtect;
 		break;
 	case 1:
-		OutputDiscLog("CSS/CPPM\n");
+		OutputLog(type, "CSS/CPPM\n");
 		*pProtect = css;
 		// cppm is set by ReadDirectoryRecordDetail of execScsiCmdforFileSystem.cpp
 		break;
 	case 2:
-		OutputDiscLog("CPRM\n");
+		OutputLog(type, "CPRM\n");
 		*pProtect = cprm;
 		break;
 	case 3:
-		OutputDiscLog("AACS with HD DVD content\n");
+		OutputLog(type, "AACS with HD DVD content\n");
 		*pProtect = aacs;
 		break;
 	case 10:
-		OutputDiscLog("AACS with BD content\n");
+		OutputLog(type, "AACS with BD content\n");
 		*pProtect = aacs;
 		break;
 	default:
 		// Nintendo optical discs output 0xfd
-		OutputDiscLog("Unknown (%#02x)\n", dvdCopyright->CopyrightProtectionType);
+		OutputLog(type, "Unknown (%#02x)\n", dvdCopyright->CopyrightProtectionType);
 		*pProtect = noProtect;
 		break;
 	}
-	OutputDiscLog("\tRegionManagementInformation:");
-	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x01, _T(" 1"));
-	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x02, _T(" 2"));
-	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x04, _T(" 3"));
-	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x08, _T(" 4"));
-	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x10, _T(" 5"));
-	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x20, _T(" 6"));
-	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x40, _T(" 7"));
-	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x80, _T(" 8"));
-	OutputDiscLog("\n");
-}
-
-VOID OutputDVDCommonInfo(
-	LPBYTE lpFormat,
-	WORD wFormatLength
-) {
-	for (WORD k = 0; k < wFormatLength; k++) {
-		OutputDiscLog("%02x", lpFormat[k]);
-	}
-	OutputDiscLog("\n");
-
+	OutputLog(type, "\tRegionManagementInformation:");
+	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x01, _T(" 1"), type);
+	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x02, _T(" 2"), type);
+	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x04, _T(" 3"), type);
+	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x08, _T(" 4"), type);
+	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x10, _T(" 5"), type);
+	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x20, _T(" 6"), type);
+	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x40, _T(" 7"), type);
+	OutputDVDRegion(dvdCopyright->RegionManagementInformation, 0x80, _T(" 8"), type);
+	OutputLog(type, "\n");
 }
 
 VOID OutputDVDDiskKeyDescriptor(
@@ -688,11 +680,12 @@ VOID OutputDVDDiskKeyDescriptor(
 VOID OutputDiscBCADescriptor(
 	PDISC pDisc,
 	PDVD_BCA_DESCRIPTOR dvdBca,
-	WORD wFormatLength
+	WORD wFormatLength,
+	LOG_TYPE type
 ) {
-	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("BCAInformation"));
+	OutputLog(type, OUTPUT_DHYPHEN_PLUS_STR("BCAInformation"));
 	if (pDisc->DVD.protect == cprm) {
-		OutputDiscLog(
+		OutputLog(type,
 			"\t   BCA Record ID: %d\n"
 			"\t  Version Number: %d\n"
 			"\t     Data Length: %d\n"
@@ -701,12 +694,12 @@ VOID OutputDiscBCADescriptor(
 			, dvdBca->BCAInformation[2], dvdBca->BCAInformation[3]
 		);
 		for (BYTE i = 0; i < dvdBca->BCAInformation[3]; i++) {
-			OutputDiscLog(" %02x", dvdBca->BCAInformation[4 + i]);
+			OutputLog(type, " %02x", dvdBca->BCAInformation[4 + i]);
 		}
-		OutputDiscLog("\n");
+		OutputLog(type, "\n");
 		if (pDisc->SCSI.wCurrentMedia == ProfileDvdRecordable ||
 			pDisc->SCSI.wCurrentMedia == ProfileDvdRewritable) {
-			OutputDiscLog(
+			OutputLog(type,
 				"\t      BCA Record ID: %d\n"
 				"\t     Version Number: %d\n"
 				"\t        Data Length: %d\n"
@@ -715,22 +708,23 @@ VOID OutputDiscBCADescriptor(
 				, dvdBca->BCAInformation[14], dvdBca->BCAInformation[15]
 			);
 			for (BYTE i = 0; i < dvdBca->BCAInformation[15]; i++) {
-				OutputDiscLog(" %02x", dvdBca->BCAInformation[16 + i]);
+				OutputLog(type, " %02x", dvdBca->BCAInformation[16 + i]);
 			}
-			OutputDiscLog("\n");
+			OutputLog(type, "\n");
 		}
 	}
 	else {
-		OutputCDMain(fileDisc, dvdBca->BCAInformation, 0, wFormatLength);
+		OutputCDMain(type, dvdBca->BCAInformation, 0, wFormatLength);
 	}
 }
 
 VOID OutputDVDManufacturerDescriptor(
 	PDVD_MANUFACTURER_DESCRIPTOR dvdManufacturer,
-	PDISC_TYPE pDiscType
+	PDISC_TYPE pDiscType,
+	LOG_TYPE type
 ) {
-	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("ManufacturingInformation"));
-	OutputCDMain(fileDisc, dvdManufacturer->ManufacturingInformation, 0,
+	OutputLog(type, OUTPUT_DHYPHEN_PLUS_STR("ManufacturingInformation"));
+	OutputCDMain(type, dvdManufacturer->ManufacturingInformation, 0,
 		sizeof(dvdManufacturer->ManufacturingInformation));
 	if (!strncmp((LPCCH)&dvdManufacturer->ManufacturingInformation[16], "Nintendo Game Disk", 18)) {
 		*pDiscType = DISC_TYPE::gamecube;
@@ -956,6 +950,17 @@ VOID OutputDVDUniqueDiscIdentifer(
 		, MAKEWORD(dvdUnique->RandomNumber[1], dvdUnique->RandomNumber[0])
 		, dvdUnique->Year, dvdUnique->Month, dvdUnique->Day
 		, dvdUnique->Hour, dvdUnique->Minute, dvdUnique->Second);
+}
+
+VOID OutputDVDCommonInfo(
+	LPBYTE lpFormat,
+	WORD wFormatLength
+) {
+	for (WORD k = 0; k < wFormatLength; k++) {
+		OutputDiscLog("%02x", lpFormat[k]);
+	}
+	OutputDiscLog("\n");
+
 }
 
 VOID OutputDVDAdipInformation(
@@ -1198,20 +1203,20 @@ VOID OutputDVDStructureFormat(
 			OutputDVDPlusRLayerDescriptor(lpFormat);
 		}
 		else {
-			OutputDVDLayerDescriptor(pDisc, (PDVD_FULL_LAYER_DESCRIPTOR)lpFormat, lpdwSectorLength, layerNumber);
+			OutputDVDLayerDescriptor(pDisc, (PDVD_FULL_LAYER_DESCRIPTOR)lpFormat, lpdwSectorLength, layerNumber, fileDisc);
 		}
 		break;
 	case DvdCopyrightDescriptor:
-		OutputDVDCopyrightDescriptor((PDVD_COPYRIGHT_DESCRIPTOR)lpFormat, &(pDisc->DVD.protect));
+		OutputDVDCopyrightDescriptor((PDVD_COPYRIGHT_DESCRIPTOR)lpFormat, &(pDisc->DVD.protect), fileDisc);
 		break;
 	case DvdDiskKeyDescriptor:
 		OutputDVDDiskKeyDescriptor((PDVD_DISK_KEY_DESCRIPTOR)lpFormat);
 		break;
 	case DvdBCADescriptor:
-		OutputDiscBCADescriptor(pDisc, (PDVD_BCA_DESCRIPTOR)lpFormat, wFormatLength);
+		OutputDiscBCADescriptor(pDisc, (PDVD_BCA_DESCRIPTOR)lpFormat, wFormatLength, fileDisc);
 		break;
 	case DvdManufacturerDescriptor:
-		OutputDVDManufacturerDescriptor((PDVD_MANUFACTURER_DESCRIPTOR)lpFormat, &(pDisc->DVD.disc));
+		OutputDVDManufacturerDescriptor((PDVD_MANUFACTURER_DESCRIPTOR)lpFormat, &(pDisc->DVD.disc), fileDisc);
 		break;
 	case 0x06:
 		OutputDVDMediaId(lpFormat);
@@ -1489,7 +1494,7 @@ VOID OutputBDStructureFormat(
 		break;
 		// format 0x01, 0x02 is reserved
 	case DvdBCADescriptor:
-		OutputDiscBCADescriptor(pDisc, (PDVD_BCA_DESCRIPTOR)lpFormat, wFormatLength);
+		OutputDiscBCADescriptor(pDisc, (PDVD_BCA_DESCRIPTOR)lpFormat, wFormatLength, fileDisc);
 		break;
 		// format 0x04 - 0x07 is reserved
 	case 0x08:

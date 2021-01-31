@@ -30,6 +30,33 @@ VOID OutputDVDStructureFormat(
 	UCHAR layerNumber
 );
 
+VOID OutputDVDLayerDescriptor(
+	PDISC pDisc,
+	PDVD_FULL_LAYER_DESCRIPTOR dvdLayer,
+	LPDWORD lpdwSectorLength,
+	UCHAR layerNumber,
+	LOG_TYPE type
+);
+
+VOID OutputDVDCopyrightDescriptor(
+	PDVD_COPYRIGHT_DESCRIPTOR dvdCopyright,
+	PPROTECT_TYPE_DVD pProtect,
+	LOG_TYPE type
+);
+
+VOID OutputDiscBCADescriptor(
+	PDISC pDisc,
+	PDVD_BCA_DESCRIPTOR dvdBca,
+	WORD wFormatLength,
+	LOG_TYPE type
+);
+
+VOID OutputDVDManufacturerDescriptor(
+	PDVD_MANUFACTURER_DESCRIPTOR dvdManufacturer,
+	PDISC_TYPE pDiscType,
+	LOG_TYPE type
+);
+
 VOID OutputDVDCopyrightManagementInformation(
 	PDVD_COPYRIGHT_MANAGEMENT_DESCRIPTOR dvdCopyright,
 	INT nLBA

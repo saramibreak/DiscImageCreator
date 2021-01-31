@@ -53,7 +53,8 @@ typedef enum _LOG_TYPE {
 	fileSubInfo = 1 << 7,
 	fileSubIntention = 1 << 8,
 	fileSubError = 1 << 9,
-	fileC2Error = 1 << 10
+	fileC2Error = 1 << 10,
+	fileMds = 1 << 11
 } LOG_TYPE, *PLOG_TYPE;
 
 typedef enum _MAIN_DATA_TYPE {
