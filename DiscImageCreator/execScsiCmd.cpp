@@ -542,41 +542,7 @@ BOOL ReadTOCText(
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
-
-		UINT uiLastSeqNumOfBlock[9] = {};
-		for (INT i = 1, j = 8; i <= 4; i++, j++) {
-			uiLastSeqNumOfBlock[i] = pDesc[wTocTextEntries - 2].Text[j];
-			if (1 < i && uiLastSeqNumOfBlock[i]) {
-				uiLastSeqNumOfBlock[i] += uiLastSeqNumOfBlock[i - 1];
-				uiLastSeqNumOfBlock[i]++;
-			}
-		}
-		if (uiLastSeqNumOfBlock[4]) {
-			for (INT k = 5, m = 0; k <= 8; k++, m++) {
-				uiLastSeqNumOfBlock[k] = pDesc[wTocTextEntries - 2].Text[m];
-				if (5 < k && uiLastSeqNumOfBlock[k]) {
-					uiLastSeqNumOfBlock[k] += uiLastSeqNumOfBlock[k - 1];
-					uiLastSeqNumOfBlock[k]++;
-				}
-			}
-		}
-
-		for (INT n = 0; n < MAX_CDTEXT_LANG; n++) {
-			if (uiLastSeqNumOfBlock[n + 1]) {
-				pDisc->SCSI.CDTEXT[n].bExist = TRUE;
-				if (n == 0) {
-					SetAndOutputTocCDText(pDisc, pDesc, pTmpText, (WORD)(uiLastSeqNumOfBlock[n + 1] + 1)
-						, 0, pDesc[uiLastSeqNumOfBlock[n + 1]].Unicode, n);
-				}
-				else {
-					SetAndOutputTocCDText(pDisc, pDesc, pTmpText, (WORD)(uiLastSeqNumOfBlock[n + 1] + 1)
-						, uiLastSeqNumOfBlock[n] + 1, pDesc[uiLastSeqNumOfBlock[n + 1]].Unicode, n);
-				}
-			}
-			else {
-				break;
-			}
-		}
+		SetAndOutputTocCDText(pDisc, pDesc, pTmpText, wTocTextEntries);
 	}
 	catch (BOOL ret) {
 		bRet = ret;
