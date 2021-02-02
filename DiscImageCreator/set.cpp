@@ -584,11 +584,7 @@ VOID SetAndOutputTocCDText(
 	UINT uiPacksOfMessages[MAX_CDTEXT_LANG] = {};
 	UINT uiPacksOfDiscId[MAX_CDTEXT_LANG] = {};
 	UINT uiPacksOfGenre[MAX_CDTEXT_LANG] = {};
-	UINT uiPacksOfTocInfo[MAX_CDTEXT_LANG] = {};
-	UINT uiPacksOfTocInfo2[MAX_CDTEXT_LANG] = {};
 	UINT uiPacksOfUpcEan[MAX_CDTEXT_LANG] = {};
-	UINT uiPacksOfSizeInfo[MAX_CDTEXT_LANG] = {};
-	UINT uiLastSeqNumOfBlock[MAX_CDTEXT_LANG] = {};
 
 	for (INT i = 0; i < wTocTextEntries; i++) {
 		if (pDesc[i].PackType == CDROM_CD_TEXT_PACK_SIZE_INFO) {
@@ -601,11 +597,7 @@ VOID SetAndOutputTocCDText(
 			uiPacksOfMessages[pDesc[i].BlockNumber] = pDesc[i].Text[9];
 			uiPacksOfDiscId[pDesc[i].BlockNumber] = pDesc[i].Text[10];
 			uiPacksOfGenre[pDesc[i].BlockNumber] = pDesc[i].Text[11];
-			uiPacksOfTocInfo[pDesc[i].BlockNumber] = pDesc[i + 1].Text[0];
-			uiPacksOfTocInfo2[pDesc[i].BlockNumber] = pDesc[i + 1].Text[1];
 			uiPacksOfUpcEan[pDesc[i].BlockNumber] = pDesc[i + 1].Text[6];
-			uiPacksOfSizeInfo[pDesc[i].BlockNumber] = pDesc[i + 1].Text[7];
-			uiLastSeqNumOfBlock[pDesc[i].BlockNumber] = pDesc[i + 1].Text[8 + pDesc[i].BlockNumber];
 			i += 2;
 		}
 	}
