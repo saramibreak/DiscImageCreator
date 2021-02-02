@@ -634,6 +634,7 @@ VOID SetAndOutputTocCDText(
 				uiTxtIdx += len;
 			}
 			j += uiPacksOfAlbum[pDesc[j].BlockNumber] - 1;
+			pDisc->SCSI.CDTEXT[pDesc[j].BlockNumber].bExist = TRUE;
 		}
 		else if (pDesc[j].PackType == CDROM_CD_TEXT_PACK_PERFORMER) {
 			for (UINT m = 0; m < uiPacksOfPerformer[pDesc[j].BlockNumber]; m++) {
