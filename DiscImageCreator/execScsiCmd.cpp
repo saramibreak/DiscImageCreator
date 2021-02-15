@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "struct.h"
+#include "calcHash.h"
 #include "check.h"
 #include "convert.h"
 #include "execIoctl.h"
@@ -395,7 +396,7 @@ BOOL ReadTOCPma(
 		for (UINT i = 0; i < wTocPmaAll / sizeof(CDROM_TOC_FULL_TOC_DATA_BLOCK); i++) {
 			OutputDiscLog(
 				"\tAdr: %u, Control: %u\n"
-				"\t          Point: %u\n"
+				"\t          Point: %02X\n"
 				"\t            Msf: %02u:%02u:%02u\n"
 				"\t            Msf: %02u:%02u:%02u\n"
 				, pDesc[i].Adr, pDesc[i].Control
@@ -542,7 +543,21 @@ BOOL ReadTOCText(
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
-		SetAndOutputTocCDText(pDisc, pDesc, pTmpText, wTocTextEntries);
+		BOOL bBad = FALSE;
+		for (INT i = 0; i < wTocTextEntries; i++) {
+			WORD crc16 = (WORD)GetCrc16CCITT(16, (LPBYTE)&pDesc[i]);
+			WORD crc = MAKEWORD(pDesc[i].CRC[1], pDesc[i].CRC[0]);
+			if (crc16 == crc) {
+				OutputDiscLog("\tEntry %d crc[%04x] is good\n", i, crc);
+			}
+			else {
+				OutputDiscLog("\tEntry %d crc[%04x] is Bad\n", i, crc);
+				bBad = TRUE;
+			}
+		}
+		if (!bBad) {
+			SetAndOutputTocCDText(pDisc, pDesc, pTmpText, wTocTextEntries);
+		}
 	}
 	catch (BOOL ret) {
 		bRet = ret;
