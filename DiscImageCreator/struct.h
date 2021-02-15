@@ -538,34 +538,33 @@ typedef struct _MDS_FOR_DVD_BLK {
 } MDS_FOR_DVD_BLK, *PMDS_FOR_DVD_BLK;
 
 typedef struct _MDS_SESSION_BLK {
-	UINT startSector;
+	INT startSector;
 	UINT endSector;
 	WORD sessionNum;
 	UCHAR totalDataBlkNum;
 	UCHAR DataBlkNum;
 	WORD firstTrackNum;
 	WORD lastTrackNum;
-	UINT zero;
+	UCHAR zero[4];
 	UINT ofsTo1stDataBlk;
 } MDS_SESSION_BLK, *PMDS_SESSION_BLK;
 
 typedef struct _MDS_DATA_BLK {
 	UCHAR trackMode;
 	UCHAR numOfSubch;
-	UCHAR adrCtl;
-	UCHAR trackNum;
-	UCHAR point;
-	UINT zero;
-	UCHAR m;
-	UCHAR s;
-	UCHAR f;
+	UCHAR Control : 4;
+	UCHAR Adr : 4;
+	UCHAR Reserved1;
+	UCHAR Point;
+	UCHAR MsfExtra[3];
+	UCHAR Zero;
+	UCHAR Msf[3];
 	UINT ofsToIndexBlk;
 	WORD sectorSize;
 	UCHAR unknown1;
 	UCHAR zero2[17];
 	UINT trackStartSector;
-	UINT ofsFromHeadToIdx1;
-	UINT unknown2;
+	UINT64 trackStartOffset;
 	UINT NumOfFname;
 	UINT OfsToFname;
 	UCHAR zero3[24];

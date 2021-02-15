@@ -1063,7 +1063,7 @@ BOOL WriteParsingMdsfile(
 
 		PMDS_DPM_HEADER pdb = NULL;
 		PMDS_DPM_BLK* pddb = NULL;
-		
+
 		if (h.ofsToDpm > 0) {
 			size_t allocsize = 4 + data[h.ofsToDpm] * sizeof(UINT);
 			if (NULL == (pdb = (PMDS_DPM_HEADER)calloc(allocsize, sizeof(MDS_DPM_HEADER)))) {
@@ -1090,23 +1090,58 @@ BOOL WriteParsingMdsfile(
 				nOfs += size;
 			}
 		}
+		// http://problemkaputt.de/psx-spx.htm#cdromdiskimagesmdsmdfalcohol120
 		OutputMdsReadableLog(
 			OUTPUT_DHYPHEN_PLUS_STR("Header")
-			"                     ID: %.16" CHARWIDTH "s\n"
-			"                Unknown: %u\n"
-			"              MediaType: %u\n"
-			"             SessionNum: %u\n"
-			"                Unknown: %u\n"
-			"            LengthOfBca: %u\n"
-			"            OffsetToBca: %u\n"
-			" OffsetToDiscStructures: %u\n"
-			"OffsetTo1stSessionBlock: %u\n"
-			"            OffsetToDpm: %u\n"
-			, h.fileId, h.unknown1, h.mediaType, h.sessionNum
-			, h.unknown2, h.lenOfBca, h.ofsToBca, h.ofsToDiscStructures
-			, h.ofsTo1stSessionBlk, h.ofsToDpm
+			"                      File ID: %.16" CHARWIDTH "s\n"
+			"                      Unknown: %u\n"
+			"                   Media Type: %u "
+			, h.fileId, h.unknown1, h.mediaType
+		);
+		switch (h.mediaType) {
+		case 0:
+			OutputMdsReadableLog("(CD-DA or CD-ROM)\n");
+			break;
+		case 1:
+			OutputMdsReadableLog("(CD-R)\n");
+			break;
+		case 2:
+			OutputMdsReadableLog("(CD-RW)\n");
+			break;
+		case 16:
+			OutputMdsReadableLog("(DVD-ROM)\n");
+			break;
+		default:
+			OutputMdsReadableLog("(Other)\n");
+			break;
+		}
+		OutputMdsReadableLog(
+			"           Number of sessions: %u\n"
+			"                      Unknown: %u\n"
+			, h.sessionNum, h.unknown2
 		);
 		if (h.mediaType == 0x10) {
+			OutputMdsReadableLog(
+				"           Length of BCA data: %u\n"
+				"                         Zero: %02u %02u %02u %02u %02u %02u %02u %02u\n"
+				"           Offset to BCA data: %u\n"
+				"                         Zero: %02u %02u %02u %02u %02u %02u %02u %02u\n"
+				"                               %02u %02u %02u %02u %02u %02u %02u %02u\n"
+				"                               %02u %02u %02u %02u %02u %02u %02u %02u\n"
+				"    Offset to Disc Structures: %u\n"
+				"                         Zero: %02u %02u %02u %02u %02u %02u %02u %02u %02u %02u %02u %02u\n"
+				"Offset to First Session-Block: %u\n"
+				"    Offset to DPM data blocks: %u\n"
+				, h.lenOfBca
+				, h.zero1[0], h.zero1[1], h.zero1[2], h.zero1[3], h.zero1[4], h.zero1[5], h.zero1[6], h.zero1[7]
+				, h.ofsToBca
+				, h.zero2[0], h.zero2[1], h.zero2[2], h.zero2[3], h.zero2[4], h.zero2[5], h.zero2[6], h.zero2[7]
+				, h.zero2[8], h.zero2[9], h.zero2[10], h.zero2[11], h.zero2[12], h.zero2[13], h.zero2[14], h.zero2[15]
+				, h.zero2[16], h.zero2[17], h.zero2[18], h.zero2[19], h.zero2[20], h.zero2[21], h.zero2[22], h.zero2[23]
+				, h.ofsToDiscStructures
+				, h.zero3[0], h.zero3[1], h.zero3[2], h.zero3[3], h.zero3[4], h.zero3[5], h.zero3[6], h.zero3[7], h.zero3[8], h.zero3[9], h.zero3[10], h.zero3[11]
+				, h.ofsTo1stSessionBlk, h.ofsToDpm
+			);
 			DISC disc;
 			for (UINT i = 0; i < layerNumber; i++) {
 				OutputDVDCopyrightDescriptor(&dvd[i].copyright, &(disc.DVD.protect), fileMds);
@@ -1120,51 +1155,204 @@ BOOL WriteParsingMdsfile(
 		}
 		for (INT i = 0; i < h.sessionNum; i++) {
 			OutputMdsReadableLog(
-				OUTPUT_DHYPHEN_PLUS_STR("SessionBlock")
-				"         startSector: %u\n"
-				"           endSector: %u\n"
-				"          sessionNum: %u\n"
-				"     totalDataBlkNum: %u\n"
-				"          DataBlkNum: %u\n"
-				"       firstTrackNum: %u\n"
-				"        lastTrackNum: %u\n"
-				"     ofsTo1stDataBlk: %u\n"
-				, psb[i].startSector, psb[i].endSector, psb[i].sessionNum
+				OUTPUT_DHYPHEN_PLUS_STR("Session Block[%d]")
+				"                 Session Start Sector: %d\n"
+				"                   Session End Sector: %u\n"
+				"                       Session number: %u\n"
+				"          Total Number of Data Blocks: %u\n"
+				"Number of Data Blocks with Point>=A0h: %u\n"
+				"        First Track Number in Session: %u\n"
+				"         Last Track Number in Session: %u\n"
+				"                                 Zero: %02u %02u %02u %02u\n"
+				"           Offset to First Data-Block: %u\n"
+				, i + 1, psb[i].startSector, psb[i].endSector, psb[i].sessionNum
 				, psb[i].totalDataBlkNum, psb[i].DataBlkNum, psb[i].firstTrackNum
-				, psb[i].lastTrackNum, psb[i].ofsTo1stDataBlk
+				, psb[i].lastTrackNum
+				, psb[i].zero[0], psb[i].zero[1], psb[i].zero[2], psb[i].zero[3]
+				, psb[i].ofsTo1stDataBlk
 			);
 		}
 		for (INT i = 0; i < tdb; i++) {
 			OutputMdsReadableLog(
-				OUTPUT_DHYPHEN_PLUS_STR("DataBlock")
-				"           trackMode: %u\n"
-				"          numOfSubch: %u\n"
-				"              adrCtl: %u\n"
-				"            trackNum: %u\n"
-				"               point: %u\n"
-				"                 msf: %02u:%02u:%02u\n"
-				"       ofsToIndexBlk: %u\n"
-				"          sectorSize: %u\n"
-				"             unknown: %u\n"
-				"    trackStartSector: %u\n"
-				"   ofsFromHeadToIdx1: %u\n"
-				"             unknown: %u\n"
-				"          NumOfFname: %u\n"
-				"          OfsToFname: %u\n"
-				, db[i].trackMode, db[i].numOfSubch, db[i].adrCtl, db[i].trackNum
-				, db[i].point, db[i].m, db[i].s, db[i].f, db[i].ofsToIndexBlk
-				, db[i].sectorSize, db[i].unknown1, db[i].trackStartSector
-				, db[i].ofsFromHeadToIdx1, db[i].unknown2, db[i].NumOfFname, db[i].OfsToFname
+				OUTPUT_DHYPHEN_PLUS_STR("Full TOC Data Block[%d]")
+				"                                 Track mode: %02X"
+				, i + 1, db[i].trackMode
 			);
+			switch (db[i].trackMode) {
+			case 0xa9:
+				OutputMdsReadableLog(" (Audio)\n");
+				break;
+			case 0xaa:
+				OutputMdsReadableLog(" (Mode 1)\n");
+				break;
+			case 0xab:
+				OutputMdsReadableLog(" (Mode 2)\n");
+				break;
+			case 0xac:
+				OutputMdsReadableLog(" (Mode 2 Form 1)\n");
+				break;
+			case 0xad:
+				OutputMdsReadableLog(" (Mode 2 Form 2)\n");
+				break;
+			case 0xec:
+				OutputMdsReadableLog(" (Mode 2 Form 1)\n");
+				break;
+			case 0xed:
+				OutputMdsReadableLog(" (Mode 2 Form 2)\n");
+				break;
+			default:
+				OutputMdsReadableLog("\n");
+				break;
+			}
+			OutputMdsReadableLog(
+				"         Number of subchannels in .MDF file: %u\n"
+				"                                        ADR: %u\n"
+				"                                    Control: %u\n"
+				"                                      Point: %02u (%02X) "
+				, db[i].numOfSubch, db[i].Adr, db[i].Control, db[i].Point, db[i].Point
+			);
+			INT nTmpLBA = 0;
+			INT nTmpLBAExt = 0;
+			switch (db[i].Point) {
+			case 0xa0:
+				OutputMdsReadableLog("FirstTrack %u, ", db[i].Msf[0]);
+				switch (db[i].Msf[1]) {
+				case DISK_TYPE_CDDA:
+					OutputMdsReadableLog("Format: CD-DA or CD-ROM\n");
+					break;
+				case DISK_TYPE_CDI:
+					OutputMdsReadableLog("Format: CD-I\n");
+					break;
+				case DISK_TYPE_XA:
+					OutputMdsReadableLog("Format: CD-ROM-XA\n");
+					break;
+				default:
+					OutputMdsReadableLog("Format: Other [0x%02x]\n", db[i].Msf[1]);
+					break;
+				}
+				break;
+			case 0xa1:
+				OutputMdsReadableLog("LastTrack %u\n", db[i].Msf[0]);
+				break;
+			case 0xa2:
+				nTmpLBA =
+					MSFtoLBA(db[i].Msf[0], db[i].Msf[1], db[i].Msf[2]) - 150;
+				OutputMdsReadableLog(
+					"Lead-out, AMSF %02u:%02u:%02u (LBA[%06d, %#07x])\n"
+					, db[i].Msf[0], db[i].Msf[1], db[i].Msf[2], nTmpLBA, (UINT)nTmpLBA);
+				break;
+			case 0xb0:
+				nTmpLBAExt =
+					MSFtoLBA(db[i].MsfExtra[0], db[i].MsfExtra[1], db[i].MsfExtra[2]) - 150;
+				nTmpLBA =
+					MSFtoLBA(db[i].Msf[0], db[i].Msf[1], db[i].Msf[2]) - 150;
+				OutputMdsReadableLog(
+					"NextSession, AMSF %02u:%02u:%02u (LBA[%06d, %#07x])\n"
+					"\t                               Outermost Lead-out of the disc, AMSF %02u:%02u:%02u (LBA[%06d, %#07x])\n"
+					"\t                                    Num of pointers in Mode 5, %02u\n"
+					, db[i].MsfExtra[0], db[i].MsfExtra[1], db[i].MsfExtra[2]
+					, nTmpLBAExt, (UINT)nTmpLBAExt
+					, db[i].Msf[0], db[i].Msf[1], db[i].Msf[2]
+					, nTmpLBA, (UINT)nTmpLBA, db[i].Zero);
+				break;
+			case 0xb1:
+				OutputMdsReadableLog(
+					"\tNum of skip interval pointers, %02u\n"
+					"\t   Num of skip track pointers, %02u\n"
+					, db[i].Msf[0], db[i].Msf[1]);
+				break;
+			case 0xb2:
+			case 0xb3:
+			case 0xb4:
+				OutputMdsReadableLog(
+					"Skip num, %02u %02u %02u %02u %02u %02u\n"
+					, db[i].MsfExtra[0], db[i].MsfExtra[1], db[i].MsfExtra[2]
+					, db[i].Msf[0], db[i].Msf[1], db[i].Msf[2]);
+				break;
+			case 0xc0:
+				nTmpLBA =
+					MSFtoLBA(db[i].Msf[0], db[i].Msf[1], db[i].Msf[2]) - 150;
+				if (h.mediaType == 1 || h.mediaType == 2) {
+					OutputMdsReadableLog(
+						", MSF %02u:%02u:%02u\n"
+						"\t                        First Lead-in of the disc, AMSF %02u:%02u:%02u\n"
+						, db[i].MsfExtra[0], db[i].MsfExtra[1], db[i].MsfExtra[2]
+						, db[i].Msf[0], db[i].Msf[1], db[i].Msf[2]);
+					// Ecma 394
+					// 4.4.1 Special Information 1 : M1,S1,F1 = 101
+					db[i].MsfExtra[0] = (UCHAR)(db[i].MsfExtra[0] >> 1 | 0x80);
+					db[i].MsfExtra[1] = (UCHAR)(db[i].MsfExtra[1] >> 1);
+					db[i].MsfExtra[2] = (UCHAR)(db[i].MsfExtra[2] >> 1 | 0x80);
+				}
+				else {
+					OutputMdsReadableLog(
+						", MSF %02u:%02u:%02u\n"
+						"\t                        First Lead-in of the disc, AMSF %02u:%02u:%02u (LBA[%06d, %#07x])\n"
+						, db[i].MsfExtra[0], db[i].MsfExtra[1], db[i].MsfExtra[2]
+						, db[i].Msf[0], db[i].Msf[1], db[i].Msf[2]
+						, nTmpLBA - 450150, (UINT)nTmpLBA - 450150);
+				}
+				break;
+			case 0xc1:
+				OutputMdsReadableLog(
+					"\nCopy of info from Additional Information1 in ATIP, MSF %02u:%02u:%02u, AMSF %02u:%02u:%02u\n"
+					, db[i].MsfExtra[0], db[i].MsfExtra[1], db[i].MsfExtra[2]
+					, db[i].Msf[0], db[i].Msf[1], db[i].Msf[2]);
+				break;
+			default:
+				if (db[i].Adr == 1) {
+					nTmpLBA =
+						MSFtoLBA(db[i].Msf[0], db[i].Msf[1], db[i].Msf[2]) - 150;
+					OutputMdsReadableLog(
+						"Track %u, AMSF %02u:%02u:%02u (LBA[%06d, %#07x])\n"
+						, db[i].Point, db[i].Msf[0], db[i].Msf[1], db[i].Msf[2], nTmpLBA, (UINT)nTmpLBA);
+				}
+				else if (db[i].Adr == 5) {
+					nTmpLBAExt =
+						MSFtoLBA(db[i].MsfExtra[0], db[i].MsfExtra[1], db[i].MsfExtra[2]) - 150;
+					nTmpLBA =
+						MSFtoLBA(db[i].Msf[0], db[i].Msf[1], db[i].Msf[2]) - 150;
+					OutputMdsReadableLog(
+						"\tSkipped interval end time, MSF %02u:%02u:%02u (LBA[%06d, %#07x])\n"
+						"\tSkipped interval start time on playback, AMSF %02u:%02u:%02u (LBA[%06d, %#07x])\n"
+						, db[i].MsfExtra[0], db[i].MsfExtra[1], db[i].MsfExtra[2], nTmpLBAExt, (UINT)nTmpLBAExt
+						, db[i].Msf[0], db[i].Msf[1], db[i].Msf[2], nTmpLBA, (UINT)nTmpLBA);
+				}
+				OutputMdsReadableLog(
+					"                      Offset to Index-block: %u\n"
+					"                                Sector size: %u\n"
+					"                                    Unknown: %u\n"
+					"                                       Zero: %02u %02u %02u %02u %02u %02u %02u %02u\n"
+					"                                             %02u %02u %02u %02u %02u %02u %02u %02u %02u\n"
+					"                         Track start sector: %u\n"
+					"      Track start offset from begin of .MDF: %llu\n"
+					"                        Number of Filenames: %u\n"
+					"Offset to Filename Block from begin of .MDS: %u\n"
+					"                                       Zero: %02u %02u %02u %02u %02u %02u %02u %02u\n"
+					"                                             %02u %02u %02u %02u %02u %02u %02u %02u\n"
+					"                                             %02u %02u %02u %02u %02u %02u %02u %02u\n"
+					, db[i].ofsToIndexBlk, db[i].sectorSize, db[i].unknown1
+					, db[i].zero2[0], db[i].zero2[1], db[i].zero2[2], db[i].zero2[3], db[i].zero2[4], db[i].zero2[5]
+					, db[i].zero2[6], db[i].zero2[7], db[i].zero2[8], db[i].zero2[9], db[i].zero2[10], db[i].zero2[11]
+					, db[i].zero2[12], db[i].zero2[13], db[i].zero2[14], db[i].zero2[15], db[i].zero2[16]
+					, db[i].trackStartSector
+					, db[i].trackStartOffset, db[i].NumOfFname, db[i].OfsToFname
+					, db[i].zero3[0], db[i].zero3[1], db[i].zero3[2], db[i].zero3[3], db[i].zero3[4], db[i].zero3[5]
+					, db[i].zero3[6], db[i].zero3[7], db[i].zero3[8], db[i].zero3[9], db[i].zero3[10], db[i].zero3[11]
+					, db[i].zero3[12], db[i].zero3[13], db[i].zero3[14], db[i].zero3[15], db[i].zero3[16], db[i].zero3[17]
+					, db[i].zero3[18], db[i].zero3[19], db[i].zero3[20], db[i].zero3[21], db[i].zero3[22], db[i].zero3[23]
+				);
+				break;
+			}
 		}
 		if (h.mediaType != 0x10) {
 			for (INT i = 0; i < tdb; i++) {
 				if (ib) {
 					OutputMdsReadableLog(
-						OUTPUT_DHYPHEN_PLUS_STR("IndexBlock")
-						"           NumOfIdx0: %u\n"
-						"           NumOfIdx1: %u\n"
-						, ib[i].NumOfIdx0, ib[i].NumOfIdx1
+						OUTPUT_DHYPHEN_PLUS_STR("Index Block[%d]")
+						"Number of sectors with Index 0: %u\n"
+						"Number of sectors with Index 1: %u\n"
+						, i + 1, ib[i].NumOfIdx0, ib[i].NumOfIdx1
 					);
 				}
 			}
@@ -1175,15 +1363,15 @@ BOOL WriteParsingMdsfile(
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		}
 		OutputMdsReadableLog(
-			OUTPUT_DHYPHEN_PLUS_STR("Fname")
-			"          ofsToFname: %u\n"
-			"            fnameFmt: %u\n"
-			"         fnameString: %" CHARWIDTH "s\n"
+			OUTPUT_DHYPHEN_PLUS_STR("Filename Block")
+			"Offset to Filename from begin of .MDS: %u\n"
+			"                      Filename format: %u\n"
+			"                      Filename string: %" CHARWIDTH "s\n"
 			, fb.ofsToFname, fb.fnameFmt, fname
 		);
 		if (pdb && h.ofsToDpm > 0) {
 			OutputMdsReadableLog(
-				OUTPUT_DHYPHEN_PLUS_STR("DPM")
+				OUTPUT_DHYPHEN_PLUS_STR("DPM Block")
 				"      dpmBlkTotalNum: %u\n"
 				, pdb->dpmBlkTotalNum);
 			for (UINT i = 0; i < pdb->dpmBlkTotalNum; i++) {
