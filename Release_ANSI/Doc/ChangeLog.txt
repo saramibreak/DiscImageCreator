@@ -722,3 +722,9 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - fixed: detect SecuROM 1st version (216 errors)
 - fixed: analyze CD-TEXT
 - deleted: xbox xtreme log
+
+*2021-03-01
+- added: check CD-TEXT CRC
+- added: securomV3_3 (no test)
+- fixed: /sf doesn't affect all sectors
+- fixed: _mdsReadable.txt
