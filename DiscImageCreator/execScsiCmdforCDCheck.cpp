@@ -2200,7 +2200,11 @@ BOOL ReadCDForCheckingSecuROM(
 		INT nALBA = MSFtoLBA(BcdToDec(pDiscPerSector->subcode.current[19])
 			, BcdToDec(pDiscPerSector->subcode.current[20]), BcdToDec(pDiscPerSector->subcode.current[21]));
 
+		// All SecuROM titles http://redump.org/discs/quicksearch/securom/protection/only
 		if ((nRLBA == 3000 || nRLBA == 3001) && nALBA == 299) { // 3001(00:40:01), 299(00:03:74)
+			// Aliens Versus Predator 2 (Disc 1) http://redump.org/disc/35861/
+			// Unreal Tournament 2003 (Disc 1) (Play Disc) http://redump.org/disc/21469/
+			// Unreal Tournament 2004 (Play Disc) http://redump.org/disc/61749/
 			OutputSubInfoWithLBALog(
 				"Detected intentional error. CRC-16 is original:[%02x%02x] and XORed with 0x8001:[%02x%02x] "
 				, -1, 0, pDiscPerSector->subcode.current[22] ^ 0x80, pDiscPerSector->subcode.current[23] ^ 0x01
@@ -2216,7 +2220,7 @@ BOOL ReadCDForCheckingSecuROM(
 			pDiscPerSector->subch.prev.nRelativeTime = -1;
 			pDiscPerSector->subch.prev.nAbsoluteTime = 149;
 		}
-		else if ((nRLBA == 167295 || nRLBA == 0) && nALBA == 150) { // 167295(37:10:45), 150(00:02:00)
+		else if ((nRLBA == 167295 || nRLBA == 0 || pDiscPerSector->subcode.current[17] == 0xff) && nALBA == 150) { // 167295(37:10:45), 150(00:02:00)
 			OutputSubInfoWithLBALog(
 				"Detected shifted sub. RMSF[%02x:%02x:%02x] AMSF[%02x:%02x:%02x]\n"
 				, -1, 0, pDiscPerSector->subcode.current[15], pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17]
@@ -2232,6 +2236,10 @@ BOOL ReadCDForCheckingSecuROM(
 				// Diablo II: Lord of Destruction (Expansion Set) (USA) http://redump.org/disc/58232/
 				OutputLog(standardOut | fileDisc, "Detected intentional subchannel in LBA -1 => SecuROM 3rd version type 2 (a.k.a. NEW)\n");
 				pDisc->PROTECT.byExist = securomV3_2;
+			}
+			else if (pDiscPerSector->subcode.current[17] == 0xff) {
+				OutputLog(standardOut | fileDisc, "Detected intentional subchannel in LBA -1 => SecuROM 3rd version type 3 (a.k.a. NEW)\n");
+				pDisc->PROTECT.byExist = securomV3_3;
 			}
 			OutputIntentionalSubchannel(-1, &pDiscPerSector->subcode.current[12]);
 			if (pDisc->SUB.nSubChannelOffset) {

@@ -622,7 +622,7 @@ BOOL IsValidSecuRomSector(
 				bRet = TRUE;
 			}
 		}
-		else if (pDisc->PROTECT.byExist == securomV3_1 || pDisc->PROTECT.byExist == securomV3_2) {
+		else if (pDisc->PROTECT.byExist == securomV3_1 || pDisc->PROTECT.byExist == securomV3_2 || pDisc->PROTECT.byExist == securomV3_3) {
 			if ((0 <= nLBA && nLBA < 8) || (5000 <= nLBA && nLBA < 25000)) {
 				bRet = TRUE;
 			}
@@ -685,15 +685,15 @@ BOOL IsValidIntentionalC2error(
 	INT idx
 ) {
 	BOOL bRet = FALSE;
-	if (pDisc->PROTECT.byExist == codelock ||
-		pDisc->PROTECT.byExist == datel ||
-		pDisc->PROTECT.byExist == datelAlt ||
-		IsValidSafeDiscSector(pDisc, pDiscPerSector)) {
-		bRet = TRUE;
-	}
-	else if (pDisc->PROTECT.byExist == c2Err && pDisc->PROTECT.ERROR_SECTOR.nExtentPos[idx] <= nLBA &&
+	if (pDisc->PROTECT.ERROR_SECTOR.nExtentPos[idx] <= nLBA &&
 		nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos[idx] + pDisc->PROTECT.ERROR_SECTOR.nSectorSize[idx]) {
-		bRet = TRUE;
+		if (pDisc->PROTECT.byExist == codelock ||
+			pDisc->PROTECT.byExist == datel ||
+			pDisc->PROTECT.byExist == datelAlt ||
+			pDisc->PROTECT.byExist == c2Err ||
+			IsValidSafeDiscSector(pDisc, pDiscPerSector)) {
+			bRet = TRUE;
+		}
 	}
 	return bRet;
 }

@@ -817,7 +817,7 @@ VOID FixSubQ(
 			if (pDiscPerSector->subch.prev.byAdr == ADR_ENCODES_CURRENT_POSITION) {
 				if ((!(pDiscPerSector->subch.prev.byIndex == 0 && pDiscPerSector->subch.current.byIndex == 1) &&
 					!(pDiscPerSector->subch.prev.byIndex >= 1 && pDiscPerSector->subch.current.byIndex == 0)) ||
-					(nLBA == 0 && (pDisc->PROTECT.byExist == securomV3_1 || pDisc->PROTECT.byExist == securomV3_2))) {
+					(nLBA == 0 && (pDisc->PROTECT.byExist == securomV3_1 || pDisc->PROTECT.byExist == securomV3_2 || pDisc->PROTECT.byExist == securomV3_3))) {
 					if (pDiscPerSector->subch.current.byIndex > 0) {
 						if (pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->byTrackNum] != nLBA) {
 							tmpRel = pDiscPerSector->subch.prev.nRelativeTime + 1;
@@ -1054,7 +1054,7 @@ VOID FixSubQ(
 		}
 		else {
 			if (pDisc->PROTECT.byExist == securomV1 || pDisc->PROTECT.byExist == securomV2 ||
-				pDisc->PROTECT.byExist == securomV3_1 || pDisc->PROTECT.byExist == securomV3_2) {
+				pDisc->PROTECT.byExist == securomV3_1 || pDisc->PROTECT.byExist == securomV3_2 || pDisc->PROTECT.byExist == securomV3_3) {
 				INT nPrevRMSF = MSFtoLBA(BcdToDec(pDiscPerSector->subcode.current[15])
 					, BcdToDec(pDiscPerSector->subcode.current[16]), BcdToDec(pDiscPerSector->subcode.current[17]));
 				INT nRMSF = MSFtoLBA(BcdToDec(SubQcodeOrg[3]), BcdToDec(SubQcodeOrg[4]), BcdToDec(SubQcodeOrg[5]));
@@ -1064,7 +1064,7 @@ VOID FixSubQ(
 
 				if ((nPrevRMSF + 1 == nRMSF && nPrevAMSF + 1 == nAMSF) ||
 					(nPrevRMSF == nRMSF && nPrevAMSF + 1 == nAMSF && 0 <= nLBA && nLBA < 9 &&
-					(pDisc->PROTECT.byExist == securomV3_1 || pDisc->PROTECT.byExist == securomV3_2))) {
+					(pDisc->PROTECT.byExist == securomV3_1 || pDisc->PROTECT.byExist == securomV3_2 || pDisc->PROTECT.byExist == securomV3_3))) {
 					OutputSubInfoWithLBALog(
 						"Detected shifted sub. Restore RMSF[%02x:%02x:%02x to %02x:%02x:%02x] AMSF[%02x:%02x:%02x to %02x:%02x:%02x]\n"
 						, nLBA, pDiscPerSector->byTrackNum, pDiscPerSector->subcode.current[15], pDiscPerSector->subcode.current[16]
