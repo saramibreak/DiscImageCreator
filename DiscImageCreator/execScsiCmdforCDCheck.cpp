@@ -1671,7 +1671,7 @@ BOOL ReadCDForCheckingExe(
 			strcasestr(pDisc->PROTECT.pNameForExe[n], ".HDR")) {
 
 			_TCHAR szTmpPath[_MAX_PATH] = {};
-			if (!GetCurrentDirectory(sizeof(szTmpPath) / sizeof(szTmpPath[0]), szTmpPath)) {
+			if (!GetTempPath(sizeof(szTmpPath) / sizeof(szTmpPath[0]), szTmpPath)) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				return FALSE;
 			}
@@ -1684,7 +1684,7 @@ BOOL ReadCDForCheckingExe(
 						"Please wait until all files are extracted. This is needed to search protection\n"
 						, pDisc->PROTECT.pFullNameForExe[n]
 					);
-					_tcscat(szTmpPath, _T("\\!extracted\\"));
+					_tcscat(szTmpPath, _T("!extracted\\"));
 					ProcessDirectory(pExtArg, pDisc, szTmpPath, FILE_CREATE);
 					if (!SetupIterateCabinet(FullPathWithDrive, 0, (PSP_FILE_CALLBACK)CabinetCallback, szTmpPath)) {
 						// 
@@ -1718,7 +1718,7 @@ BOOL ReadCDForCheckingExe(
 				if (bRet && PathFileExists(szPathIsc)) {
 					_TCHAR szTmpFullPath[_MAX_PATH] = {};
 					_tcsncpy(szTmpFullPath, szTmpPath, sizeof(szTmpFullPath) / sizeof(szTmpFullPath[0]));
-					_tcscat(szTmpPath, _T("\\!exelist.txt"));
+					_tcscat(szTmpPath, _T("!exelist.txt"));
 
 					CONST INT nStrSize = _MAX_PATH * 2;
 					_TCHAR str[nStrSize] = {};
@@ -1745,11 +1745,12 @@ BOOL ReadCDForCheckingExe(
 						}
 
 						_TCHAR buf[512] = {};
+						CONST INT nTrimSize = 16;
 						_fgetts(buf, sizeof(buf), fp);
 						while (!feof(fp) && !ferror(fp)) {
-							LPTCH pTrimBuf[7] = {};
+							LPTCH pTrimBuf[nTrimSize] = {};
 							pTrimBuf[0] = _tcstok(buf, _T(" ")); // space
-							for (INT nRoop = 1; nRoop < 7; nRoop++) {
+							for (INT nRoop = 1; nRoop < nTrimSize; nRoop++) {
 								pTrimBuf[nRoop] = _tcstok(NULL, _T(" ")); // space
 							}
 							// File size is over 0
@@ -1778,6 +1779,17 @@ BOOL ReadCDForCheckingExe(
 									_tcsncpy(fname, pTrimBuf[6], len);
 								}
 								_tcscat(szTmpFullPath, _T("\\"));
+								for (INT j = 7; j < nTrimSize; j++) {
+									if (pTrimBuf[j]) {
+										// 08-16-2002 18:06      36957 A___      12034   41 TCP Protocol.dll
+										_tcscat(fname, _T(" "));
+										_tcscat(fname, pTrimBuf[j]);
+										len += _tcslen(pTrimBuf[j]) + 1;
+									}
+									else {
+										break;
+									}
+								}
 								// Delete '\n'
 								fname[len - sizeof(_TCHAR)] = '\0';
 								_tcscat(szTmpFullPath, fname);

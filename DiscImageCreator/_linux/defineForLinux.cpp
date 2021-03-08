@@ -13,6 +13,13 @@ int GetCurrentDirectory(size_t size, char *buf)
 	return TRUE;
 }
 
+int GetTempPath(size_t size, char* buf)
+{
+	UNREFERENCED_PARAMETER(size);
+	strncpy(buf, "/tmp/", 6);
+	return TRUE;
+}
+
 // https://groups.google.com/forum/#!topic/gnu.gcc.help/0dKxhmV4voE
 // Abstract:   split a path into its parts
 // Parameters: Path: Object to split

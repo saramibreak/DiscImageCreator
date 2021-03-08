@@ -2249,6 +2249,8 @@ int Beep(int fz, int time);
 
 int GetCurrentDirectory(size_t size, char *buf);
 
+int GetTempPath(size_t size, char* buf);
+
 // https://groups.google.com/forum/#!topic/gnu.gcc.help/0dKxhmV4voE
 // Abstract:   split a path into its parts
 // Parameters: Path: Object to split
