@@ -1368,7 +1368,7 @@ BOOL ContainsC2Error(
 	BOOL bErr = FALSE;
 	for (WORD wC2ErrorPos = 0; wC2ErrorPos < CD_RAW_READ_C2_294_SIZE; wC2ErrorPos++) {
 		UINT uiPos = pDevice->TRANSFER.uiBufC2Offset + wC2ErrorPos;
-		if (wC2ErrorPos < CD_RAW_READ_C2_294_SIZE - 10 &&
+		if (wC2ErrorPos < CD_RAW_READ_C2_294_SIZE - 10 && pDevice->byPlxtrDrive &&
 			lpBuf[uiPos] == 0xf0 && lpBuf[uiPos + 1] == 0xf0 && lpBuf[uiPos + 2] == 0xf0 &&
 			lpBuf[uiPos + 3] == 0 && lpBuf[uiPos + 4] == 0 && lpBuf[uiPos + 5] == 0 &&
 			lpBuf[uiPos + 6] == 0x0f && lpBuf[uiPos + 7] == 0x0f && lpBuf[uiPos + 8] == 0x0f) {
