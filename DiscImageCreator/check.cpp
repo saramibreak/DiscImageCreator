@@ -1369,16 +1369,16 @@ BOOL ContainsC2Error(
 	for (WORD wC2ErrorPos = 0; wC2ErrorPos < CD_RAW_READ_C2_294_SIZE; wC2ErrorPos++) {
 		UINT uiPos = pDevice->TRANSFER.uiBufC2Offset + wC2ErrorPos;
 		if (wC2ErrorPos < CD_RAW_READ_C2_294_SIZE - 10 && pDevice->byPlxtrDrive &&
-			lpBuf[uiPos] == 0xf0 && lpBuf[uiPos + 1] == 0xf0 && lpBuf[uiPos + 2] == 0xf0 &&
-			lpBuf[uiPos + 3] == 0 && lpBuf[uiPos + 4] == 0 && lpBuf[uiPos + 5] == 0 &&
-			lpBuf[uiPos + 6] == 0x0f && lpBuf[uiPos + 7] == 0x0f && lpBuf[uiPos + 8] == 0x0f) {
+			lpBuf[uiPos] == 0 && lpBuf[uiPos + 1] == 0xf0 && lpBuf[uiPos + 2] == 0xf0 && lpBuf[uiPos + 3] == 0xf0 &&
+			lpBuf[uiPos + 4] == 0 && lpBuf[uiPos + 5] == 0 && lpBuf[uiPos + 6] == 0 &&
+			lpBuf[uiPos + 7] == 0x0f && lpBuf[uiPos + 8] == 0x0f && lpBuf[uiPos + 9] == 0x0f && lpBuf[uiPos + 10] == 0) {
 			if (bOutputLog) {
 				OutputLog(standardError | fileC2Error,
-					"\n LBA[%06d, %#07x] Detected C2 error \"F0 F0 F0 00 00 00 0F 0F 0F\"\n"
+					"\n LBA[%06d, %#07x] Detected C2 error \"00 F0 F0 F0 00 00 00 0F 0F 0F 00\"\n"
 					"This error can't be fixed by plextor drive. Needs to dump it by non-plextor drive and replace it\n"
 					, nLBA, (UINT)nLBA);
 			}
-			wC2ErrorPos += 8;
+			wC2ErrorPos += 10;
 		}
 		else if (lpBuf[uiPos] != 0) {
 			// Ricoh based drives (+97 read offset, like the Aopen CD-RW CRW5232)
