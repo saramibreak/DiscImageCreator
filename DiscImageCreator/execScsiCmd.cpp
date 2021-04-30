@@ -551,8 +551,14 @@ BOOL ReadTOCText(
 				OutputDiscLog("\tEntry %d crc[%04x] is good\n", i, crc);
 			}
 			else {
-				OutputDiscLog("\tEntry %d crc[%04x] is Bad\n", i, crc);
-				bBad = TRUE;
+				OutputDiscLog("\tEntry %d crc[%04x] is bad", i, crc);
+				if (0x83 <= pDesc[i].PackType && pDesc[i].PackType <= 0x8f) {
+					OutputDiscLog(", but this does not affect the cue sheet\n");
+				}
+				else {
+					OutputDiscLog("\n");
+					bBad = TRUE;
+				}
 			}
 		}
 		if (!bBad) {
