@@ -184,11 +184,13 @@
       <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
       <EnablePREfast>false</EnablePREfast>
       <ExceptionHandling>Sync</ExceptionHandling>
+      <AdditionalIncludeDirectories>$(ProgramFiles)\Visual Leak Detector\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>vld.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProgramFiles)\Visual Leak Detector\lib\Win32</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
       <Command>CreateBuildDateTime.bat</Command>
