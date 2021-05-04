@@ -399,7 +399,12 @@ BOOL FixSubQAdr6(
 			OutputSubErrorWithLBALog(
 				"Q[13-19]:Adr6[%16" CHARWIDTH "s] -> [%16" CHARWIDTH "s]\n"
 				, nLBA, pDiscPerSector->byTrackNum, szAdr6, pDisc->SUB.szAdr6);
-			SetBufferFromTmpSubch(pDiscPerSector->subcode.current, pDiscPerSector->subch.current, TRUE, TRUE);
+			sscanf(pDisc->SUB.szAdr6, "%2hhx%2hhx%2hhx%2hhx%2hhx%2hhx%2hhx%2hhx"
+				, &pDiscPerSector->subcode.current[13], &pDiscPerSector->subcode.current[14]
+				, &pDiscPerSector->subcode.current[15], &pDiscPerSector->subcode.current[16]
+				, &pDiscPerSector->subcode.current[17], &pDiscPerSector->subcode.current[18]
+				, &pDiscPerSector->subcode.current[19], &pDiscPerSector->subcode.current[20]
+			);
 		}
 	}
 	return TRUE;
@@ -486,14 +491,16 @@ VOID FixSubQ(
 
 	BOOL bAdrCurrent = FALSE;
 	if ((pDiscPerSector->subch.current.byAdr == ADR_ENCODES_MEDIA_CATALOG ||
-		pDiscPerSector->subch.current.byAdr == ADR_ENCODES_ISRC) &&
+		pDiscPerSector->subch.current.byAdr == ADR_ENCODES_ISRC ||
+		pDiscPerSector->subch.current.byAdr == ADR_ENCODES_6) &&
 		(pDiscPerSector->subch.prev.byAdr != ADR_ENCODES_MEDIA_CATALOG &&
-			pDiscPerSector->subch.prev.byAdr != ADR_ENCODES_ISRC)) {
+		pDiscPerSector->subch.prev.byAdr != ADR_ENCODES_ISRC &&
+		pDiscPerSector->subch.prev.byAdr != ADR_ENCODES_6)) {
 
 		// assume that adr is incorrect
-		BYTE bBackupAdr = pDiscPerSector->subch.current.byAdr;
-		BYTE bBackupTrackNum = pDiscPerSector->subch.current.byTrackNum;
-		BYTE bBackupIndex = pDiscPerSector->subch.current.byIndex;
+		BYTE byBackupAdr = (BYTE)(pDiscPerSector->subcode.current[12] & 0x0f);
+		BYTE byBackupSub13 = pDiscPerSector->subcode.current[13];
+		BYTE byBackupSub14 = pDiscPerSector->subcode.current[14];
 		pDiscPerSector->subch.current.byAdr = ADR_ENCODES_CURRENT_POSITION;
 		pDiscPerSector->subcode.current[12] =
 			(BYTE)(pDiscPerSector->subch.current.byCtl << 4 | pDiscPerSector->subch.current.byAdr);
@@ -509,7 +516,7 @@ VOID FixSubQ(
 		RecalcSubQCrc(pDisc, pDiscPerSector);
 		if (!pDisc->SUB.nCorruptCrcH && !pDisc->SUB.nCorruptCrcL) {
 			OutputSubErrorWithLBALog("Q[12]:Adr[%d] -> [0x01]\n"
-				, nLBA, pDiscPerSector->byTrackNum, bBackupAdr);
+				, nLBA, pDiscPerSector->byTrackNum, byBackupAdr);
 			return;
 		}
 		else if ((pDiscPerSector->subch.prev.byTrackNum == pDiscPerSector->subch.current.byTrackNum &&
@@ -517,7 +524,7 @@ VOID FixSubQ(
 			(pDiscPerSector->subch.prevPrev.byTrackNum == pDiscPerSector->subch.current.byTrackNum &&
 				pDiscPerSector->subch.prevPrev.byIndex == pDiscPerSector->subch.current.byIndex)) {
 			OutputSubErrorWithLBALog("Q[12]:Adr[%d] -> [0x01]\n"
-				, nLBA, pDiscPerSector->byTrackNum, bBackupAdr);
+				, nLBA, pDiscPerSector->byTrackNum, byBackupAdr);
 			pDiscPerSector->subch.current.byAdr = ADR_ENCODES_CURRENT_POSITION;
 			pDiscPerSector->subcode.current[12] =
 				(BYTE)(pDiscPerSector->subch.current.byCtl << 4 | pDiscPerSector->subch.current.byAdr);
@@ -528,11 +535,11 @@ VOID FixSubQ(
 			}
 		}
 		else {
-			pDiscPerSector->subch.current.byAdr = (BYTE)(bBackupAdr & 0x0f);
+			pDiscPerSector->subch.current.byAdr = (BYTE)(byBackupAdr & 0x0f);
 			pDiscPerSector->subcode.current[12] =
 				(BYTE)(pDiscPerSector->subch.current.byCtl << 4 | pDiscPerSector->subch.current.byAdr);
-			pDiscPerSector->subcode.current[13] = DecToBcd(bBackupTrackNum);
-			pDiscPerSector->subcode.current[14] = DecToBcd(bBackupIndex);
+			pDiscPerSector->subcode.current[13] = byBackupSub13;
+			pDiscPerSector->subcode.current[14] = byBackupSub14;
 
 			// assume that adr is correct but MCN or ISRC is incorrect
 			if (1 <= pExtArg->uiSubAddionalNum) {
@@ -540,6 +547,7 @@ VOID FixSubQ(
 				if (!FixSubQAdrMCN(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA)) {
 					// Next check adr:3
 					if (!FixSubQAdrISRC(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA)) {
+						// Next check adr:6
 						if (!FixSubQAdr6(pDisc, pDiscPerSector, nLBA)) {
 							bAdrCurrent = TRUE;
 						}
@@ -554,6 +562,7 @@ VOID FixSubQ(
 					if (!FixSubQAdrISRC(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA)) {
 						// Next check adr:2
 						if (!FixSubQAdrMCN(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA)) {
+							// Next check adr:6
 							if (!FixSubQAdr6(pDisc, pDiscPerSector, nLBA)) {
 								bAdrCurrent = TRUE;
 							}
@@ -565,6 +574,7 @@ VOID FixSubQ(
 					if (!FixSubQAdrMCN(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA)) {
 						// Next check adr:3
 						if (!FixSubQAdrISRC(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA)) {
+							// Next check adr:6
 							if (!FixSubQAdr6(pDisc, pDiscPerSector, nLBA)) {
 								bAdrCurrent = TRUE;
 							}
@@ -646,8 +656,11 @@ VOID FixSubQ(
 				}
 			}
 		}
-		if (pDiscPerSector->subch.current.byAdr > ADR_ENCODES_ISRC ||
-			pDiscPerSector->subch.current.byAdr == 0) {
+		if (pDiscPerSector->subch.current.byAdr != ADR_ENCODES_CURRENT_POSITION &&
+			pDiscPerSector->subch.current.byAdr != ADR_ENCODES_MEDIA_CATALOG &&
+			pDiscPerSector->subch.current.byAdr != ADR_ENCODES_ISRC &&
+			pDiscPerSector->subch.current.byAdr != ADR_ENCODES_6
+			) {
 			OutputSubErrorWithLBALog("Q[12]:Adr[%d] -> [0x01]\n"
 				, nLBA, pDiscPerSector->byTrackNum, pDiscPerSector->subch.current.byAdr);
 
@@ -969,7 +982,8 @@ VOID FixSubQ(
 	}
 	else if (nLBA >= 0 &&
 		(pDiscPerSector->subch.current.byAdr == ADR_ENCODES_MEDIA_CATALOG ||
-		pDiscPerSector->subch.current.byAdr == ADR_ENCODES_ISRC)) {
+		pDiscPerSector->subch.current.byAdr == ADR_ENCODES_ISRC ||
+		pDiscPerSector->subch.current.byAdr == ADR_ENCODES_6)) {
 		if (!IsValidSubQAFrame(pDiscPerSector->subcode.current, nLBA)) {
 			BYTE byFrame = 0;
 			BYTE bySecond = 0;
