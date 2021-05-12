@@ -849,7 +849,7 @@ BOOL ReadCDForCheckingReadInOut(
 					if (!bCached) {
 						throw FALSE;
 					}
-					else if (nLeadOutCnt < pDisc->MAIN.nAdjustSectorNum) {
+					else if (nLeadOutCnt < pDisc->MAIN.nAdjustSectorNum + 1) {
 						OutputErrorString("Cache is short. Try again\n");
 						throw FALSE;
 					}

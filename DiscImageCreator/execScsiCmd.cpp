@@ -1198,8 +1198,16 @@ BOOL ReadCacheForLgAsus(
 				, nLineNum + 1, nLBA, aSubBuf[13], aSubBuf[19], aSubBuf[20], aSubBuf[21]);
 			OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("Cached Main Channel [Lead-out]"));
 			OutputCDMain(fileMainInfo, aBuf, nLBA, CD_RAW_SECTOR_SIZE);
-			memcpy(lpOutBuf + F1_BUFFER_SIZE * (nLBA - pDisc->SCSI.nAllLength), aBuf, F1_BUFFER_SIZE);
-			(*lpbLeadOutCnt)++;
+#if 0
+			// test code
+			memset(aBuf, 0xff, CD_RAW_SECTOR_SIZE);
+			aBuf[0] = nLineNum;
+#endif
+			INT tmpLBA = MSFtoLBA(BcdToDec(aSubBuf[19]), BcdToDec(aSubBuf[20]), BcdToDec((aSubBuf[21]))) - 150;
+			if (tmpLBA == nLBA) {
+				memcpy(lpOutBuf + F1_BUFFER_SIZE * (nLBA - pDisc->SCSI.nAllLength), aBuf, F1_BUFFER_SIZE);
+				(*lpbLeadOutCnt)++;
+			}
 		}
 	}
 	else {

@@ -1022,8 +1022,8 @@ BOOL ReadCDAll(
 
 				BYTE buf[CD_RAW_READ_SUBCODE_SIZE] = {};
 				for (INT i = 0; i < 20; i++) {
-					OutputCDMain(fileMainInfo, pDisc->lpCachedBuf + 0xb00 * i, nLBA + i, CD_RAW_SECTOR_SIZE);
-					AlignRowSubcode(buf, pDisc->lpCachedBuf + 0xb00 * i + CD_RAW_SECTOR_SIZE);
+					OutputCDMain(fileMainInfo, pDisc->lpCachedBuf + F1_BUFFER_SIZE * i, nLBA + i, CD_RAW_SECTOR_SIZE);
+					AlignRowSubcode(buf, pDisc->lpCachedBuf + F1_BUFFER_SIZE * i + CD_RAW_SECTOR_SIZE);
 					OutputCDSub96Align(fileMainInfo, buf, nLBA + i);
 				}
 #endif
