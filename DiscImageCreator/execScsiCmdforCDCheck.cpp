@@ -806,57 +806,65 @@ BOOL ReadCDForCheckingReadInOut(
 		else if (0 < pDisc->MAIN.nCombinedOffset) {
 			OutputLog(standardOut | fileDrive, "This drive can't read the lead-out\n");
 			if (IsValid0xF1SupportedDrive(pDevice)) {
-				if (1 < pDisc->MAIN.nAdjustSectorNum && !pExtArg->byMultiSectorReading) {
-					OutputErrorString("Multi sector reading isn't supported now even if 0xf1 is supported\n");
+				if (!pExtArg->byMultiSectorReading) {
+					OutputErrorString("/mr is needed to read the lead-out\n");
 					return FALSE;
 				}
-				OutputLog(standardOut | fileDrive, "But 0xF1 is supported\n");
+				OutputLog(standardOut | fileDrive, "But 0xF1 opcode is supported\n");
 				INT ct = 20;
 				OutputLog(standardOut | fileDisc
 					, OUTPUT_DHYPHEN_PLUS_STR("Reading %d - %d INTO CACHE")
 					, nLBA - 1 - ct, nLBA - 1);
 
 				BYTE aLastSector[CD_RAW_SECTOR_SIZE] = {};
-				for (INT x = nLBA - 1 - ct; x <= nLBA - 1; ++x) {
-					if (!ExecReadCD(pExtArg, pDevice, lpCmd, x, aBuf,
-						CD_RAW_SECTOR_SIZE, _T(__FUNCTION__), __LINE__)
-						|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+				BOOL bCached = FALSE;
+				for (UINT r = 0; r < pExtArg->uiRetryCnt && !bCached; r++) {
+					for (INT x = nLBA - 1 - ct; x <= nLBA - 1; ++x) {
+						if (!ExecReadCD(pExtArg, pDevice, lpCmd, x, aBuf,
+							CD_RAW_SECTOR_SIZE, _T(__FUNCTION__), __LINE__)
+							|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+							return FALSE;
+						}
+						if (x == nLBA - 1) {
+							memcpy(aLastSector, aBuf, CD_RAW_SECTOR_SIZE);
+							OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("Last Sector"));
+							OutputCDMain(fileMainInfo, aLastSector, nLBA - 1, CD_RAW_SECTOR_SIZE);
+						}
+					}
+					LPBYTE lpOutBuf = NULL;
+					if (!GetAlignedCallocatedBuffer(pDevice, &pDisc->lpCachedBuf
+						, (UINT)F1_BUFFER_SIZE * 100, &lpOutBuf, _T(__FUNCTION__), __LINE__)) {
 						return FALSE;
 					}
-					if (x == nLBA - 1) {
-						memcpy(aLastSector, aBuf, CD_RAW_SECTOR_SIZE);
-						OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("Last Sector"));
-						OutputCDMain(fileMainInfo, aLastSector, nLBA - 1, CD_RAW_SECTOR_SIZE);
-					}
-				}
-				LPBYTE lpOutBuf = NULL;
-				if (!GetAlignedCallocatedBuffer(pDevice, &pDisc->lpCachedBuf
-					, (UINT)F1_BUFFER_SIZE * 100, &lpOutBuf, _T(__FUNCTION__), __LINE__)) {
-					return FALSE;
-				}
-				try {
-					INT nStartLBA = nLBA - 1 - ct;
-					BOOL bCached = FALSE;
-					INT nLeadOutCnt = 0;
-					for (INT nLineNum = 0; nLineNum < 120; ++nLineNum) {
-						if (!ReadCacheForLgAsus(pExtArg, pDevice, pDisc, lpOutBuf, nLineNum, nStartLBA + nLineNum, &bCached, &nLeadOutCnt)) {
-							throw FALSE;
+					try {
+						INT nStartLBA = nLBA - 1 - ct;
+						INT nLeadOutCnt = 0;
+						for (INT nLineNum = 0; nLineNum < 120; ++nLineNum) {
+							if (!ReadCacheForLgAsus(pExtArg, pDevice, pDisc, lpOutBuf, nLineNum, nStartLBA + nLineNum, &bCached, &nLeadOutCnt)) {
+								throw FALSE;
+							}
+							if (bCached) {
+								break;
+							}
 						}
-						if (bCached) {
-							break;
+						if (!bCached) {
+							OutputLog(standardError | fileDisc, "Unabled to get the cache. Retry %d/%d\n", r + 1, pExtArg->uiRetryCnt);
+							continue;
+						}
+						else if (nLeadOutCnt < pDisc->MAIN.nAdjustSectorNum + 1) {
+							OutputLog(standardError | fileDisc, "Cache is short. Retry %d/%d\n", r + 1, pExtArg->uiRetryCnt);
+							bCached = FALSE;
+							continue;
 						}
 					}
-					if (!bCached) {
-						throw FALSE;
-					}
-					else if (nLeadOutCnt < pDisc->MAIN.nAdjustSectorNum + 1) {
-						OutputErrorString("Cache is short. Try again\n");
-						throw FALSE;
+					catch (BOOL bErr) {
+						bRet = bErr;
+						FreeAndNull(pDisc->lpCachedBuf);
 					}
 				}
-				catch (BOOL bErr) {
-					bRet = bErr;
-					FreeAndNull(pDisc->lpCachedBuf);
+				if (!bCached) {
+					OutputErrorString("Failed to get the cache\n");
+					bRet = FALSE;
 				}
 			}
 			else {

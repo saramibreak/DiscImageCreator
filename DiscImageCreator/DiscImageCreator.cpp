@@ -715,6 +715,24 @@ int printAndSetPath(_TCHAR* szPathFromArg, _TCHAR* pszFullPath, size_t stFullPat
 	return TRUE;
 }
 
+int SetOptionMr(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
+{
+	_TCHAR* endptr = NULL;
+	pExtArg->byMultiSectorReading = TRUE;
+	if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
+		pExtArg->uiRetryCnt = (UINT)_tcstoul(argv[(*i)++], &endptr, 10);
+		if (*endptr) {
+			OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
+			return FALSE;
+		}
+	}
+	else {
+		pExtArg->uiRetryCnt = 50;
+		OutputString("/mr val was omitted. set [%u]\n", pExtArg->uiRetryCnt);
+	}
+	return TRUE;
+}
+
 int SetOptionPs(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 {
 	_TCHAR* endptr = NULL;
@@ -1059,7 +1077,9 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					pExtArg->byMicroSoftCabFile = TRUE;
 				}
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/mr"), cmdLen)) {
-					pExtArg->byMultiSectorReading = TRUE;
+					if (!SetOptionMr(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
 				}
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/np"), cmdLen)) {
 					pExtArg->bySkipSubP = TRUE;
@@ -1663,6 +1683,8 @@ void printUsage(void)
 	OutputString(
 		"\t/mscf\tExtract MicroSoftCabFile (.cab)\n"
 		"\t\t\tFor output exe file info in detail\n"
+		"\t/mr\tMulti sector reading of the lead-out for 0xf1 drive\n"
+		"\t\t\tval\tretry count (default 50)\n"
 		"Option (for CD SubChannel)\n"
 		"\t/np\tNot fix SubP\n"
 		"\t/nq\tNot fix SubQ\n"
@@ -1683,11 +1705,11 @@ void printUsage(void)
 		"\t/raw\tDumping DVD by raw (2064 or 2384 bytes/sector)\n"
 		"\t\t\tComfirmed drive: Mediatec MT chip (Lite-on etc.), PLEXTOR\n"
 		"\t\t\t               Hitachi-LG GDR, GCC\n"
-		"\t\t\t -> GDR (8082N, 8161B to 8164B) and GCC (4160N, 4240N to 4247N)\n"
-		"\t\t\t    supports GC/Wii dumping\n"
 	);
 	stopMessage();
 	OutputString(
+		"\t\t\t -> GDR (8082N, 8161B to 8164B) and GCC (4160N, 4240N to 4247N)\n"
+		"\t\t\t    supports GC/Wii dumping\n"
 		"\t/avdp\tUse Anchor Volume Descriptor Pointer as file length\n"
 		"\t/ps\tThe sector is padded when reading error occurs\n"
 		"\t\t\tval\t0: Padded by 0x00\n"

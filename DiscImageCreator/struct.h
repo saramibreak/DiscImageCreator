@@ -202,18 +202,19 @@ typedef struct _EXT_ARG {
 	BYTE byMultiSectorReading; // for 0xF1 supported drive
 	BYTE byPadding[3];
 	INT nAudioCDOffsetNum;
-	UINT uiMaxRereadNum;
+	UINT uiMaxRereadNum; // for c2 error
 	INT nAllSectors;	// use for xbox360
 	UINT uiSecuritySector[16];	// use for xbox/xbox360
-	INT nC2RereadingType;
+	INT nC2RereadingType; // 0 or 1
 	INT nStartLBAForC2;
 	INT nEndLBAForC2;
-	UINT uiCacheDelNum;
-	DWORD dwTimeoutNum;
+	UINT uiCacheDelNum; // delete cache of the drive per value. Default is 1 (DEFAULT_CACHE_DELETE_VAL)
+	DWORD dwTimeoutNum; // default is 60 (DEFAULT_SPTD_TIMEOUT_VAL)
 	UINT uiSubAddionalNum;
-	UINT uiSkipSectors;
+	UINT uiSkipSectors; // for proring, LaserLock
 	UINT uiSkipSectors2; // for some LaserLock
-	UINT uiPadNum;
+	UINT uiPadNum; // 0 : main channel is padded by 0x00, 1 : main channel is padded by 0xAA
+	UINT uiRetryCnt; // for 0xf1 drive
 	struct _FILE {
 		CHAR readError[MAX_READ_ERROR_FILE_COUNT][MAX_FNAME_FOR_VOLUME];
 		INT readErrCnt;
