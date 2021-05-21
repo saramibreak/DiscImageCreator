@@ -67,6 +67,12 @@ BOOL GetFilenameToFixError(
 	CHAR szFilename[][MAX_FNAME_FOR_VOLUME]
 );
 
+BOOL GetTimeStamp(
+	_TCHAR* pszTime,
+	size_t stBufsize,
+	DWORD dwTime
+);
+
 DWORD GetFileSize(
 	LONG lOffset,
 	FILE *fp

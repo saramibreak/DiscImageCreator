@@ -230,6 +230,17 @@ BOOL GetFilenameToFixError(
 	return TRUE;
 }
 
+BOOL GetTimeStamp(
+	_TCHAR* pszTime,
+	size_t stBufsize,
+	DWORD dwTime
+) {
+	time_t timeDateStamp = dwTime;
+	tm* ctime = gmtime(&timeDateStamp);
+	_tcsftime(pszTime, stBufsize / sizeof(_TCHAR), _T("%FT%T"), ctime);
+	return TRUE;
+}
+
 DWORD GetFileSize(
 	LONG lOffset,
 	FILE *fp

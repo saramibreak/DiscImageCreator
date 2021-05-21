@@ -23,8 +23,8 @@ VOID OutputFsImageDosHeader(
 	PIMAGE_DOS_HEADER pIdh
 ) {
 	OutputVolDescLog(
-		"\t========== Image Dos Header (%zu byte) ==========\n"
-		"\t                     Magic number: %04x\n"
+		"\t========== IMAGE_DOS_HEADER (%zu bytes) ==========\n"
+		"\t                     Magic number: %04x (%c%c)\n"
 		"\t       Bytes on last page of file: %04x\n"
 		"\t                    Pages in file: %04x\n"
 		"\t                      Relocations: %04x\n"
@@ -42,10 +42,10 @@ VOID OutputFsImageDosHeader(
 		"\tOEM information; e_oemid specific: %04x\n"
 		"\t   File address of new exe header: %08ld\n"
 		, sizeof(IMAGE_DOS_HEADER)
-		, pIdh->e_magic, pIdh->e_cblp, pIdh->e_cp, pIdh->e_crlc, pIdh->e_cparhdr
-		, pIdh->e_minalloc, pIdh->e_maxalloc, pIdh->e_ss, pIdh->e_sp, pIdh->e_csum
-		, pIdh->e_ip, pIdh->e_cs, pIdh->e_lfarlc, pIdh->e_ovno, pIdh->e_oemid
-		, pIdh->e_oeminfo, pIdh->e_lfanew
+		, pIdh->e_magic, pIdh->e_magic, pIdh->e_magic >> 8, pIdh->e_cblp, pIdh->e_cp
+		, pIdh->e_crlc, pIdh->e_cparhdr, pIdh->e_minalloc, pIdh->e_maxalloc
+		, pIdh->e_ss, pIdh->e_sp, pIdh->e_csum, pIdh->e_ip, pIdh->e_cs
+		, pIdh->e_lfarlc, pIdh->e_ovno, pIdh->e_oemid, pIdh->e_oeminfo, pIdh->e_lfanew
 		);
 }
 
@@ -53,7 +53,7 @@ VOID OutputFsImageOS2Header(
 	PIMAGE_OS2_HEADER pIoh
 ) {
 	OutputVolDescLog(
-		"\t========== Image OS/2 .EXE header (%zu byte) ==========\n"
+		"\t========== IMAGE_OS2_HEADER (%zu bytes) ==========\n"
 		"\t                      Magic number: %04x\n"
 		"\t                    Version number: %02d\n"
 		"\t                   Revision number: %02d\n"
@@ -101,18 +101,14 @@ VOID OutputFsImageOS2Header(
 VOID OutputFsImageNtHeader(
 	PIMAGE_NT_HEADERS32 pInh
 ) {
-	time_t timeDateStamp = pInh->FileHeader.TimeDateStamp;
-	tm* ctime = gmtime(&timeDateStamp);
-	_TCHAR szTime[128] = {};
-	_tcsftime(szTime, sizeof(szTime) / sizeof(szTime[0]), _T("%FT%T"), ctime);
-
 	OutputVolDescLog(
-		"\t========== Image NT Header (%zu byte) ==========\n"
-		"\tSignature: %08lx\n"
-		"\t========== File Header ==========\n"
-		"\t\t             Machine: %04x "
+		"\t========== IMAGE_NT_HEADERS (%zu bytes) ==========\n"
+		"\tSignature: %08lx (%c%c)\n"
+		"\t\t========== FileHeader ==========\n"
+		"\t\t\t             Machine: %04x "
 		, sizeof(IMAGE_NT_HEADERS32)
-		, pInh->Signature, pInh->FileHeader.Machine
+		, pInh->Signature, (CHAR)pInh->Signature, (CHAR)(pInh->Signature >> 8)
+		, pInh->FileHeader.Machine
 	);
 	switch (pInh->FileHeader.Machine) {
 	case 0x014c:
@@ -200,13 +196,15 @@ VOID OutputFsImageNtHeader(
 		OutputVolDescLog("(UNKNOWN)\n");
 		break;
 	}
+	_TCHAR szTime[128] = {};
+	GetTimeStamp(szTime, sizeof(szTime), pInh->FileHeader.TimeDateStamp);
 	OutputVolDescLog(
-		"\t\t    NumberOfSections: %04x\n"
-		"\t\t       TimeDateStamp: %08lx (%s)\n"
-		"\t\tPointerToSymbolTable: %08lx\n"
-		"\t\t     NumberOfSymbols: %08lx\n"
-		"\t\tSizeOfOptionalHeader: %04x\n"
-		"\t\t     Characteristics: %04x\n"
+		"\t\t\t    NumberOfSections: %04x\n"
+		"\t\t\t       TimeDateStamp: %08lx (%s)\n"
+		"\t\t\tPointerToSymbolTable: %08lx\n"
+		"\t\t\t     NumberOfSymbols: %08lx\n"
+		"\t\t\tSizeOfOptionalHeader: %04x\n"
+		"\t\t\t     Characteristics: %04x\n"
 		, pInh->FileHeader.NumberOfSections
 		, pInh->FileHeader.TimeDateStamp, szTime
 		, pInh->FileHeader.PointerToSymbolTable
@@ -214,76 +212,76 @@ VOID OutputFsImageNtHeader(
 		, pInh->FileHeader.Characteristics
 	);
 	if ((pInh->FileHeader.Characteristics & IMAGE_FILE_RELOCS_STRIPPED) == IMAGE_FILE_RELOCS_STRIPPED) {
-		OutputVolDescLog("\t\t                    => Relocation info stripped from file\n");
+		OutputVolDescLog("\t\t\t                    => Relocation info stripped from file\n");
 	}
 	if ((pInh->FileHeader.Characteristics & IMAGE_FILE_EXECUTABLE_IMAGE) == IMAGE_FILE_EXECUTABLE_IMAGE) {
-		OutputVolDescLog("\t\t                    => File is executable\n");
+		OutputVolDescLog("\t\t\t                    => File is executable\n");
 	}
 	if ((pInh->FileHeader.Characteristics & IMAGE_FILE_LINE_NUMS_STRIPPED) == IMAGE_FILE_LINE_NUMS_STRIPPED) {
-		OutputVolDescLog("\t\t                    => Line nunbers stripped from file\n");
+		OutputVolDescLog("\t\t\t                    => Line nunbers stripped from file\n");
 	}
 	if ((pInh->FileHeader.Characteristics & IMAGE_FILE_LOCAL_SYMS_STRIPPED) == IMAGE_FILE_LOCAL_SYMS_STRIPPED) {
-		OutputVolDescLog("\t\t                    => Local symbols stripped from file\n");
+		OutputVolDescLog("\t\t\t                    => Local symbols stripped from file\n");
 	}
 	if ((pInh->FileHeader.Characteristics & IMAGE_FILE_AGGRESIVE_WS_TRIM) == IMAGE_FILE_AGGRESIVE_WS_TRIM) {
-		OutputVolDescLog("\t\t                    => Agressively trim working set\n");
+		OutputVolDescLog("\t\t\t                    => Agressively trim working set\n");
 	}
 	if ((pInh->FileHeader.Characteristics & IMAGE_FILE_LARGE_ADDRESS_AWARE) == IMAGE_FILE_LARGE_ADDRESS_AWARE) {
-		OutputVolDescLog("\t\t                    => App can handle >2gb addresses\n");
+		OutputVolDescLog("\t\t\t                    => App can handle >2gb addresses\n");
 	}
 	if ((pInh->FileHeader.Characteristics & IMAGE_FILE_BYTES_REVERSED_LO) == IMAGE_FILE_BYTES_REVERSED_LO) {
-		OutputVolDescLog("\t\t                    => Bytes of machine word are reversed\n");
+		OutputVolDescLog("\t\t\t                    => Bytes of machine word are reversed\n");
 	}
 	if ((pInh->FileHeader.Characteristics & IMAGE_FILE_32BIT_MACHINE) == IMAGE_FILE_32BIT_MACHINE) {
-		OutputVolDescLog("\t\t                    => 32 bit word machine\n");
+		OutputVolDescLog("\t\t\t                    => 32 bit word machine\n");
 	}
 	if ((pInh->FileHeader.Characteristics & IMAGE_FILE_DEBUG_STRIPPED) == IMAGE_FILE_DEBUG_STRIPPED) {
-		OutputVolDescLog("\t\t                    => Debugging info stripped from file in .DBG file\n");
+		OutputVolDescLog("\t\t\t                    => Debugging info stripped from file in .DBG file\n");
 	}
 	if ((pInh->FileHeader.Characteristics & IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP) == IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP) {
-		OutputVolDescLog("\t\t                    => If Image is on removable media, copy and run from the swap file\n");
+		OutputVolDescLog("\t\t\t                    => If Image is on removable media, copy and run from the swap file\n");
 	}
 	if ((pInh->FileHeader.Characteristics & IMAGE_FILE_NET_RUN_FROM_SWAP) == IMAGE_FILE_NET_RUN_FROM_SWAP) {
-		OutputVolDescLog("\t\t                    => If Image is on Net, copy and run from the swap file\n");
+		OutputVolDescLog("\t\t\t                    => If Image is on Net, copy and run from the swap file\n");
 	}
 	if ((pInh->FileHeader.Characteristics & IMAGE_FILE_SYSTEM) == IMAGE_FILE_SYSTEM) {
-		OutputVolDescLog("\t\t                    => System File\n");
+		OutputVolDescLog("\t\t\t                    => System File\n");
 	}
 	if ((pInh->FileHeader.Characteristics & IMAGE_FILE_DLL) == IMAGE_FILE_DLL) {
-		OutputVolDescLog("\t\t                    => File is a DLL\n");
+		OutputVolDescLog("\t\t\t                    => File is a DLL\n");
 	}
 	if ((pInh->FileHeader.Characteristics & IMAGE_FILE_UP_SYSTEM_ONLY) == IMAGE_FILE_UP_SYSTEM_ONLY) {
-		OutputVolDescLog("\t\t                    => File should only be run on a UP machine\n");
+		OutputVolDescLog("\t\t\t                    => File should only be run on a UP machine\n");
 	}
 	if ((pInh->FileHeader.Characteristics & IMAGE_FILE_BYTES_REVERSED_HI) == IMAGE_FILE_BYTES_REVERSED_HI) {
-		OutputVolDescLog("\t\t                    => Bytes of machine word are reversed\n");
+		OutputVolDescLog("\t\t\t                    => Bytes of machine word are reversed\n");
 	}
 
 	OutputVolDescLog(
-		"\t========== Optional Header ==========\n"
-		"\t\t                      Magic: %04x\n"
-		"\t\t         MajorLinkerVersion: %02x\n"
-		"\t\t         MinorLinkerVersion: %02x\n"
-		"\t\t                 SizeOfCode: %08lx\n"
-		"\t\t      SizeOfInitializedData: %08lx\n"
-		"\t\t    SizeOfUninitializedData: %08lx\n"
-		"\t\t        AddressOfEntryPoint: %08lx\n"
-		"\t\t                 BaseOfCode: %08lx\n"
-		"\t\t                 BaseOfData: %08lx\n"
-		"\t\t                  ImageBase: %08lx\n"
-		"\t\t           SectionAlignment: %08lx\n"
-		"\t\t              FileAlignment: %08lx\n"
-		"\t\tMajorOperatingSystemVersion: %04x\n"
-		"\t\tMinorOperatingSystemVersion: %04x\n"
-		"\t\t          MajorImageVersion: %04x\n"
-		"\t\t          MinorImageVersion: %04x\n"
-		"\t\t      MajorSubsystemVersion: %04x\n"
-		"\t\t      MinorSubsystemVersion: %04x\n"
-		"\t\t          Win32VersionValue: %08lx\n"
-		"\t\t                SizeOfImage: %08lx\n"
-		"\t\t              SizeOfHeaders: %08lx\n"
-		"\t\t                   CheckSum: %08lx\n"
-		"\t\t                  Subsystem: %04x "
+		"\t\t========== OptionalHeader ==========\n"
+		"\t\t\t                      Magic: %04x\n"
+		"\t\t\t         MajorLinkerVersion: %02x\n"
+		"\t\t\t         MinorLinkerVersion: %02x\n"
+		"\t\t\t                 SizeOfCode: %08lx\n"
+		"\t\t\t      SizeOfInitializedData: %08lx\n"
+		"\t\t\t    SizeOfUninitializedData: %08lx\n"
+		"\t\t\t        AddressOfEntryPoint: %08lx\n"
+		"\t\t\t                 BaseOfCode: %08lx\n"
+		"\t\t\t                 BaseOfData: %08lx\n"
+		"\t\t\t                  ImageBase: %08lx\n"
+		"\t\t\t           SectionAlignment: %08lx\n"
+		"\t\t\t              FileAlignment: %08lx\n"
+		"\t\t\tMajorOperatingSystemVersion: %04x\n"
+		"\t\t\tMinorOperatingSystemVersion: %04x\n"
+		"\t\t\t          MajorImageVersion: %04x\n"
+		"\t\t\t          MinorImageVersion: %04x\n"
+		"\t\t\t      MajorSubsystemVersion: %04x\n"
+		"\t\t\t      MinorSubsystemVersion: %04x\n"
+		"\t\t\t          Win32VersionValue: %08lx\n"
+		"\t\t\t                SizeOfImage: %08lx\n"
+		"\t\t\t              SizeOfHeaders: %08lx\n"
+		"\t\t\t                   CheckSum: %08lx\n"
+		"\t\t\t                  Subsystem: %04x "
 		, pInh->OptionalHeader.Magic, pInh->OptionalHeader.MajorLinkerVersion
 		, pInh->OptionalHeader.MinorLinkerVersion, pInh->OptionalHeader.SizeOfCode
 		, pInh->OptionalHeader.SizeOfInitializedData, pInh->OptionalHeader.SizeOfUninitializedData
@@ -344,59 +342,59 @@ VOID OutputFsImageNtHeader(
 	}
 
 	OutputVolDescLog(
-		"\t\t         DllCharacteristics: %04x\n"
+		"\t\t\t         DllCharacteristics: %04x\n"
 		, pInh->OptionalHeader.DllCharacteristics
 	);
 	if (pInh->OptionalHeader.DllCharacteristics) {
 		BOOL bSet = FALSE;
 		if ((pInh->OptionalHeader.DllCharacteristics & IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE) == IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE) {
-			OutputVolDescLog("\t\t                          => DLL can move\n");
+			OutputVolDescLog("\t\t\t                          => DLL can move\n");
 			bSet = TRUE;
 		}
 		if ((pInh->OptionalHeader.DllCharacteristics & IMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY) == IMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY) {
-			OutputVolDescLog("\t\t                          => Code Integrity Image\n");
+			OutputVolDescLog("\t\t\t                          => Code Integrity Image\n");
 			bSet = TRUE;
 		}
 		if ((pInh->OptionalHeader.DllCharacteristics & IMAGE_DLLCHARACTERISTICS_NX_COMPAT) == IMAGE_DLLCHARACTERISTICS_NX_COMPAT) {
-			OutputVolDescLog("\t\t                          => Image is NX compatible\n");
+			OutputVolDescLog("\t\t\t                          => Image is NX compatible\n");
 			bSet = TRUE;
 		}
 		if ((pInh->OptionalHeader.DllCharacteristics & IMAGE_DLLCHARACTERISTICS_NO_ISOLATION) == IMAGE_DLLCHARACTERISTICS_NO_ISOLATION) {
-			OutputVolDescLog("\t\t                          => Image understands isolation and doesn't want it\n");
+			OutputVolDescLog("\t\t\t                          => Image understands isolation and doesn't want it\n");
 			bSet = TRUE;
 		}
 		if ((pInh->OptionalHeader.DllCharacteristics & IMAGE_DLLCHARACTERISTICS_NO_SEH) == IMAGE_DLLCHARACTERISTICS_NO_SEH) {
-			OutputVolDescLog("\t\t                          => Image does not use SEH.  No SE handler may reside in this image\n");
+			OutputVolDescLog("\t\t\t                          => Image does not use SEH.  No SE handler may reside in this image\n");
 			bSet = TRUE;
 		}
 		if ((pInh->OptionalHeader.DllCharacteristics & IMAGE_DLLCHARACTERISTICS_NO_BIND) == IMAGE_DLLCHARACTERISTICS_NO_BIND) {
-			OutputVolDescLog("\t\t                          => Do not bind this image\n");
+			OutputVolDescLog("\t\t\t                          => Do not bind this image\n");
 			bSet = TRUE;
 		}
 		if ((pInh->OptionalHeader.DllCharacteristics & IMAGE_DLLCHARACTERISTICS_WDM_DRIVER) == IMAGE_DLLCHARACTERISTICS_WDM_DRIVER) {
-			OutputVolDescLog("\t\t                          => Driver uses WDM model\n");
+			OutputVolDescLog("\t\t\t                          => Driver uses WDM model\n");
 			bSet = TRUE;
 		}
 		if ((pInh->OptionalHeader.DllCharacteristics & IMAGE_DLLCHARACTERISTICS_TERMINAL_SERVER_AWARE) == IMAGE_DLLCHARACTERISTICS_TERMINAL_SERVER_AWARE) {
-			OutputVolDescLog("\t\t                          => Terminal Server Aware\n");
+			OutputVolDescLog("\t\t\t                          => Terminal Server Aware\n");
 			bSet = TRUE;
 		}
 		if ((pInh->OptionalHeader.DllCharacteristics & IMAGE_DLLCHARACTERISTICS_NO_BIND) == IMAGE_DLLCHARACTERISTICS_NO_BIND) {
-			OutputVolDescLog("\t\t                          => Do not bind this image\n");
+			OutputVolDescLog("\t\t\t                          => Do not bind this image\n");
 			bSet = TRUE;
 		}
 		if (!bSet) {
-			OutputVolDescLog("\t\t                          => Reserved\n");
+			OutputVolDescLog("\t\t\t                          => Reserved\n");
 		}
 	}
 
 	OutputVolDescLog(
-		"\t\t         SizeOfStackReserve: %08lx\n"
-		"\t\t          SizeOfStackCommit: %08lx\n"
-		"\t\t          SizeOfHeapReserve: %08lx\n"
-		"\t\t           SizeOfHeapCommit: %08lx\n"
-		"\t\t                LoaderFlags: %08lx\n"
-		"\t\t        NumberOfRvaAndSizes: %08lx\n"
+		"\t\t\t         SizeOfStackReserve: %08lx\n"
+		"\t\t\t          SizeOfStackCommit: %08lx\n"
+		"\t\t\t          SizeOfHeapReserve: %08lx\n"
+		"\t\t\t           SizeOfHeapCommit: %08lx\n"
+		"\t\t\t                LoaderFlags: %08lx\n"
+		"\t\t\t        NumberOfRvaAndSizes: %08lx\n"
 		, pInh->OptionalHeader.SizeOfStackReserve, pInh->OptionalHeader.SizeOfStackCommit
 		, pInh->OptionalHeader.SizeOfHeapReserve, pInh->OptionalHeader.SizeOfHeapCommit
 		, pInh->OptionalHeader.LoaderFlags, pInh->OptionalHeader.NumberOfRvaAndSizes
@@ -404,57 +402,57 @@ VOID OutputFsImageNtHeader(
 	for (INT i = 0; i < IMAGE_NUMBEROF_DIRECTORY_ENTRIES; i++) {
 		switch (i) {
 		case IMAGE_DIRECTORY_ENTRY_EXPORT:
-			OutputVolDescLog("\t\tExport Directory\n");
+			OutputVolDescLog("\t\t\tExport Directory\n");
 			break;
 		case IMAGE_DIRECTORY_ENTRY_IMPORT:
-			OutputVolDescLog("\t\tImport Directory\n");
+			OutputVolDescLog("\t\t\tImport Directory\n");
 			break;
 		case IMAGE_DIRECTORY_ENTRY_RESOURCE:
-			OutputVolDescLog("\t\tResource Directory\n");
+			OutputVolDescLog("\t\t\tResource Directory\n");
 			break;
 		case IMAGE_DIRECTORY_ENTRY_EXCEPTION:
-			OutputVolDescLog("\t\tException Directory\n");
+			OutputVolDescLog("\t\t\tException Directory\n");
 			break;
 		case IMAGE_DIRECTORY_ENTRY_SECURITY:
-			OutputVolDescLog("\t\tSecurity Directory\n");
+			OutputVolDescLog("\t\t\tSecurity Directory\n");
 			break;
 		case IMAGE_DIRECTORY_ENTRY_BASERELOC:
-			OutputVolDescLog("\t\tBase Relocation Table\n");
+			OutputVolDescLog("\t\t\tBase Relocation Table\n");
 			break;
 		case IMAGE_DIRECTORY_ENTRY_DEBUG:
-			OutputVolDescLog("\t\tDebug Directory\n");
+			OutputVolDescLog("\t\t\tDebug Directory\n");
 			break;
 		case IMAGE_DIRECTORY_ENTRY_ARCHITECTURE:
-			OutputVolDescLog("\t\tArchitecture Specific Data\n");
+			OutputVolDescLog("\t\t\tArchitecture Specific Data\n");
 			break;
 		case IMAGE_DIRECTORY_ENTRY_GLOBALPTR:
-			OutputVolDescLog("\t\tRVA of GP\n");
+			OutputVolDescLog("\t\t\tRVA of GP\n");
 			break;
 		case IMAGE_DIRECTORY_ENTRY_TLS:
-			OutputVolDescLog("\t\tTLS Directory\n");
+			OutputVolDescLog("\t\t\tTLS Directory\n");
 			break;
 		case IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG:
-			OutputVolDescLog("\t\tLoad Configuration Directory\n");
+			OutputVolDescLog("\t\t\tLoad Configuration Directory\n");
 			break;
 		case IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT:
-			OutputVolDescLog("\t\tBound Import Directory in headers\n");
+			OutputVolDescLog("\t\t\tBound Import Directory in headers\n");
 			break;
 		case IMAGE_DIRECTORY_ENTRY_IAT:
-			OutputVolDescLog("\t\tImport Address Table\n");
+			OutputVolDescLog("\t\t\tImport Address Table\n");
 			break;
 		case IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT:
-			OutputVolDescLog("\t\tDelay Load Import Descriptors\n");
+			OutputVolDescLog("\t\t\tDelay Load Import Descriptors\n");
 			break;
 		case IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR:
-			OutputVolDescLog("\t\tCOM Runtime descriptor\n");
+			OutputVolDescLog("\t\t\tCOM Runtime descriptor\n");
 			break;
 		default:
-			OutputVolDescLog("\t\tReserved\n");
+			OutputVolDescLog("\t\t\tReserved\n");
 			break;
 		}
 		OutputVolDescLog(
-			"\t\t\tVirtualAddress: %08lx\n"
-			"\t\t\t          Size: %08lx\n"
+			"\t\t\t\t         VirtualAddress: %08lx\n"
+			"\t\t\t\t                   Size: %08lx\n"
 			, pInh->OptionalHeader.DataDirectory[i].VirtualAddress
 			, pInh->OptionalHeader.DataDirectory[i].Size
 		);
@@ -469,6 +467,7 @@ VOID OutputImportDirectory(
 ) {
 	INT nDllNum = 0;
 	size_t stDescOfs = 0;
+	DWORD dwAddress = dwOfs - dwImportVirtualAddress;
 	for (;;) {
 		if (dwBufSize <= dwOfs + stDescOfs) {
 			break;
@@ -479,27 +478,32 @@ VOID OutputImportDirectory(
 			break;
 		}
 		else {
-			if (dwBufSize > dwOfs + imp->Name - dwImportVirtualAddress) {
+			DWORD dwOfsOfName = dwAddress + imp->Name;
+			if (dwBufSize > dwOfsOfName) {
+				_TCHAR szTime[128] = {};
+				GetTimeStamp(szTime, sizeof(szTime), imp->TimeDateStamp);
 				OutputVolDescLog(
 					"\t========== IMAGE_IMPORT_DESCRIPTOR %d ==========\n"
 					"\t\tOriginalFirstThunk: %08lx\n"
-					"\t\t     TimeDateStamp: %08lx\n"
+					"\t\t     TimeDateStamp: %08lx (%s)\n"
 					"\t\t    ForwarderChain: %08lx\n"
 					"\t\t              Name: %08lx (%" CHARWIDTH "s)\n"
 					"\t\t        FirstThunk: %08lx\n"
-					, nDllNum + 1, imp->OriginalFirstThunk, imp->TimeDateStamp
-					, imp->ForwarderChain, imp->Name
-					, &lpBuf[dwOfs + imp->Name - dwImportVirtualAddress]
-					, imp->FirstThunk
+					, ++nDllNum, imp->OriginalFirstThunk, imp->TimeDateStamp, szTime
+					, imp->ForwarderChain, imp->Name, &lpBuf[dwOfsOfName], imp->FirstThunk
 				);
+
+				DWORD dwOrignalFirstThunkOfs = dwAddress + imp->OriginalFirstThunk;
+				DWORD dwFirstThunkOfs = dwAddress + imp->FirstThunk;
 				size_t stThunkOfs = 0;
+				INT nThunkNum = 0;
 				for (;;) {
 					PIMAGE_THUNK_DATA32 thunk = 0;
-					if (imp->OriginalFirstThunk && dwBufSize > dwOfs + imp->OriginalFirstThunk - dwImportVirtualAddress + stThunkOfs) {
-						thunk = (PIMAGE_THUNK_DATA32)&lpBuf[dwOfs + imp->OriginalFirstThunk - dwImportVirtualAddress + stThunkOfs];
+					if (imp->OriginalFirstThunk && dwBufSize > dwOrignalFirstThunkOfs + stThunkOfs) {
+						thunk = (PIMAGE_THUNK_DATA32)&lpBuf[dwOrignalFirstThunkOfs + stThunkOfs];
 					}
-					else if (imp->FirstThunk && dwBufSize > dwOfs + imp->FirstThunk - dwImportVirtualAddress + stThunkOfs) {
-						thunk = (PIMAGE_THUNK_DATA32)&lpBuf[dwOfs + imp->FirstThunk - dwImportVirtualAddress + stThunkOfs];
+					else if (imp->FirstThunk && dwBufSize > dwFirstThunkOfs + stThunkOfs) {
+						thunk = (PIMAGE_THUNK_DATA32)&lpBuf[dwFirstThunkOfs + stThunkOfs];
 					}
 					else {
 						break;
@@ -510,12 +514,12 @@ VOID OutputImportDirectory(
 					}
 					else {
 						OutputVolDescLog(
-							"\t\t========== IMAGE_THUNK_DATA ==========\n"
-							"\t\t\tAddressOfData: %08lx\n", thunk->u1.AddressOfData
+							"\t\t========== IMAGE_THUNK_DATA %d ==========\n"
+							"\t\t\tAddressOfData: %08lx\n", ++nThunkNum, thunk->u1.AddressOfData
 						);
-						if (dwBufSize > dwOfs + thunk->u1.AddressOfData - dwImportVirtualAddress) {
-							PIMAGE_IMPORT_BY_NAME byname =
-								(PIMAGE_IMPORT_BY_NAME)&lpBuf[dwOfs + thunk->u1.AddressOfData - dwImportVirtualAddress];
+						DWORD dwAddressOfDataOfs = dwAddress + thunk->u1.AddressOfData;
+						if (dwBufSize > dwAddressOfDataOfs) {
+							PIMAGE_IMPORT_BY_NAME byname = (PIMAGE_IMPORT_BY_NAME)&lpBuf[dwAddressOfDataOfs];
 							OutputVolDescLog(
 								"\t\t\t========== IMAGE_IMPORT_BY_NAME ==========\n"
 								"\t\t\t\tHint: %04x\n"
@@ -524,12 +528,10 @@ VOID OutputImportDirectory(
 							);
 						}
 					}
-
 					stThunkOfs += sizeof(IMAGE_THUNK_DATA32);
 				}
 			}
 			stDescOfs += sizeof(IMAGE_IMPORT_DESCRIPTOR);
-			nDllNum++;
 		}
 	}
 }
@@ -586,7 +588,7 @@ VOID OutputFsImageSectionHeader(
 	LPBOOL bSecurom
 ) {
 	OutputVolDescLog(
-		"\t========== Image Section Header (%zu byte) ==========\n"
+		"\t========== IMAGE_SECTION_HEADER (%zu bytes) ==========\n"
 		"\t                Name: %.8" CHARWIDTH "s\n"
 		"\t         VirtualSize: %08lx\n"
 		"\t      VirtualAddress: %08lx\n"
