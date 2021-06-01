@@ -105,8 +105,48 @@ typedef UINT			   *LPUINT;
 #define HIBYTE(w)           ((BYTE)((((DWORD_PTR)(w)) >> 8) & 0xff))
 
 // from WinNT.h
+//
+// For compilers that don't support nameless unions/structs
+//
+#ifndef DUMMYUNIONNAME
+#if defined(NONAMELESSUNION)// || !defined(_MSC_EXTENSIONS)
+#define DUMMYUNIONNAME   u
+#define DUMMYUNIONNAME2  u2
+#define DUMMYUNIONNAME3  u3
+#define DUMMYUNIONNAME4  u4
+#define DUMMYUNIONNAME5  u5
+#define DUMMYUNIONNAME6  u6
+#define DUMMYUNIONNAME7  u7
+#define DUMMYUNIONNAME8  u8
+#define DUMMYUNIONNAME9  u9
+#else
 #define DUMMYUNIONNAME
+#define DUMMYUNIONNAME2
+#define DUMMYUNIONNAME3
+#define DUMMYUNIONNAME4
+#define DUMMYUNIONNAME5
+#define DUMMYUNIONNAME6
+#define DUMMYUNIONNAME7
+#define DUMMYUNIONNAME8
+#define DUMMYUNIONNAME9
+#endif
+#endif // DUMMYUNIONNAME
+
+#ifndef DUMMYSTRUCTNAME
+#if defined(NONAMELESSUNION)// || !defined(_MSC_EXTENSIONS)
+#define DUMMYSTRUCTNAME  s
+#define DUMMYSTRUCTNAME2 s2
+#define DUMMYSTRUCTNAME3 s3
+#define DUMMYSTRUCTNAME4 s4
+#define DUMMYSTRUCTNAME5 s5
+#else
 #define DUMMYSTRUCTNAME
+#define DUMMYSTRUCTNAME2
+#define DUMMYSTRUCTNAME3
+#define DUMMYSTRUCTNAME4
+#define DUMMYSTRUCTNAME5
+#endif
+#endif // DUMMYSTRUCTNAME
 
 #define UNALIGNED
 #define UNALIGNED64
@@ -627,9 +667,61 @@ typedef struct _IMAGE_IMPORT_DESCRIPTOR {
 } IMAGE_IMPORT_DESCRIPTOR;
 typedef IMAGE_IMPORT_DESCRIPTOR UNALIGNED *PIMAGE_IMPORT_DESCRIPTOR;
 
+typedef struct _IMAGE_RESOURCE_DIRECTORY {
+	DWORD   Characteristics;
+	DWORD   TimeDateStamp;
+	WORD    MajorVersion;
+	WORD    MinorVersion;
+	WORD    NumberOfNamedEntries;
+	WORD    NumberOfIdEntries;
+	//  IMAGE_RESOURCE_DIRECTORY_ENTRY DirectoryEntries[];
+} IMAGE_RESOURCE_DIRECTORY, *PIMAGE_RESOURCE_DIRECTORY;
+
+typedef struct _IMAGE_RESOURCE_DIRECTORY_ENTRY {
+	union {
+		struct {
+			DWORD NameOffset : 31;
+			DWORD NameIsString : 1;
+		} DUMMYSTRUCTNAME;
+		DWORD   Name;
+		WORD    Id;
+	} DUMMYUNIONNAME;
+	union {
+		DWORD   OffsetToData;
+		struct {
+			DWORD   OffsetToDirectory : 31;
+			DWORD   DataIsDirectory : 1;
+		} DUMMYSTRUCTNAME2;
+	} DUMMYUNIONNAME2;
+} IMAGE_RESOURCE_DIRECTORY_ENTRY, *PIMAGE_RESOURCE_DIRECTORY_ENTRY;
+
+typedef struct _IMAGE_RESOURCE_DATA_ENTRY {
+	DWORD   OffsetToData;
+	DWORD   Size;
+	DWORD   CodePage;
+	DWORD   Reserved;
+} IMAGE_RESOURCE_DATA_ENTRY, *PIMAGE_RESOURCE_DATA_ENTRY;
 
 #define RtlFillMemory(Destination,Length,Fill) memset((Destination),(Fill),(Length))
 #define RtlZeroMemory(Destination,Length) memset((Destination),0,(Length))
+
+// from VerRsrc.h
+typedef struct tagVS_FIXEDFILEINFO
+{
+	DWORD   dwSignature;            /* e.g. 0xfeef04bd */
+	DWORD   dwStrucVersion;         /* e.g. 0x00000042 = "0.42" */
+	DWORD   dwFileVersionMS;        /* e.g. 0x00030075 = "3.75" */
+	DWORD   dwFileVersionLS;        /* e.g. 0x00000031 = "0.31" */
+	DWORD   dwProductVersionMS;     /* e.g. 0x00030010 = "3.10" */
+	DWORD   dwProductVersionLS;     /* e.g. 0x00000031 = "0.31" */
+	DWORD   dwFileFlagsMask;        /* = 0x3F for version "0.42" */
+	DWORD   dwFileFlags;            /* e.g. VFF_DEBUG | VFF_PRERELEASE */
+	DWORD   dwFileOS;               /* e.g. VOS_DOS_WINDOWS16 */
+	DWORD   dwFileType;             /* e.g. VFT_DRIVER */
+	DWORD   dwFileSubtype;          /* e.g. VFT2_DRV_KEYBOARD */
+	DWORD   dwFileDateMS;           /* e.g. 0 */
+	DWORD   dwFileDateLS;           /* e.g. 0 */
+} VS_FIXEDFILEINFO;
 
 // from WinBase.h
 #define INVALID_HANDLE_VALUE	-1

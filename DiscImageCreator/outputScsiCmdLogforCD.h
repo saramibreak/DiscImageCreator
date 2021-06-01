@@ -82,14 +82,14 @@ VOID OutputSint16(
 VOID OutputSint32(
 	LPBYTE lpBuf,
 	INT nOfsOf32dll,
-	UINT uiSize,
+	DWORD dwSize,
 	BOOL bDummy
 );
 
 VOID OutputSintNT(
 	LPBYTE lpBuf,
 	INT nOfsOfNTdll,
-	UINT uiSize,
+	DWORD dwSize,
 	BOOL bDummy
 );
 

@@ -1217,10 +1217,10 @@ VOID OutputSint16(
 VOID OutputSint32(
 	LPBYTE lpBuf,
 	INT nOfsOf32dll,
-	UINT uiSize,
+	DWORD dwSize,
 	BOOL bDummy
 ) {
-	UNREFERENCED_PARAMETER(uiSize);
+	UNREFERENCED_PARAMETER(dwSize);
 
 	OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR("SIntf32.dll"));
 	PIMAGE_DOS_HEADER pIDh = (PIMAGE_DOS_HEADER)&lpBuf[nOfsOf32dll];
@@ -1239,10 +1239,10 @@ VOID OutputSint32(
 VOID OutputSintNT(
 	LPBYTE lpBuf,
 	INT nOfsOfNTdll,
-	UINT uiSize,
+	DWORD dwSize,
 	BOOL bDummy
 ) {
-	UNREFERENCED_PARAMETER(uiSize);
+	UNREFERENCED_PARAMETER(dwSize);
 
 	OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR("SIntfNT.dll"));
 	PIMAGE_DOS_HEADER pIDh = (PIMAGE_DOS_HEADER)&lpBuf[nOfsOfNTdll];
