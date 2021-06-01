@@ -35,11 +35,28 @@ VOID OutputFsImageSectionHeader(
 	LPBOOL bSecurom
 );
 
+VOID OutputExportDirectory(
+	LPBYTE lpBuf,
+	DWORD dwBufSize,
+	DWORD dwExportVirtualAddress,
+	DWORD dwOfs
+);
+
 VOID OutputImportDirectory(
 	LPBYTE lpBuf,
 	DWORD dwBufSize,
 	DWORD dwImportVirtualAddress,
 	DWORD dwOfs
+);
+
+VOID OutputResourceDirectory(
+	LPBYTE lpBuf,
+	DWORD dwBufSize,
+	DWORD dwResourceVirtualAddress,
+	DWORD dwOfs,
+	DWORD dwOfsToDir,
+	LPWCH lpwszFileVer,
+	_TCHAR* pTab
 );
 
 VOID OutputSecuRomDll4_87Header(
@@ -52,25 +69,27 @@ VOID OutputSecuRomDllHeader(
 	LPUINT uiOfsOf16,
 	LPUINT uiOfsOf32,
 	LPUINT uiOfsOfNT,
-	LPINT idx
+	LPUINT uiSizeOf16,
+	LPUINT uiSizeOf32,
+	LPUINT uiSizeOfNT
 );
 
 VOID OutputSint16(
 	LPBYTE lpBuf,
-	UINT uiOfsOf16,
-	UINT uiOfsOfSecuRomDll,
-	INT idx
+	INT nOfsOf16dll
 );
 
 VOID OutputSint32(
 	LPBYTE lpBuf,
 	INT nOfsOf32dll,
+	UINT uiSize,
 	BOOL bDummy
 );
 
 VOID OutputSintNT(
 	LPBYTE lpBuf,
 	INT nOfsOfNTdll,
+	UINT uiSize,
 	BOOL bDummy
 );
 

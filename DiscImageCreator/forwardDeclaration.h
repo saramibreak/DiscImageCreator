@@ -74,6 +74,8 @@
 #define MAX_FNAME_FOR_VOLUME (128 + 1)
 #define MIN_LEN_DR (34)
 
+#define FILE_VERSION_SIZE (32)
+
 #define MAX_READ_ERROR_FILE_COUNT (16)
 
 #if defined _WIN32 && defined UNICODE

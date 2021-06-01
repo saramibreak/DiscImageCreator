@@ -1428,7 +1428,7 @@ BOOL ReadExeFromFile(
 		OutputErrorString("Failed to OpenFile: %s\n", szFullPath);
 		return FALSE;
 	}
-	CONST INT bufsize = DISC_MAIN_DATA_SIZE * 32;
+	size_t bufsize = DISC_MAIN_DATA_SIZE * 32;
 	LPBYTE lpBuf = NULL;
 	if (NULL == (lpBuf = (LPBYTE)calloc(bufsize, sizeof(BYTE)))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -1442,7 +1442,7 @@ BOOL ReadExeFromFile(
 		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR("%s"), szFileName);
 		OutputFsImageDosHeader(pIDh);
 
-		if (pIDh->e_lfanew >= bufsize) {
+		if (pIDh->e_lfanew >= (LONG)bufsize) {
 			OutputVolDescLog("File address of new exe header is too big. Skip reading Image NT Header etc.\n");
 		}
 		else {
@@ -1450,26 +1450,96 @@ BOOL ReadExeFromFile(
 				PIMAGE_NT_HEADERS32 pINH = (PIMAGE_NT_HEADERS32)&lpBuf[pIDh->e_lfanew];
 				OutputFsImageNtHeader(pINH);
 
+				DWORD dwExportVirtualAddress = pINH->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress;
+				DWORD dwExportSize = pINH->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].Size;
+				DWORD dwExportPointerToRawData = 0;
 				DWORD dwImportVirtualAddress = pINH->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress;
 				DWORD dwImportSize = pINH->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].Size;
 				DWORD dwImportPointerToRawData = 0;
+				DWORD dwResourceVirtualAddress = pINH->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress;
+				DWORD dwResourceSize = pINH->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].Size;
+				DWORD dwResourcePointerToRawData = 0;
 				ULONG nOfs = pIDh->e_lfanew + sizeof(IMAGE_NT_HEADERS32);
 				BOOL bSecurom = FALSE;
+
 				for (INT i = 0; i < pINH->FileHeader.NumberOfSections; i++) {
 					PIMAGE_SECTION_HEADER pISH = (PIMAGE_SECTION_HEADER)&lpBuf[nOfs];
 					OutputFsImageSectionHeader(pExtArg, pDisc, pISH, &bSecurom);
 					nOfs += sizeof(IMAGE_SECTION_HEADER);
+					if (pISH->VirtualAddress <= dwExportVirtualAddress && dwExportVirtualAddress <= pISH->VirtualAddress + pISH->Misc.VirtualSize) {
+						dwExportPointerToRawData = pISH->PointerToRawData + dwExportVirtualAddress - pISH->VirtualAddress;
+					}
 					if (pISH->VirtualAddress <= dwImportVirtualAddress && dwImportVirtualAddress <= pISH->VirtualAddress + pISH->Misc.VirtualSize) {
 						dwImportPointerToRawData = pISH->PointerToRawData + dwImportVirtualAddress - pISH->VirtualAddress;
 					}
+					if (pISH->VirtualAddress <= dwResourceVirtualAddress && dwResourceVirtualAddress <= pISH->VirtualAddress + pISH->Misc.VirtualSize) {
+						dwResourcePointerToRawData = pISH->PointerToRawData + dwResourceVirtualAddress - pISH->VirtualAddress;
+					}
 				}
+
+				if (dwExportSize > 0) {
+					if (bufsize < dwExportSize) {
+						bufsize = dwExportSize;
+						LPBYTE lpBuf2 = NULL;
+						if (NULL == (lpBuf2 = (LPBYTE)realloc(lpBuf, dwExportSize))) {
+							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+							FreeAndNull(lpBuf);
+							FcloseAndNull(fp);
+							return FALSE;
+						}
+						lpBuf = lpBuf2;
+					}
+					fseek(fp, (LONG)dwExportPointerToRawData, SEEK_SET);
+					fread(lpBuf, sizeof(BYTE), bufsize, fp);
+					OutputMainInfoLog("dwExportVirtualAddress: 0x%lx, dwExportSize: 0x%lx\n", dwExportVirtualAddress, dwExportSize);
+					OutputCDMain(fileMainInfo, lpBuf, 0, bufsize + bufsize % 16);
+					OutputExportDirectory(lpBuf, bufsize, dwExportVirtualAddress, 0);
+				}
+
 				if (dwImportSize > 0) {
+					if (bufsize < dwImportSize) {
+						bufsize = dwImportSize;
+						LPBYTE lpBuf2 = NULL;
+						if (NULL == (lpBuf2 = (LPBYTE)realloc(lpBuf, dwImportSize))) {
+							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+							FreeAndNull(lpBuf);
+							FcloseAndNull(fp);
+							return FALSE;
+						}
+						lpBuf = lpBuf2;
+					}
 					fseek(fp, (LONG)dwImportPointerToRawData, SEEK_SET);
 					fread(lpBuf, sizeof(BYTE), bufsize, fp);
 					OutputMainInfoLog("dwImportVirtualAddress: 0x%lx, dwImportSize: 0x%lx\n", dwImportVirtualAddress, dwImportSize);
-					OutputCDMain(fileMainInfo, lpBuf, 0, DISC_MAIN_DATA_SIZE);
+					OutputCDMain(fileMainInfo, lpBuf, 0, bufsize + bufsize % 16);
 					OutputImportDirectory(lpBuf, bufsize, dwImportVirtualAddress, 0);
 				}
+
+				if (dwResourceSize > 0) {
+					if (bufsize < dwResourceSize) {
+						bufsize = dwResourceSize;
+						LPBYTE lpBuf2 = NULL;
+						if (NULL == (lpBuf2 = (LPBYTE)realloc(lpBuf, dwResourceSize))) {
+							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+							FreeAndNull(lpBuf);
+							FcloseAndNull(fp);
+							return FALSE;
+						}
+						lpBuf = lpBuf2;
+					}
+					fseek(fp, (LONG)dwResourcePointerToRawData, SEEK_SET);
+					fread(lpBuf, sizeof(BYTE), bufsize, fp);
+					OutputMainInfoLog("dwResourceVirtualAddress: 0x%lx, dwResourceSize: 0x%lx\n", dwResourceVirtualAddress, dwResourceSize);
+					OutputCDMain(fileMainInfo, lpBuf, 0, bufsize + bufsize % 16);
+					_TCHAR szTab[256] = {};
+					szTab[0] = _T('\t');
+					WCHAR wszFileVer[FILE_VERSION_SIZE] = { 0 };
+					OutputResourceDirectory(lpBuf, bufsize, dwResourceVirtualAddress, 0, 0, wszFileVer, szTab);
+					if (wszFileVer[0] != 0 && strcasestr(szFileName, ".EXE")) {
+						OutputLog(standardOut | fileDisc, " %s: File Version %ls\n", szFileName, wszFileVer);
+					}
+				}
+
 				if (bSecurom) {
 					UINT uiSecuromReadSize = DISC_MAIN_DATA_SIZE * 2;
 					fseek(fp, -4, SEEK_END);
@@ -1484,19 +1554,28 @@ BOOL ReadExeFromFile(
 							UINT uiOfsOf16 = 0;
 							UINT uiOfsOf32 = 0;
 							UINT uiOfsOfNT = 0;
-							INT idx = 0;
-							OutputSecuRomDllHeader(lpBuf, &uiOfsOf16, &uiOfsOf32, &uiOfsOfNT, &idx);
-							OutputSint16(lpBuf, uiOfsOf16, uiOfsOfSecuRomDll, idx);
+							UINT uiSizeOf16 = 0;
+							UINT uiSizeOf32 = 0;
+							UINT uiSizeOfNT = 0;
+							OutputSecuRomDllHeader(lpBuf, &uiOfsOf16, &uiOfsOf32, &uiOfsOfNT, &uiSizeOf16, &uiSizeOf32, &uiSizeOfNT);
+
+							fseek(fp, (LONG)uiOfsOf16, SEEK_SET);
+							fread(lpBuf, sizeof(BYTE), (size_t)uiSizeOf16, fp);
+							OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("Sintf16.dll [F:%s]"), __FUNCTION__);
+							OutputCDMain(fileMainInfo, lpBuf, 0, uiSizeOf16);
+							OutputSint16(lpBuf, 0);
 
 							fseek(fp, (LONG)uiOfsOf32, SEEK_SET);
-							fread(lpBuf, sizeof(BYTE), (size_t)uiSecuromReadSize, fp);
-							OutputCDMain(fileMainInfo, lpBuf, 0, uiSecuromReadSize);
-							OutputSint32(lpBuf, 0, FALSE);
+							fread(lpBuf, sizeof(BYTE), (size_t)uiSizeOf32, fp);
+							OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("Sintf32.dll [F:%s]"), __FUNCTION__);
+							OutputCDMain(fileMainInfo, lpBuf, 0, uiSizeOf32);
+							OutputSint32(lpBuf, 0, uiSizeOf32, FALSE);
 
 							fseek(fp, (LONG)uiOfsOfNT, SEEK_SET);
-							fread(lpBuf, sizeof(BYTE), (size_t)uiSecuromReadSize, fp);
-							OutputCDMain(fileMainInfo, lpBuf, 0, uiSecuromReadSize);
-							OutputSintNT(lpBuf, 0, FALSE);
+							fread(lpBuf, sizeof(BYTE), (size_t)uiSizeOfNT, fp);
+							OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("SintfNT.dll [F:%s]"), __FUNCTION__);
+							OutputCDMain(fileMainInfo, lpBuf, 0, uiSizeOfNT);
+							OutputSintNT(lpBuf, 0, uiSizeOfNT, FALSE);
 						}
 					}
 					else if (pExtArg->byIntentionalSub) {
@@ -1859,10 +1938,21 @@ BOOL ReadCDForCheckingExe(
 					PIMAGE_NT_HEADERS32 pINH = (PIMAGE_NT_HEADERS32)&lpBuf[pIDh->e_lfanew];
 					OutputFsImageNtHeader(pINH);
 
+					DWORD dwExportVirtualAddress = pINH->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress;
+					DWORD dwExportSize = pINH->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].Size;
+					DWORD dwExportPointerToRawData = 0;
+					DWORD dwExportDataOfs = 0;
+					DWORD dwExportSectorSize = 0;
 					DWORD dwImportVirtualAddress = pINH->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress;
 					DWORD dwImportSize = pINH->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].Size;
 					DWORD dwImportPointerToRawData = 0;
 					DWORD dwImportDataOfs = 0;
+					DWORD dwImportSectorSize = 0;
+					DWORD dwResourceVirtualAddress = pINH->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress;
+					DWORD dwResourceSize = pINH->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].Size;
+					DWORD dwResourcePointerToRawData = 0;
+					DWORD dwResourceDataOfs = 0;
+					DWORD dwResourceSectorSize = 0;
 					ULONG nOfs = pIDh->e_lfanew + sizeof(IMAGE_NT_HEADERS32);
 					BOOL bSecurom = FALSE;
 
@@ -1871,27 +1961,71 @@ BOOL ReadCDForCheckingExe(
 						OutputFsImageSectionHeader(pExtArg, pDisc, pISH, &bSecurom);
 						nOfs += sizeof(IMAGE_SECTION_HEADER);
 
+						if (pISH->VirtualAddress <= dwExportVirtualAddress && dwExportVirtualAddress <= pISH->VirtualAddress + pISH->Misc.VirtualSize) {
+							dwExportPointerToRawData = pISH->PointerToRawData + dwExportVirtualAddress - pISH->VirtualAddress;
+							dwExportDataOfs = dwExportPointerToRawData % DISC_MAIN_DATA_SIZE;
+							DWORD dwTmpSize = dwExportDataOfs + pISH->SizeOfRawData;
+							dwExportSectorSize = DISC_MAIN_DATA_SIZE * (dwTmpSize / DISC_MAIN_DATA_SIZE + 1);
+							if (dwExportSectorSize > pDevice->dwMaxTransferLength) {
+								dwExportSectorSize = pDevice->dwMaxTransferLength;
+							}
+						}
 						if (pISH->VirtualAddress <= dwImportVirtualAddress && dwImportVirtualAddress <= pISH->VirtualAddress + pISH->Misc.VirtualSize) {
 							dwImportPointerToRawData = pISH->PointerToRawData + dwImportVirtualAddress - pISH->VirtualAddress;
 							dwImportDataOfs = dwImportPointerToRawData % DISC_MAIN_DATA_SIZE;
 							DWORD dwTmpSize = dwImportDataOfs + pISH->SizeOfRawData;
-							dwSize = DISC_MAIN_DATA_SIZE * (dwTmpSize / DISC_MAIN_DATA_SIZE + 1);
+							dwImportSectorSize = DISC_MAIN_DATA_SIZE * (dwTmpSize / DISC_MAIN_DATA_SIZE + 1);
+							if (dwImportSectorSize > pDevice->dwMaxTransferLength) {
+								dwImportSectorSize = pDevice->dwMaxTransferLength;
+							}
+						}
+						if (pISH->VirtualAddress <= dwResourceVirtualAddress && dwResourceVirtualAddress <= pISH->VirtualAddress + pISH->Misc.VirtualSize) {
+							dwResourcePointerToRawData = pISH->PointerToRawData + dwResourceVirtualAddress - pISH->VirtualAddress;
+							dwResourceDataOfs = dwResourcePointerToRawData % DISC_MAIN_DATA_SIZE;
+							DWORD dwTmpSize = dwResourceDataOfs + pISH->SizeOfRawData;
+							dwResourceSectorSize = DISC_MAIN_DATA_SIZE * (dwTmpSize / DISC_MAIN_DATA_SIZE + 1);
+							if (dwResourceSectorSize > pDevice->dwMaxTransferLength) {
+								dwResourceSectorSize = pDevice->dwMaxTransferLength;
+							}
 						}
 					}
-					if (dwImportSize > 0) {
-						if (dwSize > pDevice->dwMaxTransferLength) {
-							OutputVolDescLog(STR_LBA "Skip Reading ImportDirectory\n", pDisc->PROTECT.pExtentPosForExe[n], (UINT)pDisc->PROTECT.pExtentPosForExe[n]);
+					if (dwExportSize > 0) {
+						INT nExpSection = pDisc->PROTECT.pExtentPosForExe[n] + (INT)dwExportPointerToRawData / DISC_MAIN_DATA_SIZE;
+						SetCommandForTransferLength(pExecType, pDevice, pCdb, dwExportSectorSize, &byTransferLen, &byRoopLen);
+						if (!ExecReadCD(pExtArg, pDevice, pCdb, nExpSection, lpBuf, dwExportSectorSize, _T(__FUNCTION__), __LINE__)) {
+							continue;
 						}
-						else {
-							INT nImpSection = pDisc->PROTECT.pExtentPosForExe[n] + (INT)dwImportPointerToRawData / DISC_MAIN_DATA_SIZE;
-							SetCommandForTransferLength(pExecType, pDevice, pCdb, dwSize, &byTransferLen, &byRoopLen);
-							if (!ExecReadCD(pExtArg, pDevice, pCdb, nImpSection, lpBuf, dwSize, _T(__FUNCTION__), __LINE__)) {
-								continue;
-							}
-							OutputMainInfoLog("dwImportVirtualAddress: 0x%lx, dwImportSize: 0x%lx, dwImportDataOfs: 0x%lx\n"
-								, dwImportVirtualAddress, dwImportSize, dwImportDataOfs);
-							OutputCDMain(fileMainInfo, lpBuf, nImpSection, dwSize);
-							OutputImportDirectory(lpBuf, dwSize, dwImportVirtualAddress, dwImportDataOfs);
+						OutputMainInfoLog("dwExportVirtualAddress: 0x%lx, dwExportSize: 0x%lx, dwExportDataOfs: 0x%lx\n"
+							, dwExportVirtualAddress, dwExportSize, dwExportDataOfs);
+						OutputCDMain(fileMainInfo, lpBuf, nExpSection, dwExportSectorSize);
+						OutputExportDirectory(lpBuf, dwExportSectorSize, dwExportVirtualAddress, dwExportDataOfs);
+					}
+					if (dwImportSize > 0) {
+						INT nImpSection = pDisc->PROTECT.pExtentPosForExe[n] + (INT)dwImportPointerToRawData / DISC_MAIN_DATA_SIZE;
+						SetCommandForTransferLength(pExecType, pDevice, pCdb, dwImportSectorSize, &byTransferLen, &byRoopLen);
+						if (!ExecReadCD(pExtArg, pDevice, pCdb, nImpSection, lpBuf, dwImportSectorSize, _T(__FUNCTION__), __LINE__)) {
+							continue;
+						}
+						OutputMainInfoLog("dwImportVirtualAddress: 0x%lx, dwImportSize: 0x%lx, dwImportDataOfs: 0x%lx\n"
+							, dwImportVirtualAddress, dwImportSize, dwImportDataOfs);
+						OutputCDMain(fileMainInfo, lpBuf, nImpSection, dwImportSectorSize);
+						OutputImportDirectory(lpBuf, dwImportSectorSize, dwImportVirtualAddress, dwImportDataOfs);
+					}
+					if (dwResourceSize > 0) {
+						INT nResSection = pDisc->PROTECT.pExtentPosForExe[n] + (INT)dwResourcePointerToRawData / DISC_MAIN_DATA_SIZE;
+						SetCommandForTransferLength(pExecType, pDevice, pCdb, dwResourceSectorSize, &byTransferLen, &byRoopLen);
+						if (!ExecReadCD(pExtArg, pDevice, pCdb, nResSection, lpBuf, dwResourceSectorSize, _T(__FUNCTION__), __LINE__)) {
+							continue;
+						}
+						OutputMainInfoLog("dwResourceVirtualAddress: 0x%lx, dwResourceSize: 0x%lx, dwResourceDataOfs: 0x%lx\n"
+							, dwResourceVirtualAddress, dwResourceSize, dwResourceDataOfs);
+						OutputCDMain(fileMainInfo, lpBuf, nResSection, dwResourceSectorSize);
+						_TCHAR szTab[256] = {};
+						szTab[0] = _T('\t');
+						WCHAR wszFileVer[FILE_VERSION_SIZE] = { 0 };
+						OutputResourceDirectory(lpBuf, dwResourceSectorSize, dwResourceVirtualAddress, dwResourceDataOfs, 0, wszFileVer, szTab);
+						if (wszFileVer[0] != 0 && strcasestr(pDisc->PROTECT.pNameForExe[n], ".EXE")) {
+							OutputLog(standardOut | fileDisc, " %s: File Version %ls\n", pDisc->PROTECT.pNameForExe[n], wszFileVer);
 						}
 					}
 					dwSize = DISC_MAIN_DATA_SIZE;
@@ -1924,32 +2058,41 @@ BOOL ReadCDForCheckingExe(
 							UINT uiOfsOf16 = 0;
 							UINT uiOfsOf32 = 0;
 							UINT uiOfsOfNT = 0;
-							INT idx = 0;
+							UINT uiSizeOf16 = 0;
+							UINT uiSizeOf32 = 0;
+							UINT uiSizeOfNT = 0;
 							if (!strncmp((LPCCH)&lpBuf[0], "AddD", 4)) {
-								OutputSecuRomDllHeader(lpBuf, &uiOfsOf16, &uiOfsOf32, &uiOfsOfNT, &idx);
-								OutputSint16(lpBuf, uiOfsOf16, uiOfsOfSecuRomDll, idx);
+								OutputSecuRomDllHeader(lpBuf, &uiOfsOf16, &uiOfsOf32, &uiOfsOfNT, &uiSizeOf16, &uiSizeOf32, &uiSizeOfNT);
 
-								dwSize = DISC_MAIN_DATA_SIZE * 2;
+								INT nOfsOf16dll = (INT)(uiOfsOf16 - uiOfsOfSecuRomDll) % DISC_MAIN_DATA_SIZE;
+								OutputSint16(lpBuf, nOfsOf16dll);
+
+								dwSize = uiSizeOf32 + (DISC_MAIN_DATA_SIZE - uiSizeOf32 % DISC_MAIN_DATA_SIZE);
 								SetCommandForTransferLength(pExecType, pDevice, pCdb, dwSize, &byTransferLen, &byRoopLen);
 								UINT tmp = uiOfsOf32 / DISC_MAIN_DATA_SIZE;
 								INT n2ndSector = (INT)(pDisc->PROTECT.pExtentPosForExe[n] + tmp);
 								if (!ExecReadCD(pExtArg, pDevice, pCdb, n2ndSector, lpBuf, dwSize, _T(__FUNCTION__), __LINE__)) {
 									continue;
 								}
+
+								OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("Sintf32.dll [F:%s]"), __FUNCTION__);
 								OutputCDMain(fileMainInfo, lpBuf, n2ndSector, dwSize);
 								INT nOfsOf32dll = (INT)(uiOfsOf32 - uiOfsOfSecuRomDll) % DISC_MAIN_DATA_SIZE;
+								OutputSint32(lpBuf, nOfsOf32dll, dwSize, FALSE);
 
-								OutputSint32(lpBuf, nOfsOf32dll, FALSE);
-
+								dwSize = uiSizeOfNT + (DISC_MAIN_DATA_SIZE - uiSizeOfNT % DISC_MAIN_DATA_SIZE);
+								SetCommandForTransferLength(pExecType, pDevice, pCdb, dwSize, &byTransferLen, &byRoopLen);
 								UINT tmp2 = uiOfsOfNT / DISC_MAIN_DATA_SIZE;
 								INT n3rdSector = (INT)(pDisc->PROTECT.pExtentPosForExe[n] + tmp2);
 								if (!ExecReadCD(pExtArg, pDevice, pCdb, n3rdSector, lpBuf, dwSize, _T(__FUNCTION__), __LINE__)) {
 									continue;
 								}
+
+								OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("SintfNT.dll [F:%s]"), __FUNCTION__);
 								OutputCDMain(fileMainInfo, lpBuf, n3rdSector, dwSize);
 								INT nOfsOfNTdll = (INT)(uiOfsOfNT - uiOfsOfSecuRomDll) % DISC_MAIN_DATA_SIZE;
+								OutputSintNT(lpBuf, nOfsOfNTdll, dwSize, FALSE);
 
-								OutputSintNT(lpBuf, nOfsOfNTdll, FALSE);
 								dwSize = DISC_MAIN_DATA_SIZE;
 								SetCommandForTransferLength(pExecType, pDevice, pCdb, DISC_MAIN_DATA_SIZE, &byTransferLen, &byRoopLen);
 							}

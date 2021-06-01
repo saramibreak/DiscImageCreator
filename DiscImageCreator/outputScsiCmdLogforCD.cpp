@@ -40,7 +40,7 @@ VOID OutputFsImageDosHeader(
 		"\t                   Overlay number: %04x\n"
 		"\t   OEM identifier (for e_oeminfo): %04x\n"
 		"\tOEM information; e_oemid specific: %04x\n"
-		"\t   File address of new exe header: %08ld\n"
+		"\t   File address of new exe header: %08lx\n"
 		, sizeof(IMAGE_DOS_HEADER)
 		, pIdh->e_magic, pIdh->e_magic, pIdh->e_magic >> 8, pIdh->e_cblp, pIdh->e_cp
 		, pIdh->e_crlc, pIdh->e_cparhdr, pIdh->e_minalloc, pIdh->e_maxalloc
@@ -54,18 +54,18 @@ VOID OutputFsImageOS2Header(
 ) {
 	OutputVolDescLog(
 		"\t========== IMAGE_OS2_HEADER (%zu bytes) ==========\n"
-		"\t                      Magic number: %04x\n"
+		"\t                      Magic number: %04x (%c%c)\n"
 		"\t                    Version number: %02d\n"
 		"\t                   Revision number: %02d\n"
 		"\t             Offset of Entry Table: %04x\n"
 		"\t    Number of bytes in Entry Table: %04x\n"
-		"\t            Checksum of whole file: %08ld\n"
+		"\t            Checksum of whole file: %08lx\n"
 		"\t                         Flag word: %04x\n"
 		"\t     Automatic data segment number: %04x\n"
 		"\t           Initial heap allocation: %04x\n"
 		"\t          Initial stack allocation: %04x\n"
-		"\t             Initial CS:IP setting: %08ld\n"
-		"\t             Initial SS:SP setting: %08ld\n"
+		"\t             Initial CS:IP setting: %08lx\n"
+		"\t             Initial SS:SP setting: %08lx\n"
 		"\t            Count of file segments: %04x\n"
 		"\t Entries in Module Reference Table: %04x\n"
 		"\t   Size of non-resident name table: %04x\n"
@@ -74,7 +74,7 @@ VOID OutputFsImageOS2Header(
 		"\t     Offset of resident name table: %04x\n"
 		"\t  Offset of Module Reference Table: %04x\n"
 		"\t    Offset of Imported Names Table: %04x\n"
-		"\tOffset of Non-resident Names Table: %08ld\n"
+		"\tOffset of Non-resident Names Table: %08lx\n"
 		"\t          Count of movable entries: %04x\n"
 		"\t     Segment alignment shift count: %04x\n"
 		"\t        Count of resource segments: %04x\n"
@@ -85,12 +85,14 @@ VOID OutputFsImageOS2Header(
 		"\t       Minimum code swap area size: %04x\n"
 		"\t   Expected Windows version number: %04x\n"
 		, sizeof(IMAGE_OS2_HEADER)
-		, pIoh->ne_magic, pIoh->ne_ver, pIoh->ne_rev, pIoh->ne_enttab, pIoh->ne_cbenttab
-		, pIoh->ne_crc, pIoh->ne_flags, pIoh->ne_autodata, pIoh->ne_heap, pIoh->ne_stack
-		, pIoh->ne_csip, pIoh->ne_sssp, pIoh->ne_cseg, pIoh->ne_cmod, pIoh->ne_cbnrestab
-		, pIoh->ne_segtab, pIoh->ne_rsrctab, pIoh->ne_restab, pIoh->ne_modtab
-		, pIoh->ne_imptab, pIoh->ne_nrestab, pIoh->ne_cmovent, pIoh->ne_align
-		, pIoh->ne_cres, pIoh->ne_exetyp, pIoh->ne_flagsothers, pIoh->ne_pretthunks
+		, pIoh->ne_magic, pIoh->ne_magic, pIoh->ne_magic >> 8, pIoh->ne_ver
+		, pIoh->ne_rev, pIoh->ne_enttab, pIoh->ne_cbenttab, pIoh->ne_crc
+		, pIoh->ne_flags, pIoh->ne_autodata, pIoh->ne_heap, pIoh->ne_stack
+		, pIoh->ne_csip, pIoh->ne_sssp, pIoh->ne_cseg, pIoh->ne_cmod
+		, pIoh->ne_cbnrestab, pIoh->ne_segtab, pIoh->ne_rsrctab
+		, pIoh->ne_restab, pIoh->ne_modtab, pIoh->ne_imptab
+		, pIoh->ne_nrestab, pIoh->ne_cmovent, pIoh->ne_align, pIoh->ne_cres
+		, pIoh->ne_exetyp, pIoh->ne_flagsothers, pIoh->ne_pretthunks
 		, pIoh->ne_psegrefbytes, pIoh->ne_swaparea, pIoh->ne_expver
 		);
 }
@@ -459,79 +461,262 @@ VOID OutputFsImageNtHeader(
 	}
 }
 
+VOID OutputExportDirectory(
+	LPBYTE lpBuf,
+	DWORD dwBufSize,
+	DWORD dwExportVirtualAddress,
+	DWORD dwOfs
+) {
+	PIMAGE_EXPORT_DIRECTORY exp = (PIMAGE_EXPORT_DIRECTORY)&lpBuf[dwOfs];
+	_TCHAR szTime[32] = {};
+	GetTimeStamp(szTime, sizeof(szTime), exp->TimeDateStamp);
+	DWORD dwVaOfs = dwExportVirtualAddress - dwOfs;
+
+	OutputVolDescLog(
+		"\t========== IMAGE_EXPORT_DIRECTORY ==========\n"
+		"\t\t      Characteristics: %08lx\n"
+		"\t\t        TimeDateStamp: %08lx (%s)\n"
+		"\t\t         MajorVersion: %04x\n"
+		"\t\t         MinorVersion: %04x\n"
+		"\t\t                 Name: %08lx (%" CHARWIDTH "s)\n"
+		"\t\t                 Base: %08lx\n"
+		"\t\t    NumberOfFunctions: %08lx\n"
+		"\t\t        NumberOfNames: %08lx\n"
+		"\t\t   AddressOfFunctions: %08lx\n"
+		"\t\t       AddressOfNames: %08lx\n"
+		"\t\tAddressOfNameOrdinals: %08lx\n"
+		, exp->Characteristics, exp->TimeDateStamp, szTime
+		, exp->MajorVersion, exp->MinorVersion, exp->Name
+		, &lpBuf[exp->Name - dwVaOfs], exp->Base
+		, exp->NumberOfFunctions, exp->NumberOfNames
+		, exp->AddressOfFunctions, exp->AddressOfNames
+		, exp->AddressOfNameOrdinals
+	);
+	DWORD dwFuncAddr = exp->AddressOfFunctions - dwVaOfs;
+	DWORD dwNameAddr = exp->AddressOfNames - dwVaOfs;
+	DWORD dwNameOrdinal = exp->AddressOfNameOrdinals - dwVaOfs;
+
+	for (DWORD i = 0, j = 0, k = 0; i < exp->NumberOfFunctions; i++, j += 2, k += 4) {
+		if (dwBufSize < dwFuncAddr + 3 + k) {
+			OutputVolDescLog("Offset is over the bufsize [%lu < %lu][L:%d]\n", dwBufSize, dwFuncAddr + 3 + k, __LINE__);
+			return;
+		}
+		OutputVolDescLog(
+			"\t\t\tRelativeVirtualAddress: %08lx"
+			, MAKEDWORD(MAKEWORD(lpBuf[dwFuncAddr + k], lpBuf[dwFuncAddr + 1 + k])
+				, MAKEWORD(lpBuf[dwFuncAddr + 2 + k], lpBuf[dwFuncAddr + 3 + k]))
+		);
+		if (exp->NumberOfNames != 0) {
+			if (dwBufSize < dwNameAddr + 3 + k) {
+				OutputVolDescLog(", Offset is over the bufsize [%lu < %lu][L:%d]\n", dwBufSize, dwNameAddr + 3 + k, __LINE__);
+				return;
+			}
+			if (dwBufSize < dwNameOrdinal + 1 + j) {
+				OutputVolDescLog(", Offset is over the bufsize [%lu < %lu][L:%d]\n", dwBufSize, dwNameOrdinal + j + 1, __LINE__);
+				return;
+			}
+			DWORD dwName = MAKEDWORD(MAKEWORD(lpBuf[dwNameAddr + k], lpBuf[dwNameAddr + 1 + k])
+				, MAKEWORD(lpBuf[dwNameAddr + 2 + k], lpBuf[dwNameAddr + 3 + k])) - dwVaOfs;
+			if (dwBufSize < dwName) {
+				OutputVolDescLog(", Offset is over the bufsize [%lu < %lu][L:%d]\n", dwBufSize, dwName, __LINE__);
+				return;
+			}
+			OutputVolDescLog(
+				", Ordinal: %04x, Name: %08lx (%" CHARWIDTH "s)"
+				, MAKEWORD(lpBuf[dwNameOrdinal + j], lpBuf[dwNameOrdinal + 1 + j]), dwName, &lpBuf[dwName]
+			);
+		}
+		OutputVolDescLog("\n");
+	}
+}
+
 VOID OutputImportDirectory(
 	LPBYTE lpBuf,
 	DWORD dwBufSize,
 	DWORD dwImportVirtualAddress,
 	DWORD dwOfs
 ) {
-	INT nDllNum = 0;
+	PIMAGE_IMPORT_DESCRIPTOR imp = (PIMAGE_IMPORT_DESCRIPTOR)&lpBuf[dwOfs];
+	_TCHAR szTime[32] = {};
+	GetTimeStamp(szTime, sizeof(szTime), imp->TimeDateStamp);
+	DWORD dwVaOfs = dwImportVirtualAddress - dwOfs;
+
 	size_t stDescOfs = 0;
-	DWORD dwAddress = dwOfs - dwImportVirtualAddress;
-	for (;;) {
-		if (dwBufSize <= dwOfs + stDescOfs) {
+	INT nDllNum = 0;
+	while (imp->Characteristics != 0) {
+		OutputVolDescLog(
+			"\t========== IMAGE_IMPORT_DESCRIPTOR %d ==========\n"
+			"\t\tOriginalFirstThunk: %08lx\n", ++nDllNum, imp->OriginalFirstThunk
+		);
+		DWORD dwTmpOfs = imp->Name - dwVaOfs;
+		if (dwBufSize < dwTmpOfs) {
+			OutputVolDescLog("Offset is over the bufsize [%lu < %lu][L:%d]\n", dwBufSize, dwTmpOfs, __LINE__);
 			break;
 		}
-		PIMAGE_IMPORT_DESCRIPTOR imp = (PIMAGE_IMPORT_DESCRIPTOR)&lpBuf[dwOfs + stDescOfs];
-		if (imp->OriginalFirstThunk == 0 && imp->TimeDateStamp == 0 &&
-			imp->ForwarderChain == 0 && imp->Name == 0 && imp->FirstThunk == 0) {
+		OutputVolDescLog(
+			"\t\t     TimeDateStamp: %08lx (%s)\n"
+			"\t\t    ForwarderChain: %08lx\n"
+			"\t\t              Name: %08lx (%" CHARWIDTH "s)\n"
+			"\t\t        FirstThunk: %08lx\n"
+			, imp->TimeDateStamp, szTime, imp->ForwarderChain
+			, imp->Name, &lpBuf[dwTmpOfs], imp->FirstThunk
+		);
+
+		dwTmpOfs = imp->OriginalFirstThunk - dwVaOfs;
+		for (INT i = 0; ; i += 4) {
+			if (dwBufSize < dwTmpOfs + 3 + i) {
+				break;
+			}
+			DWORD dwAddr = MAKEDWORD(MAKEWORD(lpBuf[dwTmpOfs + i], lpBuf[dwTmpOfs + 1 + i])
+				, MAKEWORD(lpBuf[dwTmpOfs + 2 + i], lpBuf[dwTmpOfs + 3 + i])) - dwVaOfs;
+			if (dwAddr == 0 || dwBufSize < dwAddr) {
+				break;
+			}
+			PIMAGE_IMPORT_BY_NAME byname = (PIMAGE_IMPORT_BY_NAME)&lpBuf[dwAddr];
+			OutputVolDescLog(
+				"\t\t\tRelativeVirtualAddress: %08lx, Hint: %04x, Name: %" CHARWIDTH "s\n"
+				, dwAddr, byname->Hint, byname->Name
+			);
+		}
+		stDescOfs += sizeof(IMAGE_IMPORT_DESCRIPTOR);
+		dwTmpOfs = dwOfs + stDescOfs;
+		if (dwBufSize < dwTmpOfs) {
+			OutputVolDescLog("Offset is over the bufsize [%lu < %lu][L:%d]\n", dwBufSize, dwTmpOfs, __LINE__);
 			break;
+		}
+		imp = (PIMAGE_IMPORT_DESCRIPTOR)&lpBuf[dwTmpOfs];
+	}
+}
+
+VOID OutputResourceDirectory(
+	LPBYTE lpBuf,
+	DWORD dwBufSize,
+	DWORD dwResourceVirtualAddress,
+	DWORD dwOfs,
+	DWORD dwOfsToDir,
+	LPWCH lpwszFileVer,
+	_TCHAR* pTab
+) {
+	DWORD dwTmpOfs = dwOfs + dwOfsToDir;
+	if (dwBufSize < dwTmpOfs) {
+		OutputVolDescLog("Offset is over the bufsize [%lu < %lu][L:%d]\n", dwBufSize, dwTmpOfs, __LINE__);
+		return;
+	}
+	PIMAGE_RESOURCE_DIRECTORY res = (PIMAGE_RESOURCE_DIRECTORY)&lpBuf[dwTmpOfs];
+	_TCHAR szTime[32] = {};
+	GetTimeStamp(szTime, sizeof(szTime), res->TimeDateStamp);
+
+	OutputVolDescLog(
+		"%s========== IMAGE_RESOURCE_DIRECTORY ==========\n"
+		"%s\t      Characteristics: %08lx\n"
+		"%s\t        TimeDateStamp: %08lx (%s)\n"
+		"%s\t         MajorVersion: %04x\n"
+		"%s\t         MinorVersion: %04x\n"
+		"%s\t NumberOfNamedEntries: %04x\n"
+		"%s\t    NumberOfIdEntries: %04x\n"
+		, pTab, pTab, res->Characteristics, pTab, res->TimeDateStamp, szTime
+		, pTab, res->MajorVersion, pTab, res->MinorVersion
+		, pTab, res->NumberOfNamedEntries, pTab, res->NumberOfIdEntries
+	);
+
+	for (WORD i = 0; i < res->NumberOfIdEntries; i++) {
+		dwTmpOfs = dwOfs + dwOfsToDir + sizeof(IMAGE_RESOURCE_DIRECTORY) + sizeof(IMAGE_RESOURCE_DIRECTORY_ENTRY) * i;
+		if (dwBufSize < dwTmpOfs) {
+			OutputVolDescLog("Offset is over the bufsize [%lu < %lu][L:%d]\n", dwBufSize, dwTmpOfs, __LINE__);
+			return;
+		}
+		PIMAGE_RESOURCE_DIRECTORY_ENTRY dir = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)&lpBuf[dwTmpOfs];
+		if (dir->DataIsDirectory) {
+			OutputVolDescLog(
+				"%s========== IMAGE_RESOURCE_DIRECTORY_ENTRY %d ==========\n", pTab, i + 1
+			);
 		}
 		else {
-			DWORD dwOfsOfName = dwAddress + imp->Name;
-			if (dwBufSize > dwOfsOfName) {
-				_TCHAR szTime[128] = {};
-				GetTimeStamp(szTime, sizeof(szTime), imp->TimeDateStamp);
-				OutputVolDescLog(
-					"\t========== IMAGE_IMPORT_DESCRIPTOR %d ==========\n"
-					"\t\tOriginalFirstThunk: %08lx\n"
-					"\t\t     TimeDateStamp: %08lx (%s)\n"
-					"\t\t    ForwarderChain: %08lx\n"
-					"\t\t              Name: %08lx (%" CHARWIDTH "s)\n"
-					"\t\t        FirstThunk: %08lx\n"
-					, ++nDllNum, imp->OriginalFirstThunk, imp->TimeDateStamp, szTime
-					, imp->ForwarderChain, imp->Name, &lpBuf[dwOfsOfName], imp->FirstThunk
-				);
+			OutputVolDescLog(
+				"%s========== IMAGE_RESOURCE_DATA_ENTRY ==========\n", pTab
+			);
+		}
 
-				DWORD dwOrignalFirstThunkOfs = dwAddress + imp->OriginalFirstThunk;
-				DWORD dwFirstThunkOfs = dwAddress + imp->FirstThunk;
-				size_t stThunkOfs = 0;
-				INT nThunkNum = 0;
-				for (;;) {
-					PIMAGE_THUNK_DATA32 thunk = 0;
-					if (imp->OriginalFirstThunk && dwBufSize > dwOrignalFirstThunkOfs + stThunkOfs) {
-						thunk = (PIMAGE_THUNK_DATA32)&lpBuf[dwOrignalFirstThunkOfs + stThunkOfs];
+		if (dir->NameIsString) {
+			dwTmpOfs = dwOfs + dir->NameOffset;
+			if (dwBufSize < dwTmpOfs) {
+				OutputVolDescLog("Offset is over the bufsize [%lu < %lu][L:%d]\n", dwBufSize, dwTmpOfs, __LINE__);
+				return;
+			}
+			OutputVolDescLog(
+				"%s\t                 Name: %08lx (%s)\n"
+				, pTab, dir->Name, &lpBuf[dwTmpOfs]
+			);
+		}
+		else {
+			OutputVolDescLog(
+				"%s\t                   Id: %04x\n", pTab, dir->Id);
+		}
+
+		if (dir->DataIsDirectory) {
+			OutputVolDescLog(
+				"%s\t    OffsetToDirectory: %08lx\n", pTab, dir->OffsetToDirectory);
+			size_t idx = _tcslen(&pTab[0]);
+			pTab[idx] = _T('\t');
+			OutputResourceDirectory(lpBuf, dwBufSize, dwResourceVirtualAddress, dwOfs, dir->OffsetToDirectory, lpwszFileVer, pTab);
+			pTab[idx] = 0;
+		}
+		else {
+			dwTmpOfs = dwOfs + dir->OffsetToData;
+			if (dwBufSize < dwTmpOfs) {
+				OutputVolDescLog("Offset is over the bufsize [%lu < %lu][L:%d]\n", dwBufSize, dwTmpOfs, __LINE__);
+				return;
+			}
+			PIMAGE_RESOURCE_DATA_ENTRY data = (PIMAGE_RESOURCE_DATA_ENTRY)&lpBuf[dwTmpOfs];
+			OutputVolDescLog(
+				"%s\t    OffsetToDataEntry: %08lx\n"
+				"%s\t         OffsetToData: %08lx\n"
+				"%s\t                 Size: %08lx\n"
+				"%s\t             CodePage: %08lx\n"
+				, pTab, dir->OffsetToData, pTab, data->OffsetToData, pTab, data->Size, pTab, data->CodePage
+			);
+			dwTmpOfs = dwOfs + data->OffsetToData - dwResourceVirtualAddress;
+			if (dwBufSize < dwTmpOfs) {
+				OutputVolDescLog("Offset is over the bufsize [%lu < %lu][L:%d]\n", dwBufSize, dwTmpOfs, __LINE__);
+				return;
+			}
+			PFILE_VERSIONINFO finfo = (PFILE_VERSIONINFO)&lpBuf[dwTmpOfs];
+			if (!wcsncmp(finfo->ver.szKey, L"VS_VERSION_INFO", 16)) {
+				WORD wOfs = 0;
+				do {
+					dwTmpOfs = dwOfs + data->OffsetToData - dwResourceVirtualAddress + sizeof(FILE_VERSIONINFO) + wOfs;
+					if (dwBufSize < dwTmpOfs) {
+						OutputVolDescLog("Offset is over the bufsize [%lu < %lu][L:%d]\n", dwBufSize, dwTmpOfs, __LINE__);
+						return;
 					}
-					else if (imp->FirstThunk && dwBufSize > dwFirstThunkOfs + stThunkOfs) {
-						thunk = (PIMAGE_THUNK_DATA32)&lpBuf[dwFirstThunkOfs + stThunkOfs];
-					}
-					else {
+					PString pstr = (PString)&lpBuf[dwTmpOfs];
+					if (!wcsncmp(pstr->szKey, L"VarFileInfo", 11) ||
+						pstr->wLength == 0) {
 						break;
 					}
-
-					if (thunk->u1.AddressOfData == 0) {
-						break;
-					}
 					else {
-						OutputVolDescLog(
-							"\t\t========== IMAGE_THUNK_DATA %d ==========\n"
-							"\t\t\tAddressOfData: %08lx\n", ++nThunkNum, thunk->u1.AddressOfData
-						);
-						DWORD dwAddressOfDataOfs = dwAddress + thunk->u1.AddressOfData;
-						if (dwBufSize > dwAddressOfDataOfs) {
-							PIMAGE_IMPORT_BY_NAME byname = (PIMAGE_IMPORT_BY_NAME)&lpBuf[dwAddressOfDataOfs];
-							OutputVolDescLog(
-								"\t\t\t========== IMAGE_IMPORT_BY_NAME ==========\n"
-								"\t\t\t\tHint: %04x\n"
-								"\t\t\t\tName: %" CHARWIDTH "s\n"
-								, byname->Hint, byname->Name
-							);
+						OutputVolDescLog("%s\t               String: %ls - ", pTab, pstr->szKey);
+						size_t len = wcslen(pstr->szKey) + 1;
+						if (pstr->szKey[len] == '\0') {
+							len++;
+						}
+						if (pstr->wLength > len * sizeof(WCHAR) + sizeof(pstr->wLength) + sizeof(pstr->wValueLength) + sizeof(pstr->wType)) {
+							OutputVolDescLog("%ls", &pstr->szKey[len]);
+						}
+						OutputVolDescLog("\n");
+						if (!wcsncmp(pstr->szKey, L"FileVersion", 11)) {
+							size_t flen = wcslen(&pstr->szKey[len]);
+							if (flen < FILE_VERSION_SIZE) {
+								wcsncpy(lpwszFileVer, &pstr->szKey[len], flen);
+							}
+							else {
+								OutputVolDescLog("FileVersion is over the bufsize [%d < %zd]\n", FILE_VERSION_SIZE, flen);
+							}
 						}
 					}
-					stThunkOfs += sizeof(IMAGE_THUNK_DATA32);
-				}
+					wOfs += pstr->wLength + (pstr->wLength % sizeof(DWORD));
+				} while (wOfs < finfo->st.wLength);
 			}
-			stDescOfs += sizeof(IMAGE_IMPORT_DESCRIPTOR);
 		}
 	}
 }
@@ -882,7 +1067,9 @@ VOID OutputSecuRomDllHeader(
 	LPUINT uiOfsOf16,
 	LPUINT uiOfsOf32,
 	LPUINT uiOfsOfNT,
-	LPINT idx
+	LPUINT uiSizeOf16,
+	LPUINT uiSizeOf32,
+	LPUINT uiSizeOfNT
 ) {
 	OutputLog(standardOut | fileDisc, "\nDetected SecuROM %.8" CHARWIDTH "s\n", &lpBuf[8]);
 	OutputVolDescLog(
@@ -909,11 +1096,12 @@ VOID OutputSecuRomDllHeader(
 		);
 	}
 
+	INT idx = 0;
 	if (!strncmp((LPCCH)&lpBuf[8], "4.6", 3)) {
 		*uiOfsOf16 = MAKEUINT(MAKEWORD(lpBuf[96], lpBuf[97]), MAKEWORD(lpBuf[98], lpBuf[99]));
 		*uiOfsOf32 = MAKEUINT(MAKEWORD(lpBuf[144], lpBuf[145]), MAKEWORD(lpBuf[146], lpBuf[147]));
 		*uiOfsOfNT = MAKEUINT(MAKEWORD(lpBuf[192], lpBuf[193]), MAKEWORD(lpBuf[194], lpBuf[195]));
-		*idx = 32;
+		idx = 32;
 		OutputVolDescLog(
 			"\t\tUnknown String: %.10" CHARWIDTH "s\n", &lpBuf[64]
 		);
@@ -928,7 +1116,7 @@ VOID OutputSecuRomDllHeader(
 		*uiOfsOf16 = MAKEUINT(MAKEWORD(lpBuf[132], lpBuf[133]), MAKEWORD(lpBuf[134], lpBuf[135]));
 		*uiOfsOf32 = MAKEUINT(MAKEWORD(lpBuf[180], lpBuf[181]), MAKEWORD(lpBuf[182], lpBuf[183]));
 		*uiOfsOfNT = MAKEUINT(MAKEWORD(lpBuf[228], lpBuf[229]), MAKEWORD(lpBuf[230], lpBuf[231]));
-		*idx = 68;
+		idx = 68;
 		OutputVolDescLog(
 			"\t\tUnknown String: %.10" CHARWIDTH "s\n", &lpBuf[64]
 		);
@@ -944,6 +1132,9 @@ VOID OutputSecuRomDllHeader(
 		*uiOfsOf32 = MAKEUINT(MAKEWORD(lpBuf[112], lpBuf[113]), MAKEWORD(lpBuf[114], lpBuf[115]));
 		*uiOfsOfNT = MAKEUINT(MAKEWORD(lpBuf[160], lpBuf[161]), MAKEWORD(lpBuf[162], lpBuf[163]));
 	}
+	*uiSizeOf16 = MAKEUINT(MAKEWORD(lpBuf[68 + idx], lpBuf[69 + idx]), MAKEWORD(lpBuf[70 + idx], lpBuf[71 + idx]));
+	*uiSizeOf32 = MAKEUINT(MAKEWORD(lpBuf[116 + idx], lpBuf[117 + idx]), MAKEWORD(lpBuf[118 + idx], lpBuf[119 + idx]));
+	*uiSizeOfNT = MAKEUINT(MAKEWORD(lpBuf[164 + idx], lpBuf[165 + idx]), MAKEWORD(lpBuf[166 + idx], lpBuf[167 + idx]));
 
 	OutputVolDescLog(
 		"\t\t-----------------------\n"
@@ -980,82 +1171,90 @@ VOID OutputSecuRomDllHeader(
 		"\t\t         Name: %.12" CHARWIDTH "s\n"
 		"\t\tUnknown Value: %08x\n"
 		, *uiOfsOf16
-		, MAKEUINT(MAKEWORD(lpBuf[68 + *idx], lpBuf[69 + *idx]), MAKEWORD(lpBuf[70 + *idx], lpBuf[71 + *idx]))
-		, MAKEUINT(MAKEWORD(lpBuf[72 + *idx], lpBuf[73 + *idx]), MAKEWORD(lpBuf[74 + *idx], lpBuf[75 + *idx]))
-		, MAKEUINT(MAKEWORD(lpBuf[76 + *idx], lpBuf[77 + *idx]), MAKEWORD(lpBuf[78 + *idx], lpBuf[79 + *idx]))
-		, MAKEUINT(MAKEWORD(lpBuf[80 + *idx], lpBuf[81 + *idx]), MAKEWORD(lpBuf[82 + *idx], lpBuf[83 + *idx]))
-		, MAKEUINT(MAKEWORD(lpBuf[84 + *idx], lpBuf[85 + *idx]), MAKEWORD(lpBuf[86 + *idx], lpBuf[87 + *idx]))
-		, MAKEUINT(MAKEWORD(lpBuf[88 + *idx], lpBuf[89 + *idx]), MAKEWORD(lpBuf[90 + *idx], lpBuf[91 + *idx]))
-		, MAKEUINT(MAKEWORD(lpBuf[92 + *idx], lpBuf[93 + *idx]), MAKEWORD(lpBuf[94 + *idx], lpBuf[95 + *idx]))
-		, &lpBuf[96 + *idx]
-		, MAKEUINT(MAKEWORD(lpBuf[108 + *idx], lpBuf[109 + *idx]), MAKEWORD(lpBuf[110 + *idx], lpBuf[111 + *idx]))
+		, *uiSizeOf16
+		, MAKEUINT(MAKEWORD(lpBuf[72 + idx], lpBuf[73 + idx]), MAKEWORD(lpBuf[74 + idx], lpBuf[75 + idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[76 + idx], lpBuf[77 + idx]), MAKEWORD(lpBuf[78 + idx], lpBuf[79 + idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[80 + idx], lpBuf[81 + idx]), MAKEWORD(lpBuf[82 + idx], lpBuf[83 + idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[84 + idx], lpBuf[85 + idx]), MAKEWORD(lpBuf[86 + idx], lpBuf[87 + idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[88 + idx], lpBuf[89 + idx]), MAKEWORD(lpBuf[90 + idx], lpBuf[91 + idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[92 + idx], lpBuf[93 + idx]), MAKEWORD(lpBuf[94 + idx], lpBuf[95 + idx]))
+		, &lpBuf[96 + idx]
+		, MAKEUINT(MAKEWORD(lpBuf[108 + idx], lpBuf[109 + idx]), MAKEWORD(lpBuf[110 + idx], lpBuf[111 + idx]))
 		, *uiOfsOf32
-		, MAKEUINT(MAKEWORD(lpBuf[116 + *idx], lpBuf[117 + *idx]), MAKEWORD(lpBuf[118 + *idx], lpBuf[119 + *idx]))
-		, MAKEUINT(MAKEWORD(lpBuf[120 + *idx], lpBuf[121 + *idx]), MAKEWORD(lpBuf[122 + *idx], lpBuf[123 + *idx]))
-		, MAKEUINT(MAKEWORD(lpBuf[124 + *idx], lpBuf[125 + *idx]), MAKEWORD(lpBuf[126 + *idx], lpBuf[127 + *idx]))
-		, MAKEUINT(MAKEWORD(lpBuf[128 + *idx], lpBuf[129 + *idx]), MAKEWORD(lpBuf[130 + *idx], lpBuf[131 + *idx]))
-		, MAKEUINT(MAKEWORD(lpBuf[132 + *idx], lpBuf[133 + *idx]), MAKEWORD(lpBuf[134 + *idx], lpBuf[135 + *idx]))
-		, MAKEUINT(MAKEWORD(lpBuf[136 + *idx], lpBuf[137 + *idx]), MAKEWORD(lpBuf[138 + *idx], lpBuf[139 + *idx]))
-		, MAKEUINT(MAKEWORD(lpBuf[140 + *idx], lpBuf[141 + *idx]), MAKEWORD(lpBuf[142 + *idx], lpBuf[143 + *idx]))
-		, &lpBuf[144 + *idx]
-		, MAKEUINT(MAKEWORD(lpBuf[156 + *idx], lpBuf[157 + *idx]), MAKEWORD(lpBuf[158 + *idx], lpBuf[159 + *idx]))
+		, *uiSizeOf32
+		, MAKEUINT(MAKEWORD(lpBuf[120 + idx], lpBuf[121 + idx]), MAKEWORD(lpBuf[122 + idx], lpBuf[123 + idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[124 + idx], lpBuf[125 + idx]), MAKEWORD(lpBuf[126 + idx], lpBuf[127 + idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[128 + idx], lpBuf[129 + idx]), MAKEWORD(lpBuf[130 + idx], lpBuf[131 + idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[132 + idx], lpBuf[133 + idx]), MAKEWORD(lpBuf[134 + idx], lpBuf[135 + idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[136 + idx], lpBuf[137 + idx]), MAKEWORD(lpBuf[138 + idx], lpBuf[139 + idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[140 + idx], lpBuf[141 + idx]), MAKEWORD(lpBuf[142 + idx], lpBuf[143 + idx]))
+		, &lpBuf[144 + idx]
+		, MAKEUINT(MAKEWORD(lpBuf[156 + idx], lpBuf[157 + idx]), MAKEWORD(lpBuf[158 + idx], lpBuf[159 + idx]))
 		, *uiOfsOfNT
-		, MAKEUINT(MAKEWORD(lpBuf[164 + *idx], lpBuf[165 + *idx]), MAKEWORD(lpBuf[166 + *idx], lpBuf[167 + *idx]))
-		, MAKEUINT(MAKEWORD(lpBuf[168 + *idx], lpBuf[169 + *idx]), MAKEWORD(lpBuf[160 + *idx], lpBuf[161 + *idx]))
-		, MAKEUINT(MAKEWORD(lpBuf[172 + *idx], lpBuf[173 + *idx]), MAKEWORD(lpBuf[174 + *idx], lpBuf[175 + *idx]))
-		, MAKEUINT(MAKEWORD(lpBuf[176 + *idx], lpBuf[177 + *idx]), MAKEWORD(lpBuf[178 + *idx], lpBuf[179 + *idx]))
-		, MAKEUINT(MAKEWORD(lpBuf[180 + *idx], lpBuf[181 + *idx]), MAKEWORD(lpBuf[182 + *idx], lpBuf[183 + *idx]))
-		, MAKEUINT(MAKEWORD(lpBuf[184 + *idx], lpBuf[185 + *idx]), MAKEWORD(lpBuf[186 + *idx], lpBuf[187 + *idx]))
-		, MAKEUINT(MAKEWORD(lpBuf[188 + *idx], lpBuf[189 + *idx]), MAKEWORD(lpBuf[190 + *idx], lpBuf[191 + *idx]))
-		, &lpBuf[192 + *idx]
-		, MAKEUINT(MAKEWORD(lpBuf[204 + *idx], lpBuf[205 + *idx]), MAKEWORD(lpBuf[206 + *idx], lpBuf[207 + *idx]))
+		, *uiSizeOfNT
+		, MAKEUINT(MAKEWORD(lpBuf[168 + idx], lpBuf[169 + idx]), MAKEWORD(lpBuf[160 + idx], lpBuf[161 + idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[172 + idx], lpBuf[173 + idx]), MAKEWORD(lpBuf[174 + idx], lpBuf[175 + idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[176 + idx], lpBuf[177 + idx]), MAKEWORD(lpBuf[178 + idx], lpBuf[179 + idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[180 + idx], lpBuf[181 + idx]), MAKEWORD(lpBuf[182 + idx], lpBuf[183 + idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[184 + idx], lpBuf[185 + idx]), MAKEWORD(lpBuf[186 + idx], lpBuf[187 + idx]))
+		, MAKEUINT(MAKEWORD(lpBuf[188 + idx], lpBuf[189 + idx]), MAKEWORD(lpBuf[190 + idx], lpBuf[191 + idx]))
+		, &lpBuf[192 + idx]
+		, MAKEUINT(MAKEWORD(lpBuf[204 + idx], lpBuf[205 + idx]), MAKEWORD(lpBuf[206 + idx], lpBuf[207 + idx]))
 	);
 }
 
 VOID OutputSint16(
 	LPBYTE lpBuf,
-	UINT uiOfsOf16,
-	UINT uiOfsOfSecuRomDll,
-	INT idx
+	INT nOfsOf16dll
 ) {
 	OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR("SIntf16.dll"));
-	PIMAGE_DOS_HEADER pIDh2 = (PIMAGE_DOS_HEADER)&lpBuf[208 + idx];
+	PIMAGE_DOS_HEADER pIDh2 = (PIMAGE_DOS_HEADER)&lpBuf[nOfsOf16dll];
 	OutputFsImageDosHeader(pIDh2);
-	PIMAGE_OS2_HEADER pIOh = (PIMAGE_OS2_HEADER)&lpBuf[uiOfsOf16 - uiOfsOfSecuRomDll + pIDh2->e_lfanew];
+	PIMAGE_OS2_HEADER pIOh = (PIMAGE_OS2_HEADER)&lpBuf[nOfsOf16dll + pIDh2->e_lfanew];
 	OutputFsImageOS2Header(pIOh);
 }
 
 VOID OutputSint32(
 	LPBYTE lpBuf,
 	INT nOfsOf32dll,
+	UINT uiSize,
 	BOOL bDummy
 ) {
+	UNREFERENCED_PARAMETER(uiSize);
+
 	OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR("SIntf32.dll"));
-	PIMAGE_DOS_HEADER pIDh3 = (PIMAGE_DOS_HEADER)&lpBuf[nOfsOf32dll];
-	OutputFsImageDosHeader(pIDh3);
-	PIMAGE_NT_HEADERS32 pINH3 = (PIMAGE_NT_HEADERS32)&lpBuf[nOfsOf32dll + pIDh3->e_lfanew];
-	OutputFsImageNtHeader(pINH3);
-	ULONG nOfs3 = nOfsOf32dll + pIDh3->e_lfanew + sizeof(IMAGE_NT_HEADERS32);
-	for (INT i = 0; i < pINH3->FileHeader.NumberOfSections; i++) {
-		OutputFsImageSectionHeader(NULL, NULL, (PIMAGE_SECTION_HEADER)&lpBuf[nOfs3], &bDummy);
-		nOfs3 += sizeof(IMAGE_SECTION_HEADER);
+	PIMAGE_DOS_HEADER pIDh = (PIMAGE_DOS_HEADER)&lpBuf[nOfsOf32dll];
+	OutputFsImageDosHeader(pIDh);
+	PIMAGE_NT_HEADERS32 pINH = (PIMAGE_NT_HEADERS32)&lpBuf[nOfsOf32dll + pIDh->e_lfanew];
+	OutputFsImageNtHeader(pINH);
+
+	ULONG nOfs = nOfsOf32dll + pIDh->e_lfanew + sizeof(IMAGE_NT_HEADERS32);
+
+	for (INT i = 0; i < pINH->FileHeader.NumberOfSections; i++) {
+		OutputFsImageSectionHeader(NULL, NULL, (PIMAGE_SECTION_HEADER)&lpBuf[nOfs], &bDummy);
+		nOfs += sizeof(IMAGE_SECTION_HEADER);
 	}
 }
 
 VOID OutputSintNT(
 	LPBYTE lpBuf,
 	INT nOfsOfNTdll,
+	UINT uiSize,
 	BOOL bDummy
 ) {
+	UNREFERENCED_PARAMETER(uiSize);
+
 	OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR("SIntfNT.dll"));
-	PIMAGE_DOS_HEADER pIDh4 = (PIMAGE_DOS_HEADER)&lpBuf[nOfsOfNTdll];
-	OutputFsImageDosHeader(pIDh4);
-	PIMAGE_NT_HEADERS32 pINH4 = (PIMAGE_NT_HEADERS32)&lpBuf[nOfsOfNTdll + pIDh4->e_lfanew];
-	OutputFsImageNtHeader(pINH4);
-	ULONG nOfs4 = nOfsOfNTdll + pIDh4->e_lfanew + sizeof(IMAGE_NT_HEADERS32);
-	for (INT i = 0; i < pINH4->FileHeader.NumberOfSections; i++) {
-		OutputFsImageSectionHeader(NULL, NULL, (PIMAGE_SECTION_HEADER)&lpBuf[nOfs4], &bDummy);
-		nOfs4 += sizeof(IMAGE_SECTION_HEADER);
+	PIMAGE_DOS_HEADER pIDh = (PIMAGE_DOS_HEADER)&lpBuf[nOfsOfNTdll];
+	OutputFsImageDosHeader(pIDh);
+	PIMAGE_NT_HEADERS32 pINH = (PIMAGE_NT_HEADERS32)&lpBuf[nOfsOfNTdll + pIDh->e_lfanew];
+	OutputFsImageNtHeader(pINH);
+
+	ULONG nOfs = nOfsOfNTdll + pIDh->e_lfanew + sizeof(IMAGE_NT_HEADERS32);
+
+	for (INT i = 0; i < pINH->FileHeader.NumberOfSections; i++) {
+		OutputFsImageSectionHeader(NULL, NULL, (PIMAGE_SECTION_HEADER)&lpBuf[nOfs], &bDummy);
+		nOfs += sizeof(IMAGE_SECTION_HEADER);
 	}
 }
 

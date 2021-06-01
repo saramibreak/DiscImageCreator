@@ -608,3 +608,47 @@ typedef struct _FAT {
 	UINT RootDirStartSector;
 	UINT DataStartSector;
 } FAT, *PFAT;
+
+// https://docs.microsoft.com/en-us/windows/win32/menurc/vs-versioninfo
+#pragma pack(push, version, 1)
+typedef struct {
+	WORD             wLength;
+	WORD             wValueLength;
+	WORD             wType;
+	WCHAR            szKey[16];
+	WORD             Padding1;
+	VS_FIXEDFILEINFO Value;
+} VS_VERSIONINFO, *PVS_VERSIONINFO;
+
+// https://docs.microsoft.com/en-us/windows/win32/menurc/stringfileinfo
+typedef struct {
+	WORD        wLength;
+	WORD        wValueLength;
+	WORD        wType;
+	WCHAR       szKey[15];
+} StringFileInfo;
+
+// https://docs.microsoft.com/en-us/windows/win32/menurc/stringtable
+typedef struct {
+	WORD   wLength;
+	WORD   wValueLength;
+	WORD   wType;
+	WCHAR  szKey[9];
+} StringTable;
+
+// https://docs.microsoft.com/en-us/windows/win32/menurc/string-str
+typedef struct {
+	WORD  wLength;
+	WORD  wValueLength;
+	WORD  wType;
+#if !defined(__midl)
+	WCHAR szKey[0];
+#endif
+} String, *PString;
+
+typedef struct {
+	VS_VERSIONINFO ver;
+	StringFileInfo sfi;
+	StringTable     st;
+} FILE_VERSIONINFO, *PFILE_VERSIONINFO;
+#pragma pack(pop, version)
