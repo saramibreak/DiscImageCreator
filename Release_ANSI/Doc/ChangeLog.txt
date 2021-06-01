@@ -732,3 +732,12 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 *2021-04-01
 - changed: check C2 error "F0 F0 F0 00 00 00 0F 0F 0F" by plextor only
 - fixed: error occurred by findstr when there is a space in the path
+
+*2021-06-01
+- added: output IMAGE_EXPORT_DIRECTORY
+- added: output IMAGE_RESOURCE_DIRECTORY
+- changed: output IMAGE_IMPORT_DIRECTORY
+- changed: 0x83 ... 0x8f do not affect the cue sheet if crc is bad, so CD-TEXT output is permitted.
+- fixed: check c2 error "00 f0 f0 f0 00 00 00 0f 0f 0f 00"
+- fixed: SubQ adr6
+- improved: multi sector reading of the 0xf1 drive
