@@ -301,6 +301,9 @@ BOOL ReadTOCFull(
 			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 			throw FALSE;
 		}
+		OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("FULL TOC (Binary)"));
+		OutputCDMain(fileMainInfo, pFullToc, 0, size.AsUShort);
+
 		*pTocData = ((PCDROM_TOC_FULL_TOC_DATA)(pFullToc))->Descriptors;
 		INT nTmpLBAExt = 0;
 		for (WORD a = 0; a < *wTocEntries; a++) {
@@ -328,7 +331,7 @@ BOOL ReadTOCFull(
 				Session 1, Ctl 4, Adr 5, Point 0xc0, Optimum recording power, 128
 										 First Lead-in of the disc, AMSF 97:27:56 (LBA[438431, 0x6b09f])
 				 */
-				if (pDisc->SCSI.bMultiSession) {
+				if (pDisc->SCSI.bMultiSession && pDisc->SCSI.n1stLBAof2ndSession == -1) {
 					nTmpLBAExt =
 						MSFtoLBA((*pTocData + a)->MsfExtra[0], (*pTocData + a)->MsfExtra[1], (*pTocData + a)->MsfExtra[2]) - 150;
 					pDisc->SCSI.n1stLBAof2ndSession = nTmpLBAExt + 150;
