@@ -70,7 +70,8 @@ BOOL ReadBDForParamSfo(
 	PDEVICE pDevice,
 	PDISC pDisc,
 	CDB::_READ12* pCdb,
-	LPBYTE lpBuf
+	LPBYTE lpBuf,
+	INT idx
 );
 
 BOOL ReadSACDFileSystem(

@@ -75,6 +75,7 @@
 #define MIN_LEN_DR (34)
 
 #define FILE_VERSION_SIZE (32)
+#define MAX_PARAMSFO_NUM (8)
 
 #define MAX_READ_ERROR_FILE_COUNT (16)
 

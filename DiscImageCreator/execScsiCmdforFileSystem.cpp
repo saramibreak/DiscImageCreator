@@ -1903,11 +1903,12 @@ BOOL ReadBDForParamSfo(
 	PDEVICE pDevice,
 	PDISC pDisc,
 	CDB::_READ12* pCdb,
-	LPBYTE lpBuf
+	LPBYTE lpBuf,
+	INT idx
 ) {
 	pCdb->TransferLength[3] = 1;
 	FOUR_BYTE LBA;
-	LBA.AsULong = (ULONG)pDisc->BD.nLBAForParamSfo;
+	LBA.AsULong = (ULONG)pDisc->BD.nLBAForParamSfo[idx];
 	REVERSE_BYTES(pCdb->LogicalBlock, &LBA);
 #ifdef _WIN32
 	INT direction = SCSI_IOCTL_DATA_IN;
@@ -1938,11 +1939,15 @@ BOOL ReadBDForParamSfo(
 	} sfo_index_table_entry, *psfo_index_table_entry;
 
 	psfo_header header = (psfo_header)lpBuf;
+	if (header->magic != 0x46535000) {
+		OutputDiscLog("LBA[%lu]: This PARAM.SFO is encrypted\n", LBA.AsULong);
+		return TRUE;
+	}
 	OutputDiscLog(
 		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("PARAM.SFO")
 		"\tmagic: %c%c%c\n"
 		"\tversion: %u.%02u\n"
-		, pDisc->BD.nLBAForParamSfo, (UINT)pDisc->BD.nLBAForParamSfo
+		, pDisc->BD.nLBAForParamSfo[idx], (UINT)pDisc->BD.nLBAForParamSfo[idx]
 		, (CHAR)((header->magic >> 8) & 0x000000ff)
 		, (CHAR)((header->magic >> 16) & 0x000000ff), (CHAR)((header->magic >> 24) & 0x000000ff)
 		, (header->version & 0x000000ff), ((header->version >> 8) & 0x000000ff)

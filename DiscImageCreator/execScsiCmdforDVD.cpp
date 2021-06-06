@@ -211,9 +211,16 @@ BOOL ReadDVD(
 				throw FALSE;
 			}
 		}
-		else if (*pExecType == bd && pDisc->BD.nLBAForParamSfo != 0) {
-			if (!ReadBDForParamSfo(pExtArg, pDevice, pDisc, &cdb, lpBuf)) {
-				throw FALSE;
+		else if (*pExecType == bd) {
+			for (INT i = 0; i < MAX_PARAMSFO_NUM; i++) {
+				if (pDisc->BD.nLBAForParamSfo[i] != 0) {
+					if (!ReadBDForParamSfo(pExtArg, pDevice, pDisc, &cdb, lpBuf, i)) {
+						throw FALSE;
+					}
+					else {
+						break;
+					}
+				}
 			}
 		}
 		FlushLog();

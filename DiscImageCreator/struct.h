@@ -403,7 +403,8 @@ typedef struct _DISC {
 		DWORD dwXboxSwapOfs;
 	} DVD;
 	struct _BD {
-		INT nLBAForParamSfo;
+		INT nLBAForParamSfo[MAX_PARAMSFO_NUM];
+		INT nParamSfoCnt;
 	} BD;
 	LPBYTE lpCachedBuf; // for Asus 0xF1 opcode
 	DWORD dwBytesPerSector; // only use by disk command

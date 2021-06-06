@@ -162,7 +162,12 @@ VOID OutputFsDirectoryRecord(
 		OutputVolDescLog("\n\n");
 	}
 	if (!strncmp(fname, "PARAM.SFO", 9)) {
-		pDisc->BD.nLBAForParamSfo = (INT)uiExtentPos;
+		if (pDisc->BD.nParamSfoCnt < MAX_PARAMSFO_NUM) {
+			pDisc->BD.nLBAForParamSfo[pDisc->BD.nParamSfoCnt++] = (INT)uiExtentPos;
+		}
+		else {
+			OutputVolDescLog("PARAM.SFO is over %d files\n", MAX_PARAMSFO_NUM);
+		}
 	}
 
 	CHAR fnameForProtect[MAX_FNAME_FOR_VOLUME] = {};
