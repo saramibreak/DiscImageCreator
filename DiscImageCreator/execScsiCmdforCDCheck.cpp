@@ -806,8 +806,12 @@ BOOL ReadCDForCheckingReadInOut(
 		else if (0 < pDisc->MAIN.nCombinedOffset) {
 			OutputLog(standardOut | fileDrive, "This drive can't read the lead-out\n");
 			if (IsValid0xF1SupportedDrive(pDevice)) {
+				if (pDisc->SCSI.bMultiSession) {
+					OutputErrorString("Multi-session disc is not supported by this drive. Use Plextor DVD model (See README.md)\n");
+					return FALSE;
+				}
 				if (!pExtArg->byMultiSectorReading) {
-					OutputErrorString("/mr is needed to read the lead-out\n");
+					OutputErrorString("/mr <val> is needed to read the lead-out. <val> is 50 by default\n");
 					return FALSE;
 				}
 				OutputLog(standardOut | fileDrive, "But 0xF1 opcode is supported\n");
