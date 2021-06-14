@@ -1261,6 +1261,22 @@ BOOL ReadCDForCheckingSubRtoW(
 				pDisc->SUB.lpRtoWList[i] = SUB_RTOW_TYPE::Full;
 				OutputDiscLog("\tAll RtoW is 0xff\n");
 			}
+			// 0x7f * 6 + 0xff * 66 = 0x44b8
+			else if (nRtoW == 0x44b8) {
+				// [IBM-PC] Panzer General (US) (rerelease)
+				// ========== LBA[000000, 0000000], Sub Channel ==========
+				// 	  +0 +1 +2 +3 +4 +5 +6 +7 +8 +9 +A +B
+				//	P FF FF FF FF FF FF FF FF FF FF FF FF
+				//	Q 41 01 01 00 00 00 00 00 02 00 28 32
+				//	R 7F FF FF FF FF FF FF FF FF FF FF FF
+				//	S 7F FF FF FF FF FF FF FF FF FF FF FF
+				//	T 7F FF FF FF FF FF FF FF FF FF FF FF
+				//	U 7F FF FF FF FF FF FF FF FF FF FF FF
+				//	V 7F FF FF FF FF FF FF FF FF FF FF FF
+				//	W 7F FF FF FF FF FF FF FF FF FF FF FF
+				pDisc->SUB.lpRtoWList[i] = SUB_RTOW_TYPE::Full;
+				OutputDiscLog("\tAll RtoW is 0x7f, 0xff\n");
+			}
 			// (0x57 + 0x33 + 0x16) * 24 = 0xeb8
 			else if (nRtoW == 0xeb8) {
 				// [3DO] MegaRace (Japan) subch 0x02 on Plextor
