@@ -927,6 +927,7 @@ BOOL ReadCDForCheckingSubQ1stIndex(
 }
 
 BOOL ReadCDForCheckingSubQAdrFirst(
+	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
@@ -942,12 +943,17 @@ BOOL ReadCDForCheckingSubQAdrFirst(
 	}
 	CDFLAG::_READ_CD::_ERROR_FLAGS c2 = CDFLAG::_READ_CD::NoC2;
 	CDFLAG::_READ_CD::_SUB_CHANNEL_SELECTION flg = CDFLAG::_READ_CD::Pack;
+	BYTE byTransferLen = 1;
 	if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
+		byTransferLen = 2;
 		*uiBufLen = CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * 2;
 		c2 = CDFLAG::_READ_CD::byte294;
 		flg = CDFLAG::_READ_CD::Raw;
 	}
-	SetReadDiscCommand(NULL, pExtArg, pDevice, 2, c2, flg, lpCmd, FALSE);
+	else if (*pExecType == gd) {
+		flg = CDFLAG::_READ_CD::Raw;
+	}
+	SetReadDiscCommand(NULL, pExtArg, pDevice, byTransferLen, c2, flg, lpCmd, FALSE);
 	*nOfs = pDisc->MAIN.nCombinedOffset % CD_RAW_SECTOR_SIZE;
 	if (pDisc->MAIN.nCombinedOffset < 0) {
 		*nOfs = CD_RAW_SECTOR_SIZE + *nOfs;
@@ -1133,6 +1139,7 @@ BOOL ReadCDForCheckingSubQAdr(
 }
 
 BOOL ReadCDForCheckingSubRtoW(
+	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc
@@ -1151,6 +1158,9 @@ BOOL ReadCDForCheckingSubRtoW(
 	if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
 		uiBufLen = CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE;
 		c2 = CDFLAG::_READ_CD::byte294;
+		flg = CDFLAG::_READ_CD::Raw;
+	}
+	else if (*pExecType == gd) {
 		flg = CDFLAG::_READ_CD::Raw;
 	}
 	SetReadDiscCommand(NULL, pExtArg, pDevice, 1, c2, flg, lpCmd, FALSE);
@@ -2548,14 +2558,15 @@ BOOL ExecCheckingByteOrder(
 }
 
 VOID ReadCDForCheckingByteOrder(
+	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	CDFLAG::_READ_CD::_ERROR_FLAGS* c2
 ) {
-	SetBufferSizeForReadCD(pDevice, DRIVE_DATA_ORDER::NoC2);
+	SetBufferSizeForReadCD(pExecType, pDevice, DRIVE_DATA_ORDER::NoC2);
 	if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
 		*c2 = CDFLAG::_READ_CD::byte294;
-		SetBufferSizeForReadCD(pDevice, DRIVE_DATA_ORDER::MainC2Sub);
+		SetBufferSizeForReadCD(pExecType, pDevice, DRIVE_DATA_ORDER::MainC2Sub);
 		pDevice->driveOrder = DRIVE_DATA_ORDER::MainC2Sub;
 		CDFLAG::_READ_CD::_SUB_CHANNEL_SELECTION sub = CDFLAG::_READ_CD::Raw;
 
@@ -2591,13 +2602,13 @@ VOID ReadCDForCheckingByteOrder(
 				*c2 = CDFLAG::_READ_CD::NoC2;
 				pDevice->driveOrder = DRIVE_DATA_ORDER::NoC2;
 				pDevice->FEATURE.byC2ErrorData = FALSE;
-				SetBufferSizeForReadCD(pDevice, DRIVE_DATA_ORDER::NoC2);
+				SetBufferSizeForReadCD(pExecType, pDevice, DRIVE_DATA_ORDER::NoC2);
 			}
 		}
 		if (pDevice->driveOrder == DRIVE_DATA_ORDER::MainSubC2) {
 			OutputDriveLog(
 				"\tByte order of this drive is main + sub + c2\n");
-			SetBufferSizeForReadCD(pDevice, DRIVE_DATA_ORDER::MainSubC2);
+			SetBufferSizeForReadCD(pExecType, pDevice, DRIVE_DATA_ORDER::MainSubC2);
 		}
 		else if (pDevice->driveOrder == DRIVE_DATA_ORDER::MainC2Sub) {
 			OutputDriveLog(
@@ -2637,7 +2648,7 @@ BOOL ReadCDCheck(
 		}
 		// Typically, CD+G data is included in audio only disc
 		// But exceptionally, WonderMega Collection (SCD)(mixed disc) exists CD+G data.
-		if (!ReadCDForCheckingSubRtoW(pExtArg, pDevice, pDisc)) {
+		if (!ReadCDForCheckingSubRtoW(pExecType, pExtArg, pDevice, pDisc)) {
 			return FALSE;
 		}
 		if (pDisc->SCSI.trkType != TRACK_TYPE::audioOnly) {
@@ -2689,6 +2700,7 @@ BOOL ReadCDCheck(
 }
 
 BOOL ReadGDForCheckingSubQAdr(
+	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
@@ -2701,7 +2713,7 @@ BOOL ReadGDForCheckingSubQAdr(
 	BYTE byMode = DATA_BLOCK_MODE0;
 	UINT uiBufLen = CD_RAW_SECTOR_SIZE + CD_RAW_READ_SUBCODE_SIZE;
 
-	if (!ReadCDForCheckingSubQAdrFirst(pExtArg
+	if (!ReadCDForCheckingSubQAdrFirst(pExecType, pExtArg
 		, pDevice, pDisc, &pBuf, &lpBuf, lpCmd, &uiBufLen, &nOfs)) {
 		return FALSE;
 	}

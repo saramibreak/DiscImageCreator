@@ -271,7 +271,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 							make_crc6_table();
 #endif
 							CDFLAG::_READ_CD::_ERROR_FLAGS c2 = CDFLAG::_READ_CD::NoC2;
-							ReadCDForCheckingByteOrder(pExtArg, &device, &c2);
+							ReadCDForCheckingByteOrder(pExecType, pExtArg, &device, &c2);
 							if (pExtArg->byC2) {
 								if (device.FEATURE.byC2ErrorData && c2 != CDFLAG::_READ_CD::NoC2) {
 									if (NULL == (fpC2 = CreateOrOpenFile(
@@ -331,7 +331,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 								if (!ReadTOCText(pExtArg, &device, &discData, NULL)) {
 									throw FALSE;
 								}
-								if (!ReadGDForCheckingSubQAdr(pExtArg, &device, &discData, &discPerSector)) {
+								if (!ReadGDForCheckingSubQAdr(pExecType, pExtArg, &device, &discData, &discPerSector)) {
 									throw FALSE;
 								}
 							}
@@ -352,7 +352,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 									}
 								}
 								if (*pExecType != swap) {
-									WriteCcdFirst(pExtArg, &device, pDisc, &discPerSector, &fullToc, pTocData, wTocEntries, fpCcd);
+									WriteCcdFirst(pExecType, pExtArg, &device, pDisc, &discPerSector, &fullToc, pTocData, wTocEntries, fpCcd);
 									SetAndOutputTocFull(pDisc, &fullToc, pTocData, wTocEntries, fpCcd);
 								}
 							}

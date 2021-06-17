@@ -53,6 +53,7 @@ VOID SetCommandForTransferLength(
 );
 
 VOID SetBufferSizeForReadCD(
+	PEXEC_TYPE pExecType,
 	PDEVICE pDevice,
 	DRIVE_DATA_ORDER order
 );

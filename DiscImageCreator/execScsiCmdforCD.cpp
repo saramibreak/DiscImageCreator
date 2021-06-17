@@ -1782,7 +1782,7 @@ BOOL ReadCDForSwap(
 			throw FALSE;
 		}
 		pExtArg->byBe = TRUE;
-		WriteCcdFirst(pExtArg, pDevice, pDisc, pDiscPerSector, &fullToc, pTocData, wTocEntries, fpCcd);
+		WriteCcdFirst(pExecType, pExtArg, pDevice, pDisc, pDiscPerSector, &fullToc, pTocData, wTocEntries, fpCcd);
 		pExtArg->byBe = FALSE;
 		SetAndOutputTocFull(pDisc, &fullToc, pTocData, wTocEntries, fpCcd);
 		FreeAndNull(pPFullToc);
@@ -2081,7 +2081,7 @@ BOOL ReadCDPartial(
 				nFirstLBA = 0;
 			}
 			else if (nFirstLBA == 44849) {
-				nFirstLBA = 44850;
+				nFirstLBA = FIRST_PREGAP_LBA_FOR_GD;
 			}
 		}
 		INT nLBA = nFirstLBA;

@@ -300,6 +300,9 @@ BOOL InitSubData(
 		bRet = bErr;
 	}
 	(*pDisc)->SUB.nSubChannelOffset = 0xff;
+	if (*pExecType == gd) {
+		(*pDisc)->SUB.n1stPchannelOfTrk = FIRST_PREGAP_LBA_FOR_GD;
+	}
 	return bRet;
 }
 

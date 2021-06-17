@@ -155,6 +155,7 @@ VOID SetCommandForTransferLength(
 }
 
 VOID SetBufferSizeForReadCD(
+	PEXEC_TYPE pExecType,
 	PDEVICE pDevice,
 	DRIVE_DATA_ORDER order
 ) {
@@ -162,7 +163,12 @@ VOID SetBufferSizeForReadCD(
 		pDevice->TRANSFER.uiBufLen = CD_RAW_SECTOR_WITH_SUBCODE_SIZE;
 		pDevice->TRANSFER.uiBufC2Offset = 0;
 		pDevice->TRANSFER.uiBufSubOffset = CD_RAW_SECTOR_SIZE;
-		pDevice->sub = CDFLAG::_READ_CD::Pack;
+		if (*pExecType == gd) {
+			pDevice->sub = CDFLAG::_READ_CD::Raw;
+		}
+		else {
+			pDevice->sub = CDFLAG::_READ_CD::Pack;
+		}
 	}
 	else if (order == DRIVE_DATA_ORDER::MainC2Sub) {
 		pDevice->TRANSFER.uiBufLen = CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE;

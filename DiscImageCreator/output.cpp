@@ -221,6 +221,7 @@ VOID WriteCcdForSession(
 }
 
 BOOL WriteCcdFirst(
+	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
@@ -240,7 +241,7 @@ BOOL WriteCcdFirst(
 		BYTE lpCmd[CDB12GENERIC_LENGTH] = {};
 		INT nOfs = 0;
 		UINT uiBufLen = CD_RAW_SECTOR_WITH_SUBCODE_SIZE * 2;
-		if (!ReadCDForCheckingSubQAdrFirst(pExtArg
+		if (!ReadCDForCheckingSubQAdrFirst(pExecType, pExtArg
 			, pDevice, pDisc, &pBuf, &lpBuf, lpCmd, &uiBufLen, &nOfs)) {
 			FreeAndNull(pBuf);
 			return FALSE;
@@ -635,7 +636,7 @@ VOID WriteMainChannel(
 				}
 			}
 			else {
-				pDisc->SUB.lp1stLBAListOnSub[2][0] = 44850;
+				pDisc->SUB.lp1stLBAListOnSub[2][0] = FIRST_PREGAP_LBA_FOR_GD;
 			}
 		}
 		// last sector in 1st session (when session 2 exists)

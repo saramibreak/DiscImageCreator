@@ -344,6 +344,7 @@ VOID WriteCcdForSession(
 );
 
 BOOL WriteCcdFirst(
+	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
