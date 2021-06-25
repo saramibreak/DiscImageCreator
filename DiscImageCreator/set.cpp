@@ -1362,7 +1362,7 @@ VOID SetTrackAttribution(
 				)
 			) {
 			if (pDisc->SUB.lp1stLBAListOfDataTrackOnSub[pDiscPerSector->byTrackNum - 1] == -1) {
-				OutputSubInfoWithLBALog("1st LBA of Lead-out or Lead-in\n", nLBA, tmpCurrentTrackNum);
+				OutputSubInfoWithLBALog("1st LBA of Lead-out or Lead-in\n", nLBA, pDiscPerSector->byTrackNum);
 				pDisc->SUB.lp1stLBAListOfDataTrackOnSub[pDiscPerSector->byTrackNum - 1] = nLBA;
 				if (pDiscPerSector->byTrackNum < pDisc->SCSI.by1stDataTrkNum) {
 					pDisc->SCSI.by1stDataTrkNum = pDiscPerSector->byTrackNum;
@@ -1370,7 +1370,7 @@ VOID SetTrackAttribution(
 			}
 			else if (nLBA != pDisc->SCSI.n1stLBAof2ndSession - 150) {
 				OutputSubInfoWithLBALog(
-					"Set the last LBA of data track [%d]->[%d]\n", nLBA, tmpCurrentTrackNum,
+					"Set the last LBA of data track [%d]->[%d]\n", nLBA, pDiscPerSector->byTrackNum,
 					pDisc->SUB.lpLastLBAListOfDataTrackOnSub[pDiscPerSector->byTrackNum - 1], nLBA);
 				pDisc->SUB.lpLastLBAListOfDataTrackOnSub[pDiscPerSector->byTrackNum - 1] = nLBA;
 			}
