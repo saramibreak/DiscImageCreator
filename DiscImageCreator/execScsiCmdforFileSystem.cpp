@@ -522,7 +522,14 @@ BOOL ReadVolumeDescriptor(
 	BYTE byTransferLen
 ) {
 	if (pDisc->SCSI.lp1stLBAListOnToc) {
-		nPVD += pDisc->SCSI.lp1stLBAListOnToc[byIdx];
+		// Eraser Turnabout (Chinese)
+		//	========== TOC ==========
+		//	Pregap Track   , LBA        0 -        0, Length        1
+		//	  Data Track  1, LBA        1 -   317021, Length   317021
+		//	                                          Total    317022
+		if (pDisc->SCSI.lp1stLBAListOnToc[byIdx] != 1) {
+			nPVD += pDisc->SCSI.lp1stLBAListOnToc[byIdx];
+		}
 	}
 	INT nTmpLBA = nPVD;
 	BYTE bufDec[CD_RAW_SECTOR_SIZE * 2] = {};
