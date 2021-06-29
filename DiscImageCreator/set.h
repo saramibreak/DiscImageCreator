@@ -131,7 +131,7 @@ VOID SetMCNToString(
 );
 
 VOID SetLBAForFirstAdr(
-	INT nFirstLBA[][2],
+	INT n1stLBA[][2],
 	INT nRangeLBA[][2],
 	LPCTSTR strAdr,
 	LPINT nAdrLBAList,

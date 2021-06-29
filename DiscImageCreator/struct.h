@@ -313,8 +313,8 @@ typedef struct _DISC {
 		INT nOffsetEnd;
 		INT nFixStartLBA;
 		INT nFixEndLBA;
-		INT nFixFirstLBAofLeadout;		// for sliding offset
-		INT nFixFirstLBAof2ndSession;	// for sliding offset
+		INT nFix1stLBAofLeadout;	// for sliding offset
+		INT nFix1stLBAof2ndSession;	// for sliding offset
 		// 0 origin, max is last track num.
 		LPBYTE lpModeList;
 		LPDWORD lpAllSectorCrc32;
@@ -323,7 +323,7 @@ typedef struct _DISC {
 	} MAIN;
 	struct _SUB {
 		INT nSubChannelOffset;
-		INT nFirstLBAForMCN[3][2];
+		INT n1stLBAForMCN[3][2];
 		INT nRangeLBAForMCN[3][2];
 		INT nPrevMCNSector;
 		BYTE byDesync;
@@ -332,7 +332,7 @@ typedef struct _DISC {
 		BYTE byAdr6;
 		CHAR szAdr6[META_ADR6_SIZE];
 		BYTE padding[2];
-		INT nFirstLBAForISRC[3][2];
+		INT n1stLBAForISRC[3][2];
 		INT nRangeLBAForISRC[3][2];
 		INT nPrevISRCSector;
 		// 0 origin, max is last track num.

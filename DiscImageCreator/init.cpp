@@ -289,9 +289,9 @@ BOOL InitSubData(
 		(*pDisc)->SUB.byCatalog = FALSE;
 		for (INT i = 0; i < 3; i++) {
 			for (INT j = 0; j < 2; j++) {
-				(*pDisc)->SUB.nFirstLBAForMCN[i][j] = -1;
+				(*pDisc)->SUB.n1stLBAForMCN[i][j] = -1;
 				(*pDisc)->SUB.nRangeLBAForMCN[i][j] = -1;
-				(*pDisc)->SUB.nFirstLBAForISRC[i][j] = -1;
+				(*pDisc)->SUB.n1stLBAForISRC[i][j] = -1;
 				(*pDisc)->SUB.nRangeLBAForISRC[i][j] = -1;
 			}
 		}

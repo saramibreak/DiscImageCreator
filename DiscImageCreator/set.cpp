@@ -950,9 +950,9 @@ VOID SetCDOffset(
 			pDisc->MAIN.nFixEndLBA = nEndLBA + pDisc->MAIN.nAdjustSectorNum;
 		}
 		if (pDisc->SCSI.n1stLBAof2ndSession != -1) {
-			pDisc->MAIN.nFixFirstLBAofLeadout =
+			pDisc->MAIN.nFix1stLBAofLeadout =
 				pDisc->SCSI.n1stLBAofLeadout + pDisc->MAIN.nAdjustSectorNum;
-			pDisc->MAIN.nFixFirstLBAof2ndSession = 
+			pDisc->MAIN.nFix1stLBAof2ndSession = 
 				pDisc->SCSI.n1stLBAof2ndSession + pDisc->MAIN.nAdjustSectorNum - 1;
 		}
 	}
@@ -978,9 +978,9 @@ VOID SetCDOffset(
 			pDisc->MAIN.nFixEndLBA = nEndLBA + pDisc->MAIN.nAdjustSectorNum + 1;
 		}
 		if (pDisc->SCSI.n1stLBAof2ndSession != -1) {
-			pDisc->MAIN.nFixFirstLBAofLeadout = 
+			pDisc->MAIN.nFix1stLBAofLeadout = 
 				pDisc->SCSI.n1stLBAofLeadout + pDisc->MAIN.nAdjustSectorNum + 1;
-			pDisc->MAIN.nFixFirstLBAof2ndSession =
+			pDisc->MAIN.nFix1stLBAof2ndSession =
 				pDisc->SCSI.n1stLBAof2ndSession + pDisc->MAIN.nAdjustSectorNum;
 		}
 	}
@@ -991,8 +991,8 @@ VOID SetCDOffset(
 		pDisc->MAIN.nFixStartLBA = nStartLBA;
 		pDisc->MAIN.nFixEndLBA = nEndLBA;
 		if (pDisc->SCSI.n1stLBAof2ndSession != -1) {
-			pDisc->MAIN.nFixFirstLBAofLeadout =	pDisc->SCSI.n1stLBAofLeadout;
-			pDisc->MAIN.nFixFirstLBAof2ndSession = pDisc->SCSI.n1stLBAof2ndSession;
+			pDisc->MAIN.nFix1stLBAofLeadout =	pDisc->SCSI.n1stLBAofLeadout;
+			pDisc->MAIN.nFix1stLBAof2ndSession = pDisc->SCSI.n1stLBAof2ndSession;
 		}
 	}
 	UNREFERENCED_PARAMETER(byPlxtrDrive);
@@ -1495,7 +1495,7 @@ VOID SetMCNToString(
 }
 
 VOID SetLBAForFirstAdr(
-	INT nFirstLBA[][2],
+	INT n1stLBA[][2],
 	INT nRangeLBA[][2],
 	LPCTSTR strAdr,
 	LPINT nAdrLBAList,
@@ -1510,12 +1510,12 @@ VOID SetLBAForFirstAdr(
 	INT betweenTourthTwo = nAdrLBAList[3] - nAdrLBAList[1];
 	INT betweenFifthThird = nAdrLBAList[4] - nAdrLBAList[2];
 	if (first == second && first == third) {
-		if (nFirstLBA[0][byIdxOfSession] == -1) {
-			nFirstLBA[0][byIdxOfSession] = nAdrLBAList[0];
+		if (n1stLBA[0][byIdxOfSession] == -1) {
+			n1stLBA[0][byIdxOfSession] = nAdrLBAList[0];
 			nRangeLBA[0][byIdxOfSession] = nAdrLBAList[1] - nAdrLBAList[0];
 			if (byPlxtrDrive == PLXTR_DRIVE_TYPE::PXS88T) {
 				// Somehow PX-S88T is sliding subchannel +1;
-				nFirstLBA[0][byIdxOfSession]++;
+				n1stLBA[0][byIdxOfSession]++;
 			}
 		}
 		OutputDiscLog(
@@ -1538,12 +1538,12 @@ VOID SetLBAForFirstAdr(
 		// LBA[000181, 0x000b5], Audio, 2ch, Copy NG, Pre-emphasis No, Track[01], Idx[01], RMSF[00:02:31], AMSF[00:04:31], RtoW[0, 0, 0, 0]
 		// LBA[000182, 0x000b6], Audio, 2ch, Copy NG, Pre-emphasis No, MediaCatalogNumber [4988006116269], AMSF[     :32], RtoW[0, 0, 0, 0]
 		// LBA[000183, 0x000b7], Audio, 2ch, Copy NG, Pre-emphasis No, Track[01], Idx[01], RMSF[00:02:33], AMSF[00:04:33], RtoW[0, 0, 0, 0]
-		if (nFirstLBA[0][byIdxOfSession] == -1) {
-			nFirstLBA[0][byIdxOfSession] = nAdrLBAList[0] - 1;
+		if (n1stLBA[0][byIdxOfSession] == -1) {
+			n1stLBA[0][byIdxOfSession] = nAdrLBAList[0] - 1;
 			nRangeLBA[0][byIdxOfSession] = nAdrLBAList[1] - nAdrLBAList[0] + 1;
 			if (byPlxtrDrive == PLXTR_DRIVE_TYPE::PXS88T) {
 				// Somehow PX-S88T is sliding subchannel +1;
-				nFirstLBA[0][byIdxOfSession]++;
+				n1stLBA[0][byIdxOfSession]++;
 			}
 		}
 		OutputDiscLog(
@@ -1552,15 +1552,15 @@ VOID SetLBAForFirstAdr(
 			, strAdr, nAdrLBAList[1] - nAdrLBAList[0] + 1);
 	}
 	else if (betweenThirdOne == betweenTourthTwo && betweenThirdOne == betweenFifthThird) {
-		if (nFirstLBA[0][byIdxOfSession] == -1) {
-			nFirstLBA[0][byIdxOfSession] = nAdrLBAList[0];
+		if (n1stLBA[0][byIdxOfSession] == -1) {
+			n1stLBA[0][byIdxOfSession] = nAdrLBAList[0];
 			nRangeLBA[0][byIdxOfSession] = betweenThirdOne;
-			nFirstLBA[1][byIdxOfSession] = nAdrLBAList[1];
+			n1stLBA[1][byIdxOfSession] = nAdrLBAList[1];
 			nRangeLBA[1][byIdxOfSession] = betweenTourthTwo;
 			if (byPlxtrDrive == PLXTR_DRIVE_TYPE::PXS88T) {
 				// Somehow PX-S88T is sliding subchannel +1;
-				nFirstLBA[0][byIdxOfSession]++;
-				nFirstLBA[1][byIdxOfSession]++;
+				n1stLBA[0][byIdxOfSession]++;
+				n1stLBA[1][byIdxOfSession]++;
 			}
 		}
 		OutputDiscLog(
@@ -1571,18 +1571,18 @@ VOID SetLBAForFirstAdr(
 			, strAdr, nAdrLBAList[1], strAdr, betweenTourthTwo);
 	}
 	else if (first == second || first == third || second == third) {
-		if (nFirstLBA[0][byIdxOfSession] == -1) {
-			nFirstLBA[0][byIdxOfSession] = nAdrLBAList[0];
+		if (n1stLBA[0][byIdxOfSession] == -1) {
+			n1stLBA[0][byIdxOfSession] = nAdrLBAList[0];
 			nRangeLBA[0][byIdxOfSession] = nAdrLBAList[1] - nAdrLBAList[0];
-			nFirstLBA[1][byIdxOfSession] = nAdrLBAList[0];
+			n1stLBA[1][byIdxOfSession] = nAdrLBAList[0];
 			nRangeLBA[1][byIdxOfSession] = nAdrLBAList[2] - nAdrLBAList[1];
-			nFirstLBA[2][byIdxOfSession] = nAdrLBAList[0];
+			n1stLBA[2][byIdxOfSession] = nAdrLBAList[0];
 			nRangeLBA[2][byIdxOfSession] = nAdrLBAList[3] - nAdrLBAList[2];
 			if (byPlxtrDrive == PLXTR_DRIVE_TYPE::PXS88T) {
 				// Somehow PX-S88T is sliding subchannel +1;
-				nFirstLBA[0][byIdxOfSession]++;
-				nFirstLBA[1][byIdxOfSession]++;
-				nFirstLBA[2][byIdxOfSession]++;
+				n1stLBA[0][byIdxOfSession]++;
+				n1stLBA[1][byIdxOfSession]++;
+				n1stLBA[2][byIdxOfSession]++;
 			}
 		}
 		OutputDiscLog(

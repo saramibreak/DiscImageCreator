@@ -1125,11 +1125,11 @@ BOOL ReadCDForCheckingSubQAdr(
 		}
 	}
 	if (bCheckMCN) {
-		SetLBAForFirstAdr(pDisc->SUB.nFirstLBAForMCN, pDisc->SUB.nRangeLBAForMCN,
+		SetLBAForFirstAdr(pDisc->SUB.n1stLBAForMCN, pDisc->SUB.nRangeLBAForMCN,
 			_T("MCN"), nTmpMCNLBAList, (BYTE)(bySessionNum - 1), pDevice->byPlxtrDrive);
 	}
 	if (bCheckISRC) {
-		SetLBAForFirstAdr(pDisc->SUB.nFirstLBAForISRC, pDisc->SUB.nRangeLBAForISRC,
+		SetLBAForFirstAdr(pDisc->SUB.n1stLBAForISRC, pDisc->SUB.nRangeLBAForISRC,
 			_T("ISRC"), nTmpISRCLBAList, (BYTE)(bySessionNum - 1), pDevice->byPlxtrDrive);
 	}
 	if (!bCheckMCN && !bCheckISRC) {

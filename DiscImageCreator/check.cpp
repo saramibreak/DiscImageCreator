@@ -784,13 +784,13 @@ BOOL IsValidSubQAdrSector(
 	UINT uiSubAdditionalNum,
 	PSUBCH pSubch,
 	INT nRangeLBA,
-	INT nFirstLBA,
+	INT n1stLBA,
 	INT nPrevAdrSector,
 	INT nLBA
 ) {
 	BOOL bRet = FALSE;
-	INT idx = (nLBA - nFirstLBA) / nRangeLBA;
-	INT nTmpLBA = nFirstLBA + nRangeLBA * idx;
+	INT idx = (nLBA - n1stLBA) / nRangeLBA;
+	INT nTmpLBA = n1stLBA + nRangeLBA * idx;
 	if (nLBA < 0 ||
 		(nLBA == nTmpLBA) ||
 		(nLBA - nPrevAdrSector == nRangeLBA)) {

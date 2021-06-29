@@ -177,15 +177,15 @@ BOOL FixSubQAdrMCN(
 			return FALSE;
 		}
 
-		INT nFirstLBA = pDisc->SUB.nFirstLBAForMCN[0][session - 1];
+		INT n1stLBA = pDisc->SUB.n1stLBAForMCN[0][session - 1];
 		INT nPrevMCNSector = pDisc->SUB.nPrevMCNSector;
 		bRet = IsValidSubQAdrSector(pExtArg->uiSubAddionalNum, &pDiscPerSector->subch,
-			nRangeLBA, nFirstLBA, nPrevMCNSector, nLBA);
+			nRangeLBA, n1stLBA, nPrevMCNSector, nLBA);
 		if (!bRet) {
 			nRangeLBA = pDisc->SUB.nRangeLBAForMCN[1][session - 1];
 			if (nRangeLBA != -1) {
-				nFirstLBA = pDisc->SUB.nFirstLBAForMCN[1][session - 1];
-				bRet = IsValidSubQAdrSector(pExtArg->uiSubAddionalNum, &pDiscPerSector->subch, nRangeLBA, nFirstLBA, nPrevMCNSector, nLBA);
+				n1stLBA = pDisc->SUB.n1stLBAForMCN[1][session - 1];
+				bRet = IsValidSubQAdrSector(pExtArg->uiSubAddionalNum, &pDiscPerSector->subch, nRangeLBA, n1stLBA, nPrevMCNSector, nLBA);
 			}
 		}
 	}
@@ -227,7 +227,7 @@ BOOL FixSubQAdrMCN(
 			INT nTmpFirstLBA = nLBA % pDisc->SUB.nRangeLBAForMCN[0][session - 1];
 			OutputMainInfoWithLBALog("Range of MCN is different [%d]\n"
 				, nLBA, pDiscPerSector->byTrackNum, nLBA - pDisc->SUB.nPrevMCNSector);
-			pDisc->SUB.nFirstLBAForMCN[0][session - 1] = nTmpFirstLBA;
+			pDisc->SUB.n1stLBAForMCN[0][session - 1] = nTmpFirstLBA;
 			bRet = TRUE;
 		}
 	}
@@ -276,14 +276,14 @@ BOOL FixSubQAdrISRC(
 		if (nRangeLBA == -1) {
 			return FALSE;
 		}
-		INT nFirstLBA = pDisc->SUB.nFirstLBAForISRC[0][session - 1];
+		INT n1stLBA = pDisc->SUB.n1stLBAForISRC[0][session - 1];
 		INT nPrevISRCSector = pDisc->SUB.nPrevISRCSector;
-		bRet = IsValidSubQAdrSector(pExtArg->uiSubAddionalNum, &pDiscPerSector->subch, nRangeLBA, nFirstLBA, nPrevISRCSector, nLBA);
+		bRet = IsValidSubQAdrSector(pExtArg->uiSubAddionalNum, &pDiscPerSector->subch, nRangeLBA, n1stLBA, nPrevISRCSector, nLBA);
 		if (!bRet) {
 			nRangeLBA = pDisc->SUB.nRangeLBAForISRC[1][session - 1];
 			if (nRangeLBA != -1) {
-				nFirstLBA = pDisc->SUB.nFirstLBAForISRC[1][session - 1];
-				bRet = IsValidSubQAdrSector(pExtArg->uiSubAddionalNum, &pDiscPerSector->subch, nRangeLBA, nFirstLBA, nPrevISRCSector, nLBA);
+				n1stLBA = pDisc->SUB.n1stLBAForISRC[1][session - 1];
+				bRet = IsValidSubQAdrSector(pExtArg->uiSubAddionalNum, &pDiscPerSector->subch, nRangeLBA, n1stLBA, nPrevISRCSector, nLBA);
 			}
 		}
 	}
@@ -338,7 +338,7 @@ BOOL FixSubQAdrISRC(
 			INT nTmpFirstLBA = nLBA % pDisc->SUB.nRangeLBAForISRC[0][session - 1];
 			OutputMainInfoWithLBALog("Range of ISRC is different [%d]\n"
 				, nLBA, pDiscPerSector->byTrackNum, nLBA - pDisc->SUB.nPrevISRCSector);
-			pDisc->SUB.nFirstLBAForISRC[0][session - 1] = nTmpFirstLBA;
+			pDisc->SUB.n1stLBAForISRC[0][session - 1] = nTmpFirstLBA;
 			bRet = TRUE;
 		}
 	}

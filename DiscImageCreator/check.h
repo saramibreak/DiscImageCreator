@@ -146,7 +146,7 @@ BOOL IsValidSubQAdrSector(
 	UINT uiSubAdditionalNum,
 	PSUBCH pSubch,
 	INT nRangeLBA,
-	INT nFirstLBA,
+	INT n1stLBA,
 	INT nPrevAdrSector,
 	INT nLBA
 );
