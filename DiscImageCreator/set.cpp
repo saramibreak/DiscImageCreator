@@ -2133,52 +2133,54 @@ VOID UpdateTmpMainHeader(
 	PDISC_PER_SECTOR pDiscPerSector,
 	INT nMainDataType
 ) {
-	memcpy(pDiscPerSector->mainHeader.prev, pDiscPerSector->mainHeader.current, MAINHEADER_MODE1_SIZE);
-	BYTE tmp = (BYTE)(pDiscPerSector->mainHeader.current[14] + 1);
-	if ((tmp & 0x0f) == 0x0a) {
-		tmp = (BYTE)(tmp + 6);
-	}
-	if (tmp == 0x75) {
-		pDiscPerSector->mainHeader.current[14] = 0;
-		if (nMainDataType == scrambled) {
-			tmp = (BYTE)((pDiscPerSector->mainHeader.current[13] ^ 0x80) + 1);
-		}
-		else {
-			tmp = (BYTE)(pDiscPerSector->mainHeader.current[13] + 1);
-		}
+	if (IsValidMainDataHeader(pDiscPerSector->mainHeader.prev)) {
+		memcpy(pDiscPerSector->mainHeader.prev, pDiscPerSector->mainHeader.current, MAINHEADER_MODE1_SIZE);
+		BYTE tmp = (BYTE)(pDiscPerSector->mainHeader.current[14] + 1);
 		if ((tmp & 0x0f) == 0x0a) {
 			tmp = (BYTE)(tmp + 6);
 		}
-		if (tmp == 0x60) {
+		if (tmp == 0x75) {
+			pDiscPerSector->mainHeader.current[14] = 0;
 			if (nMainDataType == scrambled) {
-				pDiscPerSector->mainHeader.current[13] = 0x80;
-				tmp = (BYTE)((pDiscPerSector->mainHeader.current[12] ^ 0x01) + 1);
+				tmp = (BYTE)((pDiscPerSector->mainHeader.current[13] ^ 0x80) + 1);
 			}
 			else {
-				pDiscPerSector->mainHeader.current[13] = 0;
-				tmp = (BYTE)(pDiscPerSector->mainHeader.current[12] + 1);
+				tmp = (BYTE)(pDiscPerSector->mainHeader.current[13] + 1);
 			}
 			if ((tmp & 0x0f) == 0x0a) {
 				tmp = (BYTE)(tmp + 6);
 			}
-			if (nMainDataType == scrambled) {
-				pDiscPerSector->mainHeader.current[12] = (BYTE)(tmp ^ 0x01);
+			if (tmp == 0x60) {
+				if (nMainDataType == scrambled) {
+					pDiscPerSector->mainHeader.current[13] = 0x80;
+					tmp = (BYTE)((pDiscPerSector->mainHeader.current[12] ^ 0x01) + 1);
+				}
+				else {
+					pDiscPerSector->mainHeader.current[13] = 0;
+					tmp = (BYTE)(pDiscPerSector->mainHeader.current[12] + 1);
+				}
+				if ((tmp & 0x0f) == 0x0a) {
+					tmp = (BYTE)(tmp + 6);
+				}
+				if (nMainDataType == scrambled) {
+					pDiscPerSector->mainHeader.current[12] = (BYTE)(tmp ^ 0x01);
+				}
+				else {
+					pDiscPerSector->mainHeader.current[12] = tmp;
+				}
 			}
 			else {
-				pDiscPerSector->mainHeader.current[12] = tmp;
+				if (nMainDataType == scrambled) {
+					pDiscPerSector->mainHeader.current[13] = (BYTE)(tmp ^ 0x80);
+				}
+				else {
+					pDiscPerSector->mainHeader.current[13] = tmp;
+				}
 			}
 		}
 		else {
-			if (nMainDataType == scrambled) {
-				pDiscPerSector->mainHeader.current[13] = (BYTE)(tmp ^ 0x80);
-			}
-			else {
-				pDiscPerSector->mainHeader.current[13] = tmp;
-			}
+			pDiscPerSector->mainHeader.current[14] = tmp;
 		}
+		pDiscPerSector->mainHeader.current[15] = GetMode(pDiscPerSector, nMainDataType);
 	}
-	else {
-		pDiscPerSector->mainHeader.current[14] = tmp;
-	}
-	pDiscPerSector->mainHeader.current[15] = GetMode(pDiscPerSector, nMainDataType);
 }

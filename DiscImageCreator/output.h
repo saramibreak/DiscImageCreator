@@ -394,6 +394,7 @@ VOID WriteErrorBuffer(
 	PDISC_PER_SECTOR pDiscPerSector,
 	LPBYTE lpScrambledBuf,
 	INT nLBA,
+	INT nLastErrLBA,
 	INT nMainDataType,
 	INT nPadType,
 	FILE* fpImg,

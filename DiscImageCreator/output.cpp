@@ -728,6 +728,7 @@ VOID WriteErrorBuffer(
 	PDISC_PER_SECTOR pDiscPerSector,
 	LPBYTE lpScrambledBuf,
 	INT nLBA,
+	INT nLastErrLBA,
 	INT nMainDataType,
 	INT nPadType,
 	FILE* fpImg,
@@ -809,6 +810,13 @@ VOID WriteErrorBuffer(
 		else if (nLBA == pDisc->MAIN.nFixEndLBA - 1 || nLBA == pDisc->MAIN.nFix1stLBAof2ndSession - 150) {
 			uiSize = pDisc->MAIN.uiMainDataSlideSize;
 			if (nPadType == padByUsr55 || nPadType == padByUsr0 || nPadType == padByPrevSector) {
+				if (nLBA == nLastErrLBA) {
+					uiSize = CD_RAW_SECTOR_SIZE;
+					if (pDisc->MAIN.nAdjustSectorNum > 1) {
+						// Sonic The Hedgehog (Germany) (4 014548 004785)
+						uiSize *= 2;
+					}
+				}
 				fwrite(pDiscPerSector->data.current, sizeof(BYTE), uiSize, fpImg);
 			}
 			else {
