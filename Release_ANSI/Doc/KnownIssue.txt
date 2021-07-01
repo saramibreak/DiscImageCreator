@@ -5,10 +5,10 @@
 ============================ Known issue (not fix) ============================
 . About PLEXTOR READ CDDA Command(0xd8), the offset it can acquire varies
  according to the subch. (firmware bug?) (tested all latest firmware)
-  PLEXTOR PX-W820T  : +354(subch is 0x02), +355(subch is 0x00)
+  PLEXTOR PX-R820T  : +354(subch is 0x02), +355(subch is 0x00)
   PLEXTOR PX-W8220T : +354(subch is 0x02), +355(subch is 0x00)
-  PLEXTOR PX-W124S  : +942(subch is 0x02), +943(subch is 0x00)
-  PLEXTOR PX-W1210S : +686(subch is 0x08), +98(subch is 0x00)
+  PLEXTOR PX-W124TS : +942(subch is 0x02), +943(subch is 0x00)
+  PLEXTOR PX-W1210TS: +686(subch is 0x08), +98(subch is 0x00)
   PLEXTOR PX-W1610TA: +686(subch is 0x02), +98(subch is 0x00)
   PLEXTOR PX-W2410TA: +686(subch is 0x02), +98(subch is 0x00)
   PLEXTOR PX-320A   : +686(subch is 0x02), +98(subch is 0x00)

@@ -2,7 +2,7 @@
 ## Overview
   This command-line program dumps a disc (CD, GD, DVD, HD-DVD, BD, GC/Wii, XBOX, XBOX 360) and disk (Floppy, MO, USB etc).  
   CD and GD, it can dump considering a drive + CD (=combined) offset.  
-  What drive offset? Please look [this document](http://dbpoweramp.com/spoons-audio-guide-cd-ripping.htm)
+  What is the drive offset? Please look [this document](http://dbpoweramp.com/spoons-audio-guide-cd-ripping.htm)
   
   This program works on Windows PC (WinXP or higher) and Linux.
   
@@ -187,44 +187,44 @@ See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)
    => This is a BD based disc, but I don't know the details.
 
 ## Created files information
+- _[BuildData].txt  
+  command-line argument.
 - .bin  
-  2352 byte/sector binary image of CD. This file is used to a cue file.
+  2352 bytes/sector binary image of the CD. This file is used to a cue file.
 - .c2  
-  c2 error binary image of CD. 1bit expresses 1byte.
+  c2 error binary image of the CD. 1 bit expresses 1 byte.
 - .ccd  
   CD information. Original is [CloneCD](https://www.redfox.bz/ja/clonecd.html)
 - .cue  
   CD information. Original is [CDRWIN](https://web.archive.org/web/20111008191852/http://www.goldenhawk.com/cdrwin.htm)
 - .dat  
-  crc32/md5/sha1 of bin file. Original is [Clrmamepro](http://mamedev.emulab.it/clrmamepro/)
+  crc32/md5/sha1 of the bin file. Original is [Clrmamepro](http://mamedev.emulab.it/clrmamepro/)
 - .img  
-  2352 byte/sector binary image of CD. This file is used to a ccd file.
+  2352 bytes/sector binary image of the CD. This file is used to a ccd file.
 - .iso  
-  2048 byte/sector binary image of DVD/BD/GC/Wii/XBOX.
+  2048 bytes/sector binary image of the DVD/BD/GC/Wii/XBOX.
 - .scm  
-  scrambled image file of img file.
+  scrambled image file of the img file.
 - .raw  
-  scrambled image file of iso file.
+  scrambled image file of the iso file.
 - .sub  
-  subchannel data of CD. This file is used to a ccd file.
+  subchannel data of the CD. This file is used to a ccd file.
 - _c2Error.txt  
-  c2 error information which can be gotten by reading CD.
-- _cmd.txt  
-  command-line argument.
+  c2 error information which can be gotten by reading the CD.
 - _disc.txt  
-  disc information returned by SCSI command.
+  disc information returned by the SCSI command.
 - _drive.txt  
-  drive information returned by SCSI command.
+  drive information returned by the SCSI command.
 - _mainError.txt  
-  text data of error message which can be gotten by reading CD.
+  text data of error message which can be gotten by reading the CD.
 - _mainInfo.txt  
-  text data of main sector. Original is [IsoBuster](https://www.isobuster.com/)
+  text data of the main sector. Original is [IsoBuster](https://www.isobuster.com/)
 - _subError.txt  
-  text data of subchannel error.
+  text data of the subchannel error.
 - _subInfo.txt  
-  text data of subchannel when the track number changes.
+  text data of the subchannel when the track number changes.
 - _subIntention.txt  
-  text data of subchannel for securom.
+  text data of the subchannel for securom.
 - _subReadable.txt  
   text data of the parsed sub channel file.
 - _mdsReadable.txt  
