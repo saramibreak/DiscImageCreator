@@ -880,9 +880,13 @@ BOOL ReadDVDForFileSystem(
 		}
 		FreeAndNull(pPathTblRec);
 		if (pDisc->PROTECT.byExist && !pExtArg->byNoSkipSS) {
-			OutputLog(standardOut | fileDisc, "Detected protection [%" CHARWIDTH "s]. LBA %d to %d\n"
-				, pDisc->PROTECT.name[0], pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0]
-				, pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] + pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0]);
+			OutputLog(standardOut | fileDisc, "Detected protection [%" CHARWIDTH "s]", pDisc->PROTECT.name[0]);
+			if (pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] != 0 || pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0] != 0) {
+				OutputLog(standardOut | fileDisc, " LBA %d to %d"
+					, pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0]
+					, pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] + pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0]);
+			}
+			OutputLog(standardOut | fileDisc, "\n");
 			for (INT j = 1; j < pExtArg->FILE.readErrCnt; j++) {
 				OutputLog(standardOut | fileDisc, ", [%" CHARWIDTH "s]. LBA %d to %d"
 					, pDisc->PROTECT.name[j], pDisc->PROTECT.ERROR_SECTOR.nExtentPos[j]
