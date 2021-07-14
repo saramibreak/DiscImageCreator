@@ -1249,24 +1249,24 @@ BOOL ReadDiscStructure(
 			BOOLEAN_TO_STRING_YES_NO(pEntry->Readable));
 #if 0
 		if (wFormatLen == 0) {
-			OutputDiscLog("Skiped because length is 0\n\n");
+			OutputDiscLog("Skipped because length is 0\n\n");
 			continue;
 		}
 #endif
 		if (*pExecType == dvd || IsXbox(pExecType)) {
 			if (pEntry->FormatCode == 0xff) {
-				OutputDiscLog("Skiped\n\n");
+				OutputDiscLog("Skipped\n\n");
 				break;
 			}
 			else if (pEntry->FormatCode == 0x02) {
 				continue; // skip output because disc key is random data
 			}
 			else if (pEntry->FormatCode == 0x03 && !pDisc->DVD.ucBca) {
-				OutputDiscLog("Skiped because of no BCA data\n\n");
+				OutputDiscLog("Skipped because of no BCA data\n\n");
 				continue;
 			}
 			else if (pEntry->FormatCode == 0x05) {
-				OutputDiscLog("Skiped. If you see the detailed, use /c option\n\n");
+				OutputDiscLog("Skipped. If you see the detailed, use /c option\n\n");
 				continue;
 			}
 			else if (pEntry->FormatCode == 0x06 || pEntry->FormatCode == 0x07) {
@@ -1274,41 +1274,41 @@ BOOL ReadDiscStructure(
 					continue;
 				}
 				else {
-					OutputDiscLog("Skiped because of DVD with CPRM only\n\n");
+					OutputDiscLog("Skipped because of DVD with CPRM only\n\n");
 					continue;
 				}
 			}
 			else if ((0x08 <= pEntry->FormatCode && pEntry->FormatCode <= 0x0b) &&
 				pDisc->SCSI.wCurrentMedia != ProfileDvdRam) {
-				OutputDiscLog("Skiped because of DVD-RAM only\n\n");
+				OutputDiscLog("Skipped because of DVD-RAM only\n\n");
 				continue;
 			}
 			else if ((0x0c <= pEntry->FormatCode && pEntry->FormatCode <= 0x10) &&
 				(pDisc->SCSI.wCurrentMedia != ProfileDvdRecordable) &&
 				(pDisc->SCSI.wCurrentMedia != ProfileDvdRewritable) &&
 				(pDisc->SCSI.wCurrentMedia != ProfileDvdRWSequential)) {
-				OutputDiscLog("Skiped because of DVD-R, RW only\n\n");
+				OutputDiscLog("Skipped because of DVD-R, RW only\n\n");
 				continue;
 			}
 			else if ((pEntry->FormatCode == 0x11 || pEntry->FormatCode == 0x30) &&
 				(pDisc->SCSI.wCurrentMedia != ProfileDvdPlusRW) &&
 				(pDisc->SCSI.wCurrentMedia != ProfileDvdPlusR)) {
-				OutputDiscLog("Skiped because of DVD+R, RW only\n\n");
+				OutputDiscLog("Skipped because of DVD+R, RW only\n\n");
 				continue;
 			}
 			else if ((pEntry->FormatCode == 0x12 || pEntry->FormatCode == 0x15) &&
 				(pDisc->SCSI.wCurrentMedia != ProfileHDDVDRom)) {
-				OutputDiscLog("Skiped because of HD DVD only\n\n");
+				OutputDiscLog("Skipped because of HD DVD only\n\n");
 				continue;
 			}
 			else if ((0x20 <= pEntry->FormatCode && pEntry->FormatCode <= 0x24) &&
 				pDisc->SCSI.wCurrentMedia != ProfileDvdDashRDualLayer) {
-				OutputDiscLog("Skiped because of DVD-R DL only\n\n");
+				OutputDiscLog("Skipped because of DVD-R DL only\n\n");
 				continue;
 			}
 			else if ((pEntry->FormatCode == 0xc0) &&
 				pDisc->SCSI.wCurrentMedia != ProfileDvdRewritable) {
-				OutputDiscLog("Skiped because of DVD-R Rewritable only\n\n");
+				OutputDiscLog("Skipped because of DVD-R Rewritable only\n\n");
 				continue;
 			}
 		}
@@ -1318,13 +1318,13 @@ BOOL ReadDiscStructure(
 				pDisc->SCSI.wCurrentMedia != ProfileBDRSequentialWritable &&
 				pDisc->SCSI.wCurrentMedia != ProfileBDRRandomWritable &&
 				pDisc->SCSI.wCurrentMedia != ProfileBDRewritable) {
-				OutputDiscLog("Skiped because of BD-R, RW only\n\n");
+				OutputDiscLog("Skipped because of BD-R, RW only\n\n");
 				continue;
 			}
 		}
 		if ((0x80 <= pEntry->FormatCode && pEntry->FormatCode <= 0x86)) {
 			if (pDisc->DVD.protect != aacs) {
-				OutputDiscLog("Skiped because of AACS disc only\n\n");
+				OutputDiscLog("Skipped because of AACS disc only\n\n");
 			}
 			continue;
 		}
