@@ -1323,9 +1323,12 @@ BOOL ReadDiscStructure(
 			}
 		}
 		if ((0x80 <= pEntry->FormatCode && pEntry->FormatCode <= 0x86)) {
+			OutputDiscLog("AACS is not supported yet\n\n");
+#if 0
 			if (pDisc->DVD.protect != aacs) {
 				OutputDiscLog("Skipped because of AACS disc only\n\n");
 			}
+#endif
 			continue;
 		}
 
