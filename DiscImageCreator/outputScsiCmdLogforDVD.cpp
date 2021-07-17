@@ -1367,26 +1367,108 @@ VOID OutputBDDiscInformation(
 	LPBYTE lpFormat,
 	WORD wFormatLength
 ) {
-	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("DiscInformationFromPIC")
-		"\t            DiscInformationIdentifier: %.2" CHARWIDTH "s\n"
-		"\t                DiscInformationFormat: %02x\n"
-		"\t         NumberOfDIUnitsInEachDIBlock: %02x\n"
-		"\t                     DiscTypeSpecific: %02x\n"
-		"\tDIUnitSequenceNumber/ContinuationFlag: %02x\n"
-		"\t       NumberOfBytesInUseInThisDIUnit: %02x\n"
-		"\t                   DiscTypeIdentifier: %.3" CHARWIDTH "s\n"
-		"\t               DiscSize/Class/Version: %02x\n"
-		"\t        DIUnitFormatDependentContents: "
-		, &lpFormat[0], lpFormat[2], lpFormat[3], lpFormat[4], lpFormat[5]
-		, lpFormat[6], &lpFormat[8], lpFormat[11]);
-	for (WORD k = 0; k < 52; k++) {
-		OutputDiscLog("%02x", lpFormat[12 + k]);
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("DiscInformationFromPIC"));
+	BOOL bBdRom = TRUE;
+	INT nSize = 2048;
+	INT nBlock = 64;
+	INT nDependentSize = 52;
+	if (strncmp((CONST CHAR*) & lpFormat[8], "BDO", 3)) {
+		bBdRom = FALSE;
+		nSize = 3584;
+		nBlock = 112;
+		nDependentSize = 88;
 	}
-	OutputDiscLog("\n\t                               Others: ");
-	for (WORD k = 0; k < wFormatLength - 64; k++) {
-		OutputDiscLog("%02x", lpFormat[64 + k]);
+	UINT uiEndLogicalSector[4] = {};
+	UINT uiStartPhysicalSector[4] = {};
+	UINT uiEndPhysicalSector[4] = {};
+	INT n = 0;
+	INT nLayerNum = 0;
+
+	for (INT i = 0; i < nSize; i += nBlock) {
+		if (lpFormat[0 + i] == 0) {
+			break;
+		}
+		nLayerNum = lpFormat[3 + i] >> 0x03;
+		OutputDiscLog(
+			"\tDiscInformationUnits\n"
+			"\t            DiscInformationIdentifier: %.2" CHARWIDTH "s\n"
+			"\t                DiscInformationFormat: %02x\n"
+			"\t         NumberOfDIUnitsInEachDIBlock: %02d\n"
+			"\t                       NumberOfLayers: %02d\n"
+			"\t                     DiscTypeSpecific: %02x\n"
+			"\tDIUnitSequenceNumber/ContinuationFlag: %02x\n"
+			"\t       NumberOfBytesInUseInThisDIUnit: %02d\n"
+			"\t                   DiscTypeIdentifier: %.3" CHARWIDTH "s\n"
+			"\t               DiscSize/Class/Version: %02x\n"
+			"\t        DIUnitFormatDependentContents\n"
+			, &lpFormat[0 + i], lpFormat[2 + i], lpFormat[3 + i] & 0x07, nLayerNum
+			, lpFormat[4 + i], lpFormat[5 + i], lpFormat[6 + i], &lpFormat[8 + i], lpFormat[11 + i]
+		);
+		uiEndLogicalSector[n] = MAKEUINT(MAKEWORD(lpFormat[23 + i], lpFormat[22 + i]), MAKEWORD(lpFormat[21 + i], lpFormat[20 + i]));
+		uiStartPhysicalSector[n] = MAKEUINT(MAKEWORD(lpFormat[27 + i], lpFormat[26 + i]), MAKEWORD(lpFormat[25 + i], lpFormat[24 + i]));
+		uiEndPhysicalSector[n] = MAKEUINT(MAKEWORD(lpFormat[31 + i], lpFormat[30 + i]), MAKEWORD(lpFormat[29 + i], lpFormat[28 + i]));
+
+		OutputDiscLog(
+			"\t\t                          Unknown: %02x%02x%02x%02x\n"
+			"\t\t                          Unknown: %02x%02x%02x%02x\n"
+			"\t\t           EndLogicalSectorNumber: %08x\n"
+			"\t\t        StartPhysicalSectorNumber: %08x\n"
+			"\t\t          EndPhysicalSectorNumber: %08x\n"
+			, lpFormat[12 + i], lpFormat[13 + i], lpFormat[14 + i], lpFormat[15 + i]
+			, lpFormat[16 + i], lpFormat[17 + i], lpFormat[18 + i], lpFormat[19 + i]
+			, uiEndLogicalSector[n], uiStartPhysicalSector[n], uiEndPhysicalSector[n]
+		);
+		n++;
+
+		for (WORD k = 20; k < nDependentSize; k += 4) {
+			OutputDiscLog("\t\t                          Unknown: %02x%02x%02x%02x\n"
+				, lpFormat[12 + k + i], lpFormat[13 + k + i], lpFormat[14 + k + i], lpFormat[15 + k + i]);
+		}
+		if (!bBdRom) {
+			OutputDiscLog(
+				"\t                   DiscManufacturerID: %02x%02x%02x%02x%02x%02x\n"
+				"\t                          MediaTypeID: %02x%02x%02x\n"
+				"\t                           Time Stamp: %02x%02x\n"
+				"\t                ProductRevisionNumber: %02x\n"
+				, lpFormat[100 + i], lpFormat[101 + i], lpFormat[102 + i]
+				, lpFormat[103 + i], lpFormat[104 + i], lpFormat[105 + i]
+				, lpFormat[106 + i], lpFormat[107 + i], lpFormat[108 + i]
+				, lpFormat[109 + i], lpFormat[110 + i], lpFormat[111 + i]
+			);
+		}
+	}
+	OutputDiscLog("\tEmergencyBrakeData\n"
+		"\t             EmergencyBrakeIdentifier: %.2" CHARWIDTH "s\n"
+		"\t                               EBData: "
+		, &lpFormat[nSize]
+	);
+	for (WORD k = 0; k < wFormatLength - nSize - 4; k++) {
+		OutputDiscLog("%02x", lpFormat[nSize + 2 + k]);
 	}
 	OutputDiscLog("\n");
+
+	UINT uiEndLayerZeroSectorLen = uiEndPhysicalSector[0] - uiStartPhysicalSector[0] + 2;
+	if (nLayerNum == 1) {
+		OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("SectorLength")
+			"\t LayerZeroSector: %8u (%#x)\n"
+			, uiEndLayerZeroSectorLen, uiEndLayerZeroSectorLen
+		);
+	}
+	else if (nLayerNum == 2) {
+		UINT uiEndLayerOneSectorLen = uiEndLogicalSector[1] - uiStartPhysicalSector[1] + 1;
+		UINT uiLayerAllSectorLen = uiEndLayerZeroSectorLen + uiEndLayerOneSectorLen;
+
+		OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("SectorLength")
+			"\t LayerZeroSector: %8u (%#x)\n"
+			"\t+ LayerOneSector: %8u (%#x)\n"
+			"\t--------------------------------------\n"
+			"\t  LayerAllSector: %8u (%#x)\n"
+			, uiEndLayerZeroSectorLen, uiEndLayerZeroSectorLen
+			, uiEndLayerOneSectorLen, uiEndLayerOneSectorLen
+			, uiLayerAllSectorLen, uiLayerAllSectorLen
+		);
+	}
+	// TODO: Layer 3, 4
 }
 
 VOID OutputCartridgeStatus(
@@ -1492,7 +1574,10 @@ VOID OutputBDStructureFormat(
 	case 0:
 		OutputBDDiscInformation(lpFormat, wFormatLength);
 		break;
-		// format 0x01, 0x02 is reserved
+	case DvdCopyrightDescriptor:
+		OutputDVDCopyrightDescriptor((PDVD_COPYRIGHT_DESCRIPTOR)lpFormat, &(pDisc->DVD.protect), fileDisc);
+		break;
+		// format 0x02 is reserved
 	case DvdBCADescriptor:
 		OutputDiscBCADescriptor(pDisc, (PDVD_BCA_DESCRIPTOR)lpFormat, wFormatLength, fileDisc);
 		break;
