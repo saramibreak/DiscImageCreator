@@ -1313,7 +1313,11 @@ BOOL ReadDiscStructure(
 			}
 		}
 		else if (*pExecType == bd) {
-			if ((pEntry->FormatCode == 0x08 || pEntry->FormatCode == 0x0a ||
+			if (pEntry->FormatCode == 0x03 && !pDisc->DVD.ucBca) {
+				OutputDiscLog("Skipped because of no BCA data\n\n");
+				continue;
+			}
+			else if ((pEntry->FormatCode == 0x08 || pEntry->FormatCode == 0x0a ||
 				pEntry->FormatCode == 0x12) &&
 				pDisc->SCSI.wCurrentMedia != ProfileBDRSequentialWritable &&
 				pDisc->SCSI.wCurrentMedia != ProfileBDRRandomWritable &&

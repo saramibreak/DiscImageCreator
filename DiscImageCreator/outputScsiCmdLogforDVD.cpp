@@ -1364,6 +1364,7 @@ VOID OutputDVDCopyrightManagementInformation(
 }
 
 VOID OutputBDDiscInformation(
+	PDISC pDisc,
 	LPBYTE lpFormat,
 	WORD wFormatLength
 ) {
@@ -1372,7 +1373,7 @@ VOID OutputBDDiscInformation(
 	INT nSize = 2048;
 	INT nBlock = 64;
 	INT nDependentSize = 52;
-	if (strncmp((CONST CHAR*) & lpFormat[8], "BDO", 3)) {
+	if (strncmp((CONST CHAR*)&lpFormat[8], "BDO", 3)) {
 		bBdRom = FALSE;
 		nSize = 3584;
 		nBlock = 112;
@@ -1382,60 +1383,393 @@ VOID OutputBDDiscInformation(
 	UINT uiStartPhysicalSector[4] = {};
 	UINT uiEndPhysicalSector[4] = {};
 	INT n = 0;
+	INT nDIFormat = 0;
 	INT nLayerNum = 0;
 
+	// JIS X 6230:2017 http://kikakurui.com/x6/X6230-2017-01.html BD-R SL, DL 
+	// JIS X 6231:2017 http://kikakurui.com/x6/X6231-2017-01.html BD-R TL, QL
+	// JIS X 6232:2017 http://kikakurui.com/x6/X6232-2017-01.html BD-RE SL, DL
+	// JIS X 6233:2017 http://kikakurui.com/x6/X6233-2017-01.html BD-RE TL
 	for (INT i = 0; i < nSize; i += nBlock) {
 		if (lpFormat[0 + i] == 0) {
 			break;
 		}
-		nLayerNum = lpFormat[3 + i] >> 0x03;
+		nDIFormat = lpFormat[2 + i] & 0x7f;
+		nLayerNum = lpFormat[3 + i] & 0x07;
+		pDisc->DVD.ucBca = (UCHAR)(lpFormat[16 + i] & 0x0f);
 		OutputDiscLog(
 			"\tDiscInformationUnits\n"
-			"\t            DiscInformationIdentifier: %.2" CHARWIDTH "s\n"
-			"\t                DiscInformationFormat: %02x\n"
-			"\t         NumberOfDIUnitsInEachDIBlock: %02d\n"
-			"\t                       NumberOfLayers: %02d\n"
-			"\t                     DiscTypeSpecific: %02x\n"
-			"\tDIUnitSequenceNumber/ContinuationFlag: %02x\n"
-			"\t       NumberOfBytesInUseInThisDIUnit: %02d\n"
-			"\t                   DiscTypeIdentifier: %.3" CHARWIDTH "s\n"
-			"\t               DiscSize/Class/Version: %02x\n"
-			"\t        DIUnitFormatDependentContents\n"
-			, &lpFormat[0 + i], lpFormat[2 + i], lpFormat[3 + i] & 0x07, nLayerNum
-			, lpFormat[4 + i], lpFormat[5 + i], lpFormat[6 + i], &lpFormat[8 + i], lpFormat[11 + i]
+			"\t             DiscInformationIdentifier: %.2" CHARWIDTH "s\n"
+			"\t                               BCACode: %s\n"
+			"\t                 DiscInformationFormat: %02x\n"
+			"\t          NumberOfDIUnitsInEachDIBlock: %02d\n"
+			"\tNumberOfLayersToWhichThisDIUnitApplies: %02d\n"
+			"\t                      DiscTypeSpecific: %02x\n"
+			"\t                  DIUnitSequenceNumber: %02x\n"
+			"\t                      ContinuationFlag: %s\n"
+			"\t        NumberOfBytesInUseInThisDIUnit: %02d\n"
+			"\t                    DiscTypeIdentifier: %.3" CHARWIDTH "s\n"
+			"\t                              DiscSize: %s\n"
+			"\t                                 Class: %02x\n"
+			"\t                               Version: %02x\n"
+			"\t         DIUnitFormatDependentContents\n"
+			, &lpFormat[0 + i], lpFormat[2 + i] >> 7 == 0 ? _T("Yes") : _T("No")
+			, nDIFormat, lpFormat[3 + i] >> 3
+			, nLayerNum, lpFormat[4 + i], lpFormat[5 + i]
+			, lpFormat[6 + i] >> 7 == 0 ? _T("No") : _T("Yes"), lpFormat[6 + i] & 0x7f
+			, &lpFormat[8 + i], lpFormat[11 + i] >> 6 == 0 ? _T("120mm") : _T("80mm")
+			, (lpFormat[11 + i] >> 4) & 0x02, lpFormat[11 + i] & 0x03
 		);
+		INT nLayerType = lpFormat[12 + i] & 0x0f;
+		OutputDiscLog(
+			"\t\t                    NumberOfLayers: %02d\n"
+			"\t\t                         LayerType: %02d "
+			, lpFormat[12 + i] >> 4, nLayerType
+		);
+		switch (nLayerType) {
+		case 1:
+			OutputDiscLog("(ReadOnly)\n");
+			break;
+		case 2:
+			OutputDiscLog("(Writable)\n");
+			break;
+		case 4:
+			OutputDiscLog("(Rewritable)\n");
+			break;
+		default:
+			break;
+		}
+		if (!strncmp((CONST CHAR*)&lpFormat[8], "BDW", 3)) {
+			OutputDiscLog(
+				"\t\t                        ChannelBit: %s\n"
+				"\t\t                     BCADescriptor: %s\n"
+				"\t\t               MaximumTransferRate: %02d\n"
+				, (lpFormat[13 + i] & 0x0f) == 1 ? _T("74.5nm") : _T("Other")
+				, pDisc->DVD.ucBca == 0 ? _T("No") : _T("Exist"), lpFormat[17 + i]
+			);
+		}
+		else {
+			OutputDiscLog(
+				"\t\t                        ChannelBit: %s\n"
+				"\t\t             Push-pullPolarityFlag: %02d\n"
+				"\t\t            RecordMarkPolarityFlag: %02d\n"
+				"\t\t                     BCADescriptor: %s\n"
+				"\t\t               MaximumTransferRate: %02d\n"
+				, (lpFormat[13 + i] & 0x0f) == 1 ? _T("74.5nm") : _T("Other")
+				, lpFormat[14 + i], lpFormat[15 + i]
+				, pDisc->DVD.ucBca == 0 ? _T("No") : _T("Exist"), lpFormat[17 + i]
+			);
+		}
 		uiEndLogicalSector[n] = MAKEUINT(MAKEWORD(lpFormat[23 + i], lpFormat[22 + i]), MAKEWORD(lpFormat[21 + i], lpFormat[20 + i]));
 		uiStartPhysicalSector[n] = MAKEUINT(MAKEWORD(lpFormat[27 + i], lpFormat[26 + i]), MAKEWORD(lpFormat[25 + i], lpFormat[24 + i]));
 		uiEndPhysicalSector[n] = MAKEUINT(MAKEWORD(lpFormat[31 + i], lpFormat[30 + i]), MAKEWORD(lpFormat[29 + i], lpFormat[28 + i]));
 
-		OutputDiscLog(
-			"\t\t                          Unknown: %02x%02x%02x%02x\n"
-			"\t\t                          Unknown: %02x%02x%02x%02x\n"
-			"\t\t           EndLogicalSectorNumber: %08x\n"
-			"\t\t        StartPhysicalSectorNumber: %08x\n"
-			"\t\t          EndPhysicalSectorNumber: %08x\n"
-			, lpFormat[12 + i], lpFormat[13 + i], lpFormat[14 + i], lpFormat[15 + i]
-			, lpFormat[16 + i], lpFormat[17 + i], lpFormat[18 + i], lpFormat[19 + i]
-			, uiEndLogicalSector[n], uiStartPhysicalSector[n], uiEndPhysicalSector[n]
-		);
-		n++;
-
-		for (WORD k = 20; k < nDependentSize; k += 4) {
-			OutputDiscLog("\t\t                          Unknown: %02x%02x%02x%02x\n"
-				, lpFormat[12 + k + i], lpFormat[13 + k + i], lpFormat[14 + k + i], lpFormat[15 + k + i]);
-		}
-		if (!bBdRom) {
+		if (bBdRom) {
 			OutputDiscLog(
-				"\t                   DiscManufacturerID: %02x%02x%02x%02x%02x%02x\n"
-				"\t                          MediaTypeID: %02x%02x%02x\n"
-				"\t                           Time Stamp: %02x%02x\n"
-				"\t                ProductRevisionNumber: %02x\n"
-				, lpFormat[100 + i], lpFormat[101 + i], lpFormat[102 + i]
-				, lpFormat[103 + i], lpFormat[104 + i], lpFormat[105 + i]
-				, lpFormat[106 + i], lpFormat[107 + i], lpFormat[108 + i]
-				, lpFormat[109 + i], lpFormat[110 + i], lpFormat[111 + i]
+				"\t\t            EndLogicalSectorNumber: %08x\n"
+				"\t\t         StartPhysicalSectorNumber: %08x\n"
+				"\t\t           EndPhysicalSectorNumber: %08x\n"
+				, uiEndLogicalSector[n], uiStartPhysicalSector[n], uiEndPhysicalSector[n]
+			);
+			n++;
+		}
+		else {
+			OutputDiscLog(
+				"\t\t                          PhysicalADIPAddress: %08x\n"
+				"\t\t                              LastADIPAddress: %08x\n"
+				"\t\t                        NominalRecordingSpeed: %.2fm/s\n"
+				"\t\t                            MaxRecordingSpeed: %s\n"
+				"\t\t                            MinRecordingSpeed: %s\n"
+				"\t\t             MaxDCReadingPowerOfStandardSpeed: %02x\n"
+				"\t\t     MaxDCReadingPowerOfNominalRecordingSpeed: %06x\n"
+				"\t\t       MaxRFPiledReadingPowerOfReferenceSpeed: %02x\n"
+				"\t\tMaxRFPiledReadingPowerOfNominalRecordingSpeed: %06x\n"
+				, uiStartPhysicalSector[n], uiEndPhysicalSector[n], (DOUBLE)(MAKEWORD(lpFormat[33 + i], lpFormat[32 + i])) / 100
+				, lpFormat[34 + i] == 0x64 ? _T("Same As above") : _T("Other")
+				, lpFormat[35 + i] == 0x64 ? _T("Same As above") : _T("Other")
+				, lpFormat[36 + i], MAKEUINT(MAKEWORD(lpFormat[39 + i], lpFormat[38 + i]), MAKEWORD(lpFormat[37 + i], 0))
+				, lpFormat[40 + i], MAKEUINT(MAKEWORD(lpFormat[43 + i], lpFormat[42 + i]), MAKEWORD(lpFormat[41 + i], 0))
+			);
+			if (!strncmp((CONST CHAR*)&lpFormat[8], "BDR", 3)) {
+				OutputDiscLog(
+					"\t\t                                         PIND: %02x\n"
+					"\t\t                                         mIND: %02x\n"
+					"\t\t                                            p: %02x\n"
+					"\t\t                                          eBW: %02x\n"
+					"\t\t                                           ec: %02x\n"
+					"\t\t                                           es: %02x\n"
+					"\t\t                                            k: %02x\n"
+					"\t\t                                            b: %02x\n"
+					, lpFormat[48 + i], lpFormat[49 + i], lpFormat[50 + i], lpFormat[51 + i]
+					, lpFormat[52 + i], lpFormat[53 + i], lpFormat[54 + i], lpFormat[55 + i]
+				);
+				if (nDIFormat == 1) {
+					OutputDiscLog(
+						"\t\t                                          TMP: %02x\n"
+						"\t\t                       dTtopOfRunLength5Tto4T: %02x\n"
+						"\t\t                       dTtopOfRunLength4Tto4T: %02x\n"
+						"\t\t                       dTtopOfRunLength3Tto4T: %02x\n"
+						"\t\t                       dTtopOfRunLength2Tto4T: %02x\n"
+						"\t\t                       dTtopOfRunLength5Tto3T: %02x\n"
+						"\t\t                       dTtopOfRunLength4Tto3T: %02x\n"
+						"\t\t                       dTtopOfRunLength3Tto3T: %02x\n"
+						"\t\t                       dTtopOfRunLength2Tto3T: %02x\n"
+						"\t\t                       dTtopOfRunLength5Tto2T: %02x\n"
+						"\t\t                       dTtopOfRunLength4Tto2T: %02x\n"
+						"\t\t                       dTtopOfRunLength3Tto2T: %02x\n"
+						"\t\t                       dTtopOfRunLength2Tto2T: %02x\n"
+						"\t\t                        TtopOfRunLength5Tto4T: %04x\n"
+						"\t\t                        TtopOfRunLength4Tto4T: %04x\n"
+						"\t\t                        TtopOfRunLength3Tto4T: %04x\n"
+						"\t\t                        TtopOfRunLength2Tto4T: %04x\n"
+						"\t\t                        TtopOfRunLength5Tto3T: %04x\n"
+						"\t\t                        TtopOfRunLength4Tto3T: %04x\n"
+						"\t\t                        TtopOfRunLength3Tto3T: %04x\n"
+						"\t\t                        TtopOfRunLength2Tto3T: %04x\n"
+						"\t\t                        TtopOfRunLength5Tto2T: %04x\n"
+						"\t\t                        TtopOfRunLength4Tto2T: %04x\n"
+						"\t\t                        TtopOfRunLength3Tto2T: %04x\n"
+						"\t\t                        TtopOfRunLength2Tto2T: %04x\n"
+						"\t\t                             TLPOfRunLength4T: %02x\n"
+						"\t\t                             TLPOfRunLength3T: %02x\n"
+						"\t\t                        dTSOfRunLength4TtoN-1: %02x\n"
+						"\t\t                        dTSOfRunLength3TtoN-1: %02x\n"
+						"\t\t                        dTSOfRunLength2TtoN-1: %02x\n"
+						, lpFormat[56 + i], lpFormat[57 + i], lpFormat[58 + i], lpFormat[59 + i], lpFormat[60 + i]
+						, lpFormat[61 + i], lpFormat[62 + i], lpFormat[63 + i], lpFormat[64 + i]
+						, lpFormat[65 + i], lpFormat[66 + i], lpFormat[67 + i], lpFormat[68 + i]
+						, MAKEWORD(lpFormat[70 + i], lpFormat[69 + i]), MAKEWORD(lpFormat[72 + i], lpFormat[71 + i])
+						, MAKEWORD(lpFormat[74 + i], lpFormat[73 + i]), MAKEWORD(lpFormat[76 + i], lpFormat[75 + i])
+						, MAKEWORD(lpFormat[78 + i], lpFormat[77 + i]), MAKEWORD(lpFormat[80 + i], lpFormat[79 + i])
+						, MAKEWORD(lpFormat[82 + i], lpFormat[81 + i]), MAKEWORD(lpFormat[84 + i], lpFormat[83 + i])
+						, MAKEWORD(lpFormat[86 + i], lpFormat[85 + i]), MAKEWORD(lpFormat[88 + i], lpFormat[87 + i])
+						, MAKEWORD(lpFormat[90 + i], lpFormat[89 + i]), MAKEWORD(lpFormat[92 + i], lpFormat[91 + i])
+						, lpFormat[93 + i], lpFormat[94 + i], lpFormat[95 + i], lpFormat[96 + i], lpFormat[97 + i]
+					);
+				}
+				else if (nDIFormat == 2) {
+					OutputDiscLog(
+						"\t\t                                          TMP: %04x\n"
+						"\t\t                       dTtopOfRunLength5,7,9T: %02x\n"
+						"\t\t                       dTtopOfRunLength4,6,8T: %02x\n"
+						"\t\t                           dTtopOfRunLength3T: %02x\n"
+						"\t\t                           dTtopOfRunLength2T: %02x\n"
+						"\t\t                        TtopOfRunLength5,7,9T: %04x\n"
+						"\t\t                        TtopOfRunLength4,6,8T: %04x\n"
+						"\t\t                            TtopOfRunLength3T: %04x\n"
+						"\t\t                            TtopOfRunLength2T: %04x\n"
+						"\t\t                         TLPOfRunLength5,7,9T: %04x\n"
+						"\t\t                         TLPOfRunLength4,6,8T: %04x\n"
+						"\t\t                         dTSOfRunLength5,7,9T: %02x\n"
+						"\t\t                         dTSOfRunLength4,6,8T: %02x\n"
+						"\t\t                             dTSOfRunLength3T: %02x\n"
+						"\t\t                             dTSOfRunLength2T: %02x\n"
+						, MAKEWORD(lpFormat[57 + i], lpFormat[56 + i])
+						, lpFormat[58 + i], lpFormat[59 + i], lpFormat[60 + i], lpFormat[61 + i]
+						, MAKEWORD(lpFormat[63 + i], lpFormat[62 + i]), MAKEWORD(lpFormat[65 + i], lpFormat[64 + i])
+						, MAKEWORD(lpFormat[67 + i], lpFormat[66 + i]), MAKEWORD(lpFormat[69 + i], lpFormat[68 + i])
+						, MAKEWORD(lpFormat[71 + i], lpFormat[70 + i]), MAKEWORD(lpFormat[73 + i], lpFormat[72 + i])
+						, lpFormat[74 + i], lpFormat[75 + i], lpFormat[76 + i], lpFormat[77 + i]
+					);
+				}
+				else if (nDIFormat == 3) {
+					OutputDiscLog(
+						"\t\t                             dTCOfRunLength5T: %02x\n"
+						"\t\t                             dTCOfRunLength4T: %02x\n"
+						"\t\t                             dTCOfRunLength3T: %02x\n"
+						"\t\t                       dTtopOfRunLength4Tto4T: %02x\n"
+						"\t\t                       dTtopOfRunLength3Tto4T: %02x\n"
+						"\t\t                       dTtopOfRunLength2Tto4T: %02x\n"
+						"\t\t                       dTtopOfRunLength4Tto3T: %02x\n"
+						"\t\t                       dTtopOfRunLength3Tto3T: %02x\n"
+						"\t\t                       dTtopOfRunLength2Tto3T: %02x\n"
+						"\t\t                       dTtopOfRunLength4Tto2T: %02x\n"
+						"\t\t                       dTtopOfRunLength3Tto2T: %02x\n"
+						"\t\t                       dTtopOfRunLength2Tto2T: %02x\n"
+						"\t\t                        TtopOfRunLength4Tto4T: %02x\n"
+						"\t\t                        TtopOfRunLength3Tto4T: %02x\n"
+						"\t\t                        TtopOfRunLength2Tto4T: %02x\n"
+						"\t\t                        TtopOfRunLength4Tto3T: %02x\n"
+						"\t\t                        TtopOfRunLength3Tto3T: %02x\n"
+						"\t\t                        TtopOfRunLength2Tto3T: %02x\n"
+						"\t\t                        TtopOfRunLength4Tto2T: %02x\n"
+						"\t\t                        TtopOfRunLength3Tto2T: %02x\n"
+						"\t\t                        TtopOfRunLength2Tto2T: %02x\n"
+						"\t\t                             TLPOfRunLength4T: %02x\n"
+						"\t\t                             dTSOfRunLength4T: %02x\n"
+						"\t\t                             dTSOfRunLength3T: %02x\n"
+						"\t\t                             dTSOfRunLength2T: %02x\n"
+						, lpFormat[56 + i], lpFormat[57 + i], lpFormat[58 + i], lpFormat[59 + i], lpFormat[60 + i]
+						, lpFormat[61 + i], lpFormat[62 + i], lpFormat[63 + i], lpFormat[64 + i], lpFormat[65 + i]
+						, lpFormat[66 + i], lpFormat[67 + i], lpFormat[68 + i], lpFormat[69 + i], lpFormat[70 + i]
+						, lpFormat[71 + i], lpFormat[72 + i], lpFormat[73 + i], lpFormat[74 + i], lpFormat[75 + i]
+						, lpFormat[76 + i], lpFormat[77 + i], lpFormat[78 + i], lpFormat[79 + i], lpFormat[80 + i]
+					);
+				}
+			}
+			else if (!strncmp((CONST CHAR*)&lpFormat[8], "BDW", 3)) {
+				if (nDIFormat == 1) {
+					OutputDiscLog(
+						"\t\t                  PINDOfNominalRecordingSpeed: %02x\n"
+						"\t\t                  mINDOfNominalRecordingSpeed: %02x\n"
+						"\t\t                     pOfNominalRecordingSpeed: %02x\n"
+						"\t\t                   eBWOfNominalRecordingSpeed: %02x\n"
+						"\t\t                    ecOfNominalRecordingSpeed: %02x\n"
+						"\t\t                   eE1OfNominalRecordingSpeed: %02x\n"
+						"\t\t                   eE2OfNominalRecordingSpeed: %02x\n"
+						"\t\t                     kOfNominalRecordingSpeed: %02x\n"
+						"\t\t                      PINDOfMaxRecordingSpeed: %02x\n"
+						"\t\t                      mINDOfMaxRecordingSpeed: %02x\n"
+						"\t\t                         pOfMaxRecordingSpeed: %02x\n"
+						"\t\t                       eBWOfMaxRecordingSpeed: %02x\n"
+						"\t\t                        ecOfMaxRecordingSpeed: %02x\n"
+						"\t\t                       eE1OfMaxRecordingSpeed: %02x\n"
+						"\t\t                       eE2OfMaxRecordingSpeed: %02x\n"
+						"\t\t                         kOfMaxRecordingSpeed: %02x\n"
+						"\t\t                      PINDOfMinRecordingSpeed: %02x\n"
+						"\t\t                      mINDOfMinRecordingSpeed: %02x\n"
+						"\t\t                         pOfMinRecordingSpeed: %02x\n"
+						"\t\t                       eBWOfMinRecordingSpeed: %02x\n"
+						"\t\t                        ecOfMinRecordingSpeed: %02x\n"
+						"\t\t                       eE1OfMaxRecordingSpeed: %02x\n"
+						"\t\t                       eE2OfMaxRecordingSpeed: %02x\n"
+						"\t\t                         kOfMinRecordingSpeed: %02x\n"
+						"\t\t                                          TMP: %02x\n"
+						"\t\t                            TtopOfRunLength4T: %02x\n"
+						"\t\t                            TtopOfRunLength3T: %02x\n"
+						"\t\t                            TtopOfRunLength2T: %02x\n"
+						"\t\t    dTtopOfRunLength4TOfNominalRecordingSpeed: %02x\n"
+						"\t\t    dTtopOfRunLength3TOfNominalRecordingSpeed: %02x\n"
+						"\t\t    dTtopOfRunLength2TOfNominalRecordingSpeed: %02x\n"
+						"\t\t        dTtopOfRunLength4TOfMaxRecordingSpeed: %02x\n"
+						"\t\t        dTtopOfRunLength3TOfMaxRecordingSpeed: %02x\n"
+						"\t\t        dTtopOfRunLength2TOfMaxRecordingSpeed: %02x\n"
+						"\t\t        dTtopOfRunLength4TOfMinRecordingSpeed: %02x\n"
+						"\t\t        dTtopOfRunLength3TOfMinRecordingSpeed: %02x\n"
+						"\t\t        dTtopOfRunLength2TOfMinRecordingSpeed: %02x\n"
+						"\t\t                                           TE: %02x\n"
+						"\t\t      dTEOfRunLength4TOfNominalRecordingSpeed: %02x\n"
+						"\t\t      dTEOfRunLength3TOfNominalRecordingSpeed: %02x\n"
+						"\t\t      dTEOfRunLength2TOfNominalRecordingSpeed: %02x\n"
+						"\t\t          dTEOfRunLength4TOfMaxRecordingSpeed: %02x\n"
+						"\t\t          dTEOfRunLength3TOfMaxRecordingSpeed: %02x\n"
+						"\t\t          dTEOfRunLength2TOfMaxRecordingSpeed: %02x\n"
+						"\t\t          dTEOfRunLength4TOfMinRecordingSpeed: %02x\n"
+						"\t\t          dTEOfRunLength3TOfMinRecordingSpeed: %02x\n"
+						"\t\t          dTEOfRunLength2TOfMinRecordingSpeed: %02x\n"
+						"\t\t                                   DeleteFlag: %02x\n"
+						, lpFormat[48 + i], lpFormat[49 + i], lpFormat[50 + i], lpFormat[51 + i]
+						, lpFormat[52 + i], lpFormat[53 + i], lpFormat[54 + i], lpFormat[55 + i]
+						, lpFormat[56 + i], lpFormat[57 + i], lpFormat[58 + i], lpFormat[59 + i]
+						, lpFormat[60 + i], lpFormat[61 + i], lpFormat[62 + i], lpFormat[63 + i]
+						, lpFormat[64 + i], lpFormat[65 + i], lpFormat[66 + i], lpFormat[67 + i]
+						, lpFormat[68 + i], lpFormat[69 + i], lpFormat[70 + i], lpFormat[71 + i]
+						, lpFormat[72 + i], lpFormat[73 + i], lpFormat[74 + i], lpFormat[75 + i]
+						, lpFormat[76 + i], lpFormat[77 + i], lpFormat[78 + i], lpFormat[79 + i]
+						, lpFormat[80 + i], lpFormat[81 + i], lpFormat[82 + i], lpFormat[83 + i]
+						, lpFormat[84 + i], lpFormat[88 + i], lpFormat[89 + i], lpFormat[90 + i]
+						, lpFormat[91 + i], lpFormat[92 + i], lpFormat[93 + i], lpFormat[94 + i]
+						, lpFormat[95 + i], lpFormat[96 + i], lpFormat[97 + i], lpFormat[98 + i]
+					);
+				}
+				else if (nDIFormat == 2) {
+					OutputDiscLog(
+						"\t\t                                         PIND: %02x\n"
+						"\t\t                                         mIND: %02x\n"
+						"\t\t                                            p: %02x\n"
+						"\t\t                                          eBW: %02x\n"
+						"\t\t                                           ec: %02x\n"
+						"\t\t                                           es: %02x\n"
+						"\t\t                                            k: %02x\n"
+						"\t\t                                          TMP: %02x\n"
+						"\t\t                       dTtopOfRunLength5Tto4T: %02x\n"
+						"\t\t                       dTtopOfRunLength4Tto4T: %02x\n"
+						"\t\t                       dTtopOfRunLength3Tto4T: %02x\n"
+						"\t\t                       dTtopOfRunLength2Tto4T: %02x\n"
+						"\t\t                       dTtopOfRunLength5Tto3T: %02x\n"
+						"\t\t                       dTtopOfRunLength4Tto3T: %02x\n"
+						"\t\t                       dTtopOfRunLength3Tto3T: %02x\n"
+						"\t\t                       dTtopOfRunLength2Tto3T: %02x\n"
+						"\t\t                       dTtopOfRunLength5Tto2T: %02x\n"
+						"\t\t                       dTtopOfRunLength4Tto2T: %02x\n"
+						"\t\t                       dTtopOfRunLength3Tto2T: %02x\n"
+						"\t\t                       dTtopOfRunLength2Tto2T: %02x\n"
+						"\t\t                        TtopOfRunLength5Tto4T: %04x\n"
+						"\t\t                        TtopOfRunLength4Tto4T: %04x\n"
+						"\t\t                        TtopOfRunLength3Tto4T: %04x\n"
+						"\t\t                        TtopOfRunLength2Tto4T: %04x\n"
+						"\t\t                        TtopOfRunLength5Tto3T: %04x\n"
+						"\t\t                        TtopOfRunLength4Tto3T: %04x\n"
+						"\t\t                        TtopOfRunLength3Tto3T: %04x\n"
+						"\t\t                        TtopOfRunLength2Tto3T: %04x\n"
+						"\t\t                        TtopOfRunLength5Tto2T: %04x\n"
+						"\t\t                        TtopOfRunLength4Tto2T: %04x\n"
+						"\t\t                        TtopOfRunLength3Tto2T: %04x\n"
+						"\t\t                        TtopOfRunLength2Tto2T: %04x\n"
+						"\t\t                             TLPOfRunLength4T: %02x\n"
+						"\t\t                             TLPOfRunLength3T: %02x\n"
+						"\t\t                             dTEOfRunLength4T: %02x\n"
+						"\t\t                             dTEOfRunLength3T: %02x\n"
+						"\t\t                             dTEOfRunLength2T: %02x\n"
+						, lpFormat[48 + i], lpFormat[49 + i], lpFormat[50 + i], lpFormat[51 + i]
+						, lpFormat[52 + i], lpFormat[53 + i], lpFormat[54 + i]
+						, lpFormat[56 + i], lpFormat[57 + i], lpFormat[58 + i], lpFormat[59 + i]
+						, lpFormat[60 + i], lpFormat[61 + i], lpFormat[62 + i], lpFormat[63 + i]
+						, lpFormat[64 + i], lpFormat[65 + i], lpFormat[66 + i], lpFormat[67 + i], lpFormat[68 + i]
+						, MAKEWORD(lpFormat[70 + i], lpFormat[69 + i]), MAKEWORD(lpFormat[72 + i], lpFormat[71 + i])
+						, MAKEWORD(lpFormat[74 + i], lpFormat[73 + i]), MAKEWORD(lpFormat[76 + i], lpFormat[75 + i])
+						, MAKEWORD(lpFormat[78 + i], lpFormat[77 + i]), MAKEWORD(lpFormat[80 + i], lpFormat[79 + i])
+						, MAKEWORD(lpFormat[82 + i], lpFormat[81 + i]), MAKEWORD(lpFormat[84 + i], lpFormat[83 + i])
+						, MAKEWORD(lpFormat[86 + i], lpFormat[85 + i]), MAKEWORD(lpFormat[88 + i], lpFormat[87 + i])
+						, MAKEWORD(lpFormat[90 + i], lpFormat[89 + i]), MAKEWORD(lpFormat[92 + i], lpFormat[91 + i])
+						, lpFormat[93 + i], lpFormat[94 + i], lpFormat[95 + i], lpFormat[96 + i], lpFormat[96 + i]
+					);
+				}
+				else if (nDIFormat == 3) {
+					OutputDiscLog(
+						"\t\t                                         PIND: %02x\n"
+						"\t\t                                         mIND: %02x\n"
+						"\t\t                                            p: %02x\n"
+						"\t\t                                          eBW: %02x\n"
+						"\t\t                                           ec: %02x\n"
+						"\t\t                                           es: %02x\n"
+						"\t\t                                            k: %02x\n"
+						"\t\t                                          TMP: %02x%02x\n"
+						"\t\t                       dTtopOfRunLength5,7,9T: %02x\n"
+						"\t\t                       dTtopOfRunLength4,6,8T: %02x\n"
+						"\t\t                           dTtopOfRunLength3T: %02x\n"
+						"\t\t                           dTtopOfRunLength2T: %02x\n"
+						"\t\t                        TtopOfRunLength5,7,9T: %04x\n"
+						"\t\t                        TtopOfRunLength4,6,8T: %04x\n"
+						"\t\t                            TtopOfRunLength3T: %04x\n"
+						"\t\t                            TtopOfRunLength2T: %04x\n"
+						"\t\t                         TLPOfRunLength5,7,9T: %04x\n"
+						"\t\t                         TLPOfRunLength4,6,8T: %04x\n"
+						"\t\t                         dTEOfRunLength5,7,9T: %02x\n"
+						"\t\t                         dTEOfRunLength4,6,8T: %02x\n"
+						"\t\t                             dTEOfRunLength3T: %04x\n"
+						"\t\t                             dTEOfRunLength2T: %04x\n"
+						, lpFormat[48 + i], lpFormat[49 + i], lpFormat[50 + i], lpFormat[51 + i]
+						, lpFormat[52 + i], lpFormat[53 + i], lpFormat[54 + i], lpFormat[56 + i], lpFormat[57 + i]
+						, lpFormat[58 + i], lpFormat[59 + i], lpFormat[60 + i], lpFormat[61 + i]
+						, MAKEWORD(lpFormat[63 + i], lpFormat[62 + i]), MAKEWORD(lpFormat[65 + i], lpFormat[64 + i])
+						, MAKEWORD(lpFormat[67 + i], lpFormat[66 + i]), MAKEWORD(lpFormat[69 + i], lpFormat[68 + i])
+						, MAKEWORD(lpFormat[71 + i], lpFormat[70 + i]), MAKEWORD(lpFormat[73 + i], lpFormat[72 + i])
+						, lpFormat[74 + i], lpFormat[75 + i], lpFormat[76 + i], lpFormat[77 + i]
+					);
+				}
+			}
+			INT year = MAKEWORD(lpFormat[110 + i] & 0xf0, lpFormat[109 + i]) >> 4;
+			INT month = lpFormat[110 + i] & 0x0f;
+			OutputDiscLog(
+				"\t                    DiscManufacturerID: %.6" CHARWIDTH "s\n"
+				"\t                           MediaTypeID: %.3" CHARWIDTH "s\n"
+				"\t                             TimeStamp: %02d%02d\n"
+				"\t                 ProductRevisionNumber: %02x\n"
+				, &lpFormat[100 + i], &lpFormat[106 + i], year, month, lpFormat[111 + i]
 			);
 		}
+		OutputDiscLog("\n");
 	}
 	OutputDiscLog("\tEmergencyBrakeData\n"
 		"\t             EmergencyBrakeIdentifier: %.2" CHARWIDTH "s\n"
@@ -1447,28 +1781,30 @@ VOID OutputBDDiscInformation(
 	}
 	OutputDiscLog("\n");
 
-	UINT uiEndLayerZeroSectorLen = uiEndPhysicalSector[0] - uiStartPhysicalSector[0] + 2;
-	if (nLayerNum == 1) {
-		OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("SectorLength")
-			"\t LayerZeroSector: %8u (%#x)\n"
-			, uiEndLayerZeroSectorLen, uiEndLayerZeroSectorLen
-		);
-	}
-	else if (nLayerNum == 2) {
-		UINT uiEndLayerOneSectorLen = uiEndLogicalSector[1] - uiStartPhysicalSector[1] + 1;
-		UINT uiLayerAllSectorLen = uiEndLayerZeroSectorLen + uiEndLayerOneSectorLen;
+	if (bBdRom) {
+		UINT uiEndLayerZeroSectorLen = uiEndPhysicalSector[0] - uiStartPhysicalSector[0] + 2;
+		if (nLayerNum == 0) {
+			OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("SectorLength")
+				"\t LayerZeroSector: %8u (%#x)\n"
+				, uiEndLayerZeroSectorLen, uiEndLayerZeroSectorLen
+			);
+		}
+		else if (nLayerNum == 1) {
+			UINT uiEndLayerOneSectorLen = uiEndLogicalSector[1] - uiStartPhysicalSector[1] + 1;
+			UINT uiLayerAllSectorLen = uiEndLayerZeroSectorLen + uiEndLayerOneSectorLen;
 
-		OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("SectorLength")
-			"\t LayerZeroSector: %8u (%#x)\n"
-			"\t+ LayerOneSector: %8u (%#x)\n"
-			"\t--------------------------------------\n"
-			"\t  LayerAllSector: %8u (%#x)\n"
-			, uiEndLayerZeroSectorLen, uiEndLayerZeroSectorLen
-			, uiEndLayerOneSectorLen, uiEndLayerOneSectorLen
-			, uiLayerAllSectorLen, uiLayerAllSectorLen
-		);
+			OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("SectorLength")
+				"\t LayerZeroSector: %8u (%#x)\n"
+				"\t+ LayerOneSector: %8u (%#x)\n"
+				"\t--------------------------------------\n"
+				"\t  LayerAllSector: %8u (%#x)\n"
+				, uiEndLayerZeroSectorLen, uiEndLayerZeroSectorLen
+				, uiEndLayerOneSectorLen, uiEndLayerOneSectorLen
+				, uiLayerAllSectorLen, uiLayerAllSectorLen
+			);
+		}
+		// TODO: Layer 3, 4
 	}
-	// TODO: Layer 3, 4
 }
 
 VOID OutputCartridgeStatus(
@@ -1503,7 +1839,7 @@ VOID OutputBDRawDefectList(
 	for (WORD k = 0; k < 48; k++) {
 		OutputDiscLog("%02x ", lpFormat[16 + k]);
 	}
-	OutputDiscLog("\nDefectEntries: ");
+	OutputDiscLog("\n\t              DefectEntries: ");
 	for (UINT k = 0; k < Entries; k += 8) {
 		OutputDiscLog("%02x%02x%02x%02x%02x%02x%02x%02x "
 			, lpFormat[64 + k], lpFormat[65 + k], lpFormat[66 + k], lpFormat[67 + k]
@@ -1572,7 +1908,7 @@ VOID OutputBDStructureFormat(
 	OutputDiscLog("Disc Structure Data Length: %d\n", wFormatLength);
 	switch (byFormatCode) {
 	case 0:
-		OutputBDDiscInformation(lpFormat, wFormatLength);
+		OutputBDDiscInformation(pDisc, lpFormat, wFormatLength);
 		break;
 	case DvdCopyrightDescriptor:
 		OutputDVDCopyrightDescriptor((PDVD_COPYRIGHT_DESCRIPTOR)lpFormat, &(pDisc->DVD.protect), fileDisc);
