@@ -127,7 +127,7 @@ BOOL CheckFrameOfVideoNowColorOrXp(
 			return FALSE;
 		}
 		memcpy(lpBuf3 + CD_RAW_SECTOR_SIZE * (j - *nSector), aBuf, CD_RAW_SECTOR_SIZE);
-		OutputCDMain(fileMainInfo, lpBuf3 + CD_RAW_SECTOR_SIZE * (j - *nSector), tmpLBA + j, CD_RAW_SECTOR_SIZE);
+		OutputMainChannel(fileMainInfo, lpBuf3 + CD_RAW_SECTOR_SIZE * (j - *nSector), NULL, tmpLBA + j, CD_RAW_SECTOR_SIZE);
 	}
 	INT n1stHeaderOfs = 0;
 	INT n2ndHeaderOfs = 0;
@@ -236,7 +236,7 @@ BOOL ExecSearchingOffset(
 
 	if (pDisc->SCSI.trkType != TRACK_TYPE::audioOnly || *pExecType == swap) {
 		if (*pExecType != data) {
-			OutputCDMain(fileMainInfo, lpBuf, nLBA, CD_RAW_SECTOR_SIZE);
+			OutputMainChannel(fileMainInfo, lpBuf, NULL, nLBA, CD_RAW_SECTOR_SIZE);
 		}
 	}
 	if (uiBufSize == CD_RAW_SECTOR_WITH_SUBCODE_SIZE ||
@@ -271,7 +271,7 @@ BOOL ExecSearchingOffset(
 						, aBuf, uiBufSize, _T(__FUNCTION__), __LINE__)) {
 						return FALSE;
 					}
-					OutputCDMain(fileMainInfo, aBuf, nLBA + i, CD_RAW_SECTOR_SIZE);
+					OutputMainChannel(fileMainInfo, aBuf, NULL, nLBA + i, CD_RAW_SECTOR_SIZE);
 					memcpy(lpBuf2 + CD_RAW_SECTOR_SIZE * i, aBuf, CD_RAW_SECTOR_SIZE);
 				}
 
@@ -303,7 +303,7 @@ BOOL ExecSearchingOffset(
 										, aBuf, uiBufSize, _T(__FUNCTION__), __LINE__)) {
 										return FALSE;
 									}
-									OutputCDMain(fileMainInfo, aBuf, nLBA, CD_RAW_SECTOR_SIZE);
+									OutputMainChannel(fileMainInfo, aBuf, NULL, nLBA, CD_RAW_SECTOR_SIZE);
 									memcpy(lpBuf2, aBuf, CD_RAW_SECTOR_SIZE);
 								}
 								else if (k == 1) {
@@ -421,7 +421,7 @@ BOOL ExecSearchingOffset(
 				}
 				if (bRet) {
 					pDisc->MAIN.nCombinedOffset = i - pExtArg->nAudioCDOffsetNum;
-					OutputCDMain(fileMainInfo, lpBuf2 + CD_RAW_SECTOR_SIZE * nSector, nLBA + nSector, CD_RAW_SECTOR_SIZE);
+					OutputMainChannel(fileMainInfo, lpBuf2 + CD_RAW_SECTOR_SIZE * nSector, NULL, nLBA + nSector, CD_RAW_SECTOR_SIZE);
 					break;
 				}
 				else if (i == CD_RAW_SECTOR_SIZE * nSector - 1) {
@@ -476,7 +476,7 @@ BOOL ExecSearchingOffset(
 					}
 					if (bRet) {
 						pDisc->MAIN.nCombinedOffset = i - 2 + CD_RAW_SECTOR_SIZE * nSector;
-						OutputCDMain(fileMainInfo, lpBuf, nLBA, CD_RAW_SECTOR_SIZE);
+						OutputMainChannel(fileMainInfo, lpBuf, NULL, nLBA, CD_RAW_SECTOR_SIZE);
 						break;
 					}
 				}
@@ -831,8 +831,7 @@ BOOL ReadCDForCheckingReadInOut(
 						}
 						if (x == nLBA - 1) {
 							memcpy(aLastSector, aBuf, CD_RAW_SECTOR_SIZE);
-							OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("Last Sector"));
-							OutputCDMain(fileMainInfo, aLastSector, nLBA - 1, CD_RAW_SECTOR_SIZE);
+							OutputMainChannel(fileMainInfo, aLastSector, "Last Sector", nLBA - 1, CD_RAW_SECTOR_SIZE);
 						}
 					}
 					LPBYTE lpOutBuf = NULL;
@@ -921,7 +920,7 @@ BOOL ReadCDForCheckingSubQ1stIndex(
 		}
 	} while (1);
 #if 0
-	OutputCDMain(fileMainInfo, aBuf, nLBA, CD_RAW_SECTOR_WITH_SUBCODE_SIZE);
+	OutputMainChannel(fileMainInfo, aBuf, NULL, nLBA, CD_RAW_SECTOR_WITH_SUBCODE_SIZE);
 #endif
 	return TRUE;
 }
@@ -1015,7 +1014,7 @@ BOOL ReadCDForCheckingSubQAdr(
 		}
 		AlignRowSubcode(pDiscPerSector->subcode.current, lpBuf + nSubOfs);
 #if 0
-		OutputCDMain(lpBuf2, nLBA, CD_RAW_SECTOR_SIZE);
+		OutputMainChannel(fileMainInfo, lpBuf2, NULL, nLBA, CD_RAW_SECTOR_SIZE);
 		OutputCDSub96Align(pDiscPerSector->subcode.current, nLBA);
 #endif
 		if (nLBA == nTmpLBA) {
@@ -1522,7 +1521,7 @@ BOOL ReadExeFromFile(
 					fseek(fp, (LONG)dwExportPointerToRawData, SEEK_SET);
 					fread(lpBuf, sizeof(BYTE), bufsize, fp);
 					OutputMainInfoLog("dwExportVirtualAddress: 0x%lx, dwExportSize: 0x%lx\n", dwExportVirtualAddress, dwExportSize);
-					OutputCDMain(fileMainInfo, lpBuf, 0, bufsize + bufsize % 16);
+					OutputMainChannel(fileMainInfo, lpBuf, NULL, 0, bufsize + bufsize % 16);
 					OutputExportDirectory(lpBuf, bufsize, dwExportVirtualAddress, 0);
 				}
 
@@ -1541,7 +1540,7 @@ BOOL ReadExeFromFile(
 					fseek(fp, (LONG)dwImportPointerToRawData, SEEK_SET);
 					fread(lpBuf, sizeof(BYTE), bufsize, fp);
 					OutputMainInfoLog("dwImportVirtualAddress: 0x%lx, dwImportSize: 0x%lx\n", dwImportVirtualAddress, dwImportSize);
-					OutputCDMain(fileMainInfo, lpBuf, 0, bufsize + bufsize % 16);
+					OutputMainChannel(fileMainInfo, lpBuf, NULL, 0, bufsize + bufsize % 16);
 					OutputImportDirectory(lpBuf, bufsize, dwImportVirtualAddress, 0);
 				}
 
@@ -1560,7 +1559,7 @@ BOOL ReadExeFromFile(
 					fseek(fp, (LONG)dwResourcePointerToRawData, SEEK_SET);
 					fread(lpBuf, sizeof(BYTE), bufsize, fp);
 					OutputMainInfoLog("dwResourceVirtualAddress: 0x%lx, dwResourceSize: 0x%lx\n", dwResourceVirtualAddress, dwResourceSize);
-					OutputCDMain(fileMainInfo, lpBuf, 0, bufsize + bufsize % 16);
+					OutputMainChannel(fileMainInfo, lpBuf, NULL, 0, bufsize + bufsize % 16);
 					_TCHAR szTab[256] = {};
 					szTab[0] = _T('\t');
 					WCHAR wszFileVer[FILE_VERSION_SIZE] = { 0 };
@@ -1579,7 +1578,7 @@ BOOL ReadExeFromFile(
 						fseek(fp, (LONG)uiOfsOfSecuRomDll, SEEK_SET);
 						fread(lpBuf, sizeof(BYTE), (size_t)uiSecuromReadSize, fp);
 						if (!strncmp((LPCH)lpBuf, "AddD", 4)) {
-							OutputCDMain(fileMainInfo, lpBuf, 0, uiSecuromReadSize);
+							OutputMainChannel(fileMainInfo, lpBuf, "SecuROM Header", 0, uiSecuromReadSize);
 
 							UINT uiOfsOf16 = 0;
 							UINT uiOfsOf32 = 0;
@@ -1592,19 +1591,19 @@ BOOL ReadExeFromFile(
 							fseek(fp, (LONG)uiOfsOf16, SEEK_SET);
 							fread(lpBuf, sizeof(BYTE), (size_t)uiSizeOf16, fp);
 							OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("Sintf16.dll [F:%s]"), __FUNCTION__);
-							OutputCDMain(fileMainInfo, lpBuf, 0, uiSizeOf16);
+							OutputMainChannel(fileMainInfo, lpBuf, NULL, 0, uiSizeOf16);
 							OutputSint16(lpBuf, 0);
 
 							fseek(fp, (LONG)uiOfsOf32, SEEK_SET);
 							fread(lpBuf, sizeof(BYTE), (size_t)uiSizeOf32, fp);
 							OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("Sintf32.dll [F:%s]"), __FUNCTION__);
-							OutputCDMain(fileMainInfo, lpBuf, 0, uiSizeOf32);
+							OutputMainChannel(fileMainInfo, lpBuf, NULL, 0, uiSizeOf32);
 							OutputSint32(lpBuf, 0, uiSizeOf32, FALSE);
 
 							fseek(fp, (LONG)uiOfsOfNT, SEEK_SET);
 							fread(lpBuf, sizeof(BYTE), (size_t)uiSizeOfNT, fp);
 							OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("SintfNT.dll [F:%s]"), __FUNCTION__);
-							OutputCDMain(fileMainInfo, lpBuf, 0, uiSizeOfNT);
+							OutputMainChannel(fileMainInfo, lpBuf, NULL, 0, uiSizeOfNT);
 							OutputSintNT(lpBuf, 0, uiSizeOfNT, FALSE);
 						}
 					}
@@ -1619,7 +1618,7 @@ BOOL ReadExeFromFile(
 									LONG lSigOfs = GetOfsOfSecuromDllSig(lpBuf, i);
 									if (lSigPos == lSigOfs) {
 										OutputSecuRomDll4_87Header(lpBuf, i);
-										OutputCDMain(fileMainInfo, lpBuf, 0, uiSecuromReadSize);
+										OutputMainChannel(fileMainInfo, lpBuf, NULL, 0, uiSecuromReadSize);
 										bFound = TRUE;
 										break;
 									}
@@ -2027,7 +2026,7 @@ BOOL ReadCDForCheckingExe(
 						}
 						OutputMainInfoLog("dwExportVirtualAddress: 0x%lx, dwExportSize: 0x%lx, dwExportDataOfs: 0x%lx\n"
 							, dwExportVirtualAddress, dwExportSize, dwExportDataOfs);
-						OutputCDMain(fileMainInfo, lpBuf, nExpSection, dwExportSectorSize);
+						OutputMainChannel(fileMainInfo, lpBuf, NULL, nExpSection, dwExportSectorSize);
 						OutputExportDirectory(lpBuf, dwExportSectorSize, dwExportVirtualAddress, dwExportDataOfs);
 					}
 					if (dwImportSize > 0) {
@@ -2038,7 +2037,7 @@ BOOL ReadCDForCheckingExe(
 						}
 						OutputMainInfoLog("dwImportVirtualAddress: 0x%lx, dwImportSize: 0x%lx, dwImportDataOfs: 0x%lx\n"
 							, dwImportVirtualAddress, dwImportSize, dwImportDataOfs);
-						OutputCDMain(fileMainInfo, lpBuf, nImpSection, dwImportSectorSize);
+						OutputMainChannel(fileMainInfo, lpBuf, NULL, nImpSection, dwImportSectorSize);
 						OutputImportDirectory(lpBuf, dwImportSectorSize, dwImportVirtualAddress, dwImportDataOfs);
 					}
 					if (dwResourceSize > 0) {
@@ -2049,7 +2048,7 @@ BOOL ReadCDForCheckingExe(
 						}
 						OutputMainInfoLog("dwResourceVirtualAddress: 0x%lx, dwResourceSize: 0x%lx, dwResourceDataOfs: 0x%lx\n"
 							, dwResourceVirtualAddress, dwResourceSize, dwResourceDataOfs);
-						OutputCDMain(fileMainInfo, lpBuf, nResSection, dwResourceSectorSize);
+						OutputMainChannel(fileMainInfo, lpBuf, NULL, nResSection, dwResourceSectorSize);
 						_TCHAR szTab[256] = {};
 						szTab[0] = _T('\t');
 						WCHAR wszFileVer[FILE_VERSION_SIZE] = { 0 };
@@ -2066,7 +2065,7 @@ BOOL ReadCDForCheckingExe(
 						if (!ExecReadCD(pExtArg, pDevice, pCdb, nLastSector, lpBuf, dwSize, _T(__FUNCTION__), __LINE__)) {
 							continue;
 						}
-						OutputCDMain(fileMainInfo, lpBuf, nLastSector, DISC_MAIN_DATA_SIZE);
+						OutputMainChannel(fileMainInfo, lpBuf, NULL, nLastSector, DISC_MAIN_DATA_SIZE);
 						INT nMod = pDisc->PROTECT.pDataLenForExe[n] % DISC_MAIN_DATA_SIZE;
 						UINT uiOfsOfSecuRomDll = 0;
 						if (nMod) {
@@ -2083,7 +2082,7 @@ BOOL ReadCDForCheckingExe(
 							if (!ExecReadCD(pExtArg, pDevice, pCdb, n1stSector, lpBuf, dwSize, _T(__FUNCTION__), __LINE__)) {
 								continue;
 							}
-							OutputCDMain(fileMainInfo, lpBuf, n1stSector, DISC_MAIN_DATA_SIZE);
+							OutputMainChannel(fileMainInfo, lpBuf, NULL, n1stSector, DISC_MAIN_DATA_SIZE);
 
 							UINT uiOfsOf16 = 0;
 							UINT uiOfsOf32 = 0;
@@ -2106,7 +2105,7 @@ BOOL ReadCDForCheckingExe(
 								}
 
 								OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("Sintf32.dll [F:%s]"), __FUNCTION__);
-								OutputCDMain(fileMainInfo, lpBuf, n2ndSector, dwSize);
+								OutputMainChannel(fileMainInfo, lpBuf, NULL, n2ndSector, dwSize);
 								INT nOfsOf32dll = (INT)(uiOfsOf32 - uiOfsOfSecuRomDll) % DISC_MAIN_DATA_SIZE;
 								OutputSint32(lpBuf, nOfsOf32dll, dwSize, FALSE);
 
@@ -2119,7 +2118,7 @@ BOOL ReadCDForCheckingExe(
 								}
 
 								OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("SintfNT.dll [F:%s]"), __FUNCTION__);
-								OutputCDMain(fileMainInfo, lpBuf, n3rdSector, dwSize);
+								OutputMainChannel(fileMainInfo, lpBuf, NULL, n3rdSector, dwSize);
 								INT nOfsOfNTdll = (INT)(uiOfsOfNT - uiOfsOfSecuRomDll) % DISC_MAIN_DATA_SIZE;
 								OutputSintNT(lpBuf, nOfsOfNTdll, dwSize, FALSE);
 
@@ -2140,7 +2139,7 @@ BOOL ReadCDForCheckingExe(
 										LONG lSigOfs = GetOfsOfSecuromDllSig(lpBuf, i);
 										if (lSigPos == lSigOfs) {
 											OutputSecuRomDll4_87Header(lpBuf, i);
-											OutputCDMain(fileMainInfo, lpBuf, pDisc->PROTECT.pExtentPosForExe[n] + j, dwSize);
+											OutputMainChannel(fileMainInfo, lpBuf, NULL, pDisc->PROTECT.pExtentPosForExe[n] + j, dwSize);
 											bFound = TRUE;
 											break;
 										}
@@ -2167,7 +2166,7 @@ BOOL ReadCDForCheckingExe(
 										"Please wait until all files are extracted. This is needed to search protection\n"
 										, pDisc->PROTECT.pFullNameForExe[n]
 									);
-									OutputCDMain(fileMainInfo, lpBuf, i, dwSize);
+									OutputMainChannel(fileMainInfo, lpBuf, NULL, i, dwSize);
 
 									_TCHAR szTmpPath[_MAX_PATH] = {};
 									if (!GetCurrentDirectory(sizeof(szTmpPath) / sizeof(szTmpPath[0]), szTmpPath)) {
@@ -2240,7 +2239,7 @@ BOOL ReadCDForSegaDisc(
 		DISC_MAIN_DATA_SIZE, _T(__FUNCTION__), __LINE__)) {
 	}
 	if (!memcmp(buf, "SEGA", 4)) {
-		OutputCDMain(fileMainInfo, buf, 0, DISC_MAIN_DATA_SIZE);
+		OutputMainChannel(fileMainInfo, buf, "Sega Header", 0, DISC_MAIN_DATA_SIZE);
 	}
 	return TRUE;
 }
@@ -2262,7 +2261,7 @@ BOOL ReadCDForCheckingPsxRegion(
 		DISC_MAIN_DATA_SIZE, _T(__FUNCTION__), __LINE__)) {
 		return TRUE;
 	}
-	OutputCDMain(fileMainInfo, buf, 4, 80);
+	OutputMainChannel(fileMainInfo, buf, "Check PSX Region", 4, 80);
 	if (!memcmp(buf, regionPal, sizeof(regionPal))) {
 		return TRUE;
 	}
@@ -2297,14 +2296,14 @@ VOID ReadCDForScanningPsxAntiMod(
 			if (!memcmp(&buf[i], antiModStrEn, sizeof(antiModStrEn))) {
 				OutputLog(fileDisc | standardOut
 					, "\nDetected anti-mod string (en): LBA %d, offset %d(0x%03x)", nLBA, i, (UINT)i);
-				OutputCDMain(fileMainInfo, buf, nLBA, DISC_MAIN_DATA_SIZE);
+				OutputMainChannel(fileMainInfo, buf, NULL, nLBA, DISC_MAIN_DATA_SIZE);
 				bRet += TRUE;
 			}
 			if (!memcmp(&buf[i], antiModStrJp, sizeof(antiModStrJp))) {
 				OutputLog(fileDisc | standardOut
 					, "\nDetected anti-mod string (jp): LBA %d, offset %d(0x%03x)\n", nLBA, i, (UINT)i);
 				if (!bRet) {
-					OutputCDMain(fileMainInfo, buf, nLBA, DISC_MAIN_DATA_SIZE);
+					OutputMainChannel(fileMainInfo, buf, NULL, nLBA, DISC_MAIN_DATA_SIZE);
 				}
 				bRet += TRUE;
 			}

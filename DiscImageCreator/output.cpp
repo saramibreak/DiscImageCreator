@@ -1801,7 +1801,7 @@ VOID DescrambleMainChannelAll(
 								OutputMainErrorWithLBALog("Not all zero sector\n", n1stLBA, k + 1);
 								OutputString(
 									"\rDescrambling data sector of img: %6d/%6d", n1stLBA, nLastLBA);
-								OutputCDMain(fileMainError, aSrcBuf, n1stLBA, CD_RAW_SECTOR_SIZE);
+								OutputMainChannel(fileMainError, aSrcBuf, NULL, n1stLBA, CD_RAW_SECTOR_SIZE);
 								continue;
 							}
 						}
@@ -1809,12 +1809,12 @@ VOID DescrambleMainChannelAll(
 					else if (aSrcBuf[0x0f] == 0x61) {
 						if (IsValidReservedByte(aSrcBuf)) {
 							OutputMainErrorWithLBALog("A part of reversed sector. (Not be scrambled)\n", n1stLBA, k + 1);
-							OutputCDMain(fileMainError, aSrcBuf, n1stLBA, CD_RAW_SECTOR_SIZE);
+							OutputMainChannel(fileMainError, aSrcBuf, NULL, n1stLBA, CD_RAW_SECTOR_SIZE);
 						}
 					}
 					else if (aSrcBuf[0x0f] == 0x00 || aSrcBuf[0x0f] == 0x01 || aSrcBuf[0x0f] == 0x02) {
 						OutputMainErrorWithLBALog("Reversed sector. (Not be scrambled)\n", n1stLBA, k + 1);
-						OutputCDMain(fileMainError, aSrcBuf, n1stLBA, CD_RAW_SECTOR_SIZE);
+						OutputMainChannel(fileMainError, aSrcBuf, NULL, n1stLBA, CD_RAW_SECTOR_SIZE);
 					}
 					else if (aSrcBuf[0x0f] != 0x60 && aSrcBuf[0x0f] != 0x61 && aSrcBuf[0x0f] != 0x62 &&
 						aSrcBuf[0x0f] != 0x00 && aSrcBuf[0x0f] != 0x01 && aSrcBuf[0x0f] != 0x02) {
@@ -1827,7 +1827,7 @@ VOID DescrambleMainChannelAll(
 								OutputMainErrorLog("Invalid reserved byte. Skip descrambling\n");
 								OutputString(
 									"\rDescrambling data sector of img: %6d/%6d", n1stLBA, nLastLBA);
-								OutputCDMain(fileMainError, aSrcBuf, n1stLBA, CD_RAW_SECTOR_SIZE);
+								OutputMainChannel(fileMainError, aSrcBuf, NULL, n1stLBA, CD_RAW_SECTOR_SIZE);
 								continue;
 							}
 						}
@@ -1840,13 +1840,13 @@ VOID DescrambleMainChannelAll(
 							OutputMainErrorLog("Invalid reserved byte. Skip descrambling\n");
 							OutputString(
 								"\rDescrambling data sector of img: %6d/%6d", n1stLBA, nLastLBA);
-							OutputCDMain(fileMainError, aSrcBuf, n1stLBA, CD_RAW_SECTOR_SIZE);
+							OutputMainChannel(fileMainError, aSrcBuf, NULL, n1stLBA, CD_RAW_SECTOR_SIZE);
 							continue;
 						}
 						else {
 							OutputMainErrorLog("\n");
 						}
-						OutputCDMain(fileMainError, aSrcBuf, n1stLBA, CD_RAW_SECTOR_SIZE);
+						OutputMainChannel(fileMainError, aSrcBuf, NULL, n1stLBA, CD_RAW_SECTOR_SIZE);
 					}
 					fseek(fpImg, -CD_RAW_SECTOR_SIZE, SEEK_CUR);
 					for (INT n = 0; n < CD_RAW_SECTOR_SIZE; n++) {
@@ -1858,7 +1858,7 @@ VOID DescrambleMainChannelAll(
 					if (pDisc->SCSI.trkType != TRACK_TYPE::pregapAudioIn1stTrack &&
 						pDisc->SCSI.trkType != TRACK_TYPE::pregapDataIn1stTrack) {
 						OutputMainErrorWithLBALog("Invalid sync. Skip descrambling\n", n1stLBA, k + 1);
-						OutputCDMain(fileMainError, aSrcBuf, n1stLBA, CD_RAW_SECTOR_SIZE);
+						OutputMainChannel(fileMainError, aSrcBuf, NULL, n1stLBA, CD_RAW_SECTOR_SIZE);
 					}
 				}
 				OutputString(
@@ -1900,12 +1900,12 @@ VOID DescrambleMainChannelPartial(
 			}
 			else {
 				OutputMainInfoWithLBALog("Invalid mode. Skip descrambling\n", nStartLBA, 0);
-				OutputCDMain(fileMainInfo, aSrcBuf, nStartLBA, CD_RAW_SECTOR_SIZE);
+				OutputMainChannel(fileMainInfo, aSrcBuf, NULL, nStartLBA, CD_RAW_SECTOR_SIZE);
 			}
 		}
 		else {
 			OutputMainErrorWithLBALog("Invalid sync. Skip descrambling\n", nStartLBA, 0);
-			OutputCDMain(fileMainError, aSrcBuf, nStartLBA, CD_RAW_SECTOR_SIZE);
+			OutputMainChannel(fileMainError, aSrcBuf, NULL, nStartLBA, CD_RAW_SECTOR_SIZE);
 		}
 		OutputString(
 			"\rDescrambling data sector of img: %6d/%6d", nStartLBA, nEndLBA);

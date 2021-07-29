@@ -62,12 +62,12 @@ VOID FixMainHeader(
 				if (IsValidProtectedSector(pDisc, nLBA, GetReadErrorFileIdx(pExtArg, pDisc, nLBA))) {
 					OutputMainErrorWithLBALog(
 						"This sector is data, but sync is invalid\n", nLBA, pDiscPerSector->byTrackNum);
-					OutputCDMain(fileMainError, lpWorkBuf, nLBA, MAINHEADER_MODE1_SIZE);
+					OutputMainChannel(fileMainError, lpWorkBuf, NULL, nLBA, MAINHEADER_MODE1_SIZE);
 					memcpy(lpWorkBuf, pDiscPerSector->mainHeader.current, MAINHEADER_MODE1_SIZE);
 
 					OutputMainErrorWithLBALog(
 						"Sync was generated\n", nLBA, pDiscPerSector->byTrackNum);
-					OutputCDMain(fileMainError, lpWorkBuf, nLBA, MAINHEADER_MODE1_SIZE);
+					OutputMainChannel(fileMainError, lpWorkBuf, NULL, nLBA, MAINHEADER_MODE1_SIZE);
 					bHeader = TRUE;
 					bChangedBuf = TRUE;
 					FlushLog();
@@ -123,7 +123,7 @@ VOID FixMainHeader(
 			OutputMainErrorWithLBALog(
 				"This sector is data, but sync is invalid\n"
 				, nLBA + nAdd, pDiscPerSector->byTrackNum);
-			OutputCDMain(fileMainError, lpWorkBuf, nLBA + nAdd, MAINHEADER_MODE1_SIZE);
+			OutputMainChannel(fileMainError, lpWorkBuf, NULL, nLBA + nAdd, MAINHEADER_MODE1_SIZE);
 		}
 	}
 }

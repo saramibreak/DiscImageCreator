@@ -56,7 +56,7 @@ BOOL ExecReadDisc(
 		}
 		for (BYTE i = 0; i < byTransferLen; i++) {
 			memcpy(lpBuf + DISC_MAIN_DATA_SIZE * i, bufDec + CD_RAW_SECTOR_SIZE * i + 16, DISC_MAIN_DATA_SIZE);
-//			OutputCDMain(fileMainInfo, lpBuf + DISC_MAIN_DATA_SIZE * i, nLBA, DISC_MAIN_DATA_SIZE);
+//			OutputMainChannel(fileMainInfo, lpBuf + DISC_MAIN_DATA_SIZE * i, NULL, nLBA, DISC_MAIN_DATA_SIZE);
 		}
 	}
 	else {
@@ -137,7 +137,7 @@ BOOL ExecReadGD(
 		nOfs = CD_RAW_SECTOR_SIZE + pDisc->MAIN.nCombinedOffset;
 	}
 #if 0
-	OutputCDMain(fileMainInfo, lpInBuf + idx, nLBA, CD_RAW_SECTOR_SIZE);
+	OutputMainChannel(fileMainInfo, lpInBuf + idx, NULL, nLBA, CD_RAW_SECTOR_SIZE);
 #endif
 	for (BYTE i = 0; i < byTransferLen; i++) {
 		for (INT j = 0; j < CD_RAW_SECTOR_SIZE; j++) {
@@ -146,7 +146,7 @@ BOOL ExecReadGD(
 		}
 	}
 #if 0
-	OutputCDMain(fileMainInfo, lpOutBuf, nLBA, CD_RAW_SECTOR_SIZE);
+	OutputMainChannel(fileMainInfo, lpOutBuf, NULL, nLBA, CD_RAW_SECTOR_SIZE);
 #endif
 	return TRUE;
 }
@@ -502,9 +502,9 @@ BOOL ReadCDForRereadingSectorType2(
 					DWORD dwTmpCrc32 = 0;
 					GetCrc32(&dwTmpCrc32, lpBufMain + CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * k, CD_RAW_SECTOR_SIZE);
 #ifdef __DEBUG
-					OutputCDMain(fileC2Error, lpBufMain + CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * k, nLBA, CD_RAW_SECTOR_SIZE);
+					OutputMainChannel(fileC2Error, lpBufMain + CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * k, NULL, nLBA, CD_RAW_SECTOR_SIZE);
 					OutputCDC2Error296(fileC2Error, lpBufMain + CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * k + CD_RAW_SECTOR_SIZE, 294);
-					OutputCDMain(fileC2Error, lpBufC2 + CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * k, nLBA, CD_RAW_SECTOR_SIZE);
+					OutputMainChannel(fileC2Error, lpBufC2 + CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * k, NULL, nLBA, CD_RAW_SECTOR_SIZE);
 					OutputCDC2Error296(fileC2Error, lpBufC2 + CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * k + CD_RAW_SECTOR_SIZE, 294);
 #endif
 					BOOL bMatch = FALSE;
@@ -541,8 +541,8 @@ BOOL ReadCDForRereadingSectorType2(
 							OutputC2ErrorLog("[%03d]:0x%08lx, %d ", idx, dwTmpCrc32, bC2);
 #if 0
 							if (idx > 0) {
-								OutputCDMain(fileC2Error, &lpRereadSector[k][CD_RAW_SECTOR_SIZE * idx]
-									, nLBA - pDisc->MAIN.nOffsetStart + (INT)k, CD_RAW_SECTOR_SIZE);
+								OutputMainChannel(fileC2Error, &lpRereadSector[k][CD_RAW_SECTOR_SIZE * idx]
+									, NULL, nLBA - pDisc->MAIN.nOffsetStart + (INT)k, CD_RAW_SECTOR_SIZE);
 							}
 #endif
 						}
@@ -591,7 +591,7 @@ BOOL ReadCDForRereadingSectorType2(
 								OutputC2ErrorLog("Seek to %ld (0x%08lx)\n"
 									, CD_RAW_SECTOR_SIZE * (LONG)(nLBA + q) - pDisc->MAIN.nCombinedOffset
 									, CD_RAW_SECTOR_SIZE * (LONG)(nLBA + q) - pDisc->MAIN.nCombinedOffset);
-								OutputCDMain(fileC2Error, &lpRereadSector[q][CD_RAW_SECTOR_SIZE * l], nTmpLBA, CD_RAW_SECTOR_SIZE);
+								OutputMainChannel(fileC2Error, &lpRereadSector[q][CD_RAW_SECTOR_SIZE * l], NULL, nTmpLBA, CD_RAW_SECTOR_SIZE);
 								OutputC2ErrorLog("\n");
 #endif
 								break;
@@ -710,8 +710,8 @@ VOID ProcessReturnedContinue(
 ) {
 #if 0
 	if ((pDiscPerSector->subch.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
-		OutputCDMain(fileMainError,
-			pDiscPerSector->mainHeader.current, nLBA, MAINHEADER_MODE1_SIZE);
+		OutputMainChannel(fileMainError,
+			pDiscPerSector->mainHeader.current, NULL, nLBA, MAINHEADER_MODE1_SIZE);
 	}
 #endif
 	WriteErrorBuffer(pExecType, pExtArg, pDevice, pDisc, pDiscPerSector,
@@ -732,7 +732,7 @@ VOID ProcessReturnedContinue(
 				pBuf = pDiscPerSector->mainHeader.prev;
 			}
 		}
-		OutputCDMain(fileMainError, pBuf, nLBA, MAINHEADER_MODE1_SIZE);
+		OutputMainChannel(fileMainError, pBuf, NULL, nLBA, MAINHEADER_MODE1_SIZE);
 	}
 #endif
 }
@@ -978,8 +978,7 @@ BOOL ReadCDAll(
 						pDiscPerSector->data.current[n] ^= scrambled_table[n];
 					}
 					WriteMainChannel(pExecType, pExtArg, pDisc, pDiscPerSector->data.current, nLBA, fpScm);
-					OutputMainInfoLog("0xbe for Multi Session\n");
-					OutputCDMain(fileMainInfo, pDiscPerSector->data.current, nLBA, CD_RAW_SECTOR_SIZE);
+					OutputMainChannel(fileMainInfo, pDiscPerSector->data.current, "0xbe for Multi Session", nLBA, CD_RAW_SECTOR_SIZE);
 				}
 				else if (pDisc->MAIN.nAdjustSectorNum > 1 && nLBA == pDisc->SCSI.n1stLBAof2ndSession &&
 					((pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK)) {
@@ -991,8 +990,7 @@ BOOL ReadCDAll(
 					AlignColumnSubcode(lpSubcodeRaw, pDiscPerSector->subcode.current);
 					WriteSubChannel(pDisc, pDiscPerSector, lpSubcodeRaw, nLBA, fpSub);
 
-					OutputMainInfoLog("0xbe for Multi Session\n");
-					OutputCDMain(fileMainInfo, pDiscPerSector->data.current, nLBA, CD_RAW_SECTOR_SIZE);
+					OutputMainChannel(fileMainInfo, pDiscPerSector->data.current, "0xbe for Multi Session", nLBA, CD_RAW_SECTOR_SIZE);
 				}
 				else if (pDisc->MAIN.nAdjustSectorNum < 0 && nLBA == pDisc->MAIN.nFix1stLBAof2ndSession && 
 					(pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == 0) {
@@ -1030,13 +1028,13 @@ BOOL ReadCDAll(
 				memcpy(pDiscPerSector->data.current + CD_RAW_SECTOR_WITH_C2_294_SIZE, pDisc->lpCachedBuf + nOfs + CD_RAW_SECTOR_SIZE, CD_RAW_READ_SUBCODE_SIZE);
 				AlignRowSubcode(pDiscPerSector->subcode.current, pDisc->lpCachedBuf + nOfs + CD_RAW_SECTOR_SIZE);
 #ifdef _DEBUG
-				OutputCDMain(fileMainInfo, pDiscPerSector->data.current, nLBA, CD_RAW_SECTOR_SIZE);
+				OutputMainChannel(fileMainInfo, pDiscPerSector->data.current, NULL, nLBA, CD_RAW_SECTOR_SIZE);
 				OutputCDSub96Align(fileMainInfo, pDiscPerSector->subcode.current, nLBA);
 				OutputCDC2Error296(fileC2Error, pDiscPerSector->data.current + pDevice->TRANSFER.uiBufC2Offset, nLBA);
 
 				BYTE buf[CD_RAW_READ_SUBCODE_SIZE] = {};
 				for (INT i = 0; i < 20; i++) {
-					OutputCDMain(fileMainInfo, pDisc->lpCachedBuf + F1_BUFFER_SIZE * i, nLBA + i, CD_RAW_SECTOR_SIZE);
+					OutputMainChannel(fileMainInfo, pDisc->lpCachedBuf + F1_BUFFER_SIZE * i, NULL, nLBA + i, CD_RAW_SECTOR_SIZE);
 					AlignRowSubcode(buf, pDisc->lpCachedBuf + F1_BUFFER_SIZE * i + CD_RAW_SECTOR_SIZE);
 					OutputCDSub96Align(fileMainInfo, buf, nLBA + i);
 				}
@@ -1089,7 +1087,7 @@ BOOL ReadCDAll(
 					if (pExtArg->byMultiSession && n1stErrLBA == 0) {
 						OutputString(" End of readable sector\n");
 #ifdef _DEBUG
-						OutputCDMain(fileMainError, pDiscPerSector->data.current, nLBA, CD_RAW_SECTOR_SIZE);
+						OutputMainChannel(fileMainError, pDiscPerSector->data.current, NULL, nLBA, CD_RAW_SECTOR_SIZE);
 #endif
 						n1stErrLBA = nLBA;
 						for (INT i = nLBA; i <= pDisc->MAIN.nFix1stLBAof2ndSession - 150; i++) {
@@ -1215,7 +1213,7 @@ BOOL ReadCDAll(
 #if 0
 				if (pExtArg->byPre && PREGAP_START_LBA <= nLBA && nLBA <= -76) {
 					OutputCDSub96Align(pDiscPerSector->subcode.current, nLBA);
-					OutputCDMain(fileDisc, pDiscPerSector->data.current, nLBA, CD_RAW_SECTOR_SIZE);
+					OutputMainChannel(fileDisc, pDiscPerSector->data.current, NULL, nLBA, CD_RAW_SECTOR_SIZE);
 				}
 #endif
 				if (bReadOK) {
@@ -1233,7 +1231,7 @@ BOOL ReadCDAll(
 								continue;
 							}
 							else if (!bReturn) {
-								OutputCDMain(fileMainError, pDiscPerSector->data.current, nLBA, 2352);
+								OutputMainChannel(fileMainError, pDiscPerSector->data.current, NULL, nLBA, 2352);
 								OutputCDC2Error296(fileMainError, pDiscPerSector->data.current + 2352, nLBA);
 								OutputCDSub96Raw(fileMainError, pDiscPerSector->data.current + 2352 + 294, nLBA);
 								FlushLog();
@@ -1281,7 +1279,7 @@ BOOL ReadCDAll(
 					}
 #ifdef _DEBUG
 					if (nLBA == pDisc->MAIN.nFix1stLBAof2ndSession || n2ndSessionLBA == nLBA) {
-						OutputCDMain(fileMainInfo, pDiscPerSector->data.current, nLBA, CD_RAW_SECTOR_SIZE);
+						OutputMainChannel(fileMainInfo, pDiscPerSector->data.current, NULL, nLBA, CD_RAW_SECTOR_SIZE);
 					}
 #endif
 
@@ -1854,8 +1852,8 @@ BOOL ReadCDForSwap(
 				}
 				fseek(fpScm, CD_RAW_SECTOR_SIZE * pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->byTrackNum], SEEK_SET);
 #if 0
-				OutputCDMain(fileDisc, pDiscPerSector->mainHeader.current
-					, pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->byTrackNum - 1], MAINHEADER_MODE1_SIZE);
+				OutputMainChannel(fileDisc, pDiscPerSector->mainHeader.current
+					, NULL, pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->byTrackNum - 1], MAINHEADER_MODE1_SIZE);
 #endif
 			}
 			SetTrackAttribution(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA);
@@ -2312,7 +2310,7 @@ BOOL ReadCDPartial(
 				// Write track to scrambled
 				WriteMainChannel(pExecType, pExtArg, pDisc, pDiscPerSector->data.current, nLBA, fpBin);
 #if 0
-				OutputCDMain(standardOut, pDiscPerSector->data.current, nLBA, 2352);
+				OutputMainChannel(standardOut, pDiscPerSector->data.current, NULL, nLBA, 2352);
 #endif
 				if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
 					if (pExtArg->byD8 || pDevice->byPlxtrDrive) {

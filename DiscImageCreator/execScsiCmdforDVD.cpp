@@ -924,7 +924,7 @@ BOOL ReadDVDRaw(
 						break;
 					}
 					prevId = id;
-//					OutputCDMain(fileMainInfo, lpBuf + dwOfs3, nLBA + j, DVD_RAW_SECTOR_SIZE);
+//					OutputMainChannel(fileMainInfo, lpBuf + dwOfs3, NULL, nLBA + j, DVD_RAW_SECTOR_SIZE);
 					OutputDVDHeader(lpBuf + dwOfs3, dwSectorSize, nLBA + (INT)(j + i * transferLen.AsULong));
 				}
 
@@ -1506,7 +1506,7 @@ BOOL ReadDiscStructure(
 				, (UCHAR)(cdb.Reserved3 << 6 | cdb.AGID), cdb.Control);
 		}
 		else {
-			OutputCDMain(fileDisc, bca, 0, 0xc0);
+			OutputMainChannel(fileDisc, bca, "BCA", 0, 0xc0);
 		}
 	}
 

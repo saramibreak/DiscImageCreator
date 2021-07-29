@@ -193,8 +193,7 @@ BOOL ReadTOC(
 			return FALSE;
 		}
 	}
-	OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("TOC (Binary)"));
-	OutputCDMain(fileMainInfo, (LPBYTE)&pDisc->SCSI.toc, 0, size.AsUShort);
+	OutputMainChannel(fileMainInfo, (LPBYTE)&pDisc->SCSI.toc, "TOC (Binary)", 0, size.AsUShort);
 
 	if (pDisc->SCSI.toc.FirstTrack < 1 || 99 < pDisc->SCSI.toc.FirstTrack ||
 		pDisc->SCSI.toc.LastTrack < 1 || 99 < pDisc->SCSI.toc.LastTrack) {
@@ -301,8 +300,7 @@ BOOL ReadTOCFull(
 			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 			throw FALSE;
 		}
-		OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("FULL TOC (Binary)"));
-		OutputCDMain(fileMainInfo, pFullToc, 0, size.AsUShort);
+		OutputMainChannel(fileMainInfo, pFullToc, "FULL TOC (Binary)", 0, size.AsUShort);
 
 		*pTocData = ((PCDROM_TOC_FULL_TOC_DATA)(pFullToc))->Descriptors;
 		INT nTmpLBAExt = 0;
@@ -1199,8 +1197,7 @@ BOOL ReadCacheForLgAsus(
 		if (!*lpbCached) {
 			OutputLog(standardOut | fileDisc, "%02d Cache LBA %06d, SubQ Trk %02x, AMSF %02x:%02x:%02x [Lead-out]\n"
 				, nLineNum + 1, nLBA, aSubBuf[13], aSubBuf[19], aSubBuf[20], aSubBuf[21]);
-			OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("Cached Main Channel [Lead-out]"));
-			OutputCDMain(fileMainInfo, aBuf, nLBA, CD_RAW_SECTOR_SIZE);
+			OutputMainChannel(fileMainInfo, aBuf, "Cached Main Channel [Lead-out]", nLBA, CD_RAW_SECTOR_SIZE);
 #if 0
 			// test code
 			memset(aBuf, 0xff, CD_RAW_SECTOR_SIZE);
@@ -1335,7 +1332,7 @@ BOOL ReadGDForTOC(
 	0x2a0 - 0x2a2: Max LBA     |-> alway "b4 61 08" (549300)
 	0x2a3        : Ctl/Adr     |-> alway "41"
 	*/
-	OutputCDMain(fileMainInfo, bufDec, FIRST_LBA_FOR_GD + nOffset, CD_RAW_SECTOR_SIZE);
+	OutputMainChannel(fileMainInfo, bufDec, "GD-ROM Header", FIRST_LBA_FOR_GD + nOffset, CD_RAW_SECTOR_SIZE);
 	if (bufDec[0x110] != 'T' || bufDec[0x111] != 'O' ||
 		bufDec[0x112] != 'C' || bufDec[0x113] != '1') {
 		OutputErrorString("No GD-ROM data\n");

@@ -564,7 +564,7 @@ VOID OutputDVDLayerDescriptor(
 	);
 	pDisc->DVD.ucBca = dvdLayer->commonHeader.BCAFlag;
 
-	OutputCDMain(type, dvdLayer->MediaSpecific, 0, sizeof(dvdLayer->MediaSpecific));
+	OutputMainChannel(type, dvdLayer->MediaSpecific, NULL, 0, sizeof(dvdLayer->MediaSpecific));
 
 	if (dvdLayer->commonHeader.TrackPath) {
 		DWORD dwEndLayerZeroSectorLen = dwEndLayerZeroSector - dwStartingDataSector + 1;
@@ -673,8 +673,7 @@ VOID OutputDVDCopyrightDescriptor(
 VOID OutputDVDDiskKeyDescriptor(
 	PDVD_DISK_KEY_DESCRIPTOR dvdDiskKey
 ) {
-	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("DiskKeyData"));
-	OutputCDMain(fileDisc, dvdDiskKey->DiskKeyData, 0, sizeof(dvdDiskKey->DiskKeyData));
+	OutputMainChannel(fileDisc, dvdDiskKey->DiskKeyData, "DiskKeyData", 0, sizeof(dvdDiskKey->DiskKeyData));
 }
 
 VOID OutputDiscBCADescriptor(
@@ -714,7 +713,7 @@ VOID OutputDiscBCADescriptor(
 		}
 	}
 	else {
-		OutputCDMain(type, dvdBca->BCAInformation, 0, wFormatLength);
+		OutputMainChannel(type, dvdBca->BCAInformation, NULL, 0, wFormatLength);
 	}
 }
 
@@ -723,9 +722,8 @@ VOID OutputDVDManufacturerDescriptor(
 	PDISC_TYPE pDiscType,
 	LOG_TYPE type
 ) {
-	OutputLog(type, OUTPUT_DHYPHEN_PLUS_STR("ManufacturingInformation"));
-	OutputCDMain(type, dvdManufacturer->ManufacturingInformation, 0,
-		sizeof(dvdManufacturer->ManufacturingInformation));
+	OutputMainChannel(type, dvdManufacturer->ManufacturingInformation
+		, "ManufacturingInformation", 0, sizeof(dvdManufacturer->ManufacturingInformation));
 	if (!strncmp((LPCCH)&dvdManufacturer->ManufacturingInformation[16], "Nintendo Game Disk", 18)) {
 		*pDiscType = DISC_TYPE::gamecube;
 	}
@@ -770,7 +768,7 @@ VOID OutputDVDMediaKeyBlock(
 		" -> it seems it's always random\n"
 		"\tMedia Key Block\n"
 	);
-	OutputCDMain(fileDisc, lpFormat + 16, 0, (UINT)(wFormatLength  - 16));
+	OutputMainChannel(fileDisc, lpFormat + 16, NULL, 0, (UINT)(wFormatLength  - 16));
 }
 
 VOID OutputDiscDefinitionStructure(
@@ -817,7 +815,7 @@ VOID OutputDiscDefinitionStructure(
 		}
 	}
 	else {
-		OutputCDMain(fileDisc, lpFormat, 0, 2048);
+		OutputMainChannel(fileDisc, lpFormat, NULL, 0, 2048);
 	}
 }
 
@@ -874,7 +872,7 @@ VOID OutputDVDRmdLastBorderOut(
 	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("RMD in last border-out"));
 	INT nRoop = wFormatLength / DISC_MAIN_DATA_SIZE;
 	for (INT i = 0; i < nRoop; i++) {
-		OutputCDMain(fileDisc, lpFormat + DISC_MAIN_DATA_SIZE * i, 0, DISC_MAIN_DATA_SIZE);
+		OutputMainChannel(fileDisc, lpFormat + DISC_MAIN_DATA_SIZE * i, NULL, 0, DISC_MAIN_DATA_SIZE);
 	}
 }
 
@@ -891,7 +889,7 @@ VOID OutputDVDRecordingManagementAreaData(
 		, MAKEWORD(dvdRecordingMan->LastRecordedRMASectorNumber[1]
 		, dvdRecordingMan->LastRecordedRMASectorNumber[0]))
 	);
-	OutputCDMain(fileDisc, dvdRecordingMan->RMDBytes, 0
+	OutputMainChannel(fileDisc, dvdRecordingMan->RMDBytes, NULL, 0
 		, wFormatLength - sizeof(DVD_RECORDING_MANAGEMENT_AREA_DATA));
 }
 
@@ -1893,8 +1891,7 @@ VOID OutputBDPhysicalAddressControl(
 		}
 	}
 	else {
-		OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("PacData"));
-		OutputCDMain(fileDisc, lpFormat, 0, wFormatLength);
+		OutputMainChannel(fileDisc, lpFormat, "PacData", 0, wFormatLength);
 	}
 }
 

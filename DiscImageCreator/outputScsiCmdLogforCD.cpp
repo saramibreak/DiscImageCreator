@@ -1370,15 +1370,19 @@ VOID OutputCDC2Error296(
 	}
 }
 
-VOID OutputCDMain(
+VOID OutputMainChannel(
 	LOG_TYPE type,
 	LPBYTE lpBuf,
+	LPCTSTR szLabel,
 	INT nLBA,
 	DWORD dwSize
 ) {
 #ifdef _DEBUG
 	UNREFERENCED_PARAMETER(type);
 #endif
+	if (szLabel != NULL) {
+		OutputLog(type, OUTPUT_DHYPHEN_PLUS_STR("%s"), szLabel);
+	}
 	OutputLog(type, OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Main Channel")
 		"       +0 +1 +2 +3 +4 +5 +6 +7  +8 +9 +A +B +C +D +E +F\n", nLBA, (UINT)nLBA);
 
