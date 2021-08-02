@@ -1108,7 +1108,7 @@ BOOL ReadCDAll(
 						else if (pDisc->MAIN.nAdjustSectorNum > 0) {
 							nLBA = pDisc->MAIN.nFix1stLBAof2ndSession - 150;
 							n1stLBA = nLBA;
-							n1stLBAForSub = pDisc->SCSI.n1stLBAof2ndSession;
+							n1stLBAForSub = pDisc->SCSI.n1stLBAof2ndSession - 150;
 						}
 
 						INT idx = pDisc->SCSI.by1stMultiSessionTrkNum - 1;
