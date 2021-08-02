@@ -2133,7 +2133,7 @@ VOID UpdateTmpMainHeader(
 	PDISC_PER_SECTOR pDiscPerSector,
 	INT nMainDataType
 ) {
-	if (IsValidMainDataHeader(pDiscPerSector->mainHeader.prev)) {
+	if (IsValidMainDataHeader(pDiscPerSector->mainHeader.current)) {
 		memcpy(pDiscPerSector->mainHeader.prev, pDiscPerSector->mainHeader.current, MAINHEADER_MODE1_SIZE);
 		BYTE tmp = (BYTE)(pDiscPerSector->mainHeader.current[14] + 1);
 		if ((tmp & 0x0f) == 0x0a) {
