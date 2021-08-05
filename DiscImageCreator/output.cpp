@@ -1157,7 +1157,7 @@ BOOL WriteParsingMdsfile(
 				if (h.lenOfBca) {
 					OutputDiscBCADescriptor(&disc, dvd[i].bca, h.lenOfBca, fileMds);
 				}
-				OutputDVDManufacturerDescriptor(&dvd[i].dmi, &(disc.DVD.disc), fileMds);
+				OutputDVDManufacturerDescriptor(&dvd[i].dmi, &disc, fileMds);
 				DWORD dwSectorLength = 0;
 				OutputDVDLayerDescriptor(&disc, &dvd[i].layer, &dwSectorLength, layerNumber, fileMds);
 			}

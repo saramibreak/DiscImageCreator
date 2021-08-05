@@ -455,9 +455,11 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 						}
 					}
 					else if (*pExecType == xbox) {
+						pDisc->DVD.discType = DISC_TYPE_DVD::xboxdvd;
 						bRet = ReadXboxDVD(pExecType, pExtArg, &device, pDisc, pszFullPath);
 					}
 					else if (*pExecType == xboxswap || *pExecType == xgd2swap || *pExecType == xgd3swap) {
+						pDisc->DVD.discType = DISC_TYPE_DVD::xboxdvd;
 						bRet = ReadXboxDVDBySwap(pExecType, pExtArg, &device, pDisc, pszFullPath);
 					}
 					else if (*pExecType == bd) {
@@ -1312,7 +1314,14 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					pExtArg->byAnchorVolumeDescriptorPointer = TRUE;
 				}
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/ps"), cmdLen)) {
-					SetOptionPs(argc, argv, pExtArg, &i);
+					if (!SetOptionPs(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
+				}
+				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/nss"), cmdLen)) {
+					if (!SetOptionNss(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
 				}
 				else {
 					OutputErrorString("Unknown option: [%s]\n", argv[i - 1]);
@@ -1577,7 +1586,7 @@ void printUsage(void)
 		"\t   [/c2 (val1) (val2) (val3) (val4)] [/np] [/nq] [/nr] [/s (val)]\n"
 		"\t\tDump a HD area of GD from A to Z\n"
 		"\tdvd <DriveLetter> <Filename> <DriveSpeed(0-16)> [/c] [/f (val)] [/raw] [/q]\n"
-		"\t    [/r (startLBA) (EndLBA)] [/avdp] [/ps]\n"
+		"\t    [/r (startLBA) (EndLBA)] [/avdp] [/ps (val)] [/nss (val)]\n"
 		"\t\tDump a DVD from A to Z\n"
 		"\txbox <DriveLetter> <Filename> <DriveSpeed(0-16)> [/f (val)] [/q]\n"
 		"\t\tDump a xbox disc from A to Z\n"

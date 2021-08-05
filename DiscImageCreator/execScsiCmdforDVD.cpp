@@ -127,7 +127,7 @@ BOOL ReadDVD(
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
-	if (pExtArg->byNoSkipSS) {
+	if (IsXbox(pExecType) && pExtArg->byNoSkipSS) {
 		pDisc->PROTECT.byExist = physicalErr;
 	}
 	BOOL bRet = TRUE;
@@ -231,7 +231,7 @@ BOOL ReadDVD(
 		BYTE byScsiStatus = 0;
 		INT i = 0;
 		INT nRetryCnt = 0;
-		if (pDisc->PROTECT.byExist == ripGuard) {
+		if (pDisc->PROTECT.byExist == arccos || pDisc->PROTECT.byExist == ripGuard) {
 			transferLen.AsULong = 1;
 			REVERSE_BYTES(&cdb.TransferLength, &transferLen);
 		}
@@ -312,7 +312,7 @@ BOOL ReadDVD(
 				REVERSE_BYTES(&cdb.TransferLength, &transferLen);
 			}
 
-			if ((pDisc->PROTECT.byExist == physicalErr || pDisc->PROTECT.byExist == ripGuard)
+			if ((pDisc->PROTECT.byExist == physicalErr || pDisc->PROTECT.byExist == arccos || pDisc->PROTECT.byExist == ripGuard)
 				&& nFirstErrorLBA != 0 && nFirstErrorLBA <= nLBA && nLBA <= nLastErrorLBA) {
 				FillMemory(lpBuf, DISC_MAIN_DATA_SIZE * transferLen.AsULong, 0x00);
 				fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_MAIN_DATA_SIZE * transferLen.AsULong, fp);
@@ -341,7 +341,7 @@ BOOL ReadDVD(
 					}
 				}
 				
-				if (pDisc->PROTECT.byExist == physicalErr || pDisc->PROTECT.byExist == ripGuard) {
+				if (pDisc->PROTECT.byExist == physicalErr || pDisc->PROTECT.byExist == arccos || pDisc->PROTECT.byExist == ripGuard) {
 					if (IsXbox(pExecType) && bSetErrorSectorRange &&
 						nLastErrorLBA <= nLBA && nLBA <= (INT)pDisc->DVD.securitySectorRange[i][1]) {
 						if (++uiErrorForwardTimes <= pExtArg->uiMaxRereadNum) {
@@ -1066,10 +1066,10 @@ BOOL ReadDVDRaw(
 			// frame num == error unscrambling recording frame xx
 			OutputString("ret = %d\n", bRet);
 			if (bRet == 0) {
-				if (pDisc->DVD.disc == gamecube) {
+				if (pDisc->DVD.discType == gamecube) {
 					ReadNintendoFileSystem(pDevice, pszFullPath, gamecube);
 				}
-				else if (pDisc->DVD.disc == wii) {
+				else if (pDisc->DVD.discType == wii) {
 					ReadWiiPartition(pDevice, pszFullPath);
 				}
 			}
@@ -1472,7 +1472,7 @@ BOOL ReadDiscStructure(
 	}
 	// FormatCode: 00 failed (for gamecube. wii disc does success)
 	if (pDisc->SCSI.nAllLength == 0) {
-		if (pDisc->DVD.disc == DISC_TYPE::gamecube) {
+		if (pDisc->DVD.discType == DISC_TYPE_DVD::gamecube) {
 			pDisc->SCSI.nAllLength = GAMECUBE_SIZE;
 		}
 		else {
@@ -1480,7 +1480,7 @@ BOOL ReadDiscStructure(
 		}
 	}
 
-	if (pDisc->DVD.disc == DISC_TYPE::gamecube || pDisc->DVD.disc == DISC_TYPE::wii) {
+	if (pDisc->DVD.discType == DISC_TYPE_DVD::gamecube || pDisc->DVD.discType == DISC_TYPE_DVD::wii) {
 		BYTE bca[0xc0] = {};
 		cdb.Reserved1 = 0;
 		cdb.Lun = 0;

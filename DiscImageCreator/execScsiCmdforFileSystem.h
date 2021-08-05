@@ -57,7 +57,7 @@ BOOL ReadXBOXFileSystem(
 BOOL ReadNintendoFileSystem(
 	PDEVICE pDevice,
 	LPCTSTR pszFullPath,
-	DISC_TYPE type
+	DISC_TYPE_DVD type
 );
 
 BOOL ReadWiiPartition(

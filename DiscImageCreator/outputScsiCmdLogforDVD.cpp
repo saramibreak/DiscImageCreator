@@ -719,21 +719,35 @@ VOID OutputDiscBCADescriptor(
 
 VOID OutputDVDManufacturerDescriptor(
 	PDVD_MANUFACTURER_DESCRIPTOR dvdManufacturer,
-	PDISC_TYPE pDiscType,
+	PDISC pDisc,
 	LOG_TYPE type
 ) {
 	OutputMainChannel(type, dvdManufacturer->ManufacturingInformation
 		, "ManufacturingInformation", 0, sizeof(dvdManufacturer->ManufacturingInformation));
-	if (!strncmp((LPCCH)&dvdManufacturer->ManufacturingInformation[16], "Nintendo Game Disk", 18)) {
-		*pDiscType = DISC_TYPE::gamecube;
+	if (pDisc->DVD.discType != DISC_TYPE_DVD::xboxdvd) {
+		if (!strncmp((LPCCH)&dvdManufacturer->ManufacturingInformation[16], "Nintendo Game Disk", 18)) {
+			pDisc->DVD.discType = DISC_TYPE_DVD::gamecube;
+		}
+		else if (!strncmp((LPCCH)&dvdManufacturer->ManufacturingInformation[16], "Nintendo NNGC Disk", 18)) {
+			pDisc->DVD.discType = DISC_TYPE_DVD::wii;
+		}
+		else {
+			pDisc->DVD.discType = DISC_TYPE_DVD::formal;
+			if (pDisc->SCSI.wCurrentMedia == ProfileDvdRom) {
+				for (UINT i = 0; i < sizeof(dvdManufacturer->ManufacturingInformation); i++) {
+					if (dvdManufacturer->ManufacturingInformation[i] != 0) {
+						// Pursuit of Happyness, the (0 43396 15085 0)
+						// Stranger than Fiction (0 43396 15407 0)
+						pDisc->DVD.discType = DISC_TYPE_DVD::protect;
+						OutputLog(standardOut | fileDisc, "Detected ARccOS\n");
+						strncpy(pDisc->PROTECT.name[0], "ARccOS", 6);
+						pDisc->PROTECT.byExist = arccos;
+						break;
+					}
+				}
+			}
+		}
 	}
-	else if (!strncmp((LPCCH)&dvdManufacturer->ManufacturingInformation[16], "Nintendo NNGC Disk", 18)) {
-		*pDiscType = DISC_TYPE::wii;
-	}
-	else {
-		*pDiscType = DISC_TYPE::formal;
-	}
-
 }
 
 VOID OutputDVDMediaId(
@@ -1214,7 +1228,7 @@ VOID OutputDVDStructureFormat(
 		OutputDiscBCADescriptor(pDisc, (PDVD_BCA_DESCRIPTOR)lpFormat, wFormatLength, fileDisc);
 		break;
 	case DvdManufacturerDescriptor:
-		OutputDVDManufacturerDescriptor((PDVD_MANUFACTURER_DESCRIPTOR)lpFormat, &(pDisc->DVD.disc), fileDisc);
+		OutputDVDManufacturerDescriptor((PDVD_MANUFACTURER_DESCRIPTOR)lpFormat, pDisc, fileDisc);
 		break;
 	case 0x06:
 		OutputDVDMediaId(lpFormat);

@@ -1335,7 +1335,7 @@ BOOL ReadNintendoSystemHeader(
 BOOL ReadNintendoFileSystem(
 	PDEVICE pDevice,
 	LPCTSTR pszFullPath,
-	DISC_TYPE type
+	DISC_TYPE_DVD type
 ) {
 	FILE* fp = NULL;
 	BYTE buf[1024] = {};

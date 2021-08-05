@@ -53,7 +53,7 @@ VOID OutputDiscBCADescriptor(
 
 VOID OutputDVDManufacturerDescriptor(
 	PDVD_MANUFACTURER_DESCRIPTOR dvdManufacturer,
-	PDISC_TYPE pDiscType,
+	PDISC pDisc,
 	LOG_TYPE type
 );
 

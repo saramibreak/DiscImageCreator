@@ -98,6 +98,7 @@ typedef enum _PROTECT_TYPE_CD {
 	securomV3_3, // a.k.a SecuROM NEW ((8 shifted RMSF/AMSF + 1 error) * 11 times = 99 sector error) 
 	securomV4, // a.k.a SecuROM NEW (LBA -1 + 10 random error = 11 sector error)
 	smartE,
+	arccos,
 	ripGuard,
 	physicalErr,
 	c2Err
@@ -113,9 +114,11 @@ typedef enum _PROTECT_TYPE_DVD {
 
 typedef enum _DISC_TYPE {
 	formal,	// DVD, BD
+	protect,
+	xboxdvd,
 	gamecube,
 	wii
-} DISC_TYPE, *PDISC_TYPE;
+} DISC_TYPE_DVD, *PDISC_TYPE_DVD;
 
 typedef enum _PATH_TYPE {
 	lType,
