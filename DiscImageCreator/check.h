@@ -61,7 +61,7 @@ VOID SupportIndex0InTrack1(
 	PDEVICE pDevice
 );
 
-BOOL IsEnoughDiskSpeceForDump(
+BOOL IsEnoughDiskSpaceForDump(
 	PEXEC_TYPE pExecType,
 	_TCHAR* szDrive
 );

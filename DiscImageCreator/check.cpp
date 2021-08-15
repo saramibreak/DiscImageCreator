@@ -455,7 +455,7 @@ VOID SupportIndex0InTrack1(
 	}
 }
 
-BOOL IsEnoughDiskSpeceForDump(
+BOOL IsEnoughDiskSpaceForDump(
 	PEXEC_TYPE pExecType,
 	_TCHAR* szDrive
 ) {

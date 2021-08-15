@@ -1799,7 +1799,7 @@ int main(int argc, char* argv[])
 			nRet = FALSE;
 		}
 		else {
-			if (IsEnoughDiskSpeceForDump(&execType, s_szDrive)) {
+			if (IsEnoughDiskSpaceForDump(&execType, s_szDrive)) {
 				_TCHAR szBuf[128] = {};
 				time_t now = time(NULL);
 				tm* ts = localtime(&now);
