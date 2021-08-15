@@ -417,3 +417,52 @@ unsigned int Sleep(unsigned long seconds)
 {
 	return sleep((unsigned int)seconds / 1000);
 }
+
+int GetDiskFreeSpaceEx(
+	LPCSTR lpDirectoryName,
+	PULARGE_INTEGER lpFreeBytesAvailableToCaller,
+	PULARGE_INTEGER lpTotalNumberOfBytes,
+	PULARGE_INTEGER lpTotalNumberOfFreeBytes
+) {
+	struct statvfs64 buf;
+	buf.f_bsize = 0;
+	buf.f_frsize = 0;
+	buf.f_blocks = 0; 
+	buf.f_bfree = 0; 
+	buf.f_bavail = 0; 
+	buf.f_files = 0;
+	buf.f_ffree = 0; 
+	buf.f_favail = 0; 
+	buf.f_fsid = 0; 
+	buf.f_flag = 0; 
+	buf.f_namemax = 0;
+
+	int rc = statvfs64(lpDirectoryName, &buf);
+	if (rc < 0) {
+		fprintf(stderr, "Error: statvfs() %s: %s\n", strerror(errno), lpDirectoryName);
+		return -1;
+	}
+
+	printf(
+		"          Block Size: %lu\n"
+		"       Flagment Size: %lu\n"
+		"       All Block Num: %lu\n"
+		"      Free Block Num: %lu\n"
+		" Available Block Num: %lu\n"
+		"          I Node Num: %lu\n"
+		"     Free I Node Num: %lu\n"
+		"Available I Node Num: %lu\n"
+		"      File System ID: %lu\n"
+		"          Mount Flag: %lu\n"
+		" Max Filename Length: %lu\n"
+		, buf.f_bsize, buf.f_frsize
+		, buf.f_blocks, buf.f_bfree, buf.f_bavail
+		, buf.f_files, buf.f_ffree, buf.f_favail
+		, buf.f_fsid, buf.f_flag, buf.f_namemax
+	);
+	lpFreeBytesAvailableToCaller->QuadPart = buf.f_frsize * buf.f_bavail;
+	lpTotalNumberOfBytes->QuadPart = buf.f_frsize * buf.f_blocks;
+	lpTotalNumberOfFreeBytes->QuadPart = buf.f_frsize * (buf.f_blocks - buf.f_bavail);
+
+	return 0;
+}

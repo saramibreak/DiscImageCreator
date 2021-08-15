@@ -455,6 +455,45 @@ VOID SupportIndex0InTrack1(
 	}
 }
 
+BOOL IsEnoughDiskSpeceForDump(
+	PEXEC_TYPE pExecType,
+	_TCHAR* szDrive
+) {
+	ULARGE_INTEGER  ui64Used;
+	ULARGE_INTEGER  ui64Free;
+	ULARGE_INTEGER  ui64Avail;
+	ULARGE_INTEGER  ui64Total;
+	BOOL bRet = FALSE;
+
+	GetDiskFreeSpaceEx(szDrive, &ui64Free, &ui64Total, &ui64Avail);
+	ui64Used.QuadPart = (ui64Total.QuadPart - ui64Avail.QuadPart);
+
+	OutputString(
+		"Disk Total Size: %12llu bytes\n"
+		"Disk Used  Size: %12llu bytes\n"
+		"------------------------------------\n"
+		"Disk Space Size: %12llu bytes\n"
+		, ui64Total.QuadPart, ui64Used.QuadPart, ui64Avail.QuadPart
+	);
+	if ((*pExecType == cd && ui64Avail.QuadPart > 3000000000) ||
+		(*pExecType == swap && ui64Avail.QuadPart > 3000000000) ||
+		(*pExecType == gd && ui64Avail.QuadPart > 4000000000) ||
+		(*pExecType == dvd && ui64Avail.QuadPart > 9000000000) ||
+		(*pExecType == xbox && ui64Avail.QuadPart > 9000000000) ||
+		(*pExecType == xboxswap && ui64Avail.QuadPart > 9000000000) ||
+		(*pExecType == xgd2swap && ui64Avail.QuadPart > 9000000000) ||
+		(*pExecType == xgd3swap && ui64Avail.QuadPart > 9000000000) ||
+		(*pExecType == bd && ui64Avail.QuadPart > 130000000000)
+		) {
+		OutputString(" => There is enough the disk space for dumping\n");
+		bRet = TRUE;
+	}
+	else {
+		OutputString(" => There is not enough the disk space for dumping\n");
+	}
+	return bRet;
+}
+
 BOOL IsValidMainDataHeader(
 	LPBYTE lpBuf
 ) {

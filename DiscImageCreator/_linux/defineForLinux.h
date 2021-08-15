@@ -104,6 +104,9 @@ typedef UINT			   *LPUINT;
 #define LOBYTE(w)           ((BYTE)(((DWORD_PTR)(w)) & 0xff))
 #define HIBYTE(w)           ((BYTE)((((DWORD_PTR)(w)) >> 8) & 0xff))
 
+// WTypes.h
+ typedef double DOUBLE;
+
 // from WinNT.h
 //
 // For compilers that don't support nameless unions/structs
@@ -202,6 +205,44 @@ typedef SHORT *PSHORT;
 typedef LONG *PLONG;
 
 typedef void *HANDLE;
+
+typedef long long LONGLONG;
+
+#if defined(MIDL_PASS)
+typedef struct _LARGE_INTEGER {
+#else // MIDL_PASS
+typedef union _LARGE_INTEGER {
+	struct {
+		DWORD LowPart;
+		LONG HighPart;
+	} DUMMYSTRUCTNAME;
+	struct {
+		DWORD LowPart;
+		LONG HighPart;
+	} u;
+#endif //MIDL_PASS
+	LONGLONG QuadPart;
+} LARGE_INTEGER;
+
+typedef LARGE_INTEGER* PLARGE_INTEGER;
+
+#if defined(MIDL_PASS)
+typedef struct _ULARGE_INTEGER {
+#else // MIDL_PASS
+typedef union _ULARGE_INTEGER {
+	struct {
+		DWORD LowPart;
+		DWORD HighPart;
+	} DUMMYSTRUCTNAME;
+	struct {
+		DWORD LowPart;
+		DWORD HighPart;
+	} u;
+#endif //MIDL_PASS
+	ULONGLONG QuadPart;
+} ULARGE_INTEGER;
+
+typedef ULARGE_INTEGER* PULARGE_INTEGER;
 
 typedef BYTE  BOOLEAN;
 typedef BOOLEAN *PBOOLEAN;
@@ -1265,23 +1306,6 @@ typedef enum _MEDIA_TYPE {
 	F3_32M_512              // 3.5",   32Mb Floppy
 } MEDIA_TYPE, *PMEDIA_TYPE;
 
-typedef long long LONGLONG;
-#if defined(MIDL_PASS)
-typedef struct _LARGE_INTEGER {
-#else // MIDL_PASS
-typedef union _LARGE_INTEGER {
-	struct {
-		DWORD LowPart;
-		LONG HighPart;
-	} DUMMYSTRUCTNAME;
-	struct {
-		DWORD LowPart;
-		LONG HighPart;
-	} u;
-#endif //MIDL_PASS
-	LONGLONG QuadPart;
-} LARGE_INTEGER;
-
 #define _NTSCSI_USER_MODE_
 #include "scsi.h"
 #include "ntddcdrm.h"
@@ -2186,11 +2210,12 @@ typedef struct _AACS_READ_BINDING_NONCE {
 #include <errno.h>
 #include <pthread.h>
 
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/ioctl.h>
+#include <sys/statvfs.h>
 #include <linux/cdrom.h>
 #include <linux/iso_fs.h>
 #include <linux/mmc/ioctl.h>
@@ -2421,3 +2446,5 @@ off64_t SetFilePointerEx(int fd, LARGE_INTEGER pos, void* a, int origin);
 
 unsigned int Sleep(unsigned long seconds);
 #endif
+
+int GetDiskFreeSpaceEx(LPCSTR lpDirectoryName, PULARGE_INTEGER lpFreeBytesAvailableToCaller, PULARGE_INTEGER lpTotalNumberOfBytes, PULARGE_INTEGER lpTotalNumberOfFreeBytes);

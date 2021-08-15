@@ -1799,23 +1799,25 @@ int main(int argc, char* argv[])
 			nRet = FALSE;
 		}
 		else {
-			_TCHAR szBuf[128] = {};
-			time_t now = time(NULL);
-			tm* ts = localtime(&now);
-			_tcsftime(szBuf, sizeof(szBuf) / sizeof(szBuf[0]), _T("%FT%T%z"), ts);
-			OutputString("StartTime: %s\n", szBuf);
+			if (IsEnoughDiskSpeceForDump(&execType, s_szDrive)) {
+				_TCHAR szBuf[128] = {};
+				time_t now = time(NULL);
+				tm* ts = localtime(&now);
+				_tcsftime(szBuf, sizeof(szBuf) / sizeof(szBuf[0]), _T("%FT%T%z"), ts);
+				OutputString("StartTime: %s\n", szBuf);
 
-			if (execType != merge) {
-				nRet = createCmdFile(argc, argv, szFullPath, szDateTime);
-			}
-			if (nRet) {
-				nRet = exec(argv, &execType, &extArg, szFullPath);
-			}
+				if (execType != merge) {
+					nRet = createCmdFile(argc, argv, szFullPath, szDateTime);
+				}
+				if (nRet) {
+					nRet = exec(argv, &execType, &extArg, szFullPath);
+				}
 
-			now = time(NULL);
-			ts = localtime(&now);
-			_tcsftime(szBuf, sizeof(szBuf) / sizeof(szBuf[0]), _T("%FT%T%z"), ts);
-			OutputString("EndTime: %s\n", szBuf);
+				now = time(NULL);
+				ts = localtime(&now);
+				_tcsftime(szBuf, sizeof(szBuf) / sizeof(szBuf[0]), _T("%FT%T%z"), ts);
+				OutputString("EndTime: %s\n", szBuf);
+			}
 		}
 		if (!extArg.byQuiet) {
 			if (!soundBeep(nRet)) {

@@ -61,6 +61,11 @@ VOID SupportIndex0InTrack1(
 	PDEVICE pDevice
 );
 
+BOOL IsEnoughDiskSpeceForDump(
+	PEXEC_TYPE pExecType,
+	_TCHAR* szDrive
+);
+
 BOOL IsValidMainDataHeader(
 	LPBYTE lpBuf
 );
