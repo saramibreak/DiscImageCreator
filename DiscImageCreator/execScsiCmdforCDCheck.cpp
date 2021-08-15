@@ -851,11 +851,11 @@ BOOL ReadCDForCheckingReadInOut(
 							}
 						}
 						if (!bCached) {
-							OutputLog(standardError | fileDisc, "Unabled to get the cache. Retry %d/%d\n", r + 1, pExtArg->uiRetryCnt);
+							OutputLog(standardError | fileDisc, "Unabled to get the cache. Retry %u/%u\n", r + 1, pExtArg->uiRetryCnt);
 							continue;
 						}
 						else if (nLeadOutCnt < pDisc->MAIN.nAdjustSectorNum + 1) {
-							OutputLog(standardError | fileDisc, "Cache is short. Retry %d/%d\n", r + 1, pExtArg->uiRetryCnt);
+							OutputLog(standardError | fileDisc, "Cache is short. Retry %u/%u\n", r + 1, pExtArg->uiRetryCnt);
 							bCached = FALSE;
 							continue;
 						}

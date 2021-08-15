@@ -740,7 +740,7 @@ VOID OutputDVDManufacturerDescriptor(
 						// Stranger than Fiction (0 43396 15407 0)
 						pDisc->DVD.discType = DISC_TYPE_DVD::protect;
 						OutputLog(standardOut | fileDisc, "Detected ARccOS\n");
-						strncpy(pDisc->PROTECT.name[0], "ARccOS", 6);
+						strncpy(pDisc->PROTECT.name[0], "ARccOS", 7);
 						pDisc->PROTECT.byExist = arccos;
 						break;
 					}
@@ -1384,12 +1384,10 @@ VOID OutputBDDiscInformation(
 	BOOL bBdRom = TRUE;
 	INT nSize = 2048;
 	INT nBlock = 64;
-	INT nDependentSize = 52;
 	if (strncmp((CONST CHAR*)&lpFormat[8], "BDO", 3)) {
 		bBdRom = FALSE;
 		nSize = 3584;
 		nBlock = 112;
-		nDependentSize = 88;
 	}
 	UINT uiEndLogicalSector[4] = {};
 	UINT uiStartPhysicalSector[4] = {};
@@ -1413,17 +1411,17 @@ VOID OutputBDDiscInformation(
 			"\tDiscInformationUnits\n"
 			"\t             DiscInformationIdentifier: %.2" CHARWIDTH "s\n"
 			"\t                               BCACode: %s\n"
-			"\t                 DiscInformationFormat: %02x\n"
+			"\t                 DiscInformationFormat: %02d\n"
 			"\t          NumberOfDIUnitsInEachDIBlock: %02d\n"
 			"\tNumberOfLayersToWhichThisDIUnitApplies: %02d\n"
-			"\t                      DiscTypeSpecific: %02x\n"
-			"\t                  DIUnitSequenceNumber: %02x\n"
+			"\t                      DiscTypeSpecific: %02d\n"
+			"\t                  DIUnitSequenceNumber: %02d\n"
 			"\t                      ContinuationFlag: %s\n"
 			"\t        NumberOfBytesInUseInThisDIUnit: %02d\n"
 			"\t                    DiscTypeIdentifier: %.3" CHARWIDTH "s\n"
 			"\t                              DiscSize: %s\n"
-			"\t                                 Class: %02x\n"
-			"\t                               Version: %02x\n"
+			"\t                                 Class: %02d\n"
+			"\t                               Version: %02d\n"
 			"\t         DIUnitFormatDependentContents\n"
 			, &lpFormat[0 + i], lpFormat[2 + i] >> 7 == 0 ? _T("Yes") : _T("No")
 			, nDIFormat, lpFormat[3 + i] >> 3

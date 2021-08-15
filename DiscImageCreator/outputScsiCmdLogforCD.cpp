@@ -40,7 +40,7 @@ VOID OutputFsImageDosHeader(
 		"\t                   Overlay number: %04x\n"
 		"\t   OEM identifier (for e_oeminfo): %04x\n"
 		"\tOEM information; e_oemid specific: %04x\n"
-		"\t   File address of new exe header: %08lx\n"
+		"\t   File address of new exe header: %08ld\n"
 		, sizeof(IMAGE_DOS_HEADER)
 		, pIdh->e_magic, pIdh->e_magic, pIdh->e_magic >> 8, pIdh->e_cblp, pIdh->e_cp
 		, pIdh->e_crlc, pIdh->e_cparhdr, pIdh->e_minalloc, pIdh->e_maxalloc
@@ -59,13 +59,13 @@ VOID OutputFsImageOS2Header(
 		"\t                   Revision number: %02d\n"
 		"\t             Offset of Entry Table: %04x\n"
 		"\t    Number of bytes in Entry Table: %04x\n"
-		"\t            Checksum of whole file: %08lx\n"
+		"\t            Checksum of whole file: %08ld\n"
 		"\t                         Flag word: %04x\n"
 		"\t     Automatic data segment number: %04x\n"
 		"\t           Initial heap allocation: %04x\n"
 		"\t          Initial stack allocation: %04x\n"
-		"\t             Initial CS:IP setting: %08lx\n"
-		"\t             Initial SS:SP setting: %08lx\n"
+		"\t             Initial CS:IP setting: %08ld\n"
+		"\t             Initial SS:SP setting: %08ld\n"
 		"\t            Count of file segments: %04x\n"
 		"\t Entries in Module Reference Table: %04x\n"
 		"\t   Size of non-resident name table: %04x\n"
@@ -74,7 +74,7 @@ VOID OutputFsImageOS2Header(
 		"\t     Offset of resident name table: %04x\n"
 		"\t  Offset of Module Reference Table: %04x\n"
 		"\t    Offset of Imported Names Table: %04x\n"
-		"\tOffset of Non-resident Names Table: %08lx\n"
+		"\tOffset of Non-resident Names Table: %08ld\n"
 		"\t          Count of movable entries: %04x\n"
 		"\t     Segment alignment shift count: %04x\n"
 		"\t        Count of resource segments: %04x\n"
@@ -710,7 +710,7 @@ VOID OutputResourceDirectory(
 								wcsncpy(lpwszFileVer, &pstr->szKey[len], flen);
 							}
 							else {
-								OutputVolDescLog("FileVersion is over the bufsize [%d < %zd]\n", FILE_VERSION_SIZE, flen);
+								OutputVolDescLog("FileVersion is over the bufsize [%d < %zu]\n", FILE_VERSION_SIZE, flen);
 							}
 						}
 					}
