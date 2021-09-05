@@ -775,8 +775,12 @@ BOOL ReadDVDRaw(
 		ReadCdb.OperationCode = SCSIOP_READ12;
 		REVERSE_BYTES(&ReadCdb.TransferLength, &transferLen);
 
-		if (IsNintendoDisc(pDisc) && IsSupported0xE7(pDevice)) {
-				ReadCdb.Streaming = TRUE;
+		if ((pDisc->SCSI.nAllLength == WII_SL_SIZE || pDisc->SCSI.nAllLength == WII_DL_SIZE) && IsSupported0xE7(pDevice)) {
+			OutputString(
+				"[INFO] If you want to decrypt the dumped iso file, you need to put key.bin in the same place as DiscImageCreator.exe\n"
+				"key.bin is 16 bytes, crc32 is fc8bf576\n"
+			);
+			ReadCdb.Streaming = TRUE;
 		}
 		else {
 			ReadCdb.ForceUnitAccess = TRUE;
@@ -975,7 +979,9 @@ BOOL ReadDVDRaw(
 						}
 						else if (IsSupported0xE7Type2_1(pDevice) ||
 							IsSupported0xE7Type2_2(pDevice) ||
-							IsSupported0xE7Type3(pDevice)) {
+							IsSupported0xE7Type3(pDevice) ||
+							IsSupported0xE7Type4(pDevice)
+							) {
 							tmp = 0;
 						}
 					}
