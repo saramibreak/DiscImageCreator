@@ -1793,12 +1793,14 @@ BOOL ReadCDForCheckingExe(
 			}
 			
 			if (!strncmp((LPCCH)&lpBuf[0], "MSCF", 4)) {
+				OutputString(
+					"\nDetected MicroSoft Cabinet File: %" CHARWIDTH "s\n"
+					, pDisc->PROTECT.pFullNameForExe[n]
+				);
 				if (pExtArg->byMicroSoftCabFile) {
 #ifdef _WIN32
 					OutputString(
-						"\nDetected MicroSoft Cabinet File: %" CHARWIDTH "s\n"
 						"Please wait until all files are extracted. This is needed to search protection\n"
-						, pDisc->PROTECT.pFullNameForExe[n]
 					);
 					_tcscat(szTmpPath, _T("!extracted\\"));
 					ProcessDirectory(pExtArg, pDisc, szTmpPath, FILE_CREATE);
@@ -1812,6 +1814,9 @@ BOOL ReadCDForCheckingExe(
 #else
 					// TODO: linux can use cabextract
 #endif
+				}
+				else {
+					OutputString("/mscf is needed to extract it\n");
 				}
 			}
 			else if (!strncmp((LPCCH)&lpBuf[0], "ISc(", 4)) {
