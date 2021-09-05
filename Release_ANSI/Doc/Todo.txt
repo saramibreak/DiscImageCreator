@@ -1,11 +1,17 @@
 ==================================== TODO =====================================
-[cue]
-. support cue file of sub-pchannel version
+[unintentioanl behavior (or bug)]
+. failed to read of LBA 16 http://forum.redump.org/post/94542/#p94542
+. the shifted offset be explained by ASUS drive or a Linux bug? http://forum.redump.org/post/90412/#p90412 http://forum.redump.org/post/93955/#p93955
+. The C2 errors are completely random and inconsistent Scooby-Doo! 2.0.0 for the iXL http://forum.redump.org/post/89722/#p89722 http://forum.redump.org/post/90011/#p90011
+
+[protection]
+. support DiscGuard http://forum.redump.org/post/94457/#p94457
+. support twin sector disc (for ALPHA-ROM, ROOT, TAGES)
+. support SafeDisc on DVD http://forum.redump.org/post/87385/#p87385
 
 [image]
 . support mdf/mds (for SecuROM v4.x or higher, StarForce, CD-Cops)
-
-. support twin sector disc (for ALPHA-ROM, ROOT, TAGES)
+. support cue file of sub-pchannel version
 
 [main]
 . check IED, EDC of DVD
@@ -23,6 +29,11 @@
   byte of the ID field and ending with the least significant bit of the EDC field, then this msb will be b16 511 and the 
   lsb will be b0. Each bit bi of the EDC is as follows for i = 31 to 0 : 
   [/quote]
+
+. support generating ecc/edc when unreadable sectors are generated http://forum.redump.org/post/93774/#p93774
+
+. LBA 2174 has 2352+16 bytes? Due to this sector LBA 2175 ... last are all shifted. http://forum.redump.org/post/92408/#p92408
+. LBA 950 ... last are all shifted because LBA 949 is mastering error (2352 + 120 bytes) http://forum.redump.org/post/92507/#p92507
 
 [sub]
 . check parity P, Q for CD+G

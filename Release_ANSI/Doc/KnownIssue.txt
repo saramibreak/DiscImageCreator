@@ -16,3 +16,9 @@
 . semaphore time out occurs when use a IDE to USB adapter and exec "SetCDSpeed" function.
 
 . can't get a drive name when use a part of IDE to USB adapter.
+
+. Plextor sometimes shifts some bytes when dumps the disc. http://forum.redump.org/post/91259/#p91259
+
+. C2 error pointer is not perfect. http://forum.redump.org/post/90835/#p90835
+
+. can not capture the console correctly. http://forum.redump.org/post/90764/#p90764
