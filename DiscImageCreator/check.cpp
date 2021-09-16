@@ -469,27 +469,34 @@ BOOL IsEnoughDiskSpaceForDump(
 	ui64Used.QuadPart = (ui64Total.QuadPart - ui64Avail.QuadPart);
 
 	OutputString(
-		"Disk Total Size: %12llu bytes\n"
-		"Disk Used  Size: %12llu bytes\n"
-		"------------------------------------\n"
-		"Disk Space Size: %12llu bytes\n"
+		"CurrentDriveSize\n"
+		"\tTotal: %12llu bytes\n"
+		"\t Used: %12llu bytes\n"
+		"\t------------------------------------\n"
+		"\tSpace: %12llu bytes\n"
 		, ui64Total.QuadPart, ui64Used.QuadPart, ui64Avail.QuadPart
 	);
 	if ((*pExecType == cd && ui64Avail.QuadPart > 3000000000) ||
 		(*pExecType == swap && ui64Avail.QuadPart > 3000000000) ||
+		(*pExecType == data && ui64Avail.QuadPart > 3000000000) ||
+		(*pExecType == audio && ui64Avail.QuadPart > 3000000000) ||
 		(*pExecType == gd && ui64Avail.QuadPart > 4000000000) ||
 		(*pExecType == dvd && ui64Avail.QuadPart > 9000000000) ||
 		(*pExecType == xbox && ui64Avail.QuadPart > 9000000000) ||
 		(*pExecType == xboxswap && ui64Avail.QuadPart > 9000000000) ||
 		(*pExecType == xgd2swap && ui64Avail.QuadPart > 9000000000) ||
 		(*pExecType == xgd3swap && ui64Avail.QuadPart > 9000000000) ||
+		(*pExecType == sacd && ui64Avail.QuadPart > 9000000000) ||
 		(*pExecType == bd && ui64Avail.QuadPart > 130000000000)
 		) {
-		OutputString(" => There is enough the disk space for dumping\n");
+		OutputString("\t => There is enough the disk space for dumping\n");
+		bRet = TRUE;
+	}
+	else if (*pExecType == fd || *pExecType == disk) {
 		bRet = TRUE;
 	}
 	else {
-		OutputString(" => There is not enough the disk space for dumping\n");
+		OutputString("\t => There is not enough the disk space for dumping\n");
 	}
 	return bRet;
 }

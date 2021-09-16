@@ -205,6 +205,9 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 			FILE* fpC2 = NULL;
 			LPBYTE pPFullToc = NULL;
 			try {
+				if (!IsEnoughDiskSpaceForDump(pExecType, s_szDrive)) {
+					throw FALSE;
+				}
 #ifndef _DEBUG
 				if (*pExecType != drivespeed) {
 					// 2nd: create logfile here (because logging all working)
@@ -1723,6 +1726,7 @@ void printUsage(void)
 		"\t/ps\tThe sector is padded when reading error occurs\n"
 		"\t\t\tval\t0: Padded by 0x00\n"
 		"\t\t\tval\t1: Padded by 0xAA\n"
+		"\t/re\tResume raw (GC/Wii) dumping\n"
 		"See also -> https://github.com/saramibreak/DiscImageCreator/wiki \n"
 	);
 	stopMessage();
@@ -1799,25 +1803,23 @@ int main(int argc, char* argv[])
 			nRet = FALSE;
 		}
 		else {
-			if (IsEnoughDiskSpaceForDump(&execType, s_szDrive)) {
-				_TCHAR szBuf[128] = {};
-				time_t now = time(NULL);
-				tm* ts = localtime(&now);
-				_tcsftime(szBuf, sizeof(szBuf) / sizeof(szBuf[0]), _T("%FT%T%z"), ts);
-				OutputString("StartTime: %s\n", szBuf);
+			_TCHAR szBuf[128] = {};
+			time_t now = time(NULL);
+			tm* ts = localtime(&now);
+			_tcsftime(szBuf, sizeof(szBuf) / sizeof(szBuf[0]), _T("%FT%T%z"), ts);
+			OutputString("StartTime: %s\n", szBuf);
 
-				if (execType != merge) {
-					nRet = createCmdFile(argc, argv, szFullPath, szDateTime);
-				}
-				if (nRet) {
-					nRet = exec(argv, &execType, &extArg, szFullPath);
-				}
-
-				now = time(NULL);
-				ts = localtime(&now);
-				_tcsftime(szBuf, sizeof(szBuf) / sizeof(szBuf[0]), _T("%FT%T%z"), ts);
-				OutputString("EndTime: %s\n", szBuf);
+			if (execType != merge) {
+				nRet = createCmdFile(argc, argv, szFullPath, szDateTime);
 			}
+			if (nRet) {
+				nRet = exec(argv, &execType, &extArg, szFullPath);
+			}
+
+			now = time(NULL);
+			ts = localtime(&now);
+			_tcsftime(szBuf, sizeof(szBuf) / sizeof(szBuf[0]), _T("%FT%T%z"), ts);
+			OutputString("EndTime: %s\n", szBuf);
 		}
 		if (!extArg.byQuiet) {
 			if (!soundBeep(nRet)) {
