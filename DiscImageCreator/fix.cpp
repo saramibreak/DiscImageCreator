@@ -781,11 +781,11 @@ VOID FixSubQ(
 			if (nLBA == pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->byTrackNum - 1]) {
 				tmpIdx = 1;
 			}
-			else if (IsValidPregapSector(pDisc, &pDiscPerSector->subch, nLBA)) {
+//			else if (IsValidPregapSector(pDisc, &pDiscPerSector->subch, nLBA)) {
 				if (pDiscPerSector->subch.next.nRelativeTime + 1 == pDiscPerSector->subch.current.nRelativeTime) {
 					tmpIdx = 0;
 				}
-			}
+//			}
 			OutputSubErrorWithLBALog("Q[14]:Idx[%02u] -> [%02u], [L:%ld]\n"
 				, nLBA, pDiscPerSector->byTrackNum, pDiscPerSector->subch.current.byIndex, tmpIdx, s_lineNum);
 			pDiscPerSector->subch.current.byIndex = tmpIdx;
