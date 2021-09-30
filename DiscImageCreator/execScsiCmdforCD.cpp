@@ -654,7 +654,8 @@ INT ExecEccEdc(
 	if (pExtArg->byScanProtectViaFile) {
 		if (protect.byExist == safeDisc || protect.byExist == safeDiscLite ||
 			protect.byExist == codelock || protect.byExist == datel ||
-			protect.byExist == datelAlt || protect.byExist == c2Err) {
+			protect.byExist == datelAlt || protect.byExist == discguard ||
+			protect.byExist == c2Err) {
 			_tcsncpy(cmd, _T("fix"), sizeof(cmd) / sizeof(cmd[0]));
 		}
 	}

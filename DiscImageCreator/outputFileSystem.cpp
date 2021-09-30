@@ -220,6 +220,12 @@ VOID OutputFsDirectoryRecord(
 				pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] = (INT)uiExtentPos;
 				pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0] = (INT)(uiDataLen / DISC_MAIN_DATA_SIZE);
 			}
+			else if (!_strnicmp(fnameForProtect, "IOSLINK.VXD", 11) || !_strnicmp(fnameForProtect, "IOSLINK.SYS", 11)) {
+				pDisc->PROTECT.byExist = discguard;
+				strncpy(pDisc->PROTECT.name[0], fnameForProtect, sizeof(pDisc->PROTECT.name[0]));
+				pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] = 302;
+				pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0] = 28;
+			}
 			else if (!strncmp(fnameForProtect, "LASERLOK.IN", 11)) {
 				pDisc->PROTECT.byExist = laserlock;
 				strncpy(pDisc->PROTECT.name[0], fnameForProtect, sizeof(pDisc->PROTECT.name[0]));
@@ -281,7 +287,7 @@ VOID OutputFsDirectoryRecord(
 
 		if (pDisc->PROTECT.byExist == no) {
 			// for CodeLock, ProtectCD-VOB, a part of SecuROM
-			CHAR szSearchStr[][5] = { ".EXE", ".DLL", ".DAT", ".HDR", ".CAB" };
+			CHAR szSearchStr[][5] = { ".EXE", ".DLL", ".VXD", ".DAT", ".HDR", ".CAB" };
 			for (size_t i = 0; i < sizeof(szSearchStr) / sizeof(szSearchStr[0]); i++) {
 				LPCH p = strcasestr(fnameForProtect, szSearchStr[i]);
 				if (p) {

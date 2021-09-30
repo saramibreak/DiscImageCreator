@@ -85,6 +85,7 @@ typedef enum _PROTECT_TYPE_CD {
 	codelock,
 	datel,
 	datelAlt,
+	discguard,
 	laserlock,
 	proring,
 	protectCDVOB,
