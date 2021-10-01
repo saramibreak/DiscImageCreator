@@ -750,3 +750,13 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - fixed: failed to dump the GD-ROM
 - fixed: cannot get PVD due to one pregap sector
 - fixed: failed to dump the multi-session disc that has offsets over 2352 bytes (Sonic The Hedgehog (Germany) (4 014548 004785))
+
+*2021-10-01
+- added: detect ARccOS
+- added: detect DiscGuard (only detect, not fix bytes)
+- added: check disk space size
+- improved: BD-ROM, -R, -RE PIC log
+- fixed: reading multisession (pregap of 1st track of 2nd session)
+- fixed: msf of main channel when reading multisession
+- fixed: Nintendo Optical Disc dumping for some drive
+- fixed: when 1st pregap sector has an incorrect index and isn't well-known pregap size (225, 150, 149), can't fix it correctly.
