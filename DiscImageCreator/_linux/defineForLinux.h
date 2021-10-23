@@ -2227,7 +2227,7 @@ typedef struct _AACS_READ_BINDING_NONCE {
 
 #define __wchar_t wchar_t
 
-#define _strnicmp strncmp
+#define _strnicmp strncasecmp
 
 
 #define CP_ACP 1
