@@ -1810,7 +1810,7 @@ int main(int argc, char* argv[])
 			OutputString("StartTime: %s\n", szBuf);
 
 			if (execType != merge) {
-				nRet = createCmdFile(argc, argv, szFullPath, szDateTime);
+				nRet = createCmdFile(argc, argv, szFullPath, szBuf);
 			}
 			if (nRet) {
 				nRet = exec(argv, &execType, &extArg, szFullPath);
