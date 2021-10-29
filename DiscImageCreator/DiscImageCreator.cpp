@@ -1531,7 +1531,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 int createCmdFile(int argc, _TCHAR* argv[], _TCHAR* pszFullPath, LPTSTR pszDateTime)
 {
 	if (argc >= 4) {
-		_TCHAR date[17] = {};
+		_TCHAR date[25] = {};
 		_sntprintf(date, sizeof(date) / sizeof(_TCHAR), _T("_%s"), pszDateTime);
 		FILE* fpCmd = CreateOrOpenFile(
 			pszFullPath, date, NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0);
@@ -1806,7 +1806,7 @@ int main(int argc, char* argv[])
 			_TCHAR szBuf[128] = {};
 			time_t now = time(NULL);
 			tm* ts = localtime(&now);
-			_tcsftime(szBuf, sizeof(szBuf) / sizeof(szBuf[0]), _T("%FT%T%z"), ts);
+			_tcsftime(szBuf, sizeof(szBuf) / sizeof(szBuf[0]), _T("%FT%H-%M-%S%z"), ts);
 			OutputString("StartTime: %s\n", szBuf);
 
 			if (execType != merge) {
@@ -1818,7 +1818,7 @@ int main(int argc, char* argv[])
 
 			now = time(NULL);
 			ts = localtime(&now);
-			_tcsftime(szBuf, sizeof(szBuf) / sizeof(szBuf[0]), _T("%FT%T%z"), ts);
+			_tcsftime(szBuf, sizeof(szBuf) / sizeof(szBuf[0]), _T("%FT%H-%M-%S%z"), ts);
 			OutputString("EndTime: %s\n", szBuf);
 		}
 		if (!extArg.byQuiet) {
