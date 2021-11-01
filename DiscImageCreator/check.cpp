@@ -472,7 +472,7 @@ BOOL IsEnoughDiskSpaceForDump(
 		"CurrentDriveSize\n"
 		"\tTotal: %12llu bytes\n"
 		"\t Used: %12llu bytes\n"
-		"\t------------------------------------\n"
+		"\t--------------------------\n"
 		"\tSpace: %12llu bytes\n"
 		, ui64Total.QuadPart, ui64Used.QuadPart, ui64Avail.QuadPart
 	);
