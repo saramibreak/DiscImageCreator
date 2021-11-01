@@ -182,9 +182,9 @@ VOID OutputFsDirectoryRecord(
 	}
 	fnameForProtect[MAX_FNAME_FOR_VOLUME - 1] = 0;
 
-	if (pExtArg->byScanProtectViaFile || pExtArg->byIntentionalSub) {
+	if ((nFileFlag & 0x02) == 0 && (pExtArg->byScanProtectViaFile || pExtArg->byIntentionalSub)) {
 		if (pExtArg->byScanProtectViaFile) {
-			if ((nFileFlag & 0x02) == 0 && pDisc->PROTECT.byExist) {
+			if (pDisc->PROTECT.byExist) {
 				if (pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] < (INT)uiExtentPos) {
 					if (pDisc->PROTECT.byTmpForSafeDisc) {
 						pDisc->PROTECT.ERROR_SECTOR.nNextExtentPos = (INT)uiExtentPos;
@@ -258,17 +258,27 @@ VOID OutputFsDirectoryRecord(
 			}
 			else if (GetReadErrorFileName(pExtArg, fnameForProtect)) {
 				pDisc->PROTECT.byExist = physicalErr;
-				strncpy(pDisc->PROTECT.name[pExtArg->FILE.readErrCnt], fnameForProtect, sizeof(pDisc->PROTECT.name[pExtArg->FILE.readErrCnt]));
-				pDisc->PROTECT.ERROR_SECTOR.nExtentPos[pExtArg->FILE.readErrCnt] = (INT)uiExtentPos;
-				pDisc->PROTECT.ERROR_SECTOR.nSectorSize[pExtArg->FILE.readErrCnt] = (INT)(uiDataLen / DISC_MAIN_DATA_SIZE - 1);
-				pExtArg->FILE.readErrCnt++;
+				if (pExtArg->FILE.readErrCnt < MAX_READ_ERROR_FILE_COUNT) {
+					strncpy(pDisc->PROTECT.name[pExtArg->FILE.readErrCnt], fnameForProtect, sizeof(pDisc->PROTECT.name[pExtArg->FILE.readErrCnt]));
+					pDisc->PROTECT.ERROR_SECTOR.nExtentPos[pExtArg->FILE.readErrCnt] = (INT)uiExtentPos;
+					pDisc->PROTECT.ERROR_SECTOR.nSectorSize[pExtArg->FILE.readErrCnt] = (INT)(uiDataLen / DISC_MAIN_DATA_SIZE - 1);
+					pExtArg->FILE.readErrCnt++;
+				}
+				else {
+					OutputErrorString("[ERROR] Read error filename is over %d\n", MAX_READ_ERROR_FILE_COUNT);
+				}
 			}
 			else if (GetC2ErrorFileName(pExtArg, fnameForProtect)) {
 				pDisc->PROTECT.byExist = c2Err;
-				strncpy(pDisc->PROTECT.name[pExtArg->FILE.c2ErrCnt], fnameForProtect, sizeof(pDisc->PROTECT.name[pExtArg->FILE.c2ErrCnt]));
-				pDisc->PROTECT.ERROR_SECTOR.nExtentPos[pExtArg->FILE.c2ErrCnt] = (INT)uiExtentPos;
-				pDisc->PROTECT.ERROR_SECTOR.nSectorSize[pExtArg->FILE.c2ErrCnt] = (INT)(uiDataLen / DISC_MAIN_DATA_SIZE - 1);
-				pExtArg->FILE.c2ErrCnt++;
+				if (pExtArg->FILE.c2ErrCnt < MAX_READ_ERROR_FILE_COUNT) {
+					strncpy(pDisc->PROTECT.name[pExtArg->FILE.c2ErrCnt], fnameForProtect, sizeof(pDisc->PROTECT.name[pExtArg->FILE.c2ErrCnt]));
+					pDisc->PROTECT.ERROR_SECTOR.nExtentPos[pExtArg->FILE.c2ErrCnt] = (INT)uiExtentPos;
+					pDisc->PROTECT.ERROR_SECTOR.nSectorSize[pExtArg->FILE.c2ErrCnt] = (INT)(uiDataLen / DISC_MAIN_DATA_SIZE - 1);
+					pExtArg->FILE.c2ErrCnt++;
+				}
+				else {
+					OutputErrorString("[ERROR] C2 error filename is over %d\n", MAX_READ_ERROR_FILE_COUNT);
+				}
 			}
 		}
 

@@ -834,7 +834,7 @@ VOID WriteErrorBuffer(
 		}
 	}
 	OutputLog(fileMainError,
-		STR_LBA "Read error. padding [%ubyte]\n", nLBA, (UINT)nLBA, uiSize);
+		STR_LBA "Read error. padding [%u bytes]\n", nLBA, (UINT)nLBA, uiSize);
 
 	if (*pExecType != swap || (*pExecType == swap && nLBA < SECOND_ERROR_OF_LEADOUT)) {
 		BYTE lpSubcodeRaw[CD_RAW_READ_SUBCODE_SIZE] = {};

@@ -655,7 +655,7 @@ INT ExecEccEdc(
 		if (protect.byExist == safeDisc || protect.byExist == safeDiscLite ||
 			protect.byExist == codelock || protect.byExist == datel ||
 			protect.byExist == datelAlt || protect.byExist == discguard ||
-			protect.byExist == c2Err) {
+			protect.byExist == physicalErr || protect.byExist == c2Err) {
 			_tcsncpy(cmd, _T("fix"), sizeof(cmd) / sizeof(cmd[0]));
 		}
 	}
@@ -1009,7 +1009,12 @@ BOOL ReadCDAll(
 			}
 			else if (pDisc->PROTECT.byExist == laserlock || pDisc->PROTECT.byExist == proring ||
 				pDisc->PROTECT.byExist == physicalErr) {
-				if (IsValidProtectedSector(pDisc, nLBA - 1, GetReadErrorFileIdx(pExtArg, pDisc, nLBA))) {
+				INT tmpLBA = nLBA;
+				INT idx = GetReadErrorFileIdx(pExtArg, pDisc, nLBA);
+				if (pDisc->PROTECT.ERROR_SECTOR.nExtentPos[idx] == nLBA) {
+					tmpLBA = nLBA - pDisc->MAIN.nAdjustSectorNum;
+				}
+				if (IsValidProtectedSector(pDisc, tmpLBA, idx)) {
 					ProcessReturnedContinue(pExecType, pExtArg, pDevice, pDisc
 						, pDiscPerSector, nLBA, nLastErrLBA, nMainDataType, padByUsr55, fpScm, fpSub, fpC2);
 					nLBA++;

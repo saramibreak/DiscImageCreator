@@ -125,9 +125,12 @@ BOOL GetReadErrorFileName(
 	PEXT_ARG pExtArg,
 	CHAR protectFname[MAX_FNAME_FOR_VOLUME]
 ) {
+	size_t size1 = strlen(protectFname);
 	for (INT i = 0; i < MAX_READ_ERROR_FILE_COUNT; i++) {
-		if (strlen(pExtArg->FILE.readError[i]) > 0 &&
-			!strncmp(protectFname, pExtArg->FILE.readError[i], strlen(pExtArg->FILE.readError[i]) - 1)) {
+		// -1 is to skip the null character
+		size_t size2 = strlen(pExtArg->FILE.readError[i]) - 1;
+		if (size1 == size2 &&
+			!strncmp(protectFname, pExtArg->FILE.readError[i], size2)) {
 			return TRUE;
 		}
 	}
@@ -141,12 +144,12 @@ INT GetReadErrorFileIdx(
 ) {
 	INT idx = 0;
 	if (pDisc->PROTECT.byExist == physicalErr) {
-		while (idx < pExtArg->FILE.readErrCnt) {
-			if (pDisc->PROTECT.ERROR_SECTOR.nExtentPos[idx] <= nLBA &&
-				nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos[idx] + pDisc->PROTECT.ERROR_SECTOR.nSectorSize[idx]) {
-				return idx;
+		for (INT i = 0; i < pExtArg->FILE.readErrCnt; i++) {
+			if (pDisc->PROTECT.ERROR_SECTOR.nExtentPos[i] <= nLBA &&
+				nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos[i] + pDisc->PROTECT.ERROR_SECTOR.nSectorSize[i]) {
+				idx = i;
+				break;
 			}
-			idx++;
 		}
 	}
 	return idx;
@@ -180,9 +183,12 @@ BOOL GetC2ErrorFileName(
 	PEXT_ARG pExtArg,
 	CHAR protectFname[MAX_FNAME_FOR_VOLUME]
 ) {
+	size_t size1 = strlen(protectFname);
 	for (INT i = 0; i < MAX_READ_ERROR_FILE_COUNT; i++) {
-		if (strlen(pExtArg->FILE.c2Error[i]) > 0 &&
-			!strncmp(protectFname, pExtArg->FILE.c2Error[i], strlen(pExtArg->FILE.c2Error[i]) - 1)) {
+		// -1 is to skip the null character
+		size_t size2 = strlen(pExtArg->FILE.c2Error[i]) - 1;
+		if (size1 == size2 &&
+			!strncmp(protectFname, pExtArg->FILE.c2Error[i], size2)) {
 			return TRUE;
 		}
 	}
