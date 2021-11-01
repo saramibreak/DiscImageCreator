@@ -744,7 +744,9 @@ BOOL ReadCDForFileSystem(
 									if (bHfs && firstPartition == 0) {
 										firstPartition = MAKELONG(MAKEWORD(lpBuf[523], lpBuf[522]), MAKEWORD(lpBuf[521], lpBuf[520]));
 									}
+									OutputString("\rReading Partition Map %u/%u", j, numOfPartion);
 								}
+								OutputString("\n");
 								nLBA = 1;
 								if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, lpBuf,
 									DISC_MAIN_DATA_SIZE, _T(__FUNCTION__), __LINE__)) {
