@@ -489,14 +489,14 @@ BOOL IsEnoughDiskSpaceForDump(
 		(*pExecType == sacd && ui64Avail.QuadPart > 9000000000) ||
 		(*pExecType == bd && ui64Avail.QuadPart > 130000000000)
 		) {
-		OutputString("\t => There is enough the disk space for dumping\n");
+		OutputString("\t => There is enough disk space for dumping\n");
 		bRet = TRUE;
 	}
 	else if (*pExecType == fd || *pExecType == disk) {
 		bRet = TRUE;
 	}
 	else {
-		OutputString("\t => There is not enough the disk space for dumping\n");
+		OutputString("\t => There is not enough disk space for dumping\n");
 	}
 	return bRet;
 }
