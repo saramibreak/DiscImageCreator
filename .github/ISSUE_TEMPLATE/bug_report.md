@@ -6,6 +6,7 @@ labels: ''
 assignees: ''
 
 ---
+
 **Version**
 Please use [the latest version](https://github.com/saramibreak/DiscImageCreator/releases) when report the bug.
 
