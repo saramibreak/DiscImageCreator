@@ -1866,13 +1866,21 @@ BOOL ReadCDForCheckingExe(
 						}
 
 						_TCHAR buf[512] = {};
-						CONST INT nTrimSize = 16;
+						CONST INT nMaxTrimSize = 16;
+						INT nTrimSize = 0;
 						_fgetts(buf, sizeof(buf), fp);
+
 						while (!feof(fp) && !ferror(fp)) {
-							LPTCH pTrimBuf[nTrimSize] = {};
+							LPTCH pTrimBuf[nMaxTrimSize] = {};
 							pTrimBuf[0] = _tcstok(buf, _T(" ")); // space
-							for (INT nRoop = 1; nRoop < nTrimSize; nRoop++) {
+
+							for (INT nRoop = 1; nRoop < nMaxTrimSize; nRoop++) {
 								pTrimBuf[nRoop] = _tcstok(NULL, _T(" ")); // space
+
+								if (pTrimBuf[nRoop] == NULL) {
+									break;
+								}
+								nTrimSize++;
 							}
 							// File size is over 0
 							if (_tcscmp(pTrimBuf[4], _T("0"))) {
@@ -1888,31 +1896,80 @@ BOOL ReadCDForCheckingExe(
 								}
 								_TCHAR fname[_MAX_PATH] = {};
 								size_t len = 0;
-								// exclude path
-								// 03-27-2003 11:07     274432 A___     128354   56 utils\clcompile.exe
-								_TCHAR* p = _tcsrchr(pTrimBuf[6], '\\');
-								if (p) {
-									len = _tcslen(p + sizeof(_TCHAR));
-									_tcsncpy(fname, p + sizeof(_TCHAR), len);
+
+//#define DEBUGTEST4
+#ifdef DEBUGTEST1
+								memcpy(pTrimBuf[6], "TCP", sizeof("TCP"));
+								if (pTrimBuf[7] == NULL) {
+									pTrimBuf[7] =(LPTCH) malloc(32);
+									memcpy(pTrimBuf[7], "Protocol.dll\n", sizeof("Protocol.dll\n"));
 								}
-								else {
-									len = _tcslen(pTrimBuf[6]);
-									_tcsncpy(fname, pTrimBuf[6], len);
+								nTrimSize = 7;
+#endif
+#ifdef DEBUGTEST2
+								memcpy(pTrimBuf[6], "TCP", sizeof("TCP"));
+								if (pTrimBuf[7] == NULL) {
+									pTrimBuf[7] = (LPTCH)malloc(32);
+									memcpy(pTrimBuf[7], "version\\Protocol.dll\n", sizeof("version\\Protocol.dll\n"));
 								}
-								_tcscat(szTmpFullPath, _T("\\"));
-								for (INT j = 7; j < nTrimSize; j++) {
-									if (pTrimBuf[j]) {
-										// 08-16-2002 18:06      36957 A___      12034   41 TCP Protocol.dll
-										_tcscat(fname, _T(" "));
-										_tcscat(fname, pTrimBuf[j]);
-										len += _tcslen(pTrimBuf[j]) + 1;
+								nTrimSize = 7;
+#endif
+#ifdef DEBUGTEST3
+								memcpy(pTrimBuf[6], "TCP", sizeof("TCP"));
+								if (pTrimBuf[7] == NULL) {
+									pTrimBuf[7] = (LPTCH)malloc(32);
+									memcpy(pTrimBuf[7], "version\\TCP", sizeof("version\\TCP"));
+								}
+								if (pTrimBuf[8] == NULL) {
+									pTrimBuf[8] = (LPTCH)malloc(32);
+									memcpy(pTrimBuf[8], "Protocol.dll\n", sizeof("Protocol.dll\n"));
+							}
+								nTrimSize = 8;
+#endif
+#ifdef DEBUGTEST4
+								memcpy(pTrimBuf[6], "utils\\clcompile.exe\n", sizeof("utils\\clcompile.exe\n"));
+#endif
+								// check 4 types
+								if (nTrimSize == 6) {
+									// 1: with path and no space => nTrimSize is 6, needs to search '\\'
+									_TCHAR* p = _tcsrchr(pTrimBuf[6], '\\');
+									if (p) {
+										// exclude path
+										// 03-27-2003 11:07     274432 A___     128354   56 utils\clcompile.exe
+										len = _tcslen(p + sizeof(_TCHAR));
+										_tcsncpy(fname, p + sizeof(_TCHAR), len);
 									}
 									else {
-										break;
+										// 2: no path and no space => nTrimSize is 6
+										len = _tcslen(pTrimBuf[6]);
+										_tcsncpy(fname, pTrimBuf[6], len);
+									}
+								}
+								else {
+									// 3: with path and with space => nTrimSize is 7 or larger, needs to search '\\'
+									INT idx = 6;
+									for (INT j = 6; j <= nTrimSize; j++) {
+										_TCHAR* p = _tcsrchr(pTrimBuf[j], '\\');
+										if (p) {
+											pTrimBuf[j] = p + sizeof(_TCHAR);
+											idx++;
+										}
+									}
+
+									// 4: no path and with space => nTrimSize is 7 or larger
+									for (; idx <= nTrimSize; idx++) {
+										// 08-16-2002 18:06      36957 A___      12034   41 TCP Protocol.dll
+										_tcscat(fname, pTrimBuf[idx]);
+										len += _tcslen(pTrimBuf[idx]);
+										if (idx < nTrimSize) {
+											_tcscat(fname, _T(" "));
+											len++;
+										}
 									}
 								}
 								// Delete '\n'
 								fname[len - sizeof(_TCHAR)] = '\0';
+								_tcscat(szTmpFullPath, _T("\\"));
 								_tcscat(szTmpFullPath, fname);
 
 								if (!ReadExeFromFile(pExtArg, pDisc, szTmpFullPath, fname)) {
@@ -1929,6 +1986,7 @@ BOOL ReadCDForCheckingExe(
 								ZeroMemory(szTmpFullPath, sizeof(szTmpFullPath));
 							}
 							_fgetts(buf, sizeof(buf), fp);
+							nTrimSize = 0;
 						}
 						FcloseAndNull(fp);
 					}
