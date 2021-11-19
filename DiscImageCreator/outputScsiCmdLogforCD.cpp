@@ -1305,7 +1305,7 @@ VOID OutputCDOffset(
 ) {
 	OutputDiscLog(STR_DOUBLE_HYPHEN_B "Offset ");
 	if (bGetDriveOffset) {
-		OutputDiscLog("(Drive offset referes to http://www.accuraterip.com)");
+		OutputDiscLog("(Drive offset refers to http://www.accuraterip.com)");
 	}
 	OutputDiscLog(STR_DOUBLE_HYPHEN_E);
 
