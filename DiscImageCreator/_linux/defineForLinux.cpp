@@ -406,7 +406,7 @@ off_t SetFilePointer(int fd, off_t pos, void* a, int origin)
 }
 
 
-off_t SetFilePointerEx(int fd, LARGE_INTEGER pos, void* a, int origin)
+off64_t SetFilePointerEx(int fd, LARGE_INTEGER pos, void* a, int origin)
 {
 	UNREFERENCED_PARAMETER(a);
 	off64_t ofs = pos.QuadPart;

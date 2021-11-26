@@ -23,11 +23,11 @@ typedef unsigned long long ULONG_PTR, *PULONG_PTR;
 #define __int3264   __int64
 
 #else
-typedef _W64 int INT_PTR, * PINT_PTR;
-typedef _W64 unsigned int UINT_PTR, * PUINT_PTR;
+typedef int INT_PTR, * PINT_PTR;
+typedef unsigned int UINT_PTR, * PUINT_PTR;
 
-typedef _W64 long LONG_PTR, * PLONG_PTR;
-typedef _W64 unsigned long ULONG_PTR, * PULONG_PTR;
+typedef long LONG_PTR, * PLONG_PTR;
+typedef unsigned long ULONG_PTR, * PULONG_PTR;
 
 #define __int3264   __int32
 
