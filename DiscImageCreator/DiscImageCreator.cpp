@@ -1740,18 +1740,10 @@ int printSeveralInfo(LPTSTR pszDateTime, size_t dateTimeSize)
 	}
 #endif
 	OutputString("AppVersion\n");
-#ifdef _WIN32
-	#ifdef _WIN64
-		OutputString("\tx64, ");
-	#else
-		OutputString("\tx86, ");
-	#endif
-#elif __linux__
-	#ifdef __x86_64
-		OutputString("\tx64, ");
-	#else
-		OutputString("\tx86, ");
-	#endif
+#if (defined(_WIN32) && defined(_WIN64)) || (defined(__linux__) && defined(__x86_64__))
+	OutputString("\t64 bit, ");
+#else
+	OutputString("\t32 bit, ");
 #endif
 #ifdef UNICODE
 	OutputString("UnicodeBuild, ");
