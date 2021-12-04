@@ -396,6 +396,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 						}
 					}
 					else if (*pExecType == dvd) {
+						pDisc->DVD.discType = DISC_TYPE_DVD::formal;
 						if (IsDVDBasedDisc(pDisc)) {
 							DVDGetRegion(&device);
 							if (pExtArg->byScanProtectViaFile) {
@@ -448,7 +449,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 									if (bRet && uiDiscSize > 8547991552) {
 										OutputLog(standardOut | fileDisc, "Detected disguised file size: %llu\n", uiDiscSize);
 									}
-									AnalyzeIfoFile(&device);
+									AnalyzeIfoFile(&device, pDisc);
 									bRet = ReadDVD(pExecType, pExtArg, &device, &discData, pszFullPath);
 								}
 							}

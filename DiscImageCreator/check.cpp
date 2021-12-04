@@ -1459,7 +1459,8 @@ BOOL ContainsC2Error(
 }
 
 BOOL AnalyzeIfoFile(
-	PDEVICE pDevice
+	PDEVICE pDevice,
+	PDISC pDisc
 ) {
 	BOOL bRet = TRUE;
 	CONST size_t bufSize = 40;
@@ -1471,6 +1472,7 @@ BOOL AnalyzeIfoFile(
 #endif
 
 	if (PathFileExists(szBuf)) {
+		pDisc->DVD.discType = DISC_TYPE_DVD::video;
 		_TCHAR szFnameAndExt[_MAX_FNAME + _MAX_EXT] = {};
 		FILE* fp = CreateOrOpenFile(szBuf, NULL, NULL, szFnameAndExt, NULL, _T(".IFO"), _T("rb"), 0, 0);
 		if (!fp) {

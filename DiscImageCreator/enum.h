@@ -115,6 +115,7 @@ typedef enum _PROTECT_TYPE_DVD {
 
 typedef enum _DISC_TYPE {
 	formal,	// DVD, BD
+	video,
 	protect,
 	xboxdvd,
 	gamecube,

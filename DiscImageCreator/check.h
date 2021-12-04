@@ -212,5 +212,6 @@ BOOL ContainsC2Error(
 );
 
 BOOL AnalyzeIfoFile(
-	PDEVICE pDevice
-);
+	PDEVICE pDevice,
+	PDISC pDisc
+	);
