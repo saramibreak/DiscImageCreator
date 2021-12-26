@@ -63,7 +63,7 @@ VOID SupportIndex0InTrack1(
 
 BOOL IsEnoughDiskSpaceForDump(
 	PEXEC_TYPE pExecType,
-	_TCHAR* szDrive
+	_TCHAR* pszPath
 );
 
 BOOL IsValidMainDataHeader(

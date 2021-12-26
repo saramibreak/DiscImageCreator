@@ -457,7 +457,7 @@ VOID SupportIndex0InTrack1(
 
 BOOL IsEnoughDiskSpaceForDump(
 	PEXEC_TYPE pExecType,
-	_TCHAR* szDrive
+	_TCHAR* pszPath
 ) {
 	ULARGE_INTEGER  ui64Used;
 	ULARGE_INTEGER  ui64Free;
@@ -465,16 +465,16 @@ BOOL IsEnoughDiskSpaceForDump(
 	ULARGE_INTEGER  ui64Total;
 	BOOL bRet = FALSE;
 
-	GetDiskFreeSpaceEx(szDrive, &ui64Free, &ui64Total, &ui64Avail);
+	GetDiskFreeSpaceEx(pszPath, &ui64Free, &ui64Total, &ui64Avail);
 	ui64Used.QuadPart = (ui64Total.QuadPart - ui64Avail.QuadPart);
 
 	OutputString(
-		"CurrentDriveSize\n"
+		"DiskSize of [%s]\n"
 		"\tTotal: %12llu bytes\n"
 		"\t Used: %12llu bytes\n"
 		"\t--------------------------\n"
 		"\tSpace: %12llu bytes\n"
-		, ui64Total.QuadPart, ui64Used.QuadPart, ui64Avail.QuadPart
+		, pszPath, ui64Total.QuadPart, ui64Used.QuadPart, ui64Avail.QuadPart
 	);
 	if ((*pExecType == cd && ui64Avail.QuadPart > 3000000000) ||
 		(*pExecType == swap && ui64Avail.QuadPart > 3000000000) ||
