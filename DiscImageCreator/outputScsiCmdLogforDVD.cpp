@@ -732,14 +732,12 @@ VOID OutputDVDManufacturerDescriptor(
 			pDisc->DVD.discType = DISC_TYPE_DVD::wii;
 		}
 		else {
-			pDisc->DVD.discType = DISC_TYPE_DVD::formal;
-			if (pDisc->SCSI.wCurrentMedia == ProfileDvdRom) {
+			if (pDisc->DVD.discType == DISC_TYPE_DVD::video && pDisc->SCSI.wCurrentMedia == ProfileDvdRom) {
 				for (UINT i = 0; i < sizeof(dvdManufacturer->ManufacturingInformation); i++) {
 					if (dvdManufacturer->ManufacturingInformation[i] != 0) {
 						// Pursuit of Happyness, the (0 43396 15085 0)
 						// Stranger than Fiction (0 43396 15407 0)
 						pDisc->DVD.discType = DISC_TYPE_DVD::protect;
-						OutputLog(standardOut | fileDisc, "Detected ARccOS\n");
 						strncpy(pDisc->PROTECT.name[0], "ARccOS", 7);
 						pDisc->PROTECT.byExist = arccos;
 						break;

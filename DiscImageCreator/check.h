@@ -63,7 +63,7 @@ VOID SupportIndex0InTrack1(
 
 BOOL IsEnoughDiskSpaceForDump(
 	PEXEC_TYPE pExecType,
-	_TCHAR* szDrive
+	_TCHAR* pszPath
 );
 
 BOOL IsValidMainDataHeader(
@@ -212,5 +212,6 @@ BOOL ContainsC2Error(
 );
 
 BOOL AnalyzeIfoFile(
-	PDEVICE pDevice
-);
+	PDEVICE pDevice,
+	PDISC pDisc
+	);

@@ -880,8 +880,14 @@ BOOL ReadDVDForFileSystem(
 			return FALSE;
 		}
 		FreeAndNull(pPathTblRec);
+
 		if (pDisc->PROTECT.byExist && !pExtArg->byNoSkipSS) {
-			OutputLog(standardOut | fileDisc, "Detected protection [%" CHARWIDTH "s]", pDisc->PROTECT.name[0]);
+			if (pDisc->PROTECT.byExist == arccos) {
+				OutputLog(standardOut | fileDisc, "This disc has possibly [%" CHARWIDTH "s]", pDisc->PROTECT.name[0]);
+			}
+			else {
+				OutputLog(standardOut | fileDisc, "Detected protection [%" CHARWIDTH "s]", pDisc->PROTECT.name[0]);
+			}
 			if (pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] != 0 || pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0] != 0) {
 				OutputLog(standardOut | fileDisc, " LBA %d to %d"
 					, pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0]

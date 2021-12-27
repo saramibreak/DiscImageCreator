@@ -396,6 +396,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 						}
 					}
 					else if (*pExecType == dvd) {
+						pDisc->DVD.discType = DISC_TYPE_DVD::formal;
 						if (IsDVDBasedDisc(pDisc)) {
 							DVDGetRegion(&device);
 							if (pExtArg->byScanProtectViaFile) {
@@ -448,7 +449,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 									if (bRet && uiDiscSize > 8547991552) {
 										OutputLog(standardOut | fileDisc, "Detected disguised file size: %llu\n", uiDiscSize);
 									}
-									AnalyzeIfoFile(&device);
+									AnalyzeIfoFile(&device, pDisc);
 									bRet = ReadDVD(pExecType, pExtArg, &device, &discData, pszFullPath);
 								}
 							}
@@ -1740,18 +1741,10 @@ int printSeveralInfo(LPTSTR pszDateTime, size_t dateTimeSize)
 	}
 #endif
 	OutputString("AppVersion\n");
-#ifdef _WIN32
-	#ifdef _WIN64
-		OutputString("\tx64, ");
-	#else
-		OutputString("\tx86, ");
-	#endif
-#elif __linux__
-	#ifdef __x86_64
-		OutputString("\tx64, ");
-	#else
-		OutputString("\tx86, ");
-	#endif
+#if (defined(_WIN32) && defined(_WIN64)) || (defined(__linux__) && defined(__x86_64__))
+	OutputString("\t64 bit, ");
+#else
+	OutputString("\t32 bit, ");
 #endif
 #ifdef UNICODE
 	OutputString("UnicodeBuild, ");
