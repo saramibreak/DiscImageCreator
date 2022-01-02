@@ -2258,10 +2258,14 @@ BOOL ReadCDForCheckingExe(
 					DWORD dwResourceSectorSize = 0;
 					ULONG nOfs = pIDh->e_lfanew + sizeof(IMAGE_NT_HEADERS32);
 					BOOL bSecurom = FALSE;
+					BOOL bCompress = FALSE;
 
 					for (INT i = 0; i < pINH->FileHeader.NumberOfSections; i++) {
 						PIMAGE_SECTION_HEADER pISH = (PIMAGE_SECTION_HEADER)&lpBuf[nOfs];
 						OutputFsImageSectionHeader(pExtArg, pDisc, pISH, &bSecurom);
+						if (!strncmp((PCHAR)pISH->Name, ".petite", 7)) {
+							bCompress = TRUE;
+						}
 						nOfs += sizeof(IMAGE_SECTION_HEADER);
 
 						if (pISH->VirtualAddress <= dwExportVirtualAddress && dwExportVirtualAddress <= pISH->VirtualAddress + pISH->Misc.VirtualSize) {
@@ -2292,43 +2296,49 @@ BOOL ReadCDForCheckingExe(
 							}
 						}
 					}
-					if (dwExportSize > 0) {
-						INT nExpSection = pDisc->PROTECT.pExtentPosForExe[n] + (INT)dwExportPointerToRawData / DISC_MAIN_DATA_SIZE;
-						SetCommandForTransferLength(pExecType, pDevice, pCdb, dwExportSectorSize, &byTransferLen, &byRoopLen);
-						if (!ExecReadCD(pExtArg, pDevice, pCdb, nExpSection, lpBuf, dwExportSectorSize, _T(__FUNCTION__), __LINE__)) {
-							continue;
-						}
-						OutputMainInfoLog("dwExportVirtualAddress: 0x%lx, dwExportSize: 0x%lx, dwExportDataOfs: 0x%lx\n"
-							, dwExportVirtualAddress, dwExportSize, dwExportDataOfs);
-						OutputMainChannel(fileMainInfo, lpBuf, NULL, nExpSection, dwExportSectorSize);
-						OutputExportDirectory(lpBuf, dwExportSectorSize, dwExportVirtualAddress, dwExportDataOfs);
+
+					if (bCompress) {
+						OutputVolDescLog("Skipped reading Export, Import, Resource data due to the compressed data\n");
 					}
-					if (dwImportSize > 0) {
-						INT nImpSection = pDisc->PROTECT.pExtentPosForExe[n] + (INT)dwImportPointerToRawData / DISC_MAIN_DATA_SIZE;
-						SetCommandForTransferLength(pExecType, pDevice, pCdb, dwImportSectorSize, &byTransferLen, &byRoopLen);
-						if (!ExecReadCD(pExtArg, pDevice, pCdb, nImpSection, lpBuf, dwImportSectorSize, _T(__FUNCTION__), __LINE__)) {
-							continue;
+					else {
+						if (dwExportSize > 0) {
+							INT nExpSection = pDisc->PROTECT.pExtentPosForExe[n] + (INT)dwExportPointerToRawData / DISC_MAIN_DATA_SIZE;
+							SetCommandForTransferLength(pExecType, pDevice, pCdb, dwExportSectorSize, &byTransferLen, &byRoopLen);
+							if (!ExecReadCD(pExtArg, pDevice, pCdb, nExpSection, lpBuf, dwExportSectorSize, _T(__FUNCTION__), __LINE__)) {
+								continue;
+							}
+							OutputMainInfoLog("dwExportVirtualAddress: 0x%lx, dwExportSize: 0x%lx, dwExportDataOfs: 0x%lx\n"
+								, dwExportVirtualAddress, dwExportSize, dwExportDataOfs);
+							OutputMainChannel(fileMainInfo, lpBuf, NULL, nExpSection, dwExportSectorSize);
+							OutputExportDirectory(lpBuf, dwExportSectorSize, dwExportVirtualAddress, dwExportDataOfs);
 						}
-						OutputMainInfoLog("dwImportVirtualAddress: 0x%lx, dwImportSize: 0x%lx, dwImportDataOfs: 0x%lx\n"
-							, dwImportVirtualAddress, dwImportSize, dwImportDataOfs);
-						OutputMainChannel(fileMainInfo, lpBuf, NULL, nImpSection, dwImportSectorSize);
-						OutputImportDirectory(lpBuf, dwImportSectorSize, dwImportVirtualAddress, dwImportDataOfs);
-					}
-					if (dwResourceSize > 0) {
-						INT nResSection = pDisc->PROTECT.pExtentPosForExe[n] + (INT)dwResourcePointerToRawData / DISC_MAIN_DATA_SIZE;
-						SetCommandForTransferLength(pExecType, pDevice, pCdb, dwResourceSectorSize, &byTransferLen, &byRoopLen);
-						if (!ExecReadCD(pExtArg, pDevice, pCdb, nResSection, lpBuf, dwResourceSectorSize, _T(__FUNCTION__), __LINE__)) {
-							continue;
+						if (dwImportSize > 0) {
+							INT nImpSection = pDisc->PROTECT.pExtentPosForExe[n] + (INT)dwImportPointerToRawData / DISC_MAIN_DATA_SIZE;
+							SetCommandForTransferLength(pExecType, pDevice, pCdb, dwImportSectorSize, &byTransferLen, &byRoopLen);
+							if (!ExecReadCD(pExtArg, pDevice, pCdb, nImpSection, lpBuf, dwImportSectorSize, _T(__FUNCTION__), __LINE__)) {
+								continue;
+							}
+							OutputMainInfoLog("dwImportVirtualAddress: 0x%lx, dwImportSize: 0x%lx, dwImportDataOfs: 0x%lx\n"
+								, dwImportVirtualAddress, dwImportSize, dwImportDataOfs);
+							OutputMainChannel(fileMainInfo, lpBuf, NULL, nImpSection, dwImportSectorSize);
+							OutputImportDirectory(lpBuf, dwImportSectorSize, dwImportVirtualAddress, dwImportDataOfs);
 						}
-						OutputMainInfoLog("dwResourceVirtualAddress: 0x%lx, dwResourceSize: 0x%lx, dwResourceDataOfs: 0x%lx\n"
-							, dwResourceVirtualAddress, dwResourceSize, dwResourceDataOfs);
-						OutputMainChannel(fileMainInfo, lpBuf, NULL, nResSection, dwResourceSectorSize);
-						_TCHAR szTab[256] = {};
-						szTab[0] = _T('\t');
-						WCHAR wszFileVer[FILE_VERSION_SIZE] = { 0 };
-						OutputResourceDirectory(lpBuf, dwResourceSectorSize, dwResourceVirtualAddress, dwResourceDataOfs, 0, wszFileVer, szTab);
-						if (wszFileVer[0] != 0 && strcasestr(pDisc->PROTECT.pNameForExe[n], ".EXE")) {
-							OutputLog(standardOut | fileDisc, " %s: File Version %ls\n", pDisc->PROTECT.pNameForExe[n], wszFileVer);
+						if (dwResourceSize > 0) {
+							INT nResSection = pDisc->PROTECT.pExtentPosForExe[n] + (INT)dwResourcePointerToRawData / DISC_MAIN_DATA_SIZE;
+							SetCommandForTransferLength(pExecType, pDevice, pCdb, dwResourceSectorSize, &byTransferLen, &byRoopLen);
+							if (!ExecReadCD(pExtArg, pDevice, pCdb, nResSection, lpBuf, dwResourceSectorSize, _T(__FUNCTION__), __LINE__)) {
+								continue;
+							}
+							OutputMainInfoLog("dwResourceVirtualAddress: 0x%lx, dwResourceSize: 0x%lx, dwResourceDataOfs: 0x%lx\n"
+								, dwResourceVirtualAddress, dwResourceSize, dwResourceDataOfs);
+							OutputMainChannel(fileMainInfo, lpBuf, NULL, nResSection, dwResourceSectorSize);
+							_TCHAR szTab[256] = {};
+							szTab[0] = _T('\t');
+							WCHAR wszFileVer[FILE_VERSION_SIZE] = { 0 };
+							OutputResourceDirectory(lpBuf, dwResourceSectorSize, dwResourceVirtualAddress, dwResourceDataOfs, 0, wszFileVer, szTab);
+							if (wszFileVer[0] != 0 && strcasestr(pDisc->PROTECT.pNameForExe[n], ".EXE")) {
+								OutputLog(standardOut | fileDisc, " %s: File Version %ls\n", pDisc->PROTECT.pNameForExe[n], wszFileVer);
+							}
 						}
 					}
 					dwSize = DISC_MAIN_DATA_SIZE;
