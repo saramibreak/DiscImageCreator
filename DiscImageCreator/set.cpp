@@ -316,7 +316,27 @@ VOID SetAndOutputToc(
 	}
 	OutputDiscLog(
 		"\t                                          Total  %8d\n", pDisc->SCSI.nAllLength);
+
 	pDisc->SCSI.trkType = trkType;
+	OutputDiscLog("Set the TRACK_TYPE to ");
+
+	switch (pDisc->SCSI.trkType) {
+	case TRACK_TYPE::audioOnly:
+		OutputDiscLog("audioOnly\n");
+		break;
+	case TRACK_TYPE::dataExist:
+		OutputDiscLog("dataExist\n");
+		break;
+	case TRACK_TYPE::pregapAudioIn1stTrack:
+		OutputDiscLog("pregapAudioIn1stTrack\n");
+		break;
+	case TRACK_TYPE::pregapDataIn1stTrack:
+		OutputDiscLog("pregapDataIn1stTrack\n");
+		break;
+	default:
+		OutputDiscLog("unknown\n");
+		break;
+	}
 }
 
 VOID SetAndOutputTocForGD(
@@ -923,6 +943,76 @@ VOID SetAndOutputTocCDText(
 			}
 		}
 	}
+}
+
+VOID SetAndOutputCDOffset(
+	PEXT_ARG pExtArg,
+	PDISC pDisc,
+	BOOL bGetDriveOffset,
+	INT nDriveSampleOffset,
+	INT nDriveOffset,
+	INT nSubChannelOffset
+) {
+	OutputDiscLog(STR_DOUBLE_HYPHEN_B "Offset ");
+	if (bGetDriveOffset) {
+		OutputDiscLog("(Drive offset refers to http://www.accuraterip.com)");
+	}
+	OutputDiscLog(STR_DOUBLE_HYPHEN_E);
+
+	if (pExtArg->byAdd && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
+		pDisc->MAIN.nCombinedOffset += pExtArg->nAudioCDOffsetNum * 4;
+		pExtArg->nAudioCDOffsetNum = 0; // If it is possible, I want to repair it by a better method...
+		OutputDiscLog(
+			"\t       Combined Offset(Byte) %6d, (Samples) %5d\n"
+			"\t-         Drive Offset(Byte) %6d, (Samples) %5d\n"
+			"\t----------------------------------------------------\n"
+			"\t User Specified Offset(Byte) %6d, (Samples) %5d\n",
+			pDisc->MAIN.nCombinedOffset, pDisc->MAIN.nCombinedOffset / 4,
+			nDriveOffset, nDriveSampleOffset,
+			pDisc->MAIN.nCombinedOffset - nDriveOffset,
+			(pDisc->MAIN.nCombinedOffset - nDriveOffset) / 4);
+	}
+	else {
+		OutputDiscLog(
+			"\t Combined Offset(Byte) %6d, (Samples) %5d\n"
+			"\t-   Drive Offset(Byte) %6d, (Samples) %5d\n"
+			"\t----------------------------------------------\n"
+			"\t       CD Offset(Byte) %6d, (Samples) %5d\n",
+			pDisc->MAIN.nCombinedOffset, pDisc->MAIN.nCombinedOffset / 4,
+			nDriveOffset, nDriveSampleOffset,
+			pDisc->MAIN.nCombinedOffset - nDriveOffset,
+			(pDisc->MAIN.nCombinedOffset - nDriveOffset) / 4);
+	}
+
+	if (pDisc->MAIN.nCombinedOffset % CD_RAW_SECTOR_SIZE == 0) {
+		pDisc->MAIN.nAdjustSectorNum =
+			pDisc->MAIN.nCombinedOffset / CD_RAW_SECTOR_SIZE;
+	}
+	else if (0 < pDisc->MAIN.nCombinedOffset) {
+		pDisc->MAIN.nAdjustSectorNum =
+			pDisc->MAIN.nCombinedOffset / CD_RAW_SECTOR_SIZE + 1;
+	}
+	else if (pDisc->MAIN.nCombinedOffset < 0) {
+		pDisc->MAIN.nAdjustSectorNum =
+			pDisc->MAIN.nCombinedOffset / CD_RAW_SECTOR_SIZE - 1;
+	}
+	OutputDiscLog("\tOverread sector: %d\n", pDisc->MAIN.nAdjustSectorNum);
+	if (nSubChannelOffset != 0xff) {
+		OutputDiscLog("\tSubChannel Offset: %d\n", nSubChannelOffset);
+	}
+}
+
+VOID ResetAndOutputCDOffset(
+	PDEVICE pDevice,
+	PEXT_ARG pExtArg,
+	PDISC pDisc,
+	INT nSample
+) {
+	pDisc->MAIN.nCombinedOffsetOrg = pDisc->MAIN.nCombinedOffset;
+	pDisc->MAIN.nCombinedOffset += nSample * 4;
+	SetAndOutputCDOffset(pExtArg, pDisc, TRUE, pDevice->nDriveSampleOffset
+		, pDevice->nDriveSampleOffset * 4, pDisc->SUB.nSubChannelOffset);
+	pDisc->MAIN.bResetOffset = TRUE;
 }
 
 VOID SetCDOffset(

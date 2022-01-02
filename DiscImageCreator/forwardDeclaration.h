@@ -80,6 +80,10 @@
 
 #define MAX_READ_ERROR_FILE_COUNT (16)
 
+#define READ_AUDIO_DISC_WITHOUT_OFFSET (0)
+#define READ_AUDIO_DISC_WITH_OFFSET (1)
+#define READ_AUDIO_DISC_WITHOUT_DUMPING (2)
+
 #if defined _WIN32 && defined UNICODE
 #define CHARWIDTH "h"
 #else

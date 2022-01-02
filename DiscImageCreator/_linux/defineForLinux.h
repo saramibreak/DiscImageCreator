@@ -2224,6 +2224,7 @@ typedef struct _AACS_READ_BINDING_NONCE {
 #include <wchar.h>
 #include <locale.h>
 #include <libgen.h>
+#include <termios.h>
 
 #define __wchar_t wchar_t
 
@@ -2448,3 +2449,5 @@ unsigned int Sleep(unsigned long seconds);
 #endif
 
 int GetDiskFreeSpaceEx(LPCSTR lpDirectoryName, PULARGE_INTEGER lpFreeBytesAvailableToCaller, PULARGE_INTEGER lpTotalNumberOfBytes, PULARGE_INTEGER lpTotalNumberOfFreeBytes);
+
+int _getch(void);

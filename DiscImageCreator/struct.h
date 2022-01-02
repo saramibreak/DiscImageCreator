@@ -200,7 +200,8 @@ typedef struct _EXT_ARG {
 	BYTE byMicroSoftCabFile;
 	BYTE byPadSector;
 	BYTE byMultiSectorReading; // for 0xF1 supported drive
-	BYTE byPadding[3];
+	BYTE byVerifyAudioCDOfs;
+	BYTE byPadding[2];
 	INT nAudioCDOffsetNum;
 	UINT uiMaxRereadNum; // for c2 error
 	INT nAllSectors;	// use for xbox360
@@ -215,6 +216,7 @@ typedef struct _EXT_ARG {
 	UINT uiSkipSectors2; // for some LaserLock
 	UINT uiPadNum; // 0 : main channel is padded by 0x00, 1 : main channel is padded by 0xAA
 	UINT uiRetryCnt; // for 0xf1 drive
+	UINT uiVerifyAudio; // for /vrfy
 	struct _FILE {
 		CHAR readError[MAX_READ_ERROR_FILE_COUNT][MAX_FNAME_FOR_VOLUME];
 		INT readErrCnt;
@@ -251,6 +253,7 @@ typedef struct _DEVICE {
 	CDFLAG::_READ_CD::_SUB_CHANNEL_SELECTION sub;
 	DWORD dwTimeOutValue;
 	DRIVE_DATA_ORDER driveOrder;
+	INT nDriveSampleOffset;
 	struct _TRANSFER {
 		UINT uiBufLen;
 		UINT uiBufC2Offset;
@@ -308,6 +311,7 @@ typedef struct _DISC {
 	struct _MAIN {
 		INT nAdjustSectorNum;
 		INT nCombinedOffset;
+		INT nCombinedOffsetOrg;
 		UINT uiMainDataSlideSize;
 		INT nOffsetStart;
 		INT nOffsetEnd;
@@ -320,6 +324,7 @@ typedef struct _DISC {
 		LPDWORD lpAllSectorCrc32;
 		LPINT lpAllLBAOfC2Error;
 		INT nC2ErrorCnt;
+		BOOL bResetOffset;
 	} MAIN;
 	struct _SUB {
 		INT nSubChannelOffset;
@@ -407,6 +412,7 @@ typedef struct _DISC {
 		INT nParamSfoCnt;
 	} BD;
 	LPBYTE lpCachedBuf; // for Asus 0xF1 opcode
+	UINT uiCachedSectorNum; // for Asus 0xF1 opcode
 	DWORD dwBytesPerSector; // only use by disk command
 } DISC, *PDISC;
 
