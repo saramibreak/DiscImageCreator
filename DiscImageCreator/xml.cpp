@@ -167,22 +167,34 @@ BOOL ReadWriteDat(
 
 	WCHAR wszPathForDat[_MAX_PATH] = {};
 	_TCHAR szTmpPath[_MAX_PATH] = {};
+
+	_tcsncpy(szTmpPath, pszFullPath, sizeof(szTmpPath) / sizeof(_TCHAR) - 1);
+
 	if (bDesync) {
+#if 0
 		if (szDir[1] == '\0') {
 			_sntprintf(szTmpPath, _MAX_PATH, _T("%s\\%s (Subs indexes).dat"), szDrive, szFname);
 		}
 		else {
 			_sntprintf(szTmpPath, _MAX_PATH, _T("%s\\%s\\%s (Subs indexes).dat"), szDrive, szDir, szFname);
 		}
+#endif
+		PathRemoveExtension(szTmpPath);
+		_TCHAR str1[] = _T(" (Subs indexes).dat");
+		_tcsncat(szTmpPath, str1, sizeof(szTmpPath) / sizeof(_TCHAR) - _tcslen(szTmpPath) - 1);
 	}
 	else {
+#if 0
 		if (szDir[1] == '\0') {
 			_sntprintf(szTmpPath, _MAX_PATH, _T("%s\\%s.dat"), szDrive, szFname);
 		}
 		else {
 			_sntprintf(szTmpPath, _MAX_PATH, _T("%s\\%s\\%s.dat"), szDrive, szDir, szFname);
 		}
+#endif
+		PathRenameExtension(szTmpPath, _T(".dat"));
 	}
+
 	szTmpPath[_MAX_FNAME - 1] = 0;
 #ifndef UNICODE
 	if (!MultiByteToWideChar(CP_ACP, 0
@@ -421,11 +433,22 @@ BOOL ReadWriteDat(
 
 	CHAR szPathForDat[_MAX_PATH] = {};
 	_TCHAR szTmpPath[_MAX_PATH] = {};
+
+	_tcsncpy(szPathForDat, pszFullPath, sizeof(szPathForDat) - 1);
+
 	if (bDesync) {
+#if 0
 		_sntprintf(szPathForDat, _MAX_PATH, _T("%s%s%s (Subs indexes).dat"), szDrive, szDir, szFname);
+#endif
+		PathRemoveExtension(szPathForDat);
+		_TCHAR str1[] = _T(" (Subs indexes).dat");
+		_tcsncat(szPathForDat, str1, sizeof(szPathForDat) - _tcslen(szPathForDat) - 1);
 	}
 	else {
+#if 0
 		_sntprintf(szPathForDat, _MAX_PATH, _T("%s%s%s.dat"), szDrive, szDir, szFname);
+#endif
+		PathRenameExtension(szPathForDat, _T(".dat"));
 	}
 	szPathForDat[_MAX_PATH - 1] = 0;
 
