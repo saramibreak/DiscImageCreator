@@ -1122,7 +1122,8 @@ BOOL ReadCDForCheckingSubQ1stIndex(
 		else {
 			AlignRowSubcode(lpSubcode, aBuf + CD_RAW_SECTOR_SIZE);
 			if ((BYTE)(lpSubcode[12] & 0x0f) == ADR_ENCODES_CURRENT_POSITION) {
-				pDisc->SUB.nIdxOfLBA0 = BcdToDec(lpSubcode[14]);
+				pDisc->SUB.byCtlOfLBA0 = BcdToDec((BYTE)((lpSubcode[12] >> 4) & 0x0f));
+				pDisc->SUB.byIdxOfLBA0 = BcdToDec(lpSubcode[14]);
 				break;
 			}
 			else {
@@ -2571,7 +2572,7 @@ VOID ReadCDForScanningPsxAntiMod(
 	cdb.OperationCode = SCSIOP_READ12;
 	cdb.TransferLength[3] = 2;
 
-	for (INT nLBA = 18; nLBA < pDisc->SCSI.nLastLBAofDataTrk - 150; nLBA++) {
+	for (INT nLBA = 18; nLBA < pDisc->SCSI.nLastLBAofDataTrkOnToc - 150; nLBA++) {
 		if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, buf,
 			DISC_MAIN_DATA_SIZE * 2, _T(__FUNCTION__), __LINE__)) {
 			return;
@@ -2598,7 +2599,7 @@ VOID ReadCDForScanningPsxAntiMod(
 		if (bRet == 2) {
 			break;
 		}
-		OutputString("\rScanning sector for anti-mod string (LBA) %6d/%6d", nLBA, pDisc->SCSI.nLastLBAofDataTrk - 150 - 1);
+		OutputString("\rScanning sector for anti-mod string (LBA) %6d/%6d", nLBA, pDisc->SCSI.nLastLBAofDataTrkOnToc - 150 - 1);
 	}
 	if (!bRet) {
 		OutputLog(fileDisc | standardOut, "\nNo anti-mod string\n");

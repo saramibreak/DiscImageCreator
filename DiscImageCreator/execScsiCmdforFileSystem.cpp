@@ -527,7 +527,7 @@ BOOL ReadVolumeDescriptor(
 		//	Pregap Track   , LBA        0 -        0, Length        1
 		//	  Data Track  1, LBA        1 -   317021, Length   317021
 		//	                                          Total    317022
-		if (pDisc->SCSI.lp1stLBAListOnToc[byIdx] != 1) {
+		if (pDisc->SCSI.lp1stLBAListOnToc[byIdx] != 1 && pDisc->SCSI.trkType == TRACK_TYPE::dataExist) {
 			nPVD += pDisc->SCSI.lp1stLBAListOnToc[byIdx];
 		}
 	}
@@ -599,7 +599,7 @@ BOOL ReadCDForFileSystem(
 	BOOL bRet = TRUE;
 	for (BYTE i = 0; i < pDisc->SCSI.toc.LastTrack; i++) {
 		if ((pDisc->SCSI.toc.TrackData[i].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK ||
-			(i == 0 && pDisc->SCSI.byFormat == DISK_TYPE_CDI)) {
+			(i == 0 && (pDisc->SCSI.byFormat == DISK_TYPE_CDI || pDisc->SCSI.trkType == TRACK_TYPE::pregapDataIn1stTrack))) {
 			// for Label Gate CD, XCP
 			if (i > 1 && pDisc->SCSI.lpLastLBAListOnToc[i] - pDisc->SCSI.lp1stLBAListOnToc[i] + 1 <= 750) {
 				return TRUE;
@@ -686,10 +686,59 @@ BOOL ReadCDForFileSystem(
 						}
 					}
 				}
-				else {
+
+				BOOL bMac = FALSE;
+				INT nLBA = pDisc->SCSI.lp1stLBAListOnToc[i];
+				if (pDisc->SCSI.trkType == TRACK_TYPE::pregapDataIn1stTrack) {
+					nLBA = 0;
+				}
+				if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, lpBuf,
+					DISC_MAIN_DATA_SIZE, _T(__FUNCTION__), __LINE__)) {
+					throw FALSE;
+				}
+				// for MAC pattern 1
+				if (IsDriverDescriptorRecord(lpBuf)) {
+					OutputDriveDescriptorRecord(lpBuf);
+					if (IsApplePartionMap(lpBuf + 512)) {
+						BOOL bHfs = FALSE;
+						LONG firstPartition = 0;
+						UINT numOfPartion = MAKEUINT(MAKEWORD(lpBuf[519], lpBuf[518]), MAKEWORD(lpBuf[517], lpBuf[516]));
+						for (UINT j = 1; j <= numOfPartion; j++) {
+							OutputPartitionMap(lpBuf + 512 * j, &bHfs);
+							if (bHfs && firstPartition == 0) {
+								firstPartition = MAKELONG(MAKEWORD(lpBuf[523], lpBuf[522]), MAKEWORD(lpBuf[521], lpBuf[520]));
+							}
+							OutputString("\rReading Partition Map %u/%u", j, numOfPartion);
+						}
+						OutputString("\n");
+						nLBA += 1;
+						if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, lpBuf,
+							DISC_MAIN_DATA_SIZE, _T(__FUNCTION__), __LINE__)) {
+							throw FALSE;
+						}
+						if (IsValidMacDataHeader(lpBuf + 1024)) {
+							OutputFsMasterDirectoryBlocks(lpBuf + 1024, nLBA);
+						}
+						else if (IsValidMacDataHeader(lpBuf + 512)) {
+							OutputFsMasterDirectoryBlocks(lpBuf + 512, nLBA);
+						}
+						// for MAC pattern 2
+						nLBA += 15;
+						if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, lpBuf,
+							DISC_MAIN_DATA_SIZE, _T(__FUNCTION__), __LINE__)) {
+							throw FALSE;
+						}
+						if (IsValidMacDataHeader(lpBuf + 1024)) {
+							OutputFsMasterDirectoryBlocks(lpBuf + 1024, nLBA);
+						}
+					}
+					bMac = TRUE;
+				}
+
+				if (!bVD && !bMac) {
 					BOOL bOtherHeader = FALSE;
 					// for pce, pc-fx
-					INT nLBA = pDisc->SCSI.n1stLBAofDataTrk;
+					nLBA = pDisc->SCSI.n1stLBAofDataTrk;
 					if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, lpBuf,
 						DISC_MAIN_DATA_SIZE, _T(__FUNCTION__), __LINE__)) {
 						throw FALSE;
@@ -728,54 +777,7 @@ BOOL ReadCDForFileSystem(
 								(INT)MAKEUINT(MAKEWORD(lpBuf[103], lpBuf[102]), MAKEWORD(lpBuf[101], lpBuf[100])))) {
 								throw FALSE;
 							}
-							bOtherHeader = TRUE;
 						}
-					}
-					if (!bOtherHeader) {
-						// for MAC pattern 1
-						if (IsDriverDescriptorRecord(lpBuf)) {
-							OutputDriveDescriptorRecord(lpBuf);
-							if (IsApplePartionMap(lpBuf + 512)) {
-								BOOL bHfs = FALSE;
-								LONG firstPartition = 0;
-								UINT numOfPartion = MAKEUINT(MAKEWORD(lpBuf[519], lpBuf[518]), MAKEWORD(lpBuf[517], lpBuf[516]));
-								for (UINT j = 1; j <= numOfPartion; j++) {
-									OutputPartitionMap(lpBuf + 512 * j, &bHfs);
-									if (bHfs && firstPartition == 0) {
-										firstPartition = MAKELONG(MAKEWORD(lpBuf[523], lpBuf[522]), MAKEWORD(lpBuf[521], lpBuf[520]));
-									}
-									OutputString("\rReading Partition Map %u/%u", j, numOfPartion);
-								}
-								OutputString("\n");
-								nLBA = 1;
-								if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, lpBuf,
-									DISC_MAIN_DATA_SIZE, _T(__FUNCTION__), __LINE__)) {
-									throw FALSE;
-								}
-								if (IsValidMacDataHeader(lpBuf + 1024)) {
-									OutputFsMasterDirectoryBlocks(lpBuf + 1024, nLBA);
-									bOtherHeader = TRUE;
-								}
-								else if (IsValidMacDataHeader(lpBuf + 512)) {
-									OutputFsMasterDirectoryBlocks(lpBuf + 512, nLBA);
-									bOtherHeader = TRUE;
-								}
-								// for MAC pattern 2
-								nLBA = 16;
-								if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, lpBuf,
-									DISC_MAIN_DATA_SIZE, _T(__FUNCTION__), __LINE__)) {
-									throw FALSE;
-								}
-								if (IsValidMacDataHeader(lpBuf + 1024)) {
-									OutputFsMasterDirectoryBlocks(lpBuf + 1024, nLBA);
-									bOtherHeader = TRUE;
-								}
-							}
-						}
-					}
-					if (bOtherHeader) {
-						FreeAndNull(pBuf);
-						break;
 					}
 				}
 			}
