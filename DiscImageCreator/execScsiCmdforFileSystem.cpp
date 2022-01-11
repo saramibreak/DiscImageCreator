@@ -689,6 +689,7 @@ BOOL ReadCDForFileSystem(
 
 				BOOL bMac = FALSE;
 				INT nLBA = pDisc->SCSI.lp1stLBAListOnToc[i];
+				cdb.TransferLength[3] = 1;
 				if (pDisc->SCSI.trkType == TRACK_TYPE::pregapDataIn1stTrack) {
 					nLBA = 0;
 				}
