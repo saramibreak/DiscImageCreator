@@ -200,7 +200,8 @@ typedef struct _EXT_ARG {
 	BYTE byMicroSoftCabFile;
 	BYTE byPadSector;
 	BYTE byMultiSectorReading; // for 0xF1 supported drive
-	BYTE byPadding[3];
+	BYTE byVerifyAudioCDOfs;
+	BYTE byPadding[2];
 	INT nAudioCDOffsetNum;
 	UINT uiMaxRereadNum; // for c2 error
 	INT nAllSectors;	// use for xbox360
@@ -215,6 +216,7 @@ typedef struct _EXT_ARG {
 	UINT uiSkipSectors2; // for some LaserLock
 	UINT uiPadNum; // 0 : main channel is padded by 0x00, 1 : main channel is padded by 0xAA
 	UINT uiRetryCnt; // for 0xf1 drive
+	UINT uiVerifyAudio; // for /vrfy
 	struct _FILE {
 		CHAR readError[MAX_READ_ERROR_FILE_COUNT][MAX_FNAME_FOR_VOLUME];
 		INT readErrCnt;
@@ -251,6 +253,7 @@ typedef struct _DEVICE {
 	CDFLAG::_READ_CD::_SUB_CHANNEL_SELECTION sub;
 	DWORD dwTimeOutValue;
 	DRIVE_DATA_ORDER driveOrder;
+	INT nDriveSampleOffset;
 	struct _TRANSFER {
 		UINT uiBufLen;
 		UINT uiBufC2Offset;
@@ -277,37 +280,38 @@ typedef struct _DISC {
 #else
 		__attribute__ ((aligned(4))) CDROM_TOC toc; // get at CDROM_READ_TOC_EX_FORMAT_TOC
 #endif
-		INT nAllLength;				// get at CDROM_READ_TOC_EX_FORMAT_TOC
-		LPINT lp1stLBAListOnToc;	// get at CDROM_READ_TOC_EX_FORMAT_TOC
-		LPINT lpLastLBAListOnToc;	// get at CDROM_READ_TOC_EX_FORMAT_TOC
-		INT n1stLBAofDataTrk;		// get at CDROM_READ_TOC_EX_FORMAT_TOC
-		INT nLastLBAofDataTrk;		// get at CDROM_READ_TOC_EX_FORMAT_TOC
-		TRACK_TYPE trkType;			// get at CDROM_READ_TOC_EX_FORMAT_TOC
-		BYTE by1stDataTrkNum;		// get at CDROM_READ_TOC_EX_FORMAT_TOC
-		BYTE byLastDataTrkNum;		// get at CDROM_READ_TOC_EX_FORMAT_TOC
-		BYTE byFormat;				// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
+		INT nAllLength;					// get at CDROM_READ_TOC_EX_FORMAT_TOC
+		LPINT lp1stLBAListOnToc;		// get at CDROM_READ_TOC_EX_FORMAT_TOC
+		LPINT lpLastLBAListOnToc;		// get at CDROM_READ_TOC_EX_FORMAT_TOC
+		INT n1stLBAofDataTrk;			// get at CDROM_READ_TOC_EX_FORMAT_TOC
+		INT nLastLBAofDataTrkOnToc;		// get at CDROM_READ_TOC_EX_FORMAT_TOC
+		TRACK_TYPE trkType;				// get at CDROM_READ_TOC_EX_FORMAT_TOC
+		BYTE by1stDataTrkNum;			// get at CDROM_READ_TOC_EX_FORMAT_TOC
+		BYTE byLastDataTrkNum;			// get at CDROM_READ_TOC_EX_FORMAT_TOC
+		BYTE byFormat;					// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
 		BYTE by1stMultiSessionTrkNum;	// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
-		BOOL bMultiSession;			// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
-		LPBYTE lpSessionNumList;	// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
-		INT n1stLBAofLeadout;		// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
+		BOOL bMultiSession;				// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
+		LPBYTE lpSessionNumList;		// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
+		INT n1stLBAofLeadout;			// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
 		INT n1stLBAofLeadin;
 		INT nLeadoutLenOf1stSession;
 		INT nLeadinLenOf2ndSession;
 		INT nEndLBAOfLeadin;
 		INT nPregapLenOf1stTrkOf2ndSession;
-		INT n1stLBAof2ndSession;	// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
+		INT n1stLBAof2ndSession;		// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
 		struct _CDTEXT {
 			LPSTR* pszTitle;			// get at CDROM_READ_TOC_EX_FORMAT_CDTEXT
 			LPSTR* pszPerformer;		// get at CDROM_READ_TOC_EX_FORMAT_CDTEXT
 			LPSTR* pszSongWriter;		// get at CDROM_READ_TOC_EX_FORMAT_CDTEXT
 			BOOL bExist;
 		} CDTEXT[MAX_CDTEXT_LANG];
-		WORD wCurrentMedia;			// get at SCSIOP_GET_CONFIGURATION
+		WORD wCurrentMedia;				// get at SCSIOP_GET_CONFIGURATION
 		BYTE padding2[2];
 	} SCSI;
 	struct _MAIN {
 		INT nAdjustSectorNum;
 		INT nCombinedOffset;
+		INT nCombinedOffsetOrg;
 		UINT uiMainDataSlideSize;
 		INT nOffsetStart;
 		INT nOffsetEnd;
@@ -315,11 +319,11 @@ typedef struct _DISC {
 		INT nFixEndLBA;
 		INT nFix1stLBAofLeadout;	// for sliding offset
 		INT nFix1stLBAof2ndSession;	// for sliding offset
-		// 0 origin, max is last track num.
-		LPBYTE lpModeList;
+		LPBYTE lpModeList; // 0 origin, max is last track num.
 		LPDWORD lpAllSectorCrc32;
 		LPINT lpAllLBAOfC2Error;
 		INT nC2ErrorCnt;
+		BOOL bResetOffset;
 	} MAIN;
 	struct _SUB {
 		INT nSubChannelOffset;
@@ -331,33 +335,22 @@ typedef struct _DISC {
 		CHAR szCatalog[META_CATALOG_SIZE];
 		BYTE byAdr6;
 		CHAR szAdr6[META_ADR6_SIZE];
-		BYTE padding[2];
+		BYTE byCtlOfLBA0; // for pregap sector of track 1
+		BYTE byIdxOfLBA0; // for pregap sector of track 1
 		INT n1stLBAForISRC[3][2];
 		INT nRangeLBAForISRC[3][2];
 		INT nPrevISRCSector;
-		// 0 origin, max is last track num.
-		LPSTR* pszISRC;
-		// 0 origin, max is last track num.
-		// toc indexes in priority. single ptr: LBA per track. double ptr: LBA per index
-		LPINT* lp1stLBAListOnSub;
-		// 0 origin, max is last track num.
-		// sub indexes in priority. single ptr: LBA per track. double ptr: LBA per index
-		LPINT* lp1stLBAListOnSubSync;
-		// 0 origin, max is last track num.
-		LPINT lp1stLBAListOfDataTrackOnSub;
-		// 0 origin, max is last track num.
-		LPINT lpLastLBAListOfDataTrackOnSub;
-		// 0 origin, max is last track num.
-		LPBYTE lpCtlList;
-		// 0 origin, max is last track num.
-		LPBYTE lpEndCtlList;
-		// 0 origin, max is last track num.
-		LPBOOL lpISRCList;
-		// 0 origin, max is last track num.
-		LPBYTE lpRtoWList;
+		LPSTR* pszISRC; // 0 origin, max is last track num.
+		LPINT* lp1stLBAListOnSub; // 0 origin, max is last track num. // toc indexes in priority. single ptr: LBA per track. double ptr: LBA per index
+		LPINT* lp1stLBAListOnSubSync; // 0 origin, max is last track num. // sub indexes in priority. single ptr: LBA per track. double ptr: LBA per index
+		LPINT lp1stLBAListOfDataTrackOnSub; // 0 origin, max is last track num.
+		LPINT lpLastLBAListOfDataTrackOnSub; // 0 origin, max is last track num.
+		LPBYTE lpCtlList; // 0 origin, max is last track num.
+		LPBYTE lpEndCtlList; // 0 origin, max is last track num.
+		LPBOOL lpISRCList; // 0 origin, max is last track num.
+		LPBYTE lpRtoWList; // 0 origin, max is last track num.
 		INT nCorruptCrcH;
 		INT nCorruptCrcL;
-		INT nIdxOfLBA0;
 		INT n1stRmsfOfTrk;
 		INT n1stPchannelOfTrk;
 	} SUB;
@@ -369,8 +362,7 @@ typedef struct _DISC {
 		CHAR name[MAX_READ_ERROR_FILE_COUNT][MAX_FNAME_FOR_VOLUME];
 		CHAR name2[MAX_FNAME_FOR_VOLUME]; // for Der KorsaR, DVD Region X
 		CHAR padding[3];
-		// for skipping unreadable file
-		struct _ERROR_SECTOR {
+		struct _ERROR_SECTOR { // for skipping unreadable file
 			INT nExtentPos[MAX_READ_ERROR_FILE_COUNT];
 			INT nNextExtentPos; // for safedisc
 			INT nSectorSize[MAX_READ_ERROR_FILE_COUNT];
@@ -407,6 +399,7 @@ typedef struct _DISC {
 		INT nParamSfoCnt;
 	} BD;
 	LPBYTE lpCachedBuf; // for Asus 0xF1 opcode
+	UINT uiCachedSectorNum; // for Asus 0xF1 opcode
 	DWORD dwBytesPerSector; // only use by disk command
 } DISC, *PDISC;
 

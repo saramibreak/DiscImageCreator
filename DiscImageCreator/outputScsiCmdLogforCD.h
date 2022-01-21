@@ -97,15 +97,6 @@ VOID OutputTocWithPregap(
 	PDISC pDisc
 );
 
-VOID OutputCDOffset(
-	PEXT_ARG pExtArg,
-	PDISC pDisc,
-	BOOL bGetDriveOffset,
-	INT nDriveSampleOffset,
-	INT nDriveOffset,
-	INT nSubChannelOffset
-);
-
 VOID OutputCDC2Error296(
 	LOG_TYPE type,
 	LPBYTE lpBuf,

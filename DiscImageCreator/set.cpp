@@ -264,7 +264,7 @@ VOID SetAndOutputToc(
 				bFirstData = FALSE;
 				trkType = TRACK_TYPE::dataExist;
 			}
-			pDisc->SCSI.nLastLBAofDataTrk = pDisc->SCSI.lpLastLBAListOnToc[tIdx];
+			pDisc->SCSI.nLastLBAofDataTrkOnToc = pDisc->SCSI.lpLastLBAListOnToc[tIdx];
 			pDisc->SCSI.byLastDataTrkNum = i;
 		}
 
@@ -274,8 +274,11 @@ VOID SetAndOutputToc(
 				pDisc->SCSI.nAllLength += pDisc->SCSI.lp1stLBAListOnToc[tIdx];
 				OutputDiscLog("\tPregap Track   , LBA        0 - %8d, Length %8d\n"
 					, pDisc->SCSI.lp1stLBAListOnToc[tIdx] - 1, pDisc->SCSI.lp1stLBAListOnToc[tIdx]);
-				if (trkType == TRACK_TYPE::dataExist) {
+				if ((pDisc->SUB.byCtlOfLBA0 & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 					trkType = TRACK_TYPE::pregapDataIn1stTrack;
+					pDisc->SCSI.n1stLBAofDataTrk = 0;
+					pDisc->SCSI.by1stDataTrkNum = 1;
+					pDisc->SCSI.byLastDataTrkNum = 1;
 				}
 				else {
 					trkType = TRACK_TYPE::pregapAudioIn1stTrack;
@@ -285,7 +288,7 @@ VOID SetAndOutputToc(
 		INT idx = i;
 		if (pDisc->SCSI.byFormat == DISK_TYPE_CDI && pDisc->SCSI.toc.LastTrack > 1) {
 			if (i == pDisc->SCSI.toc.FirstTrack) {
-				if (pDisc->SUB.nIdxOfLBA0 == 0) {
+				if (pDisc->SUB.byIdxOfLBA0 == 0) {
 					// [CD-i Ready] Dimo's Quest (USA)
 					OutputDiscLog(
 						"\tPregap Track   , LBA        0 -        ?, Length        ?\n"
@@ -316,7 +319,27 @@ VOID SetAndOutputToc(
 	}
 	OutputDiscLog(
 		"\t                                          Total  %8d\n", pDisc->SCSI.nAllLength);
+
 	pDisc->SCSI.trkType = trkType;
+	OutputDiscLog("Set the TRACK_TYPE to ");
+
+	switch (pDisc->SCSI.trkType) {
+	case TRACK_TYPE::audioOnly:
+		OutputDiscLog("audioOnly\n");
+		break;
+	case TRACK_TYPE::dataExist:
+		OutputDiscLog("dataExist\n");
+		break;
+	case TRACK_TYPE::pregapAudioIn1stTrack:
+		OutputDiscLog("pregapAudioIn1stTrack\n");
+		break;
+	case TRACK_TYPE::pregapDataIn1stTrack:
+		OutputDiscLog("pregapDataIn1stTrack\n");
+		break;
+	default:
+		OutputDiscLog("unknown\n");
+		break;
+	}
 }
 
 VOID SetAndOutputTocForGD(
@@ -363,7 +386,7 @@ VOID SetAndOutputTocForGD(
 				bFirstData = FALSE;
 				trkType = TRACK_TYPE::dataExist;
 			}
-			pDisc->SCSI.nLastLBAofDataTrk = pDisc->SCSI.lpLastLBAListOnToc[tIdx];
+			pDisc->SCSI.nLastLBAofDataTrkOnToc = pDisc->SCSI.lpLastLBAListOnToc[tIdx];
 			pDisc->SCSI.byLastDataTrkNum = i;
 		}
 		OutputDiscLog(
@@ -925,6 +948,76 @@ VOID SetAndOutputTocCDText(
 	}
 }
 
+VOID SetAndOutputCDOffset(
+	PEXT_ARG pExtArg,
+	PDISC pDisc,
+	BOOL bGetDriveOffset,
+	INT nDriveSampleOffset,
+	INT nDriveOffset,
+	INT nSubChannelOffset
+) {
+	OutputDiscLog(STR_DOUBLE_HYPHEN_B "Offset ");
+	if (bGetDriveOffset) {
+		OutputDiscLog("(Drive offset refers to http://www.accuraterip.com)");
+	}
+	OutputDiscLog(STR_DOUBLE_HYPHEN_E);
+
+	if (pExtArg->byAdd && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
+		pDisc->MAIN.nCombinedOffset += pExtArg->nAudioCDOffsetNum * 4;
+		pExtArg->nAudioCDOffsetNum = 0; // If it is possible, I want to repair it by a better method...
+		OutputDiscLog(
+			"\t       Combined Offset(Byte) %6d, (Samples) %5d\n"
+			"\t-         Drive Offset(Byte) %6d, (Samples) %5d\n"
+			"\t----------------------------------------------------\n"
+			"\t User Specified Offset(Byte) %6d, (Samples) %5d\n",
+			pDisc->MAIN.nCombinedOffset, pDisc->MAIN.nCombinedOffset / 4,
+			nDriveOffset, nDriveSampleOffset,
+			pDisc->MAIN.nCombinedOffset - nDriveOffset,
+			(pDisc->MAIN.nCombinedOffset - nDriveOffset) / 4);
+	}
+	else {
+		OutputDiscLog(
+			"\t Combined Offset(Byte) %6d, (Samples) %5d\n"
+			"\t-   Drive Offset(Byte) %6d, (Samples) %5d\n"
+			"\t----------------------------------------------\n"
+			"\t       CD Offset(Byte) %6d, (Samples) %5d\n",
+			pDisc->MAIN.nCombinedOffset, pDisc->MAIN.nCombinedOffset / 4,
+			nDriveOffset, nDriveSampleOffset,
+			pDisc->MAIN.nCombinedOffset - nDriveOffset,
+			(pDisc->MAIN.nCombinedOffset - nDriveOffset) / 4);
+	}
+
+	if (pDisc->MAIN.nCombinedOffset % CD_RAW_SECTOR_SIZE == 0) {
+		pDisc->MAIN.nAdjustSectorNum =
+			pDisc->MAIN.nCombinedOffset / CD_RAW_SECTOR_SIZE;
+	}
+	else if (0 < pDisc->MAIN.nCombinedOffset) {
+		pDisc->MAIN.nAdjustSectorNum =
+			pDisc->MAIN.nCombinedOffset / CD_RAW_SECTOR_SIZE + 1;
+	}
+	else if (pDisc->MAIN.nCombinedOffset < 0) {
+		pDisc->MAIN.nAdjustSectorNum =
+			pDisc->MAIN.nCombinedOffset / CD_RAW_SECTOR_SIZE - 1;
+	}
+	OutputDiscLog("\tOverread sector: %d\n", pDisc->MAIN.nAdjustSectorNum);
+	if (nSubChannelOffset != 0xff) {
+		OutputDiscLog("\tSubChannel Offset: %d\n", nSubChannelOffset);
+	}
+}
+
+VOID ResetAndOutputCDOffset(
+	PDEVICE pDevice,
+	PEXT_ARG pExtArg,
+	PDISC pDisc,
+	INT nSample
+) {
+	pDisc->MAIN.nCombinedOffsetOrg = pDisc->MAIN.nCombinedOffset;
+	pDisc->MAIN.nCombinedOffset += nSample * 4;
+	SetAndOutputCDOffset(pExtArg, pDisc, TRUE, pDevice->nDriveSampleOffset
+		, pDevice->nDriveSampleOffset * 4, pDisc->SUB.nSubChannelOffset);
+	pDisc->MAIN.bResetOffset = TRUE;
+}
+
 VOID SetCDOffset(
 	PEXEC_TYPE pExecType,
 	BYTE byBe,
@@ -1018,6 +1111,15 @@ VOID SetTrackAttribution(
 ) {
 	BYTE tmpCurrentTrackNum = pDiscPerSector->subch.current.byTrackNum;
 	BYTE tmpCurrentIndex = pDiscPerSector->subch.current.byIndex;
+
+	if ((pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+		if ((pDiscPerSector->subch.next.byCtl & AUDIO_DATA_TRACK) == 0 && pDisc->SCSI.trkType == TRACK_TYPE::pregapDataIn1stTrack) {
+			pDisc->SUB.lp1stLBAListOfDataTrackOnSub[0] = 0;
+			pDisc->SUB.lpLastLBAListOfDataTrackOnSub[0] = nLBA;
+			OutputSubInfoWithLBALog("Index[%02d], Last data sector of this track\n"
+				, nLBA, tmpCurrentTrackNum, pDiscPerSector->subch.next.byIndex);
+		}
+	}
 
 	if (pDiscPerSector->subch.current.byAdr != ADR_ENCODES_CURRENT_POSITION) {
 		if (nLBA == 0) {
@@ -1312,20 +1414,20 @@ VOID SetTrackAttribution(
 
 		if (pExtArg->byReverse) {
 			// preserve last LBA per data track
-			if (nLBA == pDisc->SCSI.nLastLBAofDataTrk) {
+			if (nLBA == pDisc->SCSI.nLastLBAofDataTrkOnToc) {
 				if (pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tIdx] == -1 &&
 					(pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
-					pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tIdx] = pDisc->SCSI.nLastLBAofDataTrk;
+					pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tIdx] = pDisc->SCSI.nLastLBAofDataTrkOnToc;
 				}
 			}
-			else if ((pDisc->SCSI.toc.TrackData[tIdx2].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+			else if ((pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 				pDisc->SUB.lp1stLBAListOfDataTrackOnSub[tIdx] = nLBA;
 			}
 		}
 		else {
 			// preserve first LBA per data track
 			if (pDisc->SUB.lp1stLBAListOfDataTrackOnSub[tIdx] == -1 &&
-				(pDisc->SCSI.toc.TrackData[tIdx2].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+				(pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 				OutputSubInfoWithLBALog("1st LBA of this data track\n", nLBA, tmpCurrentTrackNum);
 				pDisc->SUB.lp1stLBAListOfDataTrackOnSub[tIdx] = nLBA;
 			}

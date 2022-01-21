@@ -92,6 +92,22 @@ VOID SetAndOutputTocCDText(
 	WORD wTocTextEntries
 );
 
+VOID SetAndOutputCDOffset(
+	PEXT_ARG pExtArg,
+	PDISC pDisc,
+	BOOL bGetDriveOffset,
+	INT nDriveSampleOffset,
+	INT nDriveOffset,
+	INT nSubChannelOffset
+);
+
+VOID ResetAndOutputCDOffset(
+	PDEVICE pDevice,
+	PEXT_ARG pExtArg,
+	PDISC pDisc,
+	INT nSample
+);
+
 VOID SetCDOffset(
 	PEXEC_TYPE pExecType,
 	BYTE byBe,

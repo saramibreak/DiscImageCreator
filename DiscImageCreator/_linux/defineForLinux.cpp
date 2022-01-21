@@ -462,7 +462,21 @@ int GetDiskFreeSpaceEx(
 	);
 	lpFreeBytesAvailableToCaller->QuadPart = buf.f_frsize * buf.f_bavail;
 	lpTotalNumberOfBytes->QuadPart = buf.f_frsize * buf.f_blocks;
-	lpTotalNumberOfFreeBytes->QuadPart = buf.f_frsize * (buf.f_blocks - buf.f_bavail);
+	lpTotalNumberOfFreeBytes->QuadPart = buf.f_frsize * buf.f_bfree;
 
 	return 0;
+}
+
+// https://www.webdevqa.jp.net/ja/c/linux%E3%81%A7c%E3%81%AEgetch%EF%BC%88%EF%BC%89%E9%96%A2%E6%95%B0%E3%82%92%E5%AE%9F%E8%A3%85%E3%81%99%E3%82%8B%E6%96%B9%E6%B3%95%E3%81%AF%EF%BC%9F/969438634/
+int _getch(void)
+{
+	struct termios oldattr, newattr;
+	int ch;
+	tcgetattr(STDIN_FILENO, &oldattr);
+	newattr = oldattr;
+	newattr.c_lflag &= ~(ICANON | ECHO);
+	tcsetattr(STDIN_FILENO, TCSANOW, &newattr);
+	ch = getchar();
+	tcsetattr(STDIN_FILENO, TCSANOW, &oldattr);
+	return ch;
 }

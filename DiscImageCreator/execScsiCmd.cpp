@@ -1114,8 +1114,7 @@ BOOL ReadCacheForLgAsus(
 	LPBYTE lpOutBuf,
 	INT nLineNum,
 	INT nLBA,
-	LPBOOL lpbCached,
-	LPINT lpbLeadOutCnt
+	LPBOOL lpbCached
 ) {
 	CONST DWORD dwBufSize = F1_BUFFER_SIZE * F1_READ_SECTOR_SIZE;
 	BYTE aBuf[dwBufSize] = {};
@@ -1206,7 +1205,7 @@ BOOL ReadCacheForLgAsus(
 			INT tmpLBA = MSFtoLBA(BcdToDec(aSubBuf[19]), BcdToDec(aSubBuf[20]), BcdToDec((aSubBuf[21]))) - 150;
 			if (tmpLBA == nLBA) {
 				memcpy(lpOutBuf + F1_BUFFER_SIZE * (nLBA - pDisc->SCSI.nAllLength), aBuf, F1_BUFFER_SIZE);
-				(*lpbLeadOutCnt)++;
+				pDisc->uiCachedSectorNum++;
 			}
 		}
 	}
