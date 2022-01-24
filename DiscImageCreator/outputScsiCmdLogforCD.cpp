@@ -470,7 +470,6 @@ VOID OutputExportDirectory(
 	PIMAGE_EXPORT_DIRECTORY exp = (PIMAGE_EXPORT_DIRECTORY)&lpBuf[dwOfs];
 	_TCHAR szTime[32] = {};
 	GetTimeStamp(szTime, sizeof(szTime), exp->TimeDateStamp);
-	DWORD dwVaOfs = dwExportVirtualAddress - dwOfs;
 
 	OutputVolDescLog(
 		"\t========== IMAGE_EXPORT_DIRECTORY ==========\n"
@@ -478,16 +477,26 @@ VOID OutputExportDirectory(
 		"\t\t        TimeDateStamp: %08lx (%s)\n"
 		"\t\t         MajorVersion: %04x\n"
 		"\t\t         MinorVersion: %04x\n"
-		"\t\t                 Name: %08lx (%" CHARWIDTH "s)\n"
+		"\t\t                 Name: %08lx"
+		, exp->Characteristics, exp->TimeDateStamp, szTime
+		, exp->MajorVersion, exp->MinorVersion, exp->Name
+	);
+
+	DWORD dwVaOfs = dwExportVirtualAddress - dwOfs;
+	DWORD dwNameOfs = exp->Name - dwVaOfs;
+	if (dwBufSize < dwNameOfs) {
+		OutputVolDescLog("Offset is over the bufsize when Name of IMAGE_EXPORT_DIRECTORY is outputted [%lu < %lu][L:%d]\n", dwBufSize, dwNameOfs, __LINE__);
+		return;
+	}
+	OutputVolDescLog(
+		" (%" CHARWIDTH "s)\n"
 		"\t\t                 Base: %08lx\n"
 		"\t\t    NumberOfFunctions: %08lx\n"
 		"\t\t        NumberOfNames: %08lx\n"
 		"\t\t   AddressOfFunctions: %08lx\n"
 		"\t\t       AddressOfNames: %08lx\n"
 		"\t\tAddressOfNameOrdinals: %08lx\n"
-		, exp->Characteristics, exp->TimeDateStamp, szTime
-		, exp->MajorVersion, exp->MinorVersion, exp->Name
-		, &lpBuf[exp->Name - dwVaOfs], exp->Base
+		, &lpBuf[dwNameOfs], exp->Base
 		, exp->NumberOfFunctions, exp->NumberOfNames
 		, exp->AddressOfFunctions, exp->AddressOfNames
 		, exp->AddressOfNameOrdinals
