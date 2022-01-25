@@ -33,7 +33,7 @@ BOOL IsXbox(
 	return FALSE;
 }
 
-BOOL IsCDBasedDisc(
+BOOL IsCDorRelatedDisc(
 	PEXEC_TYPE pExecType,
 	PDISC pDisc
 ) {
@@ -48,7 +48,7 @@ BOOL IsCDBasedDisc(
 	return FALSE;
 }
 
-BOOL IsDVDBasedDisc(
+BOOL IsDVDorRelatedDisc(
 	PDISC pDisc
 ) {
 	if (pDisc->SCSI.wCurrentMedia == ProfileDvdRom ||
@@ -76,7 +76,7 @@ BOOL IsDVDBasedDisc(
 	return FALSE;
 }
 
-BOOL IsBDBasedDisc(
+BOOL IsBDorRelatedDisc(
 	PDISC pDisc
 ) {
 	if (pDisc->SCSI.wCurrentMedia == ProfileBDRom ||
@@ -457,6 +457,7 @@ VOID SupportIndex0InTrack1(
 
 BOOL IsEnoughDiskSpaceForDump(
 	PEXEC_TYPE pExecType,
+	PDISC pDisc,
 	_TCHAR* pszPath
 ) {
 	ULARGE_INTEGER  ui64Used;
@@ -476,18 +477,10 @@ BOOL IsEnoughDiskSpaceForDump(
 		"\tSpace: %12llu bytes\n"
 		, pszPath, ui64Total.QuadPart, ui64Used.QuadPart, ui64Avail.QuadPart
 	);
-	if ((*pExecType == cd && ui64Avail.QuadPart > 3000000000) ||
-		(*pExecType == swap && ui64Avail.QuadPart > 3000000000) ||
-		(*pExecType == data && ui64Avail.QuadPart > 3000000000) ||
-		(*pExecType == audio && ui64Avail.QuadPart > 3000000000) ||
-		(*pExecType == gd && ui64Avail.QuadPart > 4000000000) ||
-		(*pExecType == dvd && ui64Avail.QuadPart > 9000000000) ||
-		(*pExecType == xbox && ui64Avail.QuadPart > 9000000000) ||
-		(*pExecType == xboxswap && ui64Avail.QuadPart > 9000000000) ||
-		(*pExecType == xgd2swap && ui64Avail.QuadPart > 9000000000) ||
-		(*pExecType == xgd3swap && ui64Avail.QuadPart > 9000000000) ||
-		(*pExecType == sacd && ui64Avail.QuadPart > 9000000000) ||
-		(*pExecType == bd && ui64Avail.QuadPart > 130000000000)
+	CONST INT nAllLogsFileSize = 1000000000;
+	if ((IsCDorRelatedDisc(pExecType, pDisc) && ui64Avail.QuadPart > (ULONGLONG)(pDisc->SCSI.nAllLength * 3 + nAllLogsFileSize)) ||
+		(IsDVDorRelatedDisc(pDisc) && ui64Avail.QuadPart > (ULONGLONG)(pDisc->SCSI.nAllLength + nAllLogsFileSize)) ||
+		(IsBDorRelatedDisc(pDisc) && ui64Avail.QuadPart > (ULONGLONG)(pDisc->SCSI.nAllLength + nAllLogsFileSize))
 		) {
 		OutputString("\t => There is enough disk space for dumping\n");
 		bRet = TRUE;

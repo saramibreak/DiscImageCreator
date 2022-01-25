@@ -3315,10 +3315,10 @@ VOID OutputModeSense(
 			WORD rsm = MAKEWORD(capabilities->ReadSpeedMaximum[1],
 				capabilities->ReadSpeedMaximum[0]);
 			UINT perKb = 176;
-			if (IsDVDBasedDisc(pDisc)) {
+			if (IsDVDorRelatedDisc(pDisc)) {
 				perKb = 1385;
 			}
-			else if (IsBDBasedDisc(pDisc)) {
+			else if (IsBDorRelatedDisc(pDisc)) {
 				perKb = 4496;
 			}
 			if (*pExecType == drivespeed) {

@@ -147,9 +147,6 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 		_tcsncpy(szPath, pszFullPath, sizeof(szPath) / sizeof(_TCHAR) - 1);
 		PathRemoveFileSpec(szPath);
 
-		if (!IsEnoughDiskSpaceForDump(pExecType, szPath)) {
-			throw FALSE;
-		}
 #ifndef _DEBUG
 		if (*pExecType != drivespeed) {
 			// 2nd: create logfile here (because logging all working)
@@ -175,7 +172,7 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 		}
 		else {
 			if (*pExecType == cd || *pExecType == swap || *pExecType == gd || *pExecType == data || *pExecType == audio) {
-				if (IsCDBasedDisc(pExecType, pDisc)) {
+				if (IsCDorRelatedDisc(pExecType, pDisc)) {
 #ifdef _WIN32
 					_declspec(align(4)) CDROM_TOC_FULL_TOC_DATA fullToc = { 0 };
 #else
@@ -193,6 +190,9 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 					}
 					// call this here because "Invalid TOC" occurs by GD-ROM
 					if (!ReadTOC(pExtArg, pExecType, pDevice, pDisc)) {
+						throw FALSE;
+					}
+					if (!IsEnoughDiskSpaceForDump(pExecType, pDisc, szPath)) {
 						throw FALSE;
 					}
 
@@ -345,7 +345,7 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 			}
 			else if (*pExecType == dvd) {
 				pDisc->DVD.discType = DISC_TYPE_DVD::formal;
-				if (IsDVDBasedDisc(pDisc)) {
+				if (IsDVDorRelatedDisc(pDisc)) {
 					DVDGetRegion(pDevice);
 					if (pExtArg->byScanProtectViaFile) {
 						if (!InitProtectData(&pDisc)) {
@@ -356,6 +356,9 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 						pDisc->SCSI.wCurrentMedia == ProfileDvdPlusR ||
 						pDisc->SCSI.wCurrentMedia == ProfileHDDVDRam) {
 						ReadTOC(pExtArg, pExecType, pDevice, pDisc);
+					}
+					if (!IsEnoughDiskSpaceForDump(pExecType, pDisc, szPath)) {
+						throw FALSE;
 					}
 					bRet = ReadDiscStructure(pExecType, pExtArg, pDevice, pDisc, pszFullPath);
 					if (pExtArg->byCmi) {
@@ -408,6 +411,9 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 			}
 			else if (*pExecType == xbox) {
 				pDisc->DVD.discType = DISC_TYPE_DVD::xboxdvd;
+				if (!IsEnoughDiskSpaceForDump(pExecType, pDisc, szPath)) {
+					throw FALSE;
+				}
 				bRet = ReadXboxDVD(pExecType, pExtArg, pDevice, pDisc, pszFullPath);
 			}
 			else if (*pExecType == xboxswap || *pExecType == xgd2swap || *pExecType == xgd3swap) {
@@ -415,8 +421,11 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 				bRet = ReadXboxDVDBySwap(pExecType, pExtArg, pDevice, pDisc, pszFullPath);
 			}
 			else if (*pExecType == bd) {
-				if (IsBDBasedDisc(pDisc)) {
+				if (IsBDorRelatedDisc(pDisc)) {
 					if (!ReadTOC(pExtArg, pExecType, pDevice, pDisc)) {
+						throw FALSE;
+					}
+					if (!IsEnoughDiskSpaceForDump(pExecType, pDisc, szPath)) {
 						throw FALSE;
 					}
 					bRet = ReadDiscStructure(pExecType, pExtArg, pDevice, pDisc, pszFullPath);
@@ -431,6 +440,9 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 			else if (*pExecType == sacd) {
 				if (IsValidPS3Drive(pDevice)) {
 					if (!ReadTOC(pExtArg, pExecType, pDevice, pDisc)) {
+						throw FALSE;
+					}
+					if (!IsEnoughDiskSpaceForDump(pExecType, pDisc, szPath)) {
 						throw FALSE;
 					}
 					bRet = ReadSACD(pExtArg, pDevice, pDisc, pszFullPath);

@@ -19,16 +19,16 @@ BOOL IsXbox(
 	PEXEC_TYPE pExecType
 );
 
-BOOL IsCDBasedDisc(
+BOOL IsCDorRelatedDisc(
 	PEXEC_TYPE pExecType,
 	PDISC pDisc
 );
 
-BOOL IsDVDBasedDisc(
+BOOL IsDVDorRelatedDisc(
 	PDISC pDisc
 );
 
-BOOL IsBDBasedDisc(
+BOOL IsBDorRelatedDisc(
 	PDISC pDisc
 );
 
@@ -63,6 +63,7 @@ VOID SupportIndex0InTrack1(
 
 BOOL IsEnoughDiskSpaceForDump(
 	PEXEC_TYPE pExecType,
+	PDISC pDisc,
 	_TCHAR* pszPath
 );
 
