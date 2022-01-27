@@ -19,17 +19,6 @@
 using namespace tinyxml2;
 #endif
 
-BOOL ReadWriteDat(
-	PEXEC_TYPE pExecType,
-	PEXT_ARG pExtArg,
-	PDISC pDisc,
-	_TCHAR* pszFullPath,
-	_TCHAR* szDrive,
-	_TCHAR* szDir,
-	_TCHAR* szFname,
-	BOOL bDesync
-);
-
 BOOL OutputHash(
 #ifdef _WIN32
 	CComPtr<IXmlWriter> pWriter,
@@ -41,5 +30,18 @@ BOOL OutputHash(
 	LPCTSTR szExt,
 	UCHAR uiTrack,
 	UCHAR uiLastTrack,
-	BOOL bDesync
+	BOOL bDesync,
+	PHASH pHash
+);
+
+BOOL ReadWriteDat(
+	PEXEC_TYPE pExecType,
+	PEXT_ARG pExtArg,
+	PDISC pDisc,
+	_TCHAR* pszFullPath,
+	_TCHAR* szDrive,
+	_TCHAR* szDir,
+	_TCHAR* szFname,
+	BOOL bDesync,
+	PHASH pHash
 );

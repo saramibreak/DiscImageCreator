@@ -165,7 +165,23 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 			pExtArg->byQuiet = TRUE;
 			return TRUE;
 		}
+
 		make_crc_table();
+		HASH hash = {};
+		hash.uiMax = 0;
+		if (*pExecType == dvd || *pExecType == sacd) {
+			hash.uiMax = 3; // PFI.bin, DMI.bin, .iso 
+		}
+		else if (*pExecType == xbox) {
+			hash.uiMax = 4; // SS.bin, PFI.bin, DMI.bin, .iso 
+		}
+		else if (*pExecType == bd) {
+			hash.uiMax = 2; // PIC.bin, .iso 
+		}
+		hash.pHashChunk = (PHASH_CHUNK)calloc(hash.uiMax, sizeof(HASH_CHUNK));
+		if (!hash.pHashChunk) {
+			throw FALSE;
+		}
 
 		if (*pExecType == fd || *pExecType == disk) {
 			bRet = ReadDisk(pExecType, pDevice, pDisc, pszFullPath);
@@ -360,7 +376,7 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 					if (!IsEnoughDiskSpaceForDump(pExecType, pDisc, szPath)) {
 						throw FALSE;
 					}
-					bRet = ReadDiscStructure(pExecType, pExtArg, pDevice, pDisc, pszFullPath);
+					bRet = ReadDiscStructure(pExecType, pExtArg, pDevice, pDisc, pszFullPath, &hash);
 					if (pExtArg->byCmi) {
 						bRet = ReadDVDForCMI(pExtArg, pDevice, pDisc);
 					}
@@ -401,7 +417,7 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 								OutputLog(standardOut | fileDisc, "Detected disguised file size: %llu\n", uiDiscSize);
 							}
 							AnalyzeIfoFile(pDevice, pDisc);
-							bRet = ReadDVD(pExecType, pExtArg, pDevice, pDisc, pszFullPath);
+							bRet = ReadDVD(pExecType, pExtArg, pDevice, pDisc, pszFullPath, &hash);
 						}
 					}
 				}
@@ -414,11 +430,11 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 				if (!IsEnoughDiskSpaceForDump(pExecType, pDisc, szPath)) {
 					throw FALSE;
 				}
-				bRet = ReadXboxDVD(pExecType, pExtArg, pDevice, pDisc, pszFullPath);
+				bRet = ReadXboxDVD(pExecType, pExtArg, pDevice, pDisc, pszFullPath, &hash);
 			}
 			else if (*pExecType == xboxswap || *pExecType == xgd2swap || *pExecType == xgd3swap) {
 				pDisc->DVD.discType = DISC_TYPE_DVD::xboxdvd;
-				bRet = ReadXboxDVDBySwap(pExecType, pExtArg, pDevice, pDisc, pszFullPath);
+				bRet = ReadXboxDVDBySwap(pExecType, pExtArg, pDevice, pDisc, pszFullPath, &hash);
 			}
 			else if (*pExecType == bd) {
 				if (IsBDorRelatedDisc(pDisc)) {
@@ -428,9 +444,9 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 					if (!IsEnoughDiskSpaceForDump(pExecType, pDisc, szPath)) {
 						throw FALSE;
 					}
-					bRet = ReadDiscStructure(pExecType, pExtArg, pDevice, pDisc, pszFullPath);
+					bRet = ReadDiscStructure(pExecType, pExtArg, pDevice, pDisc, pszFullPath, &hash);
 					if (bRet) {
-						bRet = ReadDVD(pExecType, pExtArg, pDevice, pDisc, pszFullPath);
+						bRet = ReadDVD(pExecType, pExtArg, pDevice, pDisc, pszFullPath, &hash);
 					}
 				}
 				else {
@@ -445,7 +461,7 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 					if (!IsEnoughDiskSpaceForDump(pExecType, pDisc, szPath)) {
 						throw FALSE;
 					}
-					bRet = ReadSACD(pExtArg, pDevice, pDisc, pszFullPath);
+					bRet = ReadSACD(pExtArg, pDevice, pDisc, pszFullPath, &hash);
 				}
 			}
 		}
@@ -461,15 +477,16 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 			else {
 #endif
 				bRet = ReadWriteDat(pExecType, pExtArg, pDisc
-					, pszFullPath, s_szDrive, s_szDir, s_szFname, FALSE);
+					, pszFullPath, s_szDrive, s_szDir, s_szFname, FALSE, &hash);
 				if (pDisc->SUB.byDesync) {
 					bRet = ReadWriteDat(pExecType, pExtArg, pDisc
-						, pszFullPath, s_szDrive, s_szDir, s_szFname, TRUE);
+						, pszFullPath, s_szDrive, s_szDir, s_szFname, TRUE, &hash);
 				}
 #if 0
 			}
 #endif
 		}
+		FreeAndNull(hash.pHashChunk);
 	}
 	catch (BOOL bErr) {
 		bRet = bErr;

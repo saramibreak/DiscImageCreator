@@ -34,7 +34,8 @@ BOOL ReadDVD(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
-	LPCTSTR pszFullPath
+	LPCTSTR pszFullPath,
+	PHASH pHash
 );
 
 BOOL ReadDVDForCMI(
@@ -55,7 +56,8 @@ BOOL ReadDiscStructure(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
-	LPCTSTR pszFullPath
+	LPCTSTR pszFullPath,
+	PHASH pHash
 );
 
 BOOL SetLockState(
@@ -69,7 +71,8 @@ BOOL ReadXboxDVD(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
-	LPCTSTR pszFullPath
+	LPCTSTR pszFullPath,
+	PHASH pHash
 );
 
 BOOL ReadXboxDVDBySwap(
@@ -77,12 +80,14 @@ BOOL ReadXboxDVDBySwap(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
-	LPCTSTR pszFullPath
+	LPCTSTR pszFullPath,
+	PHASH pHash
 );
 
 BOOL ReadSACD(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
-	LPCTSTR pszFullPath
+	LPCTSTR pszFullPath,
+	PHASH pHash
 );

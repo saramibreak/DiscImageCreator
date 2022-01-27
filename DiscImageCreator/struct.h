@@ -15,6 +15,7 @@
  */
 #pragma once
 #include "forwardDeclaration.h"
+#include "calcHash.h"
 
 // memo
 //  CONST   => const
@@ -506,6 +507,23 @@ typedef struct _SUB_R_TO_W {
 	CHAR data[16];
 	CHAR parityP[4];
 } SUB_R_TO_W, *PSUB_R_TO_W;
+
+#pragma pack(push, hash, 1)
+typedef struct _HASH_CHUNK {
+	DWORD crc32;
+	MD5_CTX md5;
+	SHA1Context sha;
+	_TCHAR szFnameAndExt[_MAX_FNAME + _MAX_EXT];
+	UINT64 ui64FileSize;
+} HASH_CHUNK, * PHASH_CHUNK;
+#pragma pack(pop, hash)
+
+typedef struct _HASH {
+	PHASH_CHUNK pHashChunk;
+	UINT uiIndex;
+	UINT uiCount;
+	UINT uiMax;
+} HASH, *PHASH;
 
 #pragma pack(push, mds, 1)
 typedef struct _MDS_HEADER {

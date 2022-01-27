@@ -26,7 +26,212 @@
 #include "xml.h"
 #include "_external/prngcd.h"
 
-BOOL OutputGameHash(
+BOOL OutputHash(
+#ifdef _WIN32
+	CComPtr<IXmlWriter> pWriter,
+#else
+	XMLElement* pWriter,
+#endif
+	_TCHAR* pszFullPath,
+	DWORD dwBytesPerSector,
+	LPCTSTR szExt,
+	UCHAR uiTrack,
+	UCHAR uiLastTrack,
+	BOOL bDesync,
+	PHASH pHash
+) {
+	_TCHAR szFnameAndExt[_MAX_FNAME + _MAX_EXT] = {};
+	DWORD crc32 = 0;
+	MD5_CTX md5 = {};
+	SHA1Context sha = {};
+	UINT64 ui64FileSize = 0;
+
+	if (pHash->uiMax == 0) {
+		// for CD
+		_TCHAR szOutPath[_MAX_PATH] = {};
+		FILE* fp = NULL;
+		if (bDesync) {
+			fp = CreateOrOpenFile(pszFullPath, _T(" (Subs indexes)"), szOutPath
+				, szFnameAndExt, NULL, szExt, _T("rb"), uiTrack, uiLastTrack);
+		}
+		else {
+			fp = CreateOrOpenFile(pszFullPath, NULL, szOutPath
+				, szFnameAndExt, NULL, szExt, _T("rb"), uiTrack, uiLastTrack);
+		}
+		if (!fp) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			OutputErrorString(" => %s\n", szOutPath);
+			return FALSE;
+		}
+
+		ui64FileSize = GetFileSize64(0, fp);
+		UINT uiSectorSizeOne = 0;
+		if (dwBytesPerSector) {
+			uiSectorSizeOne = (UINT)dwBytesPerSector;
+		}
+		else if (!_tcsncmp(szExt, _T(".iso"), 4) ||
+			!_tcsncmp(szFnameAndExt, _T("SS.bin"), 6) ||
+			!_tcsncmp(szFnameAndExt, _T("PFI.bin"), 7) ||
+			!_tcsncmp(szFnameAndExt, _T("DMI.bin"), 7) ||
+			ui64FileSize % DISC_MAIN_DATA_SIZE == 0) {
+			uiSectorSizeOne = DISC_MAIN_DATA_SIZE;
+		}
+		else {
+			uiSectorSizeOne = CD_RAW_SECTOR_SIZE;
+		}
+
+		UINT64 ui64SectorSizeAll = ui64FileSize / (UINT64)uiSectorSizeOne;
+		if (ui64FileSize >= uiSectorSizeOne) {
+			CalcInit(&md5, &sha);
+
+			BYTE data[CD_RAW_SECTOR_SIZE] = {};
+			int nRet = TRUE;
+			OutputString("Hashing: %s\n", szFnameAndExt);
+			// TODO: This code can more speed up! if reduce calling fread()
+			for (UINT64 i = 1; i <= ui64SectorSizeAll; i++) {
+				if (fread(data, sizeof(BYTE), uiSectorSizeOne, fp) < uiSectorSizeOne) {
+					OutputErrorString("Failed to read: read size %u [F:%s][L:%d]\n", uiSectorSizeOne, _T(__FUNCTION__), __LINE__);
+					return FALSE;
+				};
+				nRet = CalcHash(&crc32, &md5, &sha, data, uiSectorSizeOne);
+				if (!nRet) {
+					break;
+				}
+			}
+			FcloseAndNull(fp);
+			if (!nRet) {
+				return nRet;
+			}
+		}
+	}
+	else {
+		// for DVD, BD
+		crc32 = pHash->pHashChunk[pHash->uiCount].crc32;
+		memcpy(&md5, &pHash->pHashChunk[pHash->uiCount].md5, sizeof(md5));
+		memcpy(&sha, &pHash->pHashChunk[pHash->uiCount].sha, sizeof(sha));
+		_tcsncpy(szFnameAndExt, pHash->pHashChunk[pHash->uiCount].szFnameAndExt, sizeof(szFnameAndExt));
+		ui64FileSize = pHash->pHashChunk[pHash->uiCount].ui64FileSize;
+		pHash->uiCount++;
+	}
+
+	BYTE digest[16] = {};
+	BYTE Message_Digest[20] = {};
+	if (CalcEnd(&md5, &sha, digest, Message_Digest)) {
+		if (!_tcsncmp(szExt, _T(".scm"), 4) ||
+			!_tcsncmp(szExt, _T(".img"), 4) ||
+			!_tcsncmp(szFnameAndExt, _T("SS.bin"), 6) ||
+			!_tcsncmp(szFnameAndExt, _T("PFI.bin"), 7) ||
+			!_tcsncmp(szFnameAndExt, _T("DMI.bin"), 7) ||
+			!_tcsncmp(szFnameAndExt, _T("PIC.bin"), 7)
+			) {
+#ifndef _DEBUG
+			OutputHashData(g_LogFile.fpDisc, szFnameAndExt,	ui64FileSize, crc32, digest, Message_Digest);
+#endif
+		}
+		else {
+#ifdef _WIN32
+			HRESULT hr = S_OK;
+			if (FAILED(hr = pWriter->WriteStartElement(NULL, L"rom", NULL))) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				OutputErrorString("Dat error: %08.8lx\n", hr);
+				return FALSE;
+			}
+			WCHAR wszFnameAndExt[_MAX_FNAME + _MAX_EXT] = {};
+#ifndef UNICODE
+			if (!MultiByteToWideChar(CP_ACP, 0
+				, szFnameAndExt, sizeof(szFnameAndExt) / sizeof(szFnameAndExt[0])
+				, wszFnameAndExt, sizeof(wszFnameAndExt) / sizeof(wszFnameAndExt[0]))) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				return FALSE;
+			}
+#else
+			size_t size = sizeof(wszFnameAndExt) / sizeof(wszFnameAndExt[0]);
+			wcsncpy(wszFnameAndExt, szFnameAndExt, size);
+			wszFnameAndExt[size - 1] = 0;
+#endif
+			if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"name", NULL, wszFnameAndExt))) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				OutputErrorString("Dat error: %08.8lx\n", hr);
+				return FALSE;
+			}
+			WCHAR buf[128] = {};
+			_snwprintf(buf, sizeof(buf) / sizeof(buf[0]), L"%llu", ui64FileSize);
+			buf[127] = 0;
+			if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"size", NULL, buf))) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				OutputErrorString("Dat error: %08.8lx\n", hr);
+				return FALSE;
+			}
+			_snwprintf(buf, sizeof(buf) / sizeof(buf[0]), L"%08lx", crc32);
+			buf[127] = 0;
+			if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"crc", NULL, buf))) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				OutputErrorString("Dat error: %08.8lx\n", hr);
+				return FALSE;
+			}
+			_snwprintf(buf, sizeof(buf) / sizeof(buf[0])
+				, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
+				, digest[0], digest[1], digest[2], digest[3], digest[4], digest[5], digest[6], digest[7]
+				, digest[8], digest[9], digest[10], digest[11], digest[12], digest[13], digest[14], digest[15]);
+			buf[127] = 0;
+			if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"md5", NULL, buf))) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				OutputErrorString("Dat error: %08.8lx\n", hr);
+				return FALSE;
+			}
+			_snwprintf(buf, sizeof(buf) / sizeof(buf[0])
+				, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
+				, Message_Digest[0], Message_Digest[1], Message_Digest[2], Message_Digest[3], Message_Digest[4]
+				, Message_Digest[5], Message_Digest[6], Message_Digest[7], Message_Digest[8], Message_Digest[9]
+				, Message_Digest[10], Message_Digest[11], Message_Digest[12], Message_Digest[13], Message_Digest[14]
+				, Message_Digest[15], Message_Digest[16], Message_Digest[17], Message_Digest[18], Message_Digest[19]);
+			buf[127] = 0;
+			if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"sha1", NULL, buf))) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				OutputErrorString("Dat error: %08.8lx\n", hr);
+				return FALSE;
+			}
+			if (FAILED(hr = pWriter->WriteEndElement())) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				OutputErrorString("Dat error: %08.8lx\n", hr);
+				return FALSE;
+			}
+#else
+			XMLElement* newElem4 = pWriter->GetDocument()->NewElement("rom");
+			newElem4->SetAttribute("name", szFnameAndExt);
+
+			CHAR buf[128] = {};
+			_snprintf(buf, sizeof(buf) / sizeof(buf[0]), "%llu", ui64FileSize);
+			buf[127] = 0;
+			newElem4->SetAttribute("size", buf);
+
+			_snprintf(buf, sizeof(buf) / sizeof(buf[0]), "%08lx", crc32);
+			buf[127] = 0;
+			newElem4->SetAttribute("crc", buf);
+
+			_snprintf(buf, sizeof(buf) / sizeof(buf[0])
+				, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
+				, digest[0], digest[1], digest[2], digest[3], digest[4], digest[5], digest[6], digest[7]
+				, digest[8], digest[9], digest[10], digest[11], digest[12], digest[13], digest[14], digest[15]);
+			buf[127] = 0;
+			newElem4->SetAttribute("md5", buf);
+
+			_snprintf(buf, sizeof(buf) / sizeof(buf[0])
+				, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
+				, Message_Digest[0], Message_Digest[1], Message_Digest[2], Message_Digest[3], Message_Digest[4]
+				, Message_Digest[5], Message_Digest[6], Message_Digest[7], Message_Digest[8], Message_Digest[9]
+				, Message_Digest[10], Message_Digest[11], Message_Digest[12], Message_Digest[13], Message_Digest[14]
+				, Message_Digest[15], Message_Digest[16], Message_Digest[17], Message_Digest[18], Message_Digest[19]);
+			buf[127] = 0;
+			newElem4->SetAttribute("sha1", buf);
+			pWriter->InsertEndChild(newElem4);
+#endif
+		}
+	}
+	return TRUE;
+}
+
+BOOL OutputRomElement(
 #ifdef _WIN32
 	CComPtr<IXmlWriter> pWriter,
 #else
@@ -37,10 +242,11 @@ BOOL OutputGameHash(
 	PDISC pDisc,
 	_TCHAR* pszFullPath,
 	_TCHAR* szPath,
-	BOOL bDesync
+	BOOL bDesync,
+	PHASH pHash
 ) {
 	if (*pExecType == fd || *pExecType == disk) {
-		if (!OutputHash(pWriter, pszFullPath, pDisc->dwBytesPerSector, _T(".bin"), 1, 1, FALSE)) {
+		if (!OutputHash(pWriter, pszFullPath, pDisc->dwBytesPerSector, _T(".bin"), 1, 1, FALSE, pHash)) {
 			return FALSE;
 		}
 	}
@@ -56,7 +262,7 @@ BOOL OutputGameHash(
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 					return FALSE;
 				}
-				if (!OutputHash(pWriter, szPath, pDisc->dwBytesPerSector, _T(".bin"), 1, 1, FALSE)) {
+				if (!OutputHash(pWriter, szPath, pDisc->dwBytesPerSector, _T(".bin"), 1, 1, FALSE, pHash)) {
 					return FALSE;
 				}
 			}
@@ -69,7 +275,7 @@ BOOL OutputGameHash(
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				return FALSE;
 			}
-			if (!OutputHash(pWriter, szPath, pDisc->dwBytesPerSector, _T(".bin"), 1, 1, FALSE)) {
+			if (!OutputHash(pWriter, szPath, pDisc->dwBytesPerSector, _T(".bin"), 1, 1, FALSE, pHash)) {
 				return FALSE;
 			}
 
@@ -81,15 +287,28 @@ BOOL OutputGameHash(
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				return FALSE;
 			}
-			if (!OutputHash(pWriter, szPath, pDisc->dwBytesPerSector, _T(".bin"), 1, 1, FALSE)) {
+			if (!OutputHash(pWriter, szPath, pDisc->dwBytesPerSector, _T(".bin"), 1, 1, FALSE, pHash)) {
 				return FALSE;
 			}
 		}
-		if (!OutputHash(pWriter, pszFullPath, pDisc->dwBytesPerSector, _T(".iso"), 1, 1, FALSE)) {
+		else if (*pExecType == bd) {
+			if (!PathRemoveFileSpec(szPath)) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				return FALSE;
+			}
+			if (!PathAppend(szPath, _T("PIC.bin"))) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				return FALSE;
+			}
+			if (!OutputHash(pWriter, szPath, pDisc->dwBytesPerSector, _T(".bin"), 1, 1, FALSE, pHash)) {
+				return FALSE;
+			}
+		}
+		if (!OutputHash(pWriter, pszFullPath, pDisc->dwBytesPerSector, _T(".iso"), 1, 1, FALSE, pHash)) {
 			return FALSE;
 		}
 		if (pExtArg->byRawDump) {
-			if (!OutputHash(pWriter, pszFullPath, pDisc->dwBytesPerSector, _T(".raw"), 1, 1, FALSE)) {
+			if (!OutputHash(pWriter, pszFullPath, pDisc->dwBytesPerSector, _T(".raw"), 1, 1, FALSE, pHash)) {
 				return FALSE;
 			}
 		}
@@ -99,16 +318,16 @@ BOOL OutputGameHash(
 			OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("Hash(Whole image)"));
 			if (pDisc->SCSI.trkType == TRACK_TYPE::dataExist ||
 				pDisc->SCSI.trkType == TRACK_TYPE::pregapDataIn1stTrack) {
-				if (!OutputHash(pWriter, pszFullPath, pDisc->dwBytesPerSector, _T(".scm"), 1, 1, FALSE)) {
+				if (!OutputHash(pWriter, pszFullPath, pDisc->dwBytesPerSector, _T(".scm"), 1, 1, FALSE, pHash)) {
 					return FALSE;
 				}
 			}
-			if (!OutputHash(pWriter, pszFullPath, pDisc->dwBytesPerSector, _T(".img"), 1, 1, FALSE)) {
+			if (!OutputHash(pWriter, pszFullPath, pDisc->dwBytesPerSector, _T(".img"), 1, 1, FALSE, pHash)) {
 				return FALSE;
 			}
 		}
 		for (UCHAR i = pDisc->SCSI.toc.FirstTrack; i <= pDisc->SCSI.toc.LastTrack; i++) {
-			if (!OutputHash(pWriter, pszFullPath, pDisc->dwBytesPerSector, _T(".bin"), i, pDisc->SCSI.toc.LastTrack, bDesync)) {
+			if (!OutputHash(pWriter, pszFullPath, pDisc->dwBytesPerSector, _T(".bin"), i, pDisc->SCSI.toc.LastTrack, bDesync, pHash)) {
 				return FALSE;
 			}
 		}
@@ -124,7 +343,8 @@ BOOL ReadWriteDat(
 	_TCHAR* szDrive,
 	_TCHAR* szDir,
 	_TCHAR* szFname,
-	BOOL bDesync
+	BOOL bDesync,
+	PHASH pHash
 ) {
 #ifdef _WIN32
 	WCHAR wszDefaultDat[_MAX_PATH] = {};
@@ -350,7 +570,7 @@ BOOL ReadWriteDat(
 				return FALSE;
 			}
 			if (!wcsncmp(pwszLocalName, L"game", 4)) {
-				OutputGameHash(pWriter, pExecType, pExtArg, pDisc, pszFullPath,	szTmpPath, bDesync);
+				OutputRomElement(pWriter, pExecType, pExtArg, pDisc, pszFullPath,	szTmpPath, bDesync, pHash);
 			}
 			if (FAILED(hr = pWriter->WriteEndElement())) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -507,7 +727,7 @@ BOOL ReadWriteDat(
 			}
 
 			if (bDescription) {
-				OutputGameHash(newElem2, pExecType, pExtArg, pDisc, pszFullPath, szTmpPath, bDesync);
+				OutputRomElement(newElem2, pExecType, pExtArg, pDisc, pszFullPath, szTmpPath, bDesync, pHash);
 			}
 
 			newElem1->InsertEndChild(newElem2);
@@ -519,197 +739,5 @@ BOOL ReadWriteDat(
 
 	xmlWriter.SaveFile(szPathForDat);
 #endif
-	return TRUE;
-}
-
-BOOL OutputHash(
-#ifdef _WIN32
-	CComPtr<IXmlWriter> pWriter,
-#else
-	XMLElement* pWriter,
-#endif
-	_TCHAR* pszFullPath,
-	DWORD dwBytesPerSector,
-	LPCTSTR szExt,
-	UCHAR uiTrack,
-	UCHAR uiLastTrack,
-	BOOL bDesync
-) {
-	_TCHAR pszFnameAndExt[_MAX_FNAME + _MAX_EXT] = {};
-	_TCHAR pszOutPath[_MAX_PATH] = {};
-	FILE* fp = NULL;
-	if (bDesync) {
-		fp = CreateOrOpenFile(pszFullPath, _T(" (Subs indexes)"), pszOutPath
-			, pszFnameAndExt, NULL, szExt, _T("rb"), uiTrack, uiLastTrack);
-	}
-	else {
-		fp = CreateOrOpenFile(pszFullPath, NULL, pszOutPath
-			, pszFnameAndExt, NULL, szExt, _T("rb"), uiTrack, uiLastTrack);
-	}
-	if (!fp) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString(" => %s\n", pszOutPath);
-		return FALSE;
-	}
-	UINT64 ui64FileSize = GetFileSize64(0, fp);
-	UINT uiSectorSizeOne = 0;
-	if (dwBytesPerSector) {
-		uiSectorSizeOne = (UINT)dwBytesPerSector;
-	}
-	else if (!_tcsncmp(szExt, _T(".iso"), 4) ||
-		!_tcsncmp(pszFnameAndExt, _T("SS.bin"), 6) ||
-		!_tcsncmp(pszFnameAndExt, _T("PFI.bin"), 7) ||
-		!_tcsncmp(pszFnameAndExt, _T("DMI.bin"), 7) ||
-		ui64FileSize % DISC_MAIN_DATA_SIZE == 0) {
-		uiSectorSizeOne = DISC_MAIN_DATA_SIZE;
-	}
-	else {
-		uiSectorSizeOne = CD_RAW_SECTOR_SIZE;
-	}
-
-	UINT64 ui64SectorSizeAll = ui64FileSize / (UINT64)uiSectorSizeOne;
-	if (ui64FileSize >= uiSectorSizeOne) {
-		MD5_CTX context = {};
-		SHA1Context sha = {};
-		CalcInit(&context, &sha);
-
-		BYTE data[CD_RAW_SECTOR_SIZE] = {};
-		DWORD crc32 = 0;
-		int nRet = TRUE;
-		OutputString("Hashing: %s\n", pszFnameAndExt);
-		// TODO: This code can more speed up! if reduce calling fread()
-		for (UINT64 i = 1; i <= ui64SectorSizeAll; i++) {
-			if (fread(data, sizeof(BYTE), uiSectorSizeOne, fp) < uiSectorSizeOne) {
-				OutputErrorString("Failed to read: read size %u [F:%s][L:%d]\n", uiSectorSizeOne, _T(__FUNCTION__), __LINE__);
-				return FALSE;
-			};
-			nRet = CalcHash(&crc32, &context, &sha, data, uiSectorSizeOne);
-			if (!nRet) {
-				break;
-			}
-//			OutputString("\rCalculating hash: %s [%lld/%lld]"
-//				, pszFnameAndExt, i * uiSectorSizeOne, ui64FileSize);
-		}
-//		OutputString("\n");
-		FcloseAndNull(fp);
-		if (!nRet) {
-			return nRet;
-		}
-
-		BYTE digest[16] = {};
-		BYTE Message_Digest[20] = {};
-		if (CalcEnd(&context, &sha, digest, Message_Digest)) {
-			if (!_tcsncmp(szExt, _T(".scm"), 4) ||
-				!_tcsncmp(szExt, _T(".img"), 4) ||
-				!_tcsncmp(pszFnameAndExt, _T("SS.bin"), 6) ||
-				!_tcsncmp(pszFnameAndExt, _T("PFI.bin"), 7) ||
-				!_tcsncmp(pszFnameAndExt, _T("DMI.bin"), 7)
-				) {
-#ifndef _DEBUG
-				OutputHashData(g_LogFile.fpDisc, pszFnameAndExt,
-					ui64FileSize, crc32, digest, Message_Digest);
-#endif
-			}
-			else {
-#ifdef _WIN32
-				HRESULT hr = S_OK;
-				if (FAILED(hr = pWriter->WriteStartElement(NULL, L"rom", NULL))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					OutputErrorString("Dat error: %08.8lx\n", hr);
-					return FALSE;
-				}
-				WCHAR wszFnameAndExt[_MAX_FNAME + _MAX_EXT] = {};
-#ifndef UNICODE
-				if (!MultiByteToWideChar(CP_ACP, 0
-					, pszFnameAndExt, sizeof(pszFnameAndExt) / sizeof(pszFnameAndExt[0])
-					, wszFnameAndExt, sizeof(wszFnameAndExt) / sizeof(wszFnameAndExt[0]))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					return FALSE;
-				}
-#else
-				size_t size = sizeof(wszFnameAndExt) / sizeof(wszFnameAndExt[0]);
-				wcsncpy(wszFnameAndExt, pszFnameAndExt, size);
-				wszFnameAndExt[size - 1] = 0;
-#endif
-				if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"name", NULL, wszFnameAndExt))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					OutputErrorString("Dat error: %08.8lx\n", hr);
-					return FALSE;
-				}
-				WCHAR buf[128] = {};
-				_snwprintf(buf, sizeof(buf) / sizeof(buf[0]), L"%llu", ui64FileSize);
-				buf[127] = 0;
-				if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"size", NULL, buf))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					OutputErrorString("Dat error: %08.8lx\n", hr);
-					return FALSE;
-				}
-				_snwprintf(buf, sizeof(buf) / sizeof(buf[0]), L"%08lx", crc32);
-				buf[127] = 0;
-				if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"crc", NULL, buf))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					OutputErrorString("Dat error: %08.8lx\n", hr);
-					return FALSE;
-				}
-				_snwprintf(buf, sizeof(buf) / sizeof(buf[0])
-					, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
-					, digest[0], digest[1], digest[2], digest[3], digest[4], digest[5], digest[6], digest[7]
-					, digest[8], digest[9], digest[10], digest[11], digest[12], digest[13], digest[14], digest[15]);
-				buf[127] = 0;
-				if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"md5", NULL, buf))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					OutputErrorString("Dat error: %08.8lx\n", hr);
-					return FALSE;
-				}
-				_snwprintf(buf, sizeof(buf) / sizeof(buf[0])
-					, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
-					, Message_Digest[0], Message_Digest[1], Message_Digest[2], Message_Digest[3], Message_Digest[4]
-					, Message_Digest[5], Message_Digest[6], Message_Digest[7], Message_Digest[8], Message_Digest[9]
-					, Message_Digest[10], Message_Digest[11], Message_Digest[12], Message_Digest[13], Message_Digest[14]
-					, Message_Digest[15], Message_Digest[16], Message_Digest[17], Message_Digest[18], Message_Digest[19]);
-				buf[127] = 0;
-				if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"sha1", NULL, buf))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					OutputErrorString("Dat error: %08.8lx\n", hr);
-					return FALSE;
-				}
-				if (FAILED(hr = pWriter->WriteEndElement())) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					OutputErrorString("Dat error: %08.8lx\n", hr);
-					return FALSE;
-				}
-#else
-				XMLElement* newElem4 = pWriter->GetDocument()->NewElement("rom");
-				newElem4->SetAttribute("name", pszFnameAndExt);
-
-				CHAR buf[128] = {};
-				_snprintf(buf, sizeof(buf) / sizeof(buf[0]), "%llu", ui64FileSize);
-				buf[127] = 0;
-				newElem4->SetAttribute("size", buf);
-
-				_snprintf(buf, sizeof(buf) / sizeof(buf[0]), "%08lx", crc32);
-				buf[127] = 0;
-				newElem4->SetAttribute("crc", buf);
-
-				_snprintf(buf, sizeof(buf) / sizeof(buf[0])
-					, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
-					, digest[0], digest[1], digest[2], digest[3], digest[4], digest[5], digest[6], digest[7]
-					, digest[8], digest[9], digest[10], digest[11], digest[12], digest[13], digest[14], digest[15]);
-				buf[127] = 0;
-				newElem4->SetAttribute("md5", buf);
-
-				_snprintf(buf, sizeof(buf) / sizeof(buf[0])
-					, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
-					, Message_Digest[0], Message_Digest[1], Message_Digest[2], Message_Digest[3], Message_Digest[4]
-					, Message_Digest[5], Message_Digest[6], Message_Digest[7], Message_Digest[8], Message_Digest[9]
-					, Message_Digest[10], Message_Digest[11], Message_Digest[12], Message_Digest[13], Message_Digest[14]
-					, Message_Digest[15], Message_Digest[16], Message_Digest[17], Message_Digest[18], Message_Digest[19]);
-				buf[127] = 0;
-				newElem4->SetAttribute("sha1", buf);
-				pWriter->InsertEndChild(newElem4);
-#endif
-			}
-		}
-	}
 	return TRUE;
 }

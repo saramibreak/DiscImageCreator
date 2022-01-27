@@ -119,10 +119,12 @@ BOOL ReadDVD(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
-	LPCTSTR pszFullPath
+	LPCTSTR pszFullPath,
+	PHASH pHash
 ) {
+	_TCHAR szFnameAndExt[_MAX_FNAME + _MAX_EXT] = {};
 	FILE* fp = CreateOrOpenFile(
-		pszFullPath, NULL, NULL, NULL, NULL, _T(".iso"), _T("wb"), 0, 0);
+		pszFullPath, NULL, NULL, szFnameAndExt, NULL, _T(".iso"), _T("wb"), 0, 0);
 	if (!fp) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
@@ -224,6 +226,7 @@ BOOL ReadDVD(
 			}
 		}
 		FlushLog();
+		CalcInit(&pHash->pHashChunk[pHash->uiIndex].md5, &pHash->pHashChunk[pHash->uiIndex].sha);
 
 		FOUR_BYTE transferLen;
 		transferLen.AsULong = pDevice->dwMaxTransferLength / DISC_MAIN_DATA_SIZE;
@@ -443,6 +446,8 @@ BOOL ReadDVD(
 				nRetryCnt = 0;
 			}
 			fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_MAIN_DATA_SIZE * transferLen.AsULong, fp);
+			CalcHash(&pHash->pHashChunk[pHash->uiIndex].crc32, &pHash->pHashChunk[pHash->uiIndex].md5
+				, &pHash->pHashChunk[pHash->uiIndex].sha, lpBuf, DISC_MAIN_DATA_SIZE * (UINT)transferLen.AsULong);
 			OutputString("\rCreating iso(LBA) %8lu/%8d", nLBA + transferLen.AsULong, nAllLength);
 		}
 
@@ -463,6 +468,8 @@ BOOL ReadDVD(
 					transferLen.AsULong = dwEndOfMiddle - j;
 				}
 				fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_MAIN_DATA_SIZE * transferLen.AsULong, fp);
+				CalcHash(&pHash->pHashChunk[pHash->uiIndex].crc32, &pHash->pHashChunk[pHash->uiIndex].md5
+					, &pHash->pHashChunk[pHash->uiIndex].sha, lpBuf, DISC_MAIN_DATA_SIZE * (UINT)transferLen.AsULong);
 				OutputString("\rCreating iso(LBA) %8lu/%8d", j + transferLen.AsULong, nAllLength);
 			}
 
@@ -483,10 +490,13 @@ BOOL ReadDVD(
 					throw FALSE;
 				}
 				fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_MAIN_DATA_SIZE * transferLen.AsULong, fp);
-				OutputString("\rCreating iso(LBA) %8lu/%8d"
-					, dwEndOfMiddle + pDisc->DVD.dwLayer1SectorLength, nAllLength);
+				CalcHash(&pHash->pHashChunk[pHash->uiIndex].crc32, &pHash->pHashChunk[pHash->uiIndex].md5
+					, &pHash->pHashChunk[pHash->uiIndex].sha, lpBuf, DISC_MAIN_DATA_SIZE * (UINT)transferLen.AsULong);
+				OutputString("\rCreating iso(LBA) %8lu/%8d", dwEndOfMiddle + pDisc->DVD.dwLayer1SectorLength, nAllLength);
 			}
 		}
+		_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, szFnameAndExt, sizeof(szFnameAndExt));
+		pHash->pHashChunk[pHash->uiIndex].ui64FileSize = DISC_MAIN_DATA_SIZE * (UINT64)nAllLength;
 		OutputString("\n");
 	}
 	catch (BOOL ret) {
@@ -1165,7 +1175,8 @@ BOOL ReadDiscStructure(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
-	LPCTSTR pszFullPath
+	LPCTSTR pszFullPath,
+	PHASH pHash
 ) {
 #ifdef _WIN32
 	_declspec(align(4)) BYTE pBuf[DVD_STRUCTURE_SIZE] = {};
@@ -1243,7 +1254,8 @@ BOOL ReadDiscStructure(
 
 	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("DiscStructure"));
 	for (WORD i = 0; i < wEntrySize; i++) {
-		PDVD_STRUCTURE_LIST_ENTRY pEntry = 
+		CalcInit(&pHash->pHashChunk[pHash->uiIndex].md5, &pHash->pHashChunk[pHash->uiIndex].sha);
+		PDVD_STRUCTURE_LIST_ENTRY pEntry =
 			((PDVD_STRUCTURE_LIST_ENTRY)pDescHeader->Data + i);
 		// FormatLength is obsolete for late drive
 //		WORD wFormatLen = MAKEWORD(pEntry->FormatLength[1], pEntry->FormatLength[0]);
@@ -1378,11 +1390,21 @@ BOOL ReadDiscStructure(
 					if (pEntry->FormatCode == DvdPhysicalDescriptor) {
 						// PFI doesn't include the header
 						fwrite(lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), sizeof(BYTE), DISC_MAIN_DATA_SIZE, fpPfi);
+						CalcHash(&pHash->pHashChunk[pHash->uiIndex].crc32, &pHash->pHashChunk[pHash->uiIndex].md5
+							, &pHash->pHashChunk[pHash->uiIndex].sha, lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), DISC_MAIN_DATA_SIZE);
+						_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, _T("PFI.bin"), 8);
+						pHash->pHashChunk[pHash->uiIndex].ui64FileSize = DISC_MAIN_DATA_SIZE;
+						pHash->uiIndex++;
 						FcloseAndNull(fpPfi);
 					}
 					else if (pEntry->FormatCode == DvdManufacturerDescriptor) {
 						// DMI doesn't include the header
 						fwrite(lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), sizeof(BYTE), DISC_MAIN_DATA_SIZE, fpDmi);
+						CalcHash(&pHash->pHashChunk[pHash->uiIndex].crc32, &pHash->pHashChunk[pHash->uiIndex].md5
+							, &pHash->pHashChunk[pHash->uiIndex].sha, lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), DISC_MAIN_DATA_SIZE);
+						_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, _T("DMI.bin"), 8);
+						pHash->pHashChunk[pHash->uiIndex].ui64FileSize = DISC_MAIN_DATA_SIZE;
+						pHash->uiIndex++;
 						FcloseAndNull(fpDmi);
 					}
 				}
@@ -1426,6 +1448,11 @@ BOOL ReadDiscStructure(
 				if (pEntry->FormatCode == 0) {
 					// PIC includes the header
 					fwrite(lpFormat, sizeof(BYTE), formatLen.AsUShort, fpPic);
+					CalcHash(&pHash->pHashChunk[pHash->uiIndex].crc32, &pHash->pHashChunk[pHash->uiIndex].md5
+						, &pHash->pHashChunk[pHash->uiIndex].sha, lpFormat, formatLen.AsUShort);
+					_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, _T("PIC.bin"), 8);
+					pHash->pHashChunk[pHash->uiIndex].ui64FileSize = formatLen.AsUShort;
+					pHash->uiIndex++;
 					FcloseAndNull(fpPic);
 				}
 				else if (pEntry->FormatCode == 0x30) {
@@ -1560,7 +1587,8 @@ BOOL ExtractSecuritySector(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
-	LPCTSTR pszFullPath
+	LPCTSTR pszFullPath,
+	PHASH pHash
 ) {
 	_TCHAR szPath[_MAX_PATH] = {};
 	_tcsncpy(szPath, pszFullPath, sizeof(szPath) / sizeof(szPath[0]) - 1);
@@ -1689,6 +1717,11 @@ BOOL ExtractSecuritySector(
 	if (pDisc->SCSI.nAllLength < 4246304 || filled) {
 		fwrite(buf, sizeof(BYTE), (size_t)DISC_MAIN_DATA_SIZE, fp);
 	}
+	CalcHash(&pHash->pHashChunk[pHash->uiIndex].crc32, &pHash->pHashChunk[pHash->uiIndex].md5
+		, &pHash->pHashChunk[pHash->uiIndex].sha, buf, DISC_MAIN_DATA_SIZE);
+	_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, _T("SS.bin"), 7);
+	pHash->pHashChunk[pHash->uiIndex].ui64FileSize = DISC_MAIN_DATA_SIZE;
+	pHash->uiIndex++;
 	FcloseAndNull(fp);
 
 	if (pDisc->SCSI.nAllLength == 3697696 || pDisc->SCSI.nAllLength == 4246304) {
@@ -1848,7 +1881,8 @@ BOOL ReadXboxDVD(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
-	LPCTSTR pszFullPath
+	LPCTSTR pszFullPath,
+	PHASH pHash
 ) {
 	if (!GetFeatureListForXBox(pExtArg, pDevice)) {
 		return FALSE;
@@ -1864,7 +1898,7 @@ BOOL ReadXboxDVD(
 	if (!ReadTOC(pExtArg, pExecType, pDevice, pDisc)) {
 		return FALSE;
 	}
-	if (!ReadDiscStructure(pExecType, pExtArg, pDevice, pDisc, pszFullPath)) {
+	if (!ReadDiscStructure(pExecType, pExtArg, pDevice, pDisc, pszFullPath, pHash)) {
 		return FALSE;
 	}
 
@@ -1879,7 +1913,7 @@ BOOL ReadXboxDVD(
 		return FALSE;
 	}
 
-	if (!ExtractSecuritySector(pExtArg, pDevice, pDisc, pszFullPath)) {
+	if (!ExtractSecuritySector(pExtArg, pDevice, pDisc, pszFullPath, pHash)) {
 		return FALSE;
 	}
 
@@ -1896,7 +1930,7 @@ BOOL ReadXboxDVD(
 	// layer 0 of xbox [startPsn of xbox (0x60600) to the size of toc] -> depend on the disc
 	// layer 1 of middle zone
 	// layer 1 of dvd
-	if (!ReadDVD(pExecType, pExtArg, pDevice, pDisc, pszFullPath)) {
+	if (!ReadDVD(pExecType, pExtArg, pDevice, pDisc, pszFullPath, pHash)) {
 		return FALSE;
 	}
 	return TRUE;
@@ -1907,9 +1941,10 @@ BOOL ReadXboxDVDBySwap(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
-	LPCTSTR pszFullPath
+	LPCTSTR pszFullPath,
+	PHASH pHash
 ) {
-	if (!ReadDiscStructure(pExecType, pExtArg, pDevice, pDisc, pszFullPath)) {
+	if (!ReadDiscStructure(pExecType, pExtArg, pDevice, pDisc, pszFullPath, pHash)) {
 		return FALSE;
 	}
 	
@@ -1991,7 +2026,7 @@ BOOL ReadXboxDVDBySwap(
 			pDisc->DVD.securitySectorRange[i][1] = pExtArg->uiSecuritySector[i] + 4095 + pDisc->DVD.dwXboxSwapOfs;
 		}
 	}
-	if (!ReadDVD(pExecType, pExtArg, pDevice, pDisc, pszFullPath)) {
+	if (!ReadDVD(pExecType, pExtArg, pDevice, pDisc, pszFullPath, pHash)) {
 		return FALSE;
 	}
 	return TRUE;
@@ -2001,12 +2036,14 @@ BOOL ReadSACD(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
-	LPCTSTR pszFullPath
+	LPCTSTR pszFullPath,
+	PHASH pHash
 ) {
 	ReadSACDFileSystem(pExtArg, pDevice);
 
+	_TCHAR szFnameAndExt[_MAX_FNAME + _MAX_EXT] = {};
 	FILE* fp = CreateOrOpenFile(
-		pszFullPath, NULL, NULL, NULL, NULL, _T(".iso"), _T("wb"), 0, 0);
+		pszFullPath, NULL, NULL, szFnameAndExt, NULL, _T(".iso"), _T("wb"), 0, 0);
 	if (!fp) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
@@ -2050,6 +2087,10 @@ BOOL ReadSACD(
 			}
 
 			fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_MAIN_DATA_SIZE * transferLen.AsULong, fp);
+			CalcHash(&pHash->pHashChunk[pHash->uiIndex].crc32, &pHash->pHashChunk[pHash->uiIndex].md5
+				, &pHash->pHashChunk[pHash->uiIndex].sha, lpBuf, DISC_MAIN_DATA_SIZE * (UINT)transferLen.AsULong);
+			_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, szFnameAndExt, sizeof(szFnameAndExt));
+			pHash->pHashChunk[pHash->uiIndex].ui64FileSize = DISC_MAIN_DATA_SIZE * (UINT64)pDisc->SCSI.nAllLength;
 			OutputString("\rCreating iso(LBA) %8lu/%8d", LBA.AsULong + transferLen.AsULong, pDisc->SCSI.nAllLength);
 		}
 		OutputString("\n");
