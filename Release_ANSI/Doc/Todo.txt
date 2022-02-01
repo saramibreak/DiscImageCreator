@@ -3,6 +3,8 @@
 . failed to read of LBA 16 http://forum.redump.org/post/94542/#p94542
 . the shifted offset be explained by ASUS drive or a Linux bug? http://forum.redump.org/post/90412/#p90412 http://forum.redump.org/post/93955/#p93955
 . The C2 errors are completely random and inconsistent Scooby-Doo! 2.0.0 for the iXL http://forum.redump.org/post/89722/#p89722 http://forum.redump.org/post/90011/#p90011
+. failed to read Directory Record of some XBOX discs http://forum.redump.org/post/97640/#p97640
+. PS2 unlicenced disc doesn't match the hash http://forum.redump.org/post/96246/#p96246 http://forum.redump.org/post/97804/#p97804
 
 [protection]
 . support DiscGuard http://forum.redump.org/post/94457/#p94457
