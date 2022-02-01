@@ -94,3 +94,11 @@ BOOL ReadCDPartial(
 	INT nEnd,
 	FILE* fpC2
 );
+
+BOOL ReadCDAdditional(
+	PEXEC_TYPE pExecType,
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	PDISC pDisc,
+	LPCTSTR pszPath
+);

@@ -858,6 +858,10 @@ BOOL ReadAudioCDForCheckingReadInOut(
 	if (nLastSector == NOT_FOUND) {
 		OutputLog(standardOut | fileDisc, "Not found from the last sector - 75 to the last sector + 75\n");
 	}
+	else if (17 <= nLastSector) {
+		OutputLog(standardOut | fileDisc, "Non-zero byte position is over the +10,000 samples. Not fix the offset\n");
+		pDisc->MAIN.bManySamples |= PLUS_10000_SAMPLES;
+	}
 
 	OutputLog(standardOut | fileDisc, "Check the 1st non-zero byte -> ");
 
@@ -872,16 +876,26 @@ BOOL ReadAudioCDForCheckingReadInOut(
 	if (n1stSector == NOT_FOUND) {
 		OutputLog(standardOut | fileDisc, "Not found from LBA -75 to 75\n");
 	}
+	else if (n1stSector <= -17) {
+		OutputLog(standardOut | fileDisc, "Non-zero byte position is over the -10,000 samples. Not fix the offset\n");
+		pDisc->MAIN.bManySamples |= MINUS_10000_SAMPLES;
+	}
+
 	if (0 <= n1stSector && pExtArg->byPre) {
 		OutputLog(standardOut | fileDisc, "This disc doesn't have non-zero byte in the pregap area of track 1. /p was disabled\n");
 		pExtArg->byPre = FALSE;
 	}
 
-	if (nLastSector != NOT_FOUND || n1stSector != NOT_FOUND) {
+	if ((pDisc->MAIN.bManySamples & PLUS_10000_SAMPLES) == PLUS_10000_SAMPLES ||
+		(pDisc->MAIN.bManySamples & MINUS_10000_SAMPLES) == MINUS_10000_SAMPLES) {
+		return TRUE;
+	}
+	else if (nLastSector != NOT_FOUND || n1stSector != NOT_FOUND) {
 		if (nLastSector == n1stSector) {
+			INT nTmpOffset = CD_RAW_SECTOR_SIZE * n1stSector + n1stSectorPos;
 			if (nLastSectorPos + 1 == n1stSectorPos) {
 				// [Audio-CD] Kirby's Dream Collection: Special Edition: Compilation Soundtrack ~ Hoshi no Kirby: 20 Shuunen Memorial Soundtrack
-				INT nSample = (n1stSectorPos - pDisc->MAIN.nCombinedOffset) / 4;
+				INT nSample = (nTmpOffset - pDisc->MAIN.nCombinedOffset) / 4;
 				OutputLog(standardOut | fileDisc, "Last non-zero byte position is equal to the 1st non-zero byte position. Set /a %d\n", nSample);
 				ResetAndOutputCDOffset(pDevice, pExtArg, pDisc, nSample);
 			}
@@ -889,8 +903,8 @@ BOOL ReadAudioCDForCheckingReadInOut(
 				OutputLog(standardOut | fileDisc, "Can't fix the combined offset because the last non-zero byte position is bigger than the 1st non-zero byte position\n");
 			}
 			else if (nLastSectorPos + 1 < n1stSectorPos) {
-				if (n1stSectorPos < pDisc->MAIN.nCombinedOffset) {
-					INT nPos = n1stSectorPos;
+				if (nTmpOffset < pDisc->MAIN.nCombinedOffset) {
+					INT nPos = nTmpOffset;
 					INT corr = 4 - nPos % 4;
 					if (corr != 4) {
 						nPos -= corr;
@@ -900,8 +914,19 @@ BOOL ReadAudioCDForCheckingReadInOut(
 						, "Last non-zero byte position is smaller than the 1st non-zero byte position and the 1st non-zero byte position is smaller than the combined offset. Set /a %d\n", nSample);
 					ResetAndOutputCDOffset(pDevice, pExtArg, pDisc, nSample);
 				}
+				else if (pDisc->MAIN.nCombinedOffset < CD_RAW_SECTOR_SIZE * nLastSector + nLastSectorPos){
+					INT nPos = CD_RAW_SECTOR_SIZE * nLastSector + nLastSectorPos;
+					INT corr = 4 - nPos % 4;
+					if (corr != 4) {
+						nPos += corr;
+					}
+					INT nSample = (nPos - pDisc->MAIN.nCombinedOffset) / 4;
+					OutputLog(standardOut | fileDisc
+						, "Last non-zero byte position is smaller than the 1st non-zero byte position and bigger than the combined offset. Set /a %d\n", nSample);
+					ResetAndOutputCDOffset(pDevice, pExtArg, pDisc, nSample);
+				}
 				else {
-					OutputLog(standardOut | fileDisc, "1st non-zero byte position is smaller than the combined offset. No need to fix the combined offset\n");
+					OutputLog(standardOut | fileDisc, "No need to fix the combined offset\n");
 				}
 			}
 		}

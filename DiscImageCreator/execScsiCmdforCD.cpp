@@ -2491,3 +2491,76 @@ BOOL ReadCDPartial(
 	}
 	return bRet;
 }
+
+BOOL ReadCDAdditional(
+	PEXEC_TYPE pExecType,
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	PDISC pDisc,
+	LPCTSTR pszPath
+) {
+	BYTE lpCmd[CDB12GENERIC_LENGTH] = {};
+	SetReadDiscCommand(pExecType, pExtArg, pDevice, 1, CDFLAG::_READ_CD::byte294, CDFLAG::_READ_CD::Raw, lpCmd, FALSE);
+
+	BYTE aBuf[CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE] = {};
+	BYTE byScsiStatus = 0;
+	FILE* fpInOut = NULL;
+	if ((pDisc->MAIN.bManySamples & PLUS_10000_SAMPLES) == PLUS_10000_SAMPLES) {
+		if (NULL == (fpInOut = CreateOrOpenFile(pszPath, NULL, NULL, NULL, NULL, _T(".out"), _T("wb"), 0, 0))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			return FALSE;
+		}
+		for (INT i = pDisc->SCSI.nAllLength + pDisc->MAIN.nAdjustSectorNum; i < pDisc->SCSI.nAllLength + 100; i++) {
+			if (!ExecReadCD(pExtArg, pDevice, lpCmd, i, aBuf,
+				CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE, _T(__FUNCTION__), __LINE__)
+				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+				OutputLog(standardOut | fileDisc, "can't read\n");
+				return FALSE;
+			}
+			if (i == pDisc->SCSI.nAllLength + pDisc->MAIN.nAdjustSectorNum) {
+				fwrite(aBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize, fpInOut);
+			}
+			else if (i == pDisc->SCSI.nAllLength + 99) {
+				fwrite(aBuf, sizeof(BYTE), pDisc->MAIN.uiMainDataSlideSize, fpInOut);
+			}
+			else {
+				fwrite(aBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpInOut);
+			}
+		}
+	}
+	else if ((pDisc->MAIN.bManySamples & MINUS_10000_SAMPLES) == MINUS_10000_SAMPLES) {
+		if (NULL == (fpInOut = CreateOrOpenFile(pszPath, NULL, NULL, NULL, NULL, _T(".pre"), _T("wb"), 0, 0))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			return FALSE;
+		}
+		BYTE lpSubcode[CD_RAW_READ_SUBCODE_SIZE] = {};
+		BOOL bFound = FALSE;
+		for (INT i = PREGAP_START_LBA; i < -1150; i++) {
+			if (!ExecReadCD(pExtArg, pDevice, lpCmd, i, aBuf,
+				CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE, _T(__FUNCTION__), __LINE__)
+				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+				OutputLog(standardOut | fileDisc, "can't read\n");
+				return FALSE;
+			}
+			AlignRowSubcode(lpSubcode, &aBuf[CD_RAW_SECTOR_SIZE]);
+			if (lpSubcode[13] == 1 && lpSubcode[14] == 0 && lpSubcode[19] == 0 && lpSubcode[20] == 0 && lpSubcode[21] == 0) {
+				fwrite(aBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize, fpInOut);
+				bFound = TRUE;
+			}
+			else if (lpSubcode[13] == 1 && lpSubcode[14] == 0 && lpSubcode[19] == 0 && lpSubcode[20] == 1 && BcdToDec(lpSubcode[21]) == 74) {
+				fwrite(aBuf, sizeof(BYTE), pDisc->MAIN.uiMainDataSlideSize, fpInOut);
+				break;
+			}
+			else {
+				if (bFound) {
+					fwrite(aBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpInOut);
+				}
+				else {
+					continue;
+				}
+			}
+		}
+	}
+	FcloseAndNull(fpInOut);
+	return TRUE;
+}

@@ -325,6 +325,7 @@ typedef struct _DISC {
 		LPINT lpAllLBAOfC2Error;
 		INT nC2ErrorCnt;
 		BOOL bResetOffset;
+		BOOL bManySamples;
 	} MAIN;
 	struct _SUB {
 		INT nSubChannelOffset;
