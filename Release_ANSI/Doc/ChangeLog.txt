@@ -763,3 +763,18 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 
 *2021-11-01
 - fixed: ReadErrorProtect
+
+*2022-02-01
+- added: /vrfy flag for checking non-zero byte of audio CD
+- added: buffer size check when IMAGE_EXPORT_DIRECTORY is outputted
+- added: support for reading cache via 0xF1 on HL-DT-ST BD-RE WH14NS48 v.1.D3
+- changed: "DATE" to "wmic os get LocalDateTime" when createBuildDateTime.bat is created
+- changed: check disk free space
+- changed: Hash image while dumping (DVD, BD)
+- fixed: trim the string of i6comp.exe
+- fixed: string (x86 -> 32 bit)
+- fixed: ARccOS is checked by DVD-Video
+- fixed: cue file when /p is used
+- fixed: disk space checking for linux
+- fixed: when used .petite, it's skipped reading Export, Import, Resource data due to the compressed data
+- fixed: dumping of "Star Wars - Shadows of the Empire Soundtrack"
