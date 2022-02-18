@@ -1478,8 +1478,10 @@ BOOL AnalyzeIfoFile(
 			return FALSE;
 		}
 		LPBYTE pSector = NULL;
+		LPBYTE lpPgciStartByte = NULL;
 		try {
-			if (NULL == (pSector = (LPBYTE)calloc(pDevice->dwMaxTransferLength, sizeof(BYTE)))) {
+			size_t stBufSize = 0x13 + 12 * USHRT_MAX;
+			if (NULL == (pSector = (LPBYTE)calloc(stBufSize, sizeof(BYTE)))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
@@ -1504,6 +1506,11 @@ BOOL AnalyzeIfoFile(
 					, v + 1, byNumOfTitleSet, byNumOfTitleSetTitleNumber, wNumOfChapters, uiStartSector);
 			}
 			INT nPgcCnt = 0;
+			if (NULL == (lpPgciStartByte = (LPBYTE)calloc(USHRT_MAX, sizeof(BYTE)))) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				throw FALSE;
+			}
+
 			for (WORD w = 1; w <= wNumOfTitleSets; w++) {
 #ifdef _WIN32
 				_sntprintf(szBuf, bufSize, _T("%c:\\VIDEO_TS\\VTS_%.02d_0.IFO"), pDevice->byDriveLetter, w);
@@ -1530,19 +1537,29 @@ BOOL AnalyzeIfoFile(
 					fseek(fpVts, -8, SEEK_CUR);
 					WORD wNumOfPgciSrp = MAKEWORD(pSector[1], pSector[0]);
 					UINT wByteOfPgciSrpTbl = MAKEUINT(MAKEWORD(pSector[7], pSector[6]), MAKEWORD(pSector[5], pSector[4]));
+					LPBYTE pTmpBuf = NULL;
+					if (stBufSize < wByteOfPgciSrpTbl + 8) {
+						if (NULL == (pTmpBuf = (LPBYTE)realloc(pSector, wByteOfPgciSrpTbl + 8))) {
+							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+							throw FALSE;
+						}
+						else {
+							pSector = pTmpBuf;
+						}
+					}
 					if (fread(pSector, sizeof(BYTE), 8 + wByteOfPgciSrpTbl, fpVts) != 8 + wByteOfPgciSrpTbl) {
 						FcloseAndNull(fpVts);
 						break;
 					}
-					UINT uiPgciStartByte[100] = {};
+
 					for (WORD x = 0; x < wNumOfPgciSrp; x++) {
-						uiPgciStartByte[x] = MAKEUINT(MAKEWORD(pSector[0xf + 8 * x], pSector[0xe + 8 * x])
+						lpPgciStartByte[x] = MAKEUINT(MAKEWORD(pSector[0xf + 8 * x], pSector[0xe + 8 * x])
 							, MAKEWORD(pSector[0xd + 8 * x], pSector[0xc + 8 * x]));
-						INT nNumOfPrograms = pSector[uiPgciStartByte[x] + 2];
-						INT nNumOfCells = pSector[uiPgciStartByte[x] + 3];
-						UINT uiPlayBackTimeH = pSector[uiPgciStartByte[x] + 4];
-						UINT uiPlayBackTimeM = pSector[uiPgciStartByte[x] + 5];
-						UINT uiPlayBackTimeS = pSector[uiPgciStartByte[x] + 6];
+						INT nNumOfPrograms = pSector[lpPgciStartByte[x] + 2];
+						INT nNumOfCells = pSector[lpPgciStartByte[x] + 3];
+						UINT uiPlayBackTimeH = pSector[lpPgciStartByte[x] + 4];
+						UINT uiPlayBackTimeM = pSector[lpPgciStartByte[x] + 5];
+						UINT uiPlayBackTimeS = pSector[lpPgciStartByte[x] + 6];
 						OutputDiscLog("%s, ProgramChain %2d, NumberOfPrograms %2d, NumberOfCells %2d, PlayBackTime -- %02x:%02x:%02x\n"
 							, szFnameAndExt, x + 1, nNumOfPrograms, nNumOfCells, uiPlayBackTimeH, uiPlayBackTimeM, uiPlayBackTimeS);
 						nPgcCnt++;
@@ -1562,6 +1579,7 @@ BOOL AnalyzeIfoFile(
 			bRet = bErr;
 		}
 		FcloseAndNull(fp);
+		FreeAndNull(lpPgciStartByte);
 		FreeAndNull(pSector);
 	}
 	else {
