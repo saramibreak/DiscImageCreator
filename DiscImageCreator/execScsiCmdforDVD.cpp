@@ -1776,28 +1776,28 @@ BOOL GetFeatureListForXBox(
 		case 0:
 			break;
 		case 0x100:
-			OutputDriveLog("0x%04x : The drive supports the unlock 1 state (xtreme) for XBOX 360\n", list);
+			OutputDriveLog("0x%04x : The drive supports the unlock 1 state (xtreme) for Xbox 360\n", list);
 			break;
 		case 0x101:
-			OutputDriveLog("0x%04x : The drive supports the unlock 2 state (wxripper) for XBOX 360\n", list);
+			OutputDriveLog("0x%04x : The drive supports the unlock 2 state (wxripper) for Xbox 360\n", list);
 			break;
 		case 0x120:
-			OutputDriveLog("0x%04x : The drive supports the unlock 1 state (xtreme) for XBOX 360\n", list);
+			OutputDriveLog("0x%04x : The drive supports the unlock 1 state (xtreme) for Xbox 360\n", list);
 			break;
 		case 0x121:
-			OutputDriveLog("0x%04x : The drive has full challenge response functionality for XBOX 360\n", list);
+			OutputDriveLog("0x%04x : The drive has full challenge response functionality for Xbox 360\n", list);
 			break;
 		case 0x200:
-			OutputDriveLog("0x%04x : The drive supports the unlock 1 state (xtreme) for XBOX\n", list);
+			OutputDriveLog("0x%04x : The drive supports the unlock 1 state (xtreme) for Xbox\n", list);
 			break;
 		case 0x201:
-			OutputDriveLog("0x%04x : The drive supports the unlock 2 state (wxripper) for XBOX\n", list);
+			OutputDriveLog("0x%04x : The drive supports the unlock 2 state (wxripper) for Xbox\n", list);
 			break;
 		case 0x220:
-			OutputDriveLog("0x%04x : The drive supports the unlock 1 state (xtreme) for XBOX\n", list);
+			OutputDriveLog("0x%04x : The drive supports the unlock 1 state (xtreme) for Xbox\n", list);
 			break;
 		case 0x221:
-			OutputDriveLog("0x%04x : The drive has full challenge response functionality for XBOX\n", list);
+			OutputDriveLog("0x%04x : The drive has full challenge response functionality for Xbox\n", list);
 			break;
 		case 0xF000:
 			OutputDriveLog("0x%04x : The drive supports the lock (cancel any unlock state) command\n", list);
