@@ -98,8 +98,8 @@ VOID OutputDVDRamLayerDescriptor(
 			"\t                              Bias power 2: %s\n"
 			, (lpBuf[0] & 0x10) == 0x10 ? _T("rewritable disk") : _T("other")
 			, lpBuf[0] & 0x0f
-			, (lpBuf[1] & 0xf0) == 0 ? _T("120mm") : _T("80mm")
-			, (lpBuf[1] & 0x0f) == 0x02 ? _T("10,08 Mbits/s.") : _T("other")
+			, (lpBuf[1] & 0xf0) == 0 ? _T("120 mm") : _T("80 mm")
+			, (lpBuf[1] & 0x0f) == 0x02 ? _T("10,08 Mbits/s") : _T("other")
 			, (lpBuf[2] & 0x60) == 0 ? _T("single layer") : _T("other")
 			, (lpBuf[2] & 0x0f) == 0x04 ? _T("rewritable recording layer") : _T("other")
 			, (lpBuf[3] & 0xf0) == 0x20 ? _T("0,205 um to 0,218 um") : _T("other")
@@ -167,7 +167,7 @@ VOID OutputDVDRamLayerDescriptor(
 			"\t Bias power 2 duration on land tracks at Velocity 1: %02x\n"
 			, (lpBuf[0] & 0x10) == 0x10 ? _T("rewritable disk") : _T("other")
 			, lpBuf[0] & 0x0f
-			, (lpBuf[1] & 0xf0) == 0 ? _T("120mm") : _T("80mm")
+			, (lpBuf[1] & 0xf0) == 0 ? _T("120 mm") : _T("80 mm")
 			, (lpBuf[1] & 0x0f) == 0x0f ? _T("not specified") : _T("other")
 			, (lpBuf[2] & 0x60) == 0 ? _T("single layer") : _T("other")
 			, (lpBuf[2] & 0x0f) == 0x04 ? _T("rewritable recording layer") : _T("other")
@@ -299,13 +299,13 @@ VOID OutputDVDMinusRLayerDescriptor(
 		);
 		switch (lpBuf[1] & 0x0f) {
 		case 0:
-			OutputDiscLog("2.52Mbits/s\n");
+			OutputDiscLog("2.52 Mbits/s\n");
 			break;
 		case 1:
-			OutputDiscLog("5.04Mbits/s\n");
+			OutputDiscLog("5.04 Mbits/s\n");
 			break;
 		case 2:
-			OutputDiscLog("10.08Mbits/s\n");
+			OutputDiscLog("10.08 Mbits/s\n");
 			break;
 		default:
 			OutputDiscLog("other\n");
@@ -322,12 +322,12 @@ VOID OutputDVDMinusRLayerDescriptor(
 			"\t       Sector of the last Rzone in the Bordered Area: %u (0x%06x)\n"
 			"\tSector of the first sector of the current Border Out: %u (0x%08x)\n"
 			"\t    Sector of the first sector of the next Border In: %u (0x%08x)\n"
-			, (lpBuf[1] & 0xf0) == 0 ? _T("120mm") : _T("80mm")
+			, (lpBuf[1] & 0xf0) == 0 ? _T("120 mm") : _T("80 mm")
 			, (lpBuf[2] & 0x0f) == 0x02 ? _T("disk contains Recordable user data Zone(s)") : _T("other")
 			, (lpBuf[2] & 0x10) == 0 ? _T("Parallel") : _T("other")
 			, (lpBuf[2] & 0x60) == 0 ? 1 : 2
-			, (lpBuf[3] & 0x0f) == 1 ? _T("0.80um") : _T("other")
-			, (lpBuf[3] & 0xf0) == 1 ? _T("0.147um") : _T("other")
+			, (lpBuf[3] & 0x0f) == 1 ? _T("0.80 um") : _T("other")
+			, (lpBuf[3] & 0xf0) == 1 ? _T("0.147 um") : _T("other")
 			, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], 0))
 			, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], 0))
 			, MAKEUINT(MAKEWORD(lpBuf[11], lpBuf[10]), MAKEWORD(lpBuf[9], 0))
@@ -358,12 +358,12 @@ VOID OutputDVDMinusRLayerDescriptor(
 			, lpBuf[0] & 0x0f
 			, (lpBuf[0] & 0xf0) == 0x10 ? _T("Recordable disk") : _T("other")
 			, (lpBuf[1] & 0x0f) == 0x0f ? _T("Not specified") : _T("other")
-			, (lpBuf[1] & 0xf0) == 0 ? _T("120mm") : _T("80mm")
+			, (lpBuf[1] & 0xf0) == 0 ? _T("120 mm") : _T("80 mm")
 			, (lpBuf[2] & 0x0f) == 0x02 ? _T("disk contains Recordable user data Zone(s)") : _T("other")
 			, (lpBuf[2] & 0x10) == 0 ? _T("Parallel") : _T("other")
 			, (lpBuf[2] & 0x60) == 0 ? 1 : 2
-			, (lpBuf[3] & 0x0f) == 0 ? _T("0.74um") : _T("other")
-			, (lpBuf[3] & 0xf0) == 0 ? _T("0.133um") : _T("other")
+			, (lpBuf[3] & 0x0f) == 0 ? _T("0.74 um") : _T("other")
+			, (lpBuf[3] & 0xf0) == 0 ? _T("0.133 um") : _T("other")
 			, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], 0))
 			, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], 0))
 			, MAKEUINT(MAKEWORD(lpBuf[11], lpBuf[10]), MAKEWORD(lpBuf[9], 0))
@@ -427,11 +427,11 @@ VOID OutputDVDPlusRLayerDescriptor(
 		, (lpBuf[0] & 0x40) == 0 ? _T("single layer") : _T("other")
 		, (lpBuf[0] & 0x20) == 0x20 ? _T("+R disk") : _T("other")
 		, lpBuf[0] & 0x0f
-		, (lpBuf[1] & 0xf0) == 0 ? _T("120mm") : _T("80mm")
+		, (lpBuf[1] & 0xf0) == 0 ? _T("120 mm") : _T("80 mm")
 		, (lpBuf[1] & 0x0f) == 0x0f ? _T("not specified") : _T("other")
 		, (lpBuf[2] & 0x02) == 0x02 ? _T("write-once recording layer") : _T("other")
-		, (lpBuf[3] & 0xf0) == 0 ? _T("0.133um") : _T("other")
-		, (lpBuf[3] & 0x0f) == 0 ? _T("0.74um") : _T("other")
+		, (lpBuf[3] & 0xf0) == 0 ? _T("0.133 um") : _T("other")
+		, (lpBuf[3] & 0x0f) == 0 ? _T("0.74 um") : _T("other")
 		, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], 0))
 		, MAKEUINT(MAKEWORD(lpBuf[7], lpBuf[6]), MAKEWORD(lpBuf[5], 0))
 		, MAKEUINT(MAKEWORD(lpBuf[11], lpBuf[10]), MAKEWORD(lpBuf[9], 0))
@@ -500,16 +500,16 @@ VOID OutputDVDLayerDescriptor(
 	};
 
 	LPCTSTR lpTrackDensity[] = {
-		_T("0.74um/track"), _T("0.80um/track"), _T("0.615um/track"), _T("0.40um/track"),
+		_T("0.74 um/track"), _T("0.80 um/track"), _T("0.615 um/track"), _T("0.40 um/track"),
 		_T("0.34um/track"), _T("Reserved"), _T("Reserved"), _T("Reserved"),
 		_T("Reserved"), _T("Reserved"), _T("Reserved"), _T("Reserved"),
 		_T("Reserved"), _T("Reserved"), _T("Reserved"), _T("Reserved")
 	};
 
 	LPCTSTR lpLinearDensity[] = {
-		_T("0.267um/bit"), _T("0.293um/bit"), _T("0.409 to 0.435um/bit"), _T("Reserved"),
-		_T("0.280 to 0.291um/bit"), _T("0.153um/bit"), _T("0.130 to 0.140um/bit"), _T("Reserved"),
-		_T("0.353um/bit"), _T("Reserved"), _T("Reserved"), _T("Reserved"),
+		_T("0.267 um/bit"), _T("0.293 um/bit"), _T("0.409 to 0.435 um/bit"), _T("Reserved"),
+		_T("0.280 to 0.291 um/bit"), _T("0.153 um/bit"), _T("0.130 to 0.140 um/bit"), _T("Reserved"),
+		_T("0.353 um/bit"), _T("Reserved"), _T("Reserved"), _T("Reserved"),
 		_T("Reserved"), _T("Reserved"), _T("Reserved"), _T("Reserved")
 	};
 #ifdef _WIN32
@@ -551,7 +551,7 @@ VOID OutputDVDLayerDescriptor(
 		, dvdLayer->commonHeader.BookVersion
 		, lpBookType[dvdLayer->commonHeader.BookType]
 		, lpMaximumRate[dvdLayer->commonHeader.MinimumRate]
-		, dvdLayer->commonHeader.DiskSize == 0 ? _T("120mm") : _T("80mm")
+		, dvdLayer->commonHeader.DiskSize == 0 ? _T("120 mm") : _T("80 mm")
 		, lpLayerType[dvdLayer->commonHeader.LayerType]
 		, dvdLayer->commonHeader.TrackPath == 0 ? _T("Parallel Track Path") : _T("Opposite Track Path")
 		, dvdLayer->commonHeader.NumberOfLayers == 0 ? _T("Single Layer") : _T("Double Layer")
@@ -1404,7 +1404,6 @@ VOID OutputBDDiscInformation(
 		}
 		nDIFormat = lpFormat[2 + i] & 0x7f;
 		nLayerNum = lpFormat[3 + i] & 0x07;
-		pDisc->DVD.ucBca = (UCHAR)(lpFormat[16 + i] & 0x0f);
 		OutputDiscLog(
 			"\tDiscInformationUnits\n"
 			"\t             DiscInformationIdentifier: %.2" CHARWIDTH "s\n"
@@ -1425,7 +1424,7 @@ VOID OutputBDDiscInformation(
 			, nDIFormat, lpFormat[3 + i] >> 3
 			, nLayerNum, lpFormat[4 + i], lpFormat[5 + i]
 			, lpFormat[6 + i] >> 7 == 0 ? _T("No") : _T("Yes"), lpFormat[6 + i] & 0x7f
-			, &lpFormat[8 + i], lpFormat[11 + i] >> 6 == 0 ? _T("120mm") : _T("80mm")
+			, &lpFormat[8 + i], lpFormat[11 + i] >> 6 == 0 ? _T("120 mm") : _T("80 mm")
 			, (lpFormat[11 + i] >> 4) & 0x02, lpFormat[11 + i] & 0x03
 		);
 		INT nLayerType = lpFormat[12 + i] & 0x0f;
@@ -1445,29 +1444,35 @@ VOID OutputBDDiscInformation(
 			OutputDiscLog("(Rewritable)\n");
 			break;
 		default:
+			OutputDiscLog("(Unknown)\n");
 			break;
 		}
-		if (!strncmp((CONST CHAR*)&lpFormat[8], "BDW", 3)) {
-			OutputDiscLog(
-				"\t\t                        ChannelBit: %s\n"
-				"\t\t                     BCADescriptor: %s\n"
-				"\t\t               MaximumTransferRate: %02d\n"
-				, (lpFormat[13 + i] & 0x0f) == 1 ? _T("74.5nm") : _T("Other")
-				, pDisc->DVD.ucBca == 0 ? _T("No") : _T("Exist"), lpFormat[17 + i]
-			);
+		INT nChannelBit = lpFormat[13 + i] & 0x0f;
+		OutputDiscLog(
+			"\t\t                        ChannelBit: %02d ", nChannelBit);
+		switch (nChannelBit) {
+		case 1:
+			OutputDiscLog("(74.5 nm)\n");
+			break;
+		case 4:
+			OutputDiscLog("(58.26 nm)\n");
+			break;
+		case 5:
+			OutputDiscLog("(55.87 nm)\n");
+			break;
+		default:
+			OutputDiscLog("(Reserved)\n");
+			break;
 		}
-		else {
-			OutputDiscLog(
-				"\t\t                        ChannelBit: %s\n"
-				"\t\t             Push-pullPolarityFlag: %02d\n"
-				"\t\t            RecordMarkPolarityFlag: %02d\n"
-				"\t\t                     BCADescriptor: %s\n"
-				"\t\t               MaximumTransferRate: %02d\n"
-				, (lpFormat[13 + i] & 0x0f) == 1 ? _T("74.5nm") : _T("Other")
-				, lpFormat[14 + i], lpFormat[15 + i]
-				, pDisc->DVD.ucBca == 0 ? _T("No") : _T("Exist"), lpFormat[17 + i]
-			);
-		}
+		pDisc->DVD.ucBca = (UCHAR)(lpFormat[16 + i] & 0x0f);
+		OutputDiscLog(
+			"\t\t             Push-pullPolarityFlag: %02d\n"
+			"\t\t            RecordMarkPolarityFlag: %02d\n"
+			"\t\t                     BCADescriptor: %s\n"
+			"\t\t               MaximumTransferRate: %02d\n"
+			, lpFormat[14 + i], lpFormat[15 + i]
+			, pDisc->DVD.ucBca == 0 ? _T("No") : _T("Exist"), lpFormat[17 + i]
+		);
 		uiEndLogicalSector[n] = MAKEUINT(MAKEWORD(lpFormat[23 + i], lpFormat[22 + i]), MAKEWORD(lpFormat[21 + i], lpFormat[20 + i]));
 		uiStartPhysicalSector[n] = MAKEUINT(MAKEWORD(lpFormat[27 + i], lpFormat[26 + i]), MAKEWORD(lpFormat[25 + i], lpFormat[24 + i]));
 		uiEndPhysicalSector[n] = MAKEUINT(MAKEWORD(lpFormat[31 + i], lpFormat[30 + i]), MAKEWORD(lpFormat[29 + i], lpFormat[28 + i]));
@@ -1485,7 +1490,7 @@ VOID OutputBDDiscInformation(
 			OutputDiscLog(
 				"\t\t                          PhysicalADIPAddress: %08x\n"
 				"\t\t                              LastADIPAddress: %08x\n"
-				"\t\t                        NominalRecordingSpeed: %.2fm/s\n"
+				"\t\t                        NominalRecordingSpeed: %.2 fm/s\n"
 				"\t\t                            MaxRecordingSpeed: %s\n"
 				"\t\t                            MinRecordingSpeed: %s\n"
 				"\t\t             MaxDCReadingPowerOfStandardSpeed: %02x\n"

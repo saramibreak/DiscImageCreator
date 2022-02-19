@@ -476,10 +476,10 @@ BOOL IsEnoughDiskSpaceForDump(
 
 	OutputString(
 		"DiskSize of [%s]\n"
-		"\tTotal: %12llu bytes\n"
-		"\t Used: %12llu bytes\n"
-		"\t--------------------------\n"
-		"\tSpace: %12llu bytes\n"
+		"\tTotal: %14llu bytes\n"
+		"\t Used: %14llu bytes\n"
+		"\t---------------------------\n"
+		"\tSpace: %14llu bytes\n"
 		, pszPath, ui64Total.QuadPart, ui64Used.QuadPart, ui64Avail.QuadPart
 	);
 	CONST INT nAllLogsFileSize = 1000000000;
