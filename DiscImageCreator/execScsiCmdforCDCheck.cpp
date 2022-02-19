@@ -2592,7 +2592,7 @@ VOID ReadCDForScanningPsxAntiMod(
 	CONST CHAR antiModStrEn[] =
 		"     SOFTWARE TERMINATED\nCONSOLE MAY HAVE BEEN MODIFIED\n     CALL 1-888-780-7690";
 	CONST CHAR antiModStrJp[] =
-		"ï¿½ï¿½ï¿½ï¿½ï¿½Iï¿½ï¿½ï¿½ï¿½ï¿½Ü‚ï¿½ï¿½ï¿½ï¿½B\nï¿½{ï¿½Ì‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½\nï¿½ï¿½ï¿½ï¿½ï¿½ê‚ªï¿½ï¿½ï¿½ï¿½Ü‚ï¿½ï¿½B";
+		"‹­§I—¹‚µ‚Ü‚µ‚½B\n–{‘Ì‚ª‰ü‘¢‚³‚ê‚Ä‚¢‚é\n‚¨‚»‚ê‚ª‚ ‚è‚Ü‚·B";
 	CDB::_READ12 cdb = {};
 	cdb.OperationCode = SCSIOP_READ12;
 	cdb.TransferLength[3] = 2;
