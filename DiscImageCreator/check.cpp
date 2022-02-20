@@ -1478,7 +1478,7 @@ BOOL AnalyzeIfoFile(
 			return FALSE;
 		}
 		LPBYTE pSector = NULL;
-		LPBYTE lpPgciStartByte = NULL;
+		LPUINT lpPgciStartByte = NULL;
 		try {
 			size_t stBufSize = 0x13 + 12 * USHRT_MAX;
 			if (NULL == (pSector = (LPBYTE)calloc(stBufSize, sizeof(BYTE)))) {
@@ -1506,7 +1506,7 @@ BOOL AnalyzeIfoFile(
 					, v + 1, byNumOfTitleSet, byNumOfTitleSetTitleNumber, wNumOfChapters, uiStartSector);
 			}
 			INT nPgcCnt = 0;
-			if (NULL == (lpPgciStartByte = (LPBYTE)calloc(USHRT_MAX, sizeof(BYTE)))) {
+			if (NULL == (lpPgciStartByte = (LPUINT)calloc(USHRT_MAX, sizeof(UINT)))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				throw FALSE;
 			}
