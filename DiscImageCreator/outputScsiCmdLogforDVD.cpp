@@ -1490,7 +1490,7 @@ VOID OutputBDDiscInformation(
 			OutputDiscLog(
 				"\t\t                          PhysicalADIPAddress: %08x\n"
 				"\t\t                              LastADIPAddress: %08x\n"
-				"\t\t                        NominalRecordingSpeed: %.2 fm/s\n"
+				"\t\t                        NominalRecordingSpeed: %.2f m/s\n"
 				"\t\t                            MaxRecordingSpeed: %s\n"
 				"\t\t                            MinRecordingSpeed: %s\n"
 				"\t\t             MaxDCReadingPowerOfStandardSpeed: %02x\n"
