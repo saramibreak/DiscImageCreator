@@ -2031,7 +2031,7 @@ BOOL ReadCDForCheckingExe(
 			
 			if (!strncmp((LPCCH)&lpBuf[0], "MSCF", 4)) {
 				OutputString(
-					"\nDetected MicroSoft Cabinet File: %" CHARWIDTH "s\n"
+					"\nDetected Microsoft Cabinet File: %" CHARWIDTH "s\n"
 					, pDisc->PROTECT.pFullNameForExe[n]
 				);
 				if (pExtArg->byMicroSoftCabFile) {
@@ -2059,7 +2059,7 @@ BOOL ReadCDForCheckingExe(
 			else if (!strncmp((LPCCH)&lpBuf[0], "ISc(", 4)) {
 #ifdef _WIN32
 				OutputString(
-					"\nDetected InterShield Cabinet File: %" CHARWIDTH "s\n"
+					"\nDetected InstallShield Cabinet File: %" CHARWIDTH "s\n"
 					, pDisc->PROTECT.pFullNameForExe[n]
 				);
 				if (!bIscCab) {
