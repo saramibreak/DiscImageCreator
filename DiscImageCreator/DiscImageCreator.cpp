@@ -871,6 +871,23 @@ int SetOptionFix(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	return TRUE;
 }
 
+int SetOptionRr(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
+{
+	_TCHAR* endptr = NULL;
+	if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
+		pExtArg->uiMaxRereadNum = (UINT)_tcstoul(argv[(*i)++], &endptr, 10);
+		if (*endptr) {
+			OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
+			return FALSE;
+		}
+	}
+	else {
+		pExtArg->uiMaxRereadNum = 10;
+		OutputString("/rr val was omitted. set [%u]\n", pExtArg->uiMaxRereadNum);
+	}
+	return TRUE;
+}
+
 int SetOptionNss(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 {
 	_TCHAR* endptr = NULL;
@@ -1424,8 +1441,8 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 						return FALSE;
 					}
 				}
-				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/nss"), cmdLen)) {
-					if (!SetOptionNss(argc, argv, pExtArg, &i)) {
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/rr"), cmdLen)) {
+					if (!SetOptionRr(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
 				}
@@ -1436,14 +1453,8 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			}
 			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
 		}
-		else if (argc >= 5 && ((cmdLen == 2 && !_tcsncmp(argv[1], _T("bd"), cmdLen)) ||
-			(cmdLen == 4 && !_tcsncmp(argv[1], _T("xbox"), 4)))) {
-			if (cmdLen == 2) {
-				*pExecType = bd;
-			}
-			else if (cmdLen == 4) {
-				*pExecType = xbox;
-			}
+		else if (argc >= 5 && cmdLen == 4 && !_tcsncmp(argv[1], _T("xbox"), 4)) {
+			*pExecType = xbox;
 			s_uiSpeed = (UINT)_tcstoul(argv[4], &endptr, 10);
 			if (*endptr) {
 				OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
@@ -1459,13 +1470,10 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), cmdLen)) {
 					pExtArg->byQuiet = TRUE;
 				}
-				else if (*pExecType == xbox && cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/nss"), cmdLen)) {
+				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/nss"), cmdLen)) {
 					if (!SetOptionNss(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
-				}
-				else if (cmdLen == 5 && !_tcsncmp(argv[i - 1], _T("/avdp"), cmdLen)) {
-					pExtArg->byAnchorVolumeDescriptorPointer = TRUE;
 				}
 				else {
 					OutputErrorString("Unknown option: [%s]\n", argv[i - 1]);
@@ -1474,16 +1482,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			}
 			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
 		}
-		else if (argc >= 5 && (cmdLen == 4 && !_tcsncmp(argv[1], _T("sacd"), cmdLen))) {
-			*pExecType = sacd;
-			for (INT i = 6; i <= argc; i++) {
-				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), 2)) {
-					pExtArg->byQuiet = TRUE;
-				}
-			}
-			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
-		}
-		else if (argc >= 21 && ((cmdLen == 8 && !_tcsncmp(argv[1], _T("xboxswap"), cmdLen)))) {
+		else if (argc >= 21 && cmdLen == 8 && !_tcsncmp(argv[1], _T("xboxswap"), cmdLen)) {
 			*pExecType = xboxswap;
 			s_uiSpeed = (UINT)_tcstoul(argv[4], &endptr, 10);
 			if (*endptr) {
@@ -1519,7 +1518,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			}
 			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
 		}
-		else if (argc >= 8 && ((cmdLen == 8 && (!_tcsncmp(argv[1], _T("xgd2swap"), cmdLen) || !_tcsncmp(argv[1], _T("xgd3swap"), cmdLen))))) {
+		else if (argc >= 8 && (cmdLen == 8 && (!_tcsncmp(argv[1], _T("xgd2swap"), cmdLen) || !_tcsncmp(argv[1], _T("xgd3swap"), cmdLen)))) {
 			pExtArg->nAllSectors = (INT)_tcstoul(argv[5], &endptr, 10);
 			if (*endptr) {
 				OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
@@ -1560,6 +1559,47 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				}
 				else {
 					OutputErrorString("Unknown option: [%s]\n", argv[i]);
+					return FALSE;
+				}
+			}
+			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
+		}
+		else if (argc >= 5 && cmdLen == 4 && !_tcsncmp(argv[1], _T("sacd"), cmdLen)) {
+			*pExecType = sacd;
+			for (INT i = 6; i <= argc; i++) {
+				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), 2)) {
+					pExtArg->byQuiet = TRUE;
+				}
+			}
+			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
+		}
+		else if (argc >= 5 && cmdLen == 2 && !_tcsncmp(argv[1], _T("bd"), cmdLen)) {
+			*pExecType = bd;
+			s_uiSpeed = (UINT)_tcstoul(argv[4], &endptr, 10);
+			if (*endptr) {
+				OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
+				return FALSE;
+			}
+			for (INT i = 6; i <= argc; i++) {
+				cmdLen = _tcslen(argv[i - 1]);
+				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/f"), cmdLen)) {
+					if (!SetOptionF(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
+				}
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), cmdLen)) {
+					pExtArg->byQuiet = TRUE;
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/rr"), cmdLen)) {
+					if (!SetOptionRr(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
+				}
+				else if (cmdLen == 5 && !_tcsncmp(argv[i - 1], _T("/avdp"), cmdLen)) {
+					pExtArg->byAnchorVolumeDescriptorPointer = TRUE;
+				}
+				else {
+					OutputErrorString("Unknown option: [%s]\n", argv[i - 1]);
 					return FALSE;
 				}
 			}
@@ -1692,9 +1732,9 @@ void printUsage(void)
 		"\t   [/c2 (val1) (val2) (val3) (val4)] [/np] [/nq] [/nr] [/s (val)]\n"
 		"\t\tDump a HD area of GD from A to Z\n"
 		"\tdvd <DriveLetter> <Filename> <DriveSpeed(0-16)> [/c] [/f (val)] [/raw] [/q]\n"
-		"\t    [/r (startLBA) (EndLBA)] [/avdp] [/ps (val)] [/nss (val)]\n"
+		"\t    [/r (startLBA) (EndLBA)] [/avdp] [/ps (val)] [/rr (val)]\n"
 		"\t\tDump a DVD from A to Z\n"
-		"\txbox <DriveLetter> <Filename> <DriveSpeed(0-16)> [/f (val)] [/q]\n"
+		"\txbox <DriveLetter> <Filename> <DriveSpeed(0-16)> [/f (val)] [/q] [/nss (val)]\n"
 		"\t\tDump a xbox disc from A to Z\n"
 		"\txboxswap <DriveLetter> <Filename> <DriveSpeed(0-16)>\n"
 		"\t                                  <StartLBAOfSecuritySector1>\n"
@@ -1710,7 +1750,7 @@ void printUsage(void)
 		"\t\tDump a XGD3 disc from A to Z using swap trick\n"
 		"\tsacd <DriveLetter> <Filename> <DriveSpeed(0-16)>\n"
 		"\t\tDump a Super Audio CD from A to Z\n"
-		"\tbd <DriveLetter> <Filename> <DriveSpeed(0-12)> [/f (val)] [/q] [/avdp]\n"
+		"\tbd <DriveLetter> <Filename> <DriveSpeed(0-12)> [/f (val)] [/q] [/avdp] [/rr (val)]\n"
 		"\t\tDump a BD from A to Z\n"
 	);
 	stopMessage();
@@ -1823,6 +1863,10 @@ void printUsage(void)
 	);
 	stopMessage();
 	OutputString(
+		"\t/rr\tRetry reading when error occurs\n"
+		"\t\t\tval\tMax retry value (default: 10)\n"
+		"\t/nss\tNo skip reading SS sectors (only XBOX)\n"
+		"\t\t\tval\tMax retry value (default: 100)\n"
 		"\t/r\tRead DVD from the reverse\n"
 		"\t/raw\tDumping DVD by raw (2064 or 2384 bytes/sector)\n"
 		"\t\t\tComfirmed drive: Mediatec MT chip (Lite-on etc.), PLEXTOR\n"

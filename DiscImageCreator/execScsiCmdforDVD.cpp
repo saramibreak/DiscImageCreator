@@ -114,6 +114,18 @@ BOOL ReadDVDReverse(
 	return bRet;
 }
 
+size_t WriteBufWithCalc(
+	LPBYTE lpBuf,
+	ULONG ulTransferLen,
+	PHASH pHash,
+	FILE* fp
+) {
+	size_t stSize = fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_MAIN_DATA_SIZE * ulTransferLen, fp);
+	CalcHash(&pHash->pHashChunk[pHash->uiIndex].crc32, &pHash->pHashChunk[pHash->uiIndex].md5
+		, &pHash->pHashChunk[pHash->uiIndex].sha, lpBuf, DISC_MAIN_DATA_SIZE * (UINT)ulTransferLen);
+	return stSize;
+}
+
 BOOL ReadDVD(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
@@ -233,7 +245,7 @@ BOOL ReadDVD(
 		REVERSE_BYTES(&cdb.TransferLength, &transferLen);
 		BYTE byScsiStatus = 0;
 		INT i = 0;
-		INT nRetryCnt = 0;
+		UINT uiRetryCnt = 0;
 		if (pDisc->PROTECT.byExist == arccos || pDisc->PROTECT.byExist == ripGuard) {
 			transferLen.AsULong = 1;
 			REVERSE_BYTES(&cdb.TransferLength, &transferLen);
@@ -282,7 +294,7 @@ BOOL ReadDVD(
 								REVERSE_BYTES(&cdb.TransferLength, &transferLen);
 							}
 							ZeroMemory(lpBuf, DISC_MAIN_DATA_SIZE * transferLen.AsULong);
-							fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_MAIN_DATA_SIZE * transferLen.AsULong, fp);
+							WriteBufWithCalc(lpBuf, transferLen.AsULong, pHash, fp);
 							continue;
 						}
 					}
@@ -318,7 +330,7 @@ BOOL ReadDVD(
 			if ((pDisc->PROTECT.byExist == physicalErr || pDisc->PROTECT.byExist == arccos || pDisc->PROTECT.byExist == ripGuard)
 				&& nFirstErrorLBA != 0 && nFirstErrorLBA <= nLBA && nLBA <= nLastErrorLBA) {
 				FillMemory(lpBuf, DISC_MAIN_DATA_SIZE * transferLen.AsULong, 0x00);
-				fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_MAIN_DATA_SIZE * transferLen.AsULong, fp);
+				WriteBufWithCalc(lpBuf, transferLen.AsULong, pHash, fp);
 				if (nLBA == nLastErrorLBA) {
 					nFirstErrorLBA = 0;
 					OutputLog(standardOut | fileMainError, "Reset 1st error LBA\n");
@@ -332,10 +344,10 @@ BOOL ReadDVD(
 				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 				if (IsXbox(pExecType) && !(pDisc->DVD.securitySectorRange[i][0] <= (DWORD)nLBA &&
 					(DWORD)nLBA <= pDisc->DVD.securitySectorRange[i][1] + 1)) {
-					if (++nRetryCnt <= 5) {
+					if (++uiRetryCnt <= 5) {
 						nLBA -= (INT)transferLen.AsULong;
 						OutputLog(standardOut | fileMainError,
-							"This sector is out of the ss ranges. Read retry %d/5\n", nRetryCnt);
+							"This sector is out of the ss ranges. Read retry (Pass %u/5)\n", uiRetryCnt);
 						continue;
 					}
 					else {
@@ -359,7 +371,7 @@ BOOL ReadDVD(
 							bSetErrorSectorRange = FALSE;
 							OutputLog(standardOut | fileMainError, "Reread NG -> Filled with 0x00\n");
 							FillMemory(lpBuf, DISC_MAIN_DATA_SIZE * transferLen.AsULong, 0x00);
-							fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_MAIN_DATA_SIZE * transferLen.AsULong, fp);
+							WriteBufWithCalc(lpBuf, transferLen.AsULong, pHash, fp);
 							continue;
 						}
 					}
@@ -395,8 +407,8 @@ BOOL ReadDVD(
 						continue;
 					}
 				}
-				else if (++nRetryCnt <= 1) {
-					OutputLog(standardOut | fileMainError, "Read retry from %d\n", nLBA);
+				else if (++uiRetryCnt <= pExtArg->uiMaxRereadNum) {
+					OutputLog(standardOut | fileMainError, "Read retry from %d (Pass %u/%u)\n", nLBA, uiRetryCnt, pExtArg->uiMaxRereadNum);
 					if (pExtArg->byPadSector) {
 						if (transferLen.AsULong != 1) {
 							OutputLog(standardOut | fileMainError,
@@ -418,7 +430,7 @@ BOOL ReadDVD(
 							OutputLog(standardOut | fileMainError, "Padded by 0xAA\n");
 							FillMemory(lpBuf, DISC_MAIN_DATA_SIZE, 0xaa);
 						}
-						nRetryCnt = 0;
+						uiRetryCnt = 0;
 					}
 					else {
 						OutputString("Retry NG\n");
@@ -441,13 +453,11 @@ BOOL ReadDVD(
 				uiErrorBackTimes = 0;
 				continue;
 			}
-			if (nRetryCnt) {
-				OutputLog(standardOut | fileMainError, "Retry OK of %d\n", nLBA);
-				nRetryCnt = 0;
+			if (uiRetryCnt) {
+				OutputLog(standardOut | fileMainError, "LBA %d is retry OK\n", nLBA);
+				uiRetryCnt = 0;
 			}
-			fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_MAIN_DATA_SIZE * transferLen.AsULong, fp);
-			CalcHash(&pHash->pHashChunk[pHash->uiIndex].crc32, &pHash->pHashChunk[pHash->uiIndex].md5
-				, &pHash->pHashChunk[pHash->uiIndex].sha, lpBuf, DISC_MAIN_DATA_SIZE * (UINT)transferLen.AsULong);
+			WriteBufWithCalc(lpBuf, transferLen.AsULong, pHash, fp);
 			OutputString("\rCreating iso(LBA) %8lu/%8d", nLBA + transferLen.AsULong, nAllLength);
 		}
 
@@ -467,9 +477,7 @@ BOOL ReadDVD(
 				if (transferLen.AsULong > dwEndOfMiddle - j) {
 					transferLen.AsULong = dwEndOfMiddle - j;
 				}
-				fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_MAIN_DATA_SIZE * transferLen.AsULong, fp);
-				CalcHash(&pHash->pHashChunk[pHash->uiIndex].crc32, &pHash->pHashChunk[pHash->uiIndex].md5
-					, &pHash->pHashChunk[pHash->uiIndex].sha, lpBuf, DISC_MAIN_DATA_SIZE * (UINT)transferLen.AsULong);
+				WriteBufWithCalc(lpBuf, transferLen.AsULong, pHash, fp);
 				OutputString("\rCreating iso(LBA) %8lu/%8d", j + transferLen.AsULong, nAllLength);
 			}
 
@@ -489,9 +497,7 @@ BOOL ReadDVD(
 					|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 					throw FALSE;
 				}
-				fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_MAIN_DATA_SIZE * transferLen.AsULong, fp);
-				CalcHash(&pHash->pHashChunk[pHash->uiIndex].crc32, &pHash->pHashChunk[pHash->uiIndex].md5
-					, &pHash->pHashChunk[pHash->uiIndex].sha, lpBuf, DISC_MAIN_DATA_SIZE * (UINT)transferLen.AsULong);
+				WriteBufWithCalc(lpBuf, transferLen.AsULong, pHash, fp);
 				OutputString("\rCreating iso(LBA) %8lu/%8d", dwEndOfMiddle + pDisc->DVD.dwLayer1SectorLength, nAllLength);
 			}
 		}
