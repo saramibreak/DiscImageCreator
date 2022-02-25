@@ -1361,7 +1361,7 @@ BOOL ReadXBOXFileSystem(
 	}
 	_TCHAR szTab[256] = {};
 	szTab[0] = _T('\t');
-	OutputString("Reading XBOX DirectoryRecord\n");
+	OutputString("Reading Xbox DirectoryRecord\n");
 	if (!ReadXBOXDirectoryRecord(
 		pExtArg, pDevice, &cdb, uiDirPos + (UINT)dwStartLBA, uiDirTblSize, (UINT)dwStartLBA, szTab)) {
 		FreeAndNull(pBuf);

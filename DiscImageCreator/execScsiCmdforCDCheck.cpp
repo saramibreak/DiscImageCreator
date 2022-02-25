@@ -13,6 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+ /* Please note, this file should be opened with Shift JIS encoding
+ * due to the Japanese text in ReadCDForScanningPsxAntiMod().
+ * This sample text is high up in this file to allow some editors
+ * to autodetect encoding:
+ * 		"強制終了しました。\n本体が改造されている\nおそれがあります。";
+ */
+
 #include "struct.h"
 #include "calcHash.h"
 #include "check.h"
@@ -2031,7 +2039,7 @@ BOOL ReadCDForCheckingExe(
 			
 			if (!strncmp((LPCCH)&lpBuf[0], "MSCF", 4)) {
 				OutputString(
-					"\nDetected MicroSoft Cabinet File: %" CHARWIDTH "s\n"
+					"\nDetected Microsoft Cabinet File: %" CHARWIDTH "s\n"
 					, pDisc->PROTECT.pFullNameForExe[n]
 				);
 				if (pExtArg->byMicroSoftCabFile) {
@@ -2059,7 +2067,7 @@ BOOL ReadCDForCheckingExe(
 			else if (!strncmp((LPCCH)&lpBuf[0], "ISc(", 4)) {
 #ifdef _WIN32
 				OutputString(
-					"\nDetected InterShield Cabinet File: %" CHARWIDTH "s\n"
+					"\nDetected InstallShield Cabinet File: %" CHARWIDTH "s\n"
 					, pDisc->PROTECT.pFullNameForExe[n]
 				);
 				if (!bIscCab) {

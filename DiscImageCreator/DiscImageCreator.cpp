@@ -246,7 +246,7 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 							}
 						}
 						if (pExtArg->uiSubAddionalNum == 0 && *pExecType != gd) {
-							OutputString("[WARNING] /c2 and /s 0 can't use together. Changed /s 0 to /s 1.\n");
+							OutputString("[WARNING] /c2 and /s 0 can't be used together. Changed /s 0 to /s 1.\n");
 							pExtArg->uiSubAddionalNum = 1;
 						}
 					}
