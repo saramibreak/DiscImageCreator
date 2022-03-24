@@ -858,7 +858,7 @@ BOOL ReadAudioCDForCheckingReadInOut(
 	for (INT i = 74; -75 <= i; i--) {
 		if (IsThereNonZeroByte(pExtArg, pDevice, pDisc, lpCmd, pDisc->SCSI.nAllLength + i, aBuf, &nLastSectorPos) && nLastSectorPos >= 0) {
 			OutputMainChannel(fileMainInfo, aBuf, "last non-zero byte", pDisc->SCSI.nAllLength + i, CD_RAW_SECTOR_SIZE);
-			OutputLog(standardOut | fileDisc, "Detected in %#x(%d) of LBA %d + %d\n", (UINT)nLastSectorPos, nLastSectorPos, pDisc->SCSI.nAllLength, i);
+			OutputLog(standardOut | fileDisc, "Detected in %#x(%d) of LBA %d %+2d\n", (UINT)nLastSectorPos, nLastSectorPos, pDisc->SCSI.nAllLength, i);
 			nLastSector = i;
 			break;
 		}
