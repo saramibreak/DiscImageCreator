@@ -1,34 +1,46 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27703.2035
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.32126.315
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DiscImageCreator", "DiscImageCreator\DiscImageCreator.vcxproj", "{3AB82BC0-7716-487C-B762-55598099CE69}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug_ANSI|ARM = Debug_ANSI|ARM
 		Debug_ANSI|Win32 = Debug_ANSI|Win32
 		Debug_ANSI|x64 = Debug_ANSI|x64
+		Debug|ARM = Debug|ARM
 		Debug|Win32 = Debug|Win32
 		Debug|x64 = Debug|x64
+		Release_ANSI|ARM = Release_ANSI|ARM
 		Release_ANSI|Win32 = Release_ANSI|Win32
 		Release_ANSI|x64 = Release_ANSI|x64
+		Release|ARM = Release|ARM
 		Release|Win32 = Release|Win32
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3AB82BC0-7716-487C-B762-55598099CE69}.Debug_ANSI|ARM.ActiveCfg = Release_ANSI|ARM
+		{3AB82BC0-7716-487C-B762-55598099CE69}.Debug_ANSI|ARM.Build.0 = Release_ANSI|ARM
 		{3AB82BC0-7716-487C-B762-55598099CE69}.Debug_ANSI|Win32.ActiveCfg = Debug_ANSI|Win32
 		{3AB82BC0-7716-487C-B762-55598099CE69}.Debug_ANSI|Win32.Build.0 = Debug_ANSI|Win32
 		{3AB82BC0-7716-487C-B762-55598099CE69}.Debug_ANSI|x64.ActiveCfg = Debug_ANSI|x64
 		{3AB82BC0-7716-487C-B762-55598099CE69}.Debug_ANSI|x64.Build.0 = Debug_ANSI|x64
+		{3AB82BC0-7716-487C-B762-55598099CE69}.Debug|ARM.ActiveCfg = Debug|ARM
+		{3AB82BC0-7716-487C-B762-55598099CE69}.Debug|ARM.Build.0 = Debug|ARM
 		{3AB82BC0-7716-487C-B762-55598099CE69}.Debug|Win32.ActiveCfg = Debug|Win32
 		{3AB82BC0-7716-487C-B762-55598099CE69}.Debug|Win32.Build.0 = Debug|Win32
 		{3AB82BC0-7716-487C-B762-55598099CE69}.Debug|x64.ActiveCfg = Debug|x64
 		{3AB82BC0-7716-487C-B762-55598099CE69}.Debug|x64.Build.0 = Debug|x64
+		{3AB82BC0-7716-487C-B762-55598099CE69}.Release_ANSI|ARM.ActiveCfg = Release_ANSI|ARM
+		{3AB82BC0-7716-487C-B762-55598099CE69}.Release_ANSI|ARM.Build.0 = Release_ANSI|ARM
 		{3AB82BC0-7716-487C-B762-55598099CE69}.Release_ANSI|Win32.ActiveCfg = Release_ANSI|Win32
 		{3AB82BC0-7716-487C-B762-55598099CE69}.Release_ANSI|Win32.Build.0 = Release_ANSI|Win32
 		{3AB82BC0-7716-487C-B762-55598099CE69}.Release_ANSI|x64.ActiveCfg = Release_ANSI|x64
 		{3AB82BC0-7716-487C-B762-55598099CE69}.Release_ANSI|x64.Build.0 = Release_ANSI|x64
+		{3AB82BC0-7716-487C-B762-55598099CE69}.Release|ARM.ActiveCfg = Release|ARM
+		{3AB82BC0-7716-487C-B762-55598099CE69}.Release|ARM.Build.0 = Release|ARM
 		{3AB82BC0-7716-487C-B762-55598099CE69}.Release|Win32.ActiveCfg = Release|Win32
 		{3AB82BC0-7716-487C-B762-55598099CE69}.Release|Win32.Build.0 = Release|Win32
 		{3AB82BC0-7716-487C-B762-55598099CE69}.Release|x64.ActiveCfg = Release|x64
@@ -36,5 +48,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B015A079-F77D-42C8-908E-A465148327AA}
 	EndGlobalSection
 EndGlobal
