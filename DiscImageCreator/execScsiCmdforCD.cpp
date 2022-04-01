@@ -2500,9 +2500,9 @@ BOOL ReadCDAdditional(
 	LPCTSTR pszPath
 ) {
 	BYTE lpCmd[CDB12GENERIC_LENGTH] = {};
-	SetReadDiscCommand(pExecType, pExtArg, pDevice, 1, CDFLAG::_READ_CD::byte294, CDFLAG::_READ_CD::Raw, lpCmd, FALSE);
+	SetReadDiscCommand(pExecType, pExtArg, pDevice, 1, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::Pack, lpCmd, FALSE);
 
-	BYTE aBuf[CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE] = {};
+	BYTE aBuf[CD_RAW_SECTOR_WITH_SUBCODE_SIZE] = {};
 	BYTE byScsiStatus = 0;
 	FILE* fpInOut = NULL;
 	if ((pDisc->MAIN.bManySamples & PLUS_10000_SAMPLES) == PLUS_10000_SAMPLES) {
@@ -2512,7 +2512,7 @@ BOOL ReadCDAdditional(
 		}
 		for (INT i = pDisc->SCSI.nAllLength + pDisc->MAIN.nAdjustSectorNum; i < pDisc->SCSI.nAllLength + 100; i++) {
 			if (!ExecReadCD(pExtArg, pDevice, lpCmd, i, aBuf,
-				CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE, _T(__FUNCTION__), __LINE__)
+				CD_RAW_SECTOR_WITH_SUBCODE_SIZE, _T(__FUNCTION__), __LINE__)
 				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 				OutputLog(standardOut | fileDisc, "can't read\n");
 				return FALSE;
@@ -2526,7 +2526,9 @@ BOOL ReadCDAdditional(
 			else {
 				fwrite(aBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpInOut);
 			}
+			OutputString("\rCreating out(LBA) %8d/%8d", i, pDisc->SCSI.nAllLength + 100);
 		}
+		OutputString("\n");
 	}
 	else if ((pDisc->MAIN.bManySamples & MINUS_10000_SAMPLES) == MINUS_10000_SAMPLES) {
 		if (NULL == (fpInOut = CreateOrOpenFile(pszPath, NULL, NULL, NULL, NULL, _T(".pre"), _T("wb"), 0, 0))) {
@@ -2537,17 +2539,20 @@ BOOL ReadCDAdditional(
 		BOOL bFound = FALSE;
 		for (INT i = PREGAP_START_LBA; i < -1150; i++) {
 			if (!ExecReadCD(pExtArg, pDevice, lpCmd, i, aBuf,
-				CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE, _T(__FUNCTION__), __LINE__)
+				CD_RAW_SECTOR_WITH_SUBCODE_SIZE, _T(__FUNCTION__), __LINE__)
 				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 				OutputLog(standardOut | fileDisc, "can't read\n");
 				return FALSE;
 			}
 			AlignRowSubcode(lpSubcode, &aBuf[CD_RAW_SECTOR_SIZE]);
-			if (lpSubcode[13] == 1 && lpSubcode[14] == 0 && lpSubcode[19] == 0 && lpSubcode[20] == 0 && lpSubcode[21] == 0) {
+#if 0
+			OutputCDSub96Align(standardOut, lpSubcode, i);
+#endif
+			if (((lpSubcode[12] & 0x0f) == ADR_ENCODES_CURRENT_POSITION && lpSubcode[13] == 1 && lpSubcode[14] == 0 && lpSubcode[19] == 0 && lpSubcode[20] == 0 && lpSubcode[21] == 0)) {
 				fwrite(aBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize, fpInOut);
 				bFound = TRUE;
 			}
-			else if (lpSubcode[13] == 1 && lpSubcode[14] == 0 && lpSubcode[19] == 0 && lpSubcode[20] == 1 && BcdToDec(lpSubcode[21]) == 74) {
+			else if (lpSubcode[13] == 1 && lpSubcode[14] == 1 && lpSubcode[19] == 0 && lpSubcode[20] == 2 && lpSubcode[21] == 0) {
 				fwrite(aBuf, sizeof(BYTE), pDisc->MAIN.uiMainDataSlideSize, fpInOut);
 				break;
 			}
@@ -2555,10 +2560,12 @@ BOOL ReadCDAdditional(
 				if (bFound) {
 					fwrite(aBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpInOut);
 				}
-				else {
-					continue;
-				}
 			}
+			OutputString("\rCreating pre(LBA) %8d/%8d", i, PREGAP_START_LBA);
+		}
+		OutputString("\n");
+		if (!bFound) {
+			OutputLog(standardOut | fileDisc, "Not found LBA 0 of the sub-channel. Failed to dump .pre file\n");
 		}
 	}
 	FcloseAndNull(fpInOut);
