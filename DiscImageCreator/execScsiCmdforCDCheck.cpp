@@ -1823,14 +1823,13 @@ BOOL ReadExeFromFile(
 						fseek(fp, (LONG)uiOfsOfSecuRomDll, SEEK_SET);
 						fread(lpBuf, sizeof(BYTE), (size_t)uiSecuromReadSize, fp);
 						if (!strncmp((LPCH)lpBuf, "AddD", 4)) {
-							OutputMainChannel(fileMainInfo, lpBuf, "SecuROM Header", 0, uiSecuromReadSize);
-
 							UINT uiOfsOf16 = 0;
 							UINT uiOfsOf32 = 0;
 							UINT uiOfsOfNT = 0;
 							UINT uiSizeOf16 = 0;
 							UINT uiSizeOf32 = 0;
 							UINT uiSizeOfNT = 0;
+							OutputMainChannel(fileMainInfo, lpBuf, "SecuROM Header from file", 0, uiSecuromReadSize);
 							OutputSecuRomDllHeader(lpBuf, &uiOfsOf16, &uiOfsOf32, &uiOfsOfNT, &uiSizeOf16, &uiSizeOf32, &uiSizeOfNT);
 
 							fseek(fp, (LONG)uiOfsOf16, SEEK_SET);
@@ -1862,8 +1861,8 @@ BOOL ReadExeFromFile(
 									LONG lSigPos = (LONG)(ftell(fp) - uiSecuromReadSize + i);
 									LONG lSigOfs = GetOfsOfSecuromDllSig(lpBuf, i);
 									if (lSigPos == lSigOfs) {
-										OutputSecuRomDll4_87Header(lpBuf, i);
-										OutputMainChannel(fileMainInfo, lpBuf, NULL, 0, uiSecuromReadSize);
+										OutputSecuRomDllDescrambledHeader(lpBuf, i);
+										OutputMainChannel(fileMainInfo, lpBuf, "SecuROM Header (descrambled) from file", 0, uiSecuromReadSize);
 										bFound = TRUE;
 										break;
 									}
@@ -2400,17 +2399,19 @@ BOOL ReadCDForCheckingExe(
 							if (!ExecReadCD(pExtArg, pDevice, pCdb, n1stSector, lpBuf, dwSize, _T(__FUNCTION__), __LINE__)) {
 								continue;
 							}
-							OutputMainChannel(fileMainInfo, lpBuf, NULL, n1stSector, DISC_MAIN_DATA_SIZE);
 
-							UINT uiOfsOf16 = 0;
-							UINT uiOfsOf32 = 0;
-							UINT uiOfsOfNT = 0;
-							UINT uiSizeOf16 = 0;
-							UINT uiSizeOf32 = 0;
-							UINT uiSizeOfNT = 0;
 							if (!strncmp((LPCCH)&lpBuf[0], "AddD", 4)) {
+								UINT uiOfsOf16 = 0;
+								UINT uiOfsOf32 = 0;
+								UINT uiOfsOfNT = 0;
+								UINT uiSizeOf16 = 0;
+								UINT uiSizeOf32 = 0;
+								UINT uiSizeOfNT = 0;
+								OutputMainChannel(fileMainInfo, lpBuf, "SecuROM Header from sector", n1stSector, dwSize);
 								OutputSecuRomDllHeader(lpBuf, &uiOfsOf16, &uiOfsOf32, &uiOfsOfNT, &uiSizeOf16, &uiSizeOf32, &uiSizeOfNT);
 
+								OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("Sintf16.dll [F:%s]"), __FUNCTION__);
+								OutputMainChannel(fileMainInfo, lpBuf, NULL, n1stSector, DISC_MAIN_DATA_SIZE);
 								INT nOfsOf16dll = (INT)(uiOfsOf16 - uiOfsOfSecuRomDll) % DISC_MAIN_DATA_SIZE;
 								OutputSint16(lpBuf, nOfsOf16dll);
 
@@ -2456,8 +2457,8 @@ BOOL ReadCDForCheckingExe(
 										LONG lSigPos = (LONG)(dwSize * j + i);
 										LONG lSigOfs = GetOfsOfSecuromDllSig(lpBuf, i);
 										if (lSigPos == lSigOfs) {
-											OutputSecuRomDll4_87Header(lpBuf, i);
-											OutputMainChannel(fileMainInfo, lpBuf, NULL, pDisc->PROTECT.pExtentPosForExe[n] + j, dwSize);
+											OutputSecuRomDllDescrambledHeader(lpBuf, i);
+											OutputMainChannel(fileMainInfo, lpBuf, "SecuROM Header (descrambled) from sector", pDisc->PROTECT.pExtentPosForExe[n] + j, dwSize);
 											bFound = TRUE;
 											break;
 										}

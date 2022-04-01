@@ -59,7 +59,7 @@ VOID OutputResourceDirectory(
 	_TCHAR* pTab
 );
 
-VOID OutputSecuRomDll4_87Header(
+VOID OutputSecuRomDllDescrambledHeader(
 	LPBYTE lpBuf,
 	UINT i
 );

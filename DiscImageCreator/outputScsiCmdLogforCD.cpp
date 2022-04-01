@@ -984,7 +984,7 @@ VOID OutputFsImageSectionHeader(
 	}
 }
 
-VOID OutputSecuRomDll4_87Header(
+VOID OutputSecuRomDllDescrambledHeader(
 	LPBYTE lpBuf,
 	UINT i
 ) {
@@ -1026,7 +1026,7 @@ VOID OutputSecuRomDll4_87Header(
 		, lpBuf[12 + i] ^ scrTbl[12], lpBuf[13 + i] ^ scrTbl[13], lpBuf[14 + i] ^ scrTbl[14]);
 	OutputString("\nDetected SecuROM %s\n", ver);
 	OutputVolDescLog(
-		"\t" OUTPUT_DHYPHEN_PLUS_STR("SecuROM DLL Header")
+		"\t" OUTPUT_DHYPHEN_PLUS_STR("SecuROM Header (descrambled)")
 		"\t\t         Signature: %02x %02x %02x %02x\n"
 		"\t\t     Unknown Value: %02x %02x %02x %02x\n"
 		"\t\t           Version: %s\n"
@@ -1058,7 +1058,7 @@ VOID OutputSecuRomDll4_87Header(
 		"\t\tUnknown String: %.10" CHARWIDTH "s\n", &str[0]
 	);
 	OutputVolDescLog(
-		"\t\tOffset of SecuROM DLL Header: %5u (%04x)\n"
+		"\t\tOffset of SecuROM 4.87 Header: %5u (%04x)\n"
 		, MAKEUINT(MAKEWORD(lpBuf[82 + i], lpBuf[83 + i]), MAKEWORD(lpBuf[84 + i], lpBuf[85 + i]))
 		, MAKEUINT(MAKEWORD(lpBuf[82 + i], lpBuf[83 + i]), MAKEWORD(lpBuf[84 + i], lpBuf[85 + i]))
 	);
@@ -1082,7 +1082,7 @@ VOID OutputSecuRomDllHeader(
 ) {
 	OutputLog(standardOut | fileDisc, "\nDetected SecuROM %.8" CHARWIDTH "s\n", &lpBuf[8]);
 	OutputVolDescLog(
-		"\t" OUTPUT_DHYPHEN_PLUS_STR("SecuROM DLL Header")
+		"\t" OUTPUT_DHYPHEN_PLUS_STR("SecuROM Header")
 		"\t\t         Signature: %.4" CHARWIDTH "s\n"
 		"\t\t     Unknown Value: %08x\n"
 		"\t\t           Version: %.8" CHARWIDTH "s\n"
@@ -1121,7 +1121,7 @@ VOID OutputSecuRomDllHeader(
 			);
 		}
 	}
-	else if (!strncmp((LPCCH)&lpBuf[8], "4.8", 3)) {
+	else if (!strncmp((LPCCH)&lpBuf[8], "4.7", 3) || !strncmp((LPCCH)&lpBuf[8], "4.8", 3)) {
 		*uiOfsOf16 = MAKEUINT(MAKEWORD(lpBuf[132], lpBuf[133]), MAKEWORD(lpBuf[134], lpBuf[135]));
 		*uiOfsOf32 = MAKEUINT(MAKEWORD(lpBuf[180], lpBuf[181]), MAKEWORD(lpBuf[182], lpBuf[183]));
 		*uiOfsOfNT = MAKEUINT(MAKEWORD(lpBuf[228], lpBuf[229]), MAKEWORD(lpBuf[230], lpBuf[231]));
