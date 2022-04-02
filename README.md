@@ -203,12 +203,24 @@ See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)
   2352 bytes/sector binary image of the CD. This file is used to a ccd file.
 - .iso  
   2048 bytes/sector binary image of the DVD/BD/GC/Wii/XBOX.
-- .scm  
-  scrambled image file of the img file.
+- .pre 
+  2352 bytes/sector binary image of the pregap sector of the track 1.
+- .out 
+  2352 bytes/sector binary image of the lead-out.
 - .raw  
-  scrambled image file of the iso file.
+  scrambled image of the iso file.
+- .scm  
+  scrambled image of the img file.
 - .sub  
   subchannel data of the CD. This file is used to a ccd file.
+- DMI.bin  
+  2048 bytes binary image of the "disc manufacturing information" (DMI) in the DVD
+- PFI.bin  
+  2048 bytes binary image of the "physical format information" (PFI) in the DVD
+- PIC.bin  
+  4100 bytes binary image of the "permanent information and control data" (PIC) in the BD
+- SS.bin  
+  2048 bytes binary image of the "security sector" (SS) in the xbox/xbox 360
 - _c2Error.txt  
   c2 error information which can be gotten by reading the CD.
 - _disc.txt  
