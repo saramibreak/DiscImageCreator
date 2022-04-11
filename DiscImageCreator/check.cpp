@@ -556,6 +556,14 @@ BOOL IsFat(
 	return FALSE;
 }
 
+BOOL IsExFat(
+	LPBYTE lpBuf
+) {
+	if (lpBuf[0] == 0xeb && lpBuf[1] == 0x76 && lpBuf[2] == 0x90) {
+		return TRUE;
+	}
+	return FALSE;
+}
 BOOL IsDriverDescriptorRecord(
 	LPBYTE lpBuf
 ) {
@@ -1410,9 +1418,9 @@ BOOL ContainsC2Error(
 	BOOL bRet = RETURNED_NO_C2_ERROR_1ST;
 	*lpuiC2errorNum = 0;
 	BOOL bErr = FALSE;
-	for (WORD wC2ErrorPos = 0; wC2ErrorPos < CD_RAW_READ_C2_294_SIZE; wC2ErrorPos++) {
-		UINT uiPos = pDevice->TRANSFER.uiBufC2Offset + wC2ErrorPos;
-		if (wC2ErrorPos < CD_RAW_READ_C2_294_SIZE - 10 && pDevice->byPlxtrDrive &&
+	for (INT nC2ErrorPos = 0; nC2ErrorPos < CD_RAW_READ_C2_294_SIZE; nC2ErrorPos++) {
+		UINT uiPos = pDevice->TRANSFER.uiBufC2Offset + nC2ErrorPos;
+		if (nC2ErrorPos < CD_RAW_READ_C2_294_SIZE - 10 && pDevice->byPlxtrDrive &&
 			lpBuf[uiPos] == 0 && lpBuf[uiPos + 1] == 0xf0 && lpBuf[uiPos + 2] == 0xf0 && lpBuf[uiPos + 3] == 0xf0 &&
 			lpBuf[uiPos + 4] == 0 && lpBuf[uiPos + 5] == 0 && lpBuf[uiPos + 6] == 0 &&
 			lpBuf[uiPos + 7] == 0x0f && lpBuf[uiPos + 8] == 0x0f && lpBuf[uiPos + 9] == 0x0f && lpBuf[uiPos + 10] == 0) {
@@ -1422,7 +1430,7 @@ BOOL ContainsC2Error(
 					"This error can't be fixed by plextor drive. Needs to dump it by non-plextor drive and replace it\n"
 					, nLBA, (UINT)nLBA);
 			}
-			wC2ErrorPos += 10;
+			nC2ErrorPos += 10;
 		}
 		else if (lpBuf[uiPos] != 0) {
 			// Ricoh based drives (+97 read offset, like the Aopen CD-RW CRW5232)
@@ -1436,12 +1444,12 @@ BOOL ContainsC2Error(
 			for (INT n = 0; n < CHAR_BIT; n++) {
 				// exist C2 error
 				if (lpBuf[uiPos] & nBit) {
-					// wC2ErrorPos * CHAR_BIT => position of byte
+					// nC2ErrorPos * CHAR_BIT => position of byte
 					// (position of byte) + n => position of bit
 					bRet = RETURNED_EXIST_C2_ERROR;
 					(*lpuiC2errorNum)++;
 					if (bOutputLog) {
-						OutputC2ErrorLog("%x, ", (UINT)(wC2ErrorPos * 8 + n));
+						OutputC2ErrorLog("%x, ", (UINT)(nC2ErrorPos * 8 + n));
 						bErr = TRUE;
 					}
 				}

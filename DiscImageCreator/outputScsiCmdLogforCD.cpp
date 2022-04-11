@@ -691,9 +691,9 @@ VOID OutputResourceDirectory(
 			}
 			PFILE_VERSIONINFO finfo = (PFILE_VERSIONINFO)&lpBuf[dwTmpOfs];
 			if (!wcsncmp(finfo->ver.szKey, L"VS_VERSION_INFO", 16)) {
-				WORD wOfs = 0;
+				LONG lOfs = 0;
 				do {
-					dwTmpOfs = dwOfs + data->OffsetToData - dwResourceVirtualAddress + sizeof(FILE_VERSIONINFO) + wOfs;
+					dwTmpOfs = dwOfs + data->OffsetToData - dwResourceVirtualAddress + sizeof(FILE_VERSIONINFO) + lOfs;
 					if (dwBufSize < dwTmpOfs) {
 						OutputVolDescLog("Offset is over the bufsize [%lu < %lu][L:%d]\n", dwBufSize, dwTmpOfs, __LINE__);
 						return;
@@ -723,8 +723,8 @@ VOID OutputResourceDirectory(
 							}
 						}
 					}
-					wOfs += pstr->wLength + (pstr->wLength % sizeof(DWORD));
-				} while (wOfs < finfo->st.wLength);
+					lOfs += pstr->wLength + (pstr->wLength % sizeof(DWORD));
+				} while (lOfs < finfo->st.wLength);
 			}
 		}
 	}
@@ -1319,47 +1319,6 @@ VOID OutputCDC2Error296(
 		OutputLog(type, "%04X : %02X %02X %02X %02X %02X %02X %02X %02X\n"
 			, i, lpBuf[i], lpBuf[i + 1], lpBuf[i + 2], lpBuf[i + 3]
 			, lpBuf[i + 4], lpBuf[i + 5], lpBuf[i + 6], lpBuf[i + 7]);
-	}
-}
-
-VOID OutputMainChannel(
-	LOG_TYPE type,
-	LPBYTE lpBuf,
-	LPCTSTR szLabel,
-	INT nLBA,
-	DWORD dwSize
-) {
-#ifdef _DEBUG
-	UNREFERENCED_PARAMETER(type);
-#endif
-	if (szLabel != NULL) {
-		OutputLog(type, OUTPUT_DHYPHEN_PLUS_STR("%s"), szLabel);
-	}
-	OutputLog(type, OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Main Channel")
-		"       +0 +1 +2 +3 +4 +5 +6 +7  +8 +9 +A +B +C +D +E +F\n", nLBA, (UINT)nLBA);
-
-	for (DWORD i = 0; i < dwSize; i += 16) {
-		if (16 > dwSize - i) {
-			OutputLog(type, "%04lX : ", i);
-			for (DWORD j = 0; j < dwSize - i; j++) {
-				if (j == 8) {
-					OutputLog(type, " ");
-				}
-				OutputLog(type, "%02X ", lpBuf[i + j]);
-			}
-		}
-		else {
-			OutputLog(type,
-				"%04lX : %02X %02X %02X %02X %02X %02X %02X %02X  %02X %02X %02X %02X %02X %02X %02X %02X   "
-				, i, lpBuf[i], lpBuf[i + 1], lpBuf[i + 2], lpBuf[i + 3], lpBuf[i + 4], lpBuf[i + 5]
-				, lpBuf[i + 6], lpBuf[i + 7], lpBuf[i + 8], lpBuf[i + 9], lpBuf[i + 10], lpBuf[i + 11]
-				, lpBuf[i + 12], lpBuf[i + 13], lpBuf[i + 14], lpBuf[i + 15]);
-			for (INT j = 0; j < 16; j++) {
-				INT ch = isprint(lpBuf[i + j]) ? lpBuf[i + j] : '.';
-				OutputLog(type, "%c", ch);
-			}
-		}
-		OutputLog(type, "\n");
 	}
 }
 

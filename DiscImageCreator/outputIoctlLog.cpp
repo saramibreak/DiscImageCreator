@@ -3624,14 +3624,6 @@ VOID OutputDiskGeometry(
 	PDISK_GEOMETRY pGeom,
 	DWORD dwGeomNum
 ) {
-	if (dwGeomNum > 1) {
-		OutputDiscLog(
-			OUTPUT_DHYPHEN_PLUS_STR("DISK_GEOMETRY")
-			"SupportedMediaType\n");
-	}
-	else if (dwGeomNum == 1) {
-		OutputDiscLog("CurrentMediaType\n");
-	}
 	for (DWORD i = 0; i < dwGeomNum; i++) {
 		OutputDiscLog("\t        MediaType: %d ", pGeom[i].MediaType);
 		OutputMediaType(pGeom[i].MediaType);

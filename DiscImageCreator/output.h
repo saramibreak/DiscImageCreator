@@ -15,6 +15,7 @@
  */
 #pragma once
 #include "forwardDeclaration.h"
+#include "struct.h"
 
 #define BOOLEAN_TO_STRING_TRUE_FALSE(_b_)		((_b_) ? _T("True") : _T("False"))
 #define BOOLEAN_TO_STRING_YES_NO(_b_)			((_b_) ? _T("Yes") : _T("No"))
@@ -471,4 +472,20 @@ BOOL OutputWindowsVersion(
 BOOL OutputMergedFile(
 	LPCTSTR pszFullPath,
 	LPCTSTR pszFullPath2
+);
+
+size_t WriteBufWithCalc(
+	LPBYTE lpBuf,
+	size_t writeSize,
+	ULONG ulTransferLen,
+	FILE* fp,
+	PHASH pHash
+);
+
+VOID OutputMainChannel(
+	LOG_TYPE type,
+	LPBYTE lpBuf,
+	LPCTSTR szLabel,
+	INT nLBA,
+	DWORD dwSize
 );

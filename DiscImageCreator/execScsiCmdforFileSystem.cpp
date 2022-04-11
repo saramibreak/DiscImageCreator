@@ -777,13 +777,13 @@ BOOL ReadCDForFileSystem(
 				}
 				// for MAC pattern 1
 				if (IsDriverDescriptorRecord(lpBuf)) {
-					OutputDriveDescriptorRecord(lpBuf);
+					OutputFsDriveDescriptorRecord(lpBuf);
 					if (IsApplePartionMap(lpBuf + 512)) {
 						BOOL bHfs = FALSE;
 						LONG firstPartition = 0;
 						UINT numOfPartion = MAKEUINT(MAKEWORD(lpBuf[519], lpBuf[518]), MAKEWORD(lpBuf[517], lpBuf[516]));
 						for (UINT j = 1; j <= numOfPartion; j++) {
-							OutputPartitionMap(lpBuf + 512 * j, &bHfs);
+							OutputFsPartitionMap(lpBuf + 512 * j, &bHfs);
 							if (bHfs && firstPartition == 0) {
 								firstPartition = MAKELONG(MAKEWORD(lpBuf[523], lpBuf[522]), MAKEWORD(lpBuf[521], lpBuf[520]));
 							}

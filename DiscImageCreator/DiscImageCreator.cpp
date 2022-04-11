@@ -169,14 +169,17 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 		make_crc_table();
 		HASH hash = {};
 		hash.uiMax = 0;
-		if (*pExecType == dvd || *pExecType == sacd) {
+		if (*pExecType == disk) {
+			hash.uiMax = 1; // .bin
+		}
+		else if (*pExecType == bd) {
+			hash.uiMax = 2; // PIC.bin, .iso 
+		}
+		else if (*pExecType == dvd || *pExecType == sacd) {
 			hash.uiMax = 3; // PFI.bin, DMI.bin, .iso 
 		}
 		else if (*pExecType == xbox) {
 			hash.uiMax = 4; // SS.bin, PFI.bin, DMI.bin, .iso 
-		}
-		else if (*pExecType == bd) {
-			hash.uiMax = 2; // PIC.bin, .iso 
 		}
 		hash.pHashChunk = (PHASH_CHUNK)calloc(hash.uiMax, sizeof(HASH_CHUNK));
 		if (!hash.pHashChunk) {
@@ -184,7 +187,7 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 		}
 
 		if (*pExecType == fd || *pExecType == disk) {
-			bRet = ReadDisk(pExecType, pDevice, pDisc, pszFullPath);
+			bRet = ReadDisk(pExecType, pDevice, pDisc, pszFullPath, &hash);
 		}
 		else {
 			if (*pExecType == cd || *pExecType == swap || *pExecType == gd || *pExecType == data || *pExecType == audio) {

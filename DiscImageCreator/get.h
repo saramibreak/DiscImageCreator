@@ -135,3 +135,8 @@ BOOL GetDVDProtectionCmd(
 	_PROTECT_TYPE_DVD protect,
 	LPCTSTR pszPath
 );
+
+UINT GetLBAfromClusterNumber(
+	PEXFAT pExFat,
+	UINT uiClusterNum
+);

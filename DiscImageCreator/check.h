@@ -79,6 +79,10 @@ BOOL IsFat(
 	LPBYTE lpBuf
 );
 
+BOOL IsExFat(
+	LPBYTE lpBuf
+);
+
 BOOL IsDriverDescriptorRecord(
 	LPBYTE lpBuf
 );

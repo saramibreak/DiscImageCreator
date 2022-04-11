@@ -573,3 +573,10 @@ BOOL GetDVDProtectionCmd(
 	}
 	return bRet;
 }
+
+UINT GetLBAfromClusterNumber(
+	PEXFAT pExFat,
+	UINT uiClusterNum
+) {
+	return pExFat->ClusterHeapOffset + pExFat->SectorsPerClusterShift * (uiClusterNum - 2);
+}

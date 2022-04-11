@@ -690,7 +690,9 @@ BOOL OutputFsPathTableRecord(
 	return TRUE;
 }
 
-VOID OutputFileAllocationTable(
+// Microsoft Extensible Firmware Initiative FAT32 File System Specification
+// https://download.microsoft.com/download/1/6/1/161ba512-40e2-4cc9-843a-923143f3456c/fatgen103.doc
+VOID OutputFsFileAllocationTable(
 	LPBYTE lpBuf,
 	PFAT fat
 ) {
@@ -810,8 +812,383 @@ VOID OutputFileAllocationTable(
 	}
 }
 
+VOID OutputFsFATLDirEntry(
+	LPBYTE lpBuf,
+	UINT i,
+	_TCHAR* pTab
+) {
+	WCHAR fnameW[_MAX_FNAME] = {};
+	OutputVolDescLog("%s        LDIR_Ord: ", &pTab[0]);
+	if ((lpBuf[i] & 0x40) == 0x40) {
+		INT nCnt = (lpBuf[i] & 0x1f) - 1;
+		for (INT h = 0, j = 32 * nCnt, k = 0; h <= nCnt; h++, j -= 32, k += 13) {
+			memcpy(fnameW + k, (LPWCH)&lpBuf[1 + i + j], 10);
+			memcpy(fnameW + 5 + k, (LPWCH)&lpBuf[14 + i + j], 12);
+			memcpy(fnameW + 11 + k, (LPWCH)&lpBuf[28 + i + j], 4);
+			OutputVolDescLog("0x%02x ", lpBuf[i + j]);
+		}
+		OutputVolDescLog("\n");
+		i += 32 * ((lpBuf[i] & 0x0f) - 1);
+	}
+	else {
+		OutputVolDescLog("%#02x\n", lpBuf[i]);
+	}
+	_TCHAR fname[_MAX_FNAME] = {};
+#ifndef UNICODE
+	if (!WideCharToMultiByte(CP_ACP, 0,
+		fnameW, (INT)wcslen(fnameW), fname, sizeof(fname), NULL, NULL)) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+	}
+#else
+	memcpy(fname, fnameW, sizeof(fname));
+#endif
+	OutputVolDescLog(
+		"%s       LDIR_Name: %s\n"
+		"%s       LDIR_Attr: 0x%02x\n"
+		"%s       LDIR_Type: 0x%02x\n"
+		"%s     LDIR_Chksum: 0x%02x\n"
+		"%s  LDIR_FstClusLO: %u\n\n"
+		, &pTab[0], fname
+		, &pTab[0], lpBuf[11 + i]
+		, &pTab[0], lpBuf[12 + i]
+		, &pTab[0], lpBuf[13 + i]
+		, &pTab[0], lpBuf[26 + i]
+	);
+}
+
+VOID OutputFsFATDirEntry(
+	LPBYTE lpBuf,
+	UINT i,
+	_TCHAR* pTab
+) {
+	_TCHAR fname[_MAX_FNAME] = {};
+#ifdef UNICODE
+	if (!MultiByteToWideChar(CP_ACP, 0,
+		(LPCSTR)&lpBuf[i], (INT)strlen((LPCSTR)&lpBuf[i]), fname, sizeof(fname))) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+	}
+#else
+	memcpy(fname, &lpBuf[i], strlen((LPCSTR)&lpBuf[i]));
+#endif
+	OutputVolDescLog(
+		"%s        DIR_Name: %.11s\n"
+		"%s        DIR_Attr: 0x%02x\n"
+		"%s       DIR_NTRes: %u\n"
+		"%sDIR_CrtTimeTenth: %u\n"
+		"%s     DIR_CrtTime: %02d:%02d:%02d\n"
+		"%s     DIR_CrtDate: %04d-%02d-%02d\n"
+		"%s  DIR_LstAccDate: %04d-%02d-%02d\n"
+		"%s   DIR_FstClusHI: %u\n"
+		"%s     DIR_WrtTime: %02d:%02d:%02d\n"
+		"%s     DIR_WrtDate: %04d-%02d-%02d\n"
+		"%s   DIR_FstClusLO: %u\n"
+		"%s    DIR_FileSize: %u\n\n"
+		, &pTab[0], fname
+		, &pTab[0], lpBuf[11 + i]
+		, &pTab[0], lpBuf[12 + i]
+		, &pTab[0], lpBuf[13 + i]
+		, &pTab[0], ((lpBuf[15 + i] >> 3) & 0x1f), ((lpBuf[15 + i] << 3) & 0x38) | ((lpBuf[14 + i] >> 5) & 0x07), (lpBuf[14 + i] & 0x1f) / 2
+		, &pTab[0], ((lpBuf[17 + i] >> 1) & 0x7f) + 1980, ((lpBuf[17 + i] << 3) & 0x08) | ((lpBuf[16 + i] >> 5) & 0x07), lpBuf[16 + i] & 0x1f
+		, &pTab[0], ((lpBuf[19 + i] >> 1) & 0x7f) + 1980, ((lpBuf[19 + i] << 3) & 0x08) | ((lpBuf[18 + i] >> 5) & 0x07), lpBuf[18 + i] & 0x1f
+		, &pTab[0], MAKEWORD(lpBuf[20 + i], lpBuf[21 + i])
+		, &pTab[0], ((lpBuf[23 + i] >> 3) & 0x1f), ((lpBuf[23 + i] << 3) & 0x38) | ((lpBuf[22 + i] >> 5) & 0x07), (lpBuf[22 + i] & 0x1f) / 2
+		, &pTab[0], ((lpBuf[25 + i] >> 1) & 0x7f) + 1980, ((lpBuf[25 + i] << 3) & 0x08) | ((lpBuf[24 + i] >> 5) & 0x07), lpBuf[24 + i] & 0x1f
+		, &pTab[0], MAKEWORD(lpBuf[26 + i], lpBuf[27 + i])
+		, &pTab[0], MAKEUINT(MAKEWORD(lpBuf[28 + i], lpBuf[29 + i]), MAKEWORD(lpBuf[30 + i], lpBuf[31 + i]))
+	);
+}
+
+// exFAT
+// https://docs.microsoft.com/en-US/windows/win32/fileio/exfat-specification
+VOID OutputFsExFAT(
+	LPBYTE lpBuf,
+	PEXFAT pExFat
+) {
+	UINT64 PartitionOffset = MAKEUINT64(MAKEUINT(MAKEWORD(lpBuf[64], lpBuf[65]), MAKEWORD(lpBuf[66], lpBuf[67]))
+		, MAKEUINT(MAKEWORD(lpBuf[68], lpBuf[69]), MAKEWORD(lpBuf[70], lpBuf[71])));
+	pExFat->ClusterHeapOffset = MAKEUINT(MAKEWORD(lpBuf[88], lpBuf[89]), MAKEWORD(lpBuf[90], lpBuf[91]));
+	UINT FirstClusterOfRootDirectory = MAKEUINT(MAKEWORD(lpBuf[96], lpBuf[97]), MAKEWORD(lpBuf[98], lpBuf[99]));
+	BYTE SectorsPerClusterShift = lpBuf[109];
+
+	OutputVolDescLog(
+		OUTPUT_DHYPHEN_PLUS_STR("exFAT Volume Structure")
+		"\t                   JumpBoot: %#02x %#02x %#02x\n"
+		"\t             FileSystemName: %.8" CHARWIDTH "s\n"
+		"\t            PartitionOffset: %llu\n"
+		"\t               VolumeLength: %llu\n"
+		"\t                  FatOffset: %u\n"
+		"\t                  FatLength: %u\n"
+		"\t          ClusterHeapOffset: %u\n"
+		"\t               ClusterCount: %u\n"
+		"\tFirstClusterOfRootDirectory: %u\n"
+		"\t         VolumeSerialNumber: %u\n"
+		"\t         FileSystemRevision: %02x\n"
+		"\t                VolumeFlags: %02x\n"
+		"\t        BytesPerSectorShift: %u\n"
+		"\t     SectorsPerClusterShift: %u\n"
+		"\t               NumberOfFats: %u\n"
+		"\t                DriveSelect: %x\n"
+		"\t               PercentInUse: %u\n"
+		"\t                   BootCode: "
+		, lpBuf[0], lpBuf[1], lpBuf[2]
+		, &lpBuf[3]
+		, PartitionOffset
+		, MAKEUINT64(MAKEUINT(MAKEWORD(lpBuf[72], lpBuf[73]), MAKEWORD(lpBuf[74], lpBuf[75]))
+			, MAKEUINT(MAKEWORD(lpBuf[76], lpBuf[77]), MAKEWORD(lpBuf[78], lpBuf[79])))
+		, MAKEUINT(MAKEWORD(lpBuf[80], lpBuf[81]), MAKEWORD(lpBuf[82], lpBuf[83]))
+		, MAKEUINT(MAKEWORD(lpBuf[84], lpBuf[85]), MAKEWORD(lpBuf[86], lpBuf[87]))
+		, pExFat->ClusterHeapOffset
+		, MAKEUINT(MAKEWORD(lpBuf[92], lpBuf[93]), MAKEWORD(lpBuf[94], lpBuf[95]))
+		, FirstClusterOfRootDirectory
+		, MAKEUINT(MAKEWORD(lpBuf[100], lpBuf[101]), MAKEWORD(lpBuf[102], lpBuf[103]))
+		, MAKEWORD(lpBuf[104], lpBuf[105])
+		, MAKEWORD(lpBuf[106], lpBuf[107])
+		, lpBuf[108], SectorsPerClusterShift, lpBuf[110], lpBuf[111], lpBuf[112]
+	);
+	for (INT i = 120; i < 510; i++) {
+		OutputVolDescLog("%02x ", lpBuf[i]);
+	}
+	OutputVolDescLog("\n\t              BootSignature: %x\n", MAKEWORD(lpBuf[510], lpBuf[511]));
+
+	for (INT i = 0; i < SectorsPerClusterShift; i++) {
+		pExFat->SectorsPerClusterShift *= 2;
+	}
+	pExFat->DirStartSector = GetLBAfromClusterNumber(pExFat, FirstClusterOfRootDirectory);
+	OutputVolDescLog(
+		"\t         RootDirStartSector: %u (%u + %u * %u)\n"
+		"\t    RootDirStartSectorOfRaw: %llu (%u + %llu)\n"
+		, pExFat->DirStartSector, pExFat->ClusterHeapOffset, pExFat->SectorsPerClusterShift, FirstClusterOfRootDirectory - 2
+		, pExFat->DirStartSector + PartitionOffset, pExFat->DirStartSector, PartitionOffset);
+}
+
+VOID OutputFsExFATDirectoryEntry0x81(
+	LPBYTE lpBuf,
+	INT i,
+	_TCHAR* pTab
+) {
+	OutputVolDescLog(
+		"%sAllocation Bitmap Directory Entry\n"
+		"%s\t                EntryType: %02x\n"
+		"%s\t              BitMapFlags: %02x\n"
+		"%s\t             FirstCluster: %u\n"
+		"%s\t               DataLength: %llu\n"
+		, &pTab[0], &pTab[0], lpBuf[i * 32]
+		, &pTab[0], lpBuf[i * 32 + 1]
+		, &pTab[0], MAKEUINT(MAKEWORD(lpBuf[i * 32 + 20], lpBuf[i * 32 + 21]), MAKEWORD(lpBuf[i * 32 + 22], lpBuf[i * 32 + 23]))
+		, &pTab[0], MAKEUINT64(MAKEUINT(MAKEWORD(lpBuf[i * 32 + 24], lpBuf[i * 32 + 25]), MAKEWORD(lpBuf[i * 32 + 26], lpBuf[i * 32 + 27]))
+			, MAKEUINT(MAKEWORD(lpBuf[i * 32 + 28], lpBuf[i * 32 + 29]), MAKEWORD(lpBuf[i * 32 + 30], lpBuf[i * 32 + 31])))
+	);
+}
+
+VOID OutputFsExFATDirectoryEntry0x82(
+	LPBYTE lpBuf,
+	INT i,
+	_TCHAR* pTab
+) {
+	OutputVolDescLog(
+		"%sUp-case Table Directory Entry\n"
+		"%s\t                EntryType: %02x\n"
+		"%s\t            TableChecksum: %08x\n"
+		"%s\t             FirstCluster: %u\n"
+		"%s\t               DataLength: %llu\n"
+		, &pTab[0], &pTab[0], lpBuf[i * 32]
+		, &pTab[0], MAKEUINT(MAKEWORD(lpBuf[i * 32 + 4], lpBuf[i * 32 + 5]), MAKEWORD(lpBuf[i * 32 + 6], lpBuf[i * 32 + 7]))
+		, &pTab[0], MAKEUINT(MAKEWORD(lpBuf[i * 32 + 20], lpBuf[i * 32 + 21]), MAKEWORD(lpBuf[i * 32 + 22], lpBuf[i * 32 + 23]))
+		, &pTab[0], MAKEUINT64(MAKEUINT(MAKEWORD(lpBuf[i * 32 + 24], lpBuf[i * 32 + 25]), MAKEWORD(lpBuf[i * 32 + 26], lpBuf[i * 32 + 27]))
+			, MAKEUINT(MAKEWORD(lpBuf[i * 32 + 28], lpBuf[i * 32 + 29]), MAKEWORD(lpBuf[i * 32 + 30], lpBuf[i * 32 + 31])))
+	);
+}
+
+VOID OutputFsExFATDirectoryEntry0x83(
+	LPBYTE lpBuf,
+	INT i,
+	_TCHAR* pTab
+) {
+	OutputVolDescLog(
+		"%sVolume Label Directory Entry\n"
+		"%s\t                EntryType: %02x\n"
+		"%s\t           CharacterCount: %02x\n"
+		"%s\t              VolumeLabel: %.22" CHARWIDTH "s\n"
+		, &pTab[0], &pTab[0], lpBuf[i * 32]
+		, &pTab[0], lpBuf[i * 32 + 1]
+		, &pTab[0], &lpBuf[i * 32 + 2]
+	);
+}
+
+VOID OutputFsExFATDirectoryEntry0x85(
+	LPBYTE lpBuf,
+	WORD attr,
+	INT i,
+	_TCHAR* pTab
+) {
+	OutputVolDescLog(
+		"%sFile Directory Entry\n"
+		"%s\t                EntryType: %02x\n"
+		"%s\t           SecondaryCount: %02x\n"
+		"%s\t              SetCheckSum: %04x\n"
+		"%s\t            FileAttribute: %04x ("
+		, &pTab[0], &pTab[0], lpBuf[i * 32]
+		, &pTab[0], lpBuf[i * 32 + 1]
+		, &pTab[0], MAKEWORD(lpBuf[i * 32 + 2], lpBuf[i * 32 + 3])
+		, &pTab[0], attr
+	);
+	if ((attr & 0x01) == 0x01) {
+		OutputVolDescLog("ReadOnly");
+		if ((attr & 0xfe) != 0) {
+			OutputVolDescLog(", ");
+		}
+	}
+	if ((attr & 0x02) == 0x02) {
+		OutputVolDescLog("Hidden");
+		if ((attr & 0xfc) != 0) {
+			OutputVolDescLog(", ");
+		}
+	}
+	if ((attr & 0x04) == 0x04) {
+		OutputVolDescLog("System");
+		if ((attr & 0xf8) != 0) {
+			OutputVolDescLog(", ");
+		}
+	}
+	if ((attr & 0x10) == 0x10) {
+		OutputVolDescLog("Directory");
+		if ((attr & 0xe0) != 0) {
+			OutputVolDescLog(", ");
+		}
+	}
+	if ((attr & 0x20) == 0x20) {
+		OutputVolDescLog("Archive");
+	}
+	OutputVolDescLog(")\n");
+
+	UINT cTime = MAKEUINT(MAKEWORD(lpBuf[i * 32 + 8], lpBuf[i * 32 + 9]), MAKEWORD(lpBuf[i * 32 + 10], lpBuf[i * 32 + 11]));
+	UINT lmTime = MAKEUINT(MAKEWORD(lpBuf[i * 32 + 12], lpBuf[i * 32 + 13]), MAKEWORD(lpBuf[i * 32 + 14], lpBuf[i * 32 + 15]));
+	UINT laTime = MAKEUINT(MAKEWORD(lpBuf[i * 32 + 16], lpBuf[i * 32 + 17]), MAKEWORD(lpBuf[i * 32 + 18], lpBuf[i * 32 + 19]));
+	OutputVolDescLog(
+		"%s\t          CreateTimestamp: %4u-%02u-%02uT%02u:%02u:%02u\n"
+		"%s\t    LastModifiedTimestamp: %4u-%02u-%02uT%02u:%02u:%02u\n"
+		"%s\t    LastAccessedTimestamp: %4u-%02u-%02uT%02u:%02u:%02u\n"
+		"%s\t      Create10msIncrement: %d\n"
+		"%s\tLastModified10msIncrement: %d\n"
+		, &pTab[0], ((cTime >> 25) & 0x7f) + 1980, (cTime >> 21) & 0x0f, (cTime >> 16) & 0x1f, (cTime >> 11) & 0x1f, (cTime >> 5) & 0x3f, (cTime & 0x1f) * 2
+		, &pTab[0], ((lmTime >> 25) & 0x7f) + 1980, (lmTime >> 21) & 0x0f, (lmTime >> 16) & 0x1f, (lmTime >> 11) & 0x1f, (lmTime >> 5) & 0x3f, (lmTime & 0x1f) * 2
+		, &pTab[0], ((laTime >> 25) & 0x7f) + 1980, (laTime >> 21) & 0x0f, (laTime >> 16) & 0x1f, (laTime >> 11) & 0x1f, (laTime >> 5) & 0x3f, (laTime & 0x1f) * 2
+		, &pTab[0], lpBuf[i * 32 + 20] * 10
+		, &pTab[0], lpBuf[i * 32 + 21] * 10);
+
+	INT cUtcValid = lpBuf[i * 32 + 22] & 0x80;
+	INT cUtc = lpBuf[i * 32 + 22] & 0x7f;
+	INT lmUtcValid = lpBuf[i * 32 + 23] & 0x80;
+	INT lmUtc = lpBuf[i * 32 + 23] & 0x7f;
+	INT laUtcValid = lpBuf[i * 32 + 24] & 0x80;
+	INT laUtc = lpBuf[i * 32 + 24] & 0x7f;
+	if (cUtcValid == 0x80) {
+		if ((cUtc & 0x40) == 0) {
+			OutputVolDescLog("%s\t          CreateUtcOffset: +%02d:%02d\n", &pTab[0], cUtc / 4, cUtc % 4 * 15);
+		}
+		else {
+			OutputVolDescLog("%s\t          CreateUtcOffset: -%02d:%02d\n", &pTab[0], (cUtc ^ 0x7e) / 4, (cUtc ^ 0x7e) % 4 * 15);
+		}
+	}
+	if (lmUtcValid == 0x80) {
+		if ((lmUtc & 0x40) == 0) {
+			OutputVolDescLog("%s\t    LastModifiedUtcOffset: +%02d:%02d\n", &pTab[0], lmUtc / 4, lmUtc % 4 * 15);
+		}
+		else {
+			OutputVolDescLog("%s\t    LastModifiedUtcOffset: -%02d:%02d\n", &pTab[0], (lmUtc ^ 0x7e) / 4, (lmUtc ^ 0x7e) % 4 * 15);
+		}
+	}
+	if (laUtcValid == 0x80) {
+		if ((laUtc & 0x40) == 0) {
+			OutputVolDescLog("%s\t    LastAccessedUtcOffset: +%02d:%02d\n", &pTab[0], laUtc / 4, laUtc % 4 * 15);
+		}
+		else {
+			OutputVolDescLog("%s\t    LastAccessedUtcOffset: -%02d:%02d\n", &pTab[0], (laUtc ^ 0x7e) / 4, (laUtc ^ 0x7e) % 4 * 15);
+		}
+	}
+}
+
+VOID OutputFsExFATDirectoryEntry0xa0(
+	LPBYTE lpBuf,
+	INT i,
+	_TCHAR* pTab
+) {
+	OutputVolDescLog(
+		"%sVolume GUID Directory Entry\n"
+		"%s\t                EntryType: %02x\n"
+		"%s\t           SecondaryCount: %02x\n"
+		"%s\t              SetCheckSum: %04x\n"
+		"%s\t      GeneralPrimaryFlags: %04x\n"
+		"%s\t               VolumeGuid: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n"
+		, &pTab[0], &pTab[0], lpBuf[i * 32]
+		, &pTab[0], lpBuf[i * 32 + 1]
+		, &pTab[0], MAKEWORD(lpBuf[i * 32 + 2], lpBuf[i * 32 + 3])
+		, &pTab[0], MAKEWORD(lpBuf[i * 32 + 4], lpBuf[i * 32 + 5])
+		, &pTab[0], lpBuf[i * 32 + 6], lpBuf[i * 32 + 7], lpBuf[i * 32 + 8], lpBuf[i * 32 + 9]
+		, lpBuf[i * 32 + 10], lpBuf[i * 32 + 11], lpBuf[i * 32 + 12], lpBuf[i * 32 + 13]
+		, lpBuf[i * 32 + 14], lpBuf[i * 32 + 15], lpBuf[i * 32 + 16], lpBuf[i * 32 + 17]
+		, lpBuf[i * 32 + 18], lpBuf[i * 32 + 19], lpBuf[i * 32 + 20], lpBuf[i * 32 + 21]
+	);
+}
+
+VOID OutputFsExFATDirectoryEntry0xc0(
+	LPBYTE lpBuf,
+	INT NameLength,
+	UINT FirstCluster,
+	INT i,
+	_TCHAR* pTab
+) {
+	OutputVolDescLog(
+		"%sStream Extension Directory Entry\n"
+		"%s\t                EntryType: %02x\n"
+		"%s\t    GeneralSecondaryFlags: %02x\n"
+		"%s\t               NameLength: %d\n"
+		"%s\t                 NameHash: %04x\n"
+		"%s\t          ValidDataLength: %llu\n"
+		"%s\t             FirstCluster: %u\n"
+		"%s\t               DataLength: %llu\n"
+		, &pTab[0], &pTab[0], lpBuf[i * 32]
+		, &pTab[0], lpBuf[i * 32 + 1]
+		, &pTab[0], NameLength
+		, &pTab[0], MAKEWORD(lpBuf[i * 32 + 4], lpBuf[i * 32 + 5])
+		, &pTab[0], MAKEUINT64(MAKEUINT(MAKEWORD(lpBuf[i * 32 + 8], lpBuf[i * 32 + 9]), MAKEWORD(lpBuf[i * 32 + 10], lpBuf[i * 32 + 11]))
+			, MAKEUINT(MAKEWORD(lpBuf[i * 32 + 12], lpBuf[i * 32 + 13]), MAKEWORD(lpBuf[i * 32 + 14], lpBuf[i * 32 + 15])))
+		, &pTab[0], FirstCluster
+		, &pTab[0], MAKEUINT64(MAKEUINT(MAKEWORD(lpBuf[i * 32 + 24], lpBuf[i * 32 + 25]), MAKEWORD(lpBuf[i * 32 + 26], lpBuf[i * 32 + 27]))
+			, MAKEUINT(MAKEWORD(lpBuf[i * 32 + 28], lpBuf[i * 32 + 29]), MAKEWORD(lpBuf[i * 32 + 30], lpBuf[i * 32 + 31])))
+	);
+}
+
+VOID OutputFsExFATDirectoryEntry0xc1(
+	LPBYTE lpBuf,
+	LPBOOL bName1st,
+	INT i,
+	_TCHAR* pTab
+) {
+	CHAR fname[_MAX_FNAME] = {};
+	if (!WideCharToMultiByte(CP_ACP, 0,
+		(LPCWSTR)&lpBuf[i * 32 + 2], 15, fname, sizeof(fname), NULL, NULL)) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+	}
+	if (*bName1st) {
+		OutputVolDescLog(
+			"%sFile Name Directory Entry\n"
+			"%s\t                EntryType: %02x\n"
+			"%s\t    GeneralSecondaryFlags: %02x\n"
+			"%s\t                 FileName: %.15" CHARWIDTH "s"
+			, &pTab[0], &pTab[0], lpBuf[i * 32]
+			, &pTab[0], lpBuf[i * 32 + 1]
+			, &pTab[0], fname
+		);
+		*bName1st = FALSE;
+	}
+	else {
+		OutputVolDescLog("%s", fname);
+	}
+}
+
 // https://web.archive.org/web/20090307042249/http://developer.apple.com/documentation/mac/Devices/Devices-121.html
-VOID OutputDriveDescriptorRecord(
+VOID OutputFsDriveDescriptorRecord(
 	LPBYTE lpBuf
 ) {
 	OutputVolDescLog(
@@ -827,7 +1204,7 @@ VOID OutputDriveDescriptorRecord(
 	);
 }
 
-VOID OutputPartitionMap(
+VOID OutputFsPartitionMap(
 	LPBYTE lpBuf,
 	LPBOOL bHfs
 ) {

@@ -114,18 +114,6 @@ BOOL ReadDVDReverse(
 	return bRet;
 }
 
-size_t WriteBufWithCalc(
-	LPBYTE lpBuf,
-	ULONG ulTransferLen,
-	PHASH pHash,
-	FILE* fp
-) {
-	size_t stSize = fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_MAIN_DATA_SIZE * ulTransferLen, fp);
-	CalcHash(&pHash->pHashChunk[pHash->uiIndex].crc32, &pHash->pHashChunk[pHash->uiIndex].md5
-		, &pHash->pHashChunk[pHash->uiIndex].sha, lpBuf, DISC_MAIN_DATA_SIZE * (UINT)ulTransferLen);
-	return stSize;
-}
-
 BOOL ReadDVD(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
@@ -294,7 +282,7 @@ BOOL ReadDVD(
 								REVERSE_BYTES(&cdb.TransferLength, &transferLen);
 							}
 							ZeroMemory(lpBuf, DISC_MAIN_DATA_SIZE * transferLen.AsULong);
-							WriteBufWithCalc(lpBuf, transferLen.AsULong, pHash, fp);
+							WriteBufWithCalc(lpBuf, DISC_MAIN_DATA_SIZE, transferLen.AsULong, fp, pHash);
 							continue;
 						}
 					}
@@ -330,7 +318,7 @@ BOOL ReadDVD(
 			if ((pDisc->PROTECT.byExist == physicalErr || pDisc->PROTECT.byExist == arccos || pDisc->PROTECT.byExist == ripGuard)
 				&& nFirstErrorLBA != 0 && nFirstErrorLBA <= nLBA && nLBA <= nLastErrorLBA) {
 				FillMemory(lpBuf, DISC_MAIN_DATA_SIZE * transferLen.AsULong, 0x00);
-				WriteBufWithCalc(lpBuf, transferLen.AsULong, pHash, fp);
+				WriteBufWithCalc(lpBuf, DISC_MAIN_DATA_SIZE, transferLen.AsULong, fp, pHash);
 				if (nLBA == nLastErrorLBA) {
 					nFirstErrorLBA = 0;
 					OutputLog(standardOut | fileMainError, "Reset 1st error LBA\n");
@@ -371,7 +359,7 @@ BOOL ReadDVD(
 							bSetErrorSectorRange = FALSE;
 							OutputLog(standardOut | fileMainError, "Reread NG -> Filled with 0x00\n");
 							FillMemory(lpBuf, DISC_MAIN_DATA_SIZE * transferLen.AsULong, 0x00);
-							WriteBufWithCalc(lpBuf, transferLen.AsULong, pHash, fp);
+							WriteBufWithCalc(lpBuf, DISC_MAIN_DATA_SIZE, transferLen.AsULong, fp, pHash);
 							continue;
 						}
 					}
@@ -457,7 +445,7 @@ BOOL ReadDVD(
 				OutputLog(standardOut | fileMainError, "LBA %d is retry OK\n", nLBA);
 				uiRetryCnt = 0;
 			}
-			WriteBufWithCalc(lpBuf, transferLen.AsULong, pHash, fp);
+			WriteBufWithCalc(lpBuf, DISC_MAIN_DATA_SIZE, transferLen.AsULong, fp, pHash);
 			OutputString("\rCreating iso(LBA) %8lu/%8d", nLBA + transferLen.AsULong, nAllLength);
 		}
 
@@ -477,7 +465,7 @@ BOOL ReadDVD(
 				if (transferLen.AsULong > dwEndOfMiddle - j) {
 					transferLen.AsULong = dwEndOfMiddle - j;
 				}
-				WriteBufWithCalc(lpBuf, transferLen.AsULong, pHash, fp);
+				WriteBufWithCalc(lpBuf, DISC_MAIN_DATA_SIZE, transferLen.AsULong, fp, pHash);
 				OutputString("\rCreating iso(LBA) %8lu/%8d", j + transferLen.AsULong, nAllLength);
 			}
 
@@ -497,7 +485,7 @@ BOOL ReadDVD(
 					|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 					throw FALSE;
 				}
-				WriteBufWithCalc(lpBuf, transferLen.AsULong, pHash, fp);
+				WriteBufWithCalc(lpBuf, DISC_MAIN_DATA_SIZE, transferLen.AsULong, fp, pHash);
 				OutputString("\rCreating iso(LBA) %8lu/%8d", dwEndOfMiddle + pDisc->DVD.dwLayer1SectorLength, nAllLength);
 			}
 		}
@@ -1730,11 +1718,12 @@ BOOL ExtractSecuritySector(
 	pHash->uiIndex++;
 	FcloseAndNull(fp);
 
-	if (pDisc->SCSI.nAllLength == 3697696 || pDisc->SCSI.nAllLength == 4246304) {
-		OutputXbox360SecuritySector(pDisc, buf);
-	}
-	else {
+//	if (pDisc->SCSI.nAllLength == 3697696 || pDisc->SCSI.nAllLength == 4246304) {
+	if (buf[768] == 0x01) {
 		OutputXboxSecuritySector(pDisc, buf);
+	}
+	else if (0x02 <= buf[768]) {
+		OutputXbox360SecuritySector(pDisc, buf);
 	}
 	return TRUE;
 }

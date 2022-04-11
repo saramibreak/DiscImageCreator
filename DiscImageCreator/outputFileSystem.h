@@ -59,16 +59,79 @@ BOOL OutputFsPathTableRecord(
 	LPUINT uiDirPosNum
 );
 
-VOID OutputFileAllocationTable(
+VOID OutputFsFileAllocationTable(
 	LPBYTE lpBuf,
 	PFAT fat
 );
 
-VOID OutputDriveDescriptorRecord(
+VOID OutputFsFATLDirEntry(
+	LPBYTE lpBuf,
+	UINT i,
+	_TCHAR* pTab
+);
+
+VOID OutputFsFATDirEntry(
+	LPBYTE lpBuf,
+	UINT i,
+	_TCHAR* pTab
+);
+
+VOID OutputFsExFAT(
+	LPBYTE lpBuf,
+	PEXFAT pExFat
+);
+
+VOID OutputFsExFATDirectoryEntry0x81(
+	LPBYTE lpBuf,
+	INT i,
+	_TCHAR* pTab
+);
+
+VOID OutputFsExFATDirectoryEntry0x82(
+	LPBYTE lpBuf,
+	INT i,
+	_TCHAR* pTab
+);
+
+VOID OutputFsExFATDirectoryEntry0x83(
+	LPBYTE lpBuf,
+	INT i,
+	_TCHAR* pTab
+);
+
+VOID OutputFsExFATDirectoryEntry0x85(
+	LPBYTE lpBuf,
+	WORD attr,
+	INT i,
+	_TCHAR* pTab
+);
+
+VOID OutputFsExFATDirectoryEntry0xa0(
+	LPBYTE lpBuf,
+	INT i,
+	_TCHAR* pTab
+);
+
+VOID OutputFsExFATDirectoryEntry0xc0(
+	LPBYTE lpBuf,
+	INT NameLength,
+	UINT FirstCluster,
+	INT i,
+	_TCHAR* pTab
+);
+
+VOID OutputFsExFATDirectoryEntry0xc1(
+	LPBYTE lpBuf,
+	LPBOOL bName1st,
+	INT i,
+	_TCHAR* pTab
+);
+
+VOID OutputFsDriveDescriptorRecord(
 	LPBYTE lpBuf
 );
 
-VOID OutputPartitionMap(
+VOID OutputFsPartitionMap(
 	LPBYTE lpBuf,
 	LPBOOL bHfs
 );

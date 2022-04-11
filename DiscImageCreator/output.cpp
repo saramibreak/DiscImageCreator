@@ -2926,3 +2926,57 @@ BOOL OutputMergedFile(
 	FcloseAndNull(fpDst);
 	return TRUE;
 }
+
+size_t WriteBufWithCalc(
+	LPBYTE lpBuf,
+	size_t writeSize,
+	ULONG ulTransferLen,
+	FILE* fp,
+	PHASH pHash
+) {
+	size_t stSize = fwrite(lpBuf, sizeof(BYTE), writeSize * ulTransferLen, fp);
+	CalcHash(&pHash->pHashChunk[pHash->uiIndex].crc32, &pHash->pHashChunk[pHash->uiIndex].md5
+		, &pHash->pHashChunk[pHash->uiIndex].sha, lpBuf, (UINT)(writeSize * ulTransferLen));
+	return stSize;
+}
+
+VOID OutputMainChannel(
+	LOG_TYPE type,
+	LPBYTE lpBuf,
+	LPCTSTR szLabel,
+	INT nLBA,
+	DWORD dwSize
+) {
+#ifdef _DEBUG
+	UNREFERENCED_PARAMETER(type);
+#endif
+	if (szLabel != NULL) {
+		OutputLog(type, OUTPUT_DHYPHEN_PLUS_STR("%s"), szLabel);
+	}
+	OutputLog(type, OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Main Channel")
+		"       +0 +1 +2 +3 +4 +5 +6 +7  +8 +9 +A +B +C +D +E +F\n", nLBA, (UINT)nLBA);
+
+	for (DWORD i = 0; i < dwSize; i += 16) {
+		if (16 > dwSize - i) {
+			OutputLog(type, "%04lX : ", i);
+			for (DWORD j = 0; j < dwSize - i; j++) {
+				if (j == 8) {
+					OutputLog(type, " ");
+				}
+				OutputLog(type, "%02X ", lpBuf[i + j]);
+			}
+		}
+		else {
+			OutputLog(type,
+				"%04lX : %02X %02X %02X %02X %02X %02X %02X %02X  %02X %02X %02X %02X %02X %02X %02X %02X   "
+				, i, lpBuf[i], lpBuf[i + 1], lpBuf[i + 2], lpBuf[i + 3], lpBuf[i + 4], lpBuf[i + 5]
+				, lpBuf[i + 6], lpBuf[i + 7], lpBuf[i + 8], lpBuf[i + 9], lpBuf[i + 10], lpBuf[i + 11]
+				, lpBuf[i + 12], lpBuf[i + 13], lpBuf[i + 14], lpBuf[i + 15]);
+			for (INT j = 0; j < 16; j++) {
+				INT ch = isprint(lpBuf[i + j]) ? lpBuf[i + j] : '.';
+				OutputLog(type, "%c", ch);
+			}
+		}
+		OutputLog(type, "\n");
+	}
+}

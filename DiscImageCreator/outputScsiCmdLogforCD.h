@@ -103,14 +103,6 @@ VOID OutputCDC2Error296(
 	INT nLBA
 );
 
-VOID OutputMainChannel(
-	LOG_TYPE type,
-	LPBYTE lpBuf,
-	LPCTSTR szLabel,
-	INT nLBA,
-	DWORD dwSize
-);
-
 VOID OutputCDSub96Align(
 	LOG_TYPE type,
 	LPBYTE lpBuf,

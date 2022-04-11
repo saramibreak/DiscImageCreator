@@ -349,15 +349,15 @@ BOOL InitLogFile(
 			if (setvbuf(g_LogFile.fpVolDesc, NULL, _IONBF, 0) != 0) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			}
+			if (NULL == (g_LogFile.fpMainInfo = CreateOrOpenFile(
+				szFullPath, _T("_mainInfo"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				throw FALSE;
+			}
+			if (setvbuf(g_LogFile.fpMainInfo, NULL, _IONBF, 0) != 0) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			}
 			if (*pExecType != fd && *pExecType != disk) {
-				if (NULL == (g_LogFile.fpMainInfo = CreateOrOpenFile(
-					szFullPath, _T("_mainInfo"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					throw FALSE;
-				}
-				if (setvbuf(g_LogFile.fpMainInfo, NULL, _IONBF, 0) != 0) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				}
 				if (pExtArg->byRawDump) {
 					_TCHAR szMode[14] = _T(WFLAG);
 					if (pExtArg->byResume) {
@@ -523,8 +523,8 @@ VOID TerminateLogFile(
 	FcloseAndNull(g_LogFile.fpMainError);
 	if (*pExecType != tape) {
 		FcloseAndNull(g_LogFile.fpVolDesc);
+		FcloseAndNull(g_LogFile.fpMainInfo);
 		if (*pExecType != fd && *pExecType != disk) {
-			FcloseAndNull(g_LogFile.fpMainInfo);
 			if (pExtArg->byRawDump) {
 				FcloseAndNull(g_LogFile.fpRawReadable);
 			}

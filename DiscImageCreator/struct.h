@@ -622,6 +622,12 @@ typedef struct _FAT {
 	UINT DataStartSector;
 } FAT, *PFAT;
 
+typedef struct _EXFAT {
+	UINT ClusterHeapOffset;
+	UINT SectorsPerClusterShift;
+	UINT DirStartSector;
+} EXFAT, * PEXFAT;
+
 // https://docs.microsoft.com/en-us/windows/win32/menurc/vs-versioninfo
 #pragma pack(push, version, 1)
 typedef struct {
