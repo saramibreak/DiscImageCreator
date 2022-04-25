@@ -66,7 +66,7 @@ VOID OutputFsFileAllocationTable(
 
 VOID OutputFsFATLDirEntry(
 	LPBYTE lpBuf,
-	UINT i,
+	LPUINT i,
 	_TCHAR* pTab
 );
 

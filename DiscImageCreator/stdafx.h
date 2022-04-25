@@ -22,6 +22,7 @@
 #include <imagehlp.h>
 #pragma comment(lib, "imagehlp.lib")
 #include <conio.h>
+#include <locale.h>
 #include <tchar.h>
 #include <time.h>
 #if 0

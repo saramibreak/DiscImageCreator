@@ -814,24 +814,24 @@ VOID OutputFsFileAllocationTable(
 
 VOID OutputFsFATLDirEntry(
 	LPBYTE lpBuf,
-	UINT i,
+	LPUINT i,
 	_TCHAR* pTab
 ) {
 	WCHAR fnameW[_MAX_FNAME] = {};
 	OutputVolDescLog("%s        LDIR_Ord: ", &pTab[0]);
-	if ((lpBuf[i] & 0x40) == 0x40) {
-		INT nCnt = (lpBuf[i] & 0x1f) - 1;
+	if ((lpBuf[*i] & 0x40) == 0x40) {
+		INT nCnt = (lpBuf[*i] & 0x1f) - 1;
 		for (INT h = 0, j = 32 * nCnt, k = 0; h <= nCnt; h++, j -= 32, k += 13) {
-			memcpy(fnameW + k, (LPWCH)&lpBuf[1 + i + j], 10);
-			memcpy(fnameW + 5 + k, (LPWCH)&lpBuf[14 + i + j], 12);
-			memcpy(fnameW + 11 + k, (LPWCH)&lpBuf[28 + i + j], 4);
-			OutputVolDescLog("0x%02x ", lpBuf[i + j]);
+			memcpy(fnameW + k, (LPWCH)&lpBuf[1 + *i + j], 10);
+			memcpy(fnameW + 5 + k, (LPWCH)&lpBuf[14 + *i + j], 12);
+			memcpy(fnameW + 11 + k, (LPWCH)&lpBuf[28 + *i + j], 4);
+			OutputVolDescLog("0x%02x ", lpBuf[*i + j]);
 		}
 		OutputVolDescLog("\n");
-		i += 32 * ((lpBuf[i] & 0x0f) - 1);
+		*i += 32 * ((lpBuf[*i] & 0x0f) - 1);
 	}
 	else {
-		OutputVolDescLog("%#02x\n", lpBuf[i]);
+		OutputVolDescLog("%#02x\n", lpBuf[*i]);
 	}
 	_TCHAR fname[_MAX_FNAME] = {};
 #ifndef UNICODE
@@ -849,10 +849,10 @@ VOID OutputFsFATLDirEntry(
 		"%s     LDIR_Chksum: 0x%02x\n"
 		"%s  LDIR_FstClusLO: %u\n\n"
 		, &pTab[0], fname
-		, &pTab[0], lpBuf[11 + i]
-		, &pTab[0], lpBuf[12 + i]
-		, &pTab[0], lpBuf[13 + i]
-		, &pTab[0], lpBuf[26 + i]
+		, &pTab[0], lpBuf[11 + *i]
+		, &pTab[0], lpBuf[12 + *i]
+		, &pTab[0], lpBuf[13 + *i]
+		, &pTab[0], lpBuf[26 + *i]
 	);
 }
 
@@ -1165,26 +1165,23 @@ VOID OutputFsExFATDirectoryEntry0xc1(
 	INT i,
 	_TCHAR* pTab
 ) {
-	CHAR fname[_MAX_FNAME] = {};
-	if (!WideCharToMultiByte(CP_ACP, 0,
-		(LPCWSTR)&lpBuf[i * 32 + 2], 15, fname, sizeof(fname), NULL, NULL)) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-	}
+	setlocale(LC_ALL, ".UTF8");
 	if (*bName1st) {
 		OutputVolDescLog(
 			"%sFile Name Directory Entry\n"
 			"%s\t                EntryType: %02x\n"
 			"%s\t    GeneralSecondaryFlags: %02x\n"
-			"%s\t                 FileName: %.15" CHARWIDTH "s"
+			"%s\t                 FileName: %.15ls"
 			, &pTab[0], &pTab[0], lpBuf[i * 32]
 			, &pTab[0], lpBuf[i * 32 + 1]
-			, &pTab[0], fname
+			, &pTab[0], (LPCWSTR)&lpBuf[i * 32 + 2]
 		);
 		*bName1st = FALSE;
 	}
 	else {
-		OutputVolDescLog("%s", fname);
+		OutputVolDescLog("%ls", (LPCWSTR)&lpBuf[i * 32 + 2]);
 	}
+	setlocale(LC_ALL, "");
 }
 
 // https://web.archive.org/web/20090307042249/http://developer.apple.com/documentation/mac/Devices/Devices-121.html

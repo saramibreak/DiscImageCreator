@@ -99,6 +99,10 @@ BOOL Read10(
 	CDB::_CDB10 cdb = {};
 	cdb.OperationCode = SCSIOP_READ;
 	DWORD dwTransferLen = pDevice->dwMaxTransferLength / pDisc->dwBytesPerSector;
+	if (dwTransferLen > 0xffff) {
+		dwTransferLen = 0xffff;
+	}
+	cdb.TransferBlocksMsb = (UCHAR)(dwTransferLen >> 8);
 	cdb.TransferBlocksLsb = (UCHAR)dwTransferLen;
 
 #ifdef _WIN32
@@ -112,6 +116,7 @@ BOOL Read10(
 	for (DWORD dwLBA = 0; dwLBA < dwBlkSize; dwLBA += dwTransferLen) {
 		if (dwTransferLen > (DWORD)(dwBlkSize - dwLBA)) {
 			dwTransferLen = (DWORD)(dwBlkSize - dwLBA);
+			cdb.TransferBlocksMsb = (UCHAR)(dwTransferLen >> 8);
 			cdb.TransferBlocksLsb = (UCHAR)dwTransferLen;
 		}
 		cdb.LogicalBlockByte0 = (UCHAR)(dwLBA >> 24);
@@ -125,6 +130,7 @@ BOOL Read10(
 				OutputString("Change the transfer length: %lu -> ", dwTransferLen);
 				dwTransferLen--;
 				OutputString("%lu\n", dwTransferLen);
+				cdb.TransferBlocksMsb = (UCHAR)(dwTransferLen >> 8);
 				cdb.TransferBlocksLsb = (UCHAR)dwTransferLen;
 				dwLBA -= dwTransferLen;
 				continue;
@@ -178,10 +184,10 @@ BOOL ReadFATDirectoryRecord(
 						OutputVolDescLog("%sDeleted Entry\n", &pTab[0]);
 					}
 					else if ((lpBuf[11 + i] & 0x0f) == 0x0f) {
-						OutputFsFATLDirEntry(lpBuf, i, pTab);
+						OutputFsFATLDirEntry(lpBuf, &i, pTab);
 					}
 					else {
-						OutputFsFATLDirEntry(lpBuf, i, pTab);
+						OutputFsFATDirEntry(lpBuf, i, pTab);
 
 						DWORD FstClus = MAKEDWORD(MAKEWORD(lpBuf[26 + i], lpBuf[27 + i]), MAKEWORD(lpBuf[20 + i], lpBuf[21 + i]));
 						if (FstClus != 0 && (lpBuf[11 + i] & 0x10) == 0x10 && lpBuf[i] != '.') {
