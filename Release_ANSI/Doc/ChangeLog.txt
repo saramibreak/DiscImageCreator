@@ -784,3 +784,12 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - added: check if the directory record length is really correct (The Shooting Love: XII Stag & Trizeal [DVD] (Japan))
 - fixed: the buffer size when analyzing the IFO files
 - fixed: Xbox/Xbox360 generates an incorrect hash
+
+*2022-05-01
+- added: support dumping exFAT
+- changed: hash calculate while dumping disk
+- fixed: checking of the directory record length
+- fixed: output .pre file
+- fixed: output SecuROM 4.7x
+- fixed: output SS log of xbox/xbox 360 (use version, not filesize)
+- fixed: transfer length of the disk dumping
