@@ -1296,14 +1296,14 @@ BOOL ReadCDForCheckingSubQAdr(
 				CHAR szCatalog[META_CATALOG_SIZE] = {};
 				if (!bCheckMCN) {
 					SetMCNToString(pDisc, pDiscPerSector->subcode.current, szCatalog, FALSE);
-					strncpy(szTmpCatalog, szCatalog, sizeof(szTmpCatalog) / sizeof(szTmpCatalog[0]));
+					strncpy(szTmpCatalog, szCatalog, sizeof(szTmpCatalog) / sizeof(szTmpCatalog[0]) - 1);
 					szTmpCatalog[META_CATALOG_SIZE - 1] = 0;
 					bCheckMCN = bMCN;
 				}
 				else if (!pDisc->SUB.byCatalog) {
 					SetMCNToString(pDisc, pDiscPerSector->subcode.current, szCatalog, FALSE);
 					if (!strncmp(szTmpCatalog, szCatalog, sizeof(szTmpCatalog) / sizeof(szTmpCatalog[0]))) {
-						strncpy(pDisc->SUB.szCatalog, szCatalog, sizeof(pDisc->SUB.szCatalog) / sizeof(pDisc->SUB.szCatalog[0]));
+						strncpy(pDisc->SUB.szCatalog, szCatalog, sizeof(pDisc->SUB.szCatalog) / sizeof(pDisc->SUB.szCatalog[0]) - 1);
 						pDisc->SUB.byCatalog = (BYTE)bMCN;
 						OutputCDSub96Align(fileDisc, pDiscPerSector->subcode.current, nLBA);
 						OutputDiscLog("\tMCN: [%" CHARWIDTH "s]\n", szCatalog);
@@ -1325,14 +1325,14 @@ BOOL ReadCDForCheckingSubQAdr(
 				CHAR szISRC[META_ISRC_SIZE] = {};
 				if (!bCheckISRC) {
 					SetISRCToString(pDisc, pDiscPerSector, szISRC, FALSE);
-					strncpy(szTmpISRC, szISRC, sizeof(szTmpISRC) / sizeof(szTmpISRC[0]));
+					strncpy(szTmpISRC, szISRC, sizeof(szTmpISRC) / sizeof(szTmpISRC[0]) - 1);
 					szTmpISRC[META_ISRC_SIZE - 1] = 0;
 					bCheckISRC = bISRC;
 				}
 				else if (!pDisc->SUB.lpISRCList[byIdxOfTrack]) {
 					SetISRCToString(pDisc, pDiscPerSector, szISRC, FALSE);
 					if (!strncmp(szTmpISRC, szISRC, sizeof(szISRC) / sizeof(szISRC[0]))) {
-						strncpy(pDisc->SUB.pszISRC[byIdxOfTrack], szISRC, META_ISRC_SIZE);
+						strncpy(pDisc->SUB.pszISRC[byIdxOfTrack], szISRC, META_ISRC_SIZE - 1);
 						pDisc->SUB.lpISRCList[byIdxOfTrack] = bISRC;
 						OutputCDSub96Align(fileDisc, pDiscPerSector->subcode.current, nLBA);
 						OutputDiscLog(
@@ -1352,14 +1352,14 @@ BOOL ReadCDForCheckingSubQAdr(
 			CHAR szAdr6[META_ADR6_SIZE] = {};
 			if (!bCheckAdr6) {
 				SetAdr6ToString(pDisc, pDiscPerSector->subcode.current, szAdr6, FALSE);
-				strncpy(szTmpAdr6, szAdr6, sizeof(szTmpAdr6) / sizeof(szTmpAdr6[0]));
+				strncpy(szTmpAdr6, szAdr6, sizeof(szTmpAdr6) / sizeof(szTmpAdr6[0]) - 1);
 				szTmpAdr6[META_ADR6_SIZE - 1] = 0;
 				bCheckAdr6 = bAdr6;
 			}
 			else if (!pDisc->SUB.byAdr6) {
 				SetAdr6ToString(pDisc, pDiscPerSector->subcode.current, szAdr6, FALSE);
 				if (!strncmp(szTmpAdr6, szAdr6, sizeof(szTmpAdr6) / sizeof(szTmpAdr6[0]))) {
-					strncpy(pDisc->SUB.szAdr6, szAdr6, sizeof(pDisc->SUB.szAdr6) / sizeof(pDisc->SUB.szAdr6[0]));
+					strncpy(pDisc->SUB.szAdr6, szAdr6, sizeof(pDisc->SUB.szAdr6) / sizeof(pDisc->SUB.szAdr6[0]) - 1);
 					pDisc->SUB.byAdr6 = (BYTE)bAdr6;
 				}
 			}

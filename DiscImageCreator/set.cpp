@@ -639,7 +639,7 @@ VOID SetAndOutputTocCDText(
 			size_t uiTxtIdx = 0;
 			for (UINT k = 0; k < uiLastTrackNum + 1; k++) {
 				size_t len = strlen(pTmpText + uiTxtIdx);
-				strncpy(pDisc->SCSI.CDTEXT[pDesc[j].BlockNumber].pszTitle[k], pTmpText + uiTxtIdx, META_CDTEXT_SIZE);
+				strncpy(pDisc->SCSI.CDTEXT[pDesc[j].BlockNumber].pszTitle[k], pTmpText + uiTxtIdx, META_CDTEXT_SIZE - 1);
 				if (k == 0) {
 					OutputDiscLog("\tAlbum Name: %" CHARWIDTH "s\n", pTmpText + uiTxtIdx);
 				}
@@ -664,7 +664,7 @@ VOID SetAndOutputTocCDText(
 			size_t uiTxtIdx = 0;
 			for (UINT k = 0; k < uiLastTrackNum + 1; k++) {
 				size_t len = strlen(pTmpText + uiTxtIdx);
-				strncpy(pDisc->SCSI.CDTEXT[pDesc[j].BlockNumber].pszPerformer[k], pTmpText + uiTxtIdx, META_CDTEXT_SIZE);
+				strncpy(pDisc->SCSI.CDTEXT[pDesc[j].BlockNumber].pszPerformer[k], pTmpText + uiTxtIdx, META_CDTEXT_SIZE - 1);
 				if (k == 0) {
 					OutputDiscLog("\tAlbum Performer: %" CHARWIDTH "s\n", pTmpText + uiTxtIdx);
 				}
@@ -688,7 +688,7 @@ VOID SetAndOutputTocCDText(
 			size_t uiTxtIdx = 0;
 			for (UINT k = 0; k < uiLastTrackNum + 1; k++) {
 				size_t len = strlen(pTmpText + uiTxtIdx);
-				strncpy(pDisc->SCSI.CDTEXT[pDesc[j].BlockNumber].pszSongWriter[k], pTmpText + uiTxtIdx, META_CDTEXT_SIZE);
+				strncpy(pDisc->SCSI.CDTEXT[pDesc[j].BlockNumber].pszSongWriter[k], pTmpText + uiTxtIdx, META_CDTEXT_SIZE - 1);
 				if (k == 0) {
 					OutputDiscLog("\tAlbum SongWriter: %" CHARWIDTH "s\n", pTmpText + uiTxtIdx);
 				}
@@ -1548,7 +1548,7 @@ VOID SetISRCToString(
 		((pDiscPerSector->subcode.current[20] >> 4) & 0x0f) + 0x30);
 	pszOutString[META_ISRC_SIZE - 1] = 0;
 	if (bCopy) {
-		strncpy(pDisc->SUB.pszISRC[pDiscPerSector->byTrackNum - 1], pszOutString, META_ISRC_SIZE);
+		strncpy(pDisc->SUB.pszISRC[pDiscPerSector->byTrackNum - 1], pszOutString, META_ISRC_SIZE - 1);
 	}
 }
 

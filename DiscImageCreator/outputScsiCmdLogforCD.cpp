@@ -1517,7 +1517,7 @@ VOID OutputCDSubToLog(
 		MultiByteToWideChar(CP_ACP, 0
 			, pDisc->SUB.szCatalog, sizeof(pDisc->SUB.szCatalog), szCatalog, sizeof(szCatalog));
 #else
-		strncpy(szCatalog, pDisc->SUB.szCatalog, sizeof(szCatalog) / sizeof(szCatalog[0]));
+		strncpy(szCatalog, pDisc->SUB.szCatalog, sizeof(szCatalog) / sizeof(szCatalog[0]) - 1);
 #endif
 		OutputSubReadableLog(
 			"MediaCatalogNumber [%13s], AMSF[     :%02x]", szCatalog, pDiscPerSector->subcode.current[21]);
