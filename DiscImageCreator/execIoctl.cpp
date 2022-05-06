@@ -251,7 +251,7 @@ BOOL ReadExFATDirectoryEntry(
 		bRet = ReadFile(handle, lpBuf, dwBytesPerSector, &dwBytesRead, 0);
 		if (bRet) {
 			if (dwBytesPerSector == dwBytesRead) {
-				OutputMainChannel(fileMainInfo, lpBuf, "exFAT Directory Entry", (INT)(pExFat->DirStartSector + nCnt), dwBytesPerSector);
+				OutputMainChannel(fileMainInfo, lpBuf, _T("exFAT Directory Entry"), (INT)(pExFat->DirStartSector + nCnt), dwBytesPerSector);
 				for (INT i = 0; i < 16; i++) {
 					BYTE entry = lpBuf[i * 32];
 					if (entry == 0) {

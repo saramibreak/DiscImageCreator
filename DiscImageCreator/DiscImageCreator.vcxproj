@@ -196,12 +196,14 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <SmallerTypeCheck>false</SmallerTypeCheck>
       <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
+      <AdditionalIncludeDirectories>$(ProgramFiles)\Visual Leak Detector\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>
       </AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProgramFiles)\Visual Leak Detector\lib\Win32</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_ANSI|Win32'">

@@ -653,7 +653,7 @@ VOID OutputResourceDirectory(
 				return;
 			}
 			OutputVolDescLog(
-				"%s\t                 Name: %08lx (%s)\n"
+				"%s\t                 Name: %08lx (%hs)\n"
 				, pTab, dir->Name, &lpBuf[dwTmpOfs]
 			);
 		}

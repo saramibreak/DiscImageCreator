@@ -1533,7 +1533,7 @@ BOOL ReadDiscStructure(
 				, (UCHAR)(cdb.Reserved3 << 6 | cdb.AGID), cdb.Control);
 		}
 		else {
-			OutputMainChannel(fileDisc, bca, "BCA", 0, 0xc0);
+			OutputMainChannel(fileDisc, bca, _T("BCA"), 0, 0xc0);
 		}
 	}
 

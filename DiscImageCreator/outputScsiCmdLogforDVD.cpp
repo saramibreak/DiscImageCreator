@@ -673,7 +673,7 @@ VOID OutputDVDCopyrightDescriptor(
 VOID OutputDVDDiskKeyDescriptor(
 	PDVD_DISK_KEY_DESCRIPTOR dvdDiskKey
 ) {
-	OutputMainChannel(fileDisc, dvdDiskKey->DiskKeyData, "DiskKeyData", 0, sizeof(dvdDiskKey->DiskKeyData));
+	OutputMainChannel(fileDisc, dvdDiskKey->DiskKeyData, _T("DiskKeyData"), 0, sizeof(dvdDiskKey->DiskKeyData));
 }
 
 VOID OutputDiscBCADescriptor(
@@ -723,7 +723,7 @@ VOID OutputDVDManufacturerDescriptor(
 	LOG_TYPE type
 ) {
 	OutputMainChannel(type, dvdManufacturer->ManufacturingInformation
-		, "ManufacturingInformation", 0, sizeof(dvdManufacturer->ManufacturingInformation));
+		, _T("ManufacturingInformation"), 0, sizeof(dvdManufacturer->ManufacturingInformation));
 	if (pDisc->DVD.discType != DISC_TYPE_DVD::xboxdvd) {
 		if (!strncmp((LPCCH)&dvdManufacturer->ManufacturingInformation[16], "Nintendo Game Disk", 18)) {
 			pDisc->DVD.discType = DISC_TYPE_DVD::gamecube;
@@ -1906,7 +1906,7 @@ VOID OutputBDPhysicalAddressControl(
 		}
 	}
 	else {
-		OutputMainChannel(fileDisc, lpFormat, "PacData", 0, wFormatLength);
+		OutputMainChannel(fileDisc, lpFormat, _T("PacData"), 0, wFormatLength);
 	}
 }
 

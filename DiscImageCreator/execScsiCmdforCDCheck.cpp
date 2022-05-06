@@ -857,7 +857,7 @@ BOOL ReadAudioCDForCheckingReadInOut(
 
 	for (INT i = 74; -75 <= i; i--) {
 		if (IsThereNonZeroByte(pExtArg, pDevice, pDisc, lpCmd, pDisc->SCSI.nAllLength + i, aBuf, &nLastSectorPos) && nLastSectorPos >= 0) {
-			OutputMainChannel(fileMainInfo, aBuf, "last non-zero byte", pDisc->SCSI.nAllLength + i, CD_RAW_SECTOR_SIZE);
+			OutputMainChannel(fileMainInfo, aBuf, _T("last non-zero byte"), pDisc->SCSI.nAllLength + i, CD_RAW_SECTOR_SIZE);
 			OutputLog(standardOut | fileDisc, "Detected in %#x(%d) of LBA %d %+2d\n", (UINT)nLastSectorPos, nLastSectorPos, pDisc->SCSI.nAllLength, i);
 			nLastSector = i;
 			break;
@@ -875,7 +875,7 @@ BOOL ReadAudioCDForCheckingReadInOut(
 
 	for (INT i = -75; i < 76; i++) {
 		if (IsThereNonZeroByte(pExtArg, pDevice, pDisc, lpCmd, i, aBuf, &n1stSectorPos) && n1stSectorPos >= 0) {
-			OutputMainChannel(fileMainInfo, aBuf, "1st non-zero byte", i, CD_RAW_SECTOR_SIZE);
+			OutputMainChannel(fileMainInfo, aBuf, _T("1st non-zero byte"), i, CD_RAW_SECTOR_SIZE);
 			OutputLog(standardOut | fileDisc, "Detected in %#x(%d) of LBA %d\n", (UINT)n1stSectorPos, n1stSectorPos, i);
 			n1stSector = i;
 			break;
@@ -1076,7 +1076,7 @@ BOOL ReadCDForCheckingReadInOut(
 						}
 						if (x == nLBA - 1) {
 							memcpy(aLastSector, aBuf, CD_RAW_SECTOR_SIZE);
-							OutputMainChannel(fileMainInfo, aLastSector, "Last Sector", nLBA - 1, CD_RAW_SECTOR_SIZE);
+							OutputMainChannel(fileMainInfo, aLastSector, _T("Last Sector"), nLBA - 1, CD_RAW_SECTOR_SIZE);
 						}
 					}
 					LPBYTE lpOutBuf = NULL;
@@ -1809,7 +1809,7 @@ BOOL ReadExeFromFile(
 					szTab[0] = _T('\t');
 					WCHAR wszFileVer[FILE_VERSION_SIZE] = { 0 };
 					OutputResourceDirectory(lpBuf, bufsize, dwResourceVirtualAddress, 0, 0, wszFileVer, szTab);
-					if (wszFileVer[0] != 0 && strcasestr(szFileName, ".EXE")) {
+					if (wszFileVer[0] != 0 && _tcscasestr(szFileName, _T(".EXE"))) {
 						OutputLog(standardOut | fileDisc, " %s: File Version %ls\n", szFileName, wszFileVer);
 					}
 				}
@@ -1829,24 +1829,24 @@ BOOL ReadExeFromFile(
 							UINT uiSizeOf16 = 0;
 							UINT uiSizeOf32 = 0;
 							UINT uiSizeOfNT = 0;
-							OutputMainChannel(fileMainInfo, lpBuf, "SecuROM Header from file", 0, uiSecuromReadSize);
+							OutputMainChannel(fileMainInfo, lpBuf, _T("SecuROM Header from file"), 0, uiSecuromReadSize);
 							OutputSecuRomDllHeader(lpBuf, &uiOfsOf16, &uiOfsOf32, &uiOfsOfNT, &uiSizeOf16, &uiSizeOf32, &uiSizeOfNT);
 
 							fseek(fp, (LONG)uiOfsOf16, SEEK_SET);
 							fread(lpBuf, sizeof(BYTE), (size_t)uiSizeOf16, fp);
-							OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("Sintf16.dll [F:%s]"), __FUNCTION__);
+							OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("Sintf16.dll [F:%s]"), _T(__FUNCTION__));
 							OutputMainChannel(fileMainInfo, lpBuf, NULL, 0, uiSizeOf16);
 							OutputSint16(lpBuf, 0);
 
 							fseek(fp, (LONG)uiOfsOf32, SEEK_SET);
 							fread(lpBuf, sizeof(BYTE), (size_t)uiSizeOf32, fp);
-							OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("Sintf32.dll [F:%s]"), __FUNCTION__);
+							OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("Sintf32.dll [F:%s]"), _T(__FUNCTION__));
 							OutputMainChannel(fileMainInfo, lpBuf, NULL, 0, uiSizeOf32);
 							OutputSint32(lpBuf, 0, uiSizeOf32, FALSE);
 
 							fseek(fp, (LONG)uiOfsOfNT, SEEK_SET);
 							fread(lpBuf, sizeof(BYTE), (size_t)uiSizeOfNT, fp);
-							OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("SintfNT.dll [F:%s]"), __FUNCTION__);
+							OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("SintfNT.dll [F:%s]"), _T(__FUNCTION__));
 							OutputMainChannel(fileMainInfo, lpBuf, NULL, 0, uiSizeOfNT);
 							OutputSintNT(lpBuf, 0, uiSizeOfNT, FALSE);
 						}
@@ -1862,7 +1862,7 @@ BOOL ReadExeFromFile(
 									LONG lSigOfs = GetOfsOfSecuromDllSig(lpBuf, i);
 									if (lSigPos == lSigOfs) {
 										OutputSecuRomDllDescrambledHeader(lpBuf, i);
-										OutputMainChannel(fileMainInfo, lpBuf, "SecuROM Header (descrambled) from file", 0, uiSecuromReadSize);
+										OutputMainChannel(fileMainInfo, lpBuf, _T("SecuROM Header (descrambled) from file"), 0, uiSecuromReadSize);
 										bFound = TRUE;
 										break;
 									}
@@ -2370,7 +2370,7 @@ BOOL ReadCDForCheckingExe(
 							WCHAR wszFileVer[FILE_VERSION_SIZE] = { 0 };
 							OutputResourceDirectory(lpBuf, dwResourceSectorSize, dwResourceVirtualAddress, dwResourceDataOfs, 0, wszFileVer, szTab);
 							if (wszFileVer[0] != 0 && strcasestr(pDisc->PROTECT.pNameForExe[n], ".EXE")) {
-								OutputLog(standardOut | fileDisc, " %s: File Version %ls\n", pDisc->PROTECT.pNameForExe[n], wszFileVer);
+								OutputLog(standardOut | fileDisc, " %hs: File Version %ls\n", pDisc->PROTECT.pNameForExe[n], wszFileVer);
 							}
 						}
 					}
@@ -2407,10 +2407,10 @@ BOOL ReadCDForCheckingExe(
 								UINT uiSizeOf16 = 0;
 								UINT uiSizeOf32 = 0;
 								UINT uiSizeOfNT = 0;
-								OutputMainChannel(fileMainInfo, lpBuf, "SecuROM Header from sector", n1stSector, dwSize);
+								OutputMainChannel(fileMainInfo, lpBuf, _T("SecuROM Header from sector"), n1stSector, dwSize);
 								OutputSecuRomDllHeader(lpBuf, &uiOfsOf16, &uiOfsOf32, &uiOfsOfNT, &uiSizeOf16, &uiSizeOf32, &uiSizeOfNT);
 
-								OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("Sintf16.dll [F:%s]"), __FUNCTION__);
+								OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("Sintf16.dll [F:%s]"), _T(__FUNCTION__));
 								OutputMainChannel(fileMainInfo, lpBuf, NULL, n1stSector, DISC_MAIN_DATA_SIZE);
 								INT nOfsOf16dll = (INT)(uiOfsOf16 - uiOfsOfSecuRomDll) % DISC_MAIN_DATA_SIZE;
 								OutputSint16(lpBuf, nOfsOf16dll);
@@ -2423,7 +2423,7 @@ BOOL ReadCDForCheckingExe(
 									continue;
 								}
 
-								OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("Sintf32.dll [F:%s]"), __FUNCTION__);
+								OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("Sintf32.dll [F:%s]"), _T(__FUNCTION__));
 								OutputMainChannel(fileMainInfo, lpBuf, NULL, n2ndSector, dwSize);
 								INT nOfsOf32dll = (INT)(uiOfsOf32 - uiOfsOfSecuRomDll) % DISC_MAIN_DATA_SIZE;
 								OutputSint32(lpBuf, nOfsOf32dll, dwSize, FALSE);
@@ -2436,7 +2436,7 @@ BOOL ReadCDForCheckingExe(
 									continue;
 								}
 
-								OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("SintfNT.dll [F:%s]"), __FUNCTION__);
+								OutputMainInfoLog(OUTPUT_DHYPHEN_PLUS_STR("SintfNT.dll [F:%s]"), _T(__FUNCTION__));
 								OutputMainChannel(fileMainInfo, lpBuf, NULL, n3rdSector, dwSize);
 								INT nOfsOfNTdll = (INT)(uiOfsOfNT - uiOfsOfSecuRomDll) % DISC_MAIN_DATA_SIZE;
 								OutputSintNT(lpBuf, nOfsOfNTdll, dwSize, FALSE);
@@ -2458,7 +2458,7 @@ BOOL ReadCDForCheckingExe(
 										LONG lSigOfs = GetOfsOfSecuromDllSig(lpBuf, i);
 										if (lSigPos == lSigOfs) {
 											OutputSecuRomDllDescrambledHeader(lpBuf, i);
-											OutputMainChannel(fileMainInfo, lpBuf, "SecuROM Header (descrambled) from sector", pDisc->PROTECT.pExtentPosForExe[n] + j, dwSize);
+											OutputMainChannel(fileMainInfo, lpBuf, _T("SecuROM Header (descrambled) from sector"), pDisc->PROTECT.pExtentPosForExe[n] + j, dwSize);
 											bFound = TRUE;
 											break;
 										}
@@ -2558,7 +2558,7 @@ BOOL ReadCDForSegaDisc(
 		DISC_MAIN_DATA_SIZE, _T(__FUNCTION__), __LINE__)) {
 	}
 	if (!memcmp(buf, "SEGA", 4)) {
-		OutputMainChannel(fileMainInfo, buf, "Sega Header", 0, DISC_MAIN_DATA_SIZE);
+		OutputMainChannel(fileMainInfo, buf, _T("Sega Header"), 0, DISC_MAIN_DATA_SIZE);
 	}
 	return TRUE;
 }
@@ -2580,7 +2580,7 @@ BOOL ReadCDForCheckingPsxRegion(
 		DISC_MAIN_DATA_SIZE, _T(__FUNCTION__), __LINE__)) {
 		return TRUE;
 	}
-	OutputMainChannel(fileMainInfo, buf, "Check PSX Region", 4, 80);
+	OutputMainChannel(fileMainInfo, buf, _T("Check PSX Region"), 4, 80);
 	if (!memcmp(buf, regionPal, sizeof(regionPal))) {
 		return TRUE;
 	}

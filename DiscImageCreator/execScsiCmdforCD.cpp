@@ -979,7 +979,7 @@ BOOL ReadCDAll(
 						pDiscPerSector->data.current[n] ^= scrambled_table[n];
 					}
 					WriteMainChannel(pExecType, pExtArg, pDisc, pDiscPerSector->data.current, nLBA, fpScm);
-					OutputMainChannel(fileMainInfo, pDiscPerSector->data.current, "0xbe for Multi Session", nLBA, CD_RAW_SECTOR_SIZE);
+					OutputMainChannel(fileMainInfo, pDiscPerSector->data.current, _T("0xbe for Multi Session"), nLBA, CD_RAW_SECTOR_SIZE);
 				}
 				else if (pDisc->MAIN.nAdjustSectorNum > 1 && nLBA == pDisc->SCSI.n1stLBAof2ndSession &&
 					((pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK)) {
@@ -991,7 +991,7 @@ BOOL ReadCDAll(
 					AlignColumnSubcode(lpSubcodeRaw, pDiscPerSector->subcode.current);
 					WriteSubChannel(pDisc, pDiscPerSector, lpSubcodeRaw, nLBA, fpSub);
 
-					OutputMainChannel(fileMainInfo, pDiscPerSector->data.current, "0xbe for Multi Session", nLBA, CD_RAW_SECTOR_SIZE);
+					OutputMainChannel(fileMainInfo, pDiscPerSector->data.current, _T("0xbe for Multi Session"), nLBA, CD_RAW_SECTOR_SIZE);
 				}
 				else if (pDisc->MAIN.nAdjustSectorNum < 0 && nLBA == pDisc->MAIN.nFix1stLBAof2ndSession && 
 					(pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == 0) {

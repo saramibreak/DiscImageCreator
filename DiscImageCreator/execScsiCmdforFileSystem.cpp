@@ -51,7 +51,7 @@ BOOL ReadCDFor3DODirectory(
 			DISC_MAIN_DATA_SIZE, _T(__FUNCTION__), __LINE__)) {
 			throw FALSE;
 		}
-		OutputMainChannel(fileMainInfo, lpBuf, "3DO Directory", nLBA, DISC_MAIN_DATA_SIZE);
+		OutputMainChannel(fileMainInfo, lpBuf, _T("3DO Directory"), nLBA, DISC_MAIN_DATA_SIZE);
 
 		UINT ofs = THREEDO_DIR_HEADER_SIZE;
 		UINT dirSize =
@@ -658,7 +658,7 @@ BOOL ReadVolumeDescriptor(
 				}
 				*lpReadVD = TRUE;
 			}
-			OutputMainChannel(fileMainInfo, lpBuf, "Check Volume Descriptor", nTmpLBA, DISC_MAIN_DATA_SIZE);
+			OutputMainChannel(fileMainInfo, lpBuf, _T("Check Volume Descriptor"), nTmpLBA, DISC_MAIN_DATA_SIZE);
 			OutputFsVolumeDescriptor(pExtArg, pDisc, lpBuf, pVolDesc, nTmpLBA++);
 		}
 		else {
@@ -1403,7 +1403,7 @@ BOOL ReadNintendoSystemHeader(
 		FcloseAndNull(*fp);
 		return FALSE;
 	};
-	OutputMainChannel(fileMainInfo, buf, "Disc Header", 0, 1024);
+	OutputMainChannel(fileMainInfo, buf, _T("Disc Header"), 0, 1024);
 	OutputVolDescLog(
 		OUTPUT_DHYPHEN_PLUS_STR("Disc Header")
 		"\t                                 Disc ID: %.1" CHARWIDTH "s\n"
@@ -1437,7 +1437,7 @@ BOOL ReadNintendoFileSystem(
 		FcloseAndNull(fp);
 		return FALSE;
 	};
-	OutputMainChannel(fileMainInfo, buf, "NintendoOpticalDiscFS", 0, 64);
+	OutputMainChannel(fileMainInfo, buf, _T("NintendoOpticalDiscFS"), 0, 64);
 	UINT ofsOfFst = MAKEUINT(MAKEWORD(buf[39], buf[38]), MAKEWORD(buf[37], buf[36]));
 	UINT sizeOfFst = MAKEUINT(MAKEWORD(buf[43], buf[42]), MAKEWORD(buf[41], buf[40]));
 	OutputVolDescLog(
@@ -1474,7 +1474,7 @@ BOOL ReadNintendoFileSystem(
 		FcloseAndNull(fp);
 		return FALSE;
 	};
-	OutputMainChannel(fileMainInfo, buf, "Apploader", 0x2440 / 0x800, 0x20);
+	OutputMainChannel(fileMainInfo, buf, _T("Apploader"), 0x2440 / 0x800, 0x20);
 	OutputVolDescLog(
 		OUTPUT_DHYPHEN_PLUS_STR("Apploader")
 		"\tdate (version) of the apploader: %" CHARWIDTH "s\n"
@@ -1501,7 +1501,7 @@ BOOL ReadNintendoFileSystem(
 		FcloseAndNull(fp);
 		return FALSE;
 	};
-	OutputMainChannel(fileMainInfo, lpBuf, "Root Directory Entry", (INT)ofsOfFst / 0x800, sizeOfFst);
+	OutputMainChannel(fileMainInfo, lpBuf, _T("Root Directory Entry"), (INT)ofsOfFst / 0x800, sizeOfFst);
 	UINT numOfEntries = MAKEUINT(MAKEWORD(lpBuf[11], lpBuf[10]), MAKEWORD(lpBuf[9], lpBuf[8]));
 	OutputVolDescLog(
 		OUTPUT_DHYPHEN_PLUS_STR("Root Directory Entry")
@@ -1605,7 +1605,7 @@ BOOL ReadWiiPartition(
 		FcloseAndNull(fp);
 		return FALSE;
 	};
-	OutputMainChannel(fileMainInfo, buf, "WiiFS", 0x40000 / 0x800, 0x20);
+	OutputMainChannel(fileMainInfo, buf, _T("WiiFS"), 0x40000 / 0x800, 0x20);
 	UINT numOfPartition[4] = {};
 	numOfPartition[0] = MAKEUINT(MAKEWORD(buf[3], buf[2]), MAKEWORD(buf[1], buf[0]));
 	UINT ofsOfPart1 = MAKEUINT(MAKEWORD(buf[7], buf[6]), MAKEWORD(buf[5], buf[4]));
@@ -1647,7 +1647,7 @@ BOOL ReadWiiPartition(
 		FcloseAndNull(fp);
 		return FALSE;
 	};
-	OutputMainChannel(fileMainInfo, buf, "Region setting", 0x4e000 / 0x800, 0x20);
+	OutputMainChannel(fileMainInfo, buf, _T("Region setting"), 0x4e000 / 0x800, 0x20);
 	OutputVolDescLog(
 		OUTPUT_DHYPHEN_PLUS_STR("Region setting")
 		"\t                     Region byte: %u\n"
@@ -1697,7 +1697,7 @@ BOOL ReadWiiPartition(
 				FcloseAndNull(fp);
 				return FALSE;
 			};
-			OutputMainChannel(fileMainInfo, buf, "Partition", (INT)realOfsOfPartion / 0x800, 0x2C0);
+			OutputMainChannel(fileMainInfo, buf, _T("Partition"), (INT)realOfsOfPartion / 0x800, 0x2C0);
 			UINT sigType = MAKEUINT(MAKEWORD(buf[3], buf[2]), MAKEWORD(buf[1], buf[0]));
 			OutputVolDescLog(
 				OUTPUT_DHYPHEN_PLUS_STR("Partition")
@@ -1814,7 +1814,7 @@ BOOL ReadWiiPartition(
 				FcloseAndNull(fp);
 				return FALSE;
 			};
-			OutputMainChannel(fileMainInfo, buf, "Partition", (INT)realOfsOfPartion / 0x800, 0x1E0);
+			OutputMainChannel(fileMainInfo, buf, _T("Partition"), (INT)realOfsOfPartion / 0x800, 0x1E0);
 			sigType = MAKEUINT(MAKEWORD(buf[3], buf[2]), MAKEWORD(buf[1], buf[0]));
 			OutputVolDescLog(
 				OUTPUT_DHYPHEN_PLUS_STR("Partition")
@@ -2111,7 +2111,7 @@ BOOL ReadSACDFileSystem(
 		FreeAndNull(pBuf);
 		return FALSE;
 	}
-	OutputMainChannel(fileMainInfo, lpBuf, "SACD Header", (INT)LBA.AsULong, DISC_MAIN_DATA_SIZE);
+	OutputMainChannel(fileMainInfo, lpBuf, _T("SACD Header"), (INT)LBA.AsULong, DISC_MAIN_DATA_SIZE);
 	typedef struct _Locale {
 		CHAR Language_Code[2];
 		BYTE Character_Set_Code;
@@ -2256,7 +2256,7 @@ BOOL ReadSACDFileSystem(
 			FreeAndNull(pBuf);
 			return FALSE;
 		}
-		OutputMainChannel(fileMainInfo, lpBuf, "Master_Text", (INT)LBA.AsULong, DISC_MAIN_DATA_SIZE);
+		OutputMainChannel(fileMainInfo, lpBuf, _T("Master_Text"), (INT)LBA.AsULong, DISC_MAIN_DATA_SIZE);
 		Master_Text mText = {};
 		mText.Album_Title_Ptr = MAKEWORD(lpBuf[0x11], lpBuf[0x10]);
 		mText.Album_Artist_Ptr = MAKEWORD(lpBuf[0x13], lpBuf[0x12]);
@@ -2386,7 +2386,7 @@ BOOL ReadSACDFileSystem(
 		FreeAndNull(pBuf);
 		return FALSE;
 	}
-	OutputMainChannel(fileMainInfo, lpBuf, "Manufacture", (INT)LBA.AsULong, DISC_MAIN_DATA_SIZE);
+	OutputMainChannel(fileMainInfo, lpBuf, _T("Manufacture"), (INT)LBA.AsULong, DISC_MAIN_DATA_SIZE);
 	OutputVolDescLog(
 		OUTPUT_DHYPHEN_PLUS_STR("Manufacture")
 		"\tManuf_Info_Signature: %.8" CHARWIDTH "s\n", &lpBuf[0]);
@@ -2402,7 +2402,7 @@ BOOL ReadSACDFileSystem(
 			FreeAndNull(pBuf);
 			return FALSE;
 		}
-		OutputMainChannel(fileMainInfo, lpBuf, "Area_TOC", (INT)LBA.AsULong, DISC_MAIN_DATA_SIZE);
+		OutputMainChannel(fileMainInfo, lpBuf, _T("Area_TOC"), (INT)LBA.AsULong, DISC_MAIN_DATA_SIZE);
 
 		typedef struct _Area_TOC {
 			CHAR Area_TOC_Signature[8];	// 0..15 A_TOC_0_Header
@@ -2501,7 +2501,7 @@ BOOL ReadSACDFileSystem(
 				FreeAndNull(pBuf);
 				return FALSE;
 			}
-			OutputMainChannel(fileMainInfo, lpBuf, "Track_List", (INT)LBA.AsULong, DISC_MAIN_DATA_SIZE);
+			OutputMainChannel(fileMainInfo, lpBuf, _T("Track_List"), (INT)LBA.AsULong, DISC_MAIN_DATA_SIZE);
 
 			typedef struct _Track_List {
 				CHAR Track_List_1_Signature[8];
@@ -2545,7 +2545,7 @@ BOOL ReadSACDFileSystem(
 			FreeAndNull(pBuf);
 			return FALSE;
 		}
-		OutputMainChannel(fileMainInfo, lpBuf, "ISRC_and_Genre_List", (INT)LBA.AsULong, DISC_MAIN_DATA_SIZE * 2);
+		OutputMainChannel(fileMainInfo, lpBuf, _T("ISRC_and_Genre_List"), (INT)LBA.AsULong, DISC_MAIN_DATA_SIZE * 2);
 
 		OutputVolDescLog(
 			OUTPUT_DHYPHEN_PLUS_STR("ISRC_and_Genre_List")
@@ -2570,7 +2570,7 @@ BOOL ReadSACDFileSystem(
 				FreeAndNull(pBuf);
 				return FALSE;
 			}
-			OutputMainChannel(fileMainInfo, lpBuf, "Access_List", (INT)LBA.AsULong, DISC_MAIN_DATA_SIZE * 32);
+			OutputMainChannel(fileMainInfo, lpBuf, _T("Access_List"), (INT)LBA.AsULong, DISC_MAIN_DATA_SIZE * 32);
 #pragma pack(push, acc, 1)
 			typedef struct _Main_Acc_List {
 				USHORT Access_Flags;
@@ -2633,7 +2633,7 @@ BOOL ReadSACDFileSystem(
 				FreeAndNull(pBuf);
 				return FALSE;
 			}
-			OutputMainChannel(fileMainInfo, lpBuf, "Track_Text", (INT)LBA.AsULong, DISC_MAIN_DATA_SIZE);
+			OutputMainChannel(fileMainInfo, lpBuf, _T("Track_Text"), (INT)LBA.AsULong, DISC_MAIN_DATA_SIZE);
 
 			typedef struct _Track_Text {
 				CHAR Track_Text_Signature[8];
@@ -2664,7 +2664,7 @@ BOOL ReadSACDFileSystem(
 				FreeAndNull(pBuf);
 				return FALSE;
 			}
-			OutputMainChannel(fileMainInfo, lpBuf, "Title", (INT)LBA.AsULong, DISC_MAIN_DATA_SIZE);
+			OutputMainChannel(fileMainInfo, lpBuf, _T("Title"), (INT)LBA.AsULong, DISC_MAIN_DATA_SIZE);
 			INT nOfs = 0;
 			for (INT i = 0; i < aToc.Last_Track_Number; i++) {
 				nOfs = TTxt.Track_Text_Pos[i] - TTxt.Track_Text_Pos[0];
