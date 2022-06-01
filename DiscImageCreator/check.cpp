@@ -1595,3 +1595,46 @@ BOOL AnalyzeIfoFile(
 	}
 	return bRet;
 }
+
+BOOL IsSjis(
+	LPCH pTmpText,
+	size_t stTxtIdx,
+	size_t stTmpTextLen
+) {
+	BOOL bSjis = TRUE;
+	for (size_t m = 0; m < stTmpTextLen; m += 2) {
+		WORD c = MAKEWORD(*(pTmpText + stTxtIdx + m + 1), *(pTmpText + stTxtIdx + m));
+		if (c < 0x8140 ||
+			(0x8492 < c && c < 0x889f) ||
+			0x9873 < c) {
+			bSjis = FALSE;
+			break;
+		}
+	}
+	return bSjis;
+}
+
+// https://programming-place.net/ppp/contents/c/rev_res/string013.html
+char* find_last_string(const char* s, const char* target)
+{
+	const size_t s_len = strlen(s);
+	const size_t target_len = strlen(target);
+
+	if (s_len < target_len) {
+		return NULL;
+	}
+
+	size_t index = s_len - target_len;
+
+	for (;;) {
+		if (strncmp(&s[index], target, target_len) == 0) {
+			return (char*)&s[index];
+		}
+
+		if (index <= 0) {
+			break;
+		}
+		--index;
+	}
+	return NULL;
+}

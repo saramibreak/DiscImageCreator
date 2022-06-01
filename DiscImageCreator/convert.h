@@ -60,3 +60,10 @@ LPVOID ConvParagraphBoundary(
 UINT PadSizeForVolDesc(
 	UINT uiSize
 );
+
+INT ConvertUnicodeToSjis(
+	LPCH pTmpText,
+	LPCH* bufShiftJis,
+	size_t stTmpTextLen,
+	size_t stTxtIdx
+);

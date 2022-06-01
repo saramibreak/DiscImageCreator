@@ -219,4 +219,12 @@ BOOL ContainsC2Error(
 BOOL AnalyzeIfoFile(
 	PDEVICE pDevice,
 	PDISC pDisc
-	);
+);
+
+BOOL IsSjis(
+	LPCH pTmpText,
+	size_t stTxtIdx,
+	size_t stTmpTextLen
+);
+
+char* find_last_string(const char* s, const char* target);
