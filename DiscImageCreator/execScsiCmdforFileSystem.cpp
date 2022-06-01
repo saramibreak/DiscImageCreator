@@ -185,10 +185,14 @@ BOOL ReadDirectoryRecordDetail(
 	PPATH_TABLE_RECORD pPathTblRec,
 	UINT uiPathTblIdx
 ) {
+#ifdef LATIN1_TEST
+	memcpy(lpBuf, dirTblWithLatin1, sizeof(dirTblWithLatin1));
+#else
 	if (!ExecReadDisc(pExecType, pExtArg, pDevice, pDisc
 		, pCdb, nLBA + nOffset, lpBuf, bufDec, byTransferLen, _T(__FUNCTION__), __LINE__)) {
 		return FALSE;
 	}
+#endif
 	BYTE byRoop = byTransferLen;
 	if (*pExecType == gd) {
 		byRoop = (BYTE)(byRoop - 1);
@@ -331,10 +335,38 @@ BOOL ReadDirectoryRecordDetail(
 					!(lpDirRec[32] == 1 && szCurDirName[0] == 1)) {
 					if ((lpDirRec[25] & 0x02 || (pDisc->SCSI.byFormat == DISK_TYPE_CDI && lpDirRec[25] == 0))) {
 						for (UINT i = 1; i < uiDirPosNum; i++) {
-							if (uiExtentPos == pPathTblRec[i].uiPosOfDir &&
-								!_strnicmp(szCurDirName, pPathTblRec[i].szDirName, MAX_FNAME_FOR_VOLUME)) {
-								pPathTblRec[i].uiDirSize = PadSizeForVolDesc(uiDataLen);
-								break;
+							if (uiExtentPos == pPathTblRec[i].uiPosOfDir) {
+								BOOL bOk = TRUE;
+								if (_strnicmp(szCurDirName, pPathTblRec[i].szDirName, MAX_FNAME_FOR_VOLUME)) {
+									// Check ISO/IEC 8859-1 (aka Latin-1)
+									for (INT j = 0; j < MAX_FNAME_FOR_VOLUME; j++) {
+										UCHAR src = (UCHAR)szCurDirName[j];
+										UCHAR dst = (UCHAR)pPathTblRec[i].szDirName[j];
+										if (dst == '\0') {
+											break;
+										}
+										else if (src != dst) {
+											if (isalpha(dst)) {
+												UCHAR dst2 = islower(dst) ? (UCHAR)(dst - 0x20) : (UCHAR)(dst + 0x20);
+												if (src != dst2) {
+													bOk = FALSE;
+													break;
+												}
+											}
+											else if (0xc0 <= dst) {
+												UCHAR dst2 = src < dst ? (UCHAR)(dst - 0x20) : (UCHAR)(dst + 0x20);
+												if (src != dst2) {
+													bOk = FALSE;
+													break;
+												}
+											}
+										}
+									}
+								}
+								if (bOk) {
+									pPathTblRec[i].uiDirSize = PadSizeForVolDesc(uiDataLen);
+									break;
+								}
 							}
 						}
 					}
@@ -496,6 +528,10 @@ BOOL ReadPathTableRecord(
 	PPATH_TABLE_RECORD pPathTblRec,
 	LPUINT uiDirPosNum
 ) {
+#ifdef LATIN1_TEST
+	uiPathTblPos = 20;
+	uiPathTblSize = 46612;
+#endif
 	BYTE byTransferLen = 1;
 	BYTE byRoop = byTransferLen;
 	DWORD dwBufSize = 0;
@@ -527,10 +563,10 @@ BOOL ReadPathTableRecord(
 			if (uiPathTblSize > pDevice->dwMaxTransferLength) {
 				DWORD uiAdditionalTransferLen = uiPathTblSize / pDevice->dwMaxTransferLength;
 				SetCommandForTransferLength(pExecType, pDevice, pCdb, pDevice->dwMaxTransferLength, &byTransferLen, &byRoop);
-				OutputMainInfoLog("uiPathTblSize: %lu, byTransferLen: %d [L:%d]\n"
-					, pDevice->dwMaxTransferLength, byRoop, __LINE__);
 
 				for (DWORD n = 0; n < uiAdditionalTransferLen; n++) {
+					OutputMainInfoLog("uiPathTblPos: %u, uiPathTblSize: %lu, byTransferLen: %d [L:%d]\n"
+						, uiPathTblPos + nSectorOfs, pDevice->dwMaxTransferLength, byRoop, __LINE__);
 					if (!ExecReadDisc(pExecType, pExtArg, pDevice, pDisc, pCdb
 						, (INT)uiPathTblPos + nSectorOfs, lpBuf + pDevice->dwMaxTransferLength * n, bufDec, byTransferLen, _T(__FUNCTION__), __LINE__)) {
 						throw FALSE;
@@ -544,8 +580,8 @@ BOOL ReadPathTableRecord(
 				SetCommandForTransferLength(pExecType, pDevice, pCdb, dwLastPathTblSize, &byTransferLen, &byRoop);
 				DWORD dwBufOfs = pDevice->dwMaxTransferLength * uiAdditionalTransferLen;
 
-				OutputMainInfoLog(
-					"uiPathTblSize: %lu, byTransferLen: %d [L:%d]\n", dwLastPathTblSize, byRoop, __LINE__);
+				OutputMainInfoLog("uiPathTblPos: %u, uiPathTblSize: %lu, byTransferLen: %d [L:%d]\n"
+					, uiPathTblPos + nSectorOfs, dwLastPathTblSize, byRoop, __LINE__);
 				if (!ExecReadDisc(pExecType, pExtArg, pDevice, pDisc, pCdb
 					, (INT)uiPathTblPos + nSectorOfs, lpBuf + dwBufOfs, bufDec, byTransferLen, _T(__FUNCTION__), __LINE__)) {
 					throw FALSE;
@@ -558,12 +594,16 @@ BOOL ReadPathTableRecord(
 				}
 			}
 			else {
-				OutputMainInfoLog(
-					"uiPathTblSize: %u, byTransferLen: %d [L:%d]\n", uiPathTblSize, byRoop, __LINE__);
+				OutputMainInfoLog("uiPathTblPos: %u, uiPathTblSize: %u, byTransferLen: %d [L:%d]\n"
+					, uiPathTblPos + nSectorOfs, uiPathTblSize, byRoop, __LINE__);
+#ifdef LATIN1_TEST
+				memcpy(lpBuf, pathTblWithLatin1, sizeof(pathTblWithLatin1));
+#else
 				if (!ExecReadDisc(pExecType, pExtArg, pDevice, pDisc, pCdb
 					, (INT)uiPathTblPos + nSectorOfs, lpBuf, bufDec, byTransferLen, _T(__FUNCTION__), __LINE__)) {
 					throw FALSE;
 				}
+#endif
 				for (BYTE i = 0; i < byRoop; i++) {
 					OutputMainChannel(fileMainInfo, lpBuf + DISC_MAIN_DATA_SIZE * i, NULL, (INT)uiPathTblPos + i, DISC_MAIN_DATA_SIZE);
 				}
@@ -773,7 +813,11 @@ BOOL ReadCDForFileSystem(
 				}
 				if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, lpBuf,
 					DISC_MAIN_DATA_SIZE, _T(__FUNCTION__), __LINE__)) {
-					throw FALSE;
+					// some disc occur VENDOR UNIQUE ERROR
+					// http://forum.redump.org/post/101367/#p101367
+					// [FMT] Rainbow Islands: The Story of Bubble Bobble 2: Extra Version
+					// http://redump.org/disc/74148/
+					throw TRUE;
 				}
 				// for MAC pattern 1
 				if (IsDriverDescriptorRecord(lpBuf)) {
