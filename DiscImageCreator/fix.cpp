@@ -1357,7 +1357,7 @@ BOOL FixSubChannel(
 				SetBufferFromTmpSubch(tmpSector.subcode.current, tmpSector.subch.current, TRUE, FALSE);
 				RecalcSubQCrc(pDisc, &tmpSector);
 
-				if (!pDisc->SUB.nCorruptCrcH && !pDisc->SUB.nCorruptCrcL) {
+				if (!pDisc->SUB.nCorruptCrcH && !pDisc->SUB.nCorruptCrcL && tmpSector.subch.next.byAdr == ADR_ENCODES_CURRENT_POSITION) {
 					memcpy(&pDiscPerSector->subcode.current[12], &tmpSector.subcode.current[12], 12);
 					SetTmpSubchFromBuffer(&pDiscPerSector->subch.current, pDiscPerSector->subcode.current);
 					OutputSubErrorWithLBALog("Q fixed using next subQ\n", nLBA, pDiscPerSector->byTrackNum);
