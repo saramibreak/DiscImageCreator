@@ -69,13 +69,6 @@ BOOL OutputHash(
 		if (dwBytesPerSector) {
 			uiSectorSizeOne = (UINT)dwBytesPerSector;
 		}
-		else if (!_tcsncmp(szExt, _T(".iso"), 4) ||
-			!_tcsncmp(szFnameAndExt, _T("SS.bin"), 6) ||
-			!_tcsncmp(szFnameAndExt, _T("PFI.bin"), 7) ||
-			!_tcsncmp(szFnameAndExt, _T("DMI.bin"), 7) ||
-			ui64FileSize % DISC_MAIN_DATA_SIZE == 0) {
-			uiSectorSizeOne = DISC_MAIN_DATA_SIZE;
-		}
 		else {
 			uiSectorSizeOne = CD_RAW_SECTOR_SIZE;
 		}
@@ -119,10 +112,10 @@ BOOL OutputHash(
 	if (CalcEnd(&md5, &sha, digest, Message_Digest)) {
 		if (!_tcsncmp(szExt, _T(".scm"), 4) ||
 			!_tcsncmp(szExt, _T(".img"), 4) ||
-			!_tcsncmp(szFnameAndExt, _T("SS.bin"), 6) ||
-			!_tcsncmp(szFnameAndExt, _T("PFI.bin"), 7) ||
-			!_tcsncmp(szFnameAndExt, _T("DMI.bin"), 7) ||
-			!_tcsncmp(szFnameAndExt, _T("PIC.bin"), 7)
+			find_last_string(szFnameAndExt, _T("_SS.bin")) ||
+			find_last_string(szFnameAndExt, _T("_PFI.bin")) ||
+			find_last_string(szFnameAndExt, _T("_DMI.bin")) ||
+			find_last_string(szFnameAndExt, _T("_PIC.bin"))
 			) {
 #ifndef _DEBUG
 			OutputHashData(g_LogFile.fpDisc, szFnameAndExt,	ui64FileSize, crc32, digest, Message_Digest);
@@ -252,13 +245,10 @@ BOOL OutputRomElement(
 	}
 	else if (*pExecType == dvd || IsXbox(pExecType) || *pExecType == bd || *pExecType == sacd) {
 		if (*pExecType == dvd || *pExecType == xbox) {
-			_tcsncpy(szPath, pszFullPath, _MAX_PATH);
 			if (*pExecType == xbox) {
-				if (!PathRemoveFileSpec(szPath)) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					return FALSE;
-				}
-				if (!PathAppend(szPath, _T("SS.bin"))) {
+				_tcsncpy(szPath, pszFullPath, _MAX_PATH);
+				PathRemoveExtension(szPath);
+				if (!PathAppend(szPath, _T("_SS.bin"))) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 					return FALSE;
 				}
@@ -267,11 +257,9 @@ BOOL OutputRomElement(
 				}
 			}
 
-			if (!PathRemoveFileSpec(szPath)) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				return FALSE;
-			}
-			if (!PathAppend(szPath, _T("PFI.bin"))) {
+			_tcsncpy(szPath, pszFullPath, _MAX_PATH);
+			PathRemoveExtension(szPath);
+			if (!PathAppend(szPath, _T("_PFI.bin"))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				return FALSE;
 			}
@@ -279,11 +267,9 @@ BOOL OutputRomElement(
 				return FALSE;
 			}
 
-			if (!PathRemoveFileSpec(szPath)) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				return FALSE;
-			}
-			if (!PathAppend(szPath, _T("DMI.bin"))) {
+			_tcsncpy(szPath, pszFullPath, _MAX_PATH);
+			PathRemoveExtension(szPath);
+			if (!PathAppend(szPath, _T("_DMI.bin"))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				return FALSE;
 			}
@@ -292,11 +278,9 @@ BOOL OutputRomElement(
 			}
 		}
 		else if (*pExecType == bd) {
-			if (!PathRemoveFileSpec(szPath)) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				return FALSE;
-			}
-			if (!PathAppend(szPath, _T("PIC.bin"))) {
+			_tcsncpy(szPath, pszFullPath, _MAX_PATH);
+			PathRemoveExtension(szPath);
+			if (!PathAppend(szPath, _T("_PIC.bin"))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				return FALSE;
 			}

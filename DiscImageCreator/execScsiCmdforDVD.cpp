@@ -1204,30 +1204,25 @@ BOOL ReadDiscStructure(
 	WORD wEntrySize = (WORD)(wDataSize / sizeof(DVD_STRUCTURE_LIST_ENTRY));
 
 	_TCHAR szPath[_MAX_PATH] = {};
-	_tcsncpy(szPath, pszFullPath, sizeof(szPath) / sizeof(szPath[0]) - 1);
-	if (!PathRemoveFileSpec(szPath)) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return FALSE;
-	}
+	_TCHAR szOutPathPFI[_MAX_PATH] = {};
+	_TCHAR szOutPathDMI[_MAX_PATH] = {};
+	_TCHAR szOutPathPIC[_MAX_PATH] = {};
+	_TCHAR szFnameAndExtPFI[_MAX_FNAME + _MAX_EXT] = {};
+	_TCHAR szFnameAndExtDMI[_MAX_FNAME + _MAX_EXT] = {};
+	_TCHAR szFnameAndExtPIC[_MAX_FNAME + _MAX_EXT] = {};
 	FILE* fpPfi = NULL;
 	FILE* fpDmi = NULL;
 	FILE* fpPic = NULL;
-#ifdef _WIN32
-	CONST _TCHAR PFI[] = _T("\\PFI");
-	CONST _TCHAR DMI[] = _T("\\DMI");
-	CONST _TCHAR PIC[] = _T("\\PIC");
-#else
-	CONST _TCHAR PFI[] = "/PFI";
-	CONST _TCHAR DMI[] = "/DMI";
-	CONST _TCHAR PIC[] = "/PIC";
-#endif
+
 	if (*pExecType == dvd || *pExecType == xbox) {
-		fpPfi = CreateOrOpenFile(szPath, PFI, NULL, NULL, NULL, _T(".bin"), _T("wb"), 0, 0);
+		_tcsncpy(szPath, pszFullPath, sizeof(szPath) / sizeof(szPath[0]) - 1);
+		fpPfi = CreateOrOpenFile(szPath, _T("_PFI"), szOutPathPFI, szFnameAndExtPFI, NULL, _T(".bin"), _T("wb"), 0, 0);
 		if (!fpPfi) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
 		}
-		fpDmi = CreateOrOpenFile(szPath, DMI, NULL, NULL, NULL, _T(".bin"), _T("wb"), 0, 0);
+		_tcsncpy(szPath, pszFullPath, sizeof(szPath) / sizeof(szPath[0]) - 1);
+		fpDmi = CreateOrOpenFile(szPath, _T("_DMI"), szOutPathDMI, szFnameAndExtDMI, NULL, _T(".bin"), _T("wb"), 0, 0);
 		if (!fpDmi) {
 			FcloseAndNull(fpPfi);
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -1235,7 +1230,8 @@ BOOL ReadDiscStructure(
 		}
 	}
 	else if (*pExecType == bd) {
-		fpPic = CreateOrOpenFile(szPath, PIC, NULL, NULL, NULL, _T(".bin"), _T("wb"), 0, 0);
+		_tcsncpy(szPath, pszFullPath, sizeof(szPath) / sizeof(szPath[0]) - 1);
+		fpPic = CreateOrOpenFile(szPath, _T("_PIC"), szOutPathPIC, szFnameAndExtPIC, NULL, _T(".bin"), _T("wb"), 0, 0);
 		if (!fpPic) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
@@ -1386,7 +1382,7 @@ BOOL ReadDiscStructure(
 						fwrite(lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), sizeof(BYTE), DISC_MAIN_DATA_SIZE, fpPfi);
 						CalcHash(&pHash->pHashChunk[pHash->uiIndex].crc32, &pHash->pHashChunk[pHash->uiIndex].md5
 							, &pHash->pHashChunk[pHash->uiIndex].sha, lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), DISC_MAIN_DATA_SIZE);
-						_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, _T("PFI.bin"), 8);
+						_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, szFnameAndExtPFI, _MAX_PATH);
 						pHash->pHashChunk[pHash->uiIndex].ui64FileSize = DISC_MAIN_DATA_SIZE;
 						pHash->uiIndex++;
 						FcloseAndNull(fpPfi);
@@ -1396,7 +1392,7 @@ BOOL ReadDiscStructure(
 						fwrite(lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), sizeof(BYTE), DISC_MAIN_DATA_SIZE, fpDmi);
 						CalcHash(&pHash->pHashChunk[pHash->uiIndex].crc32, &pHash->pHashChunk[pHash->uiIndex].md5
 							, &pHash->pHashChunk[pHash->uiIndex].sha, lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), DISC_MAIN_DATA_SIZE);
-						_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, _T("DMI.bin"), 8);
+						_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, szFnameAndExtDMI, _MAX_PATH);
 						pHash->pHashChunk[pHash->uiIndex].ui64FileSize = DISC_MAIN_DATA_SIZE;
 						pHash->uiIndex++;
 						FcloseAndNull(fpDmi);
@@ -1444,7 +1440,7 @@ BOOL ReadDiscStructure(
 					fwrite(lpFormat, sizeof(BYTE), formatLen.AsUShort, fpPic);
 					CalcHash(&pHash->pHashChunk[pHash->uiIndex].crc32, &pHash->pHashChunk[pHash->uiIndex].md5
 						, &pHash->pHashChunk[pHash->uiIndex].sha, lpFormat, formatLen.AsUShort);
-					_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, _T("PIC.bin"), 8);
+					_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, szFnameAndExtPIC, _MAX_PATH);
 					pHash->pHashChunk[pHash->uiIndex].ui64FileSize = formatLen.AsUShort;
 					pHash->uiIndex++;
 					FcloseAndNull(fpPic);
@@ -1590,14 +1586,12 @@ BOOL ExtractSecuritySector(
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
-#ifdef _WIN32
-	CONST _TCHAR SS[] = _T("\\SS");
-#else
-	CONST CHAR SS[] = "/SS";
-#endif
+	_TCHAR szOutPathSS[_MAX_PATH] = {};
+	_TCHAR szFnameAndExtSS[_MAX_FNAME + _MAX_EXT] = {};
+
 	FILE* fp = NULL;
 	if (NULL == (fp = CreateOrOpenFile(
-		szPath, SS, NULL, NULL, NULL, _T(".bin"), _T("wb"), 0, 0))) {
+		szPath, _T("_SS"), szOutPathSS, szFnameAndExtSS, NULL, _T(".bin"), _T("wb"), 0, 0))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
@@ -1713,7 +1707,7 @@ BOOL ExtractSecuritySector(
 	}
 	CalcHash(&pHash->pHashChunk[pHash->uiIndex].crc32, &pHash->pHashChunk[pHash->uiIndex].md5
 		, &pHash->pHashChunk[pHash->uiIndex].sha, buf, DISC_MAIN_DATA_SIZE);
-	_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, _T("SS.bin"), 7);
+	_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, szFnameAndExtSS, _MAX_PATH);
 	pHash->pHashChunk[pHash->uiIndex].ui64FileSize = DISC_MAIN_DATA_SIZE;
 	pHash->uiIndex++;
 	FcloseAndNull(fp);
