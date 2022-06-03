@@ -1382,7 +1382,7 @@ BOOL ReadDiscStructure(
 						fwrite(lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), sizeof(BYTE), DISC_MAIN_DATA_SIZE, fpPfi);
 						CalcHash(&pHash->pHashChunk[pHash->uiIndex].crc32, &pHash->pHashChunk[pHash->uiIndex].md5
 							, &pHash->pHashChunk[pHash->uiIndex].sha, lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), DISC_MAIN_DATA_SIZE);
-						_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, szFnameAndExtPFI, _MAX_PATH);
+						_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, szFnameAndExtPFI, _MAX_FNAME + _MAX_EXT);
 						pHash->pHashChunk[pHash->uiIndex].ui64FileSize = DISC_MAIN_DATA_SIZE;
 						pHash->uiIndex++;
 						FcloseAndNull(fpPfi);
@@ -1392,7 +1392,7 @@ BOOL ReadDiscStructure(
 						fwrite(lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), sizeof(BYTE), DISC_MAIN_DATA_SIZE, fpDmi);
 						CalcHash(&pHash->pHashChunk[pHash->uiIndex].crc32, &pHash->pHashChunk[pHash->uiIndex].md5
 							, &pHash->pHashChunk[pHash->uiIndex].sha, lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), DISC_MAIN_DATA_SIZE);
-						_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, szFnameAndExtDMI, _MAX_PATH);
+						_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, szFnameAndExtDMI, _MAX_FNAME + _MAX_EXT);
 						pHash->pHashChunk[pHash->uiIndex].ui64FileSize = DISC_MAIN_DATA_SIZE;
 						pHash->uiIndex++;
 						FcloseAndNull(fpDmi);
@@ -1440,7 +1440,7 @@ BOOL ReadDiscStructure(
 					fwrite(lpFormat, sizeof(BYTE), formatLen.AsUShort, fpPic);
 					CalcHash(&pHash->pHashChunk[pHash->uiIndex].crc32, &pHash->pHashChunk[pHash->uiIndex].md5
 						, &pHash->pHashChunk[pHash->uiIndex].sha, lpFormat, formatLen.AsUShort);
-					_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, szFnameAndExtPIC, _MAX_PATH);
+					_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, szFnameAndExtPIC, _MAX_FNAME + _MAX_EXT);
 					pHash->pHashChunk[pHash->uiIndex].ui64FileSize = formatLen.AsUShort;
 					pHash->uiIndex++;
 					FcloseAndNull(fpPic);
@@ -1707,7 +1707,7 @@ BOOL ExtractSecuritySector(
 	}
 	CalcHash(&pHash->pHashChunk[pHash->uiIndex].crc32, &pHash->pHashChunk[pHash->uiIndex].md5
 		, &pHash->pHashChunk[pHash->uiIndex].sha, buf, DISC_MAIN_DATA_SIZE);
-	_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, szFnameAndExtSS, _MAX_PATH);
+	_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, szFnameAndExtSS, _MAX_FNAME + _MAX_EXT);
 	pHash->pHashChunk[pHash->uiIndex].ui64FileSize = DISC_MAIN_DATA_SIZE;
 	pHash->uiIndex++;
 	FcloseAndNull(fp);

@@ -164,7 +164,7 @@ VOID WriteCcdForDiscCatalog(
 		, pDisc->SUB.szCatalog, sizeof(pDisc->SUB.szCatalog) / sizeof(pDisc->SUB.szCatalog[0])
 		, szCatalog, sizeof(szCatalog) / sizeof(szCatalog[0]));
 #else
-	strncpy(szCatalog, pDisc->SUB.szCatalog, sizeof(szCatalog) / sizeof(szCatalog[0]) - 1);
+	strncpy(szCatalog, pDisc->SUB.szCatalog, sizeof(szCatalog) / sizeof(szCatalog[0]));
 #endif
 	if (fpCcd) {
 		_ftprintf(fpCcd, _T("CATALOG=%s\n"), szCatalog);
@@ -464,7 +464,7 @@ VOID WriteCueForFirst(
 			, pDisc->SUB.szCatalog, sizeof(pDisc->SUB.szCatalog) / sizeof(pDisc->SUB.szCatalog[0])
 			, szCatalog, sizeof(szCatalog) / sizeof(szCatalog[0]));
 #else
-		strncpy(szCatalog, pDisc->SUB.szCatalog, sizeof(szCatalog) / sizeof(szCatalog[0]) - 1);
+		strncpy(szCatalog, pDisc->SUB.szCatalog, sizeof(szCatalog) / sizeof(szCatalog[0]));
 #endif
 		_ftprintf(fpCue, _T("CATALOG %s\n"), szCatalog);
 	}

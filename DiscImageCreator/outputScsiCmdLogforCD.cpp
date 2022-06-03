@@ -653,7 +653,7 @@ VOID OutputResourceDirectory(
 				return;
 			}
 			OutputVolDescLog(
-				"%s\t                 Name: %08lx (%hs)\n"
+				"%s\t                 Name: %08lx (%s)\n"
 				, pTab, dir->Name, &lpBuf[dwTmpOfs]
 			);
 		}
@@ -1517,7 +1517,7 @@ VOID OutputCDSubToLog(
 		MultiByteToWideChar(CP_ACP, 0
 			, pDisc->SUB.szCatalog, sizeof(pDisc->SUB.szCatalog), szCatalog, sizeof(szCatalog));
 #else
-		strncpy(szCatalog, pDisc->SUB.szCatalog, sizeof(szCatalog) / sizeof(szCatalog[0]) - 1);
+		strncpy(szCatalog, pDisc->SUB.szCatalog, sizeof(szCatalog) / sizeof(szCatalog[0]));
 #endif
 		OutputSubReadableLog(
 			"MediaCatalogNumber [%13s], AMSF[     :%02x]", szCatalog, pDiscPerSector->subcode.current[21]);

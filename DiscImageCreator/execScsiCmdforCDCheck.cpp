@@ -1303,7 +1303,7 @@ BOOL ReadCDForCheckingSubQAdr(
 				else if (!pDisc->SUB.byCatalog) {
 					SetMCNToString(pDisc, pDiscPerSector->subcode.current, szCatalog, FALSE);
 					if (!strncmp(szTmpCatalog, szCatalog, sizeof(szTmpCatalog) / sizeof(szTmpCatalog[0]))) {
-						strncpy(pDisc->SUB.szCatalog, szCatalog, sizeof(pDisc->SUB.szCatalog) / sizeof(pDisc->SUB.szCatalog[0]) - 1);
+						strncpy(pDisc->SUB.szCatalog, szCatalog, sizeof(pDisc->SUB.szCatalog) / sizeof(pDisc->SUB.szCatalog[0]));
 						pDisc->SUB.byCatalog = (BYTE)bMCN;
 						OutputCDSub96Align(fileDisc, pDiscPerSector->subcode.current, nLBA);
 						OutputDiscLog("\tMCN: [%" CHARWIDTH "s]\n", szCatalog);
@@ -1332,7 +1332,7 @@ BOOL ReadCDForCheckingSubQAdr(
 				else if (!pDisc->SUB.lpISRCList[byIdxOfTrack]) {
 					SetISRCToString(pDisc, pDiscPerSector, szISRC, FALSE);
 					if (!strncmp(szTmpISRC, szISRC, sizeof(szISRC) / sizeof(szISRC[0]))) {
-						strncpy(pDisc->SUB.pszISRC[byIdxOfTrack], szISRC, META_ISRC_SIZE - 1);
+						strncpy(pDisc->SUB.pszISRC[byIdxOfTrack], szISRC, META_ISRC_SIZE);
 						pDisc->SUB.lpISRCList[byIdxOfTrack] = bISRC;
 						OutputCDSub96Align(fileDisc, pDiscPerSector->subcode.current, nLBA);
 						OutputDiscLog(
@@ -1359,7 +1359,7 @@ BOOL ReadCDForCheckingSubQAdr(
 			else if (!pDisc->SUB.byAdr6) {
 				SetAdr6ToString(pDisc, pDiscPerSector->subcode.current, szAdr6, FALSE);
 				if (!strncmp(szTmpAdr6, szAdr6, sizeof(szTmpAdr6) / sizeof(szTmpAdr6[0]))) {
-					strncpy(pDisc->SUB.szAdr6, szAdr6, sizeof(pDisc->SUB.szAdr6) / sizeof(pDisc->SUB.szAdr6[0]) - 1);
+					strncpy(pDisc->SUB.szAdr6, szAdr6, sizeof(pDisc->SUB.szAdr6) / sizeof(pDisc->SUB.szAdr6[0]));
 					pDisc->SUB.byAdr6 = (BYTE)bAdr6;
 				}
 			}
@@ -2370,7 +2370,7 @@ BOOL ReadCDForCheckingExe(
 							WCHAR wszFileVer[FILE_VERSION_SIZE] = { 0 };
 							OutputResourceDirectory(lpBuf, dwResourceSectorSize, dwResourceVirtualAddress, dwResourceDataOfs, 0, wszFileVer, szTab);
 							if (wszFileVer[0] != 0 && strcasestr(pDisc->PROTECT.pNameForExe[n], ".EXE")) {
-								OutputLog(standardOut | fileDisc, " %hs: File Version %ls\n", pDisc->PROTECT.pNameForExe[n], wszFileVer);
+								OutputLog(standardOut | fileDisc, " %s: File Version %ls\n", pDisc->PROTECT.pNameForExe[n], wszFileVer);
 							}
 						}
 					}

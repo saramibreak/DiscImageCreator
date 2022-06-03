@@ -226,7 +226,7 @@ INT ConvertUnicodeToSjis(
 	WCHAR tmp = MAKEWORD(pTmpText[stTxtIdx], pTmpText[stTxtIdx + 1]);
 	// 0x3000 is the starting position of CJK Symbols and Punctuation
 	// 0x4e00 is the starting position of CJK unified ideographs of unicode
-	if (0x3000 <= tmp && tmp < 0x3100 || 0x4e00 <= tmp && tmp < 0x8140) {
+	if ((0x3000 <= tmp && tmp < 0x3100) || (0x4e00 <= tmp && tmp < 0x8140)) {
 		lengthSJis = WideCharToMultiByte(CP_THREAD_ACP, 0, (LPWCH)(pTmpText + stTxtIdx), -1, NULL, 0, NULL, NULL);
 		*bufShiftJis = (LPCH)calloc((size_t)lengthSJis, sizeof(CHAR));
 		lengthSJis = WideCharToMultiByte(CP_THREAD_ACP, 0

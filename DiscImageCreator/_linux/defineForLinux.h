@@ -53,6 +53,19 @@ typedef long long LONG64, *PLONG64;
 typedef unsigned long long ULONG64, *PULONG64;
 typedef unsigned long long DWORD64, *PDWORD64;
 
+// from WinNls.h
+//
+//  Code Page Default Values.
+//
+#define CP_ACP                    0           // default to ANSI code page
+#define CP_OEMCP                  1           // default to OEM  code page
+#define CP_MACCP                  2           // default to MAC  code page
+#define CP_THREAD_ACP             3           // current thread's ANSI code page
+#define CP_SYMBOL                 42          // SYMBOL translations
+
+#define CP_UTF7                   65000       // UTF-7 translation
+#define CP_UTF8                   65001       // UTF-8 translation
+
 // from WinDef.h
 typedef unsigned long ULONG;
 typedef ULONG *PULONG;
@@ -2229,9 +2242,6 @@ typedef struct _AACS_READ_BINDING_NONCE {
 #define __wchar_t wchar_t
 
 #define _strnicmp strncasecmp
-
-
-#define CP_ACP 1
 
 #define NO_ERROR 0L
 
