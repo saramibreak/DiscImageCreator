@@ -146,7 +146,7 @@ VOID AdjustOfs(
 	}
 }
 
-BOOL IsValidExtentAndDataLength(
+BOOL IsValidExtent(
 	LPBYTE lpDirRec,
 	INT nDirOfs,
 	UINT uiPaddingSize
@@ -154,15 +154,9 @@ BOOL IsValidExtentAndDataLength(
 	if (lpDirRec[nDirOfs + uiPaddingSize + 2] == lpDirRec[nDirOfs + uiPaddingSize + 9] &&
 		lpDirRec[nDirOfs + uiPaddingSize + 3] == lpDirRec[nDirOfs + uiPaddingSize + 8] &&
 		lpDirRec[nDirOfs + uiPaddingSize + 4] == lpDirRec[nDirOfs + uiPaddingSize + 7] &&
-		lpDirRec[nDirOfs + uiPaddingSize + 5] == lpDirRec[nDirOfs + uiPaddingSize + 6] &&
-		lpDirRec[nDirOfs + uiPaddingSize + 10] == lpDirRec[nDirOfs + uiPaddingSize + 17] &&
-		lpDirRec[nDirOfs + uiPaddingSize + 11] == lpDirRec[nDirOfs + uiPaddingSize + 16] &&
-		lpDirRec[nDirOfs + uiPaddingSize + 12] == lpDirRec[nDirOfs + uiPaddingSize + 15] &&
-		lpDirRec[nDirOfs + uiPaddingSize + 13] == lpDirRec[nDirOfs + uiPaddingSize + 14]) {
+		lpDirRec[nDirOfs + uiPaddingSize + 5] == lpDirRec[nDirOfs + uiPaddingSize + 6]) {
 		if (!(lpDirRec[nDirOfs + uiPaddingSize + 2] == 0 && lpDirRec[nDirOfs + uiPaddingSize + 3] == 0 &&
-			lpDirRec[nDirOfs + uiPaddingSize + 4] == 0 && lpDirRec[nDirOfs + uiPaddingSize + 5] == 0) &&
-			!(lpDirRec[nDirOfs + uiPaddingSize + 10] == 0 && lpDirRec[nDirOfs + uiPaddingSize + 11] == 0 &&
-				lpDirRec[nDirOfs + uiPaddingSize + 12] == 0 && lpDirRec[nDirOfs + uiPaddingSize + 13] == 0)) {
+			lpDirRec[nDirOfs + uiPaddingSize + 4] == 0 && lpDirRec[nDirOfs + uiPaddingSize + 5] == 0)) {
 			return TRUE;
 		}
 	}
@@ -274,48 +268,51 @@ BOOL ReadDirectoryRecordDetail(
 					pDisc->DVD.protect = cppm;
 				}
 				UINT uiPaddingSize = 0;
+#ifdef TEST_INCORRECT_DIR_RECORD
+				// The Shooting Love: XII Stag & Trizeal [DVD] (Japan)
+				// 0170 :                          3C 00 91 A4 3D 00 00 3D   1.......<...=..=
+				// 0180 : A4 91 24 72 01 00 00 01  72 24 6A 03 10 01 31 2C   ..$r....r$j...1,
+				// 0190 : 24 00 00 00 01 00 00 01  03 00 3B 31 00 00 00 00   $.........;1....
+				// 01A0 : 00 00 3C 00 C0 A4 3D 00  00 3D A4 C0 A4 16 08 00   ..<...=..=......
+				// 01B0 : 00 08 16 A4
+				lpDirRec[0] = 0x3c; lpDirRec[1] = 0x00; lpDirRec[2] = 0x91; lpDirRec[3] = 0xa4;
+				lpDirRec[4] = 0x3d; lpDirRec[5] = 0x00; lpDirRec[6] = 0x00; lpDirRec[7] = 0x3d;
+				lpDirRec[8] = 0xa4; lpDirRec[9] = 0x91; lpDirRec[10] = 0x24; lpDirRec[11] = 0x72;
+				lpDirRec[12] = 0x01; lpDirRec[13] = 0x00; lpDirRec[14] = 0x00; lpDirRec[15] = 0x01;
+				lpDirRec[16] = 0x72; lpDirRec[17] = 0x24; lpDirRec[18] = 0x6a; lpDirRec[19] = 0x03;
+				lpDirRec[20] = 0x10; lpDirRec[21] = 0x01; lpDirRec[22] = 0x31; lpDirRec[23] = 0x2c;
+				lpDirRec[24] = 0x24; lpDirRec[25] = 0x00; lpDirRec[26] = 0x00; lpDirRec[27] = 0x00;
+				lpDirRec[28] = 0x01; lpDirRec[29] = 0x00; lpDirRec[30] = 0x00; lpDirRec[31] = 0x01;
+				lpDirRec[32] = 0x03; lpDirRec[33] = 0x00; lpDirRec[34] = 0x3b; lpDirRec[35] = 0x31;
+				lpDirRec[36] = 0x00; lpDirRec[37] = 0x00; lpDirRec[38] = 0x00; lpDirRec[39] = 0x00;
+				lpDirRec[40] = 0x00; lpDirRec[41] = 0x00; lpDirRec[42] = 0x3c; lpDirRec[43] = 0x00;
+				lpDirRec[44] = 0xc0; lpDirRec[45] = 0xa4; lpDirRec[46] = 0x3d; lpDirRec[47] = 0x00;
+				lpDirRec[48] = 0x00; lpDirRec[49] = 0x3d; lpDirRec[50] = 0xa4; lpDirRec[51] = 0xc0;
+				lpDirRec[52] = 0xa4; lpDirRec[53] = 0x16; lpDirRec[54] = 0x08; lpDirRec[55] = 0x00;
+				lpDirRec[56] = 0x00; lpDirRec[57] = 0x08; lpDirRec[58] = 0x16; lpDirRec[59] = 0xa4;
+#endif
 				INT nDirOfs = 33 + lpDirRec[32];
 				if (lpDirRec[32] % 2 == 0) {
 					nDirOfs++;
 				}
 				if (nDirOfs < lpDirRec[0]) {
 					OutputVolDescLog("LBA %d, Check if the directory record length (%u) is really correct -> ", nLBA, lpDirRec[0]);
-#if 0
-					lpDirRec[0] = 0x3c; lpDirRec[1] = 0x00; lpDirRec[2] = 0x91; lpDirRec[3] = 0xa4;
-					lpDirRec[4] = 0x3d; lpDirRec[5] = 0x00; lpDirRec[6] = 0x00; lpDirRec[7] = 0x3d;
-					lpDirRec[8] = 0xa4; lpDirRec[9] = 0x91; lpDirRec[10] = 0x24; lpDirRec[11] = 0x72;
-					lpDirRec[12] = 0x01; lpDirRec[13] = 0x00; lpDirRec[14] = 0x00; lpDirRec[15] = 0x01;
-					lpDirRec[16] = 0x72; lpDirRec[17] = 0x24; lpDirRec[18] = 0x6a; lpDirRec[19] = 0x03;
-					lpDirRec[20] = 0x10; lpDirRec[21] = 0x01; lpDirRec[22] = 0x31; lpDirRec[23] = 0x2c;
-					lpDirRec[24] = 0x24; lpDirRec[25] = 0x00; lpDirRec[26] = 0x00; lpDirRec[27] = 0x00;
-					lpDirRec[28] = 0x01; lpDirRec[29] = 0x00; lpDirRec[30] = 0x00; lpDirRec[31] = 0x01;
-					lpDirRec[32] = 0x03; lpDirRec[33] = 0x00; lpDirRec[34] = 0x3b; lpDirRec[35] = 0x31;
-					lpDirRec[36] = 0x00; lpDirRec[37] = 0x00; lpDirRec[38] = 0x00; lpDirRec[39] = 0x00;
-					lpDirRec[40] = 0x00; lpDirRec[41] = 0x00; lpDirRec[42] = 0x3c; lpDirRec[43] = 0x00;
-					lpDirRec[44] = 0xc0; lpDirRec[45] = 0xa4; lpDirRec[46] = 0x3d; lpDirRec[47] = 0x00;
-					lpDirRec[48] = 0x00; lpDirRec[49] = 0x3d; lpDirRec[50] = 0xa4; lpDirRec[51] = 0xc0;
-					lpDirRec[52] = 0xa4; lpDirRec[53] = 0x16; lpDirRec[54] = 0x08; lpDirRec[55] = 0x00;
-					lpDirRec[56] = 0x00; lpDirRec[57] = 0x08; lpDirRec[58] = 0x16; lpDirRec[59] = 0xa4;
-					nDirOfs = 33 + lpDirRec[32];
-					if (lpDirRec[32] % 2 == 0) {
-						nDirOfs++;
-					}
-#endif
-					// Incorrect directory record length
-					// The Shooting Love: XII Stag & Trizeal [DVD] (Japan)
-					// 0170 :                          3C 00 91 A4 3D 00 00 3D   1.......<...=..=
-					// 0180 : A4 91 24 72 01 00 00 01  72 24 6A 03 10 01 31 2C   ..$r....r$j...1,
-					// 0190 : 24 00 00 00 01 00 00 01  03 00 3B 31 00 00 00 00   $.........;1....
-					// 01A0 : 00 00 3C 00 C0 A4 3D 00  00 3D A4 C0 A4 16 08 00   ..<...=..=......
-					// 01B0 : 00 08 16 A4
+					// Check incorrect directory record length
 					LPBYTE lpNextDirRec = lpBuf + uiOfs + lpDirRec[0];
-					if (IsValidExtentAndDataLength(lpNextDirRec, 0, 0)) {
+					BOOL bAllZero = TRUE;
+					for (INT a = 0; a < 32; a++) {
+						if (lpNextDirRec[a] != 0) {
+							bAllZero = FALSE;
+							break;
+						}
+					}
+					if (IsValidExtent(lpNextDirRec, 0, 0) || bAllZero) {
 						OutputVolDescLog("correct\n");
 						uiOfs += lpDirRec[0];
 					}
 					else {
 						for (; nDirOfs + uiPaddingSize < lpDirRec[0];) {
-							if (IsValidExtentAndDataLength(lpDirRec, nDirOfs, uiPaddingSize)) {
+							if (IsValidExtent(lpDirRec, nDirOfs, uiPaddingSize)) {
 								OutputVolDescLog("incorrect. Fixed it to %u\n", nDirOfs + uiPaddingSize);
 								break;
 							}
