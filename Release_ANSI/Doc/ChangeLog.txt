@@ -793,3 +793,10 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - fixed: output SecuROM 4.7x
 - fixed: output SS log of xbox/xbox 360 (use version, not filesize)
 - fixed: transfer length of the disk dumping
+
+*2022-06-06
+- added: check Latin-1 character when reading DirectoryRecord
+- added: support CD-TEXT with Unicode
+- changed: PFI.bin to (fname)_PFI.bin and DMI, SS, PIC are also the same
+- fixed: when subQ is fixed, if the adr of next subQ is not 1, prev subQ is used
+- fixed: allow "Data Length 0" (for some linux and amiga disc)
