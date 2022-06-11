@@ -948,7 +948,7 @@ VOID SetAndOutputTocCDText(
 			if (pDesc[j].TrackNumber == 0) {
 				BYTE ch = pDesc[j].Text[0];
 				OutputDiscLog(
-					"\t         Charactor Code for this BLOCK: 0x%02x ", ch);
+					"\t         Character code for this BLOCK: 0x%02x ", ch);
 				switch (ch) {
 				case 0x00:
 					OutputDiscLog("(ISO/IEC 8859-1 [Latin-1])\n");
