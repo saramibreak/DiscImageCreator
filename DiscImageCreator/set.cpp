@@ -1298,6 +1298,8 @@ VOID SetTrackAttribution(
 		else {
 			tmpCurrentTrackNum = pDiscPerSector->subch.prev.byTrackNum;
 			tmpCurrentIndex = pDiscPerSector->subch.prev.byIndex;
+			OutputSubInfoWithLBALog("Set Track[%02d], Index[%02d] using prev subchannel\n"
+				, nLBA, tmpCurrentTrackNum, pDiscPerSector->subch.prev.byTrackNum, pDiscPerSector->subch.prev.byIndex);
 		}
 	}
 	if (0 <= nLBA && nLBA < pDisc->SCSI.nAllLength &&
@@ -1318,10 +1320,14 @@ VOID SetTrackAttribution(
 				tmpPrevTrackNum = pDiscPerSector->subch.current.byTrackNum;
 				tmpPrevIndex = pDiscPerSector->subch.current.byIndex;
 				pDiscPerSector->bNextTrk = FALSE;
+				OutputSubInfoWithLBALog("Set PrevTrack[%02d], PrevIndex[%02d] using current subchannel\n"
+					, nLBA, tmpCurrentTrackNum, pDiscPerSector->subch.prevPrev.byTrackNum, pDiscPerSector->subch.prevPrev.byIndex);
 			}
 			else {
 				tmpPrevTrackNum = pDiscPerSector->subch.prevPrev.byTrackNum;
 				tmpPrevIndex = pDiscPerSector->subch.prevPrev.byIndex;
+				OutputSubInfoWithLBALog("Set PrevTrack[%02d], PrevIndex[%02d] using prevPrev subchannel\n"
+					, nLBA, tmpCurrentTrackNum, pDiscPerSector->subch.prevPrev.byTrackNum, pDiscPerSector->subch.prevPrev.byIndex);
 			}
 		}
 
@@ -1377,11 +1383,13 @@ VOID SetTrackAttribution(
 						(UINT)pDisc->SCSI.lp1stLBAListOnToc[tIdx], tmpCurrentIndex);
 
 					pDisc->SUB.lp1stLBAListOnSub[tIdx][1] = pDisc->SCSI.lp1stLBAListOnToc[tIdx];
-					if (pDisc->SUB.lp1stLBAListOnSub[tIdx][0] == pDisc->SUB.lp1stLBAListOnSub[tIdx][1]) {
+					if (pDisc->SUB.lp1stLBAListOnSub[tIdx][0] >= pDisc->SUB.lp1stLBAListOnSub[tIdx][1]) {
+						OutputSubInfoWithLBALog("Reset pDisc->SUB.lp1stLBAListOnSub[tIdx][0] (changed track sector)\n", nLBA, tmpCurrentTrackNum);
 						pDisc->SUB.lp1stLBAListOnSub[tIdx][0] = -1;
 					}
 					pDisc->SUB.lp1stLBAListOnSubSync[tIdx][1] = nLBA;
-					if (pDisc->SUB.lp1stLBAListOnSubSync[tIdx][0] == pDisc->SUB.lp1stLBAListOnSubSync[tIdx][1]) {
+					if (pDisc->SUB.lp1stLBAListOnSubSync[tIdx][0] >= pDisc->SUB.lp1stLBAListOnSubSync[tIdx][1]) {
+						OutputSubInfoWithLBALog("Reset pDisc->SUB.lp1stLBAListOnSubSync[tIdx][0] (changed track sector)\n", nLBA, tmpCurrentTrackNum);
 						pDisc->SUB.lp1stLBAListOnSubSync[tIdx][0] = -1;
 					}
 					if (*pExecType != gd && *pExecType != swap) {
@@ -1462,14 +1470,16 @@ VOID SetTrackAttribution(
 					, nLBA, tmpCurrentTrackNum, tmpPrevIndex, tmpCurrentIndex);
 
 				pDisc->SUB.lp1stLBAListOnSub[tIdx][1] = pDisc->SCSI.lp1stLBAListOnToc[tIdx];
-				if (pDisc->SUB.lp1stLBAListOnSub[tIdx][0] == pDisc->SUB.lp1stLBAListOnSub[tIdx][1]) {
+				if (pDisc->SUB.lp1stLBAListOnSub[tIdx][0] >= pDisc->SUB.lp1stLBAListOnSub[tIdx][1]) {
 					// Crow, The - Original Motion Picture Soundtrack (82519-2)
 					// LBA 108975, Track[06], Subchannel & TOC isn't sync. LBA on TOC: 108972, prevIndex[00]
+					OutputSubInfoWithLBALog("Reset pDisc->SUB.lp1stLBAListOnSub[tIdx][0] (changed index sector)\n", nLBA, tmpCurrentTrackNum);
 					pDisc->SUB.lp1stLBAListOnSub[tIdx][0] = -1;
 				}
 
 				pDisc->SUB.lp1stLBAListOnSubSync[tIdx][1] = nLBA;
-				if (pDisc->SUB.lp1stLBAListOnSubSync[tIdx][0] == pDisc->SUB.lp1stLBAListOnSubSync[tIdx][1]) {
+				if (pDisc->SUB.lp1stLBAListOnSubSync[tIdx][0] >= pDisc->SUB.lp1stLBAListOnSubSync[tIdx][1]) {
+					OutputSubInfoWithLBALog("Reset pDisc->SUB.lp1stLBAListOnSubSync[tIdx][0] (changed index sector)\n", nLBA, tmpCurrentTrackNum);
 					pDisc->SUB.lp1stLBAListOnSubSync[tIdx][0] = -1;
 				}
 			}
@@ -2308,12 +2318,8 @@ VOID UpdateTmpSubch(
 	PDISC_PER_SECTOR pDiscPerSector
 ) {
 	pDiscPerSector->subch.prevPrev.byP = pDiscPerSector->subch.prev.byP;
-	pDiscPerSector->subch.prev.byP = pDiscPerSector->subch.current.byP;
-	// TODO: Doesn't need?
-	if (pDiscPerSector->subch.prev.byIndex == 0 && pDiscPerSector->subch.prev.nRelativeTime == 0) {
-		pDiscPerSector->subch.prev.byIndex = 1;
-	}
 	pDiscPerSector->subch.prevPrev.byCtl = pDiscPerSector->subch.prev.byCtl;
+
 	if (pDiscPerSector->subch.prev.byAdr != ADR_ENCODES_MEDIA_CATALOG &&
 		pDiscPerSector->subch.prev.byAdr != ADR_ENCODES_ISRC) {
 		pDiscPerSector->subch.prevPrev.byAdr = pDiscPerSector->subch.prev.byAdr;
@@ -2323,10 +2329,12 @@ VOID UpdateTmpSubch(
 	pDiscPerSector->subch.prevPrev.byIndex = pDiscPerSector->subch.prev.byIndex;
 	pDiscPerSector->subch.prevPrev.nAbsoluteTime = pDiscPerSector->subch.prev.nAbsoluteTime;
 
+	pDiscPerSector->subch.prev.byP = pDiscPerSector->subch.current.byP;
 	pDiscPerSector->subch.prev.byCtl = pDiscPerSector->subch.current.byCtl;
 	pDiscPerSector->subch.prev.byAdr = pDiscPerSector->subch.current.byAdr;
 	pDiscPerSector->subch.prev.byTrackNum = pDiscPerSector->subch.current.byTrackNum;
 	pDiscPerSector->subch.prev.byIndex = pDiscPerSector->subch.current.byIndex;
+
 	if (pDiscPerSector->bLibCrypt || pDiscPerSector->bSecuRom) {
 		pDiscPerSector->subch.prev.nRelativeTime++;
 	}
