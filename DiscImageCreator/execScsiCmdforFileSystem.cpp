@@ -773,9 +773,14 @@ BOOL ReadCDForFileSystem(
 						}
 					}
 					if (pDisc->PROTECT.byExist) {
-						OutputLog(standardOut | fileDisc, "Detected a protected file [%" CHARWIDTH "s]. LBA %d to %d"
-							, pDisc->PROTECT.name[0], pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0]
-							, pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] + pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0]);
+						if (pDisc->PROTECT.byExist == securomTmp && strncmp(pDisc->PROTECT.name[0], ".cms_t", 6) && strncmp(pDisc->PROTECT.name[0], ".cms_d", 6)) {
+							OutputLog(standardOut | fileDisc, "Detected unknown string [%" CHARWIDTH "s], check if this disc has SecuROM", pDisc->PROTECT.name[0]);
+						}
+						else {
+							OutputLog(standardOut | fileDisc, "Detected a protected [%" CHARWIDTH "s]. LBA %d to %d"
+								, pDisc->PROTECT.name[0], pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0]
+								, pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] + pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0]);
+						}
 						if (pDisc->PROTECT.byExist == datelAlt) {
 							OutputLog(standardOut | fileDisc, ",  [%" CHARWIDTH "s]. LBA %d to %d\n"
 								, pDisc->PROTECT.name2, pDisc->PROTECT.ERROR_SECTOR.nExtentPos2nd
@@ -1006,6 +1011,9 @@ BOOL ReadDVDForFileSystem(
 		if (pDisc->PROTECT.byExist && !pExtArg->byNoSkipSS) {
 			if (pDisc->PROTECT.byExist == arccos) {
 				OutputLog(standardOut | fileDisc, "This disc has possibly [%" CHARWIDTH "s]", pDisc->PROTECT.name[0]);
+			}
+			else if (pDisc->PROTECT.byExist == securomTmp && strncmp(pDisc->PROTECT.name[0], ".cms_t", 6) && strncmp(pDisc->PROTECT.name[0], ".cms_d", 6)) {
+				OutputLog(standardOut | fileDisc, "Detected unknown string [%" CHARWIDTH "s], check if this disc has SecuROM", pDisc->PROTECT.name[0]);
 			}
 			else {
 				OutputLog(standardOut | fileDisc, "Detected protection [%" CHARWIDTH "s]", pDisc->PROTECT.name[0]);

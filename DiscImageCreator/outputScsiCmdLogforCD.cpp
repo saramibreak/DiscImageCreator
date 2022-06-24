@@ -957,27 +957,27 @@ VOID OutputFsImageSectionHeader(
 	if (pDisc != NULL) {
 		if (!strncmp((LPCCH)pIsh->Name, "icd1", 4)) {
 			pDisc->PROTECT.byExist = codelock;
-			strncpy(pDisc->PROTECT.name[0], (LPCCH)pIsh->Name, sizeof(pDisc->PROTECT.name[0]) - 1);
+			strncpy(pDisc->PROTECT.name[0], (LPCCH)pIsh->Name, IMAGE_SIZEOF_SHORT_NAME);
 			pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] = pDisc->PROTECT.nNextLBAOfLastVolDesc;
 			pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0] =
 				pDisc->PROTECT.nPrevLBAOfPathTablePos - pDisc->PROTECT.nNextLBAOfLastVolDesc;
 		}
 		else if (!strncmp((LPCCH)pIsh->Name, ".vob.pcd", 8)) {
 			pDisc->PROTECT.byExist = protectCDVOB;
-			strncpy(pDisc->PROTECT.name[0], (LPCCH)pIsh->Name, sizeof(pDisc->PROTECT.name[0]) - 1);
+			strncpy(pDisc->PROTECT.name[0], (LPCCH)pIsh->Name, IMAGE_SIZEOF_SHORT_NAME);
 		}
 		else if (!strncmp((LPCCH)pIsh->Name, ".cms_t", 6) || !strncmp((LPCCH)pIsh->Name, ".cms_d", 6)
 			) {
 			// This string exists SecuROM OLD "Re-Volt (Europe)" and SecuROM NEW "Supreme Snowboarding (Europe) and "Beam Breakers (Europe) etc"
 			pDisc->PROTECT.byExist = securomTmp;
-			strncpy(pDisc->PROTECT.name[0], (LPCCH)pIsh->Name, sizeof(pDisc->PROTECT.name[0]) - 1);
+			strncpy(pDisc->PROTECT.name[0], (LPCCH)pIsh->Name, IMAGE_SIZEOF_SHORT_NAME);
 			*bSecurom = TRUE;
 		}
 		else if (pExtArg != NULL && pExtArg->byIntentionalSub && !IsKnownSectionName((LPCCH)pIsh->Name)) {
 			// some SecuROM discs have random section names
 			if (pDisc->PROTECT.byExist == no) {
 				pDisc->PROTECT.byExist = securomTmp;
-				strncpy(pDisc->PROTECT.name[0], (LPCCH)pIsh->Name, sizeof(pDisc->PROTECT.name[0]) - 1);
+				strncpy(pDisc->PROTECT.name[0], (LPCCH)pIsh->Name, IMAGE_SIZEOF_SHORT_NAME);
 			}
 			*bSecurom = TRUE;
 		}
