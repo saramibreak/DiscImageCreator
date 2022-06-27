@@ -3461,22 +3461,22 @@ VOID OutputEepromOverPX712(
 		OutputDriveLog("32 seconds\n");
 		break;
 	case 10:
-		OutputDriveLog("1 minite\n");
+		OutputDriveLog("1 minute\n");
 		break;
 	case 11:
-		OutputDriveLog("2 minites\n");
+		OutputDriveLog("2 minutes\n");
 		break;
 	case 12:
-		OutputDriveLog("4 minites\n");
+		OutputDriveLog("4 minutes\n");
 		break;
 	case 13:
-		OutputDriveLog("8 minites\n");
+		OutputDriveLog("8 minutes\n");
 		break;
 	case 14:
-		OutputDriveLog("16 minites\n");
+		OutputDriveLog("16 minutes\n");
 		break;
 	case 15:
-		OutputDriveLog("32 minites\n");
+		OutputDriveLog("32 minutes\n");
 		break;
 	default:
 		OutputDriveLog("Unset\n");
