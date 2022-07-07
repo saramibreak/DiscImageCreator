@@ -107,15 +107,15 @@ typedef UINT			   *LPUINT;
 #define max(a,b)            (((a) > (b)) ? (a) : (b))
 #endif
 
-#define MAKEWORD(a, b)      ((WORD)(((BYTE)(((DWORD_PTR)(a)) & 0xff)) | ((WORD)((BYTE)(((DWORD_PTR)(b)) & 0xff))) << 8))
+#define MAKEWORD(a, b)      ((WORD)(((BYTE)(((UINT_PTR)(a)) & 0xff)) | ((WORD)((BYTE)(((UINT_PTR)(b)) & 0xff))) << 8))
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
-#define MAKELONG(a, b)      ((LONG)(((WORD)(((DWORD_PTR)(a)) & 0xffff)) | ((DWORD)((WORD)(((DWORD_PTR)(b)) & 0xffff))) << 16))
+#define MAKELONG(a, b)      ((LONG)(((WORD)(((UINT_PTR)(a)) & 0xffff)) | ((UINT)((WORD)(((UINT_PTR)(b)) & 0xffff))) << 16))
 #pragma GCC diagnostic pop
-#define LOWORD(l)           ((WORD)(((DWORD_PTR)(l)) & 0xffff))
-#define HIWORD(l)           ((WORD)((((DWORD_PTR)(l)) >> 16) & 0xffff))
-#define LOBYTE(w)           ((BYTE)(((DWORD_PTR)(w)) & 0xff))
-#define HIBYTE(w)           ((BYTE)((((DWORD_PTR)(w)) >> 8) & 0xff))
+#define LOWORD(l)           ((WORD)(((UINT_PTR)(l)) & 0xffff))
+#define HIWORD(l)           ((WORD)((((UINT_PTR)(l)) >> 16) & 0xffff))
+#define LOBYTE(w)           ((BYTE)(((UINT_PTR)(w)) & 0xff))
+#define HIBYTE(w)           ((BYTE)((((UINT_PTR)(w)) >> 8) & 0xff))
 
 // WTypes.h
  typedef double DOUBLE;
@@ -226,12 +226,12 @@ typedef struct _LARGE_INTEGER {
 #else // MIDL_PASS
 typedef union _LARGE_INTEGER {
 	struct {
-		DWORD LowPart;
-		LONG HighPart;
+		UINT LowPart;
+		INT HighPart;
 	} DUMMYSTRUCTNAME;
 	struct {
-		DWORD LowPart;
-		LONG HighPart;
+		UINT LowPart;
+		INT HighPart;
 	} u;
 #endif //MIDL_PASS
 	LONGLONG QuadPart;
@@ -244,12 +244,12 @@ typedef struct _ULARGE_INTEGER {
 #else // MIDL_PASS
 typedef union _ULARGE_INTEGER {
 	struct {
-		DWORD LowPart;
-		DWORD HighPart;
+		UINT LowPart;
+		UINT HighPart;
 	} DUMMYSTRUCTNAME;
 	struct {
-		DWORD LowPart;
-		DWORD HighPart;
+		UINT LowPart;
+		UINT HighPart;
 	} u;
 #endif //MIDL_PASS
 	ULONGLONG QuadPart;
@@ -292,7 +292,7 @@ typedef struct _IMAGE_DOS_HEADER {      // DOS .EXE header
 	WORD   e_oemid;                     // OEM identifier (for e_oeminfo)
 	WORD   e_oeminfo;                   // OEM information; e_oemid specific
 	WORD   e_res2[10];                  // Reserved words
-	LONG   e_lfanew;                    // File address of new exe header
+	INT   e_lfanew;                    // File address of new exe header
 } IMAGE_DOS_HEADER, *PIMAGE_DOS_HEADER;
 
 typedef struct _IMAGE_OS2_HEADER {      // OS/2 .EXE header
@@ -301,13 +301,13 @@ typedef struct _IMAGE_OS2_HEADER {      // OS/2 .EXE header
 	CHAR   ne_rev;                      // Revision number
 	WORD   ne_enttab;                   // Offset of Entry Table
 	WORD   ne_cbenttab;                 // Number of bytes in Entry Table
-	LONG   ne_crc;                      // Checksum of whole file
+	INT   ne_crc;                      // Checksum of whole file
 	WORD   ne_flags;                    // Flag word
 	WORD   ne_autodata;                 // Automatic data segment number
 	WORD   ne_heap;                     // Initial heap allocation
 	WORD   ne_stack;                    // Initial stack allocation
-	LONG   ne_csip;                     // Initial CS:IP setting
-	LONG   ne_sssp;                     // Initial SS:SP setting
+	INT   ne_csip;                     // Initial CS:IP setting
+	INT   ne_sssp;                     // Initial SS:SP setting
 	WORD   ne_cseg;                     // Count of file segments
 	WORD   ne_cmod;                     // Entries in Module Reference Table
 	WORD   ne_cbnrestab;                // Size of non-resident name table
@@ -316,7 +316,7 @@ typedef struct _IMAGE_OS2_HEADER {      // OS/2 .EXE header
 	WORD   ne_restab;                   // Offset of resident name table
 	WORD   ne_modtab;                   // Offset of Module Reference Table
 	WORD   ne_imptab;                   // Offset of Imported Names Table
-	LONG   ne_nrestab;                  // Offset of Non-resident Names Table
+	INT   ne_nrestab;                  // Offset of Non-resident Names Table
 	WORD   ne_cmovent;                  // Count of movable entries
 	WORD   ne_align;                    // Segment alignment shift count
 	WORD   ne_cres;                     // Count of resource segments
@@ -332,52 +332,52 @@ typedef struct _IMAGE_VXD_HEADER {      // Windows VXD header
 	WORD   e32_magic;                   // Magic number
 	BYTE   e32_border;                  // The byte ordering for the VXD
 	BYTE   e32_worder;                  // The word ordering for the VXD
-	DWORD  e32_level;                   // The EXE format level for now = 0
+	UINT  e32_level;                   // The EXE format level for now = 0
 	WORD   e32_cpu;                     // The CPU type
 	WORD   e32_os;                      // The OS type
-	DWORD  e32_ver;                     // Module version
-	DWORD  e32_mflags;                  // Module flags
-	DWORD  e32_mpages;                  // Module # pages
-	DWORD  e32_startobj;                // Object # for instruction pointer
-	DWORD  e32_eip;                     // Extended instruction pointer
-	DWORD  e32_stackobj;                // Object # for stack pointer
-	DWORD  e32_esp;                     // Extended stack pointer
-	DWORD  e32_pagesize;                // VXD page size
-	DWORD  e32_lastpagesize;            // Last page size in VXD
-	DWORD  e32_fixupsize;               // Fixup section size
-	DWORD  e32_fixupsum;                // Fixup section checksum
-	DWORD  e32_ldrsize;                 // Loader section size
-	DWORD  e32_ldrsum;                  // Loader section checksum
-	DWORD  e32_objtab;                  // Object table offset
-	DWORD  e32_objcnt;                  // Number of objects in module
-	DWORD  e32_objmap;                  // Object page map offset
-	DWORD  e32_itermap;                 // Object iterated data map offset
-	DWORD  e32_rsrctab;                 // Offset of Resource Table
-	DWORD  e32_rsrccnt;                 // Number of resource entries
-	DWORD  e32_restab;                  // Offset of resident name table
-	DWORD  e32_enttab;                  // Offset of Entry Table
-	DWORD  e32_dirtab;                  // Offset of Module Directive Table
-	DWORD  e32_dircnt;                  // Number of module directives
-	DWORD  e32_fpagetab;                // Offset of Fixup Page Table
-	DWORD  e32_frectab;                 // Offset of Fixup Record Table
-	DWORD  e32_impmod;                  // Offset of Import Module Name Table
-	DWORD  e32_impmodcnt;               // Number of entries in Import Module Name Table
-	DWORD  e32_impproc;                 // Offset of Import Procedure Name Table
-	DWORD  e32_pagesum;                 // Offset of Per-Page Checksum Table
-	DWORD  e32_datapage;                // Offset of Enumerated Data Pages
-	DWORD  e32_preload;                 // Number of preload pages
-	DWORD  e32_nrestab;                 // Offset of Non-resident Names Table
-	DWORD  e32_cbnrestab;               // Size of Non-resident Name Table
-	DWORD  e32_nressum;                 // Non-resident Name Table Checksum
-	DWORD  e32_autodata;                // Object # for automatic data object
-	DWORD  e32_debuginfo;               // Offset of the debugging information
-	DWORD  e32_debuglen;                // The length of the debugging info. in bytes
-	DWORD  e32_instpreload;             // Number of instance pages in preload section of VXD file
-	DWORD  e32_instdemand;              // Number of instance pages in demand load section of VXD file
-	DWORD  e32_heapsize;                // Size of heap - for 16-bit apps
+	UINT  e32_ver;                     // Module version
+	UINT  e32_mflags;                  // Module flags
+	UINT  e32_mpages;                  // Module # pages
+	UINT  e32_startobj;                // Object # for instruction pointer
+	UINT  e32_eip;                     // Extended instruction pointer
+	UINT  e32_stackobj;                // Object # for stack pointer
+	UINT  e32_esp;                     // Extended stack pointer
+	UINT  e32_pagesize;                // VXD page size
+	UINT  e32_lastpagesize;            // Last page size in VXD
+	UINT  e32_fixupsize;               // Fixup section size
+	UINT  e32_fixupsum;                // Fixup section checksum
+	UINT  e32_ldrsize;                 // Loader section size
+	UINT  e32_ldrsum;                  // Loader section checksum
+	UINT  e32_objtab;                  // Object table offset
+	UINT  e32_objcnt;                  // Number of objects in module
+	UINT  e32_objmap;                  // Object page map offset
+	UINT  e32_itermap;                 // Object iterated data map offset
+	UINT  e32_rsrctab;                 // Offset of Resource Table
+	UINT  e32_rsrccnt;                 // Number of resource entries
+	UINT  e32_restab;                  // Offset of resident name table
+	UINT  e32_enttab;                  // Offset of Entry Table
+	UINT  e32_dirtab;                  // Offset of Module Directive Table
+	UINT  e32_dircnt;                  // Number of module directives
+	UINT  e32_fpagetab;                // Offset of Fixup Page Table
+	UINT  e32_frectab;                 // Offset of Fixup Record Table
+	UINT  e32_impmod;                  // Offset of Import Module Name Table
+	UINT  e32_impmodcnt;               // Number of entries in Import Module Name Table
+	UINT  e32_impproc;                 // Offset of Import Procedure Name Table
+	UINT  e32_pagesum;                 // Offset of Per-Page Checksum Table
+	UINT  e32_datapage;                // Offset of Enumerated Data Pages
+	UINT  e32_preload;                 // Number of preload pages
+	UINT  e32_nrestab;                 // Offset of Non-resident Names Table
+	UINT  e32_cbnrestab;               // Size of Non-resident Name Table
+	UINT  e32_nressum;                 // Non-resident Name Table Checksum
+	UINT  e32_autodata;                // Object # for automatic data object
+	UINT  e32_debuginfo;               // Offset of the debugging information
+	UINT  e32_debuglen;                // The length of the debugging info. in bytes
+	UINT  e32_instpreload;             // Number of instance pages in preload section of VXD file
+	UINT  e32_instdemand;              // Number of instance pages in demand load section of VXD file
+	UINT  e32_heapsize;                // Size of heap - for 16-bit apps
 	BYTE   e32_res3[12];                // Reserved words
-	DWORD  e32_winresoff;
-	DWORD  e32_winreslen;
+	UINT  e32_winresoff;
+	UINT  e32_winreslen;
 	WORD   e32_devid;                   // Device ID for VxD
 	WORD   e32_ddkver;                  // DDK version for VxD
 } IMAGE_VXD_HEADER, *PIMAGE_VXD_HEADER;
@@ -389,9 +389,9 @@ typedef struct _IMAGE_VXD_HEADER {      // Windows VXD header
 typedef struct _IMAGE_FILE_HEADER {
 	WORD    Machine;
 	WORD    NumberOfSections;
-	DWORD   TimeDateStamp;
-	DWORD   PointerToSymbolTable;
-	DWORD   NumberOfSymbols;
+	UINT   TimeDateStamp;
+	UINT   PointerToSymbolTable;
+	UINT   NumberOfSymbols;
 	WORD    SizeOfOptionalHeader;
 	WORD    Characteristics;
 } IMAGE_FILE_HEADER, *PIMAGE_FILE_HEADER;
@@ -449,8 +449,8 @@ typedef struct _IMAGE_FILE_HEADER {
 //
 
 typedef struct _IMAGE_DATA_DIRECTORY {
-	DWORD   VirtualAddress;
-	DWORD   Size;
+	UINT   VirtualAddress;
+	UINT   Size;
 } IMAGE_DATA_DIRECTORY, *PIMAGE_DATA_DIRECTORY;
 
 #define IMAGE_NUMBEROF_DIRECTORY_ENTRIES    16
@@ -467,43 +467,43 @@ typedef struct _IMAGE_OPTIONAL_HEADER {
 	WORD    Magic;
 	BYTE    MajorLinkerVersion;
 	BYTE    MinorLinkerVersion;
-	DWORD   SizeOfCode;
-	DWORD   SizeOfInitializedData;
-	DWORD   SizeOfUninitializedData;
-	DWORD   AddressOfEntryPoint;
-	DWORD   BaseOfCode;
-	DWORD   BaseOfData;
+	UINT   SizeOfCode;
+	UINT   SizeOfInitializedData;
+	UINT   SizeOfUninitializedData;
+	UINT   AddressOfEntryPoint;
+	UINT   BaseOfCode;
+	UINT   BaseOfData;
 
 	//
 	// NT additional fields.
 	//
 
-	DWORD   ImageBase;
-	DWORD   SectionAlignment;
-	DWORD   FileAlignment;
+	UINT   ImageBase;
+	UINT   SectionAlignment;
+	UINT   FileAlignment;
 	WORD    MajorOperatingSystemVersion;
 	WORD    MinorOperatingSystemVersion;
 	WORD    MajorImageVersion;
 	WORD    MinorImageVersion;
 	WORD    MajorSubsystemVersion;
 	WORD    MinorSubsystemVersion;
-	DWORD   Win32VersionValue;
-	DWORD   SizeOfImage;
-	DWORD   SizeOfHeaders;
-	DWORD   CheckSum;
+	UINT   Win32VersionValue;
+	UINT   SizeOfImage;
+	UINT   SizeOfHeaders;
+	UINT   CheckSum;
 	WORD    Subsystem;
 	WORD    DllCharacteristics;
-	DWORD   SizeOfStackReserve;
-	DWORD   SizeOfStackCommit;
-	DWORD   SizeOfHeapReserve;
-	DWORD   SizeOfHeapCommit;
-	DWORD   LoaderFlags;
-	DWORD   NumberOfRvaAndSizes;
+	UINT   SizeOfStackReserve;
+	UINT   SizeOfStackCommit;
+	UINT   SizeOfHeapReserve;
+	UINT   SizeOfHeapCommit;
+	UINT   LoaderFlags;
+	UINT   NumberOfRvaAndSizes;
 	IMAGE_DATA_DIRECTORY DataDirectory[IMAGE_NUMBEROF_DIRECTORY_ENTRIES];
 } IMAGE_OPTIONAL_HEADER32, *PIMAGE_OPTIONAL_HEADER32;
 
 typedef struct _IMAGE_NT_HEADERS {
-	DWORD Signature;
+	UINT Signature;
 	IMAGE_FILE_HEADER FileHeader;
 	IMAGE_OPTIONAL_HEADER32 OptionalHeader;
 } IMAGE_NT_HEADERS32, *PIMAGE_NT_HEADERS32;
@@ -570,17 +570,17 @@ typedef struct _IMAGE_NT_HEADERS {
 typedef struct _IMAGE_SECTION_HEADER {
 	BYTE    Name[IMAGE_SIZEOF_SHORT_NAME];
 	union {
-		DWORD   PhysicalAddress;
-		DWORD   VirtualSize;
+		UINT   PhysicalAddress;
+		UINT   VirtualSize;
 	} Misc;
-	DWORD   VirtualAddress;
-	DWORD   SizeOfRawData;
-	DWORD   PointerToRawData;
-	DWORD   PointerToRelocations;
-	DWORD   PointerToLinenumbers;
+	UINT   VirtualAddress;
+	UINT   SizeOfRawData;
+	UINT   PointerToRawData;
+	UINT   PointerToRelocations;
+	UINT   PointerToLinenumbers;
 	WORD    NumberOfRelocations;
 	WORD    NumberOfLinenumbers;
-	DWORD   Characteristics;
+	UINT   Characteristics;
 } IMAGE_SECTION_HEADER, *PIMAGE_SECTION_HEADER;
 
 #define IMAGE_SIZEOF_SECTION_HEADER          40
@@ -655,17 +655,17 @@ typedef struct _IMAGE_SECTION_HEADER {
 //
 
 typedef struct _IMAGE_EXPORT_DIRECTORY {
-	DWORD   Characteristics;
-	DWORD   TimeDateStamp;
+	UINT   Characteristics;
+	UINT   TimeDateStamp;
 	WORD    MajorVersion;
 	WORD    MinorVersion;
-	DWORD   Name;
-	DWORD   Base;
-	DWORD   NumberOfFunctions;
-	DWORD   NumberOfNames;
-	DWORD   AddressOfFunctions;     // RVA from base of image
-	DWORD   AddressOfNames;         // RVA from base of image
-	DWORD   AddressOfNameOrdinals;  // RVA from base of image
+	UINT   Name;
+	UINT   Base;
+	UINT   NumberOfFunctions;
+	UINT   NumberOfNames;
+	UINT   AddressOfFunctions;     // RVA from base of image
+	UINT   AddressOfNames;         // RVA from base of image
+	UINT   AddressOfNameOrdinals;  // RVA from base of image
 } IMAGE_EXPORT_DIRECTORY, * PIMAGE_EXPORT_DIRECTORY;
 
 //
@@ -689,10 +689,10 @@ typedef IMAGE_THUNK_DATA64* PIMAGE_THUNK_DATA64;
 
 typedef struct _IMAGE_THUNK_DATA32 {
 	union {
-		DWORD ForwarderString;      // PBYTE 
-		DWORD Function;             // PDWORD
-		DWORD Ordinal;
-		DWORD AddressOfData;        // PIMAGE_IMPORT_BY_NAME
+		UINT ForwarderString;      // PBYTE 
+		UINT Function;             // PUINT
+		UINT Ordinal;
+		UINT AddressOfData;        // PIMAGE_IMPORT_BY_NAME
 	} u1;
 } IMAGE_THUNK_DATA32;
 typedef IMAGE_THUNK_DATA32* PIMAGE_THUNK_DATA32;
@@ -707,23 +707,23 @@ typedef IMAGE_THUNK_DATA32* PIMAGE_THUNK_DATA32;
 
 typedef struct _IMAGE_IMPORT_DESCRIPTOR {
 	union {
-		DWORD   Characteristics;            // 0 for terminating null import descriptor
-		DWORD   OriginalFirstThunk;         // RVA to original unbound IAT (PIMAGE_THUNK_DATA)
+		UINT   Characteristics;            // 0 for terminating null import descriptor
+		UINT   OriginalFirstThunk;         // RVA to original unbound IAT (PIMAGE_THUNK_DATA)
 	} DUMMYUNIONNAME;
-	DWORD   TimeDateStamp;                  // 0 if not bound,
+	UINT   TimeDateStamp;                  // 0 if not bound,
 											// -1 if bound, and real date\time stamp
 											//     in IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT (new BIND)
 											// O.W. date/time stamp of DLL bound to (Old BIND)
 
-	DWORD   ForwarderChain;                 // -1 if no forwarders
-	DWORD   Name;
-	DWORD   FirstThunk;                     // RVA to IAT (if bound this IAT has actual addresses)
+	UINT   ForwarderChain;                 // -1 if no forwarders
+	UINT   Name;
+	UINT   FirstThunk;                     // RVA to IAT (if bound this IAT has actual addresses)
 } IMAGE_IMPORT_DESCRIPTOR;
 typedef IMAGE_IMPORT_DESCRIPTOR UNALIGNED *PIMAGE_IMPORT_DESCRIPTOR;
 
 typedef struct _IMAGE_RESOURCE_DIRECTORY {
-	DWORD   Characteristics;
-	DWORD   TimeDateStamp;
+	UINT   Characteristics;
+	UINT   TimeDateStamp;
 	WORD    MajorVersion;
 	WORD    MinorVersion;
 	WORD    NumberOfNamedEntries;
@@ -734,26 +734,26 @@ typedef struct _IMAGE_RESOURCE_DIRECTORY {
 typedef struct _IMAGE_RESOURCE_DIRECTORY_ENTRY {
 	union {
 		struct {
-			DWORD NameOffset : 31;
-			DWORD NameIsString : 1;
+			UINT NameOffset : 31;
+			UINT NameIsString : 1;
 		} DUMMYSTRUCTNAME;
-		DWORD   Name;
+		UINT   Name;
 		WORD    Id;
 	} DUMMYUNIONNAME;
 	union {
-		DWORD   OffsetToData;
+		UINT   OffsetToData;
 		struct {
-			DWORD   OffsetToDirectory : 31;
-			DWORD   DataIsDirectory : 1;
+			UINT   OffsetToDirectory : 31;
+			UINT   DataIsDirectory : 1;
 		} DUMMYSTRUCTNAME2;
 	} DUMMYUNIONNAME2;
 } IMAGE_RESOURCE_DIRECTORY_ENTRY, *PIMAGE_RESOURCE_DIRECTORY_ENTRY;
 
 typedef struct _IMAGE_RESOURCE_DATA_ENTRY {
-	DWORD   OffsetToData;
-	DWORD   Size;
-	DWORD   CodePage;
-	DWORD   Reserved;
+	UINT   OffsetToData;
+	UINT   Size;
+	UINT   CodePage;
+	UINT   Reserved;
 } IMAGE_RESOURCE_DATA_ENTRY, *PIMAGE_RESOURCE_DATA_ENTRY;
 
 #define RtlFillMemory(Destination,Length,Fill) memset((Destination),(Fill),(Length))
@@ -762,19 +762,19 @@ typedef struct _IMAGE_RESOURCE_DATA_ENTRY {
 // from VerRsrc.h
 typedef struct tagVS_FIXEDFILEINFO
 {
-	DWORD   dwSignature;            /* e.g. 0xfeef04bd */
-	DWORD   dwStrucVersion;         /* e.g. 0x00000042 = "0.42" */
-	DWORD   dwFileVersionMS;        /* e.g. 0x00030075 = "3.75" */
-	DWORD   dwFileVersionLS;        /* e.g. 0x00000031 = "0.31" */
-	DWORD   dwProductVersionMS;     /* e.g. 0x00030010 = "3.10" */
-	DWORD   dwProductVersionLS;     /* e.g. 0x00000031 = "0.31" */
-	DWORD   dwFileFlagsMask;        /* = 0x3F for version "0.42" */
-	DWORD   dwFileFlags;            /* e.g. VFF_DEBUG | VFF_PRERELEASE */
-	DWORD   dwFileOS;               /* e.g. VOS_DOS_WINDOWS16 */
-	DWORD   dwFileType;             /* e.g. VFT_DRIVER */
-	DWORD   dwFileSubtype;          /* e.g. VFT2_DRV_KEYBOARD */
-	DWORD   dwFileDateMS;           /* e.g. 0 */
-	DWORD   dwFileDateLS;           /* e.g. 0 */
+	UINT   dwSignature;            /* e.g. 0xfeef04bd */
+	UINT   dwStrucVersion;         /* e.g. 0x00000042 = "0.42" */
+	UINT   dwFileVersionMS;        /* e.g. 0x00030075 = "3.75" */
+	UINT   dwFileVersionLS;        /* e.g. 0x00000031 = "0.31" */
+	UINT   dwProductVersionMS;     /* e.g. 0x00030010 = "3.10" */
+	UINT   dwProductVersionLS;     /* e.g. 0x00000031 = "0.31" */
+	UINT   dwFileFlagsMask;        /* = 0x3F for version "0.42" */
+	UINT   dwFileFlags;            /* e.g. VFF_DEBUG | VFF_PRERELEASE */
+	UINT   dwFileOS;               /* e.g. VOS_DOS_WINDOWS16 */
+	UINT   dwFileType;             /* e.g. VFT_DRIVER */
+	UINT   dwFileSubtype;          /* e.g. VFT2_DRV_KEYBOARD */
+	UINT   dwFileDateMS;           /* e.g. 0 */
+	UINT   dwFileDateLS;           /* e.g. 0 */
 } VS_FIXEDFILEINFO;
 
 // from WinBase.h
@@ -1327,9 +1327,9 @@ typedef enum _MEDIA_TYPE {
 typedef struct _DISK_GEOMETRY {
 	LARGE_INTEGER Cylinders;
 	MEDIA_TYPE MediaType;
-	DWORD TracksPerCylinder;
-	DWORD SectorsPerTrack;
-	DWORD BytesPerSector;
+	UINT TracksPerCylinder;
+	UINT SectorsPerTrack;
+	UINT BytesPerSector;
 } DISK_GEOMETRY, *PDISK_GEOMETRY;
 
 //
@@ -1363,7 +1363,7 @@ typedef enum _DETECTION_TYPE {
 
 typedef struct _DISK_INT13_INFO {
 	WORD   DriveSelect;
-	DWORD MaxCylinders;
+	UINT MaxCylinders;
 	WORD   SectorsPerTrack;
 	WORD   MaxHeads;
 	WORD   NumberDrives;
@@ -1372,10 +1372,10 @@ typedef struct _DISK_INT13_INFO {
 typedef struct _DISK_EX_INT13_INFO {
 	WORD   ExBufferSize;
 	WORD   ExFlags;
-	DWORD ExCylinders;
-	DWORD ExHeads;
-	DWORD ExSectorsPerTrack;
-	DWORD64 ExSectorsPerDrive;
+	UINT ExCylinders;
+	UINT ExHeads;
+	UINT ExSectorsPerTrack;
+	UINT64 ExSectorsPerDrive;
 	WORD   ExSectorSize;
 	WORD   ExReserved;
 } DISK_EX_INT13_INFO, *PDISK_EX_INT13_INFO;
@@ -1386,7 +1386,7 @@ typedef struct _DISK_EX_INT13_INFO {
 #endif
 
 typedef struct _DISK_DETECTION_INFO {
-	DWORD SizeOfDetectInfo;
+	UINT SizeOfDetectInfo;
 	DETECTION_TYPE DetectionType;
 	union {
 		struct {
@@ -1412,14 +1412,14 @@ typedef struct _DISK_DETECTION_INFO {
 #define GUID_DEFINED
 #if defined(__midl)
 typedef struct {
-	unsigned long  Data1;
+	unsigned int  Data1;
 	unsigned short Data2;
 	unsigned short Data3;
 	byte           Data4[8];
 } GUID;
 #else
 typedef struct _GUID {
-	unsigned long  Data1;
+	unsigned int  Data1;
 	unsigned short Data2;
 	unsigned short Data3;
 	unsigned char  Data4[8];
@@ -1428,12 +1428,12 @@ typedef struct _GUID {
 #endif
 
 typedef struct _DISK_PARTITION_INFO {
-	DWORD SizeOfPartitionInfo;
+	UINT SizeOfPartitionInfo;
 	PARTITION_STYLE PartitionStyle;                 // PartitionStyle = RAW, GPT or MBR
 	union {
 		struct {                                                        // If PartitionStyle == MBR
-			DWORD Signature;                                // MBR Signature
-			DWORD CheckSum;                                 // MBR CheckSum
+			UINT Signature;                                // MBR Signature
+			UINT CheckSum;                                 // MBR CheckSum
 		} Mbr;
 		struct {                                                        // If PartitionStyle == GPT
 			GUID DiskId;
@@ -1463,7 +1463,7 @@ typedef struct _DISK_PARTITION_INFO {
                         ((PDISK_PARTITION_INFO)((Geometry)->Data))
 
 #define DiskGeometryGetDetect(Geometry)\
-                        ((PDISK_DETECTION_INFO)(((DWORD_PTR)DiskGeometryGetPartition(Geometry)+\
+                        ((PDISK_DETECTION_INFO)(((UINT_PTR)DiskGeometryGetPartition(Geometry)+\
                                         DiskGeometryGetPartition(Geometry)->SizeOfPartitionInfo)))
 #endif
 typedef struct _DISK_GEOMETRY_EX {
@@ -1615,27 +1615,27 @@ typedef struct _DEVICE_MEDIA_INFO {
 		struct {
 			LARGE_INTEGER Cylinders;
 			STORAGE_MEDIA_TYPE MediaType;
-			DWORD TracksPerCylinder;
-			DWORD SectorsPerTrack;
-			DWORD BytesPerSector;
-			DWORD NumberMediaSides;
-			DWORD MediaCharacteristics; // Bitmask of MEDIA_XXX values.
+			UINT TracksPerCylinder;
+			UINT SectorsPerTrack;
+			UINT BytesPerSector;
+			UINT NumberMediaSides;
+			UINT MediaCharacteristics; // Bitmask of MEDIA_XXX values.
 		} DiskInfo;
 
 		struct {
 			LARGE_INTEGER Cylinders;
 			STORAGE_MEDIA_TYPE MediaType;
-			DWORD TracksPerCylinder;
-			DWORD SectorsPerTrack;
-			DWORD BytesPerSector;
-			DWORD NumberMediaSides;
-			DWORD MediaCharacteristics; // Bitmask of MEDIA_XXX values.
+			UINT TracksPerCylinder;
+			UINT SectorsPerTrack;
+			UINT BytesPerSector;
+			UINT NumberMediaSides;
+			UINT MediaCharacteristics; // Bitmask of MEDIA_XXX values.
 		} RemovableDiskInfo;
 
 		struct {
 			STORAGE_MEDIA_TYPE MediaType;
-			DWORD   MediaCharacteristics; // Bitmask of MEDIA_XXX values.
-			DWORD   CurrentBlockSize;
+			UINT   MediaCharacteristics; // Bitmask of MEDIA_XXX values.
+			UINT   CurrentBlockSize;
 			STORAGE_BUS_TYPE BusType;
 
 			//
@@ -1654,14 +1654,14 @@ typedef struct _DEVICE_MEDIA_INFO {
 } DEVICE_MEDIA_INFO, *PDEVICE_MEDIA_INFO;
 
 typedef struct _GET_MEDIA_TYPES {
-	DWORD DeviceType;              // FILE_DEVICE_XXX values
-	DWORD MediaInfoCount;
+	UINT DeviceType;              // FILE_DEVICE_XXX values
+	UINT MediaInfoCount;
 	DEVICE_MEDIA_INFO MediaInfo[1];
 } GET_MEDIA_TYPES, *PGET_MEDIA_TYPES;
 
 
 
-typedef ULONG DVD_SESSION_ID, *PDVD_SESSION_ID;
+typedef UINT DVD_SESSION_ID, *PDVD_SESSION_ID;
 
 /*++
 
@@ -1717,9 +1717,9 @@ typedef struct _DVD_LAYER_DESCRIPTOR {
 	UCHAR Reserved1 : 1;
 	UCHAR TrackDensity : 4;
 	UCHAR LinearDensity : 4;
-	ULONG StartingDataSector;   //              3bytes + 1 zeroed byte
-	ULONG EndDataSector;        //              3bytes + 1 zeroed byte
-	ULONG EndLayerZeroSector;   //              3bytes + 1 zeroed byte
+	UINT StartingDataSector;   //              3bytes + 1 zeroed byte
+	UINT EndDataSector;        //              3bytes + 1 zeroed byte
+	UINT EndLayerZeroSector;   //              3bytes + 1 zeroed byte
 	UCHAR Reserved5 : 7;
 	UCHAR BCAFlag : 1;
 	// The large Media Specific field is not declared here to enable stack allocation
@@ -2113,8 +2113,8 @@ typedef struct _DVD_REGION {
 // The AACS layer number refers to the layer of the disc a structure
 // is read from.  This can only be a single byte in the CDB, so limit
 // the value to 0..255.
-typedef ULONG  AACS_LAYER_NUMBER, *PAACS_LAYER_NUMBER;
-typedef ULONG CAACS_LAYER_NUMBER, *PCAACS_LAYER_NUMBER;
+typedef UINT  AACS_LAYER_NUMBER, *PAACS_LAYER_NUMBER;
+typedef UINT CAACS_LAYER_NUMBER, *PCAACS_LAYER_NUMBER;
 
 
 // The AACS Certificate (opaque data structure) is used to validate
@@ -2196,7 +2196,7 @@ typedef const AACS_BINDING_NONCE *PCAACS_BINDING_NONCE;
 //       
 typedef struct _AACS_READ_BINDING_NONCE {
 	DVD_SESSION_ID        SessionId;
-	ULONG  NumberOfSectors; // spec only provides one byte
+	UINT  NumberOfSectors; // spec only provides one byte
 	ULONGLONG             StartLba;
 
 	// 32-bit HANDLE is 32 bits, 64-bit HANDLE is 64 bits
@@ -2246,7 +2246,7 @@ typedef struct _AACS_READ_BINDING_NONCE {
 #define NO_ERROR 0L
 
 typedef struct _SCSI_ADDRESS {
-	ULONG Length;
+	UINT Length;
 	UCHAR PortNumber;
 	UCHAR PathId;
 	UCHAR TargetId;
@@ -2311,9 +2311,9 @@ typedef struct _STORAGE_PROPERTY_QUERY {
 
 typedef struct _STORAGE_DESCRIPTOR_HEADER {
 
-	DWORD Version;
+	UINT Version;
 
-	DWORD Size;
+	UINT Size;
 
 } STORAGE_DESCRIPTOR_HEADER, *PSTORAGE_DESCRIPTOR_HEADER;
 
@@ -2327,15 +2327,15 @@ typedef struct _STORAGE_DESCRIPTOR_HEADER {
 
 typedef struct _STORAGE_ADAPTER_DESCRIPTOR {
 
-	DWORD Version;
+	UINT Version;
 
-	DWORD Size;
+	UINT Size;
 
-	DWORD MaximumTransferLength;
+	UINT MaximumTransferLength;
 
-	DWORD MaximumPhysicalPages;
+	UINT MaximumPhysicalPages;
 
-	DWORD AlignmentMask;
+	UINT AlignmentMask;
 
 	BOOLEAN AdapterUsesPio;
 
