@@ -1615,10 +1615,10 @@ BOOL IsSjis(
 }
 
 // https://programming-place.net/ppp/contents/c/rev_res/string013.html
-char* find_last_string(const char* s, const char* target)
+_TCHAR* find_last_string(const _TCHAR* s, const _TCHAR* target)
 {
-	const size_t s_len = strlen(s);
-	const size_t target_len = strlen(target);
+	const size_t s_len = _tcslen(s);
+	const size_t target_len = _tcslen(target);
 
 	if (s_len < target_len) {
 		return NULL;
@@ -1627,8 +1627,8 @@ char* find_last_string(const char* s, const char* target)
 	size_t index = s_len - target_len;
 
 	for (;;) {
-		if (strncmp(&s[index], target, target_len) == 0) {
-			return (char*)&s[index];
+		if (_tcsncmp(&s[index], target, target_len) == 0) {
+			return (_TCHAR*)&s[index];
 		}
 
 		if (index <= 0) {

@@ -2370,7 +2370,7 @@ BOOL ReadCDForCheckingExe(
 							WCHAR wszFileVer[FILE_VERSION_SIZE] = { 0 };
 							OutputResourceDirectory(lpBuf, dwResourceSectorSize, dwResourceVirtualAddress, dwResourceDataOfs, 0, wszFileVer, szTab);
 							if (wszFileVer[0] != 0 && strcasestr(pDisc->PROTECT.pNameForExe[n], ".EXE")) {
-								OutputLog(standardOut | fileDisc, " %s: File Version %ls\n", pDisc->PROTECT.pNameForExe[n], wszFileVer);
+								OutputLog(standardOut | fileDisc, " %" CHARWIDTH "s: File Version %ls\n", pDisc->PROTECT.pNameForExe[n], wszFileVer);
 							}
 						}
 					}
