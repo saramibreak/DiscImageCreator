@@ -800,3 +800,8 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - changed: PFI.bin to (fname)_PFI.bin and DMI, SS, PIC are also the same
 - fixed: when subQ is fixed, if the adr of next subQ is not 1, prev subQ is used
 - fixed: allow "Data Length 0" (for some linux and amiga disc)
+
+*2022-07-07
+- fixed: cue with INDEX 01 00:00:255
+- fixed: Console output still missing after a strange filename
+- changed: DWORD to UINT (Linux does not detect some SecuROM protection)
