@@ -82,8 +82,13 @@ BOOL InitTocTextData(
 	PDISC* pDisc
 ) {
 	BOOL bRet = TRUE;
+//#define TEST_CDTEXT_WITH_UNICODE
+#ifdef TEST_CDTEXT_WITH_UNICODE
+	size_t dwTrackAllocSize = 10 + 1;
+#else
 	size_t dwTrackAllocSize =
 		(*pExecType == gd || *pExecType == swap) ? MAXIMUM_NUMBER_TRACKS : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
+#endif
 	try {
 		if (NULL == ((*pDisc)->SUB.pszISRC =
 			(LPSTR*)calloc(dwTrackAllocSize * 2, sizeof(LPSTR)))) {
