@@ -300,13 +300,22 @@ BOOL ReadDirectoryRecordDetail(
 					// Check incorrect directory record length
 					LPBYTE lpNextDirRec = lpBuf + uiOfs + lpDirRec[0];
 					BOOL bAllZero = TRUE;
-					for (INT a = 0; a < 32; a++) {
-						if (lpNextDirRec[a] != 0) {
-							bAllZero = FALSE;
-							break;
+					UINT k = uiOfs / DISC_MAIN_DATA_SIZE + 1;
+
+					if (DISC_MAIN_DATA_SIZE * k - (uiOfs + lpDirRec[0]) >= MIN_LEN_DR &&
+						!(lpDirRec[32] == 1 && szCurDirName[0] == 0) &&
+						!(lpDirRec[32] == 1 && szCurDirName[0] == 1)) {
+						for (INT a = 0; a < 32; a++) {
+							if (lpNextDirRec[a] != 0) {
+								bAllZero = FALSE;
+								break;
+							}
 						}
 					}
-					if (IsValidExtent(lpNextDirRec, 0, 0) || bAllZero) {
+					BYTE semicolon = lpDirRec[32 + lpDirRec[32] - 1];
+					BYTE one = lpDirRec[32 + lpDirRec[32]];
+
+					if (IsValidExtent(lpNextDirRec, 0, 0) || bAllZero || (semicolon == ';' && one == '1')) {
 						OutputVolDescLog("correct\n");
 						uiOfs += lpDirRec[0];
 					}
