@@ -1428,7 +1428,9 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					pExtArg->byRawDump = TRUE;
 				}
 				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/fix"), cmdLen)) {
-					SetOptionFix(argc, argv, pExtArg, &i);
+					if (!SetOptionFix(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
 				}
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/re"), cmdLen)) {
 					pExtArg->byResume = TRUE;
@@ -1472,6 +1474,11 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				}
 				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), cmdLen)) {
 					pExtArg->byQuiet = TRUE;
+				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/rr"), cmdLen)) {
+					if (!SetOptionRr(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
 				}
 				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/nss"), cmdLen)) {
 					if (!SetOptionNss(argc, argv, pExtArg, &i)) {
@@ -1732,12 +1739,12 @@ void printUsage(void)
 	stopMessage();
 	OutputString(
 		"\tgd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/be (str) or /d8]\n"
-		"\t   [/c2 (val1) (val2) (val3) (val4)] [/np] [/nq] [/nr] [/s (val)]\n"
+		"\t   [/c2 (val1) (val2) (val3) (val4)] [/f (val)] [/np] [/nq] [/nr] [/s (val)]\n"
 		"\t\tDump a HD area of GD from A to Z\n"
 		"\tdvd <DriveLetter> <Filename> <DriveSpeed(0-16)> [/c] [/f (val)] [/raw] [/q]\n"
 		"\t    [/r (startLBA) (EndLBA)] [/avdp] [/ps (val)] [/rr (val)]\n"
 		"\t\tDump a DVD from A to Z\n"
-		"\txbox <DriveLetter> <Filename> <DriveSpeed(0-16)> [/f (val)] [/q] [/nss (val)]\n"
+		"\txbox <DriveLetter> <Filename> <DriveSpeed(0-16)> [/f (val)] [/q] [/nss (val)] [/rr (val)]\n"
 		"\t\tDump a xbox disc from A to Z\n"
 		"\txboxswap <DriveLetter> <Filename> <DriveSpeed(0-16)>\n"
 		"\t                                  <StartLBAOfSecuritySector1>\n"
@@ -1881,6 +1888,8 @@ void printUsage(void)
 		"\t\t\tval\t0: Padded by 0x00\n"
 		"\t\t\tval\t1: Padded by 0xAA\n"
 		"\t/re\tResume raw (GC/Wii) dumping\n"
+		"\t/fix\tRedump specified frame when completed raw (GC/Wii) dumping but failed to unscramble\n"
+		"\t\t\tval\tframe number that unscrambler.exe showed in the command line screen\n"
 		"See also -> https://github.com/saramibreak/DiscImageCreator/wiki \n"
 	);
 	stopMessage();

@@ -332,10 +332,10 @@ BOOL ReadDVD(
 				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 				if (IsXbox(pExecType) && !(pDisc->DVD.securitySectorRange[i][0] <= (DWORD)nLBA &&
 					(DWORD)nLBA <= pDisc->DVD.securitySectorRange[i][1] + 1)) {
-					if (++uiRetryCnt <= 5) {
+					if (++uiRetryCnt <= pExtArg->uiMaxRereadNum) {
 						nLBA -= (INT)transferLen.AsULong;
 						OutputLog(standardOut | fileMainError,
-							"This sector is out of the ss ranges. Read retry (Pass %u/5)\n", uiRetryCnt);
+							"This sector is out of the ss ranges. Read retry (Pass %u/%u)\n", uiRetryCnt, pExtArg->uiMaxRereadNum);
 						continue;
 					}
 					else {
@@ -630,14 +630,17 @@ BOOL ReadDVDRaw(
 	PDISC pDisc,
 	LPCTSTR pszFullPath
 ) {
+//#define TEST_WII
+#ifdef TEST_WII
+	ReadWiiPartition(pDevice, pszFullPath);
+	return TRUE;
+#endif
 	FILE* fp = NULL;
 	_TCHAR szMode[4] = _T("wb");
-	if (pExtArg->byResume) {
-		memcpy(szMode, _T("ab+"), 3);
-	}
-	else if (pExtArg->byFix) {
+	if (pExtArg->byResume || pExtArg->byFix) {
 		memcpy(szMode, _T("rb+"), 3);
 	}
+
 	_TCHAR pszOutPath[_MAX_PATH] = {};
 	if (NULL == (fp = CreateOrOpenFile(pszFullPath, NULL, pszOutPath, NULL, NULL, _T(".raw"), szMode, 0, 0))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -767,23 +770,18 @@ BOOL ReadDVDRaw(
 #endif
 		OutputString("Rawdump command [0]:%#04x [1]:%#04x [2]:%#04x\n", CacheCmd[0], CacheCmd[1], CacheCmd[2]);
 
-		INT nLBA = 0;
-		DWORD sectorNum = 0x30000;
-		if (pExtArg->byFix) {
-			UINT pos = pDisc->DVD.fixNum * 16;
-			nLBA = (INT)pos;
-			sectorNum += pos;
-		}
 		// for dumping from the disc
 		CDB::_READ12 ReadCdb = {};
 		ReadCdb.OperationCode = SCSIOP_READ12;
 		REVERSE_BYTES(&ReadCdb.TransferLength, &transferLen);
 
-		if ((pDisc->SCSI.nAllLength == WII_SL_SIZE || pDisc->SCSI.nAllLength == WII_DL_SIZE) && IsSupported0xE7(pDevice)) {
-			OutputString(
-				"[INFO] If you want to decrypt the dumped iso file, you need to put key.bin in the same place as DiscImageCreator.exe\n"
-				"key.bin is 16 bytes, crc32 is fc8bf576\n"
-			);
+		if (IsNintendoDisc(pDisc) && IsSupported0xE7(pDevice)) {
+			if ((pDisc->SCSI.nAllLength == WII_SL_SIZE || pDisc->SCSI.nAllLength == WII_DL_SIZE)) {
+				OutputString(
+					"[INFO] If you want to decrypt the dumped iso file, you need to put key.bin in the same place as DiscImageCreator.exe\n"
+					"key.bin is 16 bytes, crc32 is fc8bf576\n"
+				);
+			}
 			ReadCdb.Streaming = TRUE;
 		}
 		else {
@@ -811,6 +809,13 @@ BOOL ReadDVDRaw(
 		};
 		INT nRereadNum = 0;
 
+		INT nLBA = 0;
+		DWORD sectorNum = 0x30000;
+		if (pExtArg->byFix) {
+			UINT pos = pDisc->DVD.fixNum * 16;
+			nLBA = (INT)pos;
+			sectorNum += pos;
+		}
 		if (pExtArg->byResume) {
 			INT64 size = (INT64)GetFileSize64(0, fp);
 			_fseeki64(fp, size - dwSectorSize, SEEK_SET);
@@ -820,19 +825,24 @@ BOOL ReadDVDRaw(
 			}
 			_fseeki64(fp, size, SEEK_SET);
 			sectorNum = MAKEDWORD(MAKEWORD(lpBuf[3], lpBuf[2]), MAKEWORD(lpBuf[1], 0)) + 1;
+			OutputString("Start resuming -> Last sector num: %6lx\n", sectorNum);
 			nLBA = (INT)(size / dwSectorSize);
-#if 0
+#if 1
 			_fseeki64(fp, 0, SEEK_SET);
-			for (UINT n = 0x30000; n < sectorNum; n++) {
-				fread(lpBuf, sizeof(BYTE), DVD_RAW_SECTOR_SIZE, fp);
+			for (UINT n = 0x30000; n < sectorNum; n += transferAndMemSize) {
+				fread(lpBuf, sizeof(BYTE), DVD_RAW_SECTOR_SIZE * transferAndMemSize, fp);
 				UINT num = MAKEUINT(MAKEWORD(lpBuf[3], lpBuf[2]), MAKEWORD(lpBuf[1], 0));
 				if (n != num) {
-					OutputString(" Expected sector num: %6x, Got sector num: %6x\n", n, num);
+					OutputString("\nDetected bad sector. Expected sector num: %6x, Got sector num: %6x\n", n, num);
+					sectorNum = n;
+					_fseeki64(fp, (sectorNum - 0x30000) * dwSectorSize, SEEK_SET);
+					UINT64 tmpPos = (UINT64)_ftelli64(fp);
+					nLBA = (INT)(tmpPos / dwSectorSize);
+					break;
 				}
-				OutputString("\rChecking sector num: %6lx", n);
+				OutputString("\rChecking sector num: %6x", n);
 			}
 			OutputString("\n");
-			return FALSE;
 #endif
 		}
 
@@ -1049,7 +1059,7 @@ BOOL ReadDVDRaw(
 			OutputString("\rCreating raw(LBA) %7d/%7d"
 				, nLBA + (INT)transferAndMemSize, pDisc->SCSI.nAllLength);
 			if (pExtArg->byFix) {
-				if (nLBA == (INT)pDisc->DVD.fixNum * 16 + 16) {
+				if (nLBA == (INT)pDisc->DVD.fixNum * 16 + (INT)transferAndMemSize) {
 					break;
 				}
 			}
@@ -1071,8 +1081,8 @@ BOOL ReadDVDRaw(
 			// 1 == failed open .raw
 			// 2 == failed open .iso
 			// 3 == no enough cache space for this seed
-			// 4 == no seed found for recording frame xx
 			// 6 == can't write to .iso
+			// frame num == no seed found for recording frame xx
 			// frame num == error unscrambling recording frame xx
 			OutputString("ret = %d\n", bRet);
 			if (bRet == 0) {
@@ -1502,7 +1512,7 @@ BOOL ReadDiscStructure(
 			pDisc->SCSI.nAllLength = WII_SL_SIZE;
 		}
 	}
-
+#if 0
 	if (pDisc->DVD.discType == DISC_TYPE_DVD::gamecube || pDisc->DVD.discType == DISC_TYPE_DVD::wii) {
 		BYTE bca[0xc0] = {};
 		cdb.Reserved1 = 0;
@@ -1532,7 +1542,7 @@ BOOL ReadDiscStructure(
 			OutputMainChannel(fileDisc, bca, _T("BCA"), 0, 0xc0);
 		}
 	}
-
+#endif
 	if (*pExecType == dvd || *pExecType == xbox) {
 		FcloseAndNull(fpPfi);
 		FcloseAndNull(fpDmi);
