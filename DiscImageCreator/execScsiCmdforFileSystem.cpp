@@ -1444,8 +1444,6 @@ BOOL ReadXBOXFileSystem(
 	return TRUE;
 }
 
-// http://hitmen.c02.at/files/yagcd/yagcd/chap13.html#sec13
-// https://wiibrew.org/wiki/Wii_Disc
 BOOL ReadNintendoSystemHeader(
 	LPCTSTR pszFullPath,
 	FILE** fp,
@@ -1461,6 +1459,8 @@ BOOL ReadNintendoSystemHeader(
 		FcloseAndNull(*fp);
 		return FALSE;
 	};
+	// http://hitmen.c02.at/files/yagcd/yagcd/chap13.html#sec13.1
+	// https://wiibrew.org/wiki/Wii_disc#Header
 	OutputMainChannel(fileMainInfo, buf, _T("Disc Header"), 0, 1024);
 	OutputVolDescLog(
 		OUTPUT_DHYPHEN_PLUS_STR("Disc Header")
@@ -1495,6 +1495,7 @@ BOOL ReadNintendoFileSystem(
 		FcloseAndNull(fp);
 		return FALSE;
 	};
+	// http://hitmen.c02.at/files/yagcd/yagcd/chap13.html#sec13.1
 	OutputMainChannel(fileMainInfo, buf, _T("NintendoOpticalDiscFS"), 0, 64);
 	UINT ofsOfFst = MAKEUINT(MAKEWORD(buf[39], buf[38]), MAKEWORD(buf[37], buf[36]));
 	UINT sizeOfFst = MAKEUINT(MAKEWORD(buf[43], buf[42]), MAKEWORD(buf[41], buf[40]));
@@ -1532,6 +1533,7 @@ BOOL ReadNintendoFileSystem(
 		FcloseAndNull(fp);
 		return FALSE;
 	};
+	// http://hitmen.c02.at/files/yagcd/yagcd/chap13.html#sec13.3
 	OutputMainChannel(fileMainInfo, buf, _T("Apploader"), 0x2440 / 0x800, 0x20);
 	OutputVolDescLog(
 		OUTPUT_DHYPHEN_PLUS_STR("Apploader")
@@ -1559,6 +1561,7 @@ BOOL ReadNintendoFileSystem(
 		FcloseAndNull(fp);
 		return FALSE;
 	};
+	// http://hitmen.c02.at/files/yagcd/yagcd/chap13.html#sec13.4
 	OutputMainChannel(fileMainInfo, lpBuf, _T("Root Directory Entry"), (INT)ofsOfFst / 0x800, sizeOfFst);
 	UINT numOfEntries = MAKEUINT(MAKEWORD(lpBuf[11], lpBuf[10]), MAKEWORD(lpBuf[9], lpBuf[8]));
 	OutputVolDescLog(
@@ -1576,6 +1579,7 @@ BOOL ReadNintendoFileSystem(
 	);
 	
 	UINT posOfString = numOfEntries * 12;
+	// http://hitmen.c02.at/files/yagcd/yagcd/chap13.html#sec13.4.1
 	OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR("Directory Entry"));
 
 	for (UINT i = 12; i < posOfString; i += 12) {
@@ -1636,8 +1640,9 @@ BOOL ReadPartitionTblEntry(
 			return FALSE;
 		};
 		ofsOfPartion[idx][i] = MAKEUINT(MAKEWORD(buf[3], buf[2]), MAKEWORD(buf[1], buf[0]));
+		// https://wiibrew.org/wiki/Wii_disc#Partition_table_entry
 		OutputVolDescLog(
-			OUTPUT_DHYPHEN_PLUS_STR("Partition table entry")
+			"\t" OUTPUT_DHYPHEN_PLUS_STR("Partition table entry")
 			"\t           Partition offset: %#08x\n"
 			"\t                       Type: %u\n"
 			, ofsOfPartion[idx][i], MAKEUINT(MAKEWORD(buf[7], buf[6]), MAKEWORD(buf[5], buf[4]))
@@ -1674,6 +1679,7 @@ BOOL ReadWiiPartition(
 	numOfPartition[3] = MAKEUINT(MAKEWORD(buf[27], buf[26]), MAKEWORD(buf[25], buf[24]));
 	UINT ofsOfPart4 = MAKEUINT(MAKEWORD(buf[31], buf[30]), MAKEWORD(buf[29], buf[28]));
 
+	// https://wiibrew.org/wiki/Wii_disc#Partitions_information
 	OutputVolDescLog(
 		OUTPUT_DHYPHEN_PLUS_STR("Partitions information")
 		"\t       Total 1st partitions: %u\n"
@@ -1705,6 +1711,7 @@ BOOL ReadWiiPartition(
 		FcloseAndNull(fp);
 		return FALSE;
 	};
+	// https://wiibrew.org/wiki/Wii_disc#Region_setting
 	OutputMainChannel(fileMainInfo, buf, _T("Region setting"), 0x4e000 / 0x800, 0x20);
 	OutputVolDescLog(
 		OUTPUT_DHYPHEN_PLUS_STR("Region setting")
@@ -1757,10 +1764,13 @@ BOOL ReadWiiPartition(
 			};
 			OutputMainChannel(fileMainInfo, buf, _T("Partition"), (INT)realOfsOfPartion / 0x800, 0x2C0);
 			UINT sigType = MAKEUINT(MAKEWORD(buf[3], buf[2]), MAKEWORD(buf[1], buf[0]));
+			// https://wiibrew.org/wiki/Wii_disc#Partition
+			// https://wiibrew.org/wiki/Ticket
 			OutputVolDescLog(
 				OUTPUT_DHYPHEN_PLUS_STR("Partition")
-				"\t                  Signature type: %#x\n"
-				"\tSignature by a certificate's key: "
+				"\t                          Ticket\n"
+				"\t\t                  Signature type: %#x\n"
+				"\t\tSignature by a certificate's key: "
 				, sigType
 			);
 			INT size = 256;
@@ -1772,8 +1782,8 @@ BOOL ReadWiiPartition(
 			}
 			OutputVolDescLog(
 				"\n"
-				"\t                Signature issuer: %" CHARWIDTH "s\n"
-				"\t                       ECDH data: "
+				"\t\t                Signature issuer: %" CHARWIDTH "s\n"
+				"\t\t                       ECDH data: "
 				, &buf[0x140]
 			);
 			for (INT i = 0; i < 0x3c; i++) {
@@ -1781,7 +1791,7 @@ BOOL ReadWiiPartition(
 			}
 			OutputVolDescLog(
 				"\n"
-				"\t             Encrypted title key: "
+				"\t\t             Encrypted title key: "
 			);
 			for (INT i = 0; i < 0x10; i++) {
 				OutputVolDescLog("%02x", buf[0x01BF + i]);
@@ -1802,17 +1812,17 @@ BOOL ReadWiiPartition(
 			}
 			OutputVolDescLog(
 				"\n"
-				"\t                         Unknown: %#02x\n"
-				"\t                       ticket_id: %#16llx\n"
-				"\t                      Console ID: %#08x\n"
-				"\t                        Title ID: %#16llx\n"
-				"\t                         Unknown: %#04x\n"
-				"\t            Ticket title version: %#04x\n"
-				"\t           Permitted Titles Mask: %#08x\n"
-				"\t                     Permit mask: %#08x\n"
-				"\t                    Title Export: %#02x\n"
-				"\t                Common Key index: %#02x\n"
-				"\t                         Unknown: "
+				"\t\t                         Unknown: %#02x\n"
+				"\t\t                       ticket_id: %#16llx\n"
+				"\t\t                      Console ID: %#08x\n"
+				"\t\t                        Title ID: %#16llx\n"
+				"\t\t                         Unknown: %#04x\n"
+				"\t\t            Ticket title version: %#04x\n"
+				"\t\t           Permitted Titles Mask: %#08x\n"
+				"\t\t                     Permit mask: %#08x\n"
+				"\t\t                    Title Export: %#02x\n"
+				"\t\t                Common Key index: %#02x\n"
+				"\t\t                         Unknown: "
 				, buf[0x01CF]
 				, MAKEUINT64(MAKEUINT(MAKEWORD(buf[0x01D7], buf[0x01D6]), MAKEWORD(buf[0x01D5], buf[0x01D4]))
 					, MAKEUINT(MAKEWORD(buf[0x01D3], buf[0x01D2]), MAKEWORD(buf[0x01D1], buf[0x01D0])))
@@ -1830,22 +1840,19 @@ BOOL ReadWiiPartition(
 			}
 			OutputVolDescLog(
 				"\n"
-				"\t      Content access permissions: "
+				"\t\t      Content access permissions: "
 			);
 			for (INT i = 0; i < 0x40; i++) {
 				OutputVolDescLog("%02x", buf[0x0222 + i]);
 			}
 			OutputVolDescLog("\n");
 			for (INT i = 0; i < 7 * 8; i += 8) {
-				UINT enable = MAKEUINT(MAKEWORD(buf[0x0267 + i], buf[0x0266 + i]), MAKEWORD(buf[0x0265 + i], buf[0x0264 + i]));
-				if (enable) {
-					OutputVolDescLog(
-						"\t               Enable time limit: %u\n"
-						"\t            Time limit (Seconds): %u\n"
-						, enable
-						, MAKEUINT(MAKEWORD(buf[0x026B + i], buf[0x026A + i]), MAKEWORD(buf[0x0269 + i], buf[0x0268 + i]))
-					);
-				}
+				OutputVolDescLog(
+					"\t\t                      Limit type: %u\n"
+					"\t\t                   Maximum usage: %u\n"
+					, MAKEUINT(MAKEWORD(buf[0x0267 + i], buf[0x0266 + i]), MAKEWORD(buf[0x0265 + i], buf[0x0264 + i]))
+					, MAKEUINT(MAKEWORD(buf[0x026B + i], buf[0x026A + i]), MAKEWORD(buf[0x0269 + i], buf[0x0268 + i]))
+				);
 			}
 			UINT dataSize = MAKEUINT(MAKEWORD(buf[0x02BF], buf[0x02BE]), MAKEWORD(buf[0x02BD], buf[0x02BC]));
 			OutputVolDescLog(
@@ -1873,11 +1880,14 @@ BOOL ReadWiiPartition(
 				return FALSE;
 			};
 			OutputMainChannel(fileMainInfo, buf, _T("Partition"), (INT)realOfsOfPartion / 0x800, 0x1E0);
+
 			sigType = MAKEUINT(MAKEWORD(buf[3], buf[2]), MAKEWORD(buf[1], buf[0]));
+			// https://wiibrew.org/wiki/Title_metadata
 			OutputVolDescLog(
-				OUTPUT_DHYPHEN_PLUS_STR("Partition")
-				"\t                  Signature type: %#x\n"
-				"\t                       Signature: "
+				"\t                  Title metadata\n"
+				"\t                          Header\n"
+				"\t\t                  Signature type: %#x\n"
+				"\t\t                       Signature: "
 				, sigType
 			);
 			size = 256;
@@ -1889,24 +1899,24 @@ BOOL ReadWiiPartition(
 			}
 			OutputVolDescLog(
 				"\n"
-				"\t               Padding modulo 64: "
+				"\t\t               Padding modulo 64: "
 			);
 			for (INT i = 0; i < 60; i++) {
 				OutputVolDescLog("%02x", buf[0x104 + i]);
 			}
 			OutputVolDescLog(
 				"\n"
-				"\t                          Issuer: %" CHARWIDTH "s\n"
-				"\t                         Version: %02x\n"
-				"\t                  ca_crl_version: %02x\n"
-				"\t              signer_crl_version: %02x\n"
-				"\t               Padding modulo 64: %02x\n"
-				"\t                  System Version: %16llx\n"
-				"\t                        Title ID: %16llx\n"
-				"\t                      Title type: %08x\n"
-				"\t                        Group ID: %04x\n"
-				"\t                          Region: %04x\n"
-				"\t                         Ratings: "
+				"\t\t                          Issuer: %" CHARWIDTH "s\n"
+				"\t\t                         Version: %02x\n"
+				"\t\t                  ca_crl_version: %02x\n"
+				"\t\t              signer_crl_version: %02x\n"
+				"\t\t                         Is vWii: %02x\n"
+				"\t\t                  System Version: %016llx\n"
+				"\t\t                        Title ID: %016llx\n"
+				"\t\t                      Title type: %08x\n"
+				"\t\t                        Group ID: %04x\n"
+				"\t\t                          Region: %04x\n"
+				"\t\t                         Ratings: "
 				, &buf[0x140], buf[0x180], buf[0x181], buf[0x182], buf[0x183]
 				, MAKEUINT64(MAKEUINT(MAKEWORD(buf[0x18B], buf[0x18A]), MAKEWORD(buf[0x189], buf[0x188]))
 					, MAKEUINT(MAKEWORD(buf[0x187], buf[0x186]), MAKEWORD(buf[0x185], buf[0x184])))
@@ -1921,7 +1931,7 @@ BOOL ReadWiiPartition(
 			}
 			OutputVolDescLog(
 				"\n"
-				"\t                        IPC Mask: "
+				"\t\t                        IPC Mask: "
 			);
 			for (INT i = 0; i < 12; i++) {
 				OutputVolDescLog("%02x", buf[0x1BA + i]);
@@ -1929,9 +1939,9 @@ BOOL ReadWiiPartition(
 			WORD numOfContents = MAKEWORD(buf[0x1DF], buf[0x1DE]);
 			OutputVolDescLog(
 				"\n"
-				"\t                   Access rights: %08x\n"
-				"\t                   Title version: %04x\n"
-				"\t              Number of contents: %d\n"
+				"\t\t                   Access rights: %08x\n"
+				"\t\t                   Title version: %04x\n"
+				"\t\t              Number of contents: %d\n"
 				, MAKEUINT(MAKEWORD(buf[0x1DB], buf[0x1DA]), MAKEWORD(buf[0x1D9], buf[0x1D8]))
 				, MAKEWORD(buf[0x1DD], buf[0x1DC]), numOfContents
 			);
@@ -1942,9 +1952,8 @@ BOOL ReadWiiPartition(
 			};
 			OutputMainChannel(fileMainInfo, buf, NULL, (INT)realOfsOfPartion / 0x800, 4);
 			OutputVolDescLog(
-				"\t                      boot index: %d\n"
-				"\t               Padding modulo 64: %d\n"
-				, MAKEWORD(buf[1], buf[0]), MAKEWORD(buf[3], buf[2])
+				"\t\t                      boot index: %d\n"
+				, MAKEWORD(buf[1], buf[0])
 			);
 			size_t contentsSize = (size_t)36 * numOfContents;
 			if (fread(buf, sizeof(BYTE), contentsSize, fp) != contentsSize) {
@@ -1955,11 +1964,12 @@ BOOL ReadWiiPartition(
 			OutputMainChannel(fileMainInfo, buf, NULL, (INT)realOfsOfPartion / 0x800, (UINT)(36 * numOfContents));
 			for (size_t i = 0; i < contentsSize; i += 36) {
 				OutputVolDescLog(
-					"\t                      Content ID: %u\n"
-					"\t                           Index: %u\n"
-					"\t                            Type: %u\n"
-					"\t                            Size: %llu (%#16llx)\n"
-					"\t                       SHA1 hash: "
+					"\t                         Content\n"
+					"\t\t                      Content ID: %u\n"
+					"\t\t                           Index: %u\n"
+					"\t\t                            Type: %u\n"
+					"\t\t                            Size: %llu (%#llx)\n"
+					"\t\t                       SHA1 hash: "
 					, MAKEUINT(MAKEWORD(buf[3], buf[2]), MAKEWORD(buf[1], buf[0]))
 					, MAKEWORD(buf[5], buf[4])
 					, MAKEWORD(buf[7], buf[6])
@@ -1998,10 +2008,11 @@ BOOL ReadWiiPartition(
 						return FALSE;
 					};
 				}
+				// https://wiibrew.org/wiki/Title_metadata#Certificates
 				OutputVolDescLog(
-					OUTPUT_DHYPHEN_PLUS_STR("Certificates")
-					"\t                  Signature type: %#x\n"
-					"\t                       Signature: "
+					"\t                    Certificates\n"
+					"\t\t                  Signature type: %#x\n"
+					"\t\t                       Signature: "
 					, sigType
 				);
 				for (INT i = 0; i < size; i++) {
@@ -2010,10 +2021,10 @@ BOOL ReadWiiPartition(
 				INT ofs = 4 + size + 60;
 				OutputVolDescLog(
 					"\n"
-					"\t                          Issuer: %" CHARWIDTH "s\n"
-					"\t                             Tag: %08x\n"
-					"\t                            Name: %" CHARWIDTH "s\n"
-					"\t                             Key: "
+					"\t\t                          Issuer: %" CHARWIDTH "s\n"
+					"\t\t                 Public Key Type: %08x\n"
+					"\t\t                            Name: %" CHARWIDTH "s\n"
+					"\t\t                      Public Key: "
 					, &buf[ofs]
 					, MAKEUINT(MAKEWORD(buf[ofs + 67], buf[ofs + 66]), MAKEWORD(buf[ofs + 65], buf[ofs + 64]))
 					, &buf[ofs + 68]
@@ -2045,7 +2056,7 @@ BOOL ReadWiiPartition(
 					fwrite(decBuf, sizeof(BYTE), 0x7c00, fpDec);
 					OutputString("\rDecrypting iso %7u/%7u", i, dataSize);
 				}
-				OutputString("\n");
+				OutputString("\nDone decrypt\n");
 				FcloseAndNull(fpDec);
 				ReadNintendoFileSystem(pDevice, decPath, wii);
 			}
