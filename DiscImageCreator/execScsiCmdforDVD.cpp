@@ -829,18 +829,21 @@ BOOL ReadDVDRaw(
 			nLBA = (INT)(size / dwSectorSize);
 #if 1
 			_fseeki64(fp, 0, SEEK_SET);
-			for (UINT n = 0x30000; n < sectorNum; n += transferAndMemSize) {
-				fread(lpBuf, sizeof(BYTE), DVD_RAW_SECTOR_SIZE * transferAndMemSize, fp);
-				UINT num = MAKEUINT(MAKEWORD(lpBuf[3], lpBuf[2]), MAKEWORD(lpBuf[1], 0));
+			for (DWORD n = 0x30000; n < sectorNum; n += transferAndMemSize) {
+				if (fread(lpBuf, sizeof(BYTE), DVD_RAW_SECTOR_SIZE * transferAndMemSize, fp) < DVD_RAW_SECTOR_SIZE * transferAndMemSize) {
+					OutputErrorString("Failed to read [F:%s][L:%d]\n", _T(__FUNCTION__), __LINE__);
+					return FALSE;
+				}
+				DWORD num = MAKEDWORD(MAKEWORD(lpBuf[3], lpBuf[2]), MAKEWORD(lpBuf[1], 0));
 				if (n != num) {
-					OutputString("\nDetected bad sector. Expected sector num: %6x, Got sector num: %6x\n", n, num);
+					OutputString("\nDetected bad sector. Expected sector num: %6lx, Got sector num: %6lx\n", n, num);
 					sectorNum = n;
 					_fseeki64(fp, (sectorNum - 0x30000) * dwSectorSize, SEEK_SET);
 					UINT64 tmpPos = (UINT64)_ftelli64(fp);
 					nLBA = (INT)(tmpPos / dwSectorSize);
 					break;
 				}
-				OutputString("\rChecking sector num: %6x", n);
+				OutputString("\rChecking sector num: %6lx", n);
 			}
 			OutputString("\n");
 #endif
