@@ -48,7 +48,8 @@ BOOL ReadDVDRaw(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
-	LPCTSTR pszFullPath
+	LPCTSTR pszFullPath,
+	PHASH pHash
 );
 
 BOOL ReadDiscStructure(

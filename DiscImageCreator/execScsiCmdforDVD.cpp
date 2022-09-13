@@ -628,7 +628,8 @@ BOOL ReadDVDRaw(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
-	LPCTSTR pszFullPath
+	LPCTSTR pszFullPath,
+	PHASH pHash
 ) {
 //#define TEST_WII
 #ifdef TEST_WII
@@ -641,8 +642,9 @@ BOOL ReadDVDRaw(
 		memcpy(szMode, _T("rb+"), 3);
 	}
 
+	_TCHAR szFnameAndExt[_MAX_FNAME + _MAX_EXT] = {};
 	_TCHAR pszOutPath[_MAX_PATH] = {};
-	if (NULL == (fp = CreateOrOpenFile(pszFullPath, NULL, pszOutPath, NULL, NULL, _T(".raw"), szMode, 0, 0))) {
+	if (NULL == (fp = CreateOrOpenFile(pszFullPath, NULL, pszOutPath, szFnameAndExt, NULL, _T(".raw"), szMode, 0, 0))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
@@ -848,6 +850,7 @@ BOOL ReadDVDRaw(
 			OutputString("\n");
 #endif
 		}
+		CalcInit(&pHash->pHashChunk[pHash->uiIndex].md5, &pHash->pHashChunk[pHash->uiIndex].sha);
 
 #ifdef _WIN32
 		INT direction = SCSI_IOCTL_DATA_IN;
@@ -955,7 +958,7 @@ BOOL ReadDVDRaw(
 			}
 			if (bCheckSectorNum) {
 				nRereadNum = 0;
-				fwrite(lpBuf, sizeof(BYTE), rawWriteSize, fp);
+				WriteBufWithCalc(lpBuf, dwSectorSize * memBlkSize, transferLen.AsULong, fp, pHash);
 				sectorNum += transferAndMemSize;
 			}
 			else {
@@ -1074,6 +1077,9 @@ BOOL ReadDVDRaw(
 	}
 	FreeAndNull(pBuf);
 	FcloseAndNull(fp);
+
+	_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, szFnameAndExt, sizeof(szFnameAndExt));
+	pHash->pHashChunk[pHash->uiIndex].ui64FileSize = (UINT64)(DVD_RAW_SECTOR_SIZE * pDisc->SCSI.nAllLength);
 
 	if (bRet && IsNintendoDisc(pDisc) && IsSupported0xE7(pDevice)) {
 		_TCHAR str[_MAX_PATH * 3] = {};

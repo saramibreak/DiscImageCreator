@@ -32,6 +32,7 @@ BOOL OutputHash(
 #else
 	XMLElement* pWriter,
 #endif
+	PEXT_ARG pExtArg,
 	_TCHAR* pszFullPath,
 	DWORD dwBytesPerSector,
 	LPCTSTR szExt,
@@ -46,7 +47,7 @@ BOOL OutputHash(
 	SHA1Context sha = {};
 	UINT64 ui64FileSize = 0;
 
-	if (pHash->uiMax == 0) {
+	if (pHash->uiMax == 0 || (pExtArg->byRawDump && !_tcsncmp(szExt, _T(".iso"), 4))) {
 		// for CD
 		_TCHAR szOutPath[_MAX_PATH] = {};
 		FILE* fp = NULL;
@@ -65,16 +66,9 @@ BOOL OutputHash(
 		}
 
 		ui64FileSize = GetFileSize64(0, fp);
-		UINT uiSectorSizeOne = 0;
-		if (dwBytesPerSector) {
-			uiSectorSizeOne = (UINT)dwBytesPerSector;
-		}
-		else {
-			uiSectorSizeOne = CD_RAW_SECTOR_SIZE;
-		}
+		UINT64 ui64SectorSizeAll = ui64FileSize / (UINT64)dwBytesPerSector;
 
-		UINT64 ui64SectorSizeAll = ui64FileSize / (UINT64)uiSectorSizeOne;
-		if (ui64FileSize >= uiSectorSizeOne) {
+		if (ui64FileSize >= dwBytesPerSector) {
 			CalcInit(&md5, &sha);
 
 			BYTE data[CD_RAW_SECTOR_SIZE] = {};
@@ -82,11 +76,11 @@ BOOL OutputHash(
 			OutputString("Hashing: %s\n", szFnameAndExt);
 			// TODO: This code can more speed up! if reduce calling fread()
 			for (UINT64 i = 1; i <= ui64SectorSizeAll; i++) {
-				if (fread(data, sizeof(BYTE), uiSectorSizeOne, fp) < uiSectorSizeOne) {
-					OutputErrorString("Failed to read: read size %u [F:%s][L:%d]\n", uiSectorSizeOne, _T(__FUNCTION__), __LINE__);
+				if (fread(data, sizeof(BYTE), dwBytesPerSector, fp) < dwBytesPerSector) {
+					OutputErrorString("Failed to read: read size %lu [F:%s][L:%d]\n", dwBytesPerSector, _T(__FUNCTION__), __LINE__);
 					return FALSE;
 				};
-				nRet = CalcHash(&crc32, &md5, &sha, data, uiSectorSizeOne);
+				nRet = CalcHash(&crc32, &md5, &sha, data, dwBytesPerSector);
 				if (!nRet) {
 					break;
 				}
@@ -112,6 +106,7 @@ BOOL OutputHash(
 	if (CalcEnd(&md5, &sha, digest, Message_Digest)) {
 		if (!_tcsncmp(szExt, _T(".scm"), 4) ||
 			!_tcsncmp(szExt, _T(".img"), 4) ||
+			!_tcsncmp(szExt, _T(".raw"), 4) ||
 			find_last_string(szFnameAndExt, _T("_SS.bin")) ||
 			find_last_string(szFnameAndExt, _T("_PFI.bin")) ||
 			find_last_string(szFnameAndExt, _T("_DMI.bin")) ||
@@ -239,7 +234,7 @@ BOOL OutputRomElement(
 	PHASH pHash
 ) {
 	if (*pExecType == fd || *pExecType == disk) {
-		if (!OutputHash(pWriter, pszFullPath, pDisc->dwBytesPerSector, _T(".bin"), 1, 1, FALSE, pHash)) {
+		if (!OutputHash(pWriter, pExtArg, pszFullPath, pDisc->dwBytesPerSector, _T(".bin"), 1, 1, FALSE, pHash)) {
 			return FALSE;
 		}
 	}
@@ -252,7 +247,7 @@ BOOL OutputRomElement(
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 					return FALSE;
 				}
-				if (!OutputHash(pWriter, szPath, pDisc->dwBytesPerSector, _T(".bin"), 1, 1, FALSE, pHash)) {
+				if (!OutputHash(pWriter, pExtArg, szPath, NOT_USE_SIZE, _T(".bin"), 1, 1, FALSE, pHash)) {
 					return FALSE;
 				}
 			}
@@ -263,7 +258,7 @@ BOOL OutputRomElement(
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				return FALSE;
 			}
-			if (!OutputHash(pWriter, szPath, pDisc->dwBytesPerSector, _T(".bin"), 1, 1, FALSE, pHash)) {
+			if (!OutputHash(pWriter, pExtArg, szPath, NOT_USE_SIZE, _T(".bin"), 1, 1, FALSE, pHash)) {
 				return FALSE;
 			}
 
@@ -273,7 +268,7 @@ BOOL OutputRomElement(
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				return FALSE;
 			}
-			if (!OutputHash(pWriter, szPath, pDisc->dwBytesPerSector, _T(".bin"), 1, 1, FALSE, pHash)) {
+			if (!OutputHash(pWriter, pExtArg, szPath, NOT_USE_SIZE, _T(".bin"), 1, 1, FALSE, pHash)) {
 				return FALSE;
 			}
 		}
@@ -284,15 +279,15 @@ BOOL OutputRomElement(
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				return FALSE;
 			}
-			if (!OutputHash(pWriter, szPath, pDisc->dwBytesPerSector, _T(".bin"), 1, 1, FALSE, pHash)) {
+			if (!OutputHash(pWriter, pExtArg, szPath, NOT_USE_SIZE, _T(".bin"), 1, 1, FALSE, pHash)) {
 				return FALSE;
 			}
 		}
-		if (!OutputHash(pWriter, pszFullPath, pDisc->dwBytesPerSector, _T(".iso"), 1, 1, FALSE, pHash)) {
+		if (!OutputHash(pWriter, pExtArg, pszFullPath, DISC_MAIN_DATA_SIZE, _T(".iso"), 1, 1, FALSE, pHash)) {
 			return FALSE;
 		}
 		if (pExtArg->byRawDump) {
-			if (!OutputHash(pWriter, pszFullPath, pDisc->dwBytesPerSector, _T(".raw"), 1, 1, FALSE, pHash)) {
+			if (!OutputHash(pWriter, pExtArg, pszFullPath, NOT_USE_SIZE, _T(".raw"), 1, 1, FALSE, pHash)) {
 				return FALSE;
 			}
 		}
@@ -302,16 +297,16 @@ BOOL OutputRomElement(
 			OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("Hash(Whole image)"));
 			if (pDisc->SCSI.trkType == TRACK_TYPE::dataExist ||
 				pDisc->SCSI.trkType == TRACK_TYPE::pregapDataIn1stTrack) {
-				if (!OutputHash(pWriter, pszFullPath, pDisc->dwBytesPerSector, _T(".scm"), 1, 1, FALSE, pHash)) {
+				if (!OutputHash(pWriter, pExtArg, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".scm"), 1, 1, FALSE, pHash)) {
 					return FALSE;
 				}
 			}
-			if (!OutputHash(pWriter, pszFullPath, pDisc->dwBytesPerSector, _T(".img"), 1, 1, FALSE, pHash)) {
+			if (!OutputHash(pWriter, pExtArg, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".img"), 1, 1, FALSE, pHash)) {
 				return FALSE;
 			}
 		}
 		for (UCHAR i = pDisc->SCSI.toc.FirstTrack; i <= pDisc->SCSI.toc.LastTrack; i++) {
-			if (!OutputHash(pWriter, pszFullPath, pDisc->dwBytesPerSector, _T(".bin"), i, pDisc->SCSI.toc.LastTrack, bDesync, pHash)) {
+			if (!OutputHash(pWriter, pExtArg, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".bin"), i, pDisc->SCSI.toc.LastTrack, bDesync, pHash)) {
 				return FALSE;
 			}
 		}

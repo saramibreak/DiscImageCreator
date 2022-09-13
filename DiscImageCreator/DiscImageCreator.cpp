@@ -173,13 +173,13 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 			hash.uiMax = 1; // .bin
 		}
 		else if (*pExecType == bd) {
-			hash.uiMax = 2; // PIC.bin, .iso 
+			hash.uiMax = 2; // PIC.bin, .iso
 		}
 		else if (*pExecType == dvd || *pExecType == sacd) {
-			hash.uiMax = 3; // PFI.bin, DMI.bin, .iso 
+			hash.uiMax = 3; // PFI.bin, DMI.bin, .iso or .raw
 		}
 		else if (*pExecType == xbox) {
-			hash.uiMax = 4; // SS.bin, PFI.bin, DMI.bin, .iso 
+			hash.uiMax = 4; // SS.bin, PFI.bin, DMI.bin, .iso
 		}
 		hash.pHashChunk = (PHASH_CHUNK)calloc(hash.uiMax, sizeof(HASH_CHUNK));
 		if (!hash.pHashChunk) {
@@ -393,7 +393,7 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 								if (pExtArg->byFix) {
 									pDisc->DVD.fixNum = s_uiFix;
 								}
-								bRet = ReadDVDRaw(pExtArg, pDevice, pDisc, pszFullPath);
+								bRet = ReadDVDRaw(pExtArg, pDevice, pDisc, pszFullPath, &hash);
 								if (pExtArg->byFix && bRet > 6) {
 									s_uiFix = (UINT)bRet;
 								}
