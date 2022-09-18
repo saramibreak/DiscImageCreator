@@ -35,7 +35,11 @@
 
 - SCSI Command (MMC, SPC etc)  
   http://www.13thmonkey.org/documentation/SCSI/
-  
+
+- cuesheet 
+  https://web.archive.org/web/20070614044112/http://www.goldenhawk.com/download/cdrwin.pdf  
+  https://github.com/libyal/libodraw/blob/main/documentation/CUE%20sheet%20format.asciidoc
+
 ## Technical Documentation
 - XBOX  
   https://xboxdevwiki.net/Xbox_Game_Disc  
