@@ -440,12 +440,14 @@ BOOL ReadDirectoryRecord(
 	UINT uiDirPosNum
 ) {
 	LPBYTE bufDec = NULL;
+	DWORD dwMaxTransferLen = pDevice->dwMaxTransferLength;
 	if (*pExecType == gd) {
 		bufDec = (LPBYTE)calloc(pDevice->dwMaxTransferLength, sizeof(BYTE));
 		if (!bufDec) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
 		}
+		dwMaxTransferLen = pDevice->dwMaxTransferLength * DISC_MAIN_DATA_SIZE / CD_RAW_SECTOR_SIZE;
 	}
 	BYTE byTransferLen = 1;
 	BYTE byRoop = byTransferLen;
@@ -464,17 +466,18 @@ BOOL ReadDirectoryRecord(
 
 		for (UINT uiPathTblIdx = 0; uiPathTblIdx < uiDirPosNum; uiPathTblIdx++) {
 			INT nLBA = (INT)pPathTblRec[uiPathTblIdx].uiPosOfDir;
-			if (pPathTblRec[uiPathTblIdx].uiDirSize > pDevice->dwMaxTransferLength) {
+			if (pPathTblRec[uiPathTblIdx].uiDirSize > dwMaxTransferLen) {
 				// [FMT] Psychic Detective Series Vol. 4 - Orgel (Japan) (v1.0)
 				// [FMT] Psychic Detective Series Vol. 5 - Nightmare (Japan)
 				// [IBM - PC compatible] Maria 2 - Jutai Kokuchi no Nazo (Japan) (Disc 1)
 				// [IBM - PC compatible] PC Game Best Series Vol. 42 - J.B. Harold Series - Kiss of Murder - Satsui no Kuchizuke (Japan)
 				// [SS] Madou Monogatari (Japan)
 				// and more
-				DWORD additionalTransferLen = pPathTblRec[uiPathTblIdx].uiDirSize / pDevice->dwMaxTransferLength;
-				SetCommandForTransferLength(pExecType, pDevice, pCdb, pDevice->dwMaxTransferLength, &byTransferLen, &byRoop);
+				SetCommandForTransferLength(pExecType, pDevice, pCdb, dwMaxTransferLen, &byTransferLen, &byRoop);
+
+				DWORD additionalTransferLen = pPathTblRec[uiPathTblIdx].uiDirSize / dwMaxTransferLen;
 				OutputMainInfoLog("nLBA %d, uiDirSize: %lu*%lu, byTransferLen: %d*%lu [L:%d]\n"
-					, nLBA, pDevice->dwMaxTransferLength, additionalTransferLen, byRoop, additionalTransferLen, __LINE__);
+					, nLBA, dwMaxTransferLen, additionalTransferLen, byRoop, additionalTransferLen, __LINE__);
 
 				for (DWORD n = 0; n < additionalTransferLen; n++) {
 					if (!ReadDirectoryRecordDetail(pExecType, pExtArg, pDevice, pDisc, pCdb, nLBA
@@ -483,11 +486,13 @@ BOOL ReadDirectoryRecord(
 					}
 					nLBA += byRoop;
 				}
-				DWORD dwLastTblSize = pPathTblRec[uiPathTblIdx].uiDirSize % pDevice->dwMaxTransferLength;
+				DWORD dwLastTblSize = pPathTblRec[uiPathTblIdx].uiDirSize % dwMaxTransferLen;
+				if (*pExecType == gd) {
+					dwLastTblSize = pPathTblRec[uiPathTblIdx].uiDirSize % (DISC_MAIN_DATA_SIZE * byRoop * additionalTransferLen);
+				}
 				if (dwLastTblSize != 0) {
 					SetCommandForTransferLength(pExecType, pDevice, pCdb, dwLastTblSize, &byTransferLen, &byRoop);
-					OutputMainInfoLog("nLBA %d, uiDirSize: %lu, byTransferLen: %d [L:%d]\n"
-						, nLBA, dwLastTblSize, byRoop, __LINE__);
+					OutputMainInfoLog("nLBA %d, uiDirSize: %lu, byTransferLen: %d [L:%d]\n", nLBA, dwLastTblSize, byRoop, __LINE__);
 
 					if (!ReadDirectoryRecordDetail(pExecType, pExtArg, pDevice, pDisc, pCdb, nLBA
 						, lpBuf, bufDec, byTransferLen, uiDirPosNum, uiLogicalBlkCoef, nSectorOfs, pPathTblRec, uiPathTblIdx)) {
