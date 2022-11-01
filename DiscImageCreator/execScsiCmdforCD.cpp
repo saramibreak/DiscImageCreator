@@ -374,7 +374,7 @@ BOOL ReadCDForRereadingSectorType1(
 					// Write track to scrambled again
 					WriteMainChannel(pExecType, pExtArg, pDisc, lpBuf, nLBA, fpImg);
 
-					LONG lSeekC2 = CD_RAW_READ_C2_294_SIZE * (LONG)nLBA - nStart - (pDisc->MAIN.nCombinedOffset / 8);
+					LONG lSeekC2 = CD_RAW_READ_C2_294_SIZE * (LONG)nLBA - nStart/* - (pDisc->MAIN.nCombinedOffset / 8)*/;
 					fseek(fpC2, lSeekC2, SEEK_SET);
 					WriteC2(pExtArg, pDisc, lpNextBuf + pDevice->TRANSFER.uiBufC2Offset, nLBA, fpC2);
 					OutputC2ErrorLog("good. Rewrote .scm[%ld-%ld(%lx-%lx)] .c2[%ld-%ld(%lx-%lx)]\n"
@@ -583,7 +583,7 @@ BOOL ReadCDForRereadingSectorType2(
 								fseek(fpImg, CD_RAW_SECTOR_SIZE * (LONG)(nLBA + q) - pDisc->MAIN.nCombinedOffset, SEEK_SET);
 								// Write track to scrambled again
 								WriteMainChannel(pExecType, pExtArg, pDisc, &lpRereadSector[q][CD_RAW_SECTOR_SIZE * l], nLBA, fpImg);
-								fseek(fpC2, CD_RAW_READ_C2_294_SIZE * (LONG)nLBA - (pDisc->MAIN.nCombinedOffset / 8), SEEK_SET);
+								fseek(fpC2, CD_RAW_READ_C2_294_SIZE * (LONG)nLBA/* - (pDisc->MAIN.nCombinedOffset / 8)*/, SEEK_SET);
 								if (q + 1 < dwTransferLen) {
 									WriteC2(pExtArg, pDisc, &lpRereadSector[q + 1][CD_RAW_SECTOR_SIZE * l] + pDevice->TRANSFER.uiBufC2Offset, nLBA, fpC2);
 								}

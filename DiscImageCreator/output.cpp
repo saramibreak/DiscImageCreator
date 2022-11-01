@@ -672,6 +672,8 @@ VOID WriteC2(
 	INT nLBA,
 	FILE* fpC2
 ) {
+	fwrite(lpBuf, sizeof(BYTE), CD_RAW_READ_C2_294_SIZE, fpC2);
+#if 0
 	INT sLBA = pDisc->MAIN.nFixStartLBA;
 	INT eLBA = pDisc->MAIN.nFixEndLBA;
 	UINT nC2SlideSize = pDisc->MAIN.uiMainDataSlideSize / 8;
@@ -705,6 +707,7 @@ VOID WriteC2(
 			fwrite(lpBuf, sizeof(BYTE), CD_RAW_READ_C2_294_SIZE, fpC2);
 		}
 	}
+#endif
 }
 
 VOID WriteSubChannel(
