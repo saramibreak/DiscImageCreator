@@ -1079,7 +1079,7 @@ BOOL ReadDVDRaw(
 	FcloseAndNull(fp);
 
 	_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, szFnameAndExt, sizeof(szFnameAndExt));
-	pHash->pHashChunk[pHash->uiIndex].ui64FileSize = (UINT64)(DVD_RAW_SECTOR_SIZE * pDisc->SCSI.nAllLength);
+	pHash->pHashChunk[pHash->uiIndex].ui64FileSize = DVD_RAW_SECTOR_SIZE * (UINT64)pDisc->SCSI.nAllLength;
 
 	if (bRet && IsNintendoDisc(pDisc) && IsSupported0xE7(pDevice)) {
 		_TCHAR str[_MAX_PATH * 3] = {};
