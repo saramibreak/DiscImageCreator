@@ -252,6 +252,10 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 							OutputString("[WARNING] /c2 and /s 0 can't be used together. Changed /s 0 to /s 1.\n");
 							pExtArg->uiSubAddionalNum = 1;
 						}
+						else if (pExtArg->uiSubAddionalNum != 2 && IsPrextor712OrNewer(pDevice)) {
+							OutputString("[INFO] This drive has 295 offset in the c2. Changed to /s 2.\n");
+							pExtArg->uiSubAddionalNum = 2;
+						}
 					}
 					else {
 						OutputString("[WARNING] /c2 isn't set. The result of dumping may be incorrect if c2 error exists.\n");

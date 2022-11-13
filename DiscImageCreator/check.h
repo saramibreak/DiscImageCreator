@@ -56,6 +56,10 @@ BOOL IsPrextorDVDDrive(
 	PDEVICE pDevice
 );
 
+BOOL IsPrextor712OrNewer(
+	PDEVICE pDevice
+);
+
 VOID SupportIndex0InTrack1(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice
@@ -210,6 +214,8 @@ BOOL IsValidSubQAMSF(
 
 BOOL ContainsC2Error(
 	PDEVICE pDevice,
+	INT nStart,
+	INT nEnd,
 	LPBYTE lpBuf,
 	LPUINT lpuiC2errorNum,
 	INT nLBA,

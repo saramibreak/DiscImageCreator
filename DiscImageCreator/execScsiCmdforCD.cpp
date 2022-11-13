@@ -284,8 +284,8 @@ BOOL ProcessReadCD(
 	}
 
 	memcpy(pDiscPerSector->subcode.prev, pDiscPerSector->subcode.current, CD_RAW_READ_SUBCODE_SIZE);
-	bRet = ExecReadCDForC2(pExecType, pExtArg, pDevice, lpCmd, nLBA,
-		pDiscPerSector->data.current, _T(__FUNCTION__), __LINE__);
+	bRet = ExecReadCDForC2(pExecType, pExtArg, pDevice,
+		lpCmd, nLBA, pDiscPerSector->data.current, _T(__FUNCTION__), __LINE__);
 
 	if (pDevice->byPlxtrDrive) {
 		if (bRet == RETURNED_NO_C2_ERROR_1ST) {
@@ -295,12 +295,30 @@ BOOL ProcessReadCD(
 				AlignRowSubcode(pDiscPerSector->subcode.next, pDiscPerSector->data.next + pDevice->TRANSFER.uiBufSubOffset);
 					
 				if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
-					bRet = ContainsC2Error(pDevice, pDiscPerSector->data.next, &pDiscPerSector->uiC2errorNum, nLBA, TRUE);
+					if (IsPrextor712OrNewer(pDevice)) {
+						bRet = ContainsC2Error(pDevice, 1, CD_RAW_READ_C2_294_SIZE, pDiscPerSector->data.next, &pDiscPerSector->uiC2errorNum, nLBA, TRUE);
+					}
+					else {
+						bRet = ContainsC2Error(pDevice, 0, CD_RAW_READ_C2_294_SIZE, pDiscPerSector->data.next, &pDiscPerSector->uiC2errorNum, nLBA, TRUE);
+					}
 				}
 				if (pDiscPerSector->data.nextNext != NULL && 2 <= pExtArg->uiSubAddionalNum) {
-					ExecReadCDForC2(pExecType, pExtArg, pDevice, lpCmd,
-						nLBA + 2, pDiscPerSector->data.nextNext, _T(__FUNCTION__), __LINE__);
+//					ExecReadCDForC2(pExecType, pExtArg, pDevice, lpCmd,
+//						nLBA + 2, pDiscPerSector->data.nextNext, _T(__FUNCTION__), __LINE__);
+					memcpy(pDiscPerSector->data.nextNext, pDiscPerSector->data.current + pDevice->TRANSFER.uiBufLen * 2, pDevice->TRANSFER.uiBufLen);
 					AlignRowSubcode(pDiscPerSector->subcode.nextNext, pDiscPerSector->data.nextNext + pDevice->TRANSFER.uiBufSubOffset);
+
+					if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
+						BOOL bRet2 = RETURNED_NO_C2_ERROR_1ST;
+						if (IsPrextor712OrNewer(pDevice)) {
+							UINT uiErrorBak = pDiscPerSector->uiC2errorNum;
+							bRet2 = ContainsC2Error(pDevice, 0, 1, pDiscPerSector->data.nextNext, &pDiscPerSector->uiC2errorNum, nLBA, TRUE);
+							if (bRet2 == RETURNED_EXIST_C2_ERROR) {
+								bRet = bRet2;
+							}
+							pDiscPerSector->uiC2errorNum += uiErrorBak;
+						}
+					}
 				}
 			}
 		}
@@ -309,7 +327,7 @@ BOOL ProcessReadCD(
 		if (bRet == RETURNED_NO_C2_ERROR_1ST) {
 			AlignRowSubcode(pDiscPerSector->subcode.current, pDiscPerSector->data.current + pDevice->TRANSFER.uiBufSubOffset);
 			if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
-				bRet = ContainsC2Error(pDevice, pDiscPerSector->data.current, &pDiscPerSector->uiC2errorNum, nLBA, TRUE);
+				bRet = ContainsC2Error(pDevice, 0, CD_RAW_READ_C2_294_SIZE, pDiscPerSector->data.current, &pDiscPerSector->uiC2errorNum, nLBA, TRUE);
 			}
 			if (!IsValidProtectedSector(pDisc, nLBA, GetReadErrorFileIdx(pExtArg, pDisc, nLBA))) {
 				if (pDiscPerSector->data.next != NULL && 1 <= pExtArg->uiSubAddionalNum) {
@@ -343,13 +361,13 @@ BOOL ReadCDForRereadingSectorType1(
 	INT nStart
 ) {
 	LPBYTE lpBuf = NULL;
-	if (NULL == (lpBuf = (LPBYTE)calloc(CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * 2, sizeof(BYTE)))) {
+	if (NULL == (lpBuf = (LPBYTE)calloc(CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * 3, sizeof(BYTE)))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
 	BOOL bRet = TRUE;
 	try {
-		SetReadDiscCommand(pExecType, pExtArg, pDevice, 2
+		SetReadDiscCommand(pExecType, pExtArg, pDevice, 3
 			, CDFLAG::_READ_CD::byte294, CDFLAG::_READ_CD::Raw, lpCmd, FALSE);
 
 		for (INT m = 0; m < pDisc->MAIN.nC2ErrorCnt; m++) {
@@ -358,7 +376,7 @@ BOOL ReadCDForRereadingSectorType1(
 				OutputString("\rNeed to reread sector: %6d rereading times: %4u/%4u"
 					, nLBA, i + 1, pExtArg->uiMaxRereadNum);
 				if (!ExecReadCD(pExtArg, pDevice, lpCmd, nLBA, lpBuf
-					, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * 2, _T(__FUNCTION__), __LINE__)) {
+					, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * 3, _T(__FUNCTION__), __LINE__)) {
 					continue;
 				}
 				DWORD dwTmpCrc32 = 0;
@@ -368,7 +386,16 @@ BOOL ReadCDForRereadingSectorType1(
 				OutputC2ErrorWithLBALog("crc32[%03u]: 0x%08lx ", nLBA, i, dwTmpCrc32);
 
 				LPBYTE lpNextBuf = lpBuf + CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE;
-				if (ContainsC2Error(pDevice, lpNextBuf, &pDiscPerSector->uiC2errorNum, nLBA, FALSE) == RETURNED_NO_C2_ERROR_1ST) {
+				if (IsPrextor712OrNewer(pDevice)) {
+					bRet = ContainsC2Error(pDevice, 1, CD_RAW_READ_C2_294_SIZE, lpNextBuf, &pDiscPerSector->uiC2errorNum, nLBA, FALSE);
+					UINT c2ErrorBak = pDiscPerSector->uiC2errorNum;
+					bRet = ContainsC2Error(pDevice, 0, 1, lpNextBuf + CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE, &pDiscPerSector->uiC2errorNum, nLBA, FALSE);
+					pDiscPerSector->uiC2errorNum += c2ErrorBak;
+				}
+				else {
+					bRet = ContainsC2Error(pDevice, 0, CD_RAW_READ_C2_294_SIZE, lpNextBuf, &pDiscPerSector->uiC2errorNum, nLBA, FALSE);
+				}
+				if (bRet == RETURNED_NO_C2_ERROR_1ST) {
 					LONG lSeekMain = CD_RAW_SECTOR_SIZE * (LONG)nLBA - nStart - pDisc->MAIN.nCombinedOffset;
 					fseek(fpImg, lSeekMain, SEEK_SET);
 					// Write track to scrambled again
@@ -856,7 +883,7 @@ BOOL ReadCDAll(
 
 		BYTE byTransferLen = 1;
 		if (pDevice->byPlxtrDrive) {
-			byTransferLen = 2;
+			byTransferLen = (BYTE)(pExtArg->uiSubAddionalNum + 1);
 		}
 		// store main + (c2) + sub data all
 		if (!GetAlignedCallocatedBuffer(pDevice, &pBuf,
@@ -1065,7 +1092,8 @@ BOOL ReadCDAll(
 #endif
 				// C2 error points the current LBA - 1 (offset?)
 				OutputLog(standardError | fileC2Error,
-					" LBA[%06d, %#07x] Detected C2 error %u bit\n", nLBA, (UINT)nLBA, pDiscPerSector->uiC2errorNum);
+					" LBA[%06d], LBA translation to SCM address in hex[%#x], LBA in C2 file[%#x] Detected C2 error %u bit\n"
+					, nLBA, nLBA * CD_RAW_SECTOR_SIZE, nLBA * CD_RAW_READ_C2_294_SIZE, pDiscPerSector->uiC2errorNum);
 				if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
 					if (!(IsValidIntentionalC2error(pDisc, pDiscPerSector, nLBA, GetC2ErrorFileIdx(pExtArg, pDisc, nLBA)))) {
 						pDisc->MAIN.lpAllLBAOfC2Error[pDisc->MAIN.nC2ErrorCnt++] = nLBA;

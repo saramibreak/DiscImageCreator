@@ -449,6 +449,22 @@ BOOL IsPrextorDVDDrive(
 	return bRet;
 }
 
+BOOL IsPrextor712OrNewer(
+	PDEVICE pDevice
+) {
+	BOOL bRet = TRUE;
+	if (pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PX760A &&
+		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PX755A &&
+		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PX716AL &&
+		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PX716A &&
+		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PX714A &&
+		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PX712A
+		) {
+		bRet = FALSE;
+	}
+	return bRet;
+}
+
 VOID SupportIndex0InTrack1(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice
@@ -1410,6 +1426,8 @@ BOOL IsValidSubQAMSF(
 
 BOOL ContainsC2Error(
 	PDEVICE pDevice,
+	INT nStart,
+	INT nEnd,
 	LPBYTE lpBuf,
 	LPUINT lpuiC2errorNum,
 	INT nLBA,
@@ -1418,7 +1436,7 @@ BOOL ContainsC2Error(
 	BOOL bRet = RETURNED_NO_C2_ERROR_1ST;
 	*lpuiC2errorNum = 0;
 	BOOL bErr = FALSE;
-	for (INT nC2ErrorPos = 0; nC2ErrorPos < CD_RAW_READ_C2_294_SIZE; nC2ErrorPos++) {
+	for (INT nC2ErrorPos = nStart; nC2ErrorPos < nEnd; nC2ErrorPos++) {
 		UINT uiPos = pDevice->TRANSFER.uiBufC2Offset + nC2ErrorPos;
 		if (nC2ErrorPos < CD_RAW_READ_C2_294_SIZE - 10 && pDevice->byPlxtrDrive &&
 			lpBuf[uiPos] == 0 && lpBuf[uiPos + 1] == 0xf0 && lpBuf[uiPos + 2] == 0xf0 && lpBuf[uiPos + 3] == 0xf0 &&
