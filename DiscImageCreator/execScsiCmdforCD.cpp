@@ -2020,7 +2020,7 @@ BOOL ReadCDPartial(
 		}
 		BYTE byTransferLen = 1;
 		if (pDevice->byPlxtrDrive) {
-			byTransferLen = 2;
+			byTransferLen = (BYTE)(pExtArg->uiSubAddionalNum + 1);
 		}
 		// store main+(c2)+sub data
 		if (!GetAlignedCallocatedBuffer(pDevice, &pBuf,
@@ -2169,7 +2169,8 @@ BOOL ReadCDPartial(
 				bC2Error = TRUE;
 				// C2 error points the current LBA - 1 (offset?)
 				OutputLog(standardError | fileC2Error,
-					" LBA[%06d, %#07x] Detected C2 error %u bit\n", nLBA, (UINT)nLBA, pDiscPerSector->uiC2errorNum);
+					" LBA[%06d], LBA translation to SCM address in hex[%#x], LBA in C2 file[%#x] Detected C2 error %u bit\n"
+					, nLBA, nLBA* CD_RAW_SECTOR_SIZE, nLBA* CD_RAW_READ_C2_294_SIZE, pDiscPerSector->uiC2errorNum);
 				if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
 					if (!(IsValidIntentionalC2error(pDisc, pDiscPerSector, nLBA, GetC2ErrorFileIdx(pExtArg, pDisc, nLBA)))) {
 						pDisc->MAIN.lpAllLBAOfC2Error[pDisc->MAIN.nC2ErrorCnt++] = nLBA;

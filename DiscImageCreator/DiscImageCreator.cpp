@@ -291,7 +291,14 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 
 					if (*pExecType == gd) {
 						if (IsValidPlextorDrive(pDevice) && pExtArg->uiSubAddionalNum == 0) {
-							pExtArg->uiSubAddionalNum = 1;
+							if (IsPrextor712OrNewer(pDevice)) {
+								OutputString("[INFO] This drive has 295 offset in the c2. Changed /s 0 to /s 2.\n");
+								pExtArg->uiSubAddionalNum = 2;
+							}
+							else {
+								OutputString("[INFO] This drive has 294 offset in the c2. Changed /s 0 to /s 1.\n");
+								pExtArg->uiSubAddionalNum = 1;
+							}
 						}
 						// This func needs the combined offsets
 						if (!ReadGDForTOC(pExtArg, pDevice, pDisc)) {
