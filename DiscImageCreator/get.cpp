@@ -75,12 +75,46 @@ BOOL GetDriveOffsetManually(
 	return TRUE;
 }
 
+FILE* GetAppUsedFilePointer(
+	LPCTSTR filename,
+	size_t filelen
+) {
+	FILE * fp = NULL;
+#ifdef _WIN32
+	UNREFERENCED_PARAMETER(filelen);
+	fp = OpenProgrammabledFile(filename, _T("r"));
+#else
+	char pathLocalShare[128] = { "/usr/local/share/DiscImageCreator/" };
+	if (strlen(pathLocalShare) + filelen + 1 > 128) {
+		return NULL;
+	}
+	strncat(pathLocalShare, filename, filelen);
+	if (PathFileExists(pathLocalShare)) {
+		fp = fopen(pathLocalShare, "r");
+	}
+	else {
+		char pathShare[128] = { "/usr/share/DiscImageCreator/" };
+		if (strlen(pathShare) + filelen + 1 > 128) {
+			return NULL;
+		}
+		strncat(pathShare, filename, filelen);
+		if (PathFileExists(pathShare)) {
+			fp = fopen(pathShare, "r");
+		}
+		else {
+			fp = OpenProgrammabledFile(filename, _T("r"));
+		}
+	}
+#endif
+	return fp;
+}
+
 BOOL GetDriveOffsetAuto(
 	PDEVICE pDevice,
 	LPINT lpDriveOffset
 ) {
 	BOOL bGetOffset = FALSE;
-	FILE* fpDrive = OpenProgrammabledFile(_T("driveOffset.txt"), _T("r"));
+	FILE* fpDrive = GetAppUsedFilePointer(_T("driveOffset.txt"), _tcslen(_T("driveOffset.txt")));
 	if (!fpDrive) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
@@ -158,7 +192,7 @@ INT GetReadErrorFileIdx(
 BOOL GetFilenameToSkipError(
 	CHAR szFilename[][MAX_FNAME_FOR_VOLUME]
 ) {
-	FILE* fp = OpenProgrammabledFile(_T("ReadErrorProtect.txt"), _T("r"));
+	FILE* fp = GetAppUsedFilePointer(_T("ReadErrorProtect.txt"), _tcslen(_T("ReadErrorProtect.txt")));
 	if (!fp) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		OutputErrorString(" => ReadErrorProtect.txt");
@@ -216,7 +250,7 @@ INT GetC2ErrorFileIdx(
 BOOL GetFilenameToFixError(
 	CHAR szFilename[][MAX_FNAME_FOR_VOLUME]
 ) {
-	FILE* fp = OpenProgrammabledFile(_T("C2ErrorProtect.txt"), _T("r"));
+	FILE* fp = GetAppUsedFilePointer(_T("C2ErrorProtect.txt"), _tcslen(_T("C2ErrorProtect.txt")));
 	if (!fp) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
