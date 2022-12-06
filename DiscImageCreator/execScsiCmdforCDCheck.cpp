@@ -2556,6 +2556,7 @@ BOOL ReadCDForSegaDisc(
 
 	if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, 0, buf,
 		DISC_MAIN_DATA_SIZE, _T(__FUNCTION__), __LINE__)) {
+		return FALSE;
 	}
 	if (!memcmp(buf, "SEGA", 4)) {
 		OutputMainChannel(fileMainInfo, buf, _T("Sega Header"), 0, DISC_MAIN_DATA_SIZE);
