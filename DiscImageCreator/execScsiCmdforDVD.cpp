@@ -802,7 +802,7 @@ BOOL ReadDVDRaw(
 		DWORD transferAndMemSize = transferLen.AsULong * memBlkSize;
 		DWORD dwReadSize = (DWORD)DISC_MAIN_DATA_SIZE * transferLen.AsULong;
 		DWORD dwRawReadSize = dwSectorSize * transferLen.AsULong;
-		size_t rawWriteSize = (size_t)dwSectorSize * transferLen.AsULong * memBlkSize;
+//		size_t rawWriteSize = (size_t)dwSectorSize * transferLen.AsULong * memBlkSize;
 		DWORD dwOfs[16] = {
 			0, dwSectorSize, dwSectorSize * 2, dwSectorSize * 3, dwSectorSize * 4,
 			dwSectorSize * 5, dwSectorSize * 6, dwSectorSize * 7, dwSectorSize * 8,
@@ -870,7 +870,7 @@ BOOL ReadDVDRaw(
 			}
 			if ((INT)transferAndMemSize > pDisc->SCSI.nAllLength - nLBA) {
 				memBlkSize = (DWORD)(pDisc->SCSI.nAllLength - nLBA) / transferLen.AsULong;
-				rawWriteSize = dwSectorSize * transferLen.AsULong * memBlkSize;
+//				rawWriteSize = dwSectorSize * transferLen.AsULong * memBlkSize;
 				transferAndMemSize = transferLen.AsULong * memBlkSize;
 			}
 			LBA.AsULong = (ULONG)nLBA;
@@ -969,7 +969,7 @@ BOOL ReadDVDRaw(
 						transferAndMemSize = transferLen.AsULong * memBlkSize;
 						dwReadSize = (DWORD)DISC_MAIN_DATA_SIZE * transferLen.AsULong;
 						dwRawReadSize = (DWORD)dwSectorSize * transferLen.AsULong;
-						rawWriteSize = (size_t)dwSectorSize * transferLen.AsULong * memBlkSize;
+//						rawWriteSize = (size_t)dwSectorSize * transferLen.AsULong * memBlkSize;
 						baseAddr = 0x7FFFF7F0;
 						nLBA = (INT)sectorNum - 0x30000 - 2;
 						nRereadNum = 0;
