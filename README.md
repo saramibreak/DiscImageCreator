@@ -4,7 +4,7 @@
   CD and GD, it can dump considering a drive + CD (=combined) offset.  
   What is the drive offset? Please look [this document](http://dbpoweramp.com/spoons-audio-guide-cd-ripping.htm)
   
-  This program works on Windows PC (WinXP or higher) and Linux.
+  This program works on Windows PC (Windows XP or higher) and Linux.
   
   [MPF](https://github.com/SabreTools/MPF) can work this program with GUI.
 
@@ -22,7 +22,8 @@
 ## Requirement
 ### Package
  Download and install Visual C++ Redistributable Packages. (for Windows PC)  
-  https://aka.ms/vs/16/release/VC_redist.x86.exe
+  https://aka.ms/vs/16/release/VC_redist.x86.exe  
+ If Windows XP is used, see https://learn.microsoft.com/en-us/cpp/build/configuring-programs-for-windows-xp?view=msvc-170#windows-xp-deployment
 
 ### Recommend drive
 - CD: (Drives must be able to dump by scrambled mode and read lead-out and read lead-in).
@@ -213,13 +214,13 @@ See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)
   scrambled image of the img file.
 - .sub  
   subchannel data of the CD. This file is used to a ccd file.
-- DMI.bin  
+- _DMI.bin  
   2048 bytes binary image of the "disc manufacturing information" (DMI) in the DVD
-- PFI.bin  
+- _PFI.bin  
   2048 bytes binary image of the "physical format information" (PFI) in the DVD
-- PIC.bin  
+- _PIC.bin  
   4100 bytes binary image of the "permanent information and control data" (PIC) in the BD
-- SS.bin  
+- _SS.bin  
   2048 bytes binary image of the "security sector" (SS) in the xbox/xbox 360
 - _c2Error.txt  
   c2 error information which can be gotten by reading the CD.
@@ -245,7 +246,7 @@ See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)
   text data of the volume descriptor, path table and directory table.
 
 ## Development Tool
-- Visual Studio 2019 (Visual C++ 2019)
+- Visual Studio 2022 (Visual C++ 2022)
   - Windows build
     - [Windows Driver Kit (WDK) 7.1.0](https://www.microsoft.com/en-us/download/details.aspx?id=11800)  
     - [Visual Leak Detector](https://kinddragon.github.io/vld/) (DEBUG build only)
