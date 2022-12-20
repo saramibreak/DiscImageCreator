@@ -1353,6 +1353,7 @@ BOOL FixSubChannel(
 			else if (!*bReread && !pDiscPerSector->bLibCrypt && !pDiscPerSector->bSecuRom) {
 				DISC_PER_SECTOR tmpSector = {};
 				memcpy(&tmpSector, pDiscPerSector, sizeof(DISC_PER_SECTOR));
+				// fix for index 1 or higher
 				tmpSector.subch.current = tmpSector.subch.next;
 				tmpSector.subch.current.nRelativeTime -= 1;
 				tmpSector.subch.current.nAbsoluteTime -= 1;
@@ -1362,21 +1363,36 @@ BOOL FixSubChannel(
 				if (!pDisc->SUB.nCorruptCrcH && !pDisc->SUB.nCorruptCrcL && tmpSector.subch.next.byAdr == ADR_ENCODES_CURRENT_POSITION) {
 					memcpy(&pDiscPerSector->subcode.current[12], &tmpSector.subcode.current[12], 12);
 					SetTmpSubchFromBuffer(&pDiscPerSector->subch.current, pDiscPerSector->subcode.current);
-					OutputSubErrorWithLBALog("Q fixed using next subQ\n", nLBA, pDiscPerSector->byTrackNum);
+					OutputSubErrorWithLBALog("Q fixed using next subQ [index %d]\n", nLBA, pDiscPerSector->byTrackNum, tmpSector.subch.current.byIndex);
 					bSubOk = TRUE;
 				}
 				else {
-					tmpSector.subch.current = tmpSector.subch.prev;
+					// fix for index 0
+					tmpSector.subch.current = tmpSector.subch.next;
 					tmpSector.subch.current.nRelativeTime += 1;
-					tmpSector.subch.current.nAbsoluteTime += 1;
+					tmpSector.subch.current.nAbsoluteTime -= 1;
 					SetBufferFromTmpSubch(tmpSector.subcode.current, tmpSector.subch.current, TRUE, FALSE);
 					RecalcSubQCrc(pDisc, &tmpSector);
 
-					if (!pDisc->SUB.nCorruptCrcH && !pDisc->SUB.nCorruptCrcL) {
+					if (!pDisc->SUB.nCorruptCrcH && !pDisc->SUB.nCorruptCrcL && tmpSector.subch.next.byAdr == ADR_ENCODES_CURRENT_POSITION) {
 						memcpy(&pDiscPerSector->subcode.current[12], &tmpSector.subcode.current[12], 12);
 						SetTmpSubchFromBuffer(&pDiscPerSector->subch.current, pDiscPerSector->subcode.current);
-						OutputSubErrorWithLBALog("Q fixed using prev subQ\n", nLBA, pDiscPerSector->byTrackNum);
+						OutputSubErrorWithLBALog("Q fixed using next subQ [index %d]\n", nLBA, pDiscPerSector->byTrackNum, tmpSector.subch.current.byIndex);
 						bSubOk = TRUE;
+					}
+					else {
+						tmpSector.subch.current = tmpSector.subch.prev;
+						tmpSector.subch.current.nRelativeTime += 1;
+						tmpSector.subch.current.nAbsoluteTime += 1;
+						SetBufferFromTmpSubch(tmpSector.subcode.current, tmpSector.subch.current, TRUE, FALSE);
+						RecalcSubQCrc(pDisc, &tmpSector);
+
+						if (!pDisc->SUB.nCorruptCrcH && !pDisc->SUB.nCorruptCrcL) {
+							memcpy(&pDiscPerSector->subcode.current[12], &tmpSector.subcode.current[12], 12);
+							SetTmpSubchFromBuffer(&pDiscPerSector->subch.current, pDiscPerSector->subcode.current);
+							OutputSubErrorWithLBALog("Q fixed using prev subQ\n", nLBA, pDiscPerSector->byTrackNum);
+							bSubOk = TRUE;
+						}
 					}
 				}
 			}
