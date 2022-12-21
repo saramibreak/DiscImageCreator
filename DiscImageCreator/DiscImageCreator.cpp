@@ -187,7 +187,7 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 		}
 
 		if (*pExecType == fd || *pExecType == disk) {
-			bRet = ReadDisk(pExecType, pDevice, pDisc, pszFullPath, &hash);
+			bRet = ReadDisk(pExecType, pExtArg, pDevice, pDisc, pszFullPath, &hash);
 		}
 		else {
 			if (*pExecType == cd || *pExecType == swap || *pExecType == gd || *pExecType == data || *pExecType == audio) {
@@ -1076,6 +1076,9 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), cmdLen)) {
 					pExtArg->byQuiet = TRUE;
 				}
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/d"), cmdLen)) {
+					pExtArg->byDatExpand = TRUE;
+				}
 				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/a"), cmdLen)) {
 					if (!SetOptionA(argc, argv, pExtArg, &i)) {
 						return FALSE;
@@ -1195,6 +1198,9 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), cmdLen)) {
 					pExtArg->byQuiet = TRUE;
 				}
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/d"), cmdLen)) {
+					pExtArg->byDatExpand = TRUE;
+				}
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/be"), cmdLen)) {
 					if (!SetOptionBe(argc, argv, pExtArg, &i)) {
 						return FALSE;
@@ -1263,6 +1269,9 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				cmdLen = _tcslen(argv[i - 1]);
 				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), cmdLen)) {
 					pExtArg->byQuiet = TRUE;
+				}
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/d"), cmdLen)) {
+					pExtArg->byDatExpand = TRUE;
 				}
 				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/a"), cmdLen)) {
 					if (!SetOptionA(argc, argv, pExtArg, &i)) {
@@ -1381,6 +1390,9 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), cmdLen)) {
 					pExtArg->byQuiet = TRUE;
 				}
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/d"), cmdLen)) {
+					pExtArg->byDatExpand = TRUE;
+				}
 				else if (cmdLen == 5 && !_tcsncmp(argv[i - 1], _T("/avdp"), cmdLen)) {
 					pExtArg->byAnchorVolumeDescriptorPointer = TRUE;
 				}
@@ -1417,6 +1429,9 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				}
 				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), cmdLen)) {
 					pExtArg->byQuiet = TRUE;
+				}
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/d"), cmdLen)) {
+					pExtArg->byDatExpand = TRUE;
 				}
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/rr"), cmdLen)) {
 					if (!SetOptionRr(argc, argv, pExtArg, &i)) {
@@ -1458,6 +1473,9 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				}
 				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), cmdLen)) {
 					pExtArg->byQuiet = TRUE;
+				}
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/d"), cmdLen)) {
+					pExtArg->byDatExpand = TRUE;
 				}
 				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/nss"), cmdLen)) {
 					if (!SetOptionNss(argc, argv, pExtArg, &i)) {
@@ -1505,6 +1523,9 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), cmdLen)) {
 					pExtArg->byQuiet = TRUE;
 				}
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/d"), cmdLen)) {
+					pExtArg->byDatExpand = TRUE;
+				}
 				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/nss"), cmdLen)) {
 					if (!SetOptionNss(argc, argv, pExtArg, &i)) {
 						return FALSE;
@@ -1522,6 +1543,9 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			for (INT i = 6; i <= argc; i++) {
 				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), 2)) {
 					pExtArg->byQuiet = TRUE;
+				}
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/d"), cmdLen)) {
+					pExtArg->byDatExpand = TRUE;
 				}
 			}
 			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
@@ -1543,6 +1567,9 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), cmdLen)) {
 					pExtArg->byQuiet = TRUE;
 				}
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/d"), cmdLen)) {
+					pExtArg->byDatExpand = TRUE;
+				}
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/rr"), cmdLen)) {
 					if (!SetOptionRr(argc, argv, pExtArg, &i)) {
 						return FALSE;
@@ -1558,15 +1585,27 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			}
 			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
 		}
-		else if (argc == 4) {
+		else if (argc >= 4) {
 			cmdLen = _tcslen(argv[1]);
 			if (cmdLen == 2 && !_tcsncmp(argv[1], _T("fd"), cmdLen)) {
 				*pExecType = fd;
 				printAndSetPath(argv[3], pszFullPath, stFullPathlen);
+				for (INT i = 5; i <= argc; i++) {
+					cmdLen = _tcslen(argv[i - 1]);
+					if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/d"), cmdLen)) {
+						pExtArg->byDatExpand = TRUE;
+					}
+				}
 			}
 			else if (cmdLen == 4 && !_tcsncmp(argv[1], _T("disk"), cmdLen)) {
 				*pExecType = disk;
 				printAndSetPath(argv[3], pszFullPath, stFullPathlen);
+				for (INT i = 5; i <= argc; i++) {
+					cmdLen = _tcslen(argv[i - 1]);
+					if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/d"), cmdLen)) {
+						pExtArg->byDatExpand = TRUE;
+					}
+				}
 			}
 			else if (cmdLen == 5 && !_tcsncmp(argv[1], _T("merge"), cmdLen)) {
 				*pExecType = merge;
@@ -1655,62 +1694,62 @@ int stopMessage(void)
 
 void printUsage(void)
 {
+	// Default console window size (windows)
+	// 80 x 25 (windows 7)
+	// 120 x 30 (windows 10)
 	OutputString(
 		"Usage\n"
-		"\tcd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/a (val)] [/aj] [/p]\n"
+		"\tcd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/d] [/a (val)] [/aj] [/p]\n"
 		"\t   [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4)] [/f (val)] [/ms]\n"
 		"\t   [/vn (val)] [/vnc] [/vnx] [/mscf] [/sf (val)] [/ss] [/np] [/nq] [/nr]\n"
 		"\t   [/nl] [/ns] [/s (val)] [/vrfy (val)]\n"
 		"\t\tDump a CD from A to Z\n"
 		"\t\tFor PLEXTOR or drive that can scramble Dumping\n"
-		"\tswap <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/a (val)]\n"
+		"\tswap <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/d] [/a (val)]\n"
 		"\t   [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4)] [/f (val)]\n"
 		"\t   [/p] [/ms] [/sf (val)] [/ss] [/np] [/nq] [/nr] [/nl] [/ns] [/s (val)] [/74]\n"
 		"\t\tDump a CD from A to Z using swap trick\n"
 		"\t\tFor no PLEXTOR or drive that can't scramble dumping\n"
 		"\tdata <DriveLetter> <Filename> <DriveSpeed(0-72)> <StartLBA> <EndLBA+1>\n"
-		"\t     [/q] [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4)] [/f (val)]\n"
+		"\t     [/q] [/d] [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4)] [/f (val)]\n"
 		"\t     [/sf (val)] [/sk (val1) (val2)] [/ss] [/r] [/np] [/nq] [/nr] [/s (val)]\n"
 		"\t\tDump a CD from start to end (using 'all' flag)\n"
 		"\t\tFor no PLEXTOR or drive that can't scramble dumping\n"
 		"\taudio <DriveLetter> <Filename> <DriveSpeed(0-72)> <StartLBA> <EndLBA+1>\n"
-		"\t      [/q] [/a (val)] [/c2 (val1) (val2) (val3) (val4)] [/f (val)]\n"
+		"\t      [/q] [/d] [/a (val)] [/c2 (val1) (val2) (val3) (val4)] [/f (val)]\n"
 		"\t      [/be (str) or /d8] [/sf (val)] [/np] [/nq] [/nr] [/s (val)]\n"
 		"\t\tDump a CD from start to end (using 'cdda' flag)\n"
 		"\t\tFor dumping a lead-in, lead-out mainly\n"
+		"\tgd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/d] [/be (str) or /d8]\n"
+		"\t   [/c2 (val1) (val2) (val3) (val4)] [/f (val)] [/np] [/nq] [/nr] [/s (val)]\n"
+		"\t\tDump a HD area of GD from A to Z\n"
+		"\tdvd <DriveLetter> <Filename> <DriveSpeed(0-16)> [/c] [/f (val)] [/raw] [/q] [/d]\n"
+		"\t    [/r (startLBA) (EndLBA)] [/avdp] [/ps (val)] [/rr (val)]\n"
 	);
 	stopMessage();
 	OutputString(
-		"\tgd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/be (str) or /d8]\n"
-		"\t   [/c2 (val1) (val2) (val3) (val4)] [/f (val)] [/np] [/nq] [/nr] [/s (val)]\n"
-		"\t\tDump a HD area of GD from A to Z\n"
-		"\tdvd <DriveLetter> <Filename> <DriveSpeed(0-16)> [/c] [/f (val)] [/raw] [/q]\n"
-		"\t    [/r (startLBA) (EndLBA)] [/avdp] [/ps (val)] [/rr (val)]\n"
 		"\t\tDump a DVD from A to Z\n"
-		"\txbox <DriveLetter> <Filename> <DriveSpeed(0-16)> [/f (val)] [/q] [/nss (val)] [/rr (val)]\n"
+		"\txbox <DriveLetter> <Filename> <DriveSpeed(0-16)> [/f (val)] [/q] [/d] [/nss (val)] [/rr (val)]\n"
 		"\t\tDump a xbox disc from A to Z\n"
 		"\txboxswap <DriveLetter> <Filename> <DriveSpeed(0-16)>\n"
 		"\t                                  <StartLBAOfSecuritySector1>\n"
 		"\t                                  <StartLBAOfSecuritySector2>\n"
 		"\t                                                 :            \n"
-		"\t                                  <StartLBAOfSecuritySector16> [/f (val)] [/q]\n"
+		"\t                                  <StartLBAOfSecuritySector16> [/f (val)] [/q] [/d]\n"
 		"\t\tDump a Xbox disc from A to Z using swap trick\n"
 		"\txgd2swap <DriveLetter> <Filename> <DriveSpeed(0-16)> <AllSectorLength>\n"
-		"\t         <StartLBAOfSecuritySector1> <StartLBAOfSecuritySector2> [/f (val)] [/q]\n"
+		"\t         <StartLBAOfSecuritySector1> <StartLBAOfSecuritySector2> [/f (val)] [/q] [/d]\n"
 		"\t\tDump a XGD2 disc from A to Z using swap trick\n"
 		"\txgd3swap <DriveLetter> <Filename> <DriveSpeed(0-16)> <AllSectorLength>\n"
-		"\t         <StartLBAOfSecuritySector1> <StartLBAOfSecuritySector2> [/f (val)] [/q]\n"
+		"\t         <StartLBAOfSecuritySector1> <StartLBAOfSecuritySector2> [/f (val)] [/q] [/d]\n"
 		"\t\tDump a XGD3 disc from A to Z using swap trick\n"
-		"\tsacd <DriveLetter> <Filename> <DriveSpeed(0-16)>\n"
+		"\tsacd <DriveLetter> <Filename> <DriveSpeed(0-16)> [/q] [/d]\n"
 		"\t\tDump a Super Audio CD from A to Z\n"
-		"\tbd <DriveLetter> <Filename> <DriveSpeed(0-12)> [/f (val)] [/q] [/avdp] [/rr (val)]\n"
+		"\tbd <DriveLetter> <Filename> <DriveSpeed(0-12)> [/f (val)] [/q] [/d] [/avdp] [/rr (val)]\n"
 		"\t\tDump a BD from A to Z\n"
-	);
-	stopMessage();
-	OutputString(
-		"\tfd <DriveLetter> <Filename>\n"
+		"\tfd <DriveLetter> <Filename> [/d]\n"
 		"\t\tDump a floppy disk\n"
-		"\tdisk <DriveLetter> <Filename>\n"
+		"\tdisk <DriveLetter> <Filename> [/d]\n"
 		"\t\tDump a removable media other than floppy\n"
 		"\tstop <DriveLetter>\n"
 		"\t\tSpin off the disc\n"
@@ -1718,6 +1757,9 @@ void printUsage(void)
 		"\t\tSpin up the disc\n"
 		"\teject <DriveLetter>\n"
 		"\t\tEject the tray\n"
+	);
+	stopMessage();
+	OutputString(
 		"\tclose <DriveLetter>\n"
 		"\t\tClose the tray\n"
 		"\treset <DriveLetter>\n"
@@ -1732,22 +1774,24 @@ void printUsage(void)
 		"\t\tmerge the two files (for physical error protection)\n"
 		"Option (generic)\n"
 		"\t/f\tUse 'Force Unit Access' flag to delete the drive cache\n"
-	);
-	stopMessage();
-	OutputString(
 		"\t\t\tval\tdelete per specified value (default: 1)\n"
 		"\t/q\tDisable beep\n"
+		"\t/d\tGenerate hash SHA-224, SHA-256, SHA-384, SHA-512\n"
 		"Option (for CD read mode)\n"
 		"\t/a\tAdd CD offset manually (Only Audio CD)\n"
 		"\t\t\tval\tsamples value\n"
 		"\t/vrfy\tCheck non-zero byte in the lead-out and pregap of 1st track (Only Audio CD)\n"
 		"\t\t\tval\t0: audio cd can be read without offset (default)\n"
-		"\t\t\t   \t1: audio cd can be read with offset and select 'y' then read without offset or select 'n' then not read\n"
+		"\t\t\t   \t1: audio cd can be read with offset\n"
+		"\t\t\t   \t    and select 'y' then read without offset or select 'n' then not read\n"
 		"\t\t\t   \t2: logs are only generated with offset\n"
 		"\t/be\tUse 0xbe as the opcode for Reading CD forcibly\n"
 		"\t\t\tstr\t raw: sub channel mode is raw (default)\n"
 		"\t\t\t   \tpack: sub channel mode is pack\n"
 		"\t/d8\tUse 0xd8 as the opcode for Reading CD forcibly\n"
+	);
+	stopMessage();
+	OutputString(
 		"\t/c2\tContinue reading CD to recover C2 error existing sector\n"
 		"\t\t\tval1\tvalue to reread (default: 4000)\n"
 		"\t\t\tval2\t0: reread sector c2 error is reported (default)\n"
@@ -1759,9 +1803,6 @@ void printUsage(void)
 		"\t\t\tFor SagaFrontier Original Sound Track (Disc 3) etc.\n"
 		"\t\t\tSupport drive: PLEXTOR PX-W4012, 5224, PREMIUM, PREMIUM2\n"
 		"\t\t\t               PX-704, 708, 712, 714, 716, 755, 760\n"
-	);
-	stopMessage();
-	OutputString(
 		"\t/r\tRead CD from the reverse\n"
 		"\t\t\tFor Alpha-Disc, Tages (very slow)\n"
 		"\t/ms\tRead the lead-out of 1st session and the lead-in of 2nd session\n"
@@ -1780,15 +1821,15 @@ void printUsage(void)
 		"\t   \tcontinue reading and ignore c2 error on specific sector\n"
 		"\t\t\tFor ProtectCD-VOB\n"
 		"\t/am\tScan anti-mod string\n"
+	);
+	stopMessage();
+	OutputString(
 		"\t\t\tFor PlayStation\n"
 		"\t/vn\tSearch specific bytes\n"
 		"\t\t\tFor VideoNow\n"
 		"\t\t\tval\tCombined offset is shifted for negative direction if positive value is set\n"
 		"\t/vnc\tSearch specific bytes\n"
 		"\t\t\tFor VideoNow Color\n"
-	);
-	stopMessage();
-	OutputString(
 		"\t/vnx\tSearch specific bytes\n"
 		"\t\t\tFor VideoNow XP\n"
 		"\t/aj\tSearch specific bytes\n"
@@ -1812,10 +1853,10 @@ void printUsage(void)
 		"\t\t\t   \t1: read next sub (normal, this val is default)\n"
 		"\t\t\t   \t2: read next & next next sub (slow, precision)\n"
 		"Option (for DVD)\n"
-		"\t/c\tLog Copyright Management Information\n"
 	);
 	stopMessage();
 	OutputString(
+		"\t/c\tLog Copyright Management Information\n"
 		"\t/rr\tRetry reading when error occurs\n"
 		"\t\t\tval\tMax retry value (default: 10)\n"
 		"\t/nss\tNo skip reading SS sectors (only XBOX)\n"

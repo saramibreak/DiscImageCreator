@@ -17,7 +17,7 @@
 #include "_external/crc16ccitt.h"
 #include "_external/crc32.h"
 #include "_external/md5.h"
-#include "_external/sha1.h"
+#include "_external/sha.h"
 
 VOID CalcInit(
 	MD5_CTX* context,
@@ -48,4 +48,31 @@ BOOL CalcEnd(
 	SHA1Context* sha,
 	LPBYTE digest,
 	LPBYTE Message_Digest
+);
+
+VOID CalcInitExpand(
+	SHA224Context* sha224,
+	SHA256Context* sha256,
+	SHA384Context* sha384,
+	SHA512Context* sha512
+);
+
+BOOL CalcHashExpand(
+	SHA224Context* sha224,
+	SHA256Context* sha256,
+	SHA384Context* sha384,
+	SHA512Context* sha512,
+	LPBYTE lpBuf,
+	UINT uiSize
+);
+
+BOOL CalcEndExpand(
+	SHA224Context* sha224,
+	SHA256Context* sha256,
+	SHA384Context* sha384,
+	SHA512Context* sha512,
+	LPBYTE Message_Digest224,
+	LPBYTE Message_Digest256,
+	LPBYTE Message_Digest384,
+	LPBYTE Message_Digest512
 );

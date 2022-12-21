@@ -150,15 +150,18 @@
     <ClInclude Include="execTapeCmd.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="_external\sha.h">
+      <Filter>_external</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\sha-private.h">
+      <Filter>_external</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="_external\crc16ccitt.cpp">
       <Filter>_external</Filter>
     </ClCompile>
     <ClCompile Include="_external\crc32.cpp">
-      <Filter>_external</Filter>
-    </ClCompile>
-    <ClCompile Include="_external\sha1.cpp">
       <Filter>_external</Filter>
     </ClCompile>
     <ClCompile Include="_external\md5c.cpp">
@@ -250,6 +253,18 @@
     </ClCompile>
     <ClCompile Include="execTapeCmd.cpp">
       <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="_external\sha1.cpp">
+      <Filter>_external</Filter>
+    </ClCompile>
+    <ClCompile Include="_external\sha224-256.cpp">
+      <Filter>_external</Filter>
+    </ClCompile>
+    <ClCompile Include="_external\sha384-512.cpp">
+      <Filter>_external</Filter>
+    </ClCompile>
+    <ClCompile Include="_external\sha1.cpp">
+      <Filter>_external</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -106,6 +106,8 @@
     <ClCompile Include="_external\prngcd.cpp" />
     <ClCompile Include="_external\rijndael-alg-fst.cpp" />
     <ClCompile Include="_external\sha1.cpp" />
+    <ClCompile Include="_external\sha224-256.cpp" />
+    <ClCompile Include="_external\sha384-512.cpp" />
     <ClCompile Include="_external\tinyxml2.cpp" />
     <ClCompile Include="_linux\defineForLinux.cpp" />
   </ItemGroup>
@@ -155,7 +157,8 @@
     <ClInclude Include="_external\NonStandardFunction.h" />
     <ClInclude Include="_external\prngcd.h" />
     <ClInclude Include="_external\rijndael-alg-fst.h" />
-    <ClInclude Include="_external\sha1.h" />
+    <ClInclude Include="_external\sha-private.h" />
+    <ClInclude Include="_external\sha.h" />
     <ClInclude Include="_external\tinyxml2.h" />
     <ClInclude Include="_linux\defineForLinux.h" />
     <ClInclude Include="_linux\ntddcdrm.h" />

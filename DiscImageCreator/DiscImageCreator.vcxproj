@@ -217,13 +217,13 @@
       <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
       <EnablePREfast>false</EnablePREfast>
       <ExceptionHandling>Sync</ExceptionHandling>
-      <AdditionalIncludeDirectories>$(ProgramFiles)\Visual Leak Detector\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MSBuildProgramFiles32)\Visual Leak Detector\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>vld.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProgramFiles)\Visual Leak Detector\lib\Win32</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(MSBuildProgramFiles32)\Visual Leak Detector\lib\Win32</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
       <Command>CreateBuildDateTime.bat</Command>
@@ -411,6 +411,8 @@
     <ClInclude Include="_external\NonStandardFunction.h" />
     <ClInclude Include="_external\prngcd.h" />
     <ClInclude Include="_external\rijndael-alg-fst.h" />
+    <ClInclude Include="_external\sha-private.h" />
+    <ClInclude Include="_external\sha.h" />
     <ClInclude Include="_external\sha1.h" />
   </ItemGroup>
   <ItemGroup>
@@ -456,9 +458,9 @@
     <ClCompile Include="_external\platform_util.cpp" />
     <ClCompile Include="_external\prngcd.cpp" />
     <ClCompile Include="_external\rijndael-alg-fst.cpp" />
-    <ClCompile Include="_external\sha1.cpp">
-      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release_ANSI|Win32'">EnableAllWarnings</WarningLevel>
-    </ClCompile>
+    <ClCompile Include="_external\sha1.cpp" />
+    <ClCompile Include="_external\sha224-256.cpp" />
+    <ClCompile Include="_external\sha384-512.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

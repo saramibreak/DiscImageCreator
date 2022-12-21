@@ -451,12 +451,17 @@ VOID OutputIntentionalSubchannel(
 );
 
 VOID OutputHashData(
+	PEXT_ARG pExtArg,
 	FILE* fpHash,
 	LPCTSTR filename,
 	UINT64 ui64FileSize,
 	DWORD crc32,
 	LPBYTE digest,
-	LPBYTE Message_Digest
+	LPBYTE Message_Digest,
+	LPBYTE Message_Digest224,
+	LPBYTE Message_Digest256,
+	LPBYTE Message_Digest384,
+	LPBYTE Message_Digest512
 );
 
 VOID OutputLastErrorNumAndString(
@@ -475,6 +480,7 @@ BOOL OutputMergedFile(
 );
 
 size_t WriteBufWithCalc(
+	PEXT_ARG pExtArg,
 	LPBYTE lpBuf,
 	size_t writeSize,
 	ULONG ulTransferLen,

@@ -45,6 +45,10 @@ BOOL OutputHash(
 	DWORD crc32 = 0;
 	MD5_CTX md5 = {};
 	SHA1Context sha = {};
+	SHA224Context sha224 = {};
+	SHA256Context sha256 = {};
+	SHA384Context sha384 = {};
+	SHA512Context sha512 = {};
 	UINT64 ui64FileSize = 0;
 
 	if (pHash->uiMax == 0 || (pExtArg->byRawDump && !_tcsncmp(szExt, _T(".iso"), 4))) {
@@ -70,6 +74,9 @@ BOOL OutputHash(
 
 		if (ui64FileSize >= dwBytesPerSector) {
 			CalcInit(&md5, &sha);
+			if (pExtArg->byDatExpand) {
+				CalcInitExpand(&sha224, &sha256, &sha384, &sha512);
+			}
 
 			BYTE data[CD_RAW_SECTOR_SIZE] = {};
 			int nRet = TRUE;
@@ -80,9 +87,15 @@ BOOL OutputHash(
 					OutputErrorString("Failed to read: read size %lu [F:%s][L:%d]\n", dwBytesPerSector, _T(__FUNCTION__), __LINE__);
 					return FALSE;
 				};
-				nRet = CalcHash(&crc32, &md5, &sha, data, dwBytesPerSector);
+				nRet = CalcHash(&crc32, &md5, &sha, data, (UINT)dwBytesPerSector);
 				if (!nRet) {
 					break;
+				}
+				if (pExtArg->byDatExpand) {
+					nRet = CalcHashExpand(&sha224, &sha256, &sha384, &sha512, data, (UINT)dwBytesPerSector);
+					if (!nRet) {
+						break;
+					}
 				}
 			}
 			FcloseAndNull(fp);
@@ -96,6 +109,12 @@ BOOL OutputHash(
 		crc32 = pHash->pHashChunk[pHash->uiCount].crc32;
 		memcpy(&md5, &pHash->pHashChunk[pHash->uiCount].md5, sizeof(md5));
 		memcpy(&sha, &pHash->pHashChunk[pHash->uiCount].sha, sizeof(sha));
+		if (pExtArg->byDatExpand) {
+			memcpy(&sha224, &pHash->pHashChunk[pHash->uiCount].sha224, sizeof(sha224));
+			memcpy(&sha256, &pHash->pHashChunk[pHash->uiCount].sha256, sizeof(sha256));
+			memcpy(&sha384, &pHash->pHashChunk[pHash->uiCount].sha384, sizeof(sha384));
+			memcpy(&sha512, &pHash->pHashChunk[pHash->uiCount].sha512, sizeof(sha512));
+		}
 		_tcsncpy(szFnameAndExt, pHash->pHashChunk[pHash->uiCount].szFnameAndExt, sizeof(szFnameAndExt));
 		ui64FileSize = pHash->pHashChunk[pHash->uiCount].ui64FileSize;
 		pHash->uiCount++;
@@ -103,7 +122,15 @@ BOOL OutputHash(
 
 	BYTE digest[16] = {};
 	BYTE Message_Digest[20] = {};
+	BYTE Message_Digest224[28] = {};
+	BYTE Message_Digest256[32] = {};
+	BYTE Message_Digest384[48] = {};
+	BYTE Message_Digest512[64] = {};
 	if (CalcEnd(&md5, &sha, digest, Message_Digest)) {
+		if (pExtArg->byDatExpand) {
+			CalcEndExpand(&sha224, &sha256, &sha384, &sha512
+				, Message_Digest224, Message_Digest256, Message_Digest384, Message_Digest512);
+		}
 		if (!_tcsncmp(szExt, _T(".scm"), 4) ||
 			!_tcsncmp(szExt, _T(".img"), 4) ||
 			!_tcsncmp(szExt, _T(".raw"), 4) ||
@@ -113,7 +140,8 @@ BOOL OutputHash(
 			find_last_string(szFnameAndExt, _T("_PIC.bin"))
 			) {
 #ifndef _DEBUG
-			OutputHashData(g_LogFile.fpDisc, szFnameAndExt,	ui64FileSize, crc32, digest, Message_Digest);
+			OutputHashData(pExtArg, g_LogFile.fpDisc, szFnameAndExt, ui64FileSize, crc32, digest
+				, Message_Digest, Message_Digest224, Message_Digest256, Message_Digest384, Message_Digest512);
 #endif
 		}
 		else {
@@ -179,6 +207,63 @@ BOOL OutputHash(
 				OutputErrorString("Dat error: %08.8lx\n", hr);
 				return FALSE;
 			}
+			if (pExtArg->byDatExpand) {
+				WCHAR buf2[256] = {};
+				_snwprintf(buf2, sizeof(buf2) / sizeof(buf2[0])
+					, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
+					, Message_Digest224[0], Message_Digest224[1], Message_Digest224[2], Message_Digest224[3], Message_Digest224[4], Message_Digest224[5], Message_Digest224[6]
+					, Message_Digest224[7], Message_Digest224[8], Message_Digest224[9], Message_Digest224[10], Message_Digest224[11], Message_Digest224[12], Message_Digest224[13]
+					, Message_Digest224[14], Message_Digest224[15], Message_Digest224[16], Message_Digest224[17], Message_Digest224[18], Message_Digest224[19], Message_Digest224[20]
+					, Message_Digest224[21], Message_Digest224[22], Message_Digest224[23], Message_Digest224[24], Message_Digest224[25], Message_Digest224[26], Message_Digest224[27]);
+				buf2[255] = 0;
+				if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"sha224", NULL, buf2))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					OutputErrorString("Dat error: %08.8lx\n", hr);
+					return FALSE;
+				}
+				_snwprintf(buf2, sizeof(buf2) / sizeof(buf2[0])
+					, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
+					, Message_Digest256[0], Message_Digest256[1], Message_Digest256[2], Message_Digest256[3], Message_Digest256[4], Message_Digest256[5], Message_Digest256[6], Message_Digest256[7]
+					, Message_Digest256[8], Message_Digest256[9], Message_Digest256[10], Message_Digest256[11], Message_Digest256[12], Message_Digest256[13], Message_Digest256[14], Message_Digest256[15]
+					, Message_Digest256[16], Message_Digest256[17], Message_Digest256[18], Message_Digest256[19], Message_Digest256[20], Message_Digest256[21], Message_Digest256[22], Message_Digest256[23]
+					, Message_Digest256[24], Message_Digest256[25], Message_Digest256[26], Message_Digest256[27], Message_Digest256[28], Message_Digest256[29], Message_Digest256[30], Message_Digest256[31]);
+				buf2[255] = 0;
+				if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"sha256", NULL, buf2))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					OutputErrorString("Dat error: %08.8lx\n", hr);
+					return FALSE;
+				}
+				_snwprintf(buf2, sizeof(buf2) / sizeof(buf2[0])
+					, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
+					, Message_Digest384[0], Message_Digest384[1], Message_Digest384[2], Message_Digest384[3], Message_Digest384[4], Message_Digest384[5], Message_Digest384[6], Message_Digest384[7]
+					, Message_Digest384[8], Message_Digest384[9], Message_Digest384[10], Message_Digest384[11], Message_Digest384[12], Message_Digest384[13], Message_Digest384[14], Message_Digest384[15]
+					, Message_Digest384[16], Message_Digest384[17], Message_Digest384[18], Message_Digest384[19], Message_Digest384[20], Message_Digest384[21], Message_Digest384[22], Message_Digest384[23]
+					, Message_Digest384[24], Message_Digest384[25], Message_Digest384[26], Message_Digest384[27], Message_Digest384[28], Message_Digest384[29], Message_Digest384[30], Message_Digest384[31]
+					, Message_Digest384[32], Message_Digest384[33], Message_Digest384[34], Message_Digest384[35], Message_Digest384[36], Message_Digest384[37], Message_Digest384[38], Message_Digest384[39]
+					, Message_Digest384[40], Message_Digest384[41], Message_Digest384[42], Message_Digest384[43], Message_Digest384[44], Message_Digest384[45], Message_Digest384[46], Message_Digest384[47]);
+				buf2[255] = 0;
+				if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"sha384", NULL, buf2))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					OutputErrorString("Dat error: %08.8lx\n", hr);
+					return FALSE;
+				}
+				_snwprintf(buf2, sizeof(buf2) / sizeof(buf2[0])
+					, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
+					, Message_Digest512[0], Message_Digest512[1], Message_Digest512[2], Message_Digest512[3], Message_Digest512[4], Message_Digest512[5], Message_Digest512[6], Message_Digest512[7]
+					, Message_Digest512[8], Message_Digest512[9], Message_Digest512[10], Message_Digest512[11], Message_Digest512[12], Message_Digest512[13], Message_Digest512[14], Message_Digest512[15]
+					, Message_Digest512[16], Message_Digest512[17], Message_Digest512[18], Message_Digest512[19], Message_Digest512[20], Message_Digest512[21], Message_Digest512[22], Message_Digest512[23]
+					, Message_Digest512[24], Message_Digest512[25], Message_Digest512[26], Message_Digest512[27], Message_Digest512[28], Message_Digest512[29], Message_Digest512[30], Message_Digest512[31]
+					, Message_Digest512[32], Message_Digest512[33], Message_Digest512[34], Message_Digest512[35], Message_Digest512[36], Message_Digest512[37], Message_Digest512[38], Message_Digest512[39]
+					, Message_Digest512[40], Message_Digest512[41], Message_Digest512[42], Message_Digest512[43], Message_Digest512[44], Message_Digest512[45], Message_Digest512[46], Message_Digest512[47]
+					, Message_Digest512[48], Message_Digest512[49], Message_Digest512[50], Message_Digest512[51], Message_Digest512[52], Message_Digest512[53], Message_Digest512[54], Message_Digest512[55]
+					, Message_Digest512[56], Message_Digest512[57], Message_Digest512[58], Message_Digest512[59], Message_Digest512[60], Message_Digest512[61], Message_Digest512[62], Message_Digest512[63]);
+				buf2[255] = 0;
+				if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"sha512", NULL, buf2))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					OutputErrorString("Dat error: %08.8lx\n", hr);
+					return FALSE;
+				}
+			}
 			if (FAILED(hr = pWriter->WriteEndElement())) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				OutputErrorString("Dat error: %08.8lx\n", hr);
@@ -212,6 +297,51 @@ BOOL OutputHash(
 				, Message_Digest[15], Message_Digest[16], Message_Digest[17], Message_Digest[18], Message_Digest[19]);
 			buf[127] = 0;
 			newElem4->SetAttribute("sha1", buf);
+
+			if (pExtArg->byDatExpand) {
+				CHAR buf2[256] = {};
+				_snprintf(buf2, sizeof(buf2) / sizeof(buf2[0])
+					, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
+					, Message_Digest224[0], Message_Digest224[1], Message_Digest224[2], Message_Digest224[3], Message_Digest224[4], Message_Digest224[5], Message_Digest224[6]
+					, Message_Digest224[7], Message_Digest224[8], Message_Digest224[9], Message_Digest224[10], Message_Digest224[11], Message_Digest224[12], Message_Digest224[13]
+					, Message_Digest224[14], Message_Digest224[15], Message_Digest224[16], Message_Digest224[17], Message_Digest224[18], Message_Digest224[19], Message_Digest224[20]
+					, Message_Digest224[21], Message_Digest224[22], Message_Digest224[23], Message_Digest224[24], Message_Digest224[25], Message_Digest224[26], Message_Digest224[27]);
+				buf2[255] = 0;
+				newElem4->SetAttribute("sha224", buf2);
+
+				_snprintf(buf2, sizeof(buf2) / sizeof(buf2[0])
+					, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
+					, Message_Digest256[0], Message_Digest256[1], Message_Digest256[2], Message_Digest256[3], Message_Digest256[4], Message_Digest256[5], Message_Digest256[6], Message_Digest256[7]
+					, Message_Digest256[8], Message_Digest256[9], Message_Digest256[10], Message_Digest256[11], Message_Digest256[12], Message_Digest256[13], Message_Digest256[14], Message_Digest256[15]
+					, Message_Digest256[16], Message_Digest256[17], Message_Digest256[18], Message_Digest256[19], Message_Digest256[20], Message_Digest256[21], Message_Digest256[22], Message_Digest256[23]
+					, Message_Digest256[24], Message_Digest256[25], Message_Digest256[26], Message_Digest256[27], Message_Digest256[28], Message_Digest256[29], Message_Digest256[30], Message_Digest256[31]);
+				buf2[255] = 0;
+				newElem4->SetAttribute("sha256", buf2);
+
+				_snprintf(buf2, sizeof(buf2) / sizeof(buf2[0])
+					, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
+					, Message_Digest384[0], Message_Digest384[1], Message_Digest384[2], Message_Digest384[3], Message_Digest384[4], Message_Digest384[5], Message_Digest384[6], Message_Digest384[7]
+					, Message_Digest384[8], Message_Digest384[9], Message_Digest384[10], Message_Digest384[11], Message_Digest384[12], Message_Digest384[13], Message_Digest384[14], Message_Digest384[15]
+					, Message_Digest384[16], Message_Digest384[17], Message_Digest384[18], Message_Digest384[19], Message_Digest384[20], Message_Digest384[21], Message_Digest384[22], Message_Digest384[23]
+					, Message_Digest384[24], Message_Digest384[25], Message_Digest384[26], Message_Digest384[27], Message_Digest384[28], Message_Digest384[29], Message_Digest384[30], Message_Digest384[31]
+					, Message_Digest384[32], Message_Digest384[33], Message_Digest384[34], Message_Digest384[35], Message_Digest384[36], Message_Digest384[37], Message_Digest384[38], Message_Digest384[39]
+					, Message_Digest384[40], Message_Digest384[41], Message_Digest384[42], Message_Digest384[43], Message_Digest384[44], Message_Digest384[45], Message_Digest384[46], Message_Digest384[47]);
+				buf2[255] = 0;
+				newElem4->SetAttribute("sha384", buf2);
+
+				_snprintf(buf2, sizeof(buf2) / sizeof(buf2[0])
+					, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
+					, Message_Digest512[0], Message_Digest512[1], Message_Digest512[2], Message_Digest512[3], Message_Digest512[4], Message_Digest512[5], Message_Digest512[6], Message_Digest512[7]
+					, Message_Digest512[8], Message_Digest512[9], Message_Digest512[10], Message_Digest512[11], Message_Digest512[12], Message_Digest512[13], Message_Digest512[14], Message_Digest512[15]
+					, Message_Digest512[16], Message_Digest512[17], Message_Digest512[18], Message_Digest512[19], Message_Digest512[20], Message_Digest512[21], Message_Digest512[22], Message_Digest512[23]
+					, Message_Digest512[24], Message_Digest512[25], Message_Digest512[26], Message_Digest512[27], Message_Digest512[28], Message_Digest512[29], Message_Digest512[30], Message_Digest512[31]
+					, Message_Digest512[32], Message_Digest512[33], Message_Digest512[34], Message_Digest512[35], Message_Digest512[36], Message_Digest512[37], Message_Digest512[38], Message_Digest512[39]
+					, Message_Digest512[40], Message_Digest512[41], Message_Digest512[42], Message_Digest512[43], Message_Digest512[44], Message_Digest512[45], Message_Digest512[46], Message_Digest512[47]
+					, Message_Digest512[48], Message_Digest512[49], Message_Digest512[50], Message_Digest512[51], Message_Digest512[52], Message_Digest512[53], Message_Digest512[54], Message_Digest512[55]
+					, Message_Digest512[56], Message_Digest512[57], Message_Digest512[58], Message_Digest512[59], Message_Digest512[60], Message_Digest512[61], Message_Digest512[62], Message_Digest512[63]);
+				buf2[255] = 0;
+				newElem4->SetAttribute("sha512", buf2);
+			}
 			pWriter->InsertEndChild(newElem4);
 #endif
 		}

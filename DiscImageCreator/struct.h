@@ -169,6 +169,7 @@ typedef struct _LOG_FILE {
 
 typedef struct _EXT_ARG {
 	BYTE byQuiet;
+	BYTE byDatExpand;
 	BYTE byAdd;
 	BYTE byBe;
 	BYTE byRaw;
@@ -202,7 +203,7 @@ typedef struct _EXT_ARG {
 	BYTE byPadSector;
 	BYTE byMultiSectorReading; // for 0xF1 supported drive
 	BYTE byVerifyAudioCDOfs;
-	BYTE byPadding[2];
+	BYTE byPadding;
 	INT nAudioCDOffsetNum;
 	UINT uiMaxRereadNum; // for c2 error
 	INT nAllSectors;	// use for xbox360
@@ -514,6 +515,10 @@ typedef struct _HASH_CHUNK {
 	DWORD crc32;
 	MD5_CTX md5;
 	SHA1Context sha;
+	SHA224Context sha224;
+	SHA256Context sha256;
+	SHA384Context sha384;
+	SHA512Context sha512;
 	_TCHAR szFnameAndExt[_MAX_FNAME + _MAX_EXT];
 	UINT64 ui64FileSize;
 } HASH_CHUNK, * PHASH_CHUNK;

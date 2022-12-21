@@ -123,6 +123,12 @@
     <ClCompile Include="execTapeCmd.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="_external\sha224-256.cpp">
+      <Filter>_external</Filter>
+    </ClCompile>
+    <ClCompile Include="_external\sha384-512.cpp">
+      <Filter>_external</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="calcHash.h">
@@ -183,9 +189,6 @@
       <Filter>_external</Filter>
     </ClInclude>
     <ClInclude Include="_external\prngcd.h">
-      <Filter>_external</Filter>
-    </ClInclude>
-    <ClInclude Include="_external\sha1.h">
       <Filter>_external</Filter>
     </ClInclude>
     <ClInclude Include="outputIoctlLog.h">
@@ -268,6 +271,12 @@
     </ClInclude>
     <ClInclude Include="execTapeCmd.h">
       <Filter>header</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\sha.h">
+      <Filter>_external</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\sha-private.h">
+      <Filter>_external</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

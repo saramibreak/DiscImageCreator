@@ -88,6 +88,7 @@ BOOL StorageGetMediaTypesEx(
 }
 
 BOOL Read10(
+	PEXT_ARG pExtArg, 
 	PDEVICE pDevice,
 	PDISC pDisc,
 	LPCTSTR szFnameAndExt,
@@ -112,6 +113,10 @@ BOOL Read10(
 #endif
 	BYTE byScsiStatus = 0;
 	CalcInit(&pHash->pHashChunk[pHash->uiIndex].md5, &pHash->pHashChunk[pHash->uiIndex].sha);
+	if (pExtArg->byDatExpand) {
+		CalcInitExpand(&pHash->pHashChunk[pHash->uiIndex].sha224, &pHash->pHashChunk[pHash->uiIndex].sha256
+			, &pHash->pHashChunk[pHash->uiIndex].sha384, &pHash->pHashChunk[pHash->uiIndex].sha512);
+	}
 
 	for (DWORD dwLBA = 0; dwLBA < dwBlkSize; dwLBA += dwTransferLen) {
 		if (dwTransferLen > (DWORD)(dwBlkSize - dwLBA)) {
@@ -137,7 +142,7 @@ BOOL Read10(
 			}
 			return FALSE;
 		}
-		WriteBufWithCalc(lpBuf, pDisc->dwBytesPerSector, dwTransferLen, fp, pHash);
+		WriteBufWithCalc(pExtArg, lpBuf, pDisc->dwBytesPerSector, dwTransferLen, fp, pHash);
 		OutputString("\rCreating bin (Block) %lu/%lu", dwLBA + dwTransferLen, dwBlkSize);
 	}
 	_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, szFnameAndExt, _MAX_FNAME + _MAX_EXT - 1);
@@ -395,6 +400,7 @@ BOOL ReadFileSystem(
 
 BOOL ReadDisk(
 	PEXEC_TYPE pExecType,
+	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
 	LPCTSTR pszPath,
@@ -434,7 +440,7 @@ BOOL ReadDisk(
 		ReadFileSystem(pDevice, pDisc, lpBuf);
 		FlushLog();
 
-		bRet = Read10(pDevice, pDisc, szFnameAndExt, lpBuf, dwBlkSize, fp, pHash);
+		bRet = Read10(pExtArg, pDevice, pDisc, szFnameAndExt, lpBuf, dwBlkSize, fp, pHash);
 		FreeAndNull(lpBuf);
 	}
 	else {

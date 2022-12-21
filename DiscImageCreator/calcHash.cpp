@@ -78,3 +78,80 @@ BOOL CalcEnd(
 	}
 	return bRet;
 }
+
+VOID CalcInitExpand(
+	SHA224Context* sha224,
+	SHA256Context* sha256,
+	SHA384Context* sha384,
+	SHA512Context* sha512
+) {
+	SHA224Reset(sha224);
+	SHA256Reset(sha256);
+	SHA384Reset(sha384);
+	SHA512Reset(sha512);
+}
+
+BOOL CalcHashExpand(
+	SHA224Context* sha224,
+	SHA256Context* sha256,
+	SHA384Context* sha384,
+	SHA512Context* sha512,
+	LPBYTE lpBuf,
+	UINT uiSize
+) {
+	int err = SHA224Input(sha224, lpBuf, uiSize);
+	if (err) {
+		fprintf(stderr, "SHA224Input Error %d.\n", err);
+		return FALSE;
+	}
+	err = SHA256Input(sha256, lpBuf, uiSize);
+	if (err) {
+		fprintf(stderr, "SHA256Input Error %d.\n", err);
+		return FALSE;
+	}
+	err = SHA384Input(sha384, lpBuf, uiSize);
+	if (err) {
+		fprintf(stderr, "SHA384Input Error %d.\n", err);
+		return FALSE;
+	}
+	err = SHA512Input(sha512, lpBuf, uiSize);
+	if (err) {
+		fprintf(stderr, "SHA512Input Error %d.\n", err);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+BOOL CalcEndExpand(
+	SHA224Context* sha224,
+	SHA256Context* sha256,
+	SHA384Context* sha384,
+	SHA512Context* sha512,
+	LPBYTE Message_Digest224,
+	LPBYTE Message_Digest256,
+	LPBYTE Message_Digest384,
+	LPBYTE Message_Digest512
+) {
+	int err = SHA224Result(sha224, Message_Digest224);
+	if (err) {
+		fprintf(stderr, "SHA224Result Error %d, could not compute message digest.\n", err);
+		return FALSE;
+	}
+	err = SHA256Result(sha256, Message_Digest256);
+	if (err) {
+		fprintf(stderr, "SHA256Result Error %d, could not compute message digest.\n", err);
+		return FALSE;
+	}
+	err = SHA384Result(sha384, Message_Digest384);
+	if (err) {
+		fprintf(stderr, "SHA224Result Error %d, could not compute message digest.\n", err);
+		return FALSE;
+	}
+	err = SHA512Result(sha512, Message_Digest512);
+	if (err) {
+		fprintf(stderr, "SHA512Result Error %d, could not compute message digest.\n", err);
+		return FALSE;
+	}
+	return TRUE;
+
+}

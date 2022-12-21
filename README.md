@@ -296,9 +296,9 @@ See LICENSE
     https://www.rfc-editor.org/info/rfc1321  
     Copyright (C) 1991-2, RSA Data Security, Inc. Created 1991. All rights reserved.
 
-  sha1  
-    https://www.rfc-editor.org/info/rfc3174  
-    Copyright (C) The Internet Society (2001).  All Rights Reserved.
+  sha1, sha224, sha256, sha384, sha512  
+    https://www.rfc-editor.org/info/rfc6234  
+    Copyright (c) 2011 IETF Trust and the persons identified as authors of the code.  All rights reserved.
 
   tinyxml2  
     https://github.com/leethomason/tinyxml2  
