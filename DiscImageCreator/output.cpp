@@ -2228,7 +2228,11 @@ BOOL CreateBinCueCcd(
 						LBAtoMSF(nLBAofNextIdx, &byMinute, &bySecond, &byFrame);
 						WriteCueForIndexDirective(index, byMinute, bySecond, byFrame, fpCueForImg);
 
-						LBAtoMSF(nLBAofNextIdx - nLBAofFirstIdx, &byMinute, &bySecond, &byFrame);
+						INT nTmpLBA = nLBAofNextIdx - nLBAofFirstIdx;
+						if (2 <= index && i == pDisc->SCSI.toc.FirstTrack) {
+							nTmpLBA += pDisc->SUB.lp1stLBAListOnSub[i - 1][1];
+						}
+						LBAtoMSF(nTmpLBA, &byMinute, &bySecond, &byFrame);
 						WriteCueForIndexDirective(index, byMinute, bySecond, byFrame, fpCue);
 
 						if (j == 0) {
@@ -2251,7 +2255,11 @@ BOOL CreateBinCueCcd(
 							LBAtoMSF(nLBAofNextIdxSync, &byMinute, &bySecond, &byFrame);
 							WriteCueForIndexDirective(indexSync, byMinute, bySecond, byFrame, fpCueSyncForImg);
 
-							LBAtoMSF(nLBAofNextIdxSync - nLBAofFirstIdxSync, &byMinute, &bySecond, &byFrame);
+							INT nTmpLBA = nLBAofNextIdxSync - nLBAofFirstIdxSync;
+							if (2 <= index && i == pDisc->SCSI.toc.FirstTrack) {
+								nTmpLBA += pDisc->SUB.lp1stLBAListOnSubSync[i - 1][1];
+							}
+							LBAtoMSF(nTmpLBA, &byMinute, &bySecond, &byFrame);
 							WriteCueForIndexDirective(indexSync, byMinute, bySecond, byFrame, fpCueSync);
 						}
 						else {
