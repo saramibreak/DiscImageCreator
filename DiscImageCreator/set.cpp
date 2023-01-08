@@ -1430,9 +1430,10 @@ VOID SetTrackAttribution(
 			}
 		}
 		// preserve mode, ctl
-		// +10 => some discs have subs and toc desync http://forum.redump.org/post/82442/#p82442
+		// +11 => some discs have subs and toc desync http://forum.redump.org/post/82442/#p82442
 		//        and double offset [FMT] Sangokushi IV, Lip 3: Lipstick Adventure, Gulf War: Soukouden
-		if (nLBA == pDisc->SCSI.lp1stLBAListOnToc[tIdx] + 10) {
+		// +10 is weird sector https://github.com/saramibreak/DiscImageCreator/issues/173
+		if (nLBA == pDisc->SCSI.lp1stLBAListOnToc[tIdx] + 11) {
 			pDisc->SUB.lpCtlList[tIdx] = pDiscPerSector->subch.current.byCtl;
 			pDisc->MAIN.lpModeList[tIdx] = GetMode(pDiscPerSector, unscrambled);
 			OutputSubInfoWithLBALog("Set Ctl[%02d], Mode[%02d]\n"
