@@ -1521,7 +1521,8 @@ BOOL AnalyzeIfoFile(
 				throw FALSE;
 			}
 			WORD wNumOfTitlePlayMaps = MAKEWORD(pSector[1], pSector[0]);
-			OutputDiscLog("%s, NumberOfTitlePlayMaps: %d\n", szFnameAndExt, wNumOfTitlePlayMaps);
+			OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("IFO Information")
+				"%s, NumberOfTitlePlayMaps: %d\n", szFnameAndExt, wNumOfTitlePlayMaps);
 			for (WORD v = 0; v < wNumOfTitlePlayMaps; v++) {
 				WORD wNumOfChapters = MAKEWORD(pSector[0xb + 12 * v], pSector[0xa + 12 * v]);
 				BYTE byNumOfTitleSet = pSector[0xe + 12 * v];
@@ -1600,6 +1601,7 @@ BOOL AnalyzeIfoFile(
 			if (wNumOfTitlePlayMaps != nPgcCnt) {
 				OutputLog(standardOut | fileDisc, "Detected irregular title number\n");
 			}
+			OutputDiscLog("\n");
 		}
 		catch (BOOL bErr) {
 			bRet = bErr;

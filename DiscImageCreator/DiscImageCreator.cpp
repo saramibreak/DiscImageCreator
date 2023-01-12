@@ -394,6 +394,8 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 					if (!IsEnoughDiskSpaceForDump(pExecType, pDisc, szPath)) {
 						throw FALSE;
 					}
+					AnalyzeIfoFile(pDevice, pDisc);
+
 					bRet = ReadDiscStructure(pExecType, pExtArg, pDevice, pDisc, pszFullPath, &hash);
 					if (pExtArg->byCmi) {
 						bRet = ReadDVDForCMI(pExtArg, pDevice, pDisc);
@@ -434,7 +436,6 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 							if (bRet && uiDiscSize > 8547991552) {
 								OutputLog(standardOut | fileDisc, "Detected disguised file size: %llu\n", uiDiscSize);
 							}
-							AnalyzeIfoFile(pDevice, pDisc);
 							bRet = ReadDVD(pExecType, pExtArg, pDevice, pDisc, pszFullPath, &hash);
 						}
 					}
@@ -1406,6 +1407,11 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 						return FALSE;
 					}
 				}
+				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/sk"), cmdLen)) {
+					if (!SetOptionSk(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
+				}
 				else {
 					OutputErrorString("Unknown option: [%s]\n", argv[i - 1]);
 					return FALSE;
@@ -1724,7 +1730,7 @@ void printUsage(void)
 		"\t   [/c2 (val1) (val2) (val3) (val4)] [/f (val)] [/np] [/nq] [/nr] [/s (val)]\n"
 		"\t\tDump a HD area of GD from A to Z\n"
 		"\tdvd <DriveLetter> <Filename> <DriveSpeed(0-16)> [/c] [/f (val)] [/raw] [/q] [/d]\n"
-		"\t    [/r (startLBA) (EndLBA)] [/avdp] [/ps (val)] [/rr (val)]\n"
+		"\t    [/r (startLBA) (EndLBA)] [/avdp] [/ps (val)] [/rr (val)] [/sk (val)]\n"
 	);
 	stopMessage();
 	OutputString(
@@ -1859,6 +1865,8 @@ void printUsage(void)
 		"\t/c\tLog Copyright Management Information\n"
 		"\t/rr\tRetry reading when error occurs\n"
 		"\t\t\tval\tMax retry value (default: 10)\n"
+		"\t/sk\tSkip sector for protect (ARccOS, RipGuard)\n"
+		"\t\t\tval\tsector num\n"
 		"\t/nss\tNo skip reading SS sectors (only XBOX)\n"
 		"\t\t\tval\tMax retry value (default: 100)\n"
 		"\t/r\tRead DVD from the reverse\n"

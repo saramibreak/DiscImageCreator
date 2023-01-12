@@ -381,7 +381,9 @@ BOOL ReadDVD(
 							nFirstErrorLBA = nLBA;
 							bErrorForward = TRUE;
 						}
-						nLBA += 99;
+						if (pExtArg->uiSkipSectors) {
+							nLBA += pExtArg->uiSkipSectors - 1;
+						}
 						continue;
 					}
 					else {
