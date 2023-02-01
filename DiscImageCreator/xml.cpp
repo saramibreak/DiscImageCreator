@@ -805,7 +805,7 @@ BOOL ReadWriteDat(
 			XMLElement* newElem2 = newElem1->GetDocument()->NewElement(readElem2->Name());
 			if (readElem2->GetText() == NULL) {
 				if (!strcmp(readElem2->Name(), "game")) {
-					newElem2->SetAttribute("name", szDir);
+					newElem2->SetAttribute("name", "-insert name-");
 				}
 				else {
 					newElem2->SetText("\n");
@@ -824,7 +824,7 @@ BOOL ReadWriteDat(
 				}
 				else {
 					if (!strcmp(readElem3->Name(), "description") && !strcmp(readElem2->Name(), "game")) {
-						newElem3->SetText(szDir);
+						newElem3->SetText("-insert description-");
 						bDescription = TRUE;
 					}
 					else {
