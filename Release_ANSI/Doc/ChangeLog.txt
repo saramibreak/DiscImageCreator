@@ -812,3 +812,18 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - fixed: failed to dump gamecube disc since 5 Sep 2021
 - fixed: check the directory record length
 - improved: /re and /fix
+
+*2023-02-01
+- added: support the c2 offset of the plextor 712A or newer
+- added: change the default path of the driveOffset.txt file on linux
+- added: fix subQ using next subQ when crc does not match by index 0
+- added: /d option (hash sha224, sha256, sha384, sha512)
+- added: /sk for dvd
+- changed: do not use the combined offset in .c2
+- changed: set mode using LBA 11
+- changed: remove printing directory from .dat output file on linux
+- fixed: forgot .raw hashing
+- fixed: failed to read directory record when record size is more than the max transfer length (only GD-ROM)
+- fixed: check subchannel of lead-in of the 2nd session
+- fixed: cue indexes when there is index 2 or more in track 1
+- fixed: detecting ARccOS
