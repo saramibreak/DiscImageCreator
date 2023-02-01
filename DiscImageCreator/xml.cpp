@@ -449,9 +449,7 @@ BOOL ReadWriteDat(
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
 	_TCHAR* pszFullPath,
-	_TCHAR* szDrive,
 	_TCHAR* szDir,
-	_TCHAR* szFname,
 	BOOL bDesync,
 	PHASH pHash
 ) {
@@ -500,27 +498,11 @@ BOOL ReadWriteDat(
 	_tcsncpy(szTmpPath, pszFullPath, sizeof(szTmpPath) / sizeof(_TCHAR) - 1);
 
 	if (bDesync) {
-#if 0
-		if (szDir[1] == '\0') {
-			_sntprintf(szTmpPath, _MAX_PATH, _T("%s\\%s (Subs indexes).dat"), szDrive, szFname);
-		}
-		else {
-			_sntprintf(szTmpPath, _MAX_PATH, _T("%s\\%s\\%s (Subs indexes).dat"), szDrive, szDir, szFname);
-		}
-#endif
 		PathRemoveExtension(szTmpPath);
 		_TCHAR str1[] = _T(" (Subs indexes).dat");
 		_tcsncat(szTmpPath, str1, sizeof(szTmpPath) / sizeof(_TCHAR) - _tcslen(szTmpPath) - 1);
 	}
 	else {
-#if 0
-		if (szDir[1] == '\0') {
-			_sntprintf(szTmpPath, _MAX_PATH, _T("%s\\%s.dat"), szDrive, szFname);
-		}
-		else {
-			_sntprintf(szTmpPath, _MAX_PATH, _T("%s\\%s\\%s.dat"), szDrive, szDir, szFname);
-		}
-#endif
 		PathRenameExtension(szTmpPath, _T(".dat"));
 	}
 
@@ -700,18 +682,6 @@ BOOL ReadWriteDat(
 		case XmlNodeType_DocumentType:
 			break;
 		case XmlNodeType_Whitespace:
-#if 0
-			if (FAILED(hr = pWriter->WriteWhitespace(L"\n"))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				OutputErrorString("Dat error: %08.8lx\n", hr);
-				return FALSE;
-			}
-			if (FAILED(hr = pWriter->WriteWhitespace(L"\t"))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				OutputErrorString("Dat error: %08.8lx\n", hr);
-				return FALSE;
-			}
-#endif
 			break;
 		case XmlNodeType_XmlDeclaration:
 			break;
@@ -766,17 +736,11 @@ BOOL ReadWriteDat(
 	_tcsncpy(szPathForDat, pszFullPath, sizeof(szPathForDat) - 1);
 
 	if (bDesync) {
-#if 0
-		_sntprintf(szPathForDat, _MAX_PATH, _T("%s%s%s (Subs indexes).dat"), szDrive, szDir, szFname);
-#endif
 		PathRemoveExtension(szPathForDat);
 		_TCHAR str1[] = _T(" (Subs indexes).dat");
 		_tcsncat(szPathForDat, str1, sizeof(szPathForDat) - _tcslen(szPathForDat) - 1);
 	}
 	else {
-#if 0
-		_sntprintf(szPathForDat, _MAX_PATH, _T("%s%s%s.dat"), szDrive, szDir, szFname);
-#endif
 		PathRenameExtension(szPathForDat, _T(".dat"));
 	}
 	szPathForDat[_MAX_PATH - 1] = 0;

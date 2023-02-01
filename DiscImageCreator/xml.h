@@ -24,9 +24,7 @@ BOOL ReadWriteDat(
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
 	_TCHAR* pszFullPath,
-	_TCHAR* szDrive,
 	_TCHAR* szDir,
-	_TCHAR* szFname,
 	BOOL bDesync,
 	PHASH pHash
 );

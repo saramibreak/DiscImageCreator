@@ -495,11 +495,9 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 			}
 			else {
 #endif
-				bRet = ReadWriteDat(pExecType, pExtArg, pDisc
-					, pszFullPath, s_szDrive, s_szDir, s_szFname, FALSE, &hash);
+				bRet = ReadWriteDat(pExecType, pExtArg, pDisc, pszFullPath, s_szDir, FALSE, &hash);
 				if (pDisc->SUB.byDesync) {
-					bRet = ReadWriteDat(pExecType, pExtArg, pDisc
-						, pszFullPath, s_szDrive, s_szDir, s_szFname, TRUE, &hash);
+					bRet = ReadWriteDat(pExecType, pExtArg, pDisc, pszFullPath, s_szDir, TRUE, &hash);
 				}
 #if 0
 			}
