@@ -33,6 +33,7 @@ BOOL OutputHash(
 	XMLElement* pWriter,
 #endif
 	PEXT_ARG pExtArg,
+	PDISC pDisc,
 	_TCHAR* pszFullPath,
 	DWORD dwBytesPerSector,
 	LPCTSTR szExt,
@@ -50,6 +51,19 @@ BOOL OutputHash(
 	SHA384Context sha384 = {};
 	SHA512Context sha512 = {};
 	UINT64 ui64FileSize = 0;
+
+	DWORD crc32Uni = 0;
+	MD5_CTX md5Uni = {};
+	SHA1Context shaUni = {};
+	SHA224Context sha224Uni = {};
+	SHA256Context sha256Uni = {};
+	SHA384Context sha384Uni = {};
+	SHA512Context sha512Uni = {};
+
+	UINT ui1stNonZeroSector = 0;
+	UINT ui1stNonZeroSectorPos = 0;
+	UINT uiLastNonZeroSector = 0;
+	UINT uiLastNonZeroSectorPos = 0;
 
 	if (pHash->uiMax == 0 || (pExtArg->byRawDump && !_tcsncmp(szExt, _T(".iso"), 4))) {
 		// for CD
@@ -73,15 +87,47 @@ BOOL OutputHash(
 		UINT64 ui64SectorSizeAll = ui64FileSize / (UINT64)dwBytesPerSector;
 
 		if (ui64FileSize >= dwBytesPerSector) {
+			BYTE data[CD_RAW_SECTOR_SIZE] = {};
+			int nRet = TRUE;
+
+			if (!_tcsncmp(szExt, _T(".img"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
+				// Check last non-zero byte position for Audio CD
+				for (UINT64 j = 1; j <= ui64SectorSizeAll; j++) {
+					fseek(fp, (LONG)(ui64FileSize - dwBytesPerSector * j), SEEK_SET);
+					if (fread(data, sizeof(BYTE), dwBytesPerSector, fp) < dwBytesPerSector) {
+						OutputErrorString("Failed to read: read size %lu [F:%s][L:%d]\n", dwBytesPerSector, _T(__FUNCTION__), __LINE__);
+						return FALSE;
+					};
+					BOOL bLastNonZero = TRUE;
+					for (INT k = (INT)(dwBytesPerSector - 1); 0 <= k; k--) {
+						if (data[k] != 0) {
+							bLastNonZero = FALSE;
+							uiLastNonZeroSectorPos = (UINT)k;
+							break;
+						}
+					}
+					if (!bLastNonZero) {
+						uiLastNonZeroSector = (UINT)(ui64SectorSizeAll - j);
+						break;
+					}
+				}
+				CalcInit(&md5Uni, &shaUni);
+				if (pExtArg->byDatExpand) {
+					CalcInitExpand(&sha224Uni, &sha256Uni, &sha384Uni, &sha512Uni);
+				}
+				rewind(fp);
+			}
+
+			BOOL b1stNonZero = FALSE;
+			BOOL bCompleteUniHash = FALSE;
+
 			CalcInit(&md5, &sha);
 			if (pExtArg->byDatExpand) {
 				CalcInitExpand(&sha224, &sha256, &sha384, &sha512);
 			}
 
-			BYTE data[CD_RAW_SECTOR_SIZE] = {};
-			int nRet = TRUE;
 			OutputString("Hashing: %s\n", szFnameAndExt);
-			// TODO: This code can more speed up! if reduce calling fread()
+
 			for (UINT64 i = 1; i <= ui64SectorSizeAll; i++) {
 				if (fread(data, sizeof(BYTE), dwBytesPerSector, fp) < dwBytesPerSector) {
 					OutputErrorString("Failed to read: read size %lu [F:%s][L:%d]\n", dwBytesPerSector, _T(__FUNCTION__), __LINE__);
@@ -95,6 +141,56 @@ BOOL OutputHash(
 					nRet = CalcHashExpand(&sha224, &sha256, &sha384, &sha512, data, (UINT)dwBytesPerSector);
 					if (!nRet) {
 						break;
+					}
+				}
+				if (!_tcsncmp(szExt, _T(".img"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly && !bCompleteUniHash) {
+					// Calc hash from the 1st non-zero byte position to the last non-zero byte position
+					if (b1stNonZero) {
+						if (i == static_cast<unsigned long long>(uiLastNonZeroSector) + 1) {
+							nRet = CalcHash(&crc32Uni, &md5Uni, &shaUni, data, uiLastNonZeroSectorPos + 1);
+							if (!nRet) {
+								break;
+							}
+							if (pExtArg->byDatExpand) {
+								nRet = CalcHashExpand(&sha224Uni, &sha256Uni, &sha384Uni, &sha512Uni, data, uiLastNonZeroSectorPos + 1);
+								if (!nRet) {
+									break;
+								}
+							}
+							bCompleteUniHash = TRUE;
+						}
+						else {
+							nRet = CalcHash(&crc32Uni, &md5Uni, &shaUni, data, (UINT)dwBytesPerSector);
+							if (!nRet) {
+								break;
+							}
+							if (pExtArg->byDatExpand) {
+								nRet = CalcHashExpand(&sha224Uni, &sha256Uni, &sha384Uni, &sha512Uni, data, (UINT)dwBytesPerSector);
+								if (!nRet) {
+									break;
+								}
+							}
+						}
+					}
+					else {
+						for (UINT k = 0; k < dwBytesPerSector; k++) {
+							if (data[k] != 0) {
+								b1stNonZero = TRUE;
+								nRet = CalcHash(&crc32Uni, &md5Uni, &shaUni, data + k, (UINT)(dwBytesPerSector - k));
+								if (!nRet) {
+									break;
+								}
+								if (pExtArg->byDatExpand) {
+									nRet = CalcHashExpand(&sha224Uni, &sha256Uni, &sha384Uni, &sha512Uni, data + k, (UINT)(dwBytesPerSector - k));
+									if (!nRet) {
+										break;
+									}
+								}
+								ui1stNonZeroSector = (UINT)i;
+								ui1stNonZeroSectorPos = k;
+								break;
+							}
+						}
 					}
 				}
 			}
@@ -126,10 +222,26 @@ BOOL OutputHash(
 	BYTE Message_Digest256[32] = {};
 	BYTE Message_Digest384[48] = {};
 	BYTE Message_Digest512[64] = {};
+
+	BYTE digestUni[16] = {};
+	BYTE Message_DigestUni[20] = {};
+	BYTE Message_Digest224Uni[28] = {};
+	BYTE Message_Digest256Uni[32] = {};
+	BYTE Message_Digest384Uni[48] = {};
+	BYTE Message_Digest512Uni[64] = {};
+
 	if (CalcEnd(&md5, &sha, digest, Message_Digest)) {
 		if (pExtArg->byDatExpand) {
 			CalcEndExpand(&sha224, &sha256, &sha384, &sha512
 				, Message_Digest224, Message_Digest256, Message_Digest384, Message_Digest512);
+		}
+		if (!_tcsncmp(szExt, _T(".img"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
+			if (CalcEnd(&md5Uni, &shaUni, digestUni, Message_DigestUni)) {
+				if (pExtArg->byDatExpand) {
+					CalcEndExpand(&sha224Uni, &sha256Uni, &sha384Uni, &sha512Uni
+						, Message_Digest224Uni, Message_Digest256Uni, Message_Digest384Uni, Message_Digest512Uni);
+				}
+			}
 		}
 		if (!_tcsncmp(szExt, _T(".scm"), 4) ||
 			!_tcsncmp(szExt, _T(".img"), 4) ||
@@ -142,6 +254,17 @@ BOOL OutputHash(
 #ifndef _DEBUG
 			OutputHashData(pExtArg, g_LogFile.fpDisc, szFnameAndExt, ui64FileSize, crc32, digest
 				, Message_Digest, Message_Digest224, Message_Digest256, Message_Digest384, Message_Digest512);
+			if (!_tcsncmp(szExt, _T(".img"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
+				OutputDiscLog(
+					OUTPUT_DHYPHEN_PLUS_STR("Hash(Universal Whole image)")
+					"\t 1st non-zero byte position: %6u sector + %4u byte\n"
+					"\tLast non-zero byte position: %6u sector + %4u byte\n"
+					, ui1stNonZeroSector, ui1stNonZeroSectorPos, uiLastNonZeroSector, uiLastNonZeroSectorPos
+				);
+				UINT64 ui64UniSize = (UINT64)((uiLastNonZeroSector - ui1stNonZeroSector + 1) * dwBytesPerSector + uiLastNonZeroSectorPos - ui1stNonZeroSectorPos + 1);
+				OutputHashData(pExtArg, g_LogFile.fpDisc, szFnameAndExt, ui64UniSize, crc32Uni, digestUni
+					, Message_DigestUni, Message_Digest224Uni, Message_Digest256Uni, Message_Digest384Uni, Message_Digest512Uni);
+			}
 #endif
 		}
 		else {
@@ -364,7 +487,7 @@ BOOL OutputRomElement(
 	PHASH pHash
 ) {
 	if (*pExecType == fd || *pExecType == disk) {
-		if (!OutputHash(pWriter, pExtArg, pszFullPath, pDisc->dwBytesPerSector, _T(".bin"), 1, 1, FALSE, pHash)) {
+		if (!OutputHash(pWriter, pExtArg, pDisc, pszFullPath, pDisc->dwBytesPerSector, _T(".bin"), 1, 1, FALSE, pHash)) {
 			return FALSE;
 		}
 	}
@@ -377,7 +500,7 @@ BOOL OutputRomElement(
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 					return FALSE;
 				}
-				if (!OutputHash(pWriter, pExtArg, szPath, NOT_USE_SIZE, _T(".bin"), 1, 1, FALSE, pHash)) {
+				if (!OutputHash(pWriter, pExtArg, pDisc, szPath, NOT_USE_SIZE, _T(".bin"), 1, 1, FALSE, pHash)) {
 					return FALSE;
 				}
 			}
@@ -388,7 +511,7 @@ BOOL OutputRomElement(
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				return FALSE;
 			}
-			if (!OutputHash(pWriter, pExtArg, szPath, NOT_USE_SIZE, _T(".bin"), 1, 1, FALSE, pHash)) {
+			if (!OutputHash(pWriter, pExtArg, pDisc, szPath, NOT_USE_SIZE, _T(".bin"), 1, 1, FALSE, pHash)) {
 				return FALSE;
 			}
 
@@ -398,7 +521,7 @@ BOOL OutputRomElement(
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				return FALSE;
 			}
-			if (!OutputHash(pWriter, pExtArg, szPath, NOT_USE_SIZE, _T(".bin"), 1, 1, FALSE, pHash)) {
+			if (!OutputHash(pWriter, pExtArg, pDisc, szPath, NOT_USE_SIZE, _T(".bin"), 1, 1, FALSE, pHash)) {
 				return FALSE;
 			}
 		}
@@ -409,15 +532,15 @@ BOOL OutputRomElement(
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				return FALSE;
 			}
-			if (!OutputHash(pWriter, pExtArg, szPath, NOT_USE_SIZE, _T(".bin"), 1, 1, FALSE, pHash)) {
+			if (!OutputHash(pWriter, pExtArg, pDisc, szPath, NOT_USE_SIZE, _T(".bin"), 1, 1, FALSE, pHash)) {
 				return FALSE;
 			}
 		}
-		if (!OutputHash(pWriter, pExtArg, pszFullPath, DISC_MAIN_DATA_SIZE, _T(".iso"), 1, 1, FALSE, pHash)) {
+		if (!OutputHash(pWriter, pExtArg, pDisc, pszFullPath, DISC_MAIN_DATA_SIZE, _T(".iso"), 1, 1, FALSE, pHash)) {
 			return FALSE;
 		}
 		if (pExtArg->byRawDump) {
-			if (!OutputHash(pWriter, pExtArg, pszFullPath, NOT_USE_SIZE, _T(".raw"), 1, 1, FALSE, pHash)) {
+			if (!OutputHash(pWriter, pExtArg, pDisc, pszFullPath, NOT_USE_SIZE, _T(".raw"), 1, 1, FALSE, pHash)) {
 				return FALSE;
 			}
 		}
@@ -427,16 +550,16 @@ BOOL OutputRomElement(
 			OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("Hash(Whole image)"));
 			if (pDisc->SCSI.trkType == TRACK_TYPE::dataExist ||
 				pDisc->SCSI.trkType == TRACK_TYPE::pregapDataIn1stTrack) {
-				if (!OutputHash(pWriter, pExtArg, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".scm"), 1, 1, FALSE, pHash)) {
+				if (!OutputHash(pWriter, pExtArg, pDisc, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".scm"), 1, 1, FALSE, pHash)) {
 					return FALSE;
 				}
 			}
-			if (!OutputHash(pWriter, pExtArg, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".img"), 1, 1, FALSE, pHash)) {
+			if (!OutputHash(pWriter, pExtArg, pDisc, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".img"), 1, 1, FALSE, pHash)) {
 				return FALSE;
 			}
 		}
 		for (UCHAR i = pDisc->SCSI.toc.FirstTrack; i <= pDisc->SCSI.toc.LastTrack; i++) {
-			if (!OutputHash(pWriter, pExtArg, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".bin"), i, pDisc->SCSI.toc.LastTrack, bDesync, pHash)) {
+			if (!OutputHash(pWriter, pExtArg, pDisc, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".bin"), i, pDisc->SCSI.toc.LastTrack, bDesync, pHash)) {
 				return FALSE;
 			}
 		}
