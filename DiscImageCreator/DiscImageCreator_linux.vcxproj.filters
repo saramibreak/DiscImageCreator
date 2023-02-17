@@ -129,6 +129,9 @@
     <ClCompile Include="_external\sha384-512.cpp">
       <Filter>_external</Filter>
     </ClCompile>
+    <ClCompile Include="_external\xxhash.cpp">
+      <Filter>_external</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="calcHash.h">
@@ -276,6 +279,9 @@
       <Filter>_external</Filter>
     </ClInclude>
     <ClInclude Include="_external\sha-private.h">
+      <Filter>_external</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\xxhash.h">
       <Filter>_external</Filter>
     </ClInclude>
   </ItemGroup>

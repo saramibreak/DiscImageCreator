@@ -1780,7 +1780,7 @@ void printUsage(void)
 		"\t/f\tUse 'Force Unit Access' flag to delete the drive cache\n"
 		"\t\t\tval\tdelete per specified value (default: 1)\n"
 		"\t/q\tDisable beep\n"
-		"\t/d\tGenerate hash SHA-224, SHA-256, SHA-384, SHA-512\n"
+		"\t/d\tGenerate hash SHA-224, SHA-256, SHA-384, SHA-512, XXH3 64, XXH3 128\n"
 		"Option (for CD read mode)\n"
 		"\t/a\tAdd CD offset manually (Only Audio CD)\n"
 		"\t\t\tval\tsamples value\n"

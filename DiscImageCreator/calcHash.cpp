@@ -15,16 +15,6 @@
  */
 #include "calcHash.h"
 
-VOID CalcInit(
-	MD5_CTX* context,
-	SHA1Context* sha
-) {
-	// init md5
-	MD5Init(context);
-	// init sha1
-	SHA1Reset(sha);
-}
-
 WORD GetCrc16CCITT(
 	INT len,
 	LPBYTE lpBuf
@@ -40,118 +30,108 @@ VOID GetCrc32(
 	*crc = update_crc(*crc, lpBuf, (INT)dwSize);
 }
 
+VOID CalcInit(
+	PEXT_ARG pExtArg,
+	PHASH_CHUNK pHash
+) {
+	// init md5
+	MD5Init(&pHash->md5);
+	// init sha1
+	SHA1Reset(&pHash->sha);
+
+	if (pExtArg->byDatExpand) {
+		SHA224Reset(&pHash->sha224);
+		SHA256Reset(&pHash->sha256);
+		SHA384Reset(&pHash->sha384);
+		SHA512Reset(&pHash->sha512);
+		pHash->xxh3_64 = XXH3_createState();
+		pHash->xxh3_128 = XXH3_createState();
+		XXH3_64bits_reset(pHash->xxh3_64);
+		XXH3_128bits_reset(pHash->xxh3_128);
+	}
+}
+
 BOOL CalcHash(
-	LPDWORD crc,
-	MD5_CTX* context,
-	SHA1Context* sha,
+	PEXT_ARG pExtArg,
+	PHASH_CHUNK pHash,
 	LPBYTE lpBuf,
 	UINT uiSize
 ) {
-	BOOL bRet = TRUE;
 	/* Return the CRC of the bytes buf[0..len-1]. */
-	*crc = update_crc(*crc, lpBuf, (INT)uiSize);
+	pHash->crc32 = update_crc(pHash->crc32, lpBuf, (INT)uiSize);
 	// calc md5
-	MD5Update(context, lpBuf, uiSize);
+	MD5Update(&pHash->md5, lpBuf, uiSize);
 	// calc sha1
-	int err = SHA1Input(sha, lpBuf, uiSize);
-	if (err)	{
+	int err = SHA1Input(&pHash->sha, lpBuf, uiSize);
+	if (err) {
 		fprintf(stderr, "SHA1Input Error %d.\n", err);
-		bRet = FALSE;
+		return FALSE;
 	}
-	return bRet;
+	if (pExtArg->byDatExpand) {
+		err = SHA224Input(&pHash->sha224, lpBuf, uiSize);
+		if (err) {
+			fprintf(stderr, "SHA224Input Error %d.\n", err);
+			return FALSE;
+		}
+		err = SHA256Input(&pHash->sha256, lpBuf, uiSize);
+		if (err) {
+			fprintf(stderr, "SHA256Input Error %d.\n", err);
+			return FALSE;
+		}
+		err = SHA384Input(&pHash->sha384, lpBuf, uiSize);
+		if (err) {
+			fprintf(stderr, "SHA384Input Error %d.\n", err);
+			return FALSE;
+		}
+		err = SHA512Input(&pHash->sha512, lpBuf, uiSize);
+		if (err) {
+			fprintf(stderr, "SHA512Input Error %d.\n", err);
+			return FALSE;
+		}
+		XXH3_64bits_update(pHash->xxh3_64, lpBuf, uiSize);
+		XXH3_128bits_update(pHash->xxh3_128, lpBuf, uiSize);
+	}
+	return TRUE;
 }
 
 BOOL CalcEnd(
-	MD5_CTX* context,
-	SHA1Context* sha,
-	LPBYTE digest,
-	LPBYTE Message_Digest
+	PEXT_ARG pExtArg,
+	PHASH_CHUNK pHash,
+	PMESSAGE_DIGEST_CHUNK pDigest
 ) {
-	BOOL bRet = TRUE;
 	// end md5
-	MD5Final(digest, context);
+	MD5Final(pDigest->md5, &pHash->md5);
 	// end sha1
-	int err = SHA1Result(sha, Message_Digest);
+	int err = SHA1Result(&pHash->sha, pDigest->sha);
 	if (err) {
-		fprintf(stderr,	"SHA1Result Error %d, could not compute message digest.\n",	err);
-		bRet = FALSE;
-	}
-	return bRet;
-}
-
-VOID CalcInitExpand(
-	SHA224Context* sha224,
-	SHA256Context* sha256,
-	SHA384Context* sha384,
-	SHA512Context* sha512
-) {
-	SHA224Reset(sha224);
-	SHA256Reset(sha256);
-	SHA384Reset(sha384);
-	SHA512Reset(sha512);
-}
-
-BOOL CalcHashExpand(
-	SHA224Context* sha224,
-	SHA256Context* sha256,
-	SHA384Context* sha384,
-	SHA512Context* sha512,
-	LPBYTE lpBuf,
-	UINT uiSize
-) {
-	int err = SHA224Input(sha224, lpBuf, uiSize);
-	if (err) {
-		fprintf(stderr, "SHA224Input Error %d.\n", err);
+		fprintf(stderr, "SHA1Result Error %d, could not compute message digest.\n", err);
 		return FALSE;
 	}
-	err = SHA256Input(sha256, lpBuf, uiSize);
-	if (err) {
-		fprintf(stderr, "SHA256Input Error %d.\n", err);
-		return FALSE;
-	}
-	err = SHA384Input(sha384, lpBuf, uiSize);
-	if (err) {
-		fprintf(stderr, "SHA384Input Error %d.\n", err);
-		return FALSE;
-	}
-	err = SHA512Input(sha512, lpBuf, uiSize);
-	if (err) {
-		fprintf(stderr, "SHA512Input Error %d.\n", err);
-		return FALSE;
+	if (pExtArg->byDatExpand) {
+		err = SHA224Result(&pHash->sha224, pDigest->sha224);
+		if (err) {
+			fprintf(stderr, "SHA224Result Error %d, could not compute message digest.\n", err);
+			return FALSE;
+		}
+		err = SHA256Result(&pHash->sha256, pDigest->sha256);
+		if (err) {
+			fprintf(stderr, "SHA256Result Error %d, could not compute message digest.\n", err);
+			return FALSE;
+		}
+		err = SHA384Result(&pHash->sha384, pDigest->sha384);
+		if (err) {
+			fprintf(stderr, "SHA224Result Error %d, could not compute message digest.\n", err);
+			return FALSE;
+		}
+		err = SHA512Result(&pHash->sha512, pDigest->sha512);
+		if (err) {
+			fprintf(stderr, "SHA512Result Error %d, could not compute message digest.\n", err);
+			return FALSE;
+		}
+		pDigest->xxh3_64 = XXH3_64bits_digest(pHash->xxh3_64);
+		pDigest->xxh3_128 = XXH3_128bits_digest(pHash->xxh3_128);
+		XXH3_freeState(pHash->xxh3_64);
+		XXH3_freeState(pHash->xxh3_128);
 	}
 	return TRUE;
-}
-
-BOOL CalcEndExpand(
-	SHA224Context* sha224,
-	SHA256Context* sha256,
-	SHA384Context* sha384,
-	SHA512Context* sha512,
-	LPBYTE Message_Digest224,
-	LPBYTE Message_Digest256,
-	LPBYTE Message_Digest384,
-	LPBYTE Message_Digest512
-) {
-	int err = SHA224Result(sha224, Message_Digest224);
-	if (err) {
-		fprintf(stderr, "SHA224Result Error %d, could not compute message digest.\n", err);
-		return FALSE;
-	}
-	err = SHA256Result(sha256, Message_Digest256);
-	if (err) {
-		fprintf(stderr, "SHA256Result Error %d, could not compute message digest.\n", err);
-		return FALSE;
-	}
-	err = SHA384Result(sha384, Message_Digest384);
-	if (err) {
-		fprintf(stderr, "SHA224Result Error %d, could not compute message digest.\n", err);
-		return FALSE;
-	}
-	err = SHA512Result(sha512, Message_Digest512);
-	if (err) {
-		fprintf(stderr, "SHA512Result Error %d, could not compute message digest.\n", err);
-		return FALSE;
-	}
-	return TRUE;
-
 }

@@ -185,3 +185,7 @@ struct _MAIN_HEADER;
 typedef struct _MAIN_HEADER *PMAIN_HEADER;
 struct _SUBCH;
 typedef struct _SUBCH *PSUBCH;
+struct _HASH_CHUNK;
+typedef struct _HASH_CHUNK HASH_CHUNK, *PHASH_CHUNK;
+struct _MESSAGE_DIGEST_CHUNK;
+typedef struct _MESSAGE_DIGEST_CHUNK *PMESSAGE_DIGEST_CHUNK;

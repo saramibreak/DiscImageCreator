@@ -414,6 +414,7 @@
     <ClInclude Include="_external\sha-private.h" />
     <ClInclude Include="_external\sha.h" />
     <ClInclude Include="_external\sha1.h" />
+    <ClInclude Include="_external\xxhash.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="calcHash.cpp" />
@@ -461,6 +462,7 @@
     <ClCompile Include="_external\sha1.cpp" />
     <ClCompile Include="_external\sha224-256.cpp" />
     <ClCompile Include="_external\sha384-512.cpp" />
+    <ClCompile Include="_external\xxhash.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

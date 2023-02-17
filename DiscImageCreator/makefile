@@ -54,6 +54,7 @@ SOURCES_CXX := \
   _external/sha1.o \
   _external/sha224-256.o \
   _external/sha384-512.o \
+  _external/xxhash.o \
   _linux/defineForLinux.o
 
 OBJECTS := $(SOURCES_C:.c=.o) $(SOURCES_CXX:.cpp=.o)

@@ -18,11 +18,9 @@
 #include "_external/crc32.h"
 #include "_external/md5.h"
 #include "_external/sha.h"
-
-VOID CalcInit(
-	MD5_CTX* context,
-	SHA1Context* sha
-);
+#include "_external/xxhash.h"
+#include "forwardDeclaration.h"
+#include "struct.h"
 
 WORD GetCrc16CCITT(
 	INT len,
@@ -35,44 +33,20 @@ VOID GetCrc32(
 	DWORD dwSize
 );
 
+VOID CalcInit(
+	PEXT_ARG pExtArg,
+	PHASH_CHUNK pHash
+);
+
 BOOL CalcHash(
-	LPDWORD crc,
-	MD5_CTX* context,
-	SHA1Context* sha,
+	PEXT_ARG pExtArg,
+	PHASH_CHUNK pHash,
 	LPBYTE lpBuf,
 	UINT uiSize
 );
 
 BOOL CalcEnd(
-	MD5_CTX* context,
-	SHA1Context* sha,
-	LPBYTE digest,
-	LPBYTE Message_Digest
-);
-
-VOID CalcInitExpand(
-	SHA224Context* sha224,
-	SHA256Context* sha256,
-	SHA384Context* sha384,
-	SHA512Context* sha512
-);
-
-BOOL CalcHashExpand(
-	SHA224Context* sha224,
-	SHA256Context* sha256,
-	SHA384Context* sha384,
-	SHA512Context* sha512,
-	LPBYTE lpBuf,
-	UINT uiSize
-);
-
-BOOL CalcEndExpand(
-	SHA224Context* sha224,
-	SHA256Context* sha256,
-	SHA384Context* sha384,
-	SHA512Context* sha512,
-	LPBYTE Message_Digest224,
-	LPBYTE Message_Digest256,
-	LPBYTE Message_Digest384,
-	LPBYTE Message_Digest512
+	PEXT_ARG pExtArg,
+	PHASH_CHUNK pHash,
+	PMESSAGE_DIGEST_CHUNK pDigest
 );

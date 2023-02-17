@@ -305,6 +305,11 @@ See LICENSE
     zlib license  
     Original code by Lee Thomason (www.grinninglizard.com)
 
+  xxHash  
+    https://github.com/Cyan4973/xxHash  
+    BSD 2-Clause License  
+    Copyright (c) 2012-2021 Yann Collet. All rights reserved.
+
 - About Release_ANSI folder  
   E_WISE_W.EXE  
     http://kannegieser.net/veit/  

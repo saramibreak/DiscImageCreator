@@ -112,11 +112,7 @@ BOOL Read10(
 	INT direction = SG_DXFER_FROM_DEV;
 #endif
 	BYTE byScsiStatus = 0;
-	CalcInit(&pHash->pHashChunk[pHash->uiIndex].md5, &pHash->pHashChunk[pHash->uiIndex].sha);
-	if (pExtArg->byDatExpand) {
-		CalcInitExpand(&pHash->pHashChunk[pHash->uiIndex].sha224, &pHash->pHashChunk[pHash->uiIndex].sha256
-			, &pHash->pHashChunk[pHash->uiIndex].sha384, &pHash->pHashChunk[pHash->uiIndex].sha512);
-	}
+	CalcInit(pExtArg, &pHash->pHashChunk[pHash->uiIndex]);
 
 	for (DWORD dwLBA = 0; dwLBA < dwBlkSize; dwLBA += dwTransferLen) {
 		if (dwTransferLen > (DWORD)(dwBlkSize - dwLBA)) {

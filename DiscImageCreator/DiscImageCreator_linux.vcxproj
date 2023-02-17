@@ -109,6 +109,7 @@
     <ClCompile Include="_external\sha224-256.cpp" />
     <ClCompile Include="_external\sha384-512.cpp" />
     <ClCompile Include="_external\tinyxml2.cpp" />
+    <ClCompile Include="_external\xxhash.cpp" />
     <ClCompile Include="_linux\defineForLinux.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -160,6 +161,7 @@
     <ClInclude Include="_external\sha-private.h" />
     <ClInclude Include="_external\sha.h" />
     <ClInclude Include="_external\tinyxml2.h" />
+    <ClInclude Include="_external\xxhash.h" />
     <ClInclude Include="_linux\defineForLinux.h" />
     <ClInclude Include="_linux\ntddcdrm.h" />
     <ClInclude Include="_linux\ntddmmc.h" />

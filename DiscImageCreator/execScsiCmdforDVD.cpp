@@ -141,13 +141,11 @@ BOOL ReadDVD(
 			throw FALSE;
 		}
 		LPBYTE lpBuf = (LPBYTE)ConvParagraphBoundary(pDevice, pBuf);
-
 		CDB::_READ12 cdb = {};
 		cdb.OperationCode = SCSIOP_READ12;
 		if (pExtArg->byFua) {
 			cdb.ForceUnitAccess = TRUE;
 		}
-
 		DWORD dwLayer0MiddleZone =
 			pDisc->DVD.dwXboxStartPsn - pDisc->DVD.dwDVDStartPsn - pDisc->DVD.dwLayer0SectorLength;
 		DWORD dwLayer1MiddleZone = dwLayer0MiddleZone;
@@ -190,11 +188,9 @@ BOOL ReadDVD(
 			pDisc->SCSI.nAllLength = pExtArg->nAllSectors + (INT)pDisc->DVD.dwXboxSwapOfs;
 			nAllLength = pDisc->SCSI.nAllLength;
 		}
-
 		if (!ReadDVDForFileSystem(pExecType, pExtArg, pDevice, pDisc, &cdb, lpBuf)) {
 			throw FALSE;
 		}
-
 		if (pDisc->DVD.protect != noProtect) {
 			if (ExecReadingKey(pDevice, pDisc->DVD.protect, pszFullPath)) {
 				OutputDiscLog("Outputted to _xxxKey.txt\n\n");
@@ -203,11 +199,9 @@ BOOL ReadDVD(
 				OutputDiscLog("Failed to get _xxxKey.txt\n\n");
 			}
 		}
-
 		if (pExtArg->byAnchorVolumeDescriptorPointer) {
 			nAllLength = pDisc->SCSI.nAllLength;
 		}
-
 		if (*pExecType == xbox) {
 			if (!ReadXBOXFileSystem(pExtArg, pDevice, pDisc->DVD.dwXboxStartPsn - pDisc->DVD.dwDVDStartPsn)) {
 				throw FALSE;
@@ -226,11 +220,7 @@ BOOL ReadDVD(
 			}
 		}
 		FlushLog();
-		CalcInit(&pHash->pHashChunk[pHash->uiIndex].md5, &pHash->pHashChunk[pHash->uiIndex].sha);
-		if (pExtArg->byDatExpand) {
-			CalcInitExpand(&pHash->pHashChunk[pHash->uiIndex].sha224, &pHash->pHashChunk[pHash->uiIndex].sha256
-				, &pHash->pHashChunk[pHash->uiIndex].sha384, &pHash->pHashChunk[pHash->uiIndex].sha512);
-		}
+		CalcInit(pExtArg, &pHash->pHashChunk[pHash->uiIndex]);
 
 		FOUR_BYTE transferLen;
 		transferLen.AsULong = pDevice->dwMaxTransferLength / DISC_MAIN_DATA_SIZE;
@@ -454,7 +444,6 @@ BOOL ReadDVD(
 			WriteBufWithCalc(pExtArg, lpBuf, DISC_MAIN_DATA_SIZE, transferLen.AsULong, fp, pHash);
 			OutputString("\rCreating iso(LBA) %8lu/%8d", nLBA + transferLen.AsULong, nAllLength);
 		}
-
 		if (*pExecType == xbox) {
 			if (!SetLockState(pExtArg, pDevice, 0)) {
 				throw FALSE;
@@ -474,7 +463,6 @@ BOOL ReadDVD(
 				WriteBufWithCalc(pExtArg, lpBuf, DISC_MAIN_DATA_SIZE, transferLen.AsULong, fp, pHash);
 				OutputString("\rCreating iso(LBA) %8lu/%8d", j + transferLen.AsULong, nAllLength);
 			}
-
 			transferLen.AsULong = dwTransferLenOrg;
 			REVERSE_BYTES(&cdb.TransferLength, &transferLen);
 			DWORD dwEndOfDvd = pDisc->DVD.dwLayer0SectorLength + pDisc->DVD.dwLayer1SectorLength;
@@ -647,9 +635,9 @@ BOOL ReadDVDRaw(
 	if (pExtArg->byResume || pExtArg->byFix) {
 		memcpy(szMode, _T("rb+"), 3);
 	}
-
 	_TCHAR szFnameAndExt[_MAX_FNAME + _MAX_EXT] = {};
 	_TCHAR pszOutPath[_MAX_PATH] = {};
+
 	if (NULL == (fp = CreateOrOpenFile(pszFullPath, NULL, pszOutPath, szFnameAndExt, NULL, _T(".raw"), szMode, 0, 0))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
@@ -856,11 +844,7 @@ BOOL ReadDVDRaw(
 			OutputString("\n");
 #endif
 		}
-		CalcInit(&pHash->pHashChunk[pHash->uiIndex].md5, &pHash->pHashChunk[pHash->uiIndex].sha);
-		if (pExtArg->byDatExpand) {
-			CalcInitExpand(&pHash->pHashChunk[pHash->uiIndex].sha224, &pHash->pHashChunk[pHash->uiIndex].sha256
-				, &pHash->pHashChunk[pHash->uiIndex].sha384, &pHash->pHashChunk[pHash->uiIndex].sha512);
-		}
+		CalcInit(pExtArg, &pHash->pHashChunk[pHash->uiIndex]);
 
 #ifdef _WIN32
 		INT direction = SCSI_IOCTL_DATA_IN;
@@ -1224,7 +1208,6 @@ BOOL ReadDiscStructure(
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		return FALSE;
 	}
-
 	PDVD_DESCRIPTOR_HEADER pDescHeader = ((PDVD_DESCRIPTOR_HEADER)pBuf);
 	TWO_BYTE descLen;
 	descLen.AsUShort = pDescHeader->Length;
@@ -1266,20 +1249,15 @@ BOOL ReadDiscStructure(
 			return FALSE;
 		}
 	}
-
 	INT nPacCnt = 0; // BD, format 0x30
 	INT nPacNum = 0; // BD, format 0x30
 	BYTE pacIdList[256][4] = {}; // BD, format 0x30
 
 	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("DiscStructure"));
 	for (WORD i = 0; i < wEntrySize; i++) {
-		CalcInit(&pHash->pHashChunk[pHash->uiIndex].md5, &pHash->pHashChunk[pHash->uiIndex].sha);
-		if (pExtArg->byDatExpand) {
-			CalcInitExpand(&pHash->pHashChunk[pHash->uiIndex].sha224, &pHash->pHashChunk[pHash->uiIndex].sha256
-				, &pHash->pHashChunk[pHash->uiIndex].sha384, &pHash->pHashChunk[pHash->uiIndex].sha512);
-		}
-		PDVD_STRUCTURE_LIST_ENTRY pEntry =
-			((PDVD_STRUCTURE_LIST_ENTRY)pDescHeader->Data + i);
+		CalcInit(pExtArg, &pHash->pHashChunk[pHash->uiIndex]);
+
+		PDVD_STRUCTURE_LIST_ENTRY pEntry = ((PDVD_STRUCTURE_LIST_ENTRY)pDescHeader->Data + i);
 		// FormatLength is obsolete for late drive
 //		WORD wFormatLen = MAKEWORD(pEntry->FormatLength[1], pEntry->FormatLength[0]);
 		TWO_BYTE formatLen;
@@ -1413,12 +1391,8 @@ BOOL ReadDiscStructure(
 					if (pEntry->FormatCode == DvdPhysicalDescriptor) {
 						// PFI doesn't include the header
 						fwrite(lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), sizeof(BYTE), DISC_MAIN_DATA_SIZE, fpPfi);
-						CalcHash(&pHash->pHashChunk[pHash->uiIndex].crc32, &pHash->pHashChunk[pHash->uiIndex].md5
-							, &pHash->pHashChunk[pHash->uiIndex].sha, lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), DISC_MAIN_DATA_SIZE);
-						if (pExtArg->byDatExpand) {
-							CalcHashExpand(&pHash->pHashChunk[pHash->uiIndex].sha224, &pHash->pHashChunk[pHash->uiIndex].sha256
-								, &pHash->pHashChunk[pHash->uiIndex].sha384, &pHash->pHashChunk[pHash->uiIndex].sha512, lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), DISC_MAIN_DATA_SIZE);
-						}
+						CalcHash(pExtArg, &pHash->pHashChunk[pHash->uiIndex], lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), DISC_MAIN_DATA_SIZE);
+
 						_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, szFnameAndExtPFI, _MAX_FNAME + _MAX_EXT);
 						pHash->pHashChunk[pHash->uiIndex].ui64FileSize = DISC_MAIN_DATA_SIZE;
 						pHash->uiIndex++;
@@ -1427,12 +1401,8 @@ BOOL ReadDiscStructure(
 					else if (pEntry->FormatCode == DvdManufacturerDescriptor) {
 						// DMI doesn't include the header
 						fwrite(lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), sizeof(BYTE), DISC_MAIN_DATA_SIZE, fpDmi);
-						CalcHash(&pHash->pHashChunk[pHash->uiIndex].crc32, &pHash->pHashChunk[pHash->uiIndex].md5
-							, &pHash->pHashChunk[pHash->uiIndex].sha, lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), DISC_MAIN_DATA_SIZE);
-						if (pExtArg->byDatExpand) {
-							CalcHashExpand(&pHash->pHashChunk[pHash->uiIndex].sha224, &pHash->pHashChunk[pHash->uiIndex].sha256
-								, &pHash->pHashChunk[pHash->uiIndex].sha384, &pHash->pHashChunk[pHash->uiIndex].sha512, lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), DISC_MAIN_DATA_SIZE);
-						}
+						CalcHash(pExtArg, &pHash->pHashChunk[pHash->uiIndex], lpFormat + sizeof(DVD_DESCRIPTOR_HEADER), DISC_MAIN_DATA_SIZE);
+
 						_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, szFnameAndExtDMI, _MAX_FNAME + _MAX_EXT);
 						pHash->pHashChunk[pHash->uiIndex].ui64FileSize = DISC_MAIN_DATA_SIZE;
 						pHash->uiIndex++;
@@ -1479,12 +1449,8 @@ BOOL ReadDiscStructure(
 				if (pEntry->FormatCode == 0) {
 					// PIC includes the header
 					fwrite(lpFormat, sizeof(BYTE), formatLen.AsUShort, fpPic);
-					CalcHash(&pHash->pHashChunk[pHash->uiIndex].crc32, &pHash->pHashChunk[pHash->uiIndex].md5
-						, &pHash->pHashChunk[pHash->uiIndex].sha, lpFormat, formatLen.AsUShort);
-					if (pExtArg->byDatExpand) {
-						CalcHashExpand(&pHash->pHashChunk[pHash->uiIndex].sha224, &pHash->pHashChunk[pHash->uiIndex].sha256
-							, &pHash->pHashChunk[pHash->uiIndex].sha384, &pHash->pHashChunk[pHash->uiIndex].sha512, lpFormat, formatLen.AsUShort);
-					}
+					CalcHash(pExtArg, &pHash->pHashChunk[pHash->uiIndex], lpFormat, formatLen.AsUShort);
+
 					_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, szFnameAndExtPIC, _MAX_FNAME + _MAX_EXT);
 					pHash->pHashChunk[pHash->uiIndex].ui64FileSize = formatLen.AsUShort;
 					pHash->uiIndex++;
@@ -1750,12 +1716,8 @@ BOOL ExtractSecuritySector(
 	if (pDisc->SCSI.nAllLength < 4246304 || filled) {
 		fwrite(buf, sizeof(BYTE), (size_t)DISC_MAIN_DATA_SIZE, fp);
 	}
-	CalcHash(&pHash->pHashChunk[pHash->uiIndex].crc32, &pHash->pHashChunk[pHash->uiIndex].md5
-		, &pHash->pHashChunk[pHash->uiIndex].sha, buf, DISC_MAIN_DATA_SIZE);
-	if (pExtArg->byDatExpand) {
-		CalcHashExpand(&pHash->pHashChunk[pHash->uiIndex].sha224, &pHash->pHashChunk[pHash->uiIndex].sha256
-			, &pHash->pHashChunk[pHash->uiIndex].sha384, &pHash->pHashChunk[pHash->uiIndex].sha512, buf, DISC_MAIN_DATA_SIZE);
-	}
+	CalcHash(pExtArg, &pHash->pHashChunk[pHash->uiIndex], buf, DISC_MAIN_DATA_SIZE);
+
 	_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, szFnameAndExtSS, _MAX_FNAME + _MAX_EXT);
 	pHash->pHashChunk[pHash->uiIndex].ui64FileSize = DISC_MAIN_DATA_SIZE;
 	pHash->uiIndex++;
@@ -2101,11 +2063,8 @@ BOOL ReadSACD(
 		if (pExtArg->byFua) {
 			cdb.ForceUnitAccess = TRUE;
 		}
-		CalcInit(&pHash->pHashChunk[pHash->uiIndex].md5, &pHash->pHashChunk[pHash->uiIndex].sha);
-		if (pExtArg->byDatExpand) {
-			CalcInitExpand(&pHash->pHashChunk[pHash->uiIndex].sha224, &pHash->pHashChunk[pHash->uiIndex].sha256
-				, &pHash->pHashChunk[pHash->uiIndex].sha384, &pHash->pHashChunk[pHash->uiIndex].sha512);
-		}
+		CalcInit(pExtArg, &pHash->pHashChunk[pHash->uiIndex]);
+
 		FOUR_BYTE transferLen;
 		transferLen.AsULong = pDevice->dwMaxTransferLength / DISC_MAIN_DATA_SIZE;
 		REVERSE_BYTES(&cdb.TransferLength, &transferLen);
@@ -2128,14 +2087,9 @@ BOOL ReadSACD(
 				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 					throw FALSE;
 			}
-
 			fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_MAIN_DATA_SIZE * transferLen.AsULong, fp);
-			CalcHash(&pHash->pHashChunk[pHash->uiIndex].crc32, &pHash->pHashChunk[pHash->uiIndex].md5
-				, &pHash->pHashChunk[pHash->uiIndex].sha, lpBuf, DISC_MAIN_DATA_SIZE * (UINT)transferLen.AsULong);
-			if (pExtArg->byDatExpand) {
-				CalcHashExpand(&pHash->pHashChunk[pHash->uiIndex].sha224, &pHash->pHashChunk[pHash->uiIndex].sha256
-					, &pHash->pHashChunk[pHash->uiIndex].sha384, &pHash->pHashChunk[pHash->uiIndex].sha512, lpBuf, DISC_MAIN_DATA_SIZE * (UINT)transferLen.AsULong);
-			}
+			CalcHash(pExtArg, &pHash->pHashChunk[pHash->uiIndex], lpBuf, DISC_MAIN_DATA_SIZE * (UINT)transferLen.AsULong);
+
 			_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, szFnameAndExt, sizeof(szFnameAndExt));
 			pHash->pHashChunk[pHash->uiIndex].ui64FileSize = DISC_MAIN_DATA_SIZE * (UINT64)pDisc->SCSI.nAllLength;
 			OutputString("\rCreating iso(LBA) %8lu/%8d", LBA.AsULong + transferLen.AsULong, pDisc->SCSI.nAllLength);

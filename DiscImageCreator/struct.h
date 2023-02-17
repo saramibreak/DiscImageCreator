@@ -519,9 +519,11 @@ typedef struct _HASH_CHUNK {
 	SHA256Context sha256;
 	SHA384Context sha384;
 	SHA512Context sha512;
+	XXH3_state_t* xxh3_64;
+	XXH3_state_t* xxh3_128;
 	_TCHAR szFnameAndExt[_MAX_FNAME + _MAX_EXT];
 	UINT64 ui64FileSize;
-} HASH_CHUNK, * PHASH_CHUNK;
+} HASH_CHUNK, *PHASH_CHUNK;
 #pragma pack(pop, hash)
 
 typedef struct _HASH {
@@ -530,6 +532,17 @@ typedef struct _HASH {
 	UINT uiCount;
 	UINT uiMax;
 } HASH, *PHASH;
+
+typedef struct _MESSAGE_DIGEST_CHUNK {
+	BYTE md5[16];
+	BYTE sha[20];
+	BYTE sha224[28];
+	BYTE sha256[32];
+	BYTE sha384[48];
+	BYTE sha512[64];
+	XXH64_hash_t xxh3_64;
+	XXH128_hash_t xxh3_128;
+} MESSAGE_DIGEST_CHUNK, *PMESSAGE_DIGEST_CHUNK;
 
 #pragma pack(push, mds, 1)
 typedef struct _MDS_HEADER {
