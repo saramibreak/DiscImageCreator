@@ -2,6 +2,9 @@
 - [Firmware link from Shinano Kenshi](https://web.archive.org/web/20191107121210/http://www.skcj.co.jp/discon/download/index.html)  
   You can download almost all firmwares except PX-704, PX-708A2 and PX-714
 
+- Firmware link from buffalo.jp
+  - [PX-704 (DVM-H44FB) 1.01 (exe)](https://driver.buffalo.jp/buf-drv/hd/dvmh44fb_fw101.exe)
+
 - Firmware link from plextor.com.cn
   - [PX-704 1.02 (exe)](https://web.archive.org/web/20061211171338/http://www.plextor.com.cn:80/PX704-102.exe)
   - [PX-704 1.03 (exe)](https://web.archive.org/web/20061209215700/http://www.plextor.com.cn:80/PX704_103.exe)
