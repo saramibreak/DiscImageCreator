@@ -91,39 +91,124 @@ VOID FixMainHeader(
 	memcpy(pDiscPerSector->mainHeader.current, lpWorkBuf, MAINHEADER_MODE1_SIZE);
 	UpdateTmpMainHeader(pDiscPerSector, nMainDataType);
 
-	if (!bHeader) {
-		INT nOfs = pDisc->MAIN.nCombinedOffset;
-		BYTE ctl = 0;
-		INT nAdd = 0;
+	INT nOfs = pDisc->MAIN.nCombinedOffset;
+	INT nAdd = 0;
+	BYTE adr = 0;
+	BYTE ctl = 0;
+	BYTE trk = 0;
 
-		if (-4704 <= nOfs && nOfs < -2352) {
-			if (2 <= pExtArg->uiSubAddionalNum) {
-				ctl = pDiscPerSector->subch.nextNext.byCtl;
-				nAdd += 2;
+	if (-4704 <= nOfs && nOfs < -2352) {
+		if (2 <= pExtArg->uiSubAddionalNum) {
+			WORD crc16 = (WORD)GetCrc16CCITT(10, &pDiscPerSector->subcode.nextNext[12]);
+			if (pDiscPerSector->subcode.nextNext[22] != HIBYTE(crc16) ||
+				pDiscPerSector->subcode.nextNext[23] != LOBYTE(crc16)) {
+				DISC_PER_SECTOR tmpSector = {};
+				memcpy(&tmpSector, pDiscPerSector, sizeof(DISC_PER_SECTOR));
+
+				tmpSector.subch.nextNext = tmpSector.subch.current;
+				tmpSector.subch.nextNext.nRelativeTime += 2;
+				tmpSector.subch.nextNext.nAbsoluteTime += 2;
+				SetBufferFromTmpSubch(tmpSector.subcode.nextNext, tmpSector.subch.nextNext, TRUE, FALSE);
+				crc16 = (WORD)GetCrc16CCITT(10, &tmpSector.subcode.nextNext[12]);
+
+				if (tmpSector.subcode.nextNext[22] == HIBYTE(crc16) &&
+					tmpSector.subcode.nextNext[23] == LOBYTE(crc16)) {
+					memcpy(&pDiscPerSector->subcode.nextNext[12], &tmpSector.subcode.nextNext[12], 12);
+					SetTmpSubchFromBuffer(&pDiscPerSector->subch.nextNext, pDiscPerSector->subcode.nextNext);
+				}
+			}
+			ctl = pDiscPerSector->subch.nextNext.byCtl;
+			adr = pDiscPerSector->subch.nextNext.byAdr;
+			trk = pDiscPerSector->subch.nextNext.byTrackNum;
+			nAdd += 2;
+		}
+	}
+	else if (-2352 <= nOfs && nOfs < 0) {
+		if (1 <= pExtArg->uiSubAddionalNum) {
+			WORD crc16 = (WORD)GetCrc16CCITT(10, &pDiscPerSector->subcode.next[12]);
+			if (pDiscPerSector->subcode.next[22] != HIBYTE(crc16) ||
+				pDiscPerSector->subcode.next[23] != LOBYTE(crc16)) {
+				DISC_PER_SECTOR tmpSector = {};
+				memcpy(&tmpSector, pDiscPerSector, sizeof(DISC_PER_SECTOR));
+
+				tmpSector.subch.next = tmpSector.subch.current;
+				tmpSector.subch.next.nRelativeTime += 1;
+				tmpSector.subch.next.nAbsoluteTime += 1;
+				SetBufferFromTmpSubch(tmpSector.subcode.next, tmpSector.subch.next, TRUE, FALSE);
+				crc16 = (WORD)GetCrc16CCITT(10, &tmpSector.subcode.next[12]);
+
+				if (tmpSector.subcode.next[22] == HIBYTE(crc16) &&
+					tmpSector.subcode.next[23] == LOBYTE(crc16)) {
+					memcpy(&pDiscPerSector->subcode.next[12], &tmpSector.subcode.next[12], 12);
+					SetTmpSubchFromBuffer(&pDiscPerSector->subch.next, pDiscPerSector->subcode.next);
+				}
+			}
+			ctl = pDiscPerSector->subch.next.byCtl;
+			adr = pDiscPerSector->subch.next.byAdr;
+			trk = pDiscPerSector->subch.next.byTrackNum;
+			nAdd++;
+		}
+	}
+	else if (0 <= nOfs && nOfs < 2352) {
+		ctl = pDiscPerSector->subch.current.byCtl;
+		adr = pDiscPerSector->subch.current.byAdr;
+		trk = pDiscPerSector->subch.current.byTrackNum;
+	}
+	else if (2352 <= nOfs && nOfs < 4704) {
+		ctl = pDiscPerSector->subch.prev.byCtl;
+		adr = pDiscPerSector->subch.prev.byAdr;
+		trk = pDiscPerSector->subch.prev.byTrackNum;
+		nAdd--;
+	}
+	else if (4704 <= nOfs && nOfs < 7056) {
+		ctl = pDiscPerSector->subch.prevPrev.byCtl;
+		adr = pDiscPerSector->subch.prevPrev.byAdr;
+		trk = pDiscPerSector->subch.prevPrev.byTrackNum;
+		nAdd -= 2;
+	}
+
+	if (adr == ADR_ENCODES_CURRENT_POSITION) {
+		if ((pDisc->SCSI.toc.TrackData[trk - 1].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+			if ((ctl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+				if (!bHeader) {
+					OutputMainInfoWithLBALog(
+						"Data track, Data sector, there is not a sync\n", nLBA + nAdd, trk);
+					OutputMainChannel(fileMainInfo, lpWorkBuf, NULL, nLBA + nAdd, MAINHEADER_MODE1_SIZE);
+				}
+			}
+			else if ((ctl & AUDIO_DATA_TRACK) == 0) {
+				if (!bHeader) {
+					OutputMainInfoWithLBALog(
+						"Data track, Audio sector, there is not a sync\n", nLBA + nAdd, trk);
+					OutputMainChannel(fileMainInfo, lpWorkBuf, NULL, nLBA + nAdd, MAINHEADER_MODE1_SIZE);
+				}
+				else {
+					OutputMainInfoWithLBALog(
+						"Data track, Audio sector, there is a sync\n", nLBA + nAdd, trk);
+					OutputMainChannel(fileMainInfo, lpWorkBuf, NULL, nLBA + nAdd, MAINHEADER_MODE1_SIZE);
+				}
 			}
 		}
-		else if (-2352 <= nOfs && nOfs < 0) {
-			if (1 <= pExtArg->uiSubAddionalNum) {
-				ctl = pDiscPerSector->subch.next.byCtl;
-				nAdd++;
+		else if ((pDisc->SCSI.toc.TrackData[trk - 1].Control & AUDIO_DATA_TRACK) == 0) {
+			if ((ctl & AUDIO_DATA_TRACK) == 0) {
+				if (bHeader) {
+					OutputMainInfoWithLBALog(
+						"Audio track, Audio sector, there is a sync\n", nLBA + nAdd, trk);
+					OutputMainChannel(fileMainInfo, lpWorkBuf, NULL, nLBA + nAdd, MAINHEADER_MODE1_SIZE);
+				}
 			}
-		}
-		else if (0 <= nOfs && nOfs < 2352) {
-			ctl = pDiscPerSector->subch.current.byCtl;
-		}
-		else if (2352 <= nOfs && nOfs < 4704) {
-			ctl = pDiscPerSector->subch.prev.byCtl;
-			nAdd--;
-		}
-		else if (4704 <= nOfs && nOfs < 7056) {
-			ctl = pDiscPerSector->subch.prevPrev.byCtl;
-			nAdd -= 2;
-		}
-		if ((ctl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
-			OutputMainErrorWithLBALog(
-				"This sector is data, but sync is invalid\n"
-				, nLBA + nAdd, pDiscPerSector->byTrackNum);
-			OutputMainChannel(fileMainError, lpWorkBuf, NULL, nLBA + nAdd, MAINHEADER_MODE1_SIZE);
+			else if ((ctl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+				if (!bHeader) {
+					OutputMainInfoWithLBALog(
+						"Audio track, Data sector, there is not a sync\n", nLBA + nAdd, trk);
+					OutputMainChannel(fileMainInfo, lpWorkBuf, NULL, nLBA + nAdd, MAINHEADER_MODE1_SIZE);
+				}
+				else {
+					OutputMainInfoWithLBALog(
+						"Audio track, Data sector, there is a sync\n", nLBA + nAdd, trk);
+					OutputMainChannel(fileMainInfo, lpWorkBuf, NULL, nLBA + nAdd, MAINHEADER_MODE1_SIZE);
+				}
+			}
 		}
 	}
 }

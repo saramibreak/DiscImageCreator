@@ -1297,8 +1297,8 @@ BOOL ReadCDAll(
 							OutputCDSub96Raw(standardOut, lpSubcodeRaw, nLBA);
 #endif
 							WriteSubChannel(pDisc, pDiscPerSector, lpSubcodeRaw, nLBA, fpSub);
-							FixMainHeader(pExtArg, pDisc, pDiscPerSector, nLBA, nMainDataType);
 							SetTrackAttribution(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA);
+							FixMainHeader(pExtArg, pDisc, pDiscPerSector, nLBA, nMainDataType);
 							UpdateTmpSubch(pDiscPerSector);
 						}
 					}
@@ -2330,14 +2330,12 @@ BOOL ReadCDPartial(
 							OutputCDSub96Align(pDiscPerSector->subcode.current, nLBA);
 #endif
 							WriteSubChannel(pDisc, pDiscPerSector, lpSubcodeRaw, nLBA, fpSub);
-//							if (!(*pExecType == audio || *pExecType == data)) {
-//							if (nStart < nLBA) {
-								FixMainHeader(pExtArg, pDisc, pDiscPerSector, nLBA, nMainDataType);
-//							}
+							if (!(*pExecType == audio || *pExecType == data)) {
+								SetTrackAttribution(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA);
+							}
+							FixMainHeader(pExtArg, pDisc, pDiscPerSector, nLBA, nMainDataType);
 						}
 						if (!(*pExecType == audio || *pExecType == data)) {
-//						if (nStart < nLBA) {
-							SetTrackAttribution(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA);
 							UpdateTmpSubch(pDiscPerSector);
 						}
 					}

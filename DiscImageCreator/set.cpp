@@ -1517,19 +1517,6 @@ VOID SetTrackAttribution(
 				return;
 			}
 		}
-		if (!(pDisc->SCSI.byFormat == DISK_TYPE_CDI && pDisc->SCSI.toc.LastTrack > 1)) {
-			if ((pDisc->SCSI.toc.TrackData[tIdx2].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK &&
-				(pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == 0) {
-				OutputMainInfoWithLBALog(
-					"Data track, but this sector is audio\n", nLBA, tmpCurrentTrackNum);
-			}
-			else if ((pDisc->SCSI.toc.TrackData[tIdx2].Control & AUDIO_DATA_TRACK) == 0 &&
-				(pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
-				OutputMainInfoWithLBALog(
-					"Audio track, but this sector is data\n", nLBA, tmpCurrentTrackNum);
-			}
-		}
-
 		if (pExtArg->byReverse) {
 			// preserve last LBA per data track
 			if (nLBA == pDisc->SCSI.nLastLBAofDataTrkOnToc) {
