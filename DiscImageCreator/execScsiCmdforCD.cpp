@@ -295,7 +295,7 @@ BOOL ProcessReadCD(
 				AlignRowSubcode(pDiscPerSector->subcode.next, pDiscPerSector->data.next + pDevice->TRANSFER.uiBufSubOffset);
 					
 				if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
-					if (IsPrextor712OrNewer(pDevice)) {
+					if (IsPlextor712OrNewer(pDevice)) {
 						bRet = ContainsC2Error(pDevice, 1, CD_RAW_READ_C2_294_SIZE, pDiscPerSector->data.next, &pDiscPerSector->uiC2errorNum, nLBA, TRUE);
 					}
 					else {
@@ -310,7 +310,7 @@ BOOL ProcessReadCD(
 
 					if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
 						BOOL bRet2 = RETURNED_NO_C2_ERROR_1ST;
-						if (IsPrextor712OrNewer(pDevice)) {
+						if (IsPlextor712OrNewer(pDevice)) {
 							UINT uiErrorBak = pDiscPerSector->uiC2errorNum;
 							bRet2 = ContainsC2Error(pDevice, 0, 1, pDiscPerSector->data.nextNext, &pDiscPerSector->uiC2errorNum, nLBA, TRUE);
 							if (bRet2 == RETURNED_EXIST_C2_ERROR) {
@@ -386,7 +386,7 @@ BOOL ReadCDForRereadingSectorType1(
 				OutputC2ErrorWithLBALog("crc32[%03u]: 0x%08lx ", nLBA, i, dwTmpCrc32);
 
 				LPBYTE lpNextBuf = lpBuf + CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE;
-				if (IsPrextor712OrNewer(pDevice)) {
+				if (IsPlextor712OrNewer(pDevice)) {
 					bRet = ContainsC2Error(pDevice, 1, CD_RAW_READ_C2_294_SIZE, lpNextBuf, &pDiscPerSector->uiC2errorNum, nLBA, FALSE);
 					UINT c2ErrorBak = pDiscPerSector->uiC2errorNum;
 					bRet = ContainsC2Error(pDevice, 0, 1, lpNextBuf + CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE, &pDiscPerSector->uiC2errorNum, nLBA, FALSE);
@@ -1093,7 +1093,7 @@ BOOL ReadCDAll(
 				// C2 error points the current LBA - 1 (offset?)
 				OutputLog(standardError | fileC2Error,
 					" LBA[%06d], LBA translation to SCM address in hex[%#x], LBA in C2 file[%#x] Detected C2 error %u bit\n"
-					, nLBA, nLBA * CD_RAW_SECTOR_SIZE, nLBA * CD_RAW_READ_C2_294_SIZE, pDiscPerSector->uiC2errorNum);
+					, nLBA, (UINT)(nLBA * CD_RAW_SECTOR_SIZE), (UINT)(nLBA * CD_RAW_READ_C2_294_SIZE), pDiscPerSector->uiC2errorNum);
 				if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
 					if (!(IsValidIntentionalC2error(pDisc, pDiscPerSector, nLBA, GetC2ErrorFileIdx(pExtArg, pDisc, nLBA)))) {
 						pDisc->MAIN.lpAllLBAOfC2Error[pDisc->MAIN.nC2ErrorCnt++] = nLBA;
@@ -2170,7 +2170,7 @@ BOOL ReadCDPartial(
 				// C2 error points the current LBA - 1 (offset?)
 				OutputLog(standardError | fileC2Error,
 					" LBA[%06d], LBA translation to SCM address in hex[%#x], LBA in C2 file[%#x] Detected C2 error %u bit\n"
-					, nLBA, nLBA* CD_RAW_SECTOR_SIZE, nLBA* CD_RAW_READ_C2_294_SIZE, pDiscPerSector->uiC2errorNum);
+					, nLBA, (UINT)(nLBA * CD_RAW_SECTOR_SIZE), (UINT)(nLBA* CD_RAW_READ_C2_294_SIZE), pDiscPerSector->uiC2errorNum);
 				if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
 					if (!(IsValidIntentionalC2error(pDisc, pDiscPerSector, nLBA, GetC2ErrorFileIdx(pExtArg, pDisc, nLBA)))) {
 						pDisc->MAIN.lpAllLBAOfC2Error[pDisc->MAIN.nC2ErrorCnt++] = nLBA;
