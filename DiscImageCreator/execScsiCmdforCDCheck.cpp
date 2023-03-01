@@ -2960,7 +2960,7 @@ BOOL ReadCDCheck(
 	}
 
 	if (!pExtArg->byReverse) {
-		if (pExtArg->byMultiSession && pDevice->byPlxtrDrive && !IsPrextorDVDDrive(pDevice)) {
+		if (pExtArg->byMultiSession && pDevice->byPlxtrDrive && !IsPlextorDVDDrive(pDevice)) {
 			OutputLog(standardOut | fileDisc,
 				"[ERROR] This program doesn't support to dump the multi-session disc by the plextor CD Drive\n");
 			return FALSE;

@@ -52,11 +52,11 @@ BOOL IsPregapOfTrack1ReadableDrive(
 	PDEVICE pDevice
 );
 
-BOOL IsPrextorDVDDrive(
+BOOL IsPlextorDVDDrive(
 	PDEVICE pDevice
 );
 
-BOOL IsPrextor712OrNewer(
+BOOL IsPlextor712OrNewer(
 	PDEVICE pDevice
 );
 

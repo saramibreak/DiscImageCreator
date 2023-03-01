@@ -430,7 +430,7 @@ BOOL IsPregapOfTrack1ReadableDrive(
 	return bRet;
 }
 
-BOOL IsPrextorDVDDrive(
+BOOL IsPlextorDVDDrive(
 	PDEVICE pDevice
 ) {
 	BOOL bRet = TRUE;
@@ -449,7 +449,7 @@ BOOL IsPrextorDVDDrive(
 	return bRet;
 }
 
-BOOL IsPrextor712OrNewer(
+BOOL IsPlextor712OrNewer(
 	PDEVICE pDevice
 ) {
 	BOOL bRet = TRUE;
