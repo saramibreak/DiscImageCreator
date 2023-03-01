@@ -534,7 +534,7 @@ VOID OutputDVDLayerDescriptor(
 
 	OutputLog(type,
 		OUTPUT_DHYPHEN_PLUS_STR("PhysicalFormatInformation")
-		"\t       BookVersion: %u\n"
+		"\t       BookVersion: %hhu\n"
 		"\t          BookType: %s\n"
 		"\t       MinimumRate: %s\n"
 		"\t          DiskSize: %s\n"
@@ -918,8 +918,8 @@ VOID OutputDVDPreRecordedInformation(
 		"\t            DiscApplicatiowCode: %02x\n"
 		"\t               DiscPhysicalCode: %02x\n"
 		"\tLastAddressOfDataRecordableArea: %u (%#x)\n"
-		"\t                  ExtensiowCode: %02x\n"
-		"\t                    PartVers1on: %02x\n"
+		"\t                  ExtensiowCode: %02hhx\n"
+		"\t                    PartVers1on: %02hhx\n"
 		"\t                      FieldID_2: %02x\n"
 		"\t               OpcSuggestedCode: %02x\n"
 		"\t                 WavelengthCode: %02x\n"
@@ -1189,8 +1189,8 @@ VOID OutputDiscListOfRecognizedFormatLayers(
 ) {
 	OutputDiscLog(
 		"\t\tNumberOfRecognizedFormatLayers: %u\n"
-		"\t\t             OnlineFormatlayer: %u\n"
-		"\t\t            DefaultFormatLayer: %u\n"
+		"\t\t             OnlineFormatlayer: %hhu\n"
+		"\t\t            DefaultFormatLayer: %hhu\n"
 		, dvdListOf->NumberOfRecognizedFormatLayers
 		, dvdListOf->OnlineFormatlayer
 		, dvdListOf->DefaultFormatLayer);

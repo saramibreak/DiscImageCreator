@@ -2910,7 +2910,7 @@ VOID OutputSenseData(
 	PSENSE_DATA pSenseData
 ) {
 	OutputLog(standardError | fileMainError,
-		"\tSenseData Key-Asc-Ascq: %02x-%02x-%02x = "
+		"\tSenseData Key-Asc-Ascq: %02hhx-%02x-%02x = "
 		, pSenseData->SenseKey, pSenseData->AdditionalSenseCode
 		, pSenseData->AdditionalSenseCodeQualifier);
 	OutputSenseKey(pSenseData->SenseKey);

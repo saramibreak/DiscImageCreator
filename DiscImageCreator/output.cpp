@@ -293,8 +293,8 @@ VOID WriteCcdForEntry(
 			_T("[Entry %u]\n")
 			_T("Session=%u\n")
 			_T("Point=0x%02x\n")
-			_T("ADR=0x%02x\n")
-			_T("Control=0x%02x\n")
+			_T("ADR=0x%02hhx\n")
+			_T("Control=0x%02hhx\n")
 			_T("TrackNo=%u\n")
 			_T("AMin=%u\n")
 			_T("ASec=%u\n")
@@ -1218,8 +1218,8 @@ BOOL WriteParsingMdsfile(
 			}
 			OutputMdsReadableLog(
 				"         Number of subchannels in .MDF file: %u\n"
-				"                                        ADR: %u\n"
-				"                                    Control: %u\n"
+				"                                        ADR: %hhu\n"
+				"                                    Control: %hhu\n"
 				"                                      Point: %02u (%02X) "
 				, db[i].numOfSubch, db[i].Adr, db[i].Control, db[i].Point, db[i].Point
 			);

@@ -421,7 +421,7 @@ VOID SetAndOutputTocFull(
 		if (fpCcd) {
 			WriteCcdForEntry(pTocData, a, fpCcd);
 		}
-		OutputDiscLog("\tSession %u, Ctl %u, Adr %u, Point 0x%02x,"
+		OutputDiscLog("\tSession %u, Ctl %hhu, Adr %hhu, Point 0x%02x,"
 			, pTocData[a].SessionNumber, pTocData[a].Control, pTocData[a].Adr, pTocData[a].Point);
 		switch (pTocData[a].Point) {
 		case 0xa0:

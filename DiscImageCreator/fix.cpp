@@ -1092,7 +1092,7 @@ VOID FixSubQ(
 	}
 
 	if (!IsValidSubQCtl(&pDiscPerSector->subch, pDisc->SUB.lpEndCtlList[pDiscPerSector->byTrackNum - 1])) {
-		OutputSubErrorWithLBALog("Q[12]:Ctl[%u] -> [%u], [L:%ld]\n", nLBA, pDiscPerSector->byTrackNum
+		OutputSubErrorWithLBALog("Q[12]:Ctl[%hhu] -> [%hhu], [L:%ld]\n", nLBA, pDiscPerSector->byTrackNum
 			, pDiscPerSector->subch.current.byCtl, pDiscPerSector->subch.prev.byCtl, s_lineNum);
 		pDiscPerSector->subch.current.byCtl = pDiscPerSector->subch.prev.byCtl;
 		pDiscPerSector->subcode.current[12] =

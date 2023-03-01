@@ -70,6 +70,9 @@ BOOL OutputHash(
 		}
 
 		hash.ui64FileSize = GetFileSize64(0, fp);
+		if (dwBytesPerSector == 0) {
+			return FALSE;
+		}
 		UINT64 ui64SectorSizeAll = hash.ui64FileSize / (UINT64)dwBytesPerSector;
 
 		if (hash.ui64FileSize >= dwBytesPerSector) {
@@ -411,11 +414,11 @@ BOOL OutputHash(
 				buf2[255] = 0;
 				newElem4->SetAttribute("sha512", buf2);
 
-				_snprintf(buf2, sizeof(buf2) / sizeof(buf2[0]), "%08llx", digest.xxh3_64);
+				_snprintf(buf2, sizeof(buf2) / sizeof(buf2[0]), "%08lx", digest.xxh3_64);
 				buf2[255] = 0;
 				newElem4->SetAttribute("xxh3_64", buf2);
 
-				_snprintf(buf2, sizeof(buf2) / sizeof(buf2[0]), "%08llx%08llx", digest.xxh3_128.high64, digest.xxh3_128.low64);
+				_snprintf(buf2, sizeof(buf2) / sizeof(buf2[0]), "%08lx%08lx", digest.xxh3_128.high64, digest.xxh3_128.low64);
 				buf2[255] = 0;
 				newElem4->SetAttribute("xxh3_128", buf2);
 			}

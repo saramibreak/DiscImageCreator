@@ -396,7 +396,7 @@ BOOL ReadTOCPma(
 			((PCDROM_TOC_PMA_DATA)pTocPma)->Descriptors;
 		for (UINT i = 0; i < wTocPmaAll / sizeof(CDROM_TOC_FULL_TOC_DATA_BLOCK); i++) {
 			OutputDiscLog(
-				"\tAdr: %u, Control: %u\n"
+				"\tAdr: %hhu, Control: %hhu\n"
 				"\t          Point: %02X\n"
 				"\t            Msf: %02u:%02u:%02u\n"
 				"\t            Msf: %02u:%02u:%02u\n"

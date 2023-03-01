@@ -488,7 +488,9 @@ BOOL ReadDirectoryRecord(
 				}
 				DWORD dwLastTblSize = pPathTblRec[uiPathTblIdx].uiDirSize % dwMaxTransferLen;
 				if (*pExecType == gd) {
-					dwLastTblSize = pPathTblRec[uiPathTblIdx].uiDirSize % (DISC_MAIN_DATA_SIZE * byRoop * additionalTransferLen);
+					if (byRoop != 0 && additionalTransferLen != 0) {
+						dwLastTblSize = pPathTblRec[uiPathTblIdx].uiDirSize % (DISC_MAIN_DATA_SIZE * byRoop * additionalTransferLen);
+					}
 				}
 				if (dwLastTblSize != 0) {
 					SetCommandForTransferLength(pExecType, pDevice, pCdb, dwLastTblSize, &byTransferLen, &byRoop);
@@ -2252,7 +2254,7 @@ BOOL ReadSACDFileSystem(
 		"\t  TWOCH_TOC_2_Address: %u (%#08x)\n"
 		"\t     MC_TOC_1_Address: %u (%#08x)\n"
 		"\t     MC_TOC_2_Address: %u (%#08x)\n"
-		"\t    Disc_Flags_Hybrid: %u\n"
+		"\t    Disc_Flags_Hybrid: %hhu\n"
 		"\t        TWOCH_TOC_Len: %u (%#08x)\n"
 		"\t           MC_TOC_Len: %u (%#08x)\n"
 		"\t  Disc_Catalog_Number: %.16" CHARWIDTH "s\n"

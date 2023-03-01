@@ -58,10 +58,10 @@ VOID OutputInquiry(
 	}
 
 	OutputDriveLog(
-		"\t  DeviceTypeModifier: %u\n"
+		"\t  DeviceTypeModifier: %hhu\n"
 		"\t      RemovableMedia: %s\n"
 		"\t            Versions: %u\n"
-		"\t  ResponseDataFormat: %u\n"
+		"\t  ResponseDataFormat: %hhu\n"
 		"\t           HiSupport: %s\n"
 		"\t             NormACA: %s\n"
 		"\t       TerminateTask: %s\n"
@@ -393,9 +393,9 @@ VOID OutputGetConfigurationFeatureMultiRead(
 ) {
 	OutputDriveLog(
 		"\tFeatureMultiRead\n"
-		"\t\t   Current: %u\n"
-		"\t\tPersistent: %u\n"
-		"\t\t   Version: %u\n",
+		"\t\t   Current: %hhu\n"
+		"\t\tPersistent: %hhu\n"
+		"\t\t   Version: %hhu\n",
 		pMultiRead->Header.Current,
 		pMultiRead->Header.Persistent,
 		pMultiRead->Header.Version);
@@ -468,9 +468,9 @@ VOID OutputGetConfigurationFeatureSectorErasable(
 ) {
 	OutputDriveLog(
 		"\tFeatureSectorErasable\n"
-		"\t\t   Current: %u\n"
-		"\t\tPersistent: %u\n"
-		"\t\t   Version: %u\n",
+		"\t\t   Current: %hhu\n"
+		"\t\tPersistent: %hhu\n"
+		"\t\t   Version: %hhu\n",
 		pSectorErasable->Header.Current,
 		pSectorErasable->Header.Persistent,
 		pSectorErasable->Header.Version);
@@ -521,9 +521,9 @@ VOID OutputGetConfigurationFeatureRestrictedOverwrite(
 ) {
 	OutputDriveLog(
 		"\tFeatureRestrictedOverwrite\n"
-		"\t\t   Current: %u\n"
-		"\t\tPersistent: %u\n"
-		"\t\t   Version: %u\n",
+		"\t\t   Current: %hhu\n"
+		"\t\tPersistent: %hhu\n"
+		"\t\t   Version: %hhu\n",
 		pRestricted->Header.Current,
 		pRestricted->Header.Persistent,
 		pRestricted->Header.Version);
@@ -534,9 +534,9 @@ VOID OutputGetConfigurationFeatureCdrwCAVWrite(
 ) {
 	OutputDriveLog(
 		"\tFeatureCdrwCAVWrite\n"
-		"\t\t   Current: %u\n"
-		"\t\tPersistent: %u\n"
-		"\t\t   Version: %u\n",
+		"\t\t   Current: %hhu\n"
+		"\t\tPersistent: %hhu\n"
+		"\t\t   Version: %hhu\n",
 		pCDRW->Header.Current,
 		pCDRW->Header.Persistent,
 		pCDRW->Header.Version);
@@ -1431,9 +1431,9 @@ VOID OutputGetConfigurationFeaturePowerManagement(
 ) {
 	OutputDriveLog(
 		"\tFeaturePowerManagement\n"
-		"\t\t   Current: %u\n"
-		"\t\tPersistent: %u\n"
-		"\t\t   Version: %u\n",
+		"\t\t   Current: %hhu\n"
+		"\t\tPersistent: %hhu\n"
+		"\t\t   Version: %hhu\n",
 		pPower->Header.Current,
 		pPower->Header.Persistent,
 		pPower->Header.Version);
@@ -1455,7 +1455,7 @@ VOID OutputGetConfigurationFeatureEmbeddedChanger(
 		"\tFeatureEmbeddedChanger\n"
 		"\t\tSupportsDiscPresent: %s\n"
 		"\t\t  SideChangeCapable: %s\n"
-		"\t\t  HighestSlotNumber: %u\n",
+		"\t\t  HighestSlotNumber: %hhu\n",
 		BOOLEAN_TO_STRING_YES_NO(pEmbedded->SupportsDiscPresent),
 		BOOLEAN_TO_STRING_YES_NO(pEmbedded->SideChangeCapable),
 		pEmbedded->HighestSlotNumber);
@@ -1501,7 +1501,7 @@ VOID OutputGetConfigurationFeatureDvdCSS(
 ) {
 	OutputDriveLog(
 		"\tFeatureDvdCSS\n"
-		"\t\tCssVersion: %u\n",
+		"\t\tCssVersion: %hhu\n",
 		pDVDCss->CssVersion);
 }
 
@@ -1539,9 +1539,9 @@ VOID OutputGetConfigurationFeatureMediaSerialNumber(
 ) {
 	OutputDriveLog(
 		"\tFeatureMediaSerialNumber\n"
-		"\t\t   Current: %u\n"
-		"\t\tPersistent: %u\n"
-		"\t\t   Version: %u\n",
+		"\t\t   Current: %hhu\n"
+		"\t\tPersistent: %hhu\n"
+		"\t\t   Version: %hhu\n",
 		pMediaSerialNumber->Header.Current,
 		pMediaSerialNumber->Header.Persistent,
 		pMediaSerialNumber->Header.Version);
@@ -1565,7 +1565,7 @@ VOID OutputGetConfigurationFeatureDvdCPRM(
 ) {
 	OutputDriveLog(
 		"\tFeatureDvdCPRM\n"
-		"\t\tCPRMVersion: %u\n",
+		"\t\tCPRMVersion: %hhu\n",
 		pDVDCprm->CPRMVersion);
 }
 
@@ -1585,8 +1585,8 @@ VOID OutputGetConfigurationFeatureAACS(
 		"\tFeatureAACS\n"
 		"\t\tBindingNonceGeneration: %s\n"
 		"\t\tBindingNonceBlockCount: %u\n"
-		"\t\t         NumberOfAGIDs: %u\n"
-		"\t\t           AACSVersion: %u\n",
+		"\t\t         NumberOfAGIDs: %hhu\n"
+		"\t\t           AACSVersion: %hhu\n",
 		BOOLEAN_TO_STRING_YES_NO(pAACS->BindingNonceGeneration),
 		pAACS->BindingNonceBlockCount,
 		pAACS->NumberOfAGIDs,
@@ -1598,9 +1598,9 @@ VOID OutputGetConfigurationFeatureVCPS(
 ) {
 	OutputDriveLog(
 		"\tFeatureVCPS\n"
-		"\t\t   Current: %u\n"
-		"\t\tPersistent: %u\n"
-		"\t\t   Version: %u\n",
+		"\t\t   Current: %hhu\n"
+		"\t\tPersistent: %hhu\n"
+		"\t\t   Version: %hhu\n",
 		pVcps->Header.Current,
 		pVcps->Header.Persistent,
 		pVcps->Header.Version);
@@ -1822,8 +1822,8 @@ VOID OutputCDAtipSI1(
 	OutputDiscLog(
 		"\tSpecial Information 1\n"
 //		"\t\t            msf: %02u:%02u:%02u\n"
-		"\t\t     WritePower: %u\n"
-		"\t\t ReferenceSpeed: %u\n"
+		"\t\t     WritePower: %hhu\n"
+		"\t\t ReferenceSpeed: %hhu\n"
 		"\t\tUnrestrictedUse: %s\n"
 //		, tmp[0], tmp[1], tmp[2]
 		, pAtip->WritePower
@@ -1833,11 +1833,11 @@ VOID OutputCDAtipSI1(
 	switch (pAtip->IsCdrw)
 	{
 	case 0:
-		OutputDiscLog("\t\t       DiscType: %u (CD-R), DiscSubType: %u \n"
+		OutputDiscLog("\t\t       DiscType: %hhu (CD-R), DiscSubType: %hhu \n"
 			, pAtip->IsCdrw, pAtip->DiscSubType);
 		break;
 	case 1:
-		OutputDiscLog("\t\t       DiscType: %u (CD-RW), DiscSubType: %u "
+		OutputDiscLog("\t\t       DiscType: %hhu (CD-RW), DiscSubType: %hhu "
 			, pAtip->IsCdrw, pAtip->DiscSubType);
 		switch (pAtip->DiscSubType)
 		{
@@ -2693,7 +2693,7 @@ VOID OutputCDVDCapabilitiesPage(
 ) {
 	OutputDriveLog(
 		OUTPUT_DHYPHEN_PLUS_STR("CDVD Capabilities & Mechanism Status Page")
-		"\t                 PageCode: %#04x\n"
+		"\t                 PageCode: %#04hhx\n"
 		"\t                    PSBit: %s\n"
 		"\t               PageLength: %u\n"
 		"\t                  CDRRead: %s\n"
@@ -2802,7 +2802,7 @@ VOID OutputCDVDCapabilitiesPage(
 		"\t                      BCK: %s\n"
 		"\t                      RCK: %s\n"
 		"\t                     LSBF: %s\n"
-		"\t                   Length: %u\n"
+		"\t                   Length: %hhu\n"
 		"\t        WriteSpeedMaximum: %uKB/sec (%ux)\n"
 		"\t        WriteSpeedCurrent: %uKB/sec (%ux)\n"
 		"\t   CopyManagementRevision: %u\n"
@@ -2832,7 +2832,7 @@ VOID OutputPageCDvdInactivity(
 	PCDVD_INACTIVITY_TIMEOUT_PAGE inactivity = (PCDVD_INACTIVITY_TIMEOUT_PAGE)(modesense + pcOfs);
 	OutputDriveLog(
 		OUTPUT_DHYPHEN_PLUS_STR("CDVD_INACTIVITY_TIMEOUT_PAGE")
-		"\t                 PageCode: %#04x\n"
+		"\t                 PageCode: %#04hhx\n"
 		"\t                    PSBit: %s\n"
 		"\t               PageLength: %u\n"
 		"\t                     SWPP: %s\n"
@@ -2856,7 +2856,7 @@ VOID OutputPagePowerCondition(
 	PPOWER_CONDITION_PAGE power = (PPOWER_CONDITION_PAGE)(modesense + pcOfs);
 	OutputDriveLog(
 		OUTPUT_DHYPHEN_PLUS_STR("POWER_CONDITION_PAGE")
-		"\t                 PageCode: %#04x\n"
+		"\t                 PageCode: %#04hhx\n"
 		"\t                    PSBit: %s\n"
 		"\t               PageLength: %u\n"
 		"\t                  Standby: %s\n"
@@ -2882,7 +2882,7 @@ VOID OutputPageCDvdFeatureSet(
 	PCDVD_FEATURE_SET_PAGE feature = (PCDVD_FEATURE_SET_PAGE)(modesense + pcOfs);
 	OutputDriveLog(
 		OUTPUT_DHYPHEN_PLUS_STR("CDVD_FEATURE_SET_PAGE")
-		"\t                 PageCode: %#04x\n"
+		"\t                 PageCode: %#04hhx\n"
 		"\t                    PSBit: %s\n"
 		"\t               PageLength: %u\n"
 		"\t                  CDAudio: %d\n"
@@ -2918,7 +2918,7 @@ VOID OutputPageCdAudioControl(
 	PCDAUDIO_CONTROL_PAGE ctrl = (PCDAUDIO_CONTROL_PAGE)(modesense + pcOfs);
 	OutputDriveLog(
 		OUTPUT_DHYPHEN_PLUS_STR("CDAUDIO_CONTROL_PAGE")
-		"\t                 PageCode: %#04x\n"
+		"\t                 PageCode: %#04hhx\n"
 		"\t                    PSBit: %s\n"
 		"\t               PageLength: %u\n"
 		"\t      StopOnTrackCrossing: %s\n"
@@ -2954,7 +2954,7 @@ VOID OutputPageCdDeviceParameters(
 	LPBYTE buf = modesense + pcOfs;
 	OutputDriveLog(
 		OUTPUT_DHYPHEN_PLUS_STR("CD_DEVICE_PARAMETERS_PAGE")
-		"\t                 PageCode: %#04x\n"
+		"\t                 PageCode: %#04hhx\n"
 		"\t                    PSBit: %s\n"
 		"\t               PageLength: %u\n"
 		"\tInactivityTimerMultiplier: %u\n"
@@ -2976,7 +2976,7 @@ VOID OutputPageWriteCaching(
 	PMODE_CACHING_PAGE caching = (PMODE_CACHING_PAGE)(modesense + pcOfs);
 	OutputDriveLog(
 		OUTPUT_DHYPHEN_PLUS_STR("MODE_CACHING_PAGE")
-		"\t                 PageCode: %#04x\n"
+		"\t                 PageCode: %#04hhx\n"
 		"\t              PageSavable: %s\n"
 		"\t               PageLength: %u\n"
 		"\t         ReadDisableCache: %s\n"
@@ -3010,20 +3010,20 @@ VOID OutputPageWriteParameters(
 	PMODE_CDROM_WRITE_PARAMETERS_PAGE2 wparam = (PMODE_CDROM_WRITE_PARAMETERS_PAGE2)(modesense + pcOfs);
 	OutputDriveLog(
 		OUTPUT_DHYPHEN_PLUS_STR("MODE_CDROM_WRITE_PARAMETERS_PAGE")
-		"\t                 PageCode: %#04x\n"
+		"\t                 PageCode: %#04hhx\n"
 		"\t              PageSavable: %s\n"
 		"\t               PageLength: %u\n"
 		"\t                WriteType: %d\n"
 		"\t                TestWrite: %s\n"
 		"\t            LinkSizeValid: %s\n"
 		"\tBufferUnderrunFreeEnabled: %s\n"
-		"\t                TrackMode: %u\n"
+		"\t                TrackMode: %hhu\n"
 		"\t                     Copy: %s\n"
 		"\t              FixedPacket: %s\n"
-		"\t             MultiSession: %u\n"
-		"\t            DataBlockType: %u\n"
+		"\t             MultiSession: %hhu\n"
+		"\t            DataBlockType: %hhu\n"
 		"\t                 LinkSize: %u\n"
-		"\t      HostApplicationCode: %u\n"
+		"\t      HostApplicationCode: %hhu\n"
 		"\t            SessionFormat: %u\n"
 		"\t               PacketSize: %u\n"
 		"\t         AudioPauseLength: %u\n"
@@ -3062,7 +3062,7 @@ VOID OutputPageRigidGeometry(
 	PMODE_RIGID_GEOMETRY_PAGE geom = (PMODE_RIGID_GEOMETRY_PAGE)(modesense + pcOfs);
 	OutputDriveLog(
 		OUTPUT_DHYPHEN_PLUS_STR("MODE_RIGID_GEOMETRY_PAGE")
-		"\t                PageCode: %#04x\n"
+		"\t                PageCode: %#04hhx\n"
 		"\t             PageSavable: %s\n"
 		"\t              PageLength: %u\n"
 		"\t       NumberOfCylinders: %u\n"
@@ -3100,7 +3100,7 @@ VOID OutputPageMrw(
 	PMODE_MRW_PAGE mrw = (PMODE_MRW_PAGE)(modesense + pcOfs);
 	OutputDriveLog(
 		OUTPUT_DHYPHEN_PLUS_STR("MODE_MRW_PAGE")
-		"\t                PageCode: %#04x\n"
+		"\t                PageCode: %#04hhx\n"
 		"\t             PageSavable: %s\n"
 		"\t              PageLength: %u\n"
 		"\t                LbaSpace: %s\n"
@@ -3118,7 +3118,7 @@ VOID OutputPageDisconnect(
 	PMODE_DISCONNECT_PAGE dis = (PMODE_DISCONNECT_PAGE)(modesense + pcOfs);
 	OutputDriveLog(
 		OUTPUT_DHYPHEN_PLUS_STR("MODE_DISCONNECT_PAGE")
-		"\t                 PageCode: %#04x\n"
+		"\t                 PageCode: %#04hhx\n"
 		"\t              PageSavable: %s\n"
 		"\t               PageLength: %u\n"
 		"\t          BufferFullRatio: %u\n"
@@ -3127,7 +3127,7 @@ VOID OutputPageDisconnect(
 		"\t        BusDisconnectTime: %u\n"
 		"\t           BusConnectTime: %u\n"
 		"\t         MaximumBurstSize: %u\n"
-		"\t   DataTransferDisconnect: %u\n"
+		"\t   DataTransferDisconnect: %hhu\n"
 		, dis->PageCode
 		, BOOLEAN_TO_STRING_YES_NO(dis->PageSavable)
 		, dis->PageLength
@@ -3148,7 +3148,7 @@ VOID OutputPageErrorRecovery(
 	PMODE_READ_WRITE_RECOVERY_PAGE rec = (PMODE_READ_WRITE_RECOVERY_PAGE)(modesense + pcOfs);
 	OutputDriveLog(
 		OUTPUT_DHYPHEN_PLUS_STR("MODE_READ_WRITE_RECOVERY_PAGE")
-		"\t                 PageCode: %#04x\n"
+		"\t                 PageCode: %#04hhx\n"
 		"\t              PageSavable: %s\n"
 		"\t               PageLength: %u\n"
 		"\t                   DCRBit: %s\n"
@@ -3183,7 +3183,7 @@ VOID OutputPageUnknown(
 	UINT len = *(modesense + pcOfs + 1);
 	OutputDriveLog(
 		OUTPUT_DHYPHEN_PLUS_STR("%s")
-		"\t                 PageCode: %#04x\n"
+		"\t                 PageCode: %#04hhx\n"
 		"\t                    PSBit: %s\n"
 		"\t               PageLength: %u\n"
 		"\t                  Unknown: "
