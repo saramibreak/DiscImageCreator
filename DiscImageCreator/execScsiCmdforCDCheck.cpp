@@ -1269,6 +1269,14 @@ BOOL ReadCDForCheckingSubQAdr(
 			pDiscPerSector->subch.current.byCtl = (BYTE)((BYTE)(pDiscPerSector->subcode.current[12] >> 4) & 0x0f);
 			*byMode = GetMode(pDiscPerSector, unscrambled);
 		}
+		else {
+			SetTmpSubchFromBuffer(&pDiscPerSector->subch.current, pDiscPerSector->subcode.current);
+			if (pDiscPerSector->subch.current.byAdr == ADR_ENCODES_CURRENT_POSITION &&
+				pDiscPerSector->subch.current.byTrackNum != pDiscPerSector->byTrackNum) {
+				break;
+			}
+		}
+
 		BOOL bCRC = FALSE;
 		WORD crc16 = (WORD)GetCrc16CCITT(10, &pDiscPerSector->subcode.current[12]);
 		BYTE tmp1 = HIBYTE(crc16);
