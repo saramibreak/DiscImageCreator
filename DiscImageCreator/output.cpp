@@ -1825,14 +1825,11 @@ VOID DescrambleMainChannelAll(
 						BYTE m, s, f = 0;
 						LBAtoMSF(n1stLBA + 150, &m, &s, &f);
 						if (aSrcBuf[0x0c] == m && aSrcBuf[0x0d] == s && aSrcBuf[0x0e] == f) {
-							OutputMainErrorLog("Reversed sector. (Not be scrambled)\n");
+							OutputMainErrorLog("Reversed sector. (Not be scrambled)");
 							if (!IsValidReservedByte(aSrcBuf)) {
-								OutputMainErrorLog("Invalid reserved byte. Skip descrambling\n");
-								OutputString(
-									"\rDescrambling data sector of img: %6d/%6d", n1stLBA, nLastLBA);
-								OutputMainChannel(fileMainError, aSrcBuf, NULL, n1stLBA, CD_RAW_SECTOR_SIZE);
-								continue;
+								OutputMainErrorLog(" Invalid reserved byte");
 							}
+							OutputMainErrorLog("\n");
 						}
 						else if (IsValidReservedByte(aSrcBuf)) {
 							OutputMainErrorLog("A part of reversed sector. (Not be scrambled)\n");
@@ -1840,11 +1837,7 @@ VOID DescrambleMainChannelAll(
 						else if (aSrcBuf[0x814] != 0x48 || aSrcBuf[0x815] != 0x64 || aSrcBuf[0x816] != 0x36 ||
 							aSrcBuf[0x817] != 0xab || aSrcBuf[0x818] != 0x56 || aSrcBuf[0x819] != 0xff ||
 							aSrcBuf[0x81a] != 0x7e || aSrcBuf[0x81b] != 0xc0) {
-							OutputMainErrorLog("Invalid reserved byte. Skip descrambling\n");
-							OutputString(
-								"\rDescrambling data sector of img: %6d/%6d", n1stLBA, nLastLBA);
-							OutputMainChannel(fileMainError, aSrcBuf, NULL, n1stLBA, CD_RAW_SECTOR_SIZE);
-							continue;
+							OutputMainErrorLog("Invalid reserved byte\n");
 						}
 						else {
 							OutputMainErrorLog("\n");
