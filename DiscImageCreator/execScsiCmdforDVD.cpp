@@ -1424,7 +1424,7 @@ BOOL ReadDiscStructure(
 							byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 							OutputLog(standardError | fileDisc, "FormatCode: %02x failed\n", pEntry->FormatCode);
 							if (pEntry->FormatCode == DvdPhysicalDescriptor) {
-								ReadTOC(pExtArg, pExecType, pDevice, pDisc);
+								ReadTOC(pExtArg, pExecType, pDevice, pDisc, pszFullPath);
 							}
 						}
 						else {
@@ -1895,7 +1895,7 @@ BOOL ReadXboxDVD(
 	if (!ReadCapacity(pExtArg, pDevice)) {
 		return FALSE;
 	}
-	if (!ReadTOC(pExtArg, pExecType, pDevice, pDisc)) {
+	if (!ReadTOC(pExtArg, pExecType, pDevice, pDisc, pszFullPath)) {
 		return FALSE;
 	}
 	if (!ReadDiscStructure(pExecType, pExtArg, pDevice, pDisc, pszFullPath, pHash)) {
@@ -1909,7 +1909,7 @@ BOOL ReadXboxDVD(
 	if (!ReadCapacity(pExtArg, pDevice)) {
 		return FALSE;
 	}
-	if (!ReadTOC(pExtArg, pExecType, pDevice, pDisc)) {
+	if (!ReadTOC(pExtArg, pExecType, pDevice, pDisc, pszFullPath)) {
 		return FALSE;
 	}
 

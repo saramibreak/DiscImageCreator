@@ -282,19 +282,21 @@ typedef struct _DISC {
 #else
 		__attribute__ ((aligned(4))) CDROM_TOC toc; // get at CDROM_READ_TOC_EX_FORMAT_TOC
 #endif
-		INT nAllLength;					// get at CDROM_READ_TOC_EX_FORMAT_TOC
-		LPINT lp1stLBAListOnToc;		// get at CDROM_READ_TOC_EX_FORMAT_TOC
-		LPINT lpLastLBAListOnToc;		// get at CDROM_READ_TOC_EX_FORMAT_TOC
-		INT n1stLBAofDataTrk;			// get at CDROM_READ_TOC_EX_FORMAT_TOC
-		INT nLastLBAofDataTrkOnToc;		// get at CDROM_READ_TOC_EX_FORMAT_TOC
-		TRACK_TYPE trkType;				// get at CDROM_READ_TOC_EX_FORMAT_TOC
-		BYTE by1stDataTrkNum;			// get at CDROM_READ_TOC_EX_FORMAT_TOC
-		BYTE byLastDataTrkNum;			// get at CDROM_READ_TOC_EX_FORMAT_TOC
-		BYTE byFormat;					// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
-		BYTE by1stMultiSessionTrkNum;	// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
-		BOOL bMultiSession;				// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
-		LPBYTE lpSessionNumList;		// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
-		INT n1stLBAofLeadout;			// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
+		INT nAllLength;						// get at CDROM_READ_TOC_EX_FORMAT_TOC
+		LPINT lp1stLBAListOnToc;			// get at CDROM_READ_TOC_EX_FORMAT_TOC
+		LPINT lpLastLBAListOnToc;			// get at CDROM_READ_TOC_EX_FORMAT_TOC
+		LPINT lp1stLBAListOfDataTrackOnToc;	// get at CDROM_READ_TOC_EX_FORMAT_TOC
+		LPINT lpLastLBAListOfDataTrackOnToc;// get at CDROM_READ_TOC_EX_FORMAT_TOC
+		INT n1stLBAofDataTrk;				// get at CDROM_READ_TOC_EX_FORMAT_TOC
+		INT nLastLBAofDataTrkOnToc;			// get at CDROM_READ_TOC_EX_FORMAT_TOC
+		TRACK_TYPE trkType;					// get at CDROM_READ_TOC_EX_FORMAT_TOC
+		BYTE by1stDataTrkNum;				// get at CDROM_READ_TOC_EX_FORMAT_TOC
+		BYTE byLastDataTrkNum;				// get at CDROM_READ_TOC_EX_FORMAT_TOC
+		BYTE byFormat;						// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
+		BYTE by1stMultiSessionTrkNum;		// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
+		BOOL bMultiSession;					// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
+		LPBYTE lpSessionNumList;			// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
+		INT n1stLBAofLeadout;				// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
 		INT n1stLBAofLeadin;
 		INT nLeadoutLenOf1stSession;
 		INT nLeadinLenOf2ndSession;
@@ -333,9 +335,11 @@ typedef struct _DISC {
 		INT n1stLBAForMCN[3][2];
 		INT nRangeLBAForMCN[3][2];
 		INT nPrevMCNSector;
-		BYTE byDesync;
+		BYTE byIdxDesync;
+		BYTE byCtlDesync;
 		BYTE byCatalog;
 		CHAR szCatalog[META_CATALOG_SIZE];
+		BYTE padding[3];
 		BYTE byAdr6;
 		CHAR szAdr6[META_ADR6_SIZE];
 		BYTE byCtlOfLBA0; // for pregap sector of track 1

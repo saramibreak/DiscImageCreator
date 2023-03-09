@@ -40,7 +40,7 @@ BOOL OutputHash(
 	LPCTSTR szExt,
 	UCHAR uiTrack,
 	UCHAR uiLastTrack,
-	BOOL bDesync,
+	SUB_DESYNC_TYPE bDesync,
 	PHASH pHash
 ) {
 	HASH_CHUNK hash = {};
@@ -55,8 +55,12 @@ BOOL OutputHash(
 		// for CD
 		_TCHAR szOutPath[_MAX_PATH] = {};
 		FILE* fp = NULL;
-		if (bDesync) {
+		if (bDesync == SUB_DESYNC_TYPE::IdxDesync) {
 			fp = CreateOrOpenFile(pszFullPath, _T(" (Subs indexes)"), szOutPath
+				, hash.szFnameAndExt, NULL, szExt, _T("rb"), uiTrack, uiLastTrack);
+		}
+		else if (bDesync == SUB_DESYNC_TYPE::CtlDesync) {
+			fp = CreateOrOpenFile(pszFullPath, _T(" (Subs control)"), szOutPath
 				, hash.szFnameAndExt, NULL, szExt, _T("rb"), uiTrack, uiLastTrack);
 		}
 		else {
@@ -440,11 +444,11 @@ BOOL OutputRomElement(
 	PDISC pDisc,
 	_TCHAR* pszFullPath,
 	_TCHAR* szPath,
-	BOOL bDesync,
+	SUB_DESYNC_TYPE bDesync,
 	PHASH pHash
 ) {
 	if (*pExecType == fd || *pExecType == disk) {
-		if (!OutputHash(pWriter, pExtArg, pDisc, pszFullPath, pDisc->dwBytesPerSector, _T(".bin"), 1, 1, FALSE, pHash)) {
+		if (!OutputHash(pWriter, pExtArg, pDisc, pszFullPath, pDisc->dwBytesPerSector, _T(".bin"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
 			return FALSE;
 		}
 	}
@@ -457,7 +461,7 @@ BOOL OutputRomElement(
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 					return FALSE;
 				}
-				if (!OutputHash(pWriter, pExtArg, pDisc, szPath, NOT_USE_SIZE, _T(".bin"), 1, 1, FALSE, pHash)) {
+				if (!OutputHash(pWriter, pExtArg, pDisc, szPath, NOT_USE_SIZE, _T(".bin"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
 					return FALSE;
 				}
 			}
@@ -468,7 +472,7 @@ BOOL OutputRomElement(
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				return FALSE;
 			}
-			if (!OutputHash(pWriter, pExtArg, pDisc, szPath, NOT_USE_SIZE, _T(".bin"), 1, 1, FALSE, pHash)) {
+			if (!OutputHash(pWriter, pExtArg, pDisc, szPath, NOT_USE_SIZE, _T(".bin"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
 				return FALSE;
 			}
 
@@ -478,7 +482,7 @@ BOOL OutputRomElement(
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				return FALSE;
 			}
-			if (!OutputHash(pWriter, pExtArg, pDisc, szPath, NOT_USE_SIZE, _T(".bin"), 1, 1, FALSE, pHash)) {
+			if (!OutputHash(pWriter, pExtArg, pDisc, szPath, NOT_USE_SIZE, _T(".bin"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
 				return FALSE;
 			}
 		}
@@ -489,29 +493,34 @@ BOOL OutputRomElement(
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				return FALSE;
 			}
-			if (!OutputHash(pWriter, pExtArg, pDisc, szPath, NOT_USE_SIZE, _T(".bin"), 1, 1, FALSE, pHash)) {
+			if (!OutputHash(pWriter, pExtArg, pDisc, szPath, NOT_USE_SIZE, _T(".bin"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
 				return FALSE;
 			}
 		}
-		if (!OutputHash(pWriter, pExtArg, pDisc, pszFullPath, DISC_MAIN_DATA_SIZE, _T(".iso"), 1, 1, FALSE, pHash)) {
+		if (!OutputHash(pWriter, pExtArg, pDisc, pszFullPath, DISC_MAIN_DATA_SIZE, _T(".iso"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
 			return FALSE;
 		}
 		if (pExtArg->byRawDump) {
-			if (!OutputHash(pWriter, pExtArg, pDisc, pszFullPath, NOT_USE_SIZE, _T(".raw"), 1, 1, FALSE, pHash)) {
+			if (!OutputHash(pWriter, pExtArg, pDisc, pszFullPath, NOT_USE_SIZE, _T(".raw"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
 				return FALSE;
 			}
 		}
 	}
 	else {
-		if (!pDisc->SUB.byDesync || !bDesync) {
+		if (bDesync == SUB_DESYNC_TYPE::NoDesync) {
 			OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("Hash(Whole image)"));
 			if (pDisc->SCSI.trkType == TRACK_TYPE::dataExist ||
 				pDisc->SCSI.trkType == TRACK_TYPE::pregapDataIn1stTrack) {
-				if (!OutputHash(pWriter, pExtArg, pDisc, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".scm"), 1, 1, FALSE, pHash)) {
+				if (!OutputHash(pWriter, pExtArg, pDisc, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".scm"), 1, 1, bDesync, pHash)) {
 					return FALSE;
 				}
 			}
-			if (!OutputHash(pWriter, pExtArg, pDisc, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".img"), 1, 1, FALSE, pHash)) {
+			if (!OutputHash(pWriter, pExtArg, pDisc, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".img"), 1, 1, bDesync, pHash)) {
+				return FALSE;
+			}
+		}
+		else if (bDesync == SUB_DESYNC_TYPE::CtlDesync) {
+			if (!OutputHash(pWriter, pExtArg, pDisc, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".img"), 1, 1, bDesync, pHash)) {
 				return FALSE;
 			}
 		}
@@ -530,7 +539,7 @@ BOOL ReadWriteDat(
 	PDISC pDisc,
 	_TCHAR* pszFullPath,
 	_TCHAR* szDir,
-	BOOL bDesync,
+	SUB_DESYNC_TYPE bDesync,
 	PHASH pHash
 ) {
 #ifdef _WIN32
@@ -577,9 +586,14 @@ BOOL ReadWriteDat(
 
 	_tcsncpy(szTmpPath, pszFullPath, sizeof(szTmpPath) / sizeof(_TCHAR) - 1);
 
-	if (bDesync) {
+	if (bDesync == SUB_DESYNC_TYPE::IdxDesync) {
 		PathRemoveExtension(szTmpPath);
 		_TCHAR str1[] = _T(" (Subs indexes).dat");
+		_tcsncat(szTmpPath, str1, sizeof(szTmpPath) / sizeof(_TCHAR) - _tcslen(szTmpPath) - 1);
+	}
+	else if (bDesync == SUB_DESYNC_TYPE::CtlDesync) {
+		PathRemoveExtension(szTmpPath);
+		_TCHAR str1[] = _T(" (Subs control).dat");
 		_tcsncat(szTmpPath, str1, sizeof(szTmpPath) / sizeof(_TCHAR) - _tcslen(szTmpPath) - 1);
 	}
 	else {

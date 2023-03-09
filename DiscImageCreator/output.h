@@ -424,6 +424,9 @@ BOOL CreateBinCueForGD(
 VOID DescrambleMainChannelAll(
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
+	LPINT lp1stLBAList,
+	LPINT lpLastLBAList,
+	LPCTSTR pszType,
 	LPBYTE lpScrambledBuf,
 	FILE* fpImg
 );
@@ -442,6 +445,7 @@ BOOL CreateBinCueCcd(
 	LPCTSTR pszImgName,
 	BOOL bCanCDText,
 	FILE* fpImg,
+	FILE* fpImgDesync,
 	FILE* fpCcd
 );
 

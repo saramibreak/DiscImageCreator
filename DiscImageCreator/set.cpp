@@ -1223,7 +1223,7 @@ VOID SetTrackAttribution(
 		if ((pDiscPerSector->subch.next.byCtl & AUDIO_DATA_TRACK) == 0 && pDisc->SCSI.trkType == TRACK_TYPE::pregapDataIn1stTrack) {
 			pDisc->SUB.lp1stLBAListOfDataTrackOnSub[0] = 0;
 			pDisc->SUB.lpLastLBAListOfDataTrackOnSub[0] = nLBA;
-			OutputSubInfoWithLBALog("Index[%02d], Last data sector of this track\n"
+			OutputSubInfoWithLBALog("Index[%02d], Last data sector of this track on subchannel\n"
 				, nLBA, tmpCurrentTrackNum, pDiscPerSector->subch.next.byIndex);
 		}
 	}
@@ -1395,7 +1395,7 @@ VOID SetTrackAttribution(
 						pDisc->SUB.lp1stLBAListOnSubSync[tIdx][0] = -1;
 					}
 					if (*pExecType != gd && *pExecType != swap) {
-						pDisc->SUB.byDesync = TRUE;
+						pDisc->SUB.byIdxDesync = TRUE;
 					}
 				}
 				else {
@@ -1407,25 +1407,40 @@ VOID SetTrackAttribution(
 			}
 			// preserve last LBA per data track
 			if (0 < tmpPrevTrackNum && tmpPrevTrackNum <= tmpCurrentTrackNum + 1) {
+				INT nTmpLastLBA = nLBA - 1;
+				if (!pExtArg->byMultiSession &&
+					pDisc->SCSI.lpSessionNumList[tmpCurrentTrackNum - 1] > pDisc->SCSI.lpSessionNumList[tmpPrevTrackNum - 1]) {
+					nTmpLastLBA -= SESSION_TO_SESSION_SKIP_LBA;
+				}
+				if (pDisc->SCSI.lp1stLBAListOfDataTrackOnToc[tmpPrevTrackNum - 1] != -1 &&
+					pDisc->SCSI.lpLastLBAListOfDataTrackOnToc[tmpPrevTrackNum - 1] == -1 &&
+					(pDisc->SCSI.toc.TrackData[tmpPrevTrackNum - 1].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+
+					OutputSubInfoWithLBALog(
+						"Last LBA of this data track\n", nTmpLastLBA, tmpPrevTrackNum);
+					pDisc->SCSI.lpLastLBAListOfDataTrackOnToc[tmpPrevTrackNum - 1] = nTmpLastLBA;
+
+					OutputSubInfoWithLBALog(
+						"TrackNum is changed (Prev track is data)\n", nLBA, tmpCurrentTrackNum);
+				}
+				else if ((pDisc->SCSI.toc.TrackData[tmpPrevTrackNum - 1].Control & AUDIO_DATA_TRACK) == 0) {
+					OutputSubInfoWithLBALog(
+						"TrackNum is changed (Prev track is audio)\n", nLBA, tmpCurrentTrackNum);
+				}
 				if (pDisc->SUB.lp1stLBAListOfDataTrackOnSub[tmpPrevTrackNum - 1] != -1 &&
 					pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tmpPrevTrackNum - 1] == -1 &&
 					(pDiscPerSector->subch.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 
-					INT nTmpLastLBA = nLBA - 1;
-					if (!pExtArg->byMultiSession &&
-						pDisc->SCSI.lpSessionNumList[tmpCurrentTrackNum - 1] > pDisc->SCSI.lpSessionNumList[tmpPrevTrackNum - 1]) {
-						nTmpLastLBA -= SESSION_TO_SESSION_SKIP_LBA;
-					}
 					OutputSubInfoWithLBALog(
 						"Last LBA of this data track\n", nTmpLastLBA, tmpPrevTrackNum);
 					pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tmpPrevTrackNum - 1] = nTmpLastLBA;
 
 					OutputSubInfoWithLBALog(
-						"TrackNum is changed (Prev track is data)\n", nLBA, tmpCurrentTrackNum);
+						"TrackNum is changed (Prev sector is data)\n", nLBA, tmpCurrentTrackNum);
 				}
 				else if ((pDiscPerSector->subch.prev.byCtl & AUDIO_DATA_TRACK) == 0) {
 					OutputSubInfoWithLBALog(
-						"TrackNum is changed (Prev track is audio)\n", nLBA, tmpCurrentTrackNum);
+						"TrackNum is changed (Prev sector is audio)\n", nLBA, tmpCurrentTrackNum);
 				}
 			}
 		}
@@ -1465,7 +1480,7 @@ VOID SetTrackAttribution(
 							nLBA, tmpCurrentTrackNum, pDisc->SCSI.lp1stLBAListOnToc[tIdx],
 							(UINT)pDisc->SCSI.lp1stLBAListOnToc[tIdx], tmpPrevIndex);
 						if (*pExecType != gd && *pExecType != swap) {
-							pDisc->SUB.byDesync = TRUE;
+							pDisc->SUB.byIdxDesync = TRUE;
 						}
 					}
 				}
@@ -1531,17 +1546,29 @@ VOID SetTrackAttribution(
 		}
 		else {
 			// preserve first LBA per data track
+			if (pDisc->SCSI.lp1stLBAListOfDataTrackOnToc[tIdx] == -1 &&
+				(pDisc->SCSI.toc.TrackData[tIdx].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+				OutputSubInfoWithLBALog("1st LBA of this data track on TOC\n", nLBA, tmpCurrentTrackNum);
+				pDisc->SCSI.lp1stLBAListOfDataTrackOnToc[tIdx] = nLBA;
+			}
 			if (pDisc->SUB.lp1stLBAListOfDataTrackOnSub[tIdx] == -1 &&
 				(pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
-				OutputSubInfoWithLBALog("1st LBA of this data track\n", nLBA, tmpCurrentTrackNum);
+				OutputSubInfoWithLBALog("1st LBA of this data track on subchannel\n", nLBA, tmpCurrentTrackNum);
 				pDisc->SUB.lp1stLBAListOfDataTrackOnSub[tIdx] = nLBA;
 			}
 			else if (nLBA == pDisc->SCSI.nAllLength - 1) {
+				// preserve last LBA per data track
+				if (pDisc->SCSI.lpLastLBAListOfDataTrackOnToc[tIdx] == -1) {
+					if ((pDisc->SCSI.toc.TrackData[tIdx].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+						OutputSubInfoWithLBALog(
+							"Last LBA of this data track on TOC (and this disc)\n", nLBA, tmpCurrentTrackNum);
+						pDisc->SCSI.lpLastLBAListOfDataTrackOnToc[tIdx] = pDisc->SCSI.nAllLength - 1;
+					}
+				}
 				if (pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tIdx] == -1) {
-					// preserve last LBA per data track
 					if ((pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 						OutputSubInfoWithLBALog(
-							"Last LBA of this data track (and this disc)\n", nLBA, tmpCurrentTrackNum);
+							"Last LBA of this data track on subchannel (and this disc)\n", nLBA, tmpCurrentTrackNum);
 						pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tIdx] = pDisc->SCSI.nAllLength - 1;
 					}
 				}

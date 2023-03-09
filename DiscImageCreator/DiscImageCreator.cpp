@@ -208,7 +208,7 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 						}
 					}
 					// call this here because "Invalid TOC" occurs by GD-ROM
-					if (!ReadTOC(pExtArg, pExecType, pDevice, pDisc)) {
+					if (!ReadTOC(pExtArg, pExecType, pDevice, pDisc, pszFullPath)) {
 						throw FALSE;
 					}
 					if (!IsEnoughDiskSpaceForDump(pExecType, pDisc, szPath)) {
@@ -389,7 +389,7 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 					if (pDisc->SCSI.wCurrentMedia == ProfileDvdRam ||
 						pDisc->SCSI.wCurrentMedia == ProfileDvdPlusR ||
 						pDisc->SCSI.wCurrentMedia == ProfileHDDVDRam) {
-						ReadTOC(pExtArg, pExecType, pDevice, pDisc);
+						ReadTOC(pExtArg, pExecType, pDevice, pDisc, pszFullPath);
 					}
 					if (!IsEnoughDiskSpaceForDump(pExecType, pDisc, szPath)) {
 						throw FALSE;
@@ -457,7 +457,7 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 			}
 			else if (*pExecType == bd) {
 				if (IsBDorRelatedDisc(pDisc)) {
-					if (!ReadTOC(pExtArg, pExecType, pDevice, pDisc)) {
+					if (!ReadTOC(pExtArg, pExecType, pDevice, pDisc, pszFullPath)) {
 						throw FALSE;
 					}
 					if (!IsEnoughDiskSpaceForDump(pExecType, pDisc, szPath)) {
@@ -474,7 +474,7 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 			}
 			else if (*pExecType == sacd) {
 				if (IsValidPS3Drive(pDevice)) {
-					if (!ReadTOC(pExtArg, pExecType, pDevice, pDisc)) {
+					if (!ReadTOC(pExtArg, pExecType, pDevice, pDisc, pszFullPath)) {
 						throw FALSE;
 					}
 					if (!IsEnoughDiskSpaceForDump(pExecType, pDisc, szPath)) {
@@ -485,23 +485,13 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 			}
 		}
 		if (bRet && (*pExecType != audio && *pExecType != data)) {
-#if 0
-			_TCHAR szPathHash[_MAX_PATH] = {};
-			GetCmd(szPathHash, _T("RapidCRC"), _T("exe"));
-			if (PathFileExists(szPathHash)) {
-				PROCESS_INFORMATION pi = { 0 };
-				STARTUPINFO si = { sizeof(STARTUPINFO) };
-				CreateProcess(NULL, szPathHash, NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS, NULL, NULL, &si, &pi);
+			bRet = ReadWriteDat(pExecType, pExtArg, pDisc, pszFullPath, s_szDir, SUB_DESYNC_TYPE::NoDesync, &hash);
+			if (pDisc->SUB.byIdxDesync) {
+				bRet = ReadWriteDat(pExecType, pExtArg, pDisc, pszFullPath, s_szDir, SUB_DESYNC_TYPE::IdxDesync, &hash);
 			}
-			else {
-#endif
-				bRet = ReadWriteDat(pExecType, pExtArg, pDisc, pszFullPath, s_szDir, FALSE, &hash);
-				if (pDisc->SUB.byDesync) {
-					bRet = ReadWriteDat(pExecType, pExtArg, pDisc, pszFullPath, s_szDir, TRUE, &hash);
-				}
-#if 0
+			if (pDisc->SUB.byCtlDesync) {
+				bRet = ReadWriteDat(pExecType, pExtArg, pDisc, pszFullPath, s_szDir, SUB_DESYNC_TYPE::CtlDesync, &hash);
 			}
-#endif
 		}
 		FreeAndNull(hash.pHashChunk);
 	}

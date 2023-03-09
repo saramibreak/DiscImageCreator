@@ -669,6 +669,7 @@ BOOL ReadCDForRereadingSectorType2(
 INT ExecEccEdc(
 	PEXT_ARG pExtArg,
 	_DISC::_PROTECT protect,
+	LPCTSTR pszType,
 	LPCTSTR pszImgPath,
 	_DISC::_PROTECT::_ERROR_SECTOR errorSector
 ) {
@@ -687,7 +688,7 @@ INT ExecEccEdc(
 		}
 	}
 	INT ret = 0;
-	if (GetEccEdcCmd(str, nStrSize, cmd, pszImgPath, nStartLBA, nEndLBA)) {
+	if (GetEccEdcCmd(str, nStrSize, cmd, pszType, pszImgPath, nStartLBA, nEndLBA)) {
 		OutputString("Exec %s\n", str);
 		ret = _tsystem(str);
 	}
@@ -695,7 +696,7 @@ INT ExecEccEdc(
 		for (INT i = 1; i < pExtArg->FILE.readErrCnt; i++) {
 			nStartLBA = errorSector.nExtentPos[i];
 			nEndLBA = errorSector.nExtentPos[i] + errorSector.nSectorSize[i];
-			if (GetEccEdcCmd(str, nStrSize, cmd, pszImgPath, nStartLBA, nEndLBA)) {
+			if (GetEccEdcCmd(str, nStrSize, cmd, pszType, pszImgPath, nStartLBA, nEndLBA)) {
 				OutputString("Exec %s\n", str);
 				ret = _tsystem(str);
 			}
@@ -705,7 +706,7 @@ INT ExecEccEdc(
 		for (INT i = 1; i < pExtArg->FILE.c2ErrCnt; i++) {
 			nStartLBA = errorSector.nExtentPos[i];
 			nEndLBA = errorSector.nExtentPos[i] + errorSector.nSectorSize[i];
-			if (GetEccEdcCmd(str, nStrSize, cmd, pszImgPath, nStartLBA, nEndLBA)) {
+			if (GetEccEdcCmd(str, nStrSize, cmd, pszType, pszImgPath, nStartLBA, nEndLBA)) {
 				OutputString("Exec %s\n", str);
 				ret = _tsystem(str);
 			}
@@ -714,7 +715,7 @@ INT ExecEccEdc(
 	else if (protect.byExist == datelAlt) {
 		nStartLBA = errorSector.nExtentPos2nd;
 		nEndLBA = errorSector.nExtentPos2nd + errorSector.nSectorSize2nd;
-		if (GetEccEdcCmd(str, nStrSize, cmd, pszImgPath, nStartLBA, nEndLBA)) {
+		if (GetEccEdcCmd(str, nStrSize, cmd, pszType, pszImgPath, nStartLBA, nEndLBA)) {
 			OutputString("Exec %s\n", str);
 			ret = _tsystem(str);
 		}
@@ -790,7 +791,7 @@ BOOL ProcessDescramble(
 			return FALSE;
 		}
 		if (pExtArg->byBe) {
-			ExecEccEdc(pExtArg, pDisc->PROTECT, pszNewPath, pDisc->PROTECT.ERROR_SECTOR);
+			ExecEccEdc(pExtArg, pDisc->PROTECT, _T("TOC"), pszNewPath, pDisc->PROTECT.ERROR_SECTOR);
 		}
 	}
 	else {
@@ -806,9 +807,38 @@ BOOL ProcessDescramble(
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
 		}
-		DescrambleMainChannelAll(pExtArg, pDisc, scrambled_table, fpImg);
+		DescrambleMainChannelAll(pExtArg, pDisc, pDisc->SCSI.lp1stLBAListOfDataTrackOnToc
+			, pDisc->SCSI.lpLastLBAListOfDataTrackOnToc, _T("TOC based"), scrambled_table, fpImg);
 		FcloseAndNull(fpImg);
-		ExecEccEdc(pExtArg, pDisc->PROTECT, pszImgPath, pDisc->PROTECT.ERROR_SECTOR);
+		ExecEccEdc(pExtArg, pDisc->PROTECT, _T("TOC"), pszImgPath, pDisc->PROTECT.ERROR_SECTOR);
+
+		for (INT k = pDisc->SCSI.by1stDataTrkNum - 1; k < pDisc->SCSI.byLastDataTrkNum; k++) {
+			if (pDisc->SCSI.lp1stLBAListOfDataTrackOnToc[k] != pDisc->SUB.lp1stLBAListOfDataTrackOnSub[k]) {
+				pDisc->SUB.byCtlDesync = TRUE;
+			}
+		}
+		if (pDisc->SUB.byCtlDesync) {
+			ZeroMemory(pszNewPath, _MAX_PATH);
+			_tcsncpy(pszNewPath, pszOutScmFile, sizeof(pszNewPath) / sizeof(pszNewPath[0]));
+			pszNewPath[_MAX_PATH - 1] = 0;
+			PathRemoveExtension(pszNewPath);
+			_tcsncat(pszNewPath, _T(" (Subs control).img"), sizeof(pszNewPath) - _tcslen(pszNewPath) - 1);
+
+			OutputString("Copying .scm to .img (Subs control)\n");
+			if (!CopyFile(pszOutScmFile, pszNewPath, FALSE)) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				return FALSE;
+			}
+			if (NULL == (fpImg = CreateOrOpenFile(
+				pszPath, _T(" (Subs control)"), pszImgPath, NULL, NULL, _T(".img"), _T("rb+"), 0, 0))) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				return FALSE;
+			}
+			DescrambleMainChannelAll(pExtArg, pDisc, pDisc->SUB.lp1stLBAListOfDataTrackOnSub
+				, pDisc->SUB.lpLastLBAListOfDataTrackOnSub, _T("Sub based"), scrambled_table, fpImg);
+			FcloseAndNull(fpImg);
+			ExecEccEdc(pExtArg, pDisc->PROTECT, _T("Sub"), pszImgPath, pDisc->PROTECT.ERROR_SECTOR);
+		}
 	}
 	return TRUE;
 }
@@ -822,17 +852,26 @@ BOOL ProcessCreateBin(
 ) {
 	FILE* fpImg = NULL;
 	_TCHAR pszImgName[_MAX_FNAME + _MAX_EXT] = {};
+	FILE* fpImgDesync = NULL;
+
 	if (NULL == (fpImg = CreateOrOpenFile(
 		pszPath, NULL, NULL, pszImgName, NULL, _T(".img"), _T("rb"), 0, 0))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return FALSE;
 	}
-	if (!CreateBinCueCcd(pExtArg, pDisc, pszPath, pszImgName,
-		pDevice->FEATURE.byCanCDText, fpImg, fpCcd)) {
-		FcloseAndNull(fpImg);
-		return FALSE;
+	else {
+		if (pDisc->SUB.byCtlDesync) {
+			if (NULL == (fpImgDesync = CreateOrOpenFile(
+				pszPath, _T(" (Subs control)"), NULL, NULL, NULL, _T(".img"), _T("rb"), 0, 0))) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				return FALSE;
+			}
+		}
+		if (!CreateBinCueCcd(pExtArg, pDisc, pszPath, pszImgName,
+			pDevice->FEATURE.byCanCDText, fpImg, fpImgDesync, fpCcd)) {
+		}
 	}
 	FcloseAndNull(fpImg);
+	FcloseAndNull(fpImgDesync);
 	return TRUE;
 }
 
@@ -1836,7 +1875,7 @@ BOOL ReadCDForSwap(
 		if (!ReadTOCFull(pExtArg, pDevice, pDisc, &fullToc, &pTocData, &wTocEntries, &pPFullToc)) {
 			throw FALSE;
 		}
-		if (!ReadTOC(pExtArg, pExecType, pDevice, pDisc)) {
+		if (!ReadTOC(pExtArg, pExecType, pDevice, pDisc, pszPath)) {
 			throw FALSE;
 		}
 		pExtArg->byBe = TRUE;
@@ -2491,14 +2530,14 @@ BOOL ReadCDPartial(
 				pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] = nStart;
 				pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0] = nEnd - nStart;
 			}
-			ExecEccEdc(pExtArg, pDisc->PROTECT, pszPath, pDisc->PROTECT.ERROR_SECTOR);
+			ExecEccEdc(pExtArg, pDisc->PROTECT, _T("TOC"), pszPath, pDisc->PROTECT.ERROR_SECTOR);
 		}
 		else if (*pExecType == gd) {
 			_TCHAR pszImgPath[_MAX_PATH] = {};
 			if (!DescrambleMainChannelForGD(pszPath, pszImgPath)) {
 				throw FALSE;
 			}
-			ExecEccEdc(pExtArg, pDisc->PROTECT, pszImgPath, pDisc->PROTECT.ERROR_SECTOR);
+			ExecEccEdc(pExtArg, pDisc->PROTECT, _T("Sub"), pszImgPath, pDisc->PROTECT.ERROR_SECTOR);
 			if (!CreateBinCueForGD(pDisc, pszPath)) {
 				throw FALSE;
 			}

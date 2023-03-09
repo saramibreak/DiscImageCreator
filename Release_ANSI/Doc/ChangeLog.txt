@@ -827,3 +827,12 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - fixed: check subchannel of lead-in of the 2nd session
 - fixed: cue indexes when there is index 2 or more in track 1
 - fixed: detecting ARccOS
+
+*2023-03-09
+- added: output universal (from the 1st non-zero byte position to the last non-zero byte position) hash when audio CD is dumped
+- added: output hash for XXH3 (64bit and 128bit) when using /d
+- added: output .toc file
+- changed: do not skip descrambling when reserved area(0x814 - 0x81b) is invalid
+- changed: TOC vs. Subs are desync about the control(data/audio) flag, TOC in priority. Subs are created as "(Subs control)"
+- improved: log of the CD sync
+- fixed: ISRC issue of cuesheet for "Nine Inch Nails - Broken"

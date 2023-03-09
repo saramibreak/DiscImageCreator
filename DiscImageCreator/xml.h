@@ -25,6 +25,6 @@ BOOL ReadWriteDat(
 	PDISC pDisc,
 	_TCHAR* pszFullPath,
 	_TCHAR* szDir,
-	BOOL bDesync,
+	SUB_DESYNC_TYPE bDesync,
 	PHASH pHash
 );

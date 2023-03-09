@@ -453,6 +453,7 @@ BOOL GetEccEdcCmd(
 	LPTSTR pszStr,
 	size_t cmdSize,
 	LPCTSTR pszCmd,
+	LPCTSTR pszType,
 	LPCTSTR pszImgPath,
 	INT nStartLBA,
 	INT nEndLBA
@@ -467,21 +468,21 @@ BOOL GetEccEdcCmd(
 		if (!_tcscmp(pszCmd, _T("check"))) {
 #ifdef _WIN32
 			_sntprintf(pszStr, cmdSize,
-				_T("\"\"%s\" %s \"%s\"\""), szPathForEcc, pszCmd, pszImgPath);
+				_T("\"\"%s\" %s %s \"%s\"\""), szPathForEcc, pszCmd, pszType, pszImgPath);
 #else
 			_sntprintf(pszStr, cmdSize,
-				_T("%s %s \"%s\""), szPathForEcc, pszCmd, pszImgPath);
+				_T("%s %s %s \"%s\""), szPathForEcc, pszCmd, pszType, pszImgPath);
 #endif
 		}
 		else if (!_tcscmp(pszCmd, _T("fix"))) {
 #ifdef _WIN32
 			_sntprintf(pszStr, cmdSize,
-				_T("\"\"%s\" %s \"%s\"\" %d %d"),
-				szPathForEcc, pszCmd, pszImgPath, nStartLBA, nEndLBA);
+				_T("\"\"%s\" %s %s \"%s\"\" %d %d"),
+				szPathForEcc, pszCmd, pszType, pszImgPath, nStartLBA, nEndLBA);
 #else
 			_sntprintf(pszStr, cmdSize,
-				_T("%s %s \"%s\" %d %d"),
-				szPathForEcc, pszCmd, pszImgPath, nStartLBA, nEndLBA);
+				_T("%s %s %s \"%s\" %d %d"),
+				szPathForEcc, pszCmd, pszType, pszImgPath, nStartLBA, nEndLBA);
 #endif
 		}
 	}

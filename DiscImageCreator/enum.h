@@ -62,6 +62,20 @@ typedef enum _MAIN_DATA_TYPE {
 	scrambled
 } MAIN_DATA_TYPE, *PMAIN_DATA_TYPE;
 
+typedef enum _SUB_RTOW_TYPE {
+	Zero,
+	CDG,
+	Full,
+	AnyFull,
+	PSXSpecific
+} SUB_RTOW_TYPE, *PSUB_RTOW_TYPE;
+
+typedef enum _SUB_DESYNC_TYPE {
+	NoDesync,
+	IdxDesync,
+	CtlDesync
+} SUB_DESYNC_TYPE, *PSUB_DESYNC_TYPE;
+
 typedef enum _BYTE_PAD_TYPE {
 	padByAll0,
 	padByUsr0,
@@ -194,14 +208,6 @@ typedef enum _DRIVE_DATA_ORDER {
 	MainC2Sub, // PLEXTOR, nec-based drive
 	MainSubC2 // mediatek-based drive
 } DRIVE_DATA_ORDER, *PDRIVE_DATA_ORDER;
-
-typedef enum _SUB_RTOW_TYPE {
-	Zero,
-	CDG,
-	Full,
-	AnyFull,
-	PSXSpecific
-} SUB_RTOW_TYPE, *PSUB_RTOW_TYPE;
 
 // SONY PS-SYSTEM   302R and 408R
 typedef enum _FEATURE_PROFILE_TYPE_EX {

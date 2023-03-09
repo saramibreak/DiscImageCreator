@@ -43,18 +43,32 @@ BOOL InitLBAPerTrack(
 	size_t dwTrackAllocSize =
 		(*pExecType == gd || *pExecType == swap) ? MAXIMUM_NUMBER_TRACKS : (size_t)(*pDisc)->SCSI.toc.LastTrack + 1;
 	if (NULL == (*pDisc)->SCSI.lp1stLBAListOnToc) {
-		if (NULL == ((*pDisc)->SCSI.lp1stLBAListOnToc =
-			(LPINT)calloc(dwTrackAllocSize, sizeof(INT)))) {
+		if (NULL == ((*pDisc)->SCSI.lp1stLBAListOnToc = (LPINT)calloc(dwTrackAllocSize, sizeof(INT)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
 		}
 	}
 	if (NULL == (*pDisc)->SCSI.lpLastLBAListOnToc) {
-		if (NULL == ((*pDisc)->SCSI.lpLastLBAListOnToc =
-			(LPINT)calloc(dwTrackAllocSize, sizeof(INT)))) {
+		if (NULL == ((*pDisc)->SCSI.lpLastLBAListOnToc = (LPINT)calloc(dwTrackAllocSize, sizeof(INT)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
 		}
+	}
+	if (NULL == (*pDisc)->SCSI.lp1stLBAListOfDataTrackOnToc) {
+		if (NULL == ((*pDisc)->SCSI.lp1stLBAListOfDataTrackOnToc = (LPINT)calloc(dwTrackAllocSize, sizeof(INT)))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			return FALSE;
+		}
+	}
+	if (NULL == (*pDisc)->SCSI.lpLastLBAListOfDataTrackOnToc) {
+		if (NULL == ((*pDisc)->SCSI.lpLastLBAListOfDataTrackOnToc = (LPINT)calloc(dwTrackAllocSize, sizeof(INT)))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			return FALSE;
+		}
+	}
+	for (size_t h = 0; h < dwTrackAllocSize; h++) {
+		(*pDisc)->SCSI.lp1stLBAListOfDataTrackOnToc[h] = -1;
+		(*pDisc)->SCSI.lpLastLBAListOfDataTrackOnToc[h] = -1;
 	}
 	return TRUE;
 }
@@ -438,6 +452,8 @@ VOID TerminateLBAPerTrack(
 ) {
 	FreeAndNull((*pDisc)->SCSI.lp1stLBAListOnToc);
 	FreeAndNull((*pDisc)->SCSI.lpLastLBAListOnToc);
+	FreeAndNull((*pDisc)->SCSI.lp1stLBAListOfDataTrackOnToc);
+	FreeAndNull((*pDisc)->SCSI.lpLastLBAListOfDataTrackOnToc);
 }
 
 VOID TerminateTocFullData(

@@ -43,7 +43,8 @@ BOOL ReadTOC(
 	PEXT_ARG pExtArg,
 	PEXEC_TYPE pExecType,
 	PDEVICE pDevice,
-	PDISC pDisc
+	PDISC pDisc,
+	LPCTSTR pszPath
 );
 
 BOOL ReadTOCFull(

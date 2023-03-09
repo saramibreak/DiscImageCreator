@@ -1760,17 +1760,21 @@ BOOL IsValidReservedByte(
 VOID DescrambleMainChannelAll(
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
+	LPINT lp1stLBAList,
+	LPINT lpLastLBAList,
+	LPCTSTR pszType,
 	LPBYTE lpScrambledBuf,
 	FILE* fpImg
 ) {
 	BYTE aSrcBuf[CD_RAW_SECTOR_SIZE] = {};
 	LONG lSeekPtr = 0;
 
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("Data sector range (%s)"), pszType);
 	for (INT k = pDisc->SCSI.by1stDataTrkNum - 1; k < pDisc->SCSI.byLastDataTrkNum; k++) {
-		INT n1stLBA = pDisc->SUB.lp1stLBAListOfDataTrackOnSub[k];
+		INT n1stLBA = lp1stLBAList[k];
 		if (n1stLBA != -1) {
-			INT nLastLBA = pDisc->SUB.lpLastLBAListOfDataTrackOnSub[k];
-			OutputDiscLog("\tTrack %2d Data Sector: %6d - %6d (%#07x - %#07x)\n",
+			INT nLastLBA = lpLastLBAList[k];
+			OutputDiscLog("\tTrack %2d, %6d - %6d (%#07x - %#07x)\n",
 				k + 1, n1stLBA, nLastLBA, (UINT)n1stLBA, (UINT)nLastLBA);
 			if (!pExtArg->byMultiSession && pDisc->SCSI.lpSessionNumList[k] >= 2) {
 				INT nSkipLBA = (SESSION_TO_SESSION_SKIP_LBA * (INT)(pDisc->SCSI.lpSessionNumList[k] - 1));
@@ -2001,6 +2005,7 @@ BOOL CreateBinCueCcd(
 	LPCTSTR pszImgName,
 	BOOL bCanCDText,
 	FILE* fpImg,
+	FILE* fpImgDesync,
 	FILE* fpCcd
 ) {
 	BOOL bRet = TRUE;
@@ -2024,7 +2029,7 @@ BOOL CreateBinCueCcd(
 		WriteCueForFileDirective(pszImgName, fpCueForImg);
 		WriteCueForFirst(pDisc, bCanCDText, 0, fpCue);
 
-		if (pDisc->SUB.byDesync) {
+		if (pDisc->SUB.byIdxDesync) {
 			if (NULL == (fpCueSyncForImg = CreateOrOpenFile(
 				pszPath, _T(" (Subs indexes)_img"), NULL, NULL, NULL, _T(".cue"), _T(WFLAG), 0, 0))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -2050,7 +2055,8 @@ BOOL CreateBinCueCcd(
 			_T("_img"), _T("_imgAlt"), _T("_imgAlt2"), _T("_imgAlt3"), _T("_imgAlt4"), _T("_imgAlt5"), _T("_imgAlt6"), _T("_imgAlt7")
 		};
 		FILE* fpBin = NULL;
-		FILE* fpBinSync = NULL;
+		FILE* fpBinIdxDesync = NULL;
+		FILE* fpBinCtlDesync = NULL;
 		for (BYTE j = 0; j < MAX_CDTEXT_LANG; j++) {
 			if (0 < j) {
 				if (pDisc->SCSI.CDTEXT[j].bExist) {
@@ -2103,15 +2109,15 @@ BOOL CreateBinCueCcd(
 				}
 
 				_TCHAR pszFnameSync[_MAX_FNAME + _MAX_EXT] = {};
-				if (pDisc->SUB.byDesync) {
+				if (pDisc->SUB.byIdxDesync) {
 					// This fpBin is dummy
-					if (NULL == (fpBinSync = CreateOrOpenFile(pszPath, _T(" (Subs indexes)"), out,
+					if (NULL == (fpBinIdxDesync = CreateOrOpenFile(pszPath, _T(" (Subs indexes)"), out,
 						pszFnameSync, NULL, _T(".bin"), _T("wb"), i, pDisc->SCSI.toc.LastTrack))) {
 						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 						bRet = FALSE;
 						break;
 					}
-					FcloseAndNull(fpBinSync);
+					FcloseAndNull(fpBinIdxDesync);
 					_tremove(out);
 					if (j == 0) {
 						WriteCueForUnderFileDirective(pDisc, bCanCDText, j, i, fpCueSyncForImg);
@@ -2183,7 +2189,7 @@ BOOL CreateBinCueCcd(
 					}
 					index++;
 
-					if (pDisc->SUB.byDesync) {
+					if (pDisc->SUB.byIdxDesync) {
 						if (0 == nLBAofFirstIdxSync || (i == pDisc->SCSI.by1stMultiSessionTrkNum &&
 							pDisc->SCSI.trkType != TRACK_TYPE::pregapAudioIn1stTrack &&
 							pDisc->SCSI.trkType != TRACK_TYPE::pregapDataIn1stTrack)) {
@@ -2207,7 +2213,7 @@ BOOL CreateBinCueCcd(
 				}
 				else if (pExtArg->byPre) {
 					nLBAofFirstIdx += 150;
-					if (pDisc->SUB.byDesync) {
+					if (pDisc->SUB.byIdxDesync) {
 						nLBAofFirstIdxSync += 150;
 					}
 				}
@@ -2238,7 +2244,7 @@ BOOL CreateBinCueCcd(
 						}
 					}
 				}
-				if (pDisc->SUB.byDesync) {
+				if (pDisc->SUB.byIdxDesync) {
 					for (; indexSync < MAXIMUM_NUMBER_INDEXES; indexSync++) {
 						INT nLBAofNextIdxSync = pDisc->SUB.lp1stLBAListOnSubSync[i - 1][indexSync];
 						if (nLBAofNextIdxSync != -1) {
@@ -2272,19 +2278,12 @@ BOOL CreateBinCueCcd(
 		for (BYTE i = pDisc->SCSI.toc.FirstTrack; i <= pDisc->SCSI.toc.LastTrack; i++) {
 			OutputString(
 				"\rCreating bin (Track) %2u/%2u", i, pDisc->SCSI.toc.LastTrack);
+
 			if (NULL == (fpBin = CreateOrOpenFile(pszPath, NULL, NULL, NULL,
 				NULL, _T(".bin"), _T("wb"), i, pDisc->SCSI.toc.LastTrack))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				bRet = FALSE;
 				break;
-			}
-			if (pDisc->SUB.byDesync) {
-				if (NULL == (fpBinSync = CreateOrOpenFile(pszPath, _T(" (Subs indexes)"), NULL,
-					NULL, NULL, _T(".bin"), _T("wb"), i, pDisc->SCSI.toc.LastTrack))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					bRet = FALSE;
-					break;
-				}
 			}
 			INT nLBA = pDisc->SUB.lp1stLBAListOnSub[i - 1][0] == -1 ?
 				pDisc->SUB.lp1stLBAListOnSub[i - 1][1] : pDisc->SUB.lp1stLBAListOnSub[i - 1][0];
@@ -2312,7 +2311,26 @@ BOOL CreateBinCueCcd(
 			if (!bRet) {
 				break;
 			}
-			if (pDisc->SUB.byDesync) {
+			if (pDisc->SUB.byCtlDesync) {
+				if (NULL == (fpBinCtlDesync = CreateOrOpenFile(pszPath, _T(" (Subs control)"), NULL,
+					NULL, NULL, _T(".bin"), _T("wb"), i, pDisc->SCSI.toc.LastTrack))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					bRet = FALSE;
+					break;
+				}
+				bRet = CreateBin(pExtArg, pDisc, i, nNextLBA, nLBA, fpImgDesync, fpBinCtlDesync);
+				FcloseAndNull(fpBinCtlDesync);
+				if (!bRet) {
+					break;
+				}
+			}
+			if (pDisc->SUB.byIdxDesync) {
+				if (NULL == (fpBinIdxDesync = CreateOrOpenFile(pszPath, _T(" (Subs indexes)"), NULL,
+					NULL, NULL, _T(".bin"), _T("wb"), i, pDisc->SCSI.toc.LastTrack))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					bRet = FALSE;
+					break;
+				}
 				nLBA = pDisc->SUB.lp1stLBAListOnSubSync[i - 1][0] == -1 ?
 					pDisc->SUB.lp1stLBAListOnSubSync[i - 1][1] : pDisc->SUB.lp1stLBAListOnSubSync[i - 1][0];
 				if (pExtArg->byPre) {
@@ -2331,15 +2349,16 @@ BOOL CreateBinCueCcd(
 				if (pExtArg->byPre) {
 					nNextLBA += 150;
 				}
-				bRet = CreateBin(pExtArg, pDisc, i, nNextLBA, nLBA, fpImg, fpBinSync);
-				FcloseAndNull(fpBinSync);
+				bRet = CreateBin(pExtArg, pDisc, i, nNextLBA, nLBA, fpImg, fpBinIdxDesync);
+				FcloseAndNull(fpBinIdxDesync);
 				if (!bRet) {
 					break;
 				}
 			}
 		}
 		OutputString("\n");
-		FcloseAndNull(fpBinSync);
+		FcloseAndNull(fpBinCtlDesync);
+		FcloseAndNull(fpBinIdxDesync);
 		FcloseAndNull(fpBin);
 	}
 	catch (BOOL ret) {

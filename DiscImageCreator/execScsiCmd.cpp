@@ -167,7 +167,8 @@ BOOL ReadTOC(
 	PEXT_ARG pExtArg,
 	PEXEC_TYPE pExecType,
 	PDEVICE pDevice,
-	PDISC pDisc
+	PDISC pDisc,
+	LPCTSTR pszPath
 ) {
 	CDB::_READ_TOC cdb = {};
 	cdb.OperationCode = SCSIOP_READ_TOC;
@@ -209,6 +210,13 @@ BOOL ReadTOC(
 		if (*pExecType == gd) {
 			pDisc->SCSI.trkType = TRACK_TYPE::dataExist;
 			OutputDiscLog("This is the TOC of audio trap disc\n");
+		}
+		else {
+			FILE* fpToc = NULL;
+			if (NULL != (fpToc = CreateOrOpenFile(pszPath, NULL, NULL, NULL, NULL, _T(".toc"), _T("wb"), 0, 0))) {
+				fwrite(&pDisc->SCSI.toc, sizeof(BYTE), CDROM_TOC_SIZE, fpToc);
+				FcloseAndNull(fpToc);
+			}
 		}
 	}
 	return TRUE;

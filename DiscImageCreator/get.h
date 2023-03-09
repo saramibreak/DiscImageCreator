@@ -119,6 +119,7 @@ BOOL GetEccEdcCmd(
 	LPTSTR pszStr,
 	size_t cmdSize,
 	LPCTSTR pszCmd,
+	LPCTSTR pszType,
 	LPCTSTR pszImgPath,
 	INT nStartLBA,
 	INT nEndLBA
