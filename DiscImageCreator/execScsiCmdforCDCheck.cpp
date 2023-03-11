@@ -1231,7 +1231,7 @@ BOOL ReadCDForCheckingSubQAdr(
 	INT nTmpISRCLBAList[25] = { -1 };
 	INT nTmpLBA = pDisc->SCSI.lp1stLBAListOnToc[byIdxOfTrack];
 	INT nTmpNextLBA = 0;
-	if (byIdxOfTrack + 1 < pDisc->SCSI.byLastDataTrkNum) {
+	if (byIdxOfTrack + 1 < pDisc->SCSI.toc.LastTrack) {
 		nTmpNextLBA = pDisc->SCSI.lp1stLBAListOnToc[byIdxOfTrack + 1] - nTmpLBA;
 	}
 	else {
