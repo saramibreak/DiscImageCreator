@@ -1433,33 +1433,34 @@ VOID OutputCDSubToLog(
 			// lead-in area
 			if (pDiscPerSector->subcode.current[14] == 0xa0) {
 				OutputSubReadableLog(
-					"Point[%02x], AMSF[%02x:%02x:%02x], TrackNumOf1stTrack[%02x], ProgramAreaFormat[%02x]"
-					, pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[15]
-					, pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17]
-					, pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20]);
+					"Track[%02x], Point[%02x], AMSF[%02x:%02x:%02x], TrackNumOf1stTrack[%02x], ProgramAreaFormat[%02x]"
+					, pDiscPerSector->subcode.current[13], pDiscPerSector->subcode.current[14]
+					, pDiscPerSector->subcode.current[15], pDiscPerSector->subcode.current[16]
+					, pDiscPerSector->subcode.current[17], pDiscPerSector->subcode.current[19]
+					, pDiscPerSector->subcode.current[20]);
 			}
 			else if (pDiscPerSector->subcode.current[14] == 0xa1) {
 				OutputSubReadableLog(
-					"Point[%02x], AMSF[%02x:%02x:%02x], TrackNumOfLastTrack[%02x]"
-					, pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[15]
-					, pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17]
-					, pDiscPerSector->subcode.current[19]);
+					"Track[%02x], Point[%02x], AMSF[%02x:%02x:%02x], TrackNumOfLastTrack[%02x]"
+					, pDiscPerSector->subcode.current[13], pDiscPerSector->subcode.current[14]
+					, pDiscPerSector->subcode.current[15], pDiscPerSector->subcode.current[16]
+					, pDiscPerSector->subcode.current[17], pDiscPerSector->subcode.current[19]);
 			}
 			else if (pDiscPerSector->subcode.current[14] == 0xa2) {
 				OutputSubReadableLog(
-					"Point[%02x], AMSF[%02x:%02x:%02x], StartTimeOfLead-out[%02x:%02x:%02x]"
-					, pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[15]
-					, pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17]
-					, pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20]
-					, pDiscPerSector->subcode.current[21]);
+					"Track[%02x], Point[%02x], AMSF[%02x:%02x:%02x], StartTimeOfLead-out[%02x:%02x:%02x]"
+					, pDiscPerSector->subcode.current[13], pDiscPerSector->subcode.current[14]
+					, pDiscPerSector->subcode.current[15], pDiscPerSector->subcode.current[16]
+					, pDiscPerSector->subcode.current[17], pDiscPerSector->subcode.current[19]
+					, pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
 			}
 			else {
 				OutputSubReadableLog(
-					"Point[%02x], AMSF[%02x:%02x:%02x], StartTimeOfTrack[%02x:%02x:%02x]"
-					, pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[15]
-					, pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17]
-					, pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20]
-					, pDiscPerSector->subcode.current[21]);
+					"Track[%02x], Point[%02x], AMSF[%02x:%02x:%02x], StartTimeOfTrack[%02x:%02x:%02x]"
+					, pDiscPerSector->subcode.current[13], pDiscPerSector->subcode.current[14]
+					, pDiscPerSector->subcode.current[15], pDiscPerSector->subcode.current[16]
+					, pDiscPerSector->subcode.current[17], pDiscPerSector->subcode.current[19]
+					, pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
 			}
 			if (pDiscPerSector->subcode.prev[13] == 0xaa) {
 				pDisc->SCSI.nLeadoutLenOf1stSession = nLBA - pDisc->SCSI.n1stLBAofLeadout;
@@ -1467,15 +1468,6 @@ VOID OutputCDSubToLog(
 					, " Lead-out length of 1st session: %d\n", pDisc->SCSI.nLeadoutLenOf1stSession);
 				pDisc->SCSI.n1stLBAofLeadin = nLBA;
 			}
-		}
-		else if (pDiscPerSector->subcode.current[13] == 0xaa) {
-			// lead-out area
-			OutputSubReadableLog(
-				"LeadOut  , Idx[%02x], RMSF[%02x:%02x:%02x], AMSF[%02x:%02x:%02x]"
-				, pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[15]
-				, pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17]
-				, pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20]
-				, pDiscPerSector->subcode.current[21]);
 		}
 		else {
 			OutputSubReadableLog(
@@ -1485,7 +1477,7 @@ VOID OutputCDSubToLog(
 				, pDiscPerSector->subcode.current[17], pDiscPerSector->subcode.current[19]
 				, pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
 
-			if (pDisc->SCSI.bMultiSession && pDiscPerSector->subcode.current[13] > 1) {
+			if (pDiscPerSector->subcode.current[13] != 0xaa && pDisc->SCSI.bMultiSession && pDiscPerSector->subcode.current[13] > 1) {
 				if ((pDiscPerSector->subcode.prev[13] == 0 &&
 					(pDiscPerSector->subcode.prev[14] == 0xa0 ||
 					pDiscPerSector->subcode.prev[14] == 0xa1 ||
@@ -1544,48 +1536,44 @@ VOID OutputCDSubToLog(
 		if (pDiscPerSector->subcode.current[13] == 0) {
 			if (pDiscPerSector->subcode.current[14] == 0xb0) {
 				OutputSubReadableLog(
-					"Point[%02x], StartTimeForTheNextSession[%02x:%02x:%02x], NumberOfDifferentMode-5[%02x], OutermostLead-out[%02x:%02x:%02x]"
-					, pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[15]
-					, pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17]
-					, pDiscPerSector->subcode.current[18], pDiscPerSector->subcode.current[19]
-					, pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
+					"Track[%02x], Point[%02x], StartTimeForTheNextSession[%02x:%02x:%02x], NumberOfDifferentMode-5[%02x], OutermostLead-out[%02x:%02x:%02x]"
+					, pDiscPerSector->subcode.current[13], pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[15]
+					, pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17], pDiscPerSector->subcode.current[18]
+					, pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
 			}
 			else if (pDiscPerSector->subcode.current[14] == 0xb1) {
 				OutputSubReadableLog(
-					"Point[%02x], NumberOfSkipIntervalPointers[%02x], NumberOfSkipTrackAssignmentsInPoint[%02x]",
-					pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20]);
+					"Track[%02x], Point[%02x], NumberOfSkipIntervalPointers[%02x], NumberOfSkipTrackAssignmentsInPoint[%02x]"
+					, pDiscPerSector->subcode.current[13], pDiscPerSector->subcode.current[14]
+					, pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20]);
 			}
 			else if (pDiscPerSector->subcode.current[14] == 0xb2 ||
 				pDiscPerSector->subcode.current[14] == 0xb3 || pDiscPerSector->subcode.current[14] == 0xb4) {
 				OutputSubReadableLog(
-					"Point[%02x], TrackNumberToSkipUponPlayback[%02x %02x %02x %02x %02x %02x %02x]"
-					, pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[15]
-					, pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17]
-					, pDiscPerSector->subcode.current[18], pDiscPerSector->subcode.current[19]
-					, pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
+					"Track[%02x], Point[%02x], TrackNumberToSkipUponPlayback[%02x %02x %02x %02x %02x %02x %02x]"
+					, pDiscPerSector->subcode.current[13], pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[15]
+					, pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17], pDiscPerSector->subcode.current[18]
+					, pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
 			}
 			else if (pDiscPerSector->subcode.current[14] == 0xc0) {
 				OutputSubReadableLog(
-					"Point[%02x], OptimumRecordingPower[%02x], StartTimeOfTheFirstLead-in[%02x:%02x:%02x]"
-					, pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[15]
-					, pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20]
-					, pDiscPerSector->subcode.current[21]);
+					"Track[%02x], Point[%02x], OptimumRecordingPower[%02x], StartTimeOfTheFirstLead-in[%02x:%02x:%02x]"
+					, pDiscPerSector->subcode.current[13], pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[15]
+					, pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
 			}
 			else if (pDiscPerSector->subcode.current[14] == 0xc1) {
 				OutputSubReadableLog(
-					"Point[%02x], CopyOfInfoFromA1Point[%02x %02x %02x %02x %02x %02x %02x]"
-					, pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[15]
-					, pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17]
-					, pDiscPerSector->subcode.current[18], pDiscPerSector->subcode.current[19]
-					, pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
+					"Track[%02x], Point[%02x], CopyOfInfoFromA1Point[%02x %02x %02x %02x %02x %02x %02x]"
+					, pDiscPerSector->subcode.current[13], pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[15]
+					, pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17], pDiscPerSector->subcode.current[18]
+					, pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
 			}
 			else {
 				OutputSubReadableLog(
-					"Point[%02x], SkipIntervalStopTime[%02x:%02x:%02x], SkipIntervalStartTime[%02x:%02x:%02x]"
-					, pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[15]
-					, pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17]
-					, pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20]
-					, pDiscPerSector->subcode.current[21]);
+					"Track[%02x], Point[%02x], SkipIntervalStopTime[%02x:%02x:%02x], SkipIntervalStartTime[%02x:%02x:%02x]"
+					, pDiscPerSector->subcode.current[13], pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[15]
+					, pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17], pDiscPerSector->subcode.current[19]
+					, pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
 			}
 		}
 		else if (pDiscPerSector->subcode.current[13] == 0xaa) {
@@ -1610,22 +1598,19 @@ VOID OutputCDSubToLog(
 		if (pDiscPerSector->subcode.current[13] == 0) {
 			if (pDiscPerSector->subcode.current[14] == 0xb1) {
 				OutputSubReadableLog(
-					"Point[%02x], 15[%02x], 16[%02x], 17[%02x], 18[%02x], 19[%02x], 20[%02x], 21[%02x]"
-					, pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[15]
-					, pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17]
-					, pDiscPerSector->subcode.current[18], pDiscPerSector->subcode.current[19]
-					, pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
+					"Track[%02x], Point[%02x], 15[%02x], 16[%02x], 17[%02x], 18[%02x], 19[%02x], 20[%02x], 21[%02x]"
+					, pDiscPerSector->subcode.current[13], pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[15]
+					, pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17], pDiscPerSector->subcode.current[18]
+					, pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
 			}
 		}
 		break;
 	default:
 		OutputSubReadableLog(
 			"Adr[%02x], Track[%02x], Idx[%02x], RMSF[%02x:%02x:%02x], AMSF[%02x:%02x:%02x]"
-			, pDiscPerSector->subcode.current[12], pDiscPerSector->subcode.current[13]
-			, pDiscPerSector->subcode.current[14], pDiscPerSector->subcode.current[15]
-			, pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17]
-			, pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20]
-			, pDiscPerSector->subcode.current[21]);
+			, pDiscPerSector->subcode.current[12], pDiscPerSector->subcode.current[13], pDiscPerSector->subcode.current[14]
+			, pDiscPerSector->subcode.current[15], pDiscPerSector->subcode.current[16], pDiscPerSector->subcode.current[17]
+			, pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
 		break;
 	}
 
