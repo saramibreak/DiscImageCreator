@@ -101,10 +101,14 @@ typedef CONST void far      *LPCVOID;
 typedef int                 INT;
 typedef unsigned int        UINT;
 typedef unsigned int        *PUINT;
-typedef UINT			   *LPUINT;
+typedef UINT                *LPUINT;
 
 #ifndef max
 #define max(a,b)            (((a) > (b)) ? (a) : (b))
+#endif
+
+#ifndef min
+#define min(a,b)            (((a) < (b)) ? (a) : (b))
 #endif
 
 #define MAKEWORD(a, b)      ((WORD)(((BYTE)(((UINT_PTR)(a)) & 0xff)) | ((WORD)((BYTE)(((UINT_PTR)(b)) & 0xff))) << 8))

@@ -36,6 +36,10 @@
 #include "set.h"
 #include "_external/NonStandardFunction.h"
 
+#ifndef min
+#define min(a,b)            (((a) < (b)) ? (a) : (b))
+#endif
+
 BOOL ReadCDForSubChannelOffset(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
