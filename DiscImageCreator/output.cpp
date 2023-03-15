@@ -3022,3 +3022,82 @@ VOID OutputMainChannel(
 		OutputLog(type, "\n");
 	}
 }
+
+BOOL ConcatenateFile(
+	FILE* fpIn,
+	FILE* fpImgFull,
+	LPCTSTR func,
+	LONG line
+) {
+	BYTE buf[CD_RAW_SECTOR_SIZE] = {};
+	do {
+		if ((fread(buf, sizeof(BYTE), sizeof(buf), fpIn)) < sizeof(buf)) {
+			if (feof(fpIn)) {
+				break;
+			}
+			if (ferror(fpIn)) {
+				OutputErrorString("Failed to read: read size %zu [F:%s][L:%ld]\n", sizeof(buf), func, line);
+				return FALSE;
+			}
+		};
+		fwrite(buf, sizeof(BYTE), sizeof(buf), fpImgFull);
+	} while (1);
+	return TRUE;
+}
+
+BOOL ConcatenateFromPregapToLeadout(
+	PDISC pDisc,
+	LPCTSTR pszPath
+) {
+	FILE* fpImgFull = NULL;
+	if (NULL == (fpImgFull = CreateOrOpenFile(pszPath, _T(" (Track all)"), NULL, NULL, NULL, _T(".img"), _T("wb"), 0, 0))) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		return FALSE;
+	}
+	_TCHAR appendName1[18] = {};
+	if (pDisc->SCSI.toc.LastTrack > 9) {
+		_tcsncpy(appendName1, _T(" (Track 01)(-LBA)"), 17);
+	}
+	else {
+		_tcsncpy(appendName1, _T(" (Track 1)(-LBA)"), 16);
+	}
+	OutputString("Creating (Track all).img\n");
+
+	FILE* fpIn = NULL;
+	if (NULL == (fpIn = CreateOrOpenFile(pszPath, appendName1, NULL, NULL, NULL, _T(".bin"), _T("rb"), 0, 0))) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		return FALSE;
+	}
+	if (!ConcatenateFile(fpIn, fpImgFull, _T(__FUNCTION__), __LINE__)) {
+		FcloseAndNull(fpIn);
+		FcloseAndNull(fpImgFull);
+		return FALSE;
+	}
+	FcloseAndNull(fpIn);
+
+	FILE* fpImg = NULL;
+	if (NULL == (fpImg = CreateOrOpenFile(pszPath, NULL, NULL, NULL, NULL, _T(".img"), _T("rb"), 0, 0))) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		return FALSE;
+	}
+	if (!ConcatenateFile(fpImg, fpImgFull, _T(__FUNCTION__), __LINE__)) {
+		FcloseAndNull(fpImg);
+		FcloseAndNull(fpImgFull);
+		return FALSE;
+	}
+	FcloseAndNull(fpImg);
+
+	FILE* fpOut = NULL;
+	if (NULL == (fpOut = CreateOrOpenFile(pszPath, _T(" (Track AA)"), NULL, NULL, NULL, _T(".bin"), _T("rb"), 0, 0))) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		return FALSE;
+	}
+	if (!ConcatenateFile(fpOut, fpImgFull, _T(__FUNCTION__), __LINE__)) {
+		FcloseAndNull(fpOut);
+		FcloseAndNull(fpImgFull);
+		return FALSE;
+	}
+	FcloseAndNull(fpOut);
+	FcloseAndNull(fpImgFull);
+	return TRUE;
+}

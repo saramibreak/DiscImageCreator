@@ -492,3 +492,8 @@ VOID OutputMainChannel(
 	INT nLBA,
 	DWORD dwSize
 );
+
+BOOL ConcatenateFromPregapToLeadout(
+	PDISC pDisc,
+	LPCTSTR pszFullPath
+);

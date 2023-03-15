@@ -343,12 +343,23 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 					}
 
 					if (*pExecType == cd) {
+						if (IsPregapOfTrack1ReadableDrive(pDevice) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
+							if (!ReadCDOutOfRange(pExecType, pExtArg, pDevice, pDisc, pszFullPath)) {
+								throw FALSE;
+							}
+						}
 						bRet = ReadCDAll(pExecType, pExtArg, pDevice, pDisc, &discPerSector, c2, pszFullPath, fpCcd, fpC2);
+
+						if (IsPregapOfTrack1ReadableDrive(pDevice) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
+							ConcatenateFromPregapToLeadout(pDisc, pszFullPath);
+						}
+#if 0
 						if (!pExtArg->byPre &&
 							((pDisc->MAIN.bManySamples & PLUS_10000_SAMPLES) == PLUS_10000_SAMPLES ||
 							(pDisc->MAIN.bManySamples & MINUS_10000_SAMPLES) == MINUS_10000_SAMPLES)) {
 							ReadCDAdditional(pExecType, pExtArg, pDevice, pDisc, pszFullPath);
 						}
+#endif
 					}
 					else if (*pExecType == swap) {
 						bRet = ReadCDForSwap(pExecType, pExtArg, pDevice, pDisc, &discPerSector

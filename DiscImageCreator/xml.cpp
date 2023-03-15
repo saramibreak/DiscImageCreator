@@ -43,6 +43,9 @@ BOOL OutputHash(
 	SUB_DESYNC_TYPE bDesync,
 	PHASH pHash
 ) {
+	if (dwBytesPerSector == 0) {
+		return FALSE;
+	}
 	HASH_CHUNK hash = {};
 	HASH_CHUNK hashUni = {};
 
@@ -53,63 +56,35 @@ BOOL OutputHash(
 
 	if (pHash->uiMax == 0 || (pExtArg->byRawDump && !_tcsncmp(szExt, _T(".iso"), 4))) {
 		// for CD
-		_TCHAR szOutPath[_MAX_PATH] = {};
 		FILE* fp = NULL;
 		if (bDesync == SUB_DESYNC_TYPE::IdxDesync) {
-			fp = CreateOrOpenFile(pszFullPath, _T(" (Subs indexes)"), szOutPath
-				, hash.szFnameAndExt, NULL, szExt, _T("rb"), uiTrack, uiLastTrack);
+			if (NULL == (fp = CreateOrOpenFile(pszFullPath, _T(" (Subs indexes)"), NULL
+				, hash.szFnameAndExt, NULL, szExt, _T("rb"), uiTrack, uiLastTrack))) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				return FALSE;
+			}
 		}
 		else if (bDesync == SUB_DESYNC_TYPE::CtlDesync) {
-			fp = CreateOrOpenFile(pszFullPath, _T(" (Subs control)"), szOutPath
-				, hash.szFnameAndExt, NULL, szExt, _T("rb"), uiTrack, uiLastTrack);
+			if (NULL == (fp = CreateOrOpenFile(pszFullPath, _T(" (Subs control)"), NULL
+				, hash.szFnameAndExt, NULL, szExt, _T("rb"), uiTrack, uiLastTrack))) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				return FALSE;
+			}
 		}
 		else {
-			fp = CreateOrOpenFile(pszFullPath, NULL, szOutPath
-				, hash.szFnameAndExt, NULL, szExt, _T("rb"), uiTrack, uiLastTrack);
-		}
-		if (!fp) {
-			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-			OutputErrorString(" => %s\n", szOutPath);
-			return FALSE;
+			if (NULL == (fp = CreateOrOpenFile(pszFullPath, NULL, NULL
+				, hash.szFnameAndExt, NULL, szExt, _T("rb"), uiTrack, uiLastTrack))) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				return FALSE;
+			}
 		}
 
 		hash.ui64FileSize = GetFileSize64(0, fp);
-		if (dwBytesPerSector == 0) {
-			return FALSE;
-		}
 		UINT64 ui64SectorSizeAll = hash.ui64FileSize / (UINT64)dwBytesPerSector;
 
 		if (hash.ui64FileSize >= dwBytesPerSector) {
 			BYTE data[CD_RAW_SECTOR_SIZE] = {};
 			int nRet = TRUE;
-
-			if (!_tcsncmp(szExt, _T(".img"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
-				// Check last non-zero byte position for Audio CD
-				for (UINT64 j = 1; j <= ui64SectorSizeAll; j++) {
-					fseek(fp, (LONG)(hash.ui64FileSize - dwBytesPerSector * j), SEEK_SET);
-					if (fread(data, sizeof(BYTE), dwBytesPerSector, fp) < dwBytesPerSector) {
-						OutputErrorString("Failed to read: read size %lu [F:%s][L:%d]\n", dwBytesPerSector, _T(__FUNCTION__), __LINE__);
-						return FALSE;
-					};
-					BOOL bLastNonZero = TRUE;
-					for (INT k = (INT)(dwBytesPerSector - 1); 0 <= k; k--) {
-						if (data[k] != 0) {
-							bLastNonZero = FALSE;
-							uiLastNonZeroSectorPos = (UINT)k;
-							break;
-						}
-					}
-					if (!bLastNonZero) {
-						uiLastNonZeroSector = (UINT)(ui64SectorSizeAll - j);
-						break;
-					}
-				}
-				CalcInit(pExtArg, &hashUni);
-				rewind(fp);
-			}
-
-			BOOL b1stNonZero = FALSE;
-			BOOL bCompleteUniHash = FALSE;
 
 			CalcInit(pExtArg, &hash);
 			OutputString("Hashing: %s\n", hash.szFnameAndExt);
@@ -118,24 +93,78 @@ BOOL OutputHash(
 				if (fread(data, sizeof(BYTE), dwBytesPerSector, fp) < dwBytesPerSector) {
 					OutputErrorString("Failed to read: read size %lu [F:%s][L:%d]\n", dwBytesPerSector, _T(__FUNCTION__), __LINE__);
 					return FALSE;
-				};
+				}
 				nRet = CalcHash(pExtArg, &hash, data, (UINT)dwBytesPerSector);
 				if (!nRet) {
 					break;
 				}
-				if (!_tcsncmp(szExt, _T(".img"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly && !bCompleteUniHash) {
+
+			}
+			FcloseAndNull(fp);
+			if (!nRet) {
+				return nRet;
+			}
+
+			FILE* fpUni = NULL;
+			UINT64 ui64SectorSizeAllUni = 0;
+
+			if (!_tcsncmp(szExt, _T(".img"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
+				if (NULL == (fpUni = CreateOrOpenFile(pszFullPath, _T(" (Track all)"), NULL
+					, hashUni.szFnameAndExt, NULL, szExt, _T("rb"), uiTrack, uiLastTrack))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					return FALSE;
+				}
+				hashUni.ui64FileSize = GetFileSize64(0, fpUni);
+				ui64SectorSizeAllUni = hashUni.ui64FileSize / (UINT64)dwBytesPerSector;
+
+				// Check last non-zero byte position for Audio CD
+				for (UINT64 j = 1; j <= ui64SectorSizeAllUni; j++) {
+					fseek(fpUni, (LONG)(hashUni.ui64FileSize - dwBytesPerSector * j), SEEK_SET);
+					if (fread(data, sizeof(BYTE), dwBytesPerSector, fpUni) < dwBytesPerSector) {
+						OutputErrorString("Failed to read: read size %lu [F:%s][L:%d]\n", dwBytesPerSector, _T(__FUNCTION__), __LINE__);
+						FcloseAndNull(fpUni);
+						return FALSE;
+					};
+					BOOL bLastNonZero = TRUE;
+					for (INT k = (INT)(dwBytesPerSector - 1); 0 <= k; k--) {
+						if (data[k] != 0) {
+							bLastNonZero = FALSE;
+							UINT ofs = UINT(k + 1);
+							UINT mod = ofs % 4;
+							if (mod == 0) {
+								uiLastNonZeroSectorPos = ofs;
+							}
+							else {
+								uiLastNonZeroSectorPos = (ofs + (4 - mod));
+							}
+							break;
+						}
+					}
+					if (!bLastNonZero) {
+						uiLastNonZeroSector = (UINT)(ui64SectorSizeAllUni - j);
+						break;
+					}
+				}
+				CalcInit(pExtArg, &hashUni);
+				rewind(fpUni);
+
+				BOOL b1stNonZero = FALSE;
+				for (UINT64 j = 1; j <= ui64SectorSizeAllUni; j++) {
+					if (fread(data, sizeof(BYTE), dwBytesPerSector, fpUni) < dwBytesPerSector) {
+						OutputErrorString("Failed to read: read size %lu [F:%s][L:%d]\n", dwBytesPerSector, _T(__FUNCTION__), __LINE__);
+						FcloseAndNull(fpUni);
+						return FALSE;
+					};
 					// Calc hash from the 1st non-zero byte position to the last non-zero byte position
 					if (b1stNonZero) {
-						if (i == static_cast<unsigned long long>(uiLastNonZeroSector) + 1) {
-							nRet = CalcHash(pExtArg, &hashUni, data, uiLastNonZeroSectorPos + 1);
-							if (!nRet) {
-								break;
-							}
-							bCompleteUniHash = TRUE;
+						if (j == static_cast<unsigned long long>(uiLastNonZeroSector) + 1) {
+							CalcHash(pExtArg, &hashUni, data, uiLastNonZeroSectorPos);
+							break;
 						}
 						else {
 							nRet = CalcHash(pExtArg, &hashUni, data, (UINT)dwBytesPerSector);
 							if (!nRet) {
+								FcloseAndNull(fpUni);
 								break;
 							}
 						}
@@ -144,22 +173,21 @@ BOOL OutputHash(
 						for (UINT k = 0; k < dwBytesPerSector; k++) {
 							if (data[k] != 0) {
 								b1stNonZero = TRUE;
-								nRet = CalcHash(pExtArg, &hash, data + k, (UINT)(dwBytesPerSector - k));
+								UINT ofs = (k - (k % 4));
+								nRet = CalcHash(pExtArg, &hashUni, data + ofs, (UINT)(dwBytesPerSector - ofs));
 								if (!nRet) {
+									FcloseAndNull(fpUni);
 									break;
 								}
-								ui1stNonZeroSector = (UINT)i;
-								ui1stNonZeroSectorPos = k;
+								ui1stNonZeroSector = (UINT)j;
+								ui1stNonZeroSectorPos = ofs;
 								break;
 							}
 						}
 					}
 				}
 			}
-			FcloseAndNull(fp);
-			if (!nRet) {
-				return nRet;
-			}
+			FcloseAndNull(fpUni);
 		}
 	}
 	else {
@@ -199,11 +227,11 @@ BOOL OutputHash(
 			if (!_tcsncmp(szExt, _T(".img"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
 				OutputDiscLog(
 					OUTPUT_DHYPHEN_PLUS_STR("Hash(Universal Whole image)")
-					"\t 1st non-zero byte position: %6u sector + %4u byte\n"
-					"\tLast non-zero byte position: %6u sector + %4u byte\n"
-					, ui1stNonZeroSector, ui1stNonZeroSectorPos, uiLastNonZeroSector, uiLastNonZeroSectorPos
+					"\t 1st non-zero byte position (sample based): %6u sector + %4u byte\n"
+					"\tLast non-zero byte position (sample based): %6u sector + %4u byte\n"
+					, ui1stNonZeroSector, ui1stNonZeroSectorPos, uiLastNonZeroSector - 1, uiLastNonZeroSectorPos
 				);
-				hashUni.ui64FileSize = (UINT64)((uiLastNonZeroSector - ui1stNonZeroSector + 1) * dwBytesPerSector + uiLastNonZeroSectorPos - ui1stNonZeroSectorPos + 1);
+//				hashUni.ui64FileSize = (UINT64)((uiLastNonZeroSector - ui1stNonZeroSector + 1) * dwBytesPerSector + uiLastNonZeroSectorPos - ui1stNonZeroSectorPos + 1);
 				OutputHashData(pExtArg, g_LogFile.fpDisc, &hashUni, &digestUni);
 			}
 #endif
