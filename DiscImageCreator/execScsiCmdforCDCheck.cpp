@@ -1230,13 +1230,14 @@ BOOL ReadCDForCheckingSubQAdr(
 	INT nTmpMCNLBAList[25] = { -1 };
 	INT nTmpISRCLBAList[25] = { -1 };
 	INT nTmpLBA = pDisc->SCSI.lp1stLBAListOnToc[byIdxOfTrack];
-	INT nTmpNextLBA = 0;
-	if (byIdxOfTrack + 1 < pDisc->SCSI.byLastDataTrkNum) {
-		nTmpNextLBA = pDisc->SCSI.lp1stLBAListOnToc[byIdxOfTrack + 1] - nTmpLBA;
+	INT nNumberOfSectors = 0;
+	if (byIdxOfTrack + 1 < pDisc->SCSI.toc.LastTrack) {
+		nNumberOfSectors = pDisc->SCSI.lp1stLBAListOnToc[byIdxOfTrack + 1] - nTmpLBA;
 	}
 	else {
-		nTmpNextLBA = pDisc->SCSI.nAllLength - nTmpLBA;
+		nNumberOfSectors = pDisc->SCSI.nAllLength - nTmpLBA;
 	}
+	nNumberOfSectors = min(nNumberOfSectors, 500);
 	pDiscPerSector->byTrackNum = BYTE(byIdxOfTrack + 1);
 	INT nSubOfs = CD_RAW_SECTOR_SIZE;
 	if (pDevice->driveOrder == DRIVE_DATA_ORDER::MainC2Sub) {
@@ -1245,13 +1246,7 @@ BOOL ReadCDForCheckingSubQAdr(
 
 	OutputLog(fileDisc | fileMainInfo, 
 		OUTPUT_DHYPHEN_PLUS_STR_WITH_TRACK_F("Check MCN and/or ISRC"), lpCmd[0], lpCmd[10], byIdxOfTrack + 1);
-	for (INT nLBA = nTmpLBA; nLBA < nTmpLBA + 500; nLBA++) {
-		if (500 > nTmpNextLBA) {
-			bCheckMCN = FALSE;
-			bCheckISRC = FALSE;
-			bCheckAdr6 = FALSE;
-			break;
-		}
+	for (INT nLBA = nTmpLBA; nLBA < nTmpLBA + nNumberOfSectors; nLBA++) {
 		if (!ExecReadCD(pExtArg, pDevice, lpCmd, nLBA, lpBuf,
 			uiBufLen, _T(__FUNCTION__), __LINE__)) {
 			// skip checking
