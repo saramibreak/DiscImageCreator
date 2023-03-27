@@ -27,6 +27,77 @@
 #include "_external/prngcd.h"
 #include "_external/xxhash.h"
 
+BOOL GetLastNonZeroPosition(
+	DWORD dwBytesPerSector,
+	UINT64 uiFileSize,
+	FILE* fp,
+	LPBYTE data,
+	UINT64 ui64SectorSizeAll,
+	LPUINT uiLastNonZeroSector,
+	LPUINT uiLastNonZeroSectorPos
+
+) {
+	for (UINT64 j = 1; j <= ui64SectorSizeAll; j++) {
+		fseek(fp, (LONG)(uiFileSize - dwBytesPerSector * j), SEEK_SET);
+		if (fread(data, sizeof(BYTE), dwBytesPerSector, fp) < dwBytesPerSector) {
+			OutputErrorString("Failed to read: read size %lu [F:%s][L:%d]\n", dwBytesPerSector, _T(__FUNCTION__), __LINE__);
+			FcloseAndNull(fp);
+			return FALSE;
+		};
+		BOOL bLastNonZero = TRUE;
+		for (INT k = (INT)(dwBytesPerSector - 1); 0 <= k; k--) {
+			if (data[k] != 0) {
+				bLastNonZero = FALSE;
+				UINT ofs = UINT(k + 1);
+				UINT mod = ofs % 4;
+				if (mod == 0) {
+					*uiLastNonZeroSectorPos = ofs;
+				}
+				else {
+					*uiLastNonZeroSectorPos = (ofs + (4 - mod));
+				}
+				break;
+			}
+		}
+		if (!bLastNonZero) {
+			*uiLastNonZeroSector = (UINT)(ui64SectorSizeAll - j);
+			break;
+		}
+	}
+	rewind(fp);
+	return TRUE;
+}
+
+BOOL Get1stNonZeroPosition(
+	PEXT_ARG pExtArg,
+	DWORD dwBytesPerSector,
+	PHASH_CHUNK hash,
+	LPBOOL b1stNonZero,
+	UINT cnt,
+	LPBYTE data,
+	LPUINT ui1stNonZeroSector,
+	LPUINT ui1stNonZeroSectorPos,
+	BOOL bGetHash
+) {
+	INT nRet = FALSE;
+	for (UINT k = 0; k < dwBytesPerSector; k++) {
+		if (data[k] != 0) {
+			UINT ofs = (k - (k % 4));
+			*b1stNonZero = TRUE;
+			if (bGetHash) {
+				nRet = CalcHash(pExtArg, hash, data + ofs, (UINT)(dwBytesPerSector - ofs));
+				if (!nRet) {
+					return FALSE;
+				}
+			}
+			*ui1stNonZeroSector = cnt;
+			*ui1stNonZeroSectorPos = ofs;
+			break;
+		}
+	}
+	return TRUE;
+}
+
 BOOL OutputHash(
 #ifdef _WIN32
 	CComPtr<IXmlWriter> pWriter,
@@ -86,10 +157,14 @@ BOOL OutputHash(
 			BYTE data[CD_RAW_SECTOR_SIZE] = {};
 			int nRet = TRUE;
 
+			if (!_tcsncmp(szExt, _T(".bin"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
+				GetLastNonZeroPosition(dwBytesPerSector, hash.ui64FileSize, fp, data, ui64SectorSizeAll, &uiLastNonZeroSector, &uiLastNonZeroSectorPos);
+			}
 			CalcInit(pExtArg, &hash);
 			OutputString("Hashing: %s\n", hash.szFnameAndExt);
+			BOOL b1stNonZero = FALSE;
 
-			for (UINT64 i = 1; i <= ui64SectorSizeAll; i++) {
+			for (UINT64 i = 0; i < ui64SectorSizeAll; i++) {
 				if (fread(data, sizeof(BYTE), dwBytesPerSector, fp) < dwBytesPerSector) {
 					OutputErrorString("Failed to read: read size %lu [F:%s][L:%d]\n", dwBytesPerSector, _T(__FUNCTION__), __LINE__);
 					return FALSE;
@@ -98,7 +173,17 @@ BOOL OutputHash(
 				if (!nRet) {
 					break;
 				}
-
+				if (!_tcsncmp(szExt, _T(".bin"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly && !b1stNonZero) {
+					Get1stNonZeroPosition(pExtArg, dwBytesPerSector, &hash, &b1stNonZero, (UINT)i, data, &ui1stNonZeroSector, &ui1stNonZeroSectorPos, FALSE);
+				}
+			}
+			if (!_tcsncmp(szExt, _T(".bin"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
+				OutputDiscLog(
+					OUTPUT_DHYPHEN_PLUS_STR("Non-zero byte position of the track %02d")
+					"\t 1st non-zero byte position (sample based): %6u sector + %4u byte\n"
+					"\tLast non-zero byte position (sample based): %6u sector + %4u byte (Last sector: %6llu)\n"
+					, uiTrack, ui1stNonZeroSector, ui1stNonZeroSectorPos, uiLastNonZeroSector, uiLastNonZeroSectorPos, ui64SectorSizeAll
+				);
 			}
 			FcloseAndNull(fp);
 			if (!nRet) {
@@ -117,39 +202,11 @@ BOOL OutputHash(
 				hashUni.ui64FileSize = GetFileSize64(0, fpUni);
 				ui64SectorSizeAllUni = hashUni.ui64FileSize / (UINT64)dwBytesPerSector;
 
-				// Check last non-zero byte position for Audio CD
-				for (UINT64 j = 1; j <= ui64SectorSizeAllUni; j++) {
-					fseek(fpUni, (LONG)(hashUni.ui64FileSize - dwBytesPerSector * j), SEEK_SET);
-					if (fread(data, sizeof(BYTE), dwBytesPerSector, fpUni) < dwBytesPerSector) {
-						OutputErrorString("Failed to read: read size %lu [F:%s][L:%d]\n", dwBytesPerSector, _T(__FUNCTION__), __LINE__);
-						FcloseAndNull(fpUni);
-						return FALSE;
-					};
-					BOOL bLastNonZero = TRUE;
-					for (INT k = (INT)(dwBytesPerSector - 1); 0 <= k; k--) {
-						if (data[k] != 0) {
-							bLastNonZero = FALSE;
-							UINT ofs = UINT(k + 1);
-							UINT mod = ofs % 4;
-							if (mod == 0) {
-								uiLastNonZeroSectorPos = ofs;
-							}
-							else {
-								uiLastNonZeroSectorPos = (ofs + (4 - mod));
-							}
-							break;
-						}
-					}
-					if (!bLastNonZero) {
-						uiLastNonZeroSector = (UINT)(ui64SectorSizeAllUni - j);
-						break;
-					}
-				}
+				GetLastNonZeroPosition(dwBytesPerSector, hashUni.ui64FileSize, fpUni, data, ui64SectorSizeAllUni, &uiLastNonZeroSector, &uiLastNonZeroSectorPos);
 				CalcInit(pExtArg, &hashUni);
-				rewind(fpUni);
 
-				BOOL b1stNonZero = FALSE;
-				for (UINT64 j = 1; j <= ui64SectorSizeAllUni; j++) {
+				b1stNonZero = FALSE;
+				for (UINT64 j = 0; j < ui64SectorSizeAllUni; j++) {
 					if (fread(data, sizeof(BYTE), dwBytesPerSector, fpUni) < dwBytesPerSector) {
 						OutputErrorString("Failed to read: read size %lu [F:%s][L:%d]\n", dwBytesPerSector, _T(__FUNCTION__), __LINE__);
 						FcloseAndNull(fpUni);
@@ -157,7 +214,7 @@ BOOL OutputHash(
 					};
 					// Calc hash from the 1st non-zero byte position to the last non-zero byte position
 					if (b1stNonZero) {
-						if (j == static_cast<unsigned long long>(uiLastNonZeroSector) + 1) {
+						if (j == static_cast<unsigned long long>(uiLastNonZeroSector)) {
 							CalcHash(pExtArg, &hashUni, data, uiLastNonZeroSectorPos);
 							break;
 						}
@@ -170,20 +227,7 @@ BOOL OutputHash(
 						}
 					}
 					else {
-						for (UINT k = 0; k < dwBytesPerSector; k++) {
-							if (data[k] != 0) {
-								b1stNonZero = TRUE;
-								UINT ofs = (k - (k % 4));
-								nRet = CalcHash(pExtArg, &hashUni, data + ofs, (UINT)(dwBytesPerSector - ofs));
-								if (!nRet) {
-									FcloseAndNull(fpUni);
-									break;
-								}
-								ui1stNonZeroSector = (UINT)j;
-								ui1stNonZeroSectorPos = ofs;
-								break;
-							}
-						}
+						Get1stNonZeroPosition(pExtArg, dwBytesPerSector, &hashUni, &b1stNonZero, (UINT)j, data, &ui1stNonZeroSector, &ui1stNonZeroSectorPos, TRUE);
 					}
 				}
 			}
@@ -229,9 +273,8 @@ BOOL OutputHash(
 					OUTPUT_DHYPHEN_PLUS_STR("Hash(Universal Whole image)")
 					"\t 1st non-zero byte position (sample based): %6u sector + %4u byte\n"
 					"\tLast non-zero byte position (sample based): %6u sector + %4u byte\n"
-					, ui1stNonZeroSector, ui1stNonZeroSectorPos, uiLastNonZeroSector - 1, uiLastNonZeroSectorPos
+					, ui1stNonZeroSector, ui1stNonZeroSectorPos, uiLastNonZeroSector, uiLastNonZeroSectorPos
 				);
-//				hashUni.ui64FileSize = (UINT64)((uiLastNonZeroSector - ui1stNonZeroSector + 1) * dwBytesPerSector + uiLastNonZeroSectorPos - ui1stNonZeroSectorPos + 1);
 				OutputHashData(pExtArg, g_LogFile.fpDisc, &hashUni, &digestUni);
 			}
 #endif
