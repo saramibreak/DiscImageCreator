@@ -221,6 +221,7 @@ BOOL IsValid0xF1SupportedDrive(
 }
 
 BOOL IsValidPlextorDrive(
+	PEXT_ARG pExtArg,
 	PDEVICE pDevice
 ) {
 	if (!strncmp(pDevice->szVendorId, "PLEXTOR ", DRIVE_VENDOR_ID_SIZE)) {
@@ -230,6 +231,7 @@ BOOL IsValidPlextorDrive(
 			}
 			else {
 				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PX760A;
+				pExtArg->uiC2Offset = 295;
 			}
 		}
 		else if (!strncmp(pDevice->szProductId, "DVDR   PX-755A  ", DRIVE_PRODUCT_ID_SIZE)) {
@@ -238,6 +240,7 @@ BOOL IsValidPlextorDrive(
 			}
 			else {
 				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PX755A;
+				pExtArg->uiC2Offset = 295;
 			}
 		}
 		else if (!strncmp(pDevice->szProductId, "DVDR   PX-716AL ", DRIVE_PRODUCT_ID_SIZE)) {
@@ -246,6 +249,7 @@ BOOL IsValidPlextorDrive(
 			}
 			else {
 				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PX716AL;
+				pExtArg->uiC2Offset = 295;
 			}
 		}
 		else if (!strncmp(pDevice->szProductId, "DVDR   PX-716A  ", DRIVE_PRODUCT_ID_SIZE)) {
@@ -254,10 +258,12 @@ BOOL IsValidPlextorDrive(
 			}
 			else {
 				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PX716A;
+				pExtArg->uiC2Offset = 295;
 			}
 		}
 		else if (!strncmp(pDevice->szProductId, "DVDR   PX-714A  ", DRIVE_PRODUCT_ID_SIZE)) {
 			pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PX714A;
+			pExtArg->uiC2Offset = 295;
 		}
 		else if (!strncmp(pDevice->szProductId, "DVDR   PX-712A  ", DRIVE_PRODUCT_ID_SIZE)) {
 			if (strncmp(pDevice->szProductRevisionLevel, "1.09", DRIVE_VERSION_ID_SIZE)) {
@@ -265,10 +271,12 @@ BOOL IsValidPlextorDrive(
 			}
 			else {
 				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PX712A;
+				pExtArg->uiC2Offset = 295;
 			}
 		}
 		else if (!strncmp(pDevice->szProductId, "DVDR   PX-708A2 ", DRIVE_PRODUCT_ID_SIZE)) {
 			pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PX708A2;
+			pExtArg->uiC2Offset = 294;
 		}
 		else if (!strncmp(pDevice->szProductId, "DVDR   PX-708A  ", DRIVE_PRODUCT_ID_SIZE)) {
 			if (strncmp(pDevice->szProductRevisionLevel, "1.12", DRIVE_VERSION_ID_SIZE) &&
@@ -277,13 +285,16 @@ BOOL IsValidPlextorDrive(
 			}
 			else {
 				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PX708A;
+				pExtArg->uiC2Offset = 294;
 			}
 		}
 		else if (!strncmp(pDevice->szProductId, "DVDR   PX-704A  ", DRIVE_PRODUCT_ID_SIZE)) {
 			pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PX704A;
+			pExtArg->uiC2Offset = 294;
 		}
 		else if (!strncmp(pDevice->szProductId, "CD-R   PX-320A  ", DRIVE_PRODUCT_ID_SIZE)) {
 			pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PX320A;
+			pExtArg->uiC2Offset = 294;
 		}
 		else if (!strncmp(pDevice->szProductId, "CD-R   PREMIUM2 ", DRIVE_PRODUCT_ID_SIZE)) {
 			if (strncmp(pDevice->szProductRevisionLevel, "1.03", DRIVE_VERSION_ID_SIZE)) {
@@ -291,6 +302,7 @@ BOOL IsValidPlextorDrive(
 			}
 			else {
 				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PREMIUM2;
+				pExtArg->uiC2Offset = 294;
 			}
 		}
 		else if (!strncmp(pDevice->szProductId, "CD-R   PREMIUM  ", DRIVE_PRODUCT_ID_SIZE)) {
@@ -299,6 +311,7 @@ BOOL IsValidPlextorDrive(
 			}
 			else {
 				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PREMIUM;
+				pExtArg->uiC2Offset = 294;
 			}
 		}
 		else if (!strncmp(pDevice->szProductId, "CD-R   PX-W5224A", DRIVE_PRODUCT_ID_SIZE)) {
@@ -307,6 +320,7 @@ BOOL IsValidPlextorDrive(
 			}
 			else {
 				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PXW5224A;
+				pExtArg->uiC2Offset = 294;
 			}
 		}
 		else if (!strncmp(pDevice->szProductId, "CD-R   PX-W4824A", DRIVE_PRODUCT_ID_SIZE)) {
@@ -315,6 +329,7 @@ BOOL IsValidPlextorDrive(
 			}
 			else {
 				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PXW4824A;
+				pExtArg->uiC2Offset = 294;
 			}
 		}
 		else if (!strncmp(pDevice->szProductId, "CD-R   PX-W4012A", DRIVE_PRODUCT_ID_SIZE)) {
@@ -323,6 +338,7 @@ BOOL IsValidPlextorDrive(
 			}
 			else {
 				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PXW4012A;
+				pExtArg->uiC2Offset = 294;
 			}
 		}
 		else if (!strncmp(pDevice->szProductId, "CD-R   PX-W4012S", DRIVE_PRODUCT_ID_SIZE)) {
@@ -331,6 +347,7 @@ BOOL IsValidPlextorDrive(
 			}
 			else {
 				pDevice->byPlxtrDrive = PLXTR_DRIVE_TYPE::PXW4012S;
+				pExtArg->uiC2Offset = 294;
 			}
 		}
 		else if (!strncmp(pDevice->szProductId, "CD-R   PX-W2410A", DRIVE_PRODUCT_ID_SIZE)) {
@@ -1426,8 +1443,9 @@ BOOL IsValidSubQAMSF(
 
 BOOL ContainsC2Error(
 	PDEVICE pDevice,
-	INT nStart,
-	INT nEnd,
+	PDISC pDisc,
+	UINT uiStart,
+	UINT uiEnd,
 	LPBYTE lpBuf,
 	LPUINT lpuiC2errorNum,
 	INT nLBA,
@@ -1436,9 +1454,12 @@ BOOL ContainsC2Error(
 	BOOL bRet = RETURNED_NO_C2_ERROR_1ST;
 	*lpuiC2errorNum = 0;
 	BOOL bErr = FALSE;
-	for (INT nC2ErrorPos = nStart; nC2ErrorPos < nEnd; nC2ErrorPos++) {
-		UINT uiPos = pDevice->TRANSFER.uiBufC2Offset + nC2ErrorPos;
-		if (nC2ErrorPos < CD_RAW_READ_C2_294_SIZE - 10 && pDevice->byPlxtrDrive &&
+	INT aC2ErrPosBuf[CD_RAW_READ_C2_294_SIZE * CHAR_BIT] = {};
+	INT nC2ErrPosCnt = 0;
+
+	for (UINT uiC2ErrorPos = uiStart; uiC2ErrorPos < uiEnd; uiC2ErrorPos++) {
+		UINT uiPos = pDevice->TRANSFER.uiBufC2Offset + uiC2ErrorPos;
+		if (uiC2ErrorPos < CD_RAW_READ_C2_294_SIZE - 10 && pDevice->byPlxtrDrive &&
 			lpBuf[uiPos] == 0 && lpBuf[uiPos + 1] == 0xf0 && lpBuf[uiPos + 2] == 0xf0 && lpBuf[uiPos + 3] == 0xf0 &&
 			lpBuf[uiPos + 4] == 0 && lpBuf[uiPos + 5] == 0 && lpBuf[uiPos + 6] == 0 &&
 			lpBuf[uiPos + 7] == 0x0f && lpBuf[uiPos + 8] == 0x0f && lpBuf[uiPos + 9] == 0x0f && lpBuf[uiPos + 10] == 0) {
@@ -1448,7 +1469,7 @@ BOOL ContainsC2Error(
 					"This error can't be fixed by plextor drive. Needs to dump it by non-plextor drive and replace it\n"
 					, nLBA, (UINT)nLBA);
 			}
-			nC2ErrorPos += 10;
+			uiC2ErrorPos += 10;
 		}
 		else if (lpBuf[uiPos] != 0) {
 			// Ricoh based drives (+97 read offset, like the Aopen CD-RW CRW5232)
@@ -1457,17 +1478,18 @@ BOOL ContainsC2Error(
 //			INT nBit = 0x01;
 			INT nBit = 0x80;
 			if (bOutputLog && !bErr) {
-				OutputC2ErrorLog("                 ofs: ");
+				OutputC2ErrorLog("                        ofs: ");
 			}
 			for (INT n = 0; n < CHAR_BIT; n++) {
 				// exist C2 error
 				if (lpBuf[uiPos] & nBit) {
-					// nC2ErrorPos * CHAR_BIT => position of byte
+					// uiC2ErrorPos * CHAR_BIT => position of byte
 					// (position of byte) + n => position of bit
 					bRet = RETURNED_EXIST_C2_ERROR;
 					(*lpuiC2errorNum)++;
 					if (bOutputLog) {
-						OutputC2ErrorLog("%x, ", (UINT)(nC2ErrorPos * 8 + n));
+						aC2ErrPosBuf[nC2ErrPosCnt++] = (INT)uiC2ErrorPos * 8 + n;
+						OutputC2ErrorLog("%x, ", uiC2ErrorPos * 8 + n);
 						bErr = TRUE;
 					}
 				}
@@ -1477,6 +1499,15 @@ BOOL ContainsC2Error(
 		}
 	}
 	if (bOutputLog && bErr) {
+		OutputC2ErrorLog("\n              ofs corrected: ");
+		for (INT i = 0; i < nC2ErrPosCnt; i++) {
+			if (0 <= aC2ErrPosBuf[i] + pDisc->MAIN.nCombinedOffset) {
+				OutputC2ErrorLog("%x, ", aC2ErrPosBuf[i] + pDisc->MAIN.nCombinedOffset);
+			}
+			else {
+				OutputC2ErrorLog("-%x, ", abs(pDisc->MAIN.nCombinedOffset + aC2ErrPosBuf[i]));
+			}
+		}
 		OutputC2ErrorLog("\n");
 	}
 	return bRet;

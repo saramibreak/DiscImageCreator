@@ -711,7 +711,7 @@ BOOL ReadDVDRaw(
 			}
 		}
 		// Plextor
-		else if (IsValidPlextorDrive(pDevice)) {
+		else if (IsValidPlextorDrive(pExtArg, pDevice)) {
 			CacheCmd[0] = SCSIOP_READ_DATA_BUFF;
 			CacheCmd[1] = 0x02;
 			CacheCmd[6] = LOBYTE(HIWORD(dwSectorSize * transferLen.AsULong));

@@ -373,9 +373,8 @@ VOID WriteMainChannel(
 
 VOID WriteC2(
 	PEXT_ARG pExtArg,
-	PDISC pDisc,
-	LPBYTE lpBuf,
-	INT nLBA,
+	PDEVICE pDevice,
+	PDISC_PER_SECTOR pDiscPerSector,
 	FILE* fpC2
 );
 

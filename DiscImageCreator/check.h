@@ -45,6 +45,7 @@ BOOL IsValid0xF1SupportedDrive(
 );
 
 BOOL IsValidPlextorDrive(
+	PEXT_ARG pExtArg,
 	PDEVICE pDevice
 );
 
@@ -214,8 +215,9 @@ BOOL IsValidSubQAMSF(
 
 BOOL ContainsC2Error(
 	PDEVICE pDevice,
-	INT nStart,
-	INT nEnd,
+	PDISC pDisc,
+	UINT uiStart,
+	UINT uiEnd,
 	LPBYTE lpBuf,
 	LPUINT lpuiC2errorNum,
 	INT nLBA,

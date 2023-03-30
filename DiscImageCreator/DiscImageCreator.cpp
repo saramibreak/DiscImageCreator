@@ -290,7 +290,7 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 					memcpy(&discPerSector.mainHeader, &mainHeader, sizeof(MAIN_HEADER));
 
 					if (*pExecType == gd) {
-						if (IsValidPlextorDrive(pDevice) && pExtArg->uiSubAddionalNum == 0) {
+						if (IsValidPlextorDrive(pExtArg, pDevice) && pExtArg->uiSubAddionalNum == 0) {
 							if (IsPlextor712OrNewer(pDevice)) {
 								OutputString("[INFO] This drive has 295 offset in the c2. Changed /s 0 to /s 2.\n");
 								pExtArg->uiSubAddionalNum = 2;
@@ -959,48 +959,65 @@ int SetOptionC2(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 			return FALSE;
 		}
 		if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
-			pExtArg->nC2RereadingType = (INT)_tcstol(argv[(*i)++], &endptr, 10);
+			pExtArg->uiC2Offset = (UINT)_tcstoul(argv[(*i)++], &endptr, 10);
 			if (*endptr) {
 				OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
 				return FALSE;
 			}
-			if (pExtArg->nC2RereadingType != 0) {
-				if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1) && pExtArg->nC2RereadingType == 1) {
-					pExtArg->nStartLBAForC2 = (INT)_tcstol(argv[(*i)++], &endptr, 10);
-					if (*endptr) {
-						OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
-						return FALSE;
-					}
-					if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
-						pExtArg->nEndLBAForC2 = (INT)_tcstol(argv[(*i)++], &endptr, 10);
+			else if (CD_RAW_READ_C2_294_SIZE * 2 < pExtArg->uiC2Offset) {
+				OutputErrorString("[%u] is invalid argument. Please input from 0 to %u.\n", pExtArg->uiC2Offset, CD_RAW_READ_C2_294_SIZE * 2 - 1);
+				return FALSE;
+			}
+			if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
+				pExtArg->nC2RereadingType = (INT)_tcstol(argv[(*i)++], &endptr, 10);
+				if (*endptr) {
+					OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
+					return FALSE;
+				}
+				if (pExtArg->nC2RereadingType != 0) {
+					if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1) && pExtArg->nC2RereadingType == 1) {
+						pExtArg->nStartLBAForC2 = (INT)_tcstol(argv[(*i)++], &endptr, 10);
 						if (*endptr) {
 							OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
 							return FALSE;
 						}
+						if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
+							pExtArg->nEndLBAForC2 = (INT)_tcstol(argv[(*i)++], &endptr, 10);
+							if (*endptr) {
+								OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
+								return FALSE;
+							}
+						}
+						else {
+							pExtArg->nEndLBAForC2 = 0;
+							OutputString("/c2 val5 was omitted. set [%d]\n", 0);
+						}
 					}
 					else {
-						pExtArg->nEndLBAForC2 = 0;
+						pExtArg->nStartLBAForC2 = 0;
 						OutputString("/c2 val4 was omitted. set [%d]\n", 0);
+						pExtArg->nEndLBAForC2 = 0;
+						OutputString("/c2 val5 was omitted. set [%d]\n", 0);
 					}
 				}
-				else {
-					pExtArg->nStartLBAForC2 = 0;
-					OutputString("/c2 val3 was omitted. set [%d]\n", 0);
-					pExtArg->nEndLBAForC2 = 0;
-					OutputString("/c2 val4 was omitted. set [%d]\n", 0);
-				}
+			}
+			else {
+				pExtArg->nC2RereadingType = 0;
+				OutputString("/c2 val3 was omitted. set [%d]\n", 0);
 			}
 		}
 		else {
-			pExtArg->nC2RereadingType = 0;
+			pExtArg->uiC2Offset = 0;
 			OutputString("/c2 val2 was omitted. set [%d]\n", 0);
 		}
 	}
 	else {
 		pExtArg->uiMaxRereadNum = DEFAULT_REREAD_VAL;
 		OutputString("/c2 val1 was omitted. set [%d]\n", DEFAULT_REREAD_VAL);
-		pExtArg->nC2RereadingType = 0;
+		pExtArg->uiC2Offset = 0;
 		OutputString("/c2 val2 was omitted. set [%d]\n", 0);
+		pExtArg->nC2RereadingType = 0;
+		OutputString("/c2 val3 was omitted. set [%d]\n", 0);
 	}
 	return TRUE;
 }
@@ -1705,28 +1722,28 @@ void printUsage(void)
 	OutputString(
 		"Usage\n"
 		"\tcd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/d] [/a (val)] [/aj] [/p]\n"
-		"\t   [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4)] [/f (val)] [/ms]\n"
+		"\t   [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4) (val5)] [/f (val)] [/ms]\n"
 		"\t   [/vn (val)] [/vnc] [/vnx] [/mscf] [/sf (val)] [/ss] [/np] [/nq] [/nr]\n"
 		"\t   [/nl] [/ns] [/s (val)] [/vrfy (val)]\n"
 		"\t\tDump a CD from A to Z\n"
 		"\t\tFor PLEXTOR or drive that can scramble Dumping\n"
 		"\tswap <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/d] [/a (val)]\n"
-		"\t   [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4)] [/f (val)]\n"
+		"\t   [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4) (val5)] [/f (val)]\n"
 		"\t   [/p] [/ms] [/sf (val)] [/ss] [/np] [/nq] [/nr] [/nl] [/ns] [/s (val)] [/74]\n"
 		"\t\tDump a CD from A to Z using swap trick\n"
 		"\t\tFor no PLEXTOR or drive that can't scramble dumping\n"
 		"\tdata <DriveLetter> <Filename> <DriveSpeed(0-72)> <StartLBA> <EndLBA+1>\n"
-		"\t     [/q] [/d] [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4)] [/f (val)]\n"
+		"\t     [/q] [/d] [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4) (val5)] [/f (val)]\n"
 		"\t     [/sf (val)] [/sk (val1) (val2)] [/ss] [/r] [/np] [/nq] [/nr] [/s (val)]\n"
 		"\t\tDump a CD from start to end (using 'all' flag)\n"
 		"\t\tFor no PLEXTOR or drive that can't scramble dumping\n"
 		"\taudio <DriveLetter> <Filename> <DriveSpeed(0-72)> <StartLBA> <EndLBA+1>\n"
-		"\t      [/q] [/d] [/a (val)] [/c2 (val1) (val2) (val3) (val4)] [/f (val)]\n"
+		"\t      [/q] [/d] [/a (val)] [/c2 (val1) (val2) (val3) (val4) (val5)] [/f (val)]\n"
 		"\t      [/be (str) or /d8] [/sf (val)] [/np] [/nq] [/nr] [/s (val)]\n"
 		"\t\tDump a CD from start to end (using 'cdda' flag)\n"
 		"\t\tFor dumping a lead-in, lead-out mainly\n"
 		"\tgd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/d] [/be (str) or /d8]\n"
-		"\t   [/c2 (val1) (val2) (val3) (val4)] [/f (val)] [/np] [/nq] [/nr] [/s (val)]\n"
+		"\t   [/c2 (val1) (val2) (val3) (val4) (val5)] [/f (val)] [/np] [/nq] [/nr] [/s (val)]\n"
 		"\t\tDump a HD area of GD from A to Z\n"
 		"\tdvd <DriveLetter> <Filename> <DriveSpeed(0-16)> [/c] [/f (val)] [/raw] [/q] [/d]\n"
 		"\t    [/r (startLBA) (EndLBA)] [/avdp] [/ps (val)] [/rr (val)] [/sk (val)]\n"
@@ -1799,10 +1816,11 @@ void printUsage(void)
 	OutputString(
 		"\t/c2\tContinue reading CD to recover C2 error existing sector\n"
 		"\t\t\tval1\tvalue to reread (default: 4000)\n"
-		"\t\t\tval2\t0: reread sector c2 error is reported (default)\n"
+		"\t\t\tval2\tvalue to set the C2 offset (default: 0)\n"
+		"\t\t\tval3\t0: reread sector c2 error is reported (default)\n"
 		"\t\t\t    \t1: reread all (or from first to last) sector\n"
-		"\t\t\tval3\tfirst LBA to reread (default: 0)\n"
-		"\t\t\tval4\tlast LBA to reread (default: end-of-sector)\n"
+		"\t\t\tval4\tfirst LBA to reread (default: 0)\n"
+		"\t\t\tval5\tlast LBA to reread (default: end-of-sector)\n"
 		"\t\t\t    \tval3, 4 is used when val2 is 1\n"
 		"\t/p\tDumping the AMSF from 00:00:00 to 00:01:74\n"
 		"\t\t\tFor SagaFrontier Original Sound Track (Disc 3) etc.\n"

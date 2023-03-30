@@ -1295,7 +1295,7 @@ BOOL ReadDriveInformation(
 	}
 	if (*pExecType != fd && *pExecType != disk) {
 		// 4th: check PLEXTOR or not here (because use modesense and from there)
-		if (IsValidPlextorDrive(pDevice)) {
+		if (IsValidPlextorDrive(pExtArg, pDevice)) {
 			if ((PLXTR_DRIVE_TYPE)pDevice->byPlxtrDrive == PLXTR_DRIVE_TYPE::NotLatest) {
 				OutputErrorString(
 					"[ERROR] This drive isn't latest firmware. Please update\n"

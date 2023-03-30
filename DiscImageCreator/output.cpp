@@ -667,47 +667,27 @@ VOID WriteMainChannel(
 
 VOID WriteC2(
 	PEXT_ARG pExtArg,
-	PDISC pDisc,
-	LPBYTE lpBuf,
-	INT nLBA,
+	PDEVICE pDevice,
+	PDISC_PER_SECTOR pDiscPerSector,
 	FILE* fpC2
 ) {
-	fwrite(lpBuf, sizeof(BYTE), CD_RAW_READ_C2_294_SIZE, fpC2);
-#if 0
-	INT sLBA = pDisc->MAIN.nFixStartLBA;
-	INT eLBA = pDisc->MAIN.nFixEndLBA;
-	UINT nC2SlideSize = pDisc->MAIN.uiMainDataSlideSize / 8;
-	if (sLBA <= nLBA && nLBA < eLBA) {
-		// first sector
-		if (nLBA == sLBA) {
-			fwrite(lpBuf + nC2SlideSize, sizeof(BYTE),
-				CD_RAW_READ_C2_294_SIZE - nC2SlideSize, fpC2);
+	if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
+		if (0 < pExtArg->uiC2Offset && pExtArg->uiC2Offset < CD_RAW_READ_C2_294_SIZE) {
+			fwrite(pDiscPerSector->data.current + pDevice->TRANSFER.uiBufC2Offset + pExtArg->uiC2Offset, sizeof(BYTE), (size_t)CD_RAW_READ_C2_294_SIZE - pExtArg->uiC2Offset, fpC2);
+			fwrite(pDiscPerSector->data.next + pDevice->TRANSFER.uiBufC2Offset, sizeof(BYTE), (size_t)pExtArg->uiC2Offset, fpC2);
 		}
-		// last sector in 1st session (when exists session 2)
-		else if (!pExtArg->byMultiSession && pDisc->SCSI.n1stLBAof2ndSession != -1 &&
-			nLBA == pDisc->MAIN.nFix1stLBAofLeadout - 1) {
-			fwrite(lpBuf, sizeof(BYTE), nC2SlideSize, fpC2);
+		else if (pExtArg->uiC2Offset == CD_RAW_READ_C2_294_SIZE) {
+			fwrite(pDiscPerSector->data.next + pDevice->TRANSFER.uiBufC2Offset, sizeof(BYTE), CD_RAW_READ_C2_294_SIZE, fpC2);
 		}
-		// first sector in 2nd Session
-		else if (!pExtArg->byMultiSession && pDisc->SCSI.n1stLBAof2ndSession != -1 &&
-			nLBA == pDisc->MAIN.nFix1stLBAof2ndSession) {
-			fwrite(lpBuf + nC2SlideSize, sizeof(BYTE),
-				CD_RAW_READ_C2_294_SIZE - nC2SlideSize, fpC2);
-		}
-		// last sector
-		else if (nLBA == eLBA - 1) {
-			if (pDisc->MAIN.uiMainDataSlideSize != 0) {
-				fwrite(lpBuf, sizeof(BYTE), nC2SlideSize, fpC2);
-			}
-			else {
-				fwrite(lpBuf, sizeof(BYTE), CD_RAW_READ_C2_294_SIZE, fpC2);
-			}
+		else if (CD_RAW_READ_C2_294_SIZE < pExtArg->uiC2Offset && pExtArg->uiC2Offset < CD_RAW_READ_C2_294_SIZE * 2) {
+			UINT uiVal = pExtArg->uiC2Offset - CD_RAW_READ_C2_294_SIZE;
+			fwrite(pDiscPerSector->data.next + pDevice->TRANSFER.uiBufC2Offset + uiVal, sizeof(BYTE), (size_t)CD_RAW_READ_C2_294_SIZE - uiVal, fpC2);
+			fwrite(pDiscPerSector->data.nextNext + pDevice->TRANSFER.uiBufC2Offset, sizeof(BYTE), uiVal, fpC2);
 		}
 		else {
-			fwrite(lpBuf, sizeof(BYTE), CD_RAW_READ_C2_294_SIZE, fpC2);
+			fwrite(pDiscPerSector->data.current + pDevice->TRANSFER.uiBufC2Offset, sizeof(BYTE), CD_RAW_READ_C2_294_SIZE, fpC2);
 		}
 	}
-#endif
 }
 
 VOID WriteSubChannel(

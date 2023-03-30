@@ -208,6 +208,7 @@ typedef struct _EXT_ARG {
 	UINT uiMaxRereadNum; // for c2 error
 	INT nAllSectors;	// use for xbox360
 	UINT uiSecuritySector[16];	// use for xbox/xbox360
+	UINT uiC2Offset;
 	INT nC2RereadingType; // 0 or 1
 	INT nStartLBAForC2;
 	INT nEndLBAForC2;
