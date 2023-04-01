@@ -204,10 +204,6 @@ See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)
   2352 bytes/sector binary image of the CD. This file is used to a ccd file.
 - .iso  
   2048 bytes/sector binary image of the DVD/BD/GC/Wii/XBOX.
-- .pre 
-  2352 bytes/sector binary image of the pregap sector of the track 1.
-- .out 
-  2352 bytes/sector binary image of the lead-out.
 - .raw  
   scrambled image of the iso file.
 - .scm  

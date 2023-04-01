@@ -557,8 +557,8 @@ BOOL GetDVDProtectionCmd(
 		OutputErrorString("Path too long\n");
 		return FALSE;
 	}
-	_tcsncpy(keyPath, szFname, sizeof(keyPath) / sizeof(keyPath[0]));
-	_tcsncat(keyPath, keyFile, sizeof(keyPath) / sizeof(keyPath[0]) - _tcslen(keyPath) - 1);
+	_tcsncpy(keyPath, szFname, SIZE_OF_ARRAY(keyPath));
+	_tcsncat(keyPath, keyFile, SIZE_OF_ARRAY(keyPath) - _tcslen(keyPath) - 1);
 
 	_TCHAR szPathForCss[_MAX_PATH] = {};
 #ifdef _WIN32

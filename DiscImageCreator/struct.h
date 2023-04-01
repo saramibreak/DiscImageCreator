@@ -202,24 +202,22 @@ typedef struct _EXT_ARG {
 	BYTE byMicroSoftCabFile;
 	BYTE byPadSector;
 	BYTE byMultiSectorReading; // for 0xF1 supported drive
-	BYTE byVerifyAudioCDOfs;
-	BYTE byPadding;
-	INT nAudioCDOffsetNum;
-	UINT uiMaxRereadNum; // for c2 error
-	INT nAllSectors;	// use for xbox360
-	UINT uiSecuritySector[16];	// use for xbox/xbox360
-	UINT uiC2Offset;
-	INT nC2RereadingType; // 0 or 1
-	INT nStartLBAForC2;
-	INT nEndLBAForC2;
-	UINT uiCacheDelNum; // delete cache of the drive per value. Default is 1 (DEFAULT_CACHE_DELETE_VAL)
-	DWORD dwTimeoutNum; // default is 60 (DEFAULT_SPTD_TIMEOUT_VAL)
-	UINT uiSubAddionalNum;
-	UINT uiSkipSectors; // for proring, LaserLock
-	UINT uiSkipSectors2; // for some LaserLock
-	UINT uiPadNum; // 0 : main channel is padded by 0x00, 1 : main channel is padded by 0xAA
-	UINT uiRetryCnt; // for 0xf1 drive
-	UINT uiVerifyAudio; // for /vrfy
+	BYTE byPadding[2];
+	INT nAllSectors;			// for xgd2swap
+	UINT uiSecuritySector[16];	// for xgd2swap
+	INT nAudioCDOffsetNum;		// for /a and /vn
+	UINT uiMaxRereadNum;		// for /c2 val 1 and /rr and /nss
+	UINT uiC2Offset;			// for /c2 val 2
+	INT nC2RereadingType;		// for /c2 val 3
+	INT nStartLBAForC2;			// for /c2 val 4
+	INT nEndLBAForC2;			// for /c2 val 5
+	UINT uiCacheDelNum;			// for /f. delete cache of the drive per value. Default is 1 (DEFAULT_CACHE_DELETE_VAL)
+	DWORD dwTimeoutNum;			// for /sf. default is 60 (DEFAULT_SPTD_TIMEOUT_VAL)
+	UINT uiSubAddionalNum;		// for /s
+	UINT uiSkipSectors;			// for /sk
+	UINT uiSkipSectors2;		// for /sk
+	UINT uiPadNum;				// for /ps. 0 : main channel is padded by 0x00, 1 : main channel is padded by 0xAA
+	UINT uiRetryCnt;			// for /mr
 	struct _FILE {
 		CHAR readError[MAX_READ_ERROR_FILE_COUNT][MAX_FNAME_FOR_VOLUME];
 		INT readErrCnt;
@@ -328,8 +326,6 @@ typedef struct _DISC {
 		LPDWORD lpAllSectorCrc32;
 		LPINT lpAllLBAOfC2Error;
 		INT nC2ErrorCnt;
-		BOOL bResetOffset;
-		BOOL bManySamples;
 	} MAIN;
 	struct _SUB {
 		INT nSubChannelOffset;

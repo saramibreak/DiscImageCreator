@@ -75,11 +75,11 @@ VOID SetReadDiscCommand(
 			SetReadD8Command(pDevice, &cdb, byTransferLen, CDFLAG::_PLXTR_READ_CDDA::NoSub);
 		}
 		else if (pDevice->sub == CDFLAG::_READ_CD::Pack || tmpsub == CDFLAG::_READ_CD::Pack) {
-			_tcsncpy(szSubCode, _T("Pack"), sizeof(szSubCode) / sizeof(szSubCode[0]));
+			_tcsncpy(szSubCode, _T("Pack"), SIZE_OF_ARRAY(szSubCode));
 			SetReadD8Command(pDevice, &cdb, byTransferLen, CDFLAG::_PLXTR_READ_CDDA::MainPack);
 		}
 		else if (pDevice->sub == CDFLAG::_READ_CD::Raw || tmpsub == CDFLAG::_READ_CD::Raw) {
-			_tcsncpy(szSubCode, _T("Raw"), sizeof(szSubCode) / sizeof(szSubCode[0]));
+			_tcsncpy(szSubCode, _T("Raw"), SIZE_OF_ARRAY(szSubCode));
 			SetReadD8Command(pDevice, &cdb, byTransferLen, CDFLAG::_PLXTR_READ_CDDA::MainC2Raw);
 		}
 		memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
@@ -93,10 +93,10 @@ VOID SetReadDiscCommand(
 		}
 		CDFLAG::_READ_CD::_SUB_CHANNEL_SELECTION sub = tmpsub;
 		if (pExtArg->byPack || tmpsub == CDFLAG::_READ_CD::Pack) {
-			_tcsncpy(szSubCode, _T("Pack"), sizeof(szSubCode) / sizeof(szSubCode[0]));
+			_tcsncpy(szSubCode, _T("Pack"), SIZE_OF_ARRAY(szSubCode));
 		}
 		else if (pExtArg->byRaw || tmpsub == CDFLAG::_READ_CD::Raw) {
-			_tcsncpy(szSubCode, _T("Raw"), sizeof(szSubCode) / sizeof(szSubCode[0]));
+			_tcsncpy(szSubCode, _T("Raw"), SIZE_OF_ARRAY(szSubCode));
 		}
 		SetReadCDCommand(pDevice, &cdb, type, byTransferLen, c2, sub);
 		memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
@@ -1122,7 +1122,6 @@ VOID ResetAndOutputCDOffset(
 	pDisc->MAIN.nCombinedOffset += nSample * 4;
 	SetAndOutputCDOffset(pExtArg, pDisc, TRUE, pDevice->nDriveSampleOffset
 		, pDevice->nDriveSampleOffset * 4, pDisc->SUB.nSubChannelOffset);
-	pDisc->MAIN.bResetOffset = TRUE;
 }
 
 VOID SetCDOffset(

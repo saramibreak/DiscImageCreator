@@ -290,13 +290,13 @@ BOOL OutputHash(
 			WCHAR wszFnameAndExt[_MAX_FNAME + _MAX_EXT] = {};
 #ifndef UNICODE
 			if (!MultiByteToWideChar(CP_ACP, 0
-				, hash.szFnameAndExt, sizeof(hash.szFnameAndExt) / sizeof(hash.szFnameAndExt[0])
-				, wszFnameAndExt, sizeof(wszFnameAndExt) / sizeof(wszFnameAndExt[0]))) {
+				, hash.szFnameAndExt, SIZE_OF_ARRAY(hash.szFnameAndExt)
+				, wszFnameAndExt, SIZE_OF_ARRAY(wszFnameAndExt))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				return FALSE;
 			}
 #else
-			size_t size = sizeof(wszFnameAndExt) / sizeof(wszFnameAndExt[0]);
+			size_t size = SIZE_OF_ARRAY(wszFnameAndExt));
 			wcsncpy(wszFnameAndExt, szFnameAndExt, size);
 			wszFnameAndExt[size - 1] = 0;
 #endif
@@ -306,21 +306,21 @@ BOOL OutputHash(
 				return FALSE;
 			}
 			WCHAR buf[128] = {};
-			_snwprintf(buf, sizeof(buf) / sizeof(buf[0]), L"%llu", hash.ui64FileSize);
+			_snwprintf(buf, SIZE_OF_ARRAY(buf), L"%llu", hash.ui64FileSize);
 			buf[127] = 0;
 			if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"size", NULL, buf))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				OutputErrorString("Dat error: %08.8lx\n", hr);
 				return FALSE;
 			}
-			_snwprintf(buf, sizeof(buf) / sizeof(buf[0]), L"%08lx", hash.crc32);
+			_snwprintf(buf, SIZE_OF_ARRAY(buf), L"%08lx", hash.crc32);
 			buf[127] = 0;
 			if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"crc", NULL, buf))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				OutputErrorString("Dat error: %08.8lx\n", hr);
 				return FALSE;
 			}
-			_snwprintf(buf, sizeof(buf) / sizeof(buf[0])
+			_snwprintf(buf, SIZE_OF_ARRAY(buf)
 				, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
 				, digest.md5[0], digest.md5[1], digest.md5[2], digest.md5[3], digest.md5[4], digest.md5[5], digest.md5[6], digest.md5[7]
 				, digest.md5[8], digest.md5[9], digest.md5[10], digest.md5[11], digest.md5[12], digest.md5[13], digest.md5[14], digest.md5[15]);
@@ -330,7 +330,7 @@ BOOL OutputHash(
 				OutputErrorString("Dat error: %08.8lx\n", hr);
 				return FALSE;
 			}
-			_snwprintf(buf, sizeof(buf) / sizeof(buf[0])
+			_snwprintf(buf, SIZE_OF_ARRAY(buf)
 				, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
 				, digest.sha[0], digest.sha[1], digest.sha[2], digest.sha[3], digest.sha[4]
 				, digest.sha[5], digest.sha[6], digest.sha[7], digest.sha[8], digest.sha[9]
@@ -344,7 +344,7 @@ BOOL OutputHash(
 			}
 			if (pExtArg->byDatExpand) {
 				WCHAR buf2[256] = {};
-				_snwprintf(buf2, sizeof(buf2) / sizeof(buf2[0])
+				_snwprintf(buf2, SIZE_OF_ARRAY(buf2)
 					, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
 					, digest.sha224[0], digest.sha224[1], digest.sha224[2], digest.sha224[3], digest.sha224[4], digest.sha224[5], digest.sha224[6]
 					, digest.sha224[7], digest.sha224[8], digest.sha224[9], digest.sha224[10], digest.sha224[11], digest.sha224[12], digest.sha224[13]
@@ -356,7 +356,7 @@ BOOL OutputHash(
 					OutputErrorString("Dat error: %08.8lx\n", hr);
 					return FALSE;
 				}
-				_snwprintf(buf2, sizeof(buf2) / sizeof(buf2[0])
+				_snwprintf(buf2, SIZE_OF_ARRAY(buf2)
 					, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
 					, digest.sha256[0], digest.sha256[1], digest.sha256[2], digest.sha256[3], digest.sha256[4], digest.sha256[5], digest.sha256[6], digest.sha256[7]
 					, digest.sha256[8], digest.sha256[9], digest.sha256[10], digest.sha256[11], digest.sha256[12], digest.sha256[13], digest.sha256[14], digest.sha256[15]
@@ -368,7 +368,7 @@ BOOL OutputHash(
 					OutputErrorString("Dat error: %08.8lx\n", hr);
 					return FALSE;
 				}
-				_snwprintf(buf2, sizeof(buf2) / sizeof(buf2[0])
+				_snwprintf(buf2, SIZE_OF_ARRAY(buf2)
 					, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
 					, digest.sha384[0], digest.sha384[1], digest.sha384[2], digest.sha384[3], digest.sha384[4], digest.sha384[5], digest.sha384[6], digest.sha384[7]
 					, digest.sha384[8], digest.sha384[9], digest.sha384[10], digest.sha384[11], digest.sha384[12], digest.sha384[13], digest.sha384[14], digest.sha384[15]
@@ -382,7 +382,7 @@ BOOL OutputHash(
 					OutputErrorString("Dat error: %08.8lx\n", hr);
 					return FALSE;
 				}
-				_snwprintf(buf2, sizeof(buf2) / sizeof(buf2[0])
+				_snwprintf(buf2, SIZE_OF_ARRAY(buf2)
 					, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
 					, digest.sha512[0], digest.sha512[1], digest.sha512[2], digest.sha512[3], digest.sha512[4], digest.sha512[5], digest.sha512[6], digest.sha512[7]
 					, digest.sha512[8], digest.sha512[9], digest.sha512[10], digest.sha512[11], digest.sha512[12], digest.sha512[13], digest.sha512[14], digest.sha512[15]
@@ -398,13 +398,13 @@ BOOL OutputHash(
 					OutputErrorString("Dat error: %08.8lx\n", hr);
 					return FALSE;
 				}
-				_snwprintf(buf2, sizeof(buf2) / sizeof(buf2[0]), L"%08llx", digest.xxh3_64);
+				_snwprintf(buf2, SIZE_OF_ARRAY(buf2), L"%08llx", digest.xxh3_64);
 				if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"xxh3_64", NULL, buf2))) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 					OutputErrorString("Dat error: %08.8lx\n", hr);
 					return FALSE;
 				}
-				_snwprintf(buf2, sizeof(buf2) / sizeof(buf2[0]), L"%08llx%08llx", digest.xxh3_128.high64, digest.xxh3_128.low64);
+				_snwprintf(buf2, SIZE_OF_ARRAY(buf2), L"%08llx%08llx", digest.xxh3_128.high64, digest.xxh3_128.low64);
 				if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"xxh3_128", NULL, buf2))) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 					OutputErrorString("Dat error: %08.8lx\n", hr);
@@ -421,22 +421,22 @@ BOOL OutputHash(
 			newElem4->SetAttribute("name", hash.szFnameAndExt);
 
 			CHAR buf[128] = {};
-			_snprintf(buf, sizeof(buf) / sizeof(buf[0]), "%llu", hash.ui64FileSize);
+			_snprintf(buf, SIZE_OF_ARRAY(buf), "%llu", hash.ui64FileSize);
 			buf[127] = 0;
 			newElem4->SetAttribute("size", buf);
 
-			_snprintf(buf, sizeof(buf) / sizeof(buf[0]), "%08lx", hash.crc32);
+			_snprintf(buf, SIZE_OF_ARRAY(buf), "%08lx", hash.crc32);
 			buf[127] = 0;
 			newElem4->SetAttribute("crc", buf);
 
-			_snprintf(buf, sizeof(buf) / sizeof(buf[0])
+			_snprintf(buf, SIZE_OF_ARRAY(buf)
 				, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
 				, digest.md5[0], digest.md5[1], digest.md5[2], digest.md5[3], digest.md5[4], digest.md5[5], digest.md5[6], digest.md5[7]
 				, digest.md5[8], digest.md5[9], digest.md5[10], digest.md5[11], digest.md5[12], digest.md5[13], digest.md5[14], digest.md5[15]);
 			buf[127] = 0;
 			newElem4->SetAttribute("md5", buf);
 
-			_snprintf(buf, sizeof(buf) / sizeof(buf[0])
+			_snprintf(buf, SIZE_OF_ARRAY(buf)
 				, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
 				, digest.sha[0], digest.sha[1], digest.sha[2], digest.sha[3], digest.sha[4]
 				, digest.sha[5], digest.sha[6], digest.sha[7], digest.sha[8], digest.sha[9]
@@ -447,7 +447,7 @@ BOOL OutputHash(
 
 			if (pExtArg->byDatExpand) {
 				CHAR buf2[256] = {};
-				_snprintf(buf2, sizeof(buf2) / sizeof(buf2[0])
+				_snprintf(buf2, SIZE_OF_ARRAY(buf)
 					, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
 					, digest.sha224[0], digest.sha224[1], digest.sha224[2], digest.sha224[3], digest.sha224[4], digest.sha224[5], digest.sha224[6]
 					, digest.sha224[7], digest.sha224[8], digest.sha224[9], digest.sha224[10], digest.sha224[11], digest.sha224[12], digest.sha224[13]
@@ -456,7 +456,7 @@ BOOL OutputHash(
 				buf2[255] = 0;
 				newElem4->SetAttribute("sha224", buf2);
 
-				_snprintf(buf2, sizeof(buf2) / sizeof(buf2[0])
+				_snprintf(buf2, SIZE_OF_ARRAY(buf2)
 					, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
 					, digest.sha256[0], digest.sha256[1], digest.sha256[2], digest.sha256[3], digest.sha256[4], digest.sha256[5], digest.sha256[6], digest.sha256[7]
 					, digest.sha256[8], digest.sha256[9], digest.sha256[10], digest.sha256[11], digest.sha256[12], digest.sha256[13], digest.sha256[14], digest.sha256[15]
@@ -465,7 +465,7 @@ BOOL OutputHash(
 				buf2[255] = 0;
 				newElem4->SetAttribute("sha256", buf2);
 
-				_snprintf(buf2, sizeof(buf2) / sizeof(buf2[0])
+				_snprintf(buf2, SIZE_OF_ARRAY(buf2)
 					, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
 					, digest.sha384[0], digest.sha384[1], digest.sha384[2], digest.sha384[3], digest.sha384[4], digest.sha384[5], digest.sha384[6], digest.sha384[7]
 					, digest.sha384[8], digest.sha384[9], digest.sha384[10], digest.sha384[11], digest.sha384[12], digest.sha384[13], digest.sha384[14], digest.sha384[15]
@@ -476,7 +476,7 @@ BOOL OutputHash(
 				buf2[255] = 0;
 				newElem4->SetAttribute("sha384", buf2);
 
-				_snprintf(buf2, sizeof(buf2) / sizeof(buf2[0])
+				_snprintf(buf2, SIZE_OF_ARRAY(buf2)
 					, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
 					, digest.sha512[0], digest.sha512[1], digest.sha512[2], digest.sha512[3], digest.sha512[4], digest.sha512[5], digest.sha512[6], digest.sha512[7]
 					, digest.sha512[8], digest.sha512[9], digest.sha512[10], digest.sha512[11], digest.sha512[12], digest.sha512[13], digest.sha512[14], digest.sha512[15]
@@ -489,11 +489,11 @@ BOOL OutputHash(
 				buf2[255] = 0;
 				newElem4->SetAttribute("sha512", buf2);
 
-				_snprintf(buf2, sizeof(buf2) / sizeof(buf2[0]), "%08lx", digest.xxh3_64);
+				_snprintf(buf2, SIZE_OF_ARRAY(buf2), "%08lx", digest.xxh3_64);
 				buf2[255] = 0;
 				newElem4->SetAttribute("xxh3_64", buf2);
 
-				_snprintf(buf2, sizeof(buf2) / sizeof(buf2[0]), "%08lx%08lx", digest.xxh3_128.high64, digest.xxh3_128.low64);
+				_snprintf(buf2, SIZE_OF_ARRAY(buf2), "%08lx%08lx", digest.xxh3_128.high64, digest.xxh3_128.low64);
 				buf2[255] = 0;
 				newElem4->SetAttribute("xxh3_128", buf2);
 			}
@@ -615,7 +615,7 @@ BOOL ReadWriteDat(
 ) {
 #ifdef _WIN32
 	WCHAR wszDefaultDat[_MAX_PATH] = {};
-	if (!GetModuleFileNameW(NULL, wszDefaultDat, sizeof(wszDefaultDat) / sizeof(wszDefaultDat[0]))) {
+	if (!GetModuleFileNameW(NULL, wszDefaultDat, SIZE_OF_ARRAY(wszDefaultDat))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
@@ -655,17 +655,17 @@ BOOL ReadWriteDat(
 	WCHAR wszPathForDat[_MAX_PATH] = {};
 	_TCHAR szTmpPath[_MAX_PATH] = {};
 
-	_tcsncpy(szTmpPath, pszFullPath, sizeof(szTmpPath) / sizeof(_TCHAR) - 1);
+	_tcsncpy(szTmpPath, pszFullPath, SIZE_OF_ARRAY(szTmpPath) - 1);
 
 	if (bDesync == SUB_DESYNC_TYPE::IdxDesync) {
 		PathRemoveExtension(szTmpPath);
 		_TCHAR str1[] = _T(" (Subs indexes).dat");
-		_tcsncat(szTmpPath, str1, sizeof(szTmpPath) / sizeof(_TCHAR) - _tcslen(szTmpPath) - 1);
+		_tcsncat(szTmpPath, str1, SIZE_OF_ARRAY(szTmpPath) - _tcslen(szTmpPath) - 1);
 	}
 	else if (bDesync == SUB_DESYNC_TYPE::CtlDesync) {
 		PathRemoveExtension(szTmpPath);
 		_TCHAR str1[] = _T(" (Subs control).dat");
-		_tcsncat(szTmpPath, str1, sizeof(szTmpPath) / sizeof(_TCHAR) - _tcslen(szTmpPath) - 1);
+		_tcsncat(szTmpPath, str1, SIZE_OF_ARRAY(szTmpPath) - _tcslen(szTmpPath) - 1);
 	}
 	else {
 		PathRenameExtension(szTmpPath, _T(".dat"));
@@ -674,13 +674,13 @@ BOOL ReadWriteDat(
 	szTmpPath[_MAX_FNAME - 1] = 0;
 #ifndef UNICODE
 	if (!MultiByteToWideChar(CP_ACP, 0
-		, szTmpPath, sizeof(szTmpPath) / sizeof(szTmpPath[0])
-		, wszPathForDat, sizeof(wszPathForDat) / sizeof(wszPathForDat[0]))) {
+		, szTmpPath, SIZE_OF_ARRAY(szTmpPath)
+		, wszPathForDat, SIZE_OF_ARRAY(wszPathForDat))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
 #else
-	size_t size = sizeof(wszPathForDat) / sizeof(wszPathForDat[0]);
+	size_t size = SIZE_OF_ARRAY(wszPathForDat);
 	wcsncpy(wszPathForDat, szTmpPath, size);
 	wszPathForDat[size - 1] = 0;
 #endif
@@ -722,12 +722,12 @@ BOOL ReadWriteDat(
 
 	WCHAR wszDir[_MAX_DIR] = {};
 #ifndef UNICODE
-	if (!MultiByteToWideChar(CP_ACP, 0, szDir, _MAX_DIR, wszDir, sizeof(wszDir) / sizeof(wszDir[0]))) {
+	if (!MultiByteToWideChar(CP_ACP, 0, szDir, _MAX_DIR, wszDir, SIZE_OF_ARRAY(wszDir))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
 #else
-	size = sizeof(wszDir) / sizeof(wszDir[0]);
+	size = SIZE_OF_ARRAY(wszDir);
 	wcsncpy(wszDir, szDir, size);
 	wszDir[size - 1] = 0;
 #endif
@@ -874,7 +874,7 @@ BOOL ReadWriteDat(
 		PathSet(szDefaultDat, "/usr/share/DiscImageCreator/default.dat");
 	}
 	else {
-		if (!GetModuleFileName(NULL, szDefaultDat, sizeof(szDefaultDat) / sizeof(szDefaultDat[0]))) {
+		if (!GetModuleFileName(NULL, szDefaultDat, SIZE_OF_ARRAY(szDefaultDat))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
 		}

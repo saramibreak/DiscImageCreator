@@ -1227,13 +1227,13 @@ BOOL ReadDiscStructure(
 	FILE* fpPic = NULL;
 
 	if (*pExecType == dvd || *pExecType == xbox) {
-		_tcsncpy(szPath, pszFullPath, sizeof(szPath) / sizeof(szPath[0]) - 1);
+		_tcsncpy(szPath, pszFullPath, SIZE_OF_ARRAY(szPath) - 1);
 		fpPfi = CreateOrOpenFile(szPath, _T("_PFI"), szOutPathPFI, szFnameAndExtPFI, NULL, _T(".bin"), _T("wb"), 0, 0);
 		if (!fpPfi) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
 		}
-		_tcsncpy(szPath, pszFullPath, sizeof(szPath) / sizeof(szPath[0]) - 1);
+		_tcsncpy(szPath, pszFullPath, SIZE_OF_ARRAY(szPath) - 1);
 		fpDmi = CreateOrOpenFile(szPath, _T("_DMI"), szOutPathDMI, szFnameAndExtDMI, NULL, _T(".bin"), _T("wb"), 0, 0);
 		if (!fpDmi) {
 			FcloseAndNull(fpPfi);
@@ -1242,7 +1242,7 @@ BOOL ReadDiscStructure(
 		}
 	}
 	else if (*pExecType == bd) {
-		_tcsncpy(szPath, pszFullPath, sizeof(szPath) / sizeof(szPath[0]) - 1);
+		_tcsncpy(szPath, pszFullPath, SIZE_OF_ARRAY(szPath) - 1);
 		fpPic = CreateOrOpenFile(szPath, _T("_PIC"), szOutPathPIC, szFnameAndExtPIC, NULL, _T(".bin"), _T("wb"), 0, 0);
 		if (!fpPic) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -1592,7 +1592,7 @@ BOOL ExtractSecuritySector(
 	PHASH pHash
 ) {
 	_TCHAR szPath[_MAX_PATH] = {};
-	_tcsncpy(szPath, pszFullPath, sizeof(szPath) / sizeof(szPath[0]) - 1);
+	_tcsncpy(szPath, pszFullPath, SIZE_OF_ARRAY(szPath) - 1);
 	if (!PathRemoveFileSpec(szPath)) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;

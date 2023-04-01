@@ -728,7 +728,7 @@ INT ExecEccEdc(
 			protect.byExist == codelock || protect.byExist == datel ||
 			protect.byExist == datelAlt || protect.byExist == discguard ||
 			protect.byExist == physicalErr || protect.byExist == c2Err) {
-			_tcsncpy(cmd, _T("fix"), sizeof(cmd) / sizeof(cmd[0]));
+			_tcsncpy(cmd, _T("fix"), SIZE_OF_ARRAY(cmd));
 		}
 	}
 	INT ret = 0;
@@ -817,7 +817,7 @@ BOOL ProcessDescramble(
 	_TCHAR* pszOutScmFile
 ) {
 	_TCHAR pszNewPath[_MAX_PATH] = {};
-	_tcsncpy(pszNewPath, pszOutScmFile, sizeof(pszNewPath) / sizeof(pszNewPath[0]));
+	_tcsncpy(pszNewPath, pszOutScmFile, SIZE_OF_ARRAY(pszNewPath));
 	pszNewPath[_MAX_PATH - 1] = 0;
 	// "PathRenameExtension" fails to rename if space is included in extension.
 	// e.g.
@@ -863,7 +863,7 @@ BOOL ProcessDescramble(
 		}
 		if (pDisc->SUB.byCtlDesync) {
 			ZeroMemory(pszNewPath, _MAX_PATH);
-			_tcsncpy(pszNewPath, pszOutScmFile, sizeof(pszNewPath) / sizeof(pszNewPath[0]));
+			_tcsncpy(pszNewPath, pszOutScmFile, SIZE_OF_ARRAY(pszNewPath));
 			pszNewPath[_MAX_PATH - 1] = 0;
 			PathRemoveExtension(pszNewPath);
 			_tcsncat(pszNewPath, _T(" (Subs control).img"), sizeof(pszNewPath) - _tcslen(pszNewPath) - 1);
@@ -1185,7 +1185,7 @@ BOOL ReadCDAll(
 #ifdef _DEBUG
 				FILE* fpErrbin = NULL;
 				_TCHAR tmp[16] = {};
-				_sntprintf(tmp, sizeof(tmp) / sizeof(tmp[0]), _T("_%06d"), nLBA);
+				_sntprintf(tmp, SIZE_OF_ARRAY(tmp), _T("_%06d"), nLBA);
 				if (NULL == (fpErrbin = CreateOrOpenFile(pszPath, tmp,
 					NULL, NULL, NULL, _T(".scm"), _T("wb"), 0, 0))) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -1506,13 +1506,13 @@ BOOL ReadCDAll(
 		if (pExtArg->byMultiSession) {
 			OutputString("Trimming lead-out, lead-in, pregap of 1st track of 2nd session\n");
 			_TCHAR pszOutImgFile[_MAX_PATH] = {};
-			_tcsncpy(pszOutImgFile, pszPath, sizeof(pszOutImgFile) / sizeof(pszOutImgFile[0]) - 1);
+			_tcsncpy(pszOutImgFile, pszPath, SIZE_OF_ARRAY(pszOutImgFile) - 1);
 			if (!PathRenameExtension(pszOutImgFile, _T(".img"))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				return FALSE;
 			}
 			_TCHAR pszOutImgFileTmp[_MAX_PATH] = {};
-			_tcsncpy(pszOutImgFileTmp, pszPath, sizeof(pszOutImgFileTmp) / sizeof(pszOutImgFileTmp[0]) - 1);
+			_tcsncpy(pszOutImgFileTmp, pszPath, SIZE_OF_ARRAY(pszOutImgFileTmp) - 1);
 			if (!PathRenameExtension(pszOutImgFileTmp, _T(".imgtmp"))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				return FALSE;
@@ -1524,13 +1524,13 @@ BOOL ReadCDAll(
 			_tremove(pszOutImgFile);
 
 			_TCHAR pszOutSubFile[_MAX_PATH] = {};
-			_tcsncpy(pszOutSubFile, pszPath, sizeof(pszOutSubFile) / sizeof(pszOutSubFile[0]) - 1);
+			_tcsncpy(pszOutSubFile, pszPath, SIZE_OF_ARRAY(pszOutSubFile) - 1);
 			if (!PathRenameExtension(pszOutSubFile, _T(".sub"))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				return FALSE;
 			}
 			_TCHAR pszOutSubFileTmp[_MAX_PATH] = {};
-			_tcsncpy(pszOutSubFileTmp, pszPath, sizeof(pszOutSubFileTmp) / sizeof(pszOutSubFileTmp[0]) - 1);
+			_tcsncpy(pszOutSubFileTmp, pszPath, SIZE_OF_ARRAY(pszOutSubFileTmp) - 1);
 			if (!PathRenameExtension(pszOutSubFileTmp, _T(".subtmp"))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				return FALSE;
@@ -2580,86 +2580,6 @@ BOOL ReadCDPartial(
 	return bRet;
 }
 
-BOOL ReadCDAdditional(
-	PEXEC_TYPE pExecType,
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc,
-	LPCTSTR pszPath
-) {
-	BYTE lpCmd[CDB12GENERIC_LENGTH] = {};
-	SetReadDiscCommand(pExecType, pExtArg, pDevice, 1, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::Pack, lpCmd, FALSE);
-
-	BYTE aBuf[CD_RAW_SECTOR_WITH_SUBCODE_SIZE] = {};
-	BYTE byScsiStatus = 0;
-	FILE* fpInOut = NULL;
-	if ((pDisc->MAIN.bManySamples & PLUS_10000_SAMPLES) == PLUS_10000_SAMPLES) {
-		if (NULL == (fpInOut = CreateOrOpenFile(pszPath, NULL, NULL, NULL, NULL, _T(".out"), _T("wb"), 0, 0))) {
-			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-			return FALSE;
-		}
-		for (INT i = pDisc->SCSI.nAllLength + pDisc->MAIN.nAdjustSectorNum; i < pDisc->SCSI.nAllLength + 100; i++) {
-			if (!ExecReadCD(pExtArg, pDevice, lpCmd, i, aBuf,
-				CD_RAW_SECTOR_WITH_SUBCODE_SIZE, _T(__FUNCTION__), __LINE__)
-				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-				OutputLog(standardOut | fileDisc, "can't read\n");
-				return FALSE;
-			}
-			if (i == pDisc->SCSI.nAllLength + pDisc->MAIN.nAdjustSectorNum) {
-				fwrite(aBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize, fpInOut);
-			}
-			else if (i == pDisc->SCSI.nAllLength + 99) {
-				fwrite(aBuf, sizeof(BYTE), pDisc->MAIN.uiMainDataSlideSize, fpInOut);
-			}
-			else {
-				fwrite(aBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpInOut);
-			}
-			OutputString("\rCreating out(LBA) %8d/%8d", i, pDisc->SCSI.nAllLength + 100);
-		}
-		OutputString("\n");
-	}
-	else if ((pDisc->MAIN.bManySamples & MINUS_10000_SAMPLES) == MINUS_10000_SAMPLES) {
-		if (NULL == (fpInOut = CreateOrOpenFile(pszPath, NULL, NULL, NULL, NULL, _T(".pre"), _T("wb"), 0, 0))) {
-			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-			return FALSE;
-		}
-		BYTE lpSubcode[CD_RAW_READ_SUBCODE_SIZE] = {};
-		BOOL bFound = FALSE;
-		for (INT i = PREGAP_START_LBA; i < -1150; i++) {
-			if (!ExecReadCD(pExtArg, pDevice, lpCmd, i, aBuf,
-				CD_RAW_SECTOR_WITH_SUBCODE_SIZE, _T(__FUNCTION__), __LINE__)
-				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-				OutputLog(standardOut | fileDisc, "can't read\n");
-				return FALSE;
-			}
-			AlignRowSubcode(lpSubcode, &aBuf[CD_RAW_SECTOR_SIZE]);
-#if 0
-			OutputCDSub96Align(standardOut, lpSubcode, i);
-#endif
-			if (((lpSubcode[12] & 0x0f) == ADR_ENCODES_CURRENT_POSITION && lpSubcode[13] == 1 && lpSubcode[14] == 0 && lpSubcode[19] == 0 && lpSubcode[20] == 0 && lpSubcode[21] == 0)) {
-				fwrite(aBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize, fpInOut);
-				bFound = TRUE;
-			}
-			else if (lpSubcode[13] == 1 && lpSubcode[14] == 1 && lpSubcode[19] == 0 && lpSubcode[20] == 2 && lpSubcode[21] == 0) {
-				fwrite(aBuf, sizeof(BYTE), pDisc->MAIN.uiMainDataSlideSize, fpInOut);
-				break;
-			}
-			else {
-				if (bFound) {
-					fwrite(aBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpInOut);
-				}
-			}
-			OutputString("\rCreating pre(LBA) %8d/%8d", i, PREGAP_START_LBA);
-		}
-		OutputString("\n");
-		if (!bFound) {
-			OutputLog(standardOut | fileDisc, "Not found LBA 0 of the sub-channel. Failed to dump .pre file\n");
-		}
-	}
-	FcloseAndNull(fpInOut);
-	return TRUE;
-}
-
 #define POSITIVE -1
 #define NEGATIVE 1
 BOOL HasNonZeroByte(
@@ -2762,7 +2682,7 @@ BOOL ReadCDOutOfRange(
 			uiByteOffsetOut = i;
 			break;
 		}
-		OutputString("\rSearching last non-zero byte (size) %6d/%6d", fsize - i - 1, fsize);
+		OutputString("\rSearching last non-zero byte (size) %6u/%6u", fsize - i - 1, fsize);
 	}
 	OutputString("\n");
 
@@ -2770,7 +2690,7 @@ BOOL ReadCDOutOfRange(
 	if (bNonZeroByteExistOut) {
 		UINT ofs = fsize - uiByteOffsetOut + 1;
 		UINT sample = (ofs + (ofs % 4)) / 4;
-		OutputLog(standardOut | fileDisc, "\tThere is non-zero byte in the (Track AA): %d byte => %d sample\n", ofs, sample);
+		OutputLog(standardOut | fileDisc, "\tThere is non-zero byte in the (Track AA): %u byte => %u sample\n", ofs, sample);
 	}
 	else {
 		OutputLog(standardOut | fileDisc, "\tThere is not non-zero byte in the (Track AA)\n");
@@ -2780,12 +2700,12 @@ BOOL ReadCDOutOfRange(
 	_TCHAR appendName0[12] = {};
 	_TCHAR appendName1[18] = {};
 	if (pDisc->SCSI.toc.LastTrack > 9) {
-		_tcsncpy(appendName0, _T(" (Track 00)"), 11);
-		_tcsncpy(appendName1, _T(" (Track 01)(-LBA)"), 17);
+		_tcsncpy(appendName0, _T(" (Track 00)"), SIZE_OF_ARRAY(appendName0));
+		_tcsncpy(appendName1, _T(" (Track 01)(-LBA)"), SIZE_OF_ARRAY(appendName1));
 	}
 	else {
-		_tcsncpy(appendName0, _T(" (Track 0)"), 10);
-		_tcsncpy(appendName1, _T(" (Track 1)(-LBA)"), 16);
+		_tcsncpy(appendName0, _T(" (Track 0)"), SIZE_OF_ARRAY(appendName0));
+		_tcsncpy(appendName1, _T(" (Track 1)(-LBA)"), SIZE_OF_ARRAY(appendName1));
 	}
 	FILE* fpIn = NULL;
 	if (NULL == (fpIn = CreateOrOpenFile(pszPath, appendName0, NULL, NULL, NULL, _T(".bin"), _T("wb"), 0, 0))) {

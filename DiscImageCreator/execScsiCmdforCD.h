@@ -95,14 +95,6 @@ BOOL ReadCDPartial(
 	FILE* fpC2
 );
 
-BOOL ReadCDAdditional(
-	PEXEC_TYPE pExecType,
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc,
-	LPCTSTR pszPath
-);
-
 BOOL ReadCDOutOfRange(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,

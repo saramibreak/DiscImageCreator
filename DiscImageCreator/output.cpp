@@ -58,15 +58,15 @@ FILE* CreateOrOpenFile(
 		_tcsncat(szFname, pszPlusFname, sizeof(szFname) - _tcslen(szFname) - 1);
 	}
 	if (byMaxTrackNum <= 1) {
-		_sntprintf(szDstPath, sizeof(szDstPath) / sizeof(szDstPath[0]),
+		_sntprintf(szDstPath, SIZE_OF_ARRAY(szDstPath),
 			_T("%s%s%s%s"), szDrive, szDir, szFname, pszExt);
 	}
 	else if (2 <= byMaxTrackNum && byMaxTrackNum <= 9) {
-		_sntprintf(szDstPath, sizeof(szDstPath) / sizeof(szDstPath[0]),
+		_sntprintf(szDstPath, SIZE_OF_ARRAY(szDstPath),
 			_T("%s%s%s (Track %u)%s"), szDrive, szDir, szFname, byTrackNum, pszExt);
 	}
 	else if (10 <= byMaxTrackNum) {
-		_sntprintf(szDstPath, sizeof(szDstPath) / sizeof(szDstPath[0]),
+		_sntprintf(szDstPath, SIZE_OF_ARRAY(szDstPath),
 			_T("%s%s%s (Track %02u)%s"), szDrive, szDir, szFname, byTrackNum, pszExt);
 	}
 	szDstPath[_MAX_PATH - 1] = 0;
@@ -100,7 +100,7 @@ FILE* OpenProgrammabledFile(
 	LPCTSTR pszMode
 ) {
 	_TCHAR szFullPath[_MAX_PATH] = {};
-	if (!::GetModuleFileName(NULL, szFullPath, sizeof(szFullPath) / sizeof(szFullPath[0]))) {
+	if (!::GetModuleFileName(NULL, szFullPath, SIZE_OF_ARRAY(szFullPath))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return NULL;
 	}
@@ -115,10 +115,10 @@ FILE* OpenProgrammabledFile(
 		_TCHAR szFullPathName[_MAX_PATH + _MAX_FNAME] = {};
 #ifdef _WIN32
 		_sntprintf(szFullPathName
-			, sizeof(szFullPathName) / sizeof(szFullPathName[0]), _T("%s\\%s"), szFullPath, pszFname);
+			, SIZE_OF_ARRAY(szFullPathName), _T("%s\\%s"), szFullPath, pszFname);
 #else
 		_sntprintf(szFullPathName
-			, sizeof(szFullPathName) / sizeof(szFullPathName[0]), _T("%s/%s"), szFullPath, pszFname);
+			, SIZE_OF_ARRAY(szFullPathName), _T("%s/%s"), szFullPath, pszFname);
 #endif
 		szFullPathName[_MAX_PATH + _MAX_FNAME - 1] = 0;
 		fp = _tfopen(szFullPathName, pszMode);
@@ -161,10 +161,10 @@ VOID WriteCcdForDiscCatalog(
 	_TCHAR szCatalog[META_CATALOG_SIZE] = {};
 #ifdef UNICODE
 	MultiByteToWideChar(CP_ACP, 0
-		, pDisc->SUB.szCatalog, sizeof(pDisc->SUB.szCatalog) / sizeof(pDisc->SUB.szCatalog[0])
-		, szCatalog, sizeof(szCatalog) / sizeof(szCatalog[0]));
+		, pDisc->SUB.szCatalog, SIZE_OF_ARRAY(pDisc->SUB.szCatalog)
+		, szCatalog, SIZE_OF_ARRAY(szCatalog));
 #else
-	strncpy(szCatalog, pDisc->SUB.szCatalog, sizeof(szCatalog) / sizeof(szCatalog[0]));
+	strncpy(szCatalog, pDisc->SUB.szCatalog, SIZE_OF_ARRAY(szCatalog));
 #endif
 	if (fpCcd) {
 		_ftprintf(fpCcd, _T("CATALOG=%s\n"), szCatalog);
@@ -335,9 +335,9 @@ VOID WriteCcdForTrack(
 #ifdef UNICODE
 			MultiByteToWideChar(CP_ACP, 0
 				, pDisc->SUB.pszISRC[byTrackNum - 1], META_ISRC_SIZE
-				, szISRC, sizeof(szISRC) / sizeof(szISRC[0]));
+				, szISRC, SIZE_OF_ARRAY(szISRC));
 #else
-			strncpy(szISRC, pDisc->SUB.pszISRC[byTrackNum - 1], sizeof(szISRC) / sizeof(szISRC[0]) - 1);
+			strncpy(szISRC, pDisc->SUB.pszISRC[byTrackNum - 1], SIZE_OF_ARRAY(szISRC) - 1);
 #endif
 			_ftprintf(fpCcd, _T("ISRC=%s\n"), szISRC);
 		}
@@ -390,9 +390,9 @@ VOID WriteCueForSongWriter(
 #ifdef UNICODE
 		MultiByteToWideChar(CP_ACP, 0
 			, pDisc->SCSI.CDTEXT[n].pszSongWriter[byIdx], META_CDTEXT_SIZE
-			, szSongWriter, sizeof(szSongWriter) / sizeof(szSongWriter[0]));
+			, szSongWriter, SIZE_OF_ARRAY(szSongWriter));
 #else
-		strncpy(szSongWriter, pDisc->SCSI.CDTEXT[n].pszSongWriter[byIdx], sizeof(szSongWriter) / sizeof(szSongWriter[0]) - 1);
+		strncpy(szSongWriter, pDisc->SCSI.CDTEXT[n].pszSongWriter[byIdx], SIZE_OF_ARRAY(szSongWriter) - 1);
 #endif
 		if (byIdx == 0) {
 			_ftprintf(fpCue, _T("SONGWRITER \"%s\"\n"), szSongWriter);
@@ -414,9 +414,9 @@ VOID WriteCueForPerformer(
 #ifdef UNICODE
 		MultiByteToWideChar(CP_ACP, 0
 			, pDisc->SCSI.CDTEXT[n].pszPerformer[byIdx], META_CDTEXT_SIZE
-			, szPerformer, sizeof(szPerformer) / sizeof(szPerformer[0]));
+			, szPerformer, SIZE_OF_ARRAY(szPerformer));
 #else
-		strncpy(szPerformer, pDisc->SCSI.CDTEXT[n].pszPerformer[byIdx], sizeof(szPerformer) / sizeof(szPerformer[0]) - 1);
+		strncpy(szPerformer, pDisc->SCSI.CDTEXT[n].pszPerformer[byIdx], SIZE_OF_ARRAY(szPerformer) - 1);
 #endif
 		if (byIdx == 0) {
 			_ftprintf(fpCue, _T("PERFORMER \"%s\"\n"), szPerformer);
@@ -438,9 +438,9 @@ VOID WriteCueForTitle(
 #ifdef UNICODE
 		MultiByteToWideChar(CP_ACP, 0
 			, pDisc->SCSI.CDTEXT[n].pszTitle[byIdx], META_CDTEXT_SIZE
-			, szTitle, sizeof(szTitle) / sizeof(szTitle[0]));
+			, szTitle, SIZE_OF_ARRAY(szTitle));
 #else
-		strncpy(szTitle, pDisc->SCSI.CDTEXT[n].pszTitle[byIdx], sizeof(szTitle) / sizeof(szTitle[0]) - 1);
+		strncpy(szTitle, pDisc->SCSI.CDTEXT[n].pszTitle[byIdx], SIZE_OF_ARRAY(szTitle) - 1);
 #endif
 		if(byIdx == 0) {
 			_ftprintf(fpCue, _T("TITLE \"%s\"\n"), szTitle);
@@ -461,10 +461,10 @@ VOID WriteCueForFirst(
 		_TCHAR szCatalog[META_CATALOG_SIZE] = {};
 #ifdef UNICODE
 		MultiByteToWideChar(CP_ACP, 0 
-			, pDisc->SUB.szCatalog, sizeof(pDisc->SUB.szCatalog) / sizeof(pDisc->SUB.szCatalog[0])
-			, szCatalog, sizeof(szCatalog) / sizeof(szCatalog[0]));
+			, pDisc->SUB.szCatalog, SIZE_OF_ARRAY(pDisc->SUB.szCatalog)
+			, szCatalog, SIZE_OF_ARRAY(szCatalog));
 #else
-		strncpy(szCatalog, pDisc->SUB.szCatalog, sizeof(szCatalog) / sizeof(szCatalog[0]));
+		strncpy(szCatalog, pDisc->SUB.szCatalog, SIZE_OF_ARRAY(szCatalog));
 #endif
 		_ftprintf(fpCue, _T("CATALOG %s\n"), szCatalog);
 	}
@@ -533,9 +533,9 @@ VOID WriteCueForISRC(
 #ifdef UNICODE
 		MultiByteToWideChar(CP_ACP, 0
 			, pDisc->SUB.pszISRC[nIdx], META_ISRC_SIZE
-			, szISRC, sizeof(szISRC) / sizeof(szISRC[0]));
+			, szISRC, SIZE_OF_ARRAY(szISRC));
 #else
-		strncpy(szISRC, pDisc->SUB.pszISRC[nIdx], sizeof(szISRC) / sizeof(szISRC[0]) - 1);
+		strncpy(szISRC, pDisc->SUB.pszISRC[nIdx], SIZE_OF_ARRAY(szISRC) - 1);
 #endif
 		_ftprintf(fpCue, _T("    ISRC %s\n"), szISRC);
 	}
@@ -673,7 +673,8 @@ VOID WriteC2(
 ) {
 	if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
 		if (0 < pExtArg->uiC2Offset && pExtArg->uiC2Offset < CD_RAW_READ_C2_294_SIZE) {
-			fwrite(pDiscPerSector->data.current + pDevice->TRANSFER.uiBufC2Offset + pExtArg->uiC2Offset, sizeof(BYTE), (size_t)CD_RAW_READ_C2_294_SIZE - pExtArg->uiC2Offset, fpC2);
+			fwrite(pDiscPerSector->data.current + pDevice->TRANSFER.uiBufC2Offset + pExtArg->uiC2Offset
+				, sizeof(BYTE), (size_t)CD_RAW_READ_C2_294_SIZE - pExtArg->uiC2Offset, fpC2);
 			fwrite(pDiscPerSector->data.next + pDevice->TRANSFER.uiBufC2Offset, sizeof(BYTE), (size_t)pExtArg->uiC2Offset, fpC2);
 		}
 		else if (pExtArg->uiC2Offset == CD_RAW_READ_C2_294_SIZE) {
@@ -3036,10 +3037,10 @@ BOOL ConcatenateFromPregapToLeadout(
 	}
 	_TCHAR appendName1[18] = {};
 	if (pDisc->SCSI.toc.LastTrack > 9) {
-		_tcsncpy(appendName1, _T(" (Track 01)(-LBA)"), 17);
+		_tcsncpy(appendName1, _T(" (Track 01)(-LBA)"), SIZE_OF_ARRAY(appendName1));
 	}
 	else {
-		_tcsncpy(appendName1, _T(" (Track 1)(-LBA)"), 16);
+		_tcsncpy(appendName1, _T(" (Track 1)(-LBA)"), SIZE_OF_ARRAY(appendName1));
 	}
 	OutputString("Creating (Track all).img\n");
 

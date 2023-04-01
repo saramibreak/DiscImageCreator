@@ -81,12 +81,6 @@
 
 #define MAX_READ_ERROR_FILE_COUNT (16)
 
-#define READ_AUDIO_DISC_WITHOUT_OFFSET (0)
-#define READ_AUDIO_DISC_WITH_OFFSET (1)
-#define READ_AUDIO_DISC_WITHOUT_DUMPING (2)
-#define PLUS_10000_SAMPLES (1)
-#define MINUS_10000_SAMPLES (2)
-
 #if defined _WIN32 && defined UNICODE
 #define CHARWIDTH "h"
 #else
@@ -170,6 +164,8 @@
 #define MAKEDWORD(a, b)      ((DWORD)(((WORD)(((DWORD_PTR)(a)) & 0xffff)) | ((DWORD)((WORD)(((DWORD_PTR)(b)) & 0xffff))) << 16))
 #define MAKEUINT64(a, b)      ((UINT64)(((UINT)(((UINT_PTR)(a)) & 0xffffffff)) | ((UINT64)((UINT)(((UINT_PTR)(b)) & 0xffffffff))) << 32))
 #define MAKEDWORD64(a, b)      ((DWORD64)(((DWORD)(((DWORD_PTR)(a)) & 0xffffffff)) | ((DWORD64)((DWORD)(((DWORD_PTR)(b)) & 0xffffffff))) << 32))
+
+#define SIZE_OF_ARRAY(array)    (sizeof(array)/sizeof(array[0]))
 
 struct _LOG_FILE;
 typedef struct _LOG_FILE LOG_FILE;

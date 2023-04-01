@@ -297,7 +297,7 @@ VOID OutputFsDirectoryRecord(
 		if (pDisc->PROTECT.byExist == no) {
 			// for CodeLock, ProtectCD-VOB, a part of SecuROM
 			CHAR szSearchStr[][5] = { ".EXE", ".DLL", ".VXD", ".DAT", ".HDR", ".CAB" };
-			for (size_t i = 0; i < sizeof(szSearchStr) / sizeof(szSearchStr[0]); i++) {
+			for (size_t i = 0; i < SIZE_OF_ARRAY(szSearchStr); i++) {
 				LPCH p = strcasestr(fnameForProtect, szSearchStr[i]);
 				if (p) {
 					if (pDisc->PROTECT.nCntForExe == EXELBA_STORE_SIZE) {
@@ -1254,18 +1254,18 @@ VOID OutputFsMasterDirectoryBlocks(
 	tm* ctime = gmtime(&creationTime);
 	ctime->tm_year -= 66; // HFS starts from 1904, while UNIX starts from 1970
 	_TCHAR szBufc[128] = {};
-	_tcsftime(szBufc, sizeof(szBufc) / sizeof(szBufc[0]), _T("%FT%T"), ctime);
+	_tcsftime(szBufc, SIZE_OF_ARRAY(szBufc), _T("%FT%T"), ctime);
 
 	tm* mtime = gmtime(&modificationTime);
 	mtime->tm_year -= 66;
 	_TCHAR szBufm[128] = {};
-	_tcsftime(szBufm, sizeof(szBufm) / sizeof(szBufm[0]), _T("%FT%T"), mtime);
+	_tcsftime(szBufm, SIZE_OF_ARRAY(szBufm), _T("%FT%T"), mtime);
 
 	tm* ltime = gmtime(&lastTime);
 	ltime->tm_year -= 66;
 	_TCHAR szBufl[128] = {};
 	if (lastTime) {
-		_tcsftime(szBufl, sizeof(szBufl) / sizeof(szBufl[0]), _T("%FT%T"), mtime);
+		_tcsftime(szBufl, SIZE_OF_ARRAY(szBufl), _T("%FT%T"), mtime);
 	}
 
 	OutputVolDescWithLBALog2("Master Directory Blocks",

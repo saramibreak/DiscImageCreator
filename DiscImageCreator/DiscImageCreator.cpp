@@ -144,7 +144,7 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 	LPBYTE pPFullToc = NULL;
 	try {
 		_TCHAR szPath[_MAX_PATH] = { 0 };
-		_tcsncpy(szPath, pszFullPath, sizeof(szPath) / sizeof(_TCHAR) - 1);
+		_tcsncpy(szPath, pszFullPath, SIZE_OF_ARRAY(szPath) - 1);
 		PathRemoveFileSpec(szPath);
 
 #ifndef _DEBUG
@@ -336,10 +336,6 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 						if (!ReadCDCheck(pExecType, pExtArg, pDevice, pDisc)) {
 							throw FALSE;
 						}
-						if (pExtArg->byVerifyAudioCDOfs && pExtArg->uiVerifyAudio == READ_AUDIO_DISC_WITHOUT_DUMPING &&
-							pDisc->SCSI.trkType == TRACK_TYPE::audioOnly && pDisc->MAIN.bResetOffset) {
-							throw TRUE;
-						}
 					}
 
 					if (*pExecType == cd) {
@@ -353,13 +349,6 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 						if (IsPregapOfTrack1ReadableDrive(pDevice) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
 							ConcatenateFromPregapToLeadout(pDisc, pszFullPath);
 						}
-#if 0
-						if (!pExtArg->byPre &&
-							((pDisc->MAIN.bManySamples & PLUS_10000_SAMPLES) == PLUS_10000_SAMPLES ||
-							(pDisc->MAIN.bManySamples & MINUS_10000_SAMPLES) == MINUS_10000_SAMPLES)) {
-							ReadCDAdditional(pExecType, pExtArg, pDevice, pDisc, pszFullPath);
-						}
-#endif
 					}
 					else if (*pExecType == swap) {
 						bRet = ReadCDForSwap(pExecType, pExtArg, pDevice, pDisc, &discPerSector
@@ -593,25 +582,6 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 
 			bRet = execForDumping(pExecType, pExtArg, pszFullPath, &device, pDisc);
 
-			if (bRet && pExtArg->byVerifyAudioCDOfs && pExtArg->uiVerifyAudio == READ_AUDIO_DISC_WITH_OFFSET &&
-				pDisc->SCSI.trkType == TRACK_TYPE::audioOnly && pDisc->MAIN.bResetOffset) {
-				pExtArg->uiVerifyAudio = READ_AUDIO_DISC_WITHOUT_OFFSET;
-				INT ch = 0;
-				do {
-					OutputString("Would you like to also generate hashes for a non-offset dump to verify with another disc? [y/n]\n");
-					ch = _getch();
-					if (ch == 'y') {
-						_TCHAR szFullPathNoOfs[_MAX_PATH] = {};
-						_tcsncpy(szFullPathNoOfs, pszFullPath, sizeof(szFullPathNoOfs) / sizeof(_TCHAR) - 1);
-						PathRemoveExtension(szFullPathNoOfs);
-						_tcsncat(szFullPathNoOfs, _T("_NoOffset"), 9);
-						PathRenameExtension(szFullPathNoOfs, s_szExt);
-
-						execForDumping(pExecType, pExtArg, szFullPathNoOfs, &device, pDisc);
-					}
-				} while (ch != 'y' && ch != 'n');
-			}
-
 			if (*pExecType == cd || *pExecType == swap || *pExecType == gd ||
 				*pExecType == data || *pExecType == audio || *pExecType == bd) {
 				TerminateLBAPerTrack(&pDisc);
@@ -640,22 +610,22 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 int appendExtIfNotExt(_TCHAR* szPathFromArg, size_t pathLen, _TCHAR* szTmpPath)
 {
 	_TCHAR ext[5] = {};
-	_tcsncpy(ext, &szPathFromArg[pathLen - 4], sizeof(ext) / sizeof(ext[0]) - 1);
-	if (_tcsncmp(ext, _T(".bin"), sizeof(ext) / sizeof(ext[0])) != 0 &&
-		_tcsncmp(ext, _T(".iso"), sizeof(ext) / sizeof(ext[0])) != 0 &&
-		_tcsncmp(ext, _T(".sub"), sizeof(ext) / sizeof(ext[0])) != 0 &&
-		_tcsncmp(ext, _T(".mds"), sizeof(ext) / sizeof(ext[0])) != 0 &&
-		_tcsncmp(ext, _T(".mdf"), sizeof(ext) / sizeof(ext[0])) != 0
+	_tcsncpy(ext, &szPathFromArg[pathLen - 4], SIZE_OF_ARRAY(ext) - 1);
+	if (_tcsncmp(ext, _T(".bin"), SIZE_OF_ARRAY(ext)) != 0 &&
+		_tcsncmp(ext, _T(".iso"), SIZE_OF_ARRAY(ext)) != 0 &&
+		_tcsncmp(ext, _T(".sub"), SIZE_OF_ARRAY(ext)) != 0 &&
+		_tcsncmp(ext, _T(".mds"), SIZE_OF_ARRAY(ext)) != 0 &&
+		_tcsncmp(ext, _T(".mdf"), SIZE_OF_ARRAY(ext)) != 0
 		) {
 		OutputString("valid extension was omitted. -> ");
 		size_t len = _tcslen(szTmpPath);
-		if (len + sizeof(ext) / sizeof(ext[0]) > _MAX_PATH) {
+		if (len + SIZE_OF_ARRAY(ext) > _MAX_PATH) {
 			OutputString("can't set extension because PATH too long\n");
 			return FALSE;
 		}
 		else {
 			OutputString("set .bin\n");
-			_tcsncat(szTmpPath, _T(".bin"), sizeof(ext) / sizeof(ext[0]));
+			_tcsncat(szTmpPath, _T(".bin"), SIZE_OF_ARRAY(ext));
 		}
 	}
 	return TRUE;
@@ -664,10 +634,10 @@ int appendExtIfNotExt(_TCHAR* szPathFromArg, size_t pathLen, _TCHAR* szTmpPath)
 int printAndSetPath(_TCHAR* szPathFromArg, _TCHAR* pszFullPath, size_t stFullPathlen)
 {
 	_TCHAR szTmpPath[_MAX_PATH] = {};
-	_tcsncpy(szTmpPath, szPathFromArg, sizeof(szTmpPath) / sizeof(szTmpPath[0]) - 1);
+	_tcsncpy(szTmpPath, szPathFromArg, SIZE_OF_ARRAY(szTmpPath) - 1);
 	appendExtIfNotExt(szPathFromArg, _tcslen(szPathFromArg), szTmpPath);
 
-	if (!GetCurrentDirectory(sizeof(s_szCurrentdir) / sizeof(s_szCurrentdir[0]), s_szCurrentdir)) {
+	if (!GetCurrentDirectory(SIZE_OF_ARRAY(s_szCurrentdir), s_szCurrentdir)) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
@@ -737,30 +707,6 @@ int printAndSetPath(_TCHAR* szPathFromArg, _TCHAR* pszFullPath, size_t stFullPat
 		"\tExtension: %s\n",
 		s_szCurrentdir, szTmpPath, pszFullPath, s_szDrive, s_szDir, s_szFname, s_szExt);
 
-	return TRUE;
-}
-
-int SetOptionVrfy(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
-{
-	_TCHAR* endptr = NULL;
-	pExtArg->byVerifyAudioCDOfs = TRUE;
-	if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
-		pExtArg->uiVerifyAudio = (UINT)_tcstoul(argv[(*i)++], &endptr, 10);
-		if (*endptr) {
-			OutputErrorString("[ERROR] [%s] is invalid argument. Please input integer.\n", endptr);
-			return FALSE;
-		}
-		else if (pExtArg->uiVerifyAudio != READ_AUDIO_DISC_WITHOUT_OFFSET &&
-			pExtArg->uiVerifyAudio != READ_AUDIO_DISC_WITH_OFFSET &&
-			pExtArg->uiVerifyAudio != READ_AUDIO_DISC_WITHOUT_DUMPING) {
-			OutputErrorString("[ERROR] [%s] is invalid argument. 0 or 1 or 2 can be used.\n", endptr);
-			return FALSE;
-		}
-	}
-	else {
-		pExtArg->uiVerifyAudio = READ_AUDIO_DISC_WITH_OFFSET;
-		OutputString("[INFO] /vrfy val was omitted. set [%u]\n", pExtArg->uiVerifyAudio);
-	}
 	return TRUE;
 }
 
@@ -965,7 +911,7 @@ int SetOptionC2(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 				return FALSE;
 			}
 			else if (CD_RAW_READ_C2_294_SIZE * 2 < pExtArg->uiC2Offset) {
-				OutputErrorString("[%u] is invalid argument. Please input from 0 to %u.\n", pExtArg->uiC2Offset, CD_RAW_READ_C2_294_SIZE * 2 - 1);
+				OutputErrorString("[%u] is invalid argument. Please input from 0 to %d.\n", pExtArg->uiC2Offset, CD_RAW_READ_C2_294_SIZE * 2 - 1);
 				return FALSE;
 			}
 			if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
@@ -1189,11 +1135,6 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				}
 				else if (*pExecType == swap && cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/74"), cmdLen)) {
 					pExtArg->by74Min = TRUE;
-				}
-				else if (cmdLen == 5 && !_tcsncmp(argv[i - 1], _T("/vrfy"), cmdLen)) {
-					if (!SetOptionVrfy(argc, argv, pExtArg, &i)) {
-						return FALSE;
-					}
 				}
 				else {
 					OutputErrorString("Unknown option: [%s]\n", argv[i - 1]);
@@ -1689,7 +1630,7 @@ int createCmdFile(int argc, _TCHAR* argv[], _TCHAR* pszFullPath, LPTSTR pszDateT
 {
 	if (argc >= 4) {
 		_TCHAR date[17] = {};
-		_sntprintf(date, sizeof(date) / sizeof(_TCHAR), _T("_%s"), pszDateTime);
+		_sntprintf(date, SIZE_OF_ARRAY(date), _T("_%s"), pszDateTime);
 		FILE* fpCmd = CreateOrOpenFile(
 			pszFullPath, date, NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0);
 		if (!fpCmd) {
@@ -1724,7 +1665,7 @@ void printUsage(void)
 		"\tcd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/d] [/a (val)] [/aj] [/p]\n"
 		"\t   [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4) (val5)] [/f (val)] [/ms]\n"
 		"\t   [/vn (val)] [/vnc] [/vnx] [/mscf] [/sf (val)] [/ss] [/np] [/nq] [/nr]\n"
-		"\t   [/nl] [/ns] [/s (val)] [/vrfy (val)]\n"
+		"\t   [/nl] [/ns] [/s (val)]\n"
 		"\t\tDump a CD from A to Z\n"
 		"\t\tFor PLEXTOR or drive that can scramble Dumping\n"
 		"\tswap <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/d] [/a (val)]\n"
@@ -1802,23 +1743,18 @@ void printUsage(void)
 		"Option (for CD read mode)\n"
 		"\t/a\tAdd CD offset manually (Only Audio CD)\n"
 		"\t\t\tval\tsamples value\n"
-		"\t/vrfy\tCheck non-zero byte in the lead-out and pregap of 1st track (Only Audio CD)\n"
-		"\t\t\tval\t0: audio cd can be read without offset (default)\n"
-		"\t\t\t   \t1: audio cd can be read with offset\n"
-		"\t\t\t   \t    and select 'y' then read without offset or select 'n' then not read\n"
-		"\t\t\t   \t2: logs are only generated with offset\n"
 		"\t/be\tUse 0xbe as the opcode for Reading CD forcibly\n"
 		"\t\t\tstr\t raw: sub channel mode is raw (default)\n"
 		"\t\t\t   \tpack: sub channel mode is pack\n"
 		"\t/d8\tUse 0xd8 as the opcode for Reading CD forcibly\n"
-	);
-	stopMessage();
-	OutputString(
 		"\t/c2\tContinue reading CD to recover C2 error existing sector\n"
 		"\t\t\tval1\tvalue to reread (default: 4000)\n"
 		"\t\t\tval2\tvalue to set the C2 offset (default: 0)\n"
 		"\t\t\tval3\t0: reread sector c2 error is reported (default)\n"
 		"\t\t\t    \t1: reread all (or from first to last) sector\n"
+	);
+	stopMessage();
+	OutputString(
 		"\t\t\tval4\tfirst LBA to reread (default: 0)\n"
 		"\t\t\tval5\tlast LBA to reread (default: end-of-sector)\n"
 		"\t\t\t    \tval3, 4 is used when val2 is 1\n"
@@ -1844,13 +1780,13 @@ void printUsage(void)
 		"\t   \tcontinue reading and ignore c2 error on specific sector\n"
 		"\t\t\tFor ProtectCD-VOB\n"
 		"\t/am\tScan anti-mod string\n"
-	);
-	stopMessage();
-	OutputString(
 		"\t\t\tFor PlayStation\n"
 		"\t/vn\tSearch specific bytes\n"
 		"\t\t\tFor VideoNow\n"
 		"\t\t\tval\tCombined offset is shifted for negative direction if positive value is set\n"
+	);
+	stopMessage();
+	OutputString(
 		"\t/vnc\tSearch specific bytes\n"
 		"\t\t\tFor VideoNow Color\n"
 		"\t/vnx\tSearch specific bytes\n"
@@ -1876,13 +1812,13 @@ void printUsage(void)
 		"\t\t\t   \t1: read next sub (normal, this val is default)\n"
 		"\t\t\t   \t2: read next & next next sub (slow, precision)\n"
 		"Option (for DVD)\n"
-	);
-	stopMessage();
-	OutputString(
 		"\t/c\tLog Copyright Management Information\n"
 		"\t/rr\tRetry reading when error occurs\n"
 		"\t\t\tval\tMax retry value (default: 10)\n"
 		"\t/sk\tSkip sector for protect (ARccOS, RipGuard)\n"
+	);
+	stopMessage();
+	OutputString(
 		"\t\t\tval\tsector num\n"
 		"\t/nss\tNo skip reading SS sectors (only XBOX)\n"
 		"\t\t\tval\tMax retry value (default: 100)\n"
@@ -1957,7 +1893,7 @@ int main(int argc, char* argv[])
 		EXT_ARG extArg = {};
 		extArg.uiCacheDelNum = DEFAULT_CACHE_DELETE_VAL;
 		_TCHAR szFullPath[_MAX_PATH] = {};
-		if (!checkArg(argc, argv, &execType, &extArg, szFullPath, sizeof(szFullPath) / sizeof(szFullPath[0]))) {
+		if (!checkArg(argc, argv, &execType, &extArg, szFullPath, SIZE_OF_ARRAY(szFullPath))) {
 			if (argc == 1) {
 				printUsage();
 			}
@@ -1970,7 +1906,7 @@ int main(int argc, char* argv[])
 			_TCHAR szBuf[128] = {};
 			time_t now = time(NULL);
 			tm* ts = localtime(&now);
-			_tcsftime(szBuf, sizeof(szBuf) / sizeof(szBuf[0]), _T("%FT%T%z"), ts);
+			_tcsftime(szBuf, SIZE_OF_ARRAY(szBuf), _T("%FT%T%z"), ts);
 			OutputString("StartTime: %s\n", szBuf);
 
 			if (execType != merge) {
@@ -1982,7 +1918,7 @@ int main(int argc, char* argv[])
 
 			now = time(NULL);
 			ts = localtime(&now);
-			_tcsftime(szBuf, sizeof(szBuf) / sizeof(szBuf[0]), _T("%FT%T%z"), ts);
+			_tcsftime(szBuf, SIZE_OF_ARRAY(szBuf), _T("%FT%T%z"), ts);
 			OutputString("EndTime: %s\n", szBuf);
 		}
 		if (!extArg.byQuiet) {
