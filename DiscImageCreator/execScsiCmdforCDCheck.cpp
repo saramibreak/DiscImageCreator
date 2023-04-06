@@ -198,18 +198,18 @@ BOOL ExecSearchingOffset(
 	if (!bRet) {
 		if (*pExecType == gd) {
 			OutputErrorString(
-				"Couldn't read data sectors at scrambled state [OpCode: %#02x, C2flag: %d, SubCode: %x]\n"
-				, lpCmd[0], (lpCmd[9] & 0x6) >> 1, lpCmd[10]);
+				"This drive (%.16s) couldn't read data sectors at scrambled state [OpCode: %#02x, C2flag: %d, SubCode: %x]\n"
+				, pDevice->szProductId, lpCmd[0], (lpCmd[9] & 0x6) >> 1, lpCmd[10]);
 		}
 		else {
 			if ((pExtArg->byD8 || pDevice->byPlxtrDrive) && !pExtArg->byBe) {
 				OutputLog(standardError | fileDrive,
-					"This drive doesn't support [OpCode: %#02x, SubCode: %x]\n", lpCmd[0], lpCmd[10]);
+					"This drive (%.16s) doesn't support [OpCode: %#02x, SubCode: %x]\n", pDevice->szProductId, lpCmd[0], lpCmd[10]);
 			}
 			else {
 				OutputErrorString(
-					"This drive can't read data sectors at scrambled state [OpCode: %#02x, C2flag: %d, SubCode: %x]\n"
-					, lpCmd[0], (lpCmd[9] & 0x6) >> 1, lpCmd[10]);
+					"This drive (%.16s) can't read data sectors at scrambled state [OpCode: %#02x, C2flag: %d, SubCode: %x]\n"
+					, pDevice->szProductId, lpCmd[0], (lpCmd[9] & 0x6) >> 1, lpCmd[10]);
 			}
 		}
 		return FALSE;
@@ -217,13 +217,13 @@ BOOL ExecSearchingOffset(
 	else {
 		if ((pExtArg->byD8 || pDevice->byPlxtrDrive) && !pExtArg->byBe) {
 			OutputLog(standardOut | fileDrive,
-				"This drive supports [OpCode: %#02x, SubCode: %x]\n", lpCmd[0], lpCmd[10]);
+				"This drive (%.16s) supports [OpCode: %#02x, SubCode: %x]\n", pDevice->szProductId, lpCmd[0], lpCmd[10]);
 		}
 		else {
 			if (*pExecType != data) {
 				OutputLog(standardOut | fileDrive,
-					"This drive can read data sectors at scrambled state [OpCode: %#02x, C2flag: %d, SubCode: %x]\n"
-					, lpCmd[0], (lpCmd[9] & 0x6) >> 1, lpCmd[10]);
+					"This drive (%.16s) can read data sectors at scrambled state [OpCode: %#02x, C2flag: %d, SubCode: %x]\n"
+					, pDevice->szProductId, lpCmd[0], (lpCmd[9] & 0x6) >> 1, lpCmd[10]);
 			}
 		}
 	}
