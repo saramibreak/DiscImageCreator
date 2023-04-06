@@ -436,6 +436,7 @@ BOOL IsPregapOfTrack1ReadableDrive(
 		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PREMIUM &&
 		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PXW5224A &&
 		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PXW4012A &&
+		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PXW4012S &&
 		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PXW2410A &&
 		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PXS88T &&
 		pDevice->byPlxtrDrive != PLXTR_DRIVE_TYPE::PXW1610A &&
