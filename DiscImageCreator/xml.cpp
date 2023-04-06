@@ -105,6 +105,7 @@ BOOL OutputHash(
 	XMLElement* pWriter,
 #endif
 	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
 	PDISC pDisc,
 	_TCHAR* pszFullPath,
 	DWORD dwBytesPerSector,
@@ -152,9 +153,11 @@ BOOL OutputHash(
 
 		hash.ui64FileSize = GetFileSize64(0, fp);
 		UINT64 ui64SectorSizeAll = hash.ui64FileSize / (UINT64)dwBytesPerSector;
+		UINT uiConsecutiveZeroBytePos = 0;
 
 		if (hash.ui64FileSize >= dwBytesPerSector) {
 			BYTE data[CD_RAW_SECTOR_SIZE] = {};
+			BYTE dataBak[CD_RAW_SECTOR_SIZE] = {};
 			int nRet = TRUE;
 
 			if (!_tcsncmp(szExt, _T(".bin"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
@@ -163,6 +166,7 @@ BOOL OutputHash(
 			CalcInit(pExtArg, &hash);
 			OutputString("Hashing: %s\n", hash.szFnameAndExt);
 			BOOL b1stNonZero = FALSE;
+			BOOL bConsecutiveZeroByte = FALSE;
 
 			for (UINT64 i = 0; i < ui64SectorSizeAll; i++) {
 				if (fread(data, sizeof(BYTE), dwBytesPerSector, fp) < dwBytesPerSector) {
@@ -176,13 +180,36 @@ BOOL OutputHash(
 				if (!_tcsncmp(szExt, _T(".bin"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly && !b1stNonZero) {
 					Get1stNonZeroPosition(pExtArg, dwBytesPerSector, &hash, &b1stNonZero, (UINT)i, data, &ui1stNonZeroSector, &ui1stNonZeroSectorPos, FALSE);
 				}
+				// Check consecutive zero-byte after 1st non-zero byte
+				if (i <= 35 && b1stNonZero && ui1stNonZeroSector == 0 && ui1stNonZeroSectorPos == 0 && uiConsecutiveZeroBytePos == 0 && !bConsecutiveZeroByte) {
+					BOOL bAllZero = TRUE;
+					for (DWORD j = 0; j < dwBytesPerSector; j++) {
+						if (data[j] != 0) {
+							bAllZero = FALSE;
+							break;
+						}
+					}
+					if (bAllZero) {
+						for (INT k = (INT)(dwBytesPerSector  - 4); 0 <= k; k -= 4) {
+							if (dataBak[k] != 0 || dataBak[k + 1] != 0 || dataBak[k + 2] != 0 || dataBak[k + 3] != 0) {
+								uiConsecutiveZeroBytePos = dwBytesPerSector * (i - 1) + (k + 4);
+								bConsecutiveZeroByte = TRUE;
+								break;
+							}
+						}
+					}
+					else {
+						memcpy(dataBak, data, CD_RAW_SECTOR_SIZE);
+					}
+				}
 			}
 			if (!_tcsncmp(szExt, _T(".bin"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
 				OutputDiscLog(
 					OUTPUT_DHYPHEN_PLUS_STR("Non-zero byte position of the track %02d")
 					"\t 1st non-zero byte position (sample based): %6u sector + %4u byte\n"
+					"\tConsecutive zero byte position after 1st non-zero byte: %4u\n"
 					"\tLast non-zero byte position (sample based): %6u sector + %4u byte (Last sector: %6llu)\n"
-					, uiTrack, ui1stNonZeroSector, ui1stNonZeroSectorPos, uiLastNonZeroSector, uiLastNonZeroSectorPos, ui64SectorSizeAll
+					, uiTrack, ui1stNonZeroSector, ui1stNonZeroSectorPos, uiConsecutiveZeroBytePos, uiLastNonZeroSector, uiLastNonZeroSectorPos, ui64SectorSizeAll
 				);
 			}
 			FcloseAndNull(fp);
@@ -193,7 +220,7 @@ BOOL OutputHash(
 			FILE* fpUni = NULL;
 			UINT64 ui64SectorSizeAllUni = 0;
 
-			if (!_tcsncmp(szExt, _T(".img"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
+			if (IsPregapOfTrack1ReadableDrive(pDevice) && !_tcsncmp(szExt, _T(".img"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
 				if (NULL == (fpUni = CreateOrOpenFile(pszFullPath, _T(" (Track all)"), NULL
 					, hashUni.szFnameAndExt, NULL, szExt, _T("rb"), uiTrack, uiLastTrack))) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -255,7 +282,7 @@ BOOL OutputHash(
 	MESSAGE_DIGEST_CHUNK digestUni = {};
 
 	if (CalcEnd(pExtArg, &hash, &digest)) {
-		if (!_tcsncmp(szExt, _T(".img"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
+		if (IsPregapOfTrack1ReadableDrive(pDevice) && !_tcsncmp(szExt, _T(".img"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
 			CalcEnd(pExtArg, &hashUni, &digestUni);
 		}
 		if (!_tcsncmp(szExt, _T(".scm"), 4) ||
@@ -268,7 +295,7 @@ BOOL OutputHash(
 			) {
 #ifndef _DEBUG
 			OutputHashData(pExtArg, g_LogFile.fpDisc, &hash, &digest);
-			if (!_tcsncmp(szExt, _T(".img"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
+			if (IsPregapOfTrack1ReadableDrive(pDevice) && !_tcsncmp(szExt, _T(".img"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
 				OutputDiscLog(
 					OUTPUT_DHYPHEN_PLUS_STR("Hash(Universal Whole image)")
 					"\t 1st non-zero byte position (sample based): %6u sector + %4u byte\n"
@@ -512,6 +539,7 @@ BOOL OutputRomElement(
 #endif
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
 	PDISC pDisc,
 	_TCHAR* pszFullPath,
 	_TCHAR* szPath,
@@ -519,7 +547,7 @@ BOOL OutputRomElement(
 	PHASH pHash
 ) {
 	if (*pExecType == fd || *pExecType == disk) {
-		if (!OutputHash(pWriter, pExtArg, pDisc, pszFullPath, pDisc->dwBytesPerSector, _T(".bin"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
+		if (!OutputHash(pWriter, pExtArg, pDevice, pDisc, pszFullPath, pDisc->dwBytesPerSector, _T(".bin"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
 			return FALSE;
 		}
 	}
@@ -528,51 +556,43 @@ BOOL OutputRomElement(
 			if (*pExecType == xbox) {
 				_tcsncpy(szPath, pszFullPath, _MAX_PATH);
 				PathRemoveExtension(szPath);
-				if (!PathAppend(szPath, _T("_SS.bin"))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					return FALSE;
-				}
-				if (!OutputHash(pWriter, pExtArg, pDisc, szPath, NOT_USE_SIZE, _T(".bin"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
+				_tcsncat(szPath, _T("_SS.bin"), _MAX_PATH - _tcslen(szPath) - 1);
+
+				if (!OutputHash(pWriter, pExtArg, pDevice, pDisc, szPath, DISC_MAIN_DATA_SIZE, _T(".bin"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
 					return FALSE;
 				}
 			}
 
 			_tcsncpy(szPath, pszFullPath, _MAX_PATH);
 			PathRemoveExtension(szPath);
-			if (!PathAppend(szPath, _T("_PFI.bin"))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				return FALSE;
-			}
-			if (!OutputHash(pWriter, pExtArg, pDisc, szPath, NOT_USE_SIZE, _T(".bin"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
+			_tcsncat(szPath, _T("_PFI.bin"), _MAX_PATH - _tcslen(szPath) - 1);
+
+			if (!OutputHash(pWriter, pExtArg, pDevice, pDisc, szPath, DISC_MAIN_DATA_SIZE, _T(".bin"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
 				return FALSE;
 			}
 
 			_tcsncpy(szPath, pszFullPath, _MAX_PATH);
 			PathRemoveExtension(szPath);
-			if (!PathAppend(szPath, _T("_DMI.bin"))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				return FALSE;
-			}
-			if (!OutputHash(pWriter, pExtArg, pDisc, szPath, NOT_USE_SIZE, _T(".bin"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
+			_tcsncat(szPath, _T("_DMI.bin"), _MAX_PATH - _tcslen(szPath) - 1);
+
+			if (!OutputHash(pWriter, pExtArg, pDevice, pDisc, szPath, DISC_MAIN_DATA_SIZE, _T(".bin"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
 				return FALSE;
 			}
 		}
 		else if (*pExecType == bd) {
 			_tcsncpy(szPath, pszFullPath, _MAX_PATH);
 			PathRemoveExtension(szPath);
-			if (!PathAppend(szPath, _T("_PIC.bin"))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				return FALSE;
-			}
-			if (!OutputHash(pWriter, pExtArg, pDisc, szPath, NOT_USE_SIZE, _T(".bin"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
+			_tcsncat(szPath, _T("_PIC.bin"), _MAX_PATH - _tcslen(szPath) - 1);
+
+			if (!OutputHash(pWriter, pExtArg, pDevice, pDisc, szPath, DISC_MAIN_DATA_SIZE, _T(".bin"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
 				return FALSE;
 			}
 		}
-		if (!OutputHash(pWriter, pExtArg, pDisc, pszFullPath, DISC_MAIN_DATA_SIZE, _T(".iso"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
+		if (!OutputHash(pWriter, pExtArg, pDevice, pDisc, pszFullPath, DISC_MAIN_DATA_SIZE, _T(".iso"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
 			return FALSE;
 		}
 		if (pExtArg->byRawDump) {
-			if (!OutputHash(pWriter, pExtArg, pDisc, pszFullPath, NOT_USE_SIZE, _T(".raw"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
+			if (!OutputHash(pWriter, pExtArg, pDevice, pDisc, pszFullPath, DISC_MAIN_DATA_SIZE, _T(".raw"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
 				return FALSE;
 			}
 		}
@@ -582,21 +602,21 @@ BOOL OutputRomElement(
 			OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("Hash(Whole image)"));
 			if (pDisc->SCSI.trkType == TRACK_TYPE::dataExist ||
 				pDisc->SCSI.trkType == TRACK_TYPE::pregapDataIn1stTrack) {
-				if (!OutputHash(pWriter, pExtArg, pDisc, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".scm"), 1, 1, bDesync, pHash)) {
+				if (!OutputHash(pWriter, pExtArg, pDevice, pDisc, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".scm"), 1, 1, bDesync, pHash)) {
 					return FALSE;
 				}
 			}
-			if (!OutputHash(pWriter, pExtArg, pDisc, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".img"), 1, 1, bDesync, pHash)) {
+			if (!OutputHash(pWriter, pExtArg, pDevice, pDisc, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".img"), 1, 1, bDesync, pHash)) {
 				return FALSE;
 			}
 		}
 		else if (bDesync == SUB_DESYNC_TYPE::CtlDesync) {
-			if (!OutputHash(pWriter, pExtArg, pDisc, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".img"), 1, 1, bDesync, pHash)) {
+			if (!OutputHash(pWriter, pExtArg, pDevice, pDisc, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".img"), 1, 1, bDesync, pHash)) {
 				return FALSE;
 			}
 		}
 		for (UCHAR i = pDisc->SCSI.toc.FirstTrack; i <= pDisc->SCSI.toc.LastTrack; i++) {
-			if (!OutputHash(pWriter, pExtArg, pDisc, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".bin"), i, pDisc->SCSI.toc.LastTrack, bDesync, pHash)) {
+			if (!OutputHash(pWriter, pExtArg, pDevice, pDisc, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".bin"), i, pDisc->SCSI.toc.LastTrack, bDesync, pHash)) {
 				return FALSE;
 			}
 		}
@@ -607,6 +627,7 @@ BOOL OutputRomElement(
 BOOL ReadWriteDat(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
 	PDISC pDisc,
 	_TCHAR* pszFullPath,
 	_TCHAR* szDir,
@@ -826,7 +847,7 @@ BOOL ReadWriteDat(
 				return FALSE;
 			}
 			if (!wcsncmp(pwszLocalName, L"game", 4)) {
-				OutputRomElement(pWriter, pExecType, pExtArg, pDisc, pszFullPath,	szTmpPath, bDesync, pHash);
+				OutputRomElement(pWriter, pExecType, pExtArg, pDevice, pDisc, pszFullPath, szTmpPath, bDesync, pHash);
 			}
 			if (FAILED(hr = pWriter->WriteEndElement())) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);

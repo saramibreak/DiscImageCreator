@@ -485,12 +485,12 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 			}
 		}
 		if (bRet && (*pExecType != audio && *pExecType != data)) {
-			bRet = ReadWriteDat(pExecType, pExtArg, pDisc, pszFullPath, s_szDir, SUB_DESYNC_TYPE::NoDesync, &hash);
+			bRet = ReadWriteDat(pExecType, pExtArg, pDevice, pDisc, pszFullPath, s_szDir, SUB_DESYNC_TYPE::NoDesync, &hash);
 			if (pDisc->SUB.byIdxDesync) {
-				bRet = ReadWriteDat(pExecType, pExtArg, pDisc, pszFullPath, s_szDir, SUB_DESYNC_TYPE::IdxDesync, &hash);
+				bRet = ReadWriteDat(pExecType, pExtArg, pDevice, pDisc, pszFullPath, s_szDir, SUB_DESYNC_TYPE::IdxDesync, &hash);
 			}
 			if (pDisc->SUB.byCtlDesync) {
-				bRet = ReadWriteDat(pExecType, pExtArg, pDisc, pszFullPath, s_szDir, SUB_DESYNC_TYPE::CtlDesync, &hash);
+				bRet = ReadWriteDat(pExecType, pExtArg, pDevice, pDisc, pszFullPath, s_szDir, SUB_DESYNC_TYPE::CtlDesync, &hash);
 			}
 		}
 		FreeAndNull(hash.pHashChunk);

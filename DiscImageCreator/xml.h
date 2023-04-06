@@ -22,6 +22,7 @@ using namespace tinyxml2;
 BOOL ReadWriteDat(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
 	PDISC pDisc,
 	_TCHAR* pszFullPath,
 	_TCHAR* szDir,
