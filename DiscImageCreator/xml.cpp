@@ -158,7 +158,7 @@ BOOL Get1stNonZeroPositionRear(
 			INT nTmpSector = cnt;
 			UINT ofs = (UINT)nTmpPos;
 			if (nTmpPos < 0) {
-				ofs = dwBytesPerSector + nTmpPos;
+				ofs = (UINT)dwBytesPerSector + nTmpPos;
 				if (0 < cnt) {
 					nTmpSector--;
 				}
@@ -1070,7 +1070,7 @@ BOOL ReadWriteDat(
 			}
 
 			if (bDescription) {
-				OutputRomElement(newElem2, pExecType, pExtArg, pDisc, pszFullPath, szTmpPath, bDesync, pHash);
+				OutputRomElement(newElem2, pExecType, pExtArg, pDevice, pDisc, pszFullPath, szTmpPath, bDesync, pHash);
 			}
 
 			newElem1->InsertEndChild(newElem2);

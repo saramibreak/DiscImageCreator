@@ -846,3 +846,12 @@ http://www.mediafire.com/?mhif8c7s3iayqac/
 - fixed: universal hash (changed sample base, not byte)
 - fixed: the range of the SubQ check
 - fixed: and improved C2 error recovering
+
+*2023-04-13
+- added: output the drive name to the command-line
+- added: support mixed-mode disc in relation to reading the pregap of track 1 and the lead-out
+- changed: do not output path in _[BuildData].txt
+- improved: detect 1st/last non-zero byte of each tracks when audio disc is dumped
+- fixed: forgot to add PXW4012S to PregapOfTrack1ReadableDrive
+- fixed: fail to open (Track all).img when non-Plextor drive is used
+- fixed: no hash is outputted due to PathAppend when DVD is dumped
