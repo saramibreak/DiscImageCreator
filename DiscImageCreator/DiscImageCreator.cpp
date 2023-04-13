@@ -1637,8 +1637,13 @@ int createCmdFile(int argc, _TCHAR* argv[], _TCHAR* pszFullPath, LPTSTR pszDateT
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
 		}
-		for (int i = 0; i < argc; i++) {
-			_ftprintf(fpCmd, _T("%s "), argv[i]);
+		for (int i = 1; i < argc; i++) {
+			if (i == 3) {
+				_ftprintf(fpCmd, _T("%s%s "), s_szFname, s_szExt);
+			}
+			else {
+				_ftprintf(fpCmd, _T("%s "), argv[i]);
+			}
 		}
 		FcloseAndNull(fpCmd);
 	}
