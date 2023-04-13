@@ -339,7 +339,7 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 					}
 
 					if (*pExecType == cd) {
-						if (IsPregapOfTrack1ReadableDrive(pDevice) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
+						if (IsPregapOfTrack1ReadableDrive(pDevice)) {
 							if (!ReadCDOutOfRange(pExecType, pExtArg, pDevice, pDisc, pszFullPath)) {
 								throw FALSE;
 							}

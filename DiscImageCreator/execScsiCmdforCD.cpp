@@ -2622,211 +2622,242 @@ BOOL ReadCDOutOfRange(
 	BYTE aBuf[CD_RAW_SECTOR_WITH_SUBCODE_SIZE] = {};
 	BYTE lpSubcode[CD_RAW_READ_SUBCODE_SIZE] = {};
 	BYTE byScsiStatus = 0;
-	FILE* fpOut = NULL;
-	if (NULL == (fpOut = CreateOrOpenFile(pszPath, _T(" (Track AA)"), NULL, NULL, NULL, _T(".bin"), _T("wb"), 0, 0))) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return FALSE;
-	}
-	FILE* fpOutSub = NULL;
-	if (NULL == (fpOutSub = CreateOrOpenFile(pszPath, _T(" (Track AA)"), NULL, NULL, NULL, _T(".sub"), _T("wb"), 0, 0))) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return FALSE;
-	}
 	UINT uiByteOffsetOut = 0;
 	BOOL bNonZeroByteExistOut = FALSE;
+	INT nOverreadSize =	pDisc->MAIN.nCombinedOffset / CD_RAW_SECTOR_SIZE;
+	if (pDisc->MAIN.nCombinedOffset < 0) {
+		nOverreadSize = pDisc->MAIN.nAdjustSectorNum;
+	}
 
-	for (INT i = pDisc->SCSI.nAllLength; i < pDisc->SCSI.nAllLength + LAST_TRACK_LEADOUT_SIZE; i++) {
-		if (!ExecReadCD(pExtArg, pDevice, lpCmd, i, aBuf,
-			CD_RAW_SECTOR_WITH_SUBCODE_SIZE, _T(__FUNCTION__), __LINE__)
-			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-			OutputLog(standardOut | fileDisc, "can't read\n");
+	if ((pDisc->SCSI.toc.TrackData[pDisc->SCSI.toc.LastTrack - 1].Control & AUDIO_DATA_TRACK) == 0) {
+		FILE* fpOut = NULL;
+		if (NULL == (fpOut = CreateOrOpenFile(pszPath, _T(" (Track AA)"), NULL, NULL, NULL, _T(".bin"), _T("wb"), 0, 0))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
 		}
-		AlignRowSubcode(lpSubcode, &aBuf[CD_RAW_SECTOR_SIZE]);
-
-		if (i == pDisc->SCSI.nAllLength) {
-			fwrite(aBuf + pDisc->MAIN.uiMainDataSlideSize, sizeof(BYTE), CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize, fpOut);
+		FILE* fpOutSub = NULL;
+		if (NULL == (fpOutSub = CreateOrOpenFile(pszPath, _T(" (Track AA)"), NULL, NULL, NULL, _T(".sub"), _T("wb"), 0, 0))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			return FALSE;
 		}
-		else {
-			fwrite(aBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpOut);
-		}
-		fwrite(lpSubcode, sizeof(BYTE), CD_RAW_READ_SUBCODE_SIZE, fpOutSub);
 
-		OutputString("\rCreating (Track AA).bin & .sub (LBA) %8d/%8d", i, pDisc->SCSI.nAllLength + 99);
-	}
-	OutputString("\n");
-	FcloseAndNull(fpOut);
-	FcloseAndNull(fpOutSub);
-
-	if (NULL == (fpOut = CreateOrOpenFile(pszPath, _T(" (Track AA)"), NULL, NULL, NULL, _T(".bin"), _T("rb"), 0, 0))) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return FALSE;
-	}
-	BYTE buf = 0;
-	// 101th sector can't read by Plextor
-	UINT fsize = CD_RAW_SECTOR_SIZE * LAST_TRACK_LEADOUT_SIZE - pDisc->MAIN.uiMainDataSlideSize;
-
-	for (UINT i = 1; i < fsize; i++) {
-		fseek(fpOut, (LONG)(fsize - i), SEEK_SET);
-		if ((fread(&buf, sizeof(BYTE), sizeof(buf), fpOut)) < sizeof(buf)) {
-			if (feof(fpOut)) {
-				break;
-			}
-			if (ferror(fpOut)) {
-				OutputErrorString("Failed to read: read size %zu [F:%s][L:%d]\n", sizeof(buf), __FUNCTION__, __LINE__);
+		for (INT i = pDisc->SCSI.nAllLength + nOverreadSize; i < pDisc->SCSI.nAllLength + LAST_TRACK_LEADOUT_SIZE; i++) {
+			if (!ExecReadCD(pExtArg, pDevice, lpCmd, i, aBuf,
+				CD_RAW_SECTOR_WITH_SUBCODE_SIZE, _T(__FUNCTION__), __LINE__)
+				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+				OutputLog(standardOut | fileDisc, "can't read\n");
 				return FALSE;
 			}
-		}
-		if (buf != 0) {
-			bNonZeroByteExistOut = TRUE;
-			uiByteOffsetOut = i;
-			break;
-		}
-		OutputString("\rSearching last non-zero byte (size) %6u/%6u", fsize - i - 1, fsize);
-	}
-	OutputString("\n");
+			AlignRowSubcode(lpSubcode, &aBuf[CD_RAW_SECTOR_SIZE]);
 
-	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("Check non-zero byte of the sector"));
-	if (bNonZeroByteExistOut) {
-		UINT ofs = fsize - uiByteOffsetOut + 1;
-		UINT sample = (ofs + (ofs % 4)) / 4;
-		OutputLog(standardOut | fileDisc, "\tThere is non-zero byte in the (Track AA): %u byte => %u sample\n", ofs, sample);
-	}
-	else {
-		OutputLog(standardOut | fileDisc, "\tThere is not non-zero byte in the (Track AA)\n");
+			if (i == pDisc->SCSI.nAllLength + nOverreadSize) {
+				fwrite(aBuf + pDisc->MAIN.uiMainDataSlideSize, sizeof(BYTE), CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize, fpOut);
+			}
+			else {
+				fwrite(aBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpOut);
+			}
+			fwrite(lpSubcode, sizeof(BYTE), CD_RAW_READ_SUBCODE_SIZE, fpOutSub);
+
+			OutputString("\rCreating (Track AA).bin & .sub (LBA) %8d/%8d", i, pDisc->SCSI.nAllLength + 99);
+		}
+		OutputString("\n");
+		FcloseAndNull(fpOut);
+		FcloseAndNull(fpOutSub);
+
+		if (NULL == (fpOut = CreateOrOpenFile(pszPath, _T(" (Track AA)"), NULL, NULL, NULL, _T(".bin"), _T("rb"), 0, 0))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			return FALSE;
+		}
+		BYTE buf = 0;
+		// 101th sector can't read by Plextor
+		UINT fsize = CD_RAW_SECTOR_SIZE * LAST_TRACK_LEADOUT_SIZE - pDisc->MAIN.uiMainDataSlideSize;
+
+		for (UINT i = 1; i < fsize; i++) {
+			fseek(fpOut, (LONG)(fsize - i), SEEK_SET);
+			if ((fread(&buf, sizeof(BYTE), sizeof(buf), fpOut)) < sizeof(buf)) {
+				if (feof(fpOut)) {
+					break;
+				}
+				if (ferror(fpOut)) {
+					OutputErrorString("Failed to read: read size %zu [F:%s][L:%d]\n", sizeof(buf), __FUNCTION__, __LINE__);
+					return FALSE;
+				}
+			}
+			if (buf != 0) {
+				bNonZeroByteExistOut = TRUE;
+				uiByteOffsetOut = i;
+				break;
+			}
+			OutputString("\rSearching last non-zero byte (size) %6u/%6u", fsize - i - 1, fsize);
+		}
+		OutputString("\n");
+
+		OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("Check non-zero byte of the sector"));
+		if (bNonZeroByteExistOut) {
+			UINT ofs = fsize - uiByteOffsetOut + 1;
+			UINT sample = (ofs + (ofs % 4)) / 4;
+			OutputLog(standardOut | fileDisc, "\tThere is non-zero byte in the (Track AA): %u byte => %u sample\n", ofs, sample);
+		}
+		else {
+			OutputLog(standardOut | fileDisc, "\tThere is not non-zero byte in the (Track AA)\n");
+		}
 	}
 
-	BOOL bTrack1 = FALSE;
-	_TCHAR appendName0[12] = {};
-	_TCHAR appendName1[18] = {};
-	if (pDisc->SCSI.toc.LastTrack > 9) {
-		_tcsncpy(appendName0, _T(" (Track 00)"), SIZE_OF_ARRAY(appendName0));
-		_tcsncpy(appendName1, _T(" (Track 01)(-LBA)"), SIZE_OF_ARRAY(appendName1));
-	}
-	else {
-		_tcsncpy(appendName0, _T(" (Track 0)"), SIZE_OF_ARRAY(appendName0));
-		_tcsncpy(appendName1, _T(" (Track 1)(-LBA)"), SIZE_OF_ARRAY(appendName1));
-	}
-	FILE* fpIn = NULL;
-	if (NULL == (fpIn = CreateOrOpenFile(pszPath, appendName0, NULL, NULL, NULL, _T(".bin"), _T("wb"), 0, 0))) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return FALSE;
-	}
-	FILE* fpInSub = NULL;
-	if (NULL == (fpInSub = CreateOrOpenFile(pszPath, appendName0, NULL, NULL, NULL, _T(".sub"), _T("wb"), 0, 0))) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return FALSE;
-	}
-	UINT uiByteOffsetIn = 0;
 	BOOL bNonZeroByteExistIn = FALSE;
+	_TCHAR appendName1[18] = {};
 
-	for (INT i = PREGAP_START_LBA; i < -1150; i++) {
-		if (!ExecReadCD(pExtArg, pDevice, lpCmd, i, aBuf,
-			CD_RAW_SECTOR_WITH_SUBCODE_SIZE, _T(__FUNCTION__), __LINE__)
-			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-			OutputLog(standardOut | fileDisc, "can't read\n");
-			return FALSE;
-		}
-		AlignRowSubcode(lpSubcode, &aBuf[CD_RAW_SECTOR_SIZE]);
-#if 0
-		OutputCDSub96Align(standardOut, lpSubcode, i);
-#endif
-		if (((lpSubcode[12] & 0x0f) == ADR_ENCODES_CURRENT_POSITION && lpSubcode[13] == 1 &&
-			lpSubcode[14] == 0 && lpSubcode[19] == 0 && lpSubcode[20] == 0 && lpSubcode[21] == 0)) {
-			bTrack1 = TRUE;
-			FcloseAndNull(fpIn);
-			FcloseAndNull(fpInSub);
-			if (NULL == (fpIn = CreateOrOpenFile(pszPath, appendName1, NULL, NULL, NULL, _T(".bin"), _T("wb"), 0, 0))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				return FALSE;
-			}
-			if (NULL == (fpInSub = CreateOrOpenFile(pszPath, appendName1, NULL, NULL, NULL, _T(".sub"), _T("wb"), 0, 0))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				return FALSE;
-			}
-			fwrite(aBuf + pDisc->MAIN.uiMainDataSlideSize, sizeof(BYTE), CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize, fpIn);
-			bNonZeroByteExistIn = HasNonZeroByte(aBuf + pDisc->MAIN.uiMainDataSlideSize
-				, CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize, 0, &uiByteOffsetIn, POSITIVE);
-		}
-		else if (lpSubcode[13] == 1 && (lpSubcode[14] == 0 || lpSubcode[14] == 1) &&
-			lpSubcode[19] == 0 && lpSubcode[20] == 2 && lpSubcode[21] == 0) {
-			fwrite(aBuf, sizeof(BYTE), pDisc->MAIN.uiMainDataSlideSize, fpIn);
-			if (!bNonZeroByteExistIn) {
-				bNonZeroByteExistIn = HasNonZeroByte(aBuf, pDisc->MAIN.uiMainDataSlideSize, 150, &uiByteOffsetIn, POSITIVE);
-			}
-			break;
+	if ((pDisc->SCSI.toc.TrackData[0].Control & AUDIO_DATA_TRACK) == 0) {
+		BOOL bTrack1 = FALSE;
+		_TCHAR appendName0[12] = {};
+		if (pDisc->SCSI.toc.LastTrack > 9) {
+			_tcsncpy(appendName0, _T(" (Track 00)"), SIZE_OF_ARRAY(appendName0));
+			_tcsncpy(appendName1, _T(" (Track 01)(-LBA)"), SIZE_OF_ARRAY(appendName1));
 		}
 		else {
-			fwrite(aBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpIn);
-			if (bTrack1 && !bNonZeroByteExistIn) {
-				INT nIdx = MSFtoLBA(BcdToDec(lpSubcode[19]), BcdToDec(lpSubcode[20]), BcdToDec(lpSubcode[21]));
-				bNonZeroByteExistIn = HasNonZeroByte(aBuf, CD_RAW_SECTOR_SIZE, nIdx, &uiByteOffsetIn, POSITIVE);
-			}
+			_tcsncpy(appendName0, _T(" (Track 0)"), SIZE_OF_ARRAY(appendName0));
+			_tcsncpy(appendName1, _T(" (Track 1)(-LBA)"), SIZE_OF_ARRAY(appendName1));
 		}
-		fwrite(lpSubcode, sizeof(BYTE), CD_RAW_READ_SUBCODE_SIZE, fpInSub);
-		OutputString("\rCreating%s.bin & .sub,%s.bin & .sub (LBA) %8d/%8d", appendName0, appendName1, i, PREGAP_START_LBA);
-	}
-	OutputString("\n");
-	FcloseAndNull(fpIn);
-	FcloseAndNull(fpInSub);
+		FILE* fpIn = NULL;
+		if (NULL == (fpIn = CreateOrOpenFile(pszPath, appendName0, NULL, NULL, NULL, _T(".bin"), _T("wb"), 0, 0))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			return FALSE;
+		}
+		FILE* fpInSub = NULL;
+		if (NULL == (fpInSub = CreateOrOpenFile(pszPath, appendName0, NULL, NULL, NULL, _T(".sub"), _T("wb"), 0, 0))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			return FALSE;
+		}
+		UINT uiByteOffsetIn = 0;
 
-	if (!bTrack1) {
-		OutputErrorString("Failed to get%s\n", appendName1);
-		return FALSE;
-	}
-
-	if (bNonZeroByteExistIn) {
-		INT ofs = (INT)(uiByteOffsetIn - pDisc->MAIN.uiMainDataSlideSize) - 352800;
-		INT sample = (ofs + (ofs % 4)) / 4;
-		OutputLog(standardOut | fileDisc, "\tThere is non-zero byte in the%s: %d byte => %d sample\n", appendName1, ofs, sample);
-	}
-	else {
-		OutputLog(standardOut | fileDisc, "\tThere is not non-zero byte in the%s\n", appendName1);
-	}
-
-	if (bNonZeroByteExistIn && !bNonZeroByteExistOut) {
-		INT nTmpLBA = pDisc->SCSI.nAllLength;
-		for (INT i = nTmpLBA, j = 0; nTmpLBA - FIRST_TRACK_PREGAP_SIZE < i; i--, j++) {
+		for (INT i = PREGAP_START_LBA; i < -1150; i++) {
 			if (!ExecReadCD(pExtArg, pDevice, lpCmd, i, aBuf,
 				CD_RAW_SECTOR_WITH_SUBCODE_SIZE, _T(__FUNCTION__), __LINE__)
 				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 				OutputLog(standardOut | fileDisc, "can't read\n");
 				return FALSE;
 			}
-			if (i == pDisc->SCSI.nAllLength) {
-				bNonZeroByteExistOut = HasNonZeroByte(aBuf, pDisc->MAIN.uiMainDataSlideSize, j, &uiByteOffsetOut, NEGATIVE);
+			AlignRowSubcode(lpSubcode, &aBuf[CD_RAW_SECTOR_SIZE]);
+#if 0
+			OutputCDSub96Align(standardOut, lpSubcode, i);
+#endif
+			BOOL bLastPregapSector = FALSE;
+			if (lpSubcode[13] == 1 && (lpSubcode[14] == 0 || lpSubcode[14] == 1)) {
+				if ((lpSubcode[19] == 0 && lpSubcode[20] == 1 && BcdToDec(lpSubcode[21]) == 70 && nOverreadSize == -5) ||
+					(lpSubcode[19] == 0 && lpSubcode[20] == 1 && BcdToDec(lpSubcode[21]) == 71 && nOverreadSize == -4) ||
+					(lpSubcode[19] == 0 && lpSubcode[20] == 1 && BcdToDec(lpSubcode[21]) == 72 && nOverreadSize == -3) ||
+					(lpSubcode[19] == 0 && lpSubcode[20] == 1 && BcdToDec(lpSubcode[21]) == 73 && nOverreadSize == -2) ||
+					(lpSubcode[19] == 0 && lpSubcode[20] == 1 && BcdToDec(lpSubcode[21]) == 74 && nOverreadSize == -1) ||
+					(lpSubcode[19] == 0 && lpSubcode[20] == 2 && lpSubcode[21] == 0 && nOverreadSize == 0) ||
+					(lpSubcode[19] == 0 && lpSubcode[20] == 2 && lpSubcode[21] == 1 && nOverreadSize == 1) ||
+					(lpSubcode[19] == 0 && lpSubcode[20] == 2 && lpSubcode[21] == 2 && nOverreadSize == 2) ||
+					(lpSubcode[19] == 0 && lpSubcode[20] == 2 && lpSubcode[21] == 3 && nOverreadSize == 3) ||
+					(lpSubcode[19] == 0 && lpSubcode[20] == 2 && lpSubcode[21] == 4 && nOverreadSize == 4)
+					) {
+					bLastPregapSector = TRUE;
+				}
 			}
-			else {
-				bNonZeroByteExistOut = HasNonZeroByte(aBuf, CD_RAW_SECTOR_SIZE, j, &uiByteOffsetOut, NEGATIVE);
+
+			if (((lpSubcode[12] & 0x0f) == ADR_ENCODES_CURRENT_POSITION && lpSubcode[13] == 1 &&
+				lpSubcode[14] == 0 && lpSubcode[19] == 0 && lpSubcode[20] == 0 && lpSubcode[21] == 0)) {
+				bTrack1 = TRUE;
+				FcloseAndNull(fpIn);
+				FcloseAndNull(fpInSub);
+				if (NULL == (fpIn = CreateOrOpenFile(pszPath, appendName1, NULL, NULL, NULL, _T(".bin"), _T("wb"), 0, 0))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					return FALSE;
+				}
+				if (NULL == (fpInSub = CreateOrOpenFile(pszPath, appendName1, NULL, NULL, NULL, _T(".sub"), _T("wb"), 0, 0))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					return FALSE;
+				}
+				UINT uiTmpSize = pDisc->MAIN.uiMainDataSlideSize;
+				if (nOverreadSize < 0) {
+					uiTmpSize = 0;
+				}
+				fwrite(aBuf + uiTmpSize, sizeof(BYTE), CD_RAW_SECTOR_SIZE - uiTmpSize, fpIn);
+				bNonZeroByteExistIn = HasNonZeroByte(aBuf + uiTmpSize, CD_RAW_SECTOR_SIZE - uiTmpSize, 0, &uiByteOffsetIn, POSITIVE);
 			}
-			if (bNonZeroByteExistOut) {
-				INT ofs = (INT)(uiByteOffsetOut + pDisc->MAIN.uiMainDataSlideSize - 1) * -1;
-				INT sample = (ofs + (ofs % 4)) / 4;
-				OutputLog(standardOut | fileDisc, "\tLast non-zero byte before (Track AA): %d byte => %d sample\n", ofs, sample);
+			else if (bLastPregapSector) {
+				fwrite(aBuf, sizeof(BYTE), pDisc->MAIN.uiMainDataSlideSize, fpIn);
+				if (!bNonZeroByteExistIn) {
+					bNonZeroByteExistIn = HasNonZeroByte(aBuf, pDisc->MAIN.uiMainDataSlideSize, 150, &uiByteOffsetIn, POSITIVE);
+				}
 				break;
 			}
+			else {
+				fwrite(aBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpIn);
+				if (bTrack1 && !bNonZeroByteExistIn) {
+					INT nIdx = MSFtoLBA(BcdToDec(lpSubcode[19]), BcdToDec(lpSubcode[20]), BcdToDec(lpSubcode[21]));
+					bNonZeroByteExistIn = HasNonZeroByte(aBuf, CD_RAW_SECTOR_SIZE, nIdx, &uiByteOffsetIn, POSITIVE);
+				}
+			}
+			fwrite(lpSubcode, sizeof(BYTE), CD_RAW_READ_SUBCODE_SIZE, fpInSub);
+			OutputString("\rCreating%s.bin & .sub,%s.bin & .sub (LBA) %8d/%8d", appendName0, appendName1, i, PREGAP_START_LBA);
+		}
+		OutputString("\n");
+		FcloseAndNull(fpIn);
+		FcloseAndNull(fpInSub);
+
+		if (!bTrack1) {
+			OutputErrorString("Failed to get%s\n", appendName1);
+			return FALSE;
+		}
+
+		if (bNonZeroByteExistIn) {
+			INT ofs = (INT)(uiByteOffsetIn - pDisc->MAIN.uiMainDataSlideSize) - 352800;
+			INT sample = (ofs + (ofs % 4)) / 4;
+			OutputLog(standardOut | fileDisc, "\tThere is non-zero byte in the%s: %d byte => %d sample\n", appendName1, ofs, sample);
+		}
+		else {
+			OutputLog(standardOut | fileDisc, "\tThere is not non-zero byte in the%s\n", appendName1);
 		}
 	}
-	if (!bNonZeroByteExistIn && bNonZeroByteExistOut) {
-		for (INT i = 0, j = 0; i < LAST_TRACK_LEADOUT_SIZE; i++, j++) {
-			if (!ExecReadCD(pExtArg, pDevice, lpCmd, i, aBuf,
-				CD_RAW_SECTOR_WITH_SUBCODE_SIZE, _T(__FUNCTION__), __LINE__)
-				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-				OutputLog(standardOut | fileDisc, "can't read\n");
-				return FALSE;
+
+	if (pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
+		if (bNonZeroByteExistIn && !bNonZeroByteExistOut) {
+			INT nTmpLBA = pDisc->SCSI.nAllLength;
+			for (INT i = nTmpLBA, j = 0; nTmpLBA - FIRST_TRACK_PREGAP_SIZE < i; i--, j++) {
+				if (!ExecReadCD(pExtArg, pDevice, lpCmd, i, aBuf,
+					CD_RAW_SECTOR_WITH_SUBCODE_SIZE, _T(__FUNCTION__), __LINE__)
+					|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+					OutputLog(standardOut | fileDisc, "can't read\n");
+					return FALSE;
+				}
+				if (i == pDisc->SCSI.nAllLength) {
+					bNonZeroByteExistOut = HasNonZeroByte(aBuf, pDisc->MAIN.uiMainDataSlideSize, j, &uiByteOffsetOut, NEGATIVE);
+				}
+				else {
+					bNonZeroByteExistOut = HasNonZeroByte(aBuf, CD_RAW_SECTOR_SIZE, j, &uiByteOffsetOut, NEGATIVE);
+				}
+				if (bNonZeroByteExistOut) {
+					INT ofs = (INT)(uiByteOffsetOut + pDisc->MAIN.uiMainDataSlideSize - 1) * -1;
+					INT sample = (ofs + (ofs % 4)) / 4;
+					OutputLog(standardOut | fileDisc, "\tLast non-zero byte before (Track AA): %d byte => %d sample\n", ofs, sample);
+					break;
+				}
 			}
-			if (i == 0) {
-				bNonZeroByteExistIn = HasNonZeroByte(aBuf + pDisc->MAIN.uiMainDataSlideSize
-					, CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize, j, &uiByteOffsetOut, POSITIVE);
-			}
-			else {
-				bNonZeroByteExistIn = HasNonZeroByte(aBuf, CD_RAW_SECTOR_SIZE, j, &uiByteOffsetOut, POSITIVE);
-			}
-			if (bNonZeroByteExistIn) {
-				INT ofs = (INT)(uiByteOffsetOut - pDisc->MAIN.uiMainDataSlideSize);
-				INT sample = (ofs - (ofs % 4)) / 4;
-				OutputLog(standardOut | fileDisc, "\t1st non-zero byte after%s: %d byte => %d sample\n", appendName1, ofs, sample);
-				break;
+		}
+		if (!bNonZeroByteExistIn && bNonZeroByteExistOut) {
+			for (INT i = 0, j = 0; i < LAST_TRACK_LEADOUT_SIZE; i++, j++) {
+				if (!ExecReadCD(pExtArg, pDevice, lpCmd, i, aBuf,
+					CD_RAW_SECTOR_WITH_SUBCODE_SIZE, _T(__FUNCTION__), __LINE__)
+					|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+					OutputLog(standardOut | fileDisc, "can't read\n");
+					return FALSE;
+				}
+				if (i == 0) {
+					bNonZeroByteExistIn = HasNonZeroByte(aBuf + pDisc->MAIN.uiMainDataSlideSize
+						, CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize, j, &uiByteOffsetOut, POSITIVE);
+				}
+				else {
+					bNonZeroByteExistIn = HasNonZeroByte(aBuf, CD_RAW_SECTOR_SIZE, j, &uiByteOffsetOut, POSITIVE);
+				}
+				if (bNonZeroByteExistIn) {
+					INT ofs = (INT)(uiByteOffsetOut - pDisc->MAIN.uiMainDataSlideSize);
+					INT sample = (ofs - (ofs % 4)) / 4;
+					OutputLog(standardOut | fileDisc, "\t1st non-zero byte after%s: %d byte => %d sample\n", appendName1, ofs, sample);
+					break;
+				}
 			}
 		}
 	}
