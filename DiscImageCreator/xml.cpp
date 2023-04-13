@@ -27,16 +27,23 @@
 #include "_external/prngcd.h"
 #include "_external/xxhash.h"
 
+#define ZERO_BYTE_CHUNK 2352
+
 BOOL GetLastNonZeroPosition(
 	DWORD dwBytesPerSector,
 	UINT64 uiFileSize,
 	FILE* fp,
 	LPBYTE data,
 	UINT64 ui64SectorSizeAll,
-	LPUINT uiLastNonZeroSector,
-	LPUINT uiLastNonZeroSectorPos
-
+	LPUINT uiLastNonZeroSectorRear,
+	LPUINT uiLastNonZeroSectorPosRear,
+	LPUINT uiLastNonZeroSectorFront,
+	LPUINT uiLastNonZeroSectorPosFront
 ) {
+	BOOL bLastNonZeroRear = FALSE;
+	BOOL bLastNonZeroFront = FALSE;
+	INT nConsecutiveZeroCnt = 0;
+
 	for (UINT64 j = 1; j <= ui64SectorSizeAll; j++) {
 		fseek(fp, (LONG)(uiFileSize - dwBytesPerSector * j), SEEK_SET);
 		if (fread(data, sizeof(BYTE), dwBytesPerSector, fp) < dwBytesPerSector) {
@@ -44,23 +51,44 @@ BOOL GetLastNonZeroPosition(
 			FcloseAndNull(fp);
 			return FALSE;
 		};
-		BOOL bLastNonZero = TRUE;
 		for (INT k = (INT)(dwBytesPerSector - 1); 0 <= k; k--) {
-			if (data[k] != 0) {
-				bLastNonZero = FALSE;
-				UINT ofs = UINT(k + 1);
-				UINT mod = ofs % 4;
-				if (mod == 0) {
-					*uiLastNonZeroSectorPos = ofs;
+			if (!bLastNonZeroRear) {
+				if (data[k] != 0) {
+					UINT ofs = UINT(k + 1);
+					UINT mod = ofs % BYTE_SIZE_PER_SAMPLE;
+					if (mod == 0) {
+						*uiLastNonZeroSectorPosRear = ofs;
+					}
+					else {
+						*uiLastNonZeroSectorPosRear = (ofs + (BYTE_SIZE_PER_SAMPLE - mod));
+					}
+					*uiLastNonZeroSectorRear = (UINT)(ui64SectorSizeAll - j);
+					bLastNonZeroRear = TRUE;
 				}
-				else {
-					*uiLastNonZeroSectorPos = (ofs + (4 - mod));
+			}
+			else if (bLastNonZeroRear) {
+				if (data[k] == 0) {
+					++nConsecutiveZeroCnt;
 				}
-				break;
+				else if (nConsecutiveZeroCnt < ZERO_BYTE_CHUNK) {
+					nConsecutiveZeroCnt = 0;
+				}
+
+				if (ZERO_BYTE_CHUNK == nConsecutiveZeroCnt) {
+					INT ofs = k + nConsecutiveZeroCnt;
+					UINT64 nSector = j;
+					if (ofs >= CD_RAW_SECTOR_SIZE) {
+						ofs -= CD_RAW_SECTOR_SIZE;
+						nSector--;
+					}
+					*uiLastNonZeroSectorPosFront = (UINT)(ofs - ofs % BYTE_SIZE_PER_SAMPLE);
+					*uiLastNonZeroSectorFront = (UINT)(ui64SectorSizeAll - nSector);
+					bLastNonZeroFront = TRUE;
+					break;
+				}
 			}
 		}
-		if (!bLastNonZero) {
-			*uiLastNonZeroSector = (UINT)(ui64SectorSizeAll - j);
+		if (bLastNonZeroFront) {
 			break;
 		}
 	}
@@ -68,30 +96,82 @@ BOOL GetLastNonZeroPosition(
 	return TRUE;
 }
 
-BOOL Get1stNonZeroPosition(
+BOOL Get1stNonZeroPositionFront(
 	PEXT_ARG pExtArg,
 	DWORD dwBytesPerSector,
 	PHASH_CHUNK hash,
 	LPBOOL b1stNonZero,
 	UINT cnt,
 	LPBYTE data,
+	LPINT nConsecutiveZeroCnt,
 	LPUINT ui1stNonZeroSector,
 	LPUINT ui1stNonZeroSectorPos,
 	BOOL bGetHash
 ) {
 	INT nRet = FALSE;
 	for (UINT k = 0; k < dwBytesPerSector; k++) {
-		if (data[k] != 0) {
-			UINT ofs = (k - (k % 4));
-			*b1stNonZero = TRUE;
-			if (bGetHash) {
-				nRet = CalcHash(pExtArg, hash, data + ofs, (UINT)(dwBytesPerSector - ofs));
-				if (!nRet) {
-					return FALSE;
+		if (*b1stNonZero) {
+			if (data[k] == 0) {
+				++(*nConsecutiveZeroCnt);
+			}
+			else if (*nConsecutiveZeroCnt < ZERO_BYTE_CHUNK) {
+				*nConsecutiveZeroCnt = 0;
+			}
+		}
+		else {
+			if (data[k] != 0) {
+				UINT ofs = (k - (k % BYTE_SIZE_PER_SAMPLE));
+				*b1stNonZero = TRUE;
+				if (bGetHash) {
+					nRet = CalcHash(pExtArg, hash, data + ofs, (UINT)(dwBytesPerSector - ofs));
+					if (!nRet) {
+						return FALSE;
+					}
+				}
+				*ui1stNonZeroSector = cnt;
+				*ui1stNonZeroSectorPos = ofs;
+			}
+		}
+	}
+	return TRUE;
+}
+
+BOOL Get1stNonZeroPositionRear(
+	DWORD dwBytesPerSector,
+	LPBOOL b1stNonZeroRear,
+	INT cnt,
+	LPBYTE data,
+	LPINT nConsecutiveZeroCnt,
+	LPUINT ui1stNonZeroSectorRear,
+	LPUINT ui1stNonZeroSectorPosRear
+) {
+	for (INT j = 0; j < (INT)dwBytesPerSector; j++) {
+		if (data[j] == 0) {
+			++(*nConsecutiveZeroCnt);
+		}
+		else if (*nConsecutiveZeroCnt < ZERO_BYTE_CHUNK) {
+			*nConsecutiveZeroCnt = 0;
+		}
+
+		if (ZERO_BYTE_CHUNK <= *nConsecutiveZeroCnt) {
+			INT nTmpPos = j - *nConsecutiveZeroCnt;
+			INT nTmpSector = cnt;
+			UINT ofs = (UINT)nTmpPos;
+			if (nTmpPos < 0) {
+				ofs = dwBytesPerSector + nTmpPos;
+				if (0 < cnt) {
+					nTmpSector--;
 				}
 			}
-			*ui1stNonZeroSector = cnt;
-			*ui1stNonZeroSectorPos = ofs;
+			UINT mod = ofs % BYTE_SIZE_PER_SAMPLE;
+			if (mod == 0) {
+				*ui1stNonZeroSectorPosRear = ofs;
+			}
+			else {
+				*ui1stNonZeroSectorPosRear = (ofs + (BYTE_SIZE_PER_SAMPLE - mod));
+			}
+			*ui1stNonZeroSectorRear = (UINT)nTmpSector;
+			*b1stNonZeroRear = TRUE;
 			break;
 		}
 	}
@@ -121,10 +201,14 @@ BOOL OutputHash(
 	HASH_CHUNK hash = {};
 	HASH_CHUNK hashUni = {};
 
-	UINT ui1stNonZeroSector = 0;
-	UINT ui1stNonZeroSectorPos = 0;
-	UINT uiLastNonZeroSector = 0;
-	UINT uiLastNonZeroSectorPos = 0;
+	UINT ui1stNonZeroSectorRear = 0;
+	UINT ui1stNonZeroSectorPosRear = 0;
+	UINT ui1stNonZeroSectorFront = 0;
+	UINT ui1stNonZeroSectorPosFront = 0;
+	UINT uiLastNonZeroSectorRear = 0;
+	UINT uiLastNonZeroSectorPosRear = 0;
+	UINT uiLastNonZeroSectorFront = 0;
+	UINT uiLastNonZeroSectorPosFront = 0;
 
 	if (pHash->uiMax == 0 || (pExtArg->byRawDump && !_tcsncmp(szExt, _T(".iso"), 4))) {
 		// for CD
@@ -153,20 +237,20 @@ BOOL OutputHash(
 
 		hash.ui64FileSize = GetFileSize64(0, fp);
 		UINT64 ui64SectorSizeAll = hash.ui64FileSize / (UINT64)dwBytesPerSector;
-		UINT uiConsecutiveZeroBytePos = 0;
 
 		if (hash.ui64FileSize >= dwBytesPerSector) {
 			BYTE data[CD_RAW_SECTOR_SIZE] = {};
-			BYTE dataBak[CD_RAW_SECTOR_SIZE] = {};
 			int nRet = TRUE;
 
 			if (!_tcsncmp(szExt, _T(".bin"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
-				GetLastNonZeroPosition(dwBytesPerSector, hash.ui64FileSize, fp, data, ui64SectorSizeAll, &uiLastNonZeroSector, &uiLastNonZeroSectorPos);
+				GetLastNonZeroPosition(dwBytesPerSector, hash.ui64FileSize, fp, data, ui64SectorSizeAll
+					, &uiLastNonZeroSectorRear, &uiLastNonZeroSectorPosRear, &uiLastNonZeroSectorFront, &uiLastNonZeroSectorPosFront);
 			}
 			CalcInit(pExtArg, &hash);
 			OutputString("Hashing: %s\n", hash.szFnameAndExt);
-			BOOL b1stNonZero = FALSE;
-			BOOL bConsecutiveZeroByte = FALSE;
+			BOOL b1stNonZeroFront = FALSE;
+			BOOL b1stNonZeroRear = FALSE;
+			INT nConsecutiveZeroCnt = 0;
 
 			for (UINT64 i = 0; i < ui64SectorSizeAll; i++) {
 				if (fread(data, sizeof(BYTE), dwBytesPerSector, fp) < dwBytesPerSector) {
@@ -177,39 +261,37 @@ BOOL OutputHash(
 				if (!nRet) {
 					break;
 				}
-				if (!_tcsncmp(szExt, _T(".bin"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly && !b1stNonZero) {
-					Get1stNonZeroPosition(pExtArg, dwBytesPerSector, &hash, &b1stNonZero, (UINT)i, data, &ui1stNonZeroSector, &ui1stNonZeroSectorPos, FALSE);
+				if (!_tcsncmp(szExt, _T(".bin"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly && !b1stNonZeroFront) {
+					Get1stNonZeroPositionFront(pExtArg, dwBytesPerSector, &hash, &b1stNonZeroFront, (UINT)i, data, &nConsecutiveZeroCnt, &ui1stNonZeroSectorFront, &ui1stNonZeroSectorPosFront, FALSE);
+					if (b1stNonZeroFront && ui1stNonZeroSectorFront == 0) {
+						Get1stNonZeroPositionRear(dwBytesPerSector, &b1stNonZeroRear, (INT)i, data, &nConsecutiveZeroCnt, &ui1stNonZeroSectorRear, &ui1stNonZeroSectorPosRear);
+						if (ui1stNonZeroSectorRear == 0xffffffff && ui1stNonZeroSectorPosRear == 2352) {
+							ui1stNonZeroSectorRear = uiLastNonZeroSectorRear;
+							ui1stNonZeroSectorPosRear = uiLastNonZeroSectorPosRear;
+							b1stNonZeroRear = TRUE;
+						}
+					}
 				}
-				// Check consecutive zero-byte after 1st non-zero byte
-				if (i <= 35 && b1stNonZero && ui1stNonZeroSector == 0 && ui1stNonZeroSectorPos == 0 && uiConsecutiveZeroBytePos == 0 && !bConsecutiveZeroByte) {
-					BOOL bAllZero = TRUE;
-					for (DWORD j = 0; j < dwBytesPerSector; j++) {
-						if (data[j] != 0) {
-							bAllZero = FALSE;
-							break;
-						}
-					}
-					if (bAllZero) {
-						for (INT k = (INT)(dwBytesPerSector  - 4); 0 <= k; k -= 4) {
-							if (dataBak[k] != 0 || dataBak[k + 1] != 0 || dataBak[k + 2] != 0 || dataBak[k + 3] != 0) {
-								uiConsecutiveZeroBytePos = dwBytesPerSector * (i - 1) + (k + 4);
-								bConsecutiveZeroByte = TRUE;
-								break;
-							}
-						}
-					}
-					else {
-						memcpy(dataBak, data, CD_RAW_SECTOR_SIZE);
-					}
+				else if (b1stNonZeroFront && !b1stNonZeroRear) {
+					Get1stNonZeroPositionRear(dwBytesPerSector, &b1stNonZeroRear, (INT)i, data, &nConsecutiveZeroCnt, &ui1stNonZeroSectorRear, &ui1stNonZeroSectorPosRear);
 				}
 			}
+			if (nConsecutiveZeroCnt < ZERO_BYTE_CHUNK) {
+				ui1stNonZeroSectorRear = uiLastNonZeroSectorRear;
+				ui1stNonZeroSectorPosRear = uiLastNonZeroSectorPosRear;
+			}
+
 			if (!_tcsncmp(szExt, _T(".bin"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
 				OutputDiscLog(
 					OUTPUT_DHYPHEN_PLUS_STR("Non-zero byte position of the track %02d")
-					"\t 1st non-zero byte position (sample based): %6u sector + %4u byte\n"
-					"\tConsecutive zero byte position after 1st non-zero byte: %4u\n"
-					"\tLast non-zero byte position (sample based): %6u sector + %4u byte (Last sector: %6llu)\n"
-					, uiTrack, ui1stNonZeroSector, ui1stNonZeroSectorPos, uiConsecutiveZeroBytePos, uiLastNonZeroSector, uiLastNonZeroSectorPos, ui64SectorSizeAll
+					"\t 1st non-zero byte position (sample based)(Front): %6u sector + %4u byte\n"
+					"\t 1st non-zero byte position (sample based)(Rear) : %6u sector + %4u byte\n"
+					"\tLast non-zero byte position (sample based)(Front): %6u sector + %4u byte\n"
+					"\tLast non-zero byte position (sample based)(Rear) : %6u sector + %4u byte (Last sector: %6llu)\n"
+					, uiTrack, ui1stNonZeroSectorFront, ui1stNonZeroSectorPosFront
+					, ui1stNonZeroSectorRear, ui1stNonZeroSectorPosRear
+					, uiLastNonZeroSectorFront, uiLastNonZeroSectorPosFront
+					, uiLastNonZeroSectorRear, uiLastNonZeroSectorPosRear, ui64SectorSizeAll
 				);
 			}
 			FcloseAndNull(fp);
@@ -229,10 +311,11 @@ BOOL OutputHash(
 				hashUni.ui64FileSize = GetFileSize64(0, fpUni);
 				ui64SectorSizeAllUni = hashUni.ui64FileSize / (UINT64)dwBytesPerSector;
 
-				GetLastNonZeroPosition(dwBytesPerSector, hashUni.ui64FileSize, fpUni, data, ui64SectorSizeAllUni, &uiLastNonZeroSector, &uiLastNonZeroSectorPos);
+				GetLastNonZeroPosition(dwBytesPerSector, hashUni.ui64FileSize, fpUni, data, ui64SectorSizeAllUni
+					, &uiLastNonZeroSectorRear, &uiLastNonZeroSectorPosRear, &uiLastNonZeroSectorFront, &uiLastNonZeroSectorPosFront);
 				CalcInit(pExtArg, &hashUni);
 
-				b1stNonZero = FALSE;
+				b1stNonZeroRear = FALSE;
 				for (UINT64 j = 0; j < ui64SectorSizeAllUni; j++) {
 					if (fread(data, sizeof(BYTE), dwBytesPerSector, fpUni) < dwBytesPerSector) {
 						OutputErrorString("Failed to read: read size %lu [F:%s][L:%d]\n", dwBytesPerSector, _T(__FUNCTION__), __LINE__);
@@ -240,9 +323,9 @@ BOOL OutputHash(
 						return FALSE;
 					};
 					// Calc hash from the 1st non-zero byte position to the last non-zero byte position
-					if (b1stNonZero) {
-						if (j == static_cast<unsigned long long>(uiLastNonZeroSector)) {
-							CalcHash(pExtArg, &hashUni, data, uiLastNonZeroSectorPos);
+					if (b1stNonZeroRear) {
+						if (j == static_cast<unsigned long long>(uiLastNonZeroSectorRear)) {
+							CalcHash(pExtArg, &hashUni, data, uiLastNonZeroSectorPosRear);
 							break;
 						}
 						else {
@@ -254,7 +337,7 @@ BOOL OutputHash(
 						}
 					}
 					else {
-						Get1stNonZeroPosition(pExtArg, dwBytesPerSector, &hashUni, &b1stNonZero, (UINT)j, data, &ui1stNonZeroSector, &ui1stNonZeroSectorPos, TRUE);
+						Get1stNonZeroPositionFront(pExtArg, dwBytesPerSector, &hashUni, &b1stNonZeroRear, (UINT)j, data, &nConsecutiveZeroCnt, &ui1stNonZeroSectorRear, &ui1stNonZeroSectorPosRear, TRUE);
 					}
 				}
 			}
@@ -300,7 +383,7 @@ BOOL OutputHash(
 					OUTPUT_DHYPHEN_PLUS_STR("Hash(Universal Whole image)")
 					"\t 1st non-zero byte position (sample based): %6u sector + %4u byte\n"
 					"\tLast non-zero byte position (sample based): %6u sector + %4u byte\n"
-					, ui1stNonZeroSector, ui1stNonZeroSectorPos, uiLastNonZeroSector, uiLastNonZeroSectorPos
+					, ui1stNonZeroSectorRear, ui1stNonZeroSectorPosRear, uiLastNonZeroSectorRear, uiLastNonZeroSectorPosRear
 				);
 				OutputHashData(pExtArg, g_LogFile.fpDisc, &hashUni, &digestUni);
 			}
