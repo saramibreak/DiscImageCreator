@@ -167,6 +167,11 @@ BOOL IsValid0xF1SupportedDrive(
 					pDevice->by0xF1Drive = TRUE;
 				}
 			}
+			else if (!strncmp(pDevice->szProductRevisionLevel, "1.03", DRIVE_VERSION_ID_SIZE)) {
+				if (!strncmp(pDevice->szVendorSpecific, "N0A03A0", 7)) {
+					pDevice->by0xF1Drive = TRUE;
+				}
+			}
 		}
 		else if (!strncmp(pDevice->szProductId, "BD-RE  BH16NS55 ", DRIVE_PRODUCT_ID_SIZE)) {
 			if (!strncmp(pDevice->szProductRevisionLevel, "1.00", DRIVE_VERSION_ID_SIZE) ||
