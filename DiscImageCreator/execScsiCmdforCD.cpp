@@ -407,10 +407,13 @@ BOOL ReadCDForRereadingSectorType1(
 				OutputC2ErrorWithLBALog("crc32[%03u]: 0x%08lx ", nLBA, i, dwTmpCrc32);
 
 				memcpy(pDiscPerSector->data.current, lpBuf, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE);
-				memcpy(pDiscPerSector->data.next, lpBuf + CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE);
-				memcpy(pDiscPerSector->data.nextNext, lpBuf + CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * 2, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE);
-
-				if (0 < pExtArg->uiC2Offset && pExtArg->uiC2Offset < CD_RAW_READ_C2_294_SIZE){
+				if (1 <= pExtArg->uiSubAddionalNum) {
+					memcpy(pDiscPerSector->data.next, lpBuf + CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE);
+				}
+				if (2 <= pExtArg->uiSubAddionalNum) {
+					memcpy(pDiscPerSector->data.nextNext, lpBuf + CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * 2, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE);
+				}
+				if (1 <= pExtArg->uiSubAddionalNum && 0 < pExtArg->uiC2Offset && pExtArg->uiC2Offset < CD_RAW_READ_C2_294_SIZE){
 					BOOL bRetA = ContainsC2Error(pDevice, pDisc, pExtArg->uiC2Offset, CD_RAW_READ_C2_294_SIZE, pDiscPerSector->data.current, &pDiscPerSector->uiC2errorNum, nLBA, FALSE);
 					UINT c2ErrorBak = pDiscPerSector->uiC2errorNum;
 
@@ -419,11 +422,11 @@ BOOL ReadCDForRereadingSectorType1(
 
 					bRet = bRetA == RETURNED_NO_C2_ERROR_1ST ? bRetB : bRetA;
 				}
-				else if (pExtArg->uiC2Offset == CD_RAW_READ_C2_294_SIZE){
+				else if (1 <= pExtArg->uiSubAddionalNum && pExtArg->uiC2Offset == CD_RAW_READ_C2_294_SIZE){
 					// Plextor older than PX-712 => +294
 					bRet = ContainsC2Error(pDevice, pDisc, 0, CD_RAW_READ_C2_294_SIZE, pDiscPerSector->data.next, &pDiscPerSector->uiC2errorNum, nLBA, FALSE);
 				}
-				else if (CD_RAW_READ_C2_294_SIZE < pExtArg->uiC2Offset && pExtArg->uiC2Offset < CD_RAW_READ_C2_294_SIZE * 2) {
+				else if (2 <= pExtArg->uiSubAddionalNum && CD_RAW_READ_C2_294_SIZE < pExtArg->uiC2Offset && pExtArg->uiC2Offset < CD_RAW_READ_C2_294_SIZE * 2) {
 					// Plextor PX-712 or newer => +295
 					UINT uiVal = pExtArg->uiC2Offset - CD_RAW_READ_C2_294_SIZE;
 					BOOL bRetA = ContainsC2Error(pDevice, pDisc, uiVal, CD_RAW_READ_C2_294_SIZE, pDiscPerSector->data.next, &pDiscPerSector->uiC2errorNum, nLBA, FALSE);
