@@ -16,6 +16,7 @@
 #pragma once
 
 typedef enum _EXEC_TYPE {
+	noexec,
 	cd,
 	swap,
 	data,

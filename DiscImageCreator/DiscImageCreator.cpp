@@ -252,6 +252,14 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 							OutputString("[WARNING] /c2 and /s 0 can't be used together. Changed /s 0 to /s 1.\n");
 							pExtArg->uiSubAddionalNum = 1;
 						}
+						else if (pExtArg->uiSubAddionalNum == 0 && 1 < pExtArg->uiC2Offset && pExtArg->uiC2Offset < CD_RAW_READ_C2_294_SIZE) {
+							OutputString("[INFO] c2 offset is set %u. Changed to /s 1.\n", pExtArg->uiC2Offset);
+							pExtArg->uiSubAddionalNum = 1;
+						}
+						else if ((pExtArg->uiSubAddionalNum == 0 || pExtArg->uiSubAddionalNum == 1) && CD_RAW_READ_C2_294_SIZE < pExtArg->uiC2Offset) {
+							OutputString("[INFO] c2 offset is set %u. Changed to /s 2.\n", pExtArg->uiC2Offset);
+							pExtArg->uiSubAddionalNum = 2;
+						}
 						else if (pExtArg->uiSubAddionalNum != 2 && IsPlextor712OrNewer(pDevice)) {
 							OutputString("[INFO] This drive has 295 offset in the c2. Changed to /s 2.\n");
 							pExtArg->uiSubAddionalNum = 2;
@@ -1616,6 +1624,16 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				return FALSE;
 			}
 		}
+		else if (argc == 2) {
+			cmdLen = _tcslen(argv[1]);
+			if (cmdLen == 2 && !_tcsncmp(argv[1], _T("/v"), cmdLen)) {
+				*pExecType = noexec;
+			}
+			else {
+				OutputErrorString("Invalid argument\n");
+				return FALSE;
+			}
+		}
 		else {
 			if (argc > 1) {
 				OutputErrorString("Invalid argument\n");
@@ -1635,6 +1653,9 @@ int createCmdFile(int argc, _TCHAR* argv[], _TCHAR* pszFullPath, LPTSTR pszDateT
 			pszFullPath, date, NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0);
 		if (!fpCmd) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			if (GetLastError() == 123) {
+				OutputErrorString("Please remove \\, /, :, *, ?, Åg, <, >, | of the filename\n");
+			}
 			return FALSE;
 		}
 		for (int i = 1; i < argc; i++) {
@@ -1907,7 +1928,7 @@ int main(int argc, char* argv[])
 			}
 			nRet = FALSE;
 		}
-		else {
+		else if (execType != noexec) {
 			_TCHAR szBuf[128] = {};
 			time_t now = time(NULL);
 			tm* ts = localtime(&now);
@@ -1927,8 +1948,10 @@ int main(int argc, char* argv[])
 			OutputString("EndTime: %s\n", szBuf);
 		}
 		if (!extArg.byQuiet) {
-			if (!soundBeep(nRet)) {
-				nRet = FALSE;
+			if (execType != noexec && argc != 1) {
+				if (!soundBeep(nRet)) {
+					nRet = FALSE;
+				}
 			}
 		}
 	}
