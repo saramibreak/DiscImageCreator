@@ -336,7 +336,7 @@ BOOL ProcessReadCD(
 			}
 			if (!IsValidProtectedSector(pDisc, nLBA, GetReadErrorFileIdx(pExtArg, pDisc, nLBA))) {
 				if (pDiscPerSector->data.next != NULL && 1 <= pExtArg->uiSubAddionalNum) {
-					if (!(pDevice->by0xF1Drive && pDisc->SCSI.nAllLength - 1 <= nLBA)) {
+					if (!(IsValid0xF1SupportedDrive(pDevice) && pDisc->SCSI.nAllLength - 1 <= nLBA)) {
 						ExecReadCDForC2(pExecType, pExtArg, pDevice, lpCmd,
 							nLBA + 1, pDiscPerSector->data.next, _T(__FUNCTION__), __LINE__);
 						AlignRowSubcode(pDiscPerSector->subcode.next, pDiscPerSector->data.next + pDevice->TRANSFER.uiBufSubOffset);
@@ -357,8 +357,8 @@ BOOL ProcessReadCD(
 								nLBA + 2, pDiscPerSector->data.nextNext, _T(__FUNCTION__), __LINE__);
 							AlignRowSubcode(pDiscPerSector->subcode.nextNext, pDiscPerSector->data.nextNext + pDevice->TRANSFER.uiBufSubOffset);
 
-							UINT uiVal = pExtArg->uiC2Offset - CD_RAW_READ_C2_294_SIZE;
 							if (CD_RAW_READ_C2_294_SIZE < pExtArg->uiC2Offset && pExtArg->uiC2Offset < CD_RAW_READ_C2_294_SIZE * 2) {
+								UINT uiVal = pExtArg->uiC2Offset - CD_RAW_READ_C2_294_SIZE;
 								bRet = ContainsC2Error(pDevice, pDisc, 0, uiVal, pDiscPerSector->data.nextNext, &pDiscPerSector->uiC2errorNum, nLBA, TRUE);
 							}
 						}
@@ -382,22 +382,31 @@ BOOL ReadCDForRereadingSectorType1(
 	INT nStart
 ) {
 	LPBYTE lpBuf = NULL;
-	if (NULL == (lpBuf = (LPBYTE)calloc(CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * 3, sizeof(BYTE)))) {
+	BYTE byTransferLength = 3;
+	if (IsValid0xF1SupportedDrive(pDevice)) {
+		byTransferLength = 1;
+	}
+	if (NULL == (lpBuf = (LPBYTE)calloc(CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * (size_t)byTransferLength, sizeof(BYTE)))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
 	BOOL bRet = TRUE;
+	LPINT lpAllLBAOfC2ErrorRemain = NULL;
 	try {
-		SetReadDiscCommand(pExecType, pExtArg, pDevice, 3
+		INT nC2ErrorCntRemain = 0;
+		if (NULL == (lpAllLBAOfC2ErrorRemain = (LPINT)calloc((size_t)pDisc->MAIN.nC2ErrorCnt, sizeof(INT)))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			throw FALSE;
+		}
+		SetReadDiscCommand(pExecType, pExtArg, pDevice, byTransferLength
 			, CDFLAG::_READ_CD::byte294, CDFLAG::_READ_CD::Raw, lpCmd, FALSE);
 
-		for (INT m = 0; m < pDisc->MAIN.nC2ErrorCnt; m++) {
-			INT nLBA = pDisc->MAIN.lpAllLBAOfC2Error[m];
-			for (UINT i = 0; i < pExtArg->uiMaxRereadNum; i++) {
-				OutputString("\rNeed to reread sector: %6d rereading times: %4u/%4u"
-					, nLBA, i + 1, pExtArg->uiMaxRereadNum);
+		for (UINT i = 0; i < pExtArg->uiMaxRereadNum; i++) {
+			for (INT m = 0; m < pDisc->MAIN.nC2ErrorCnt; m++) {
+				INT nLBA = pDisc->MAIN.lpAllLBAOfC2Error[m];
+				OutputString("\rNeed to reread sector: %6d", nLBA);
 				if (!ExecReadCD(pExtArg, pDevice, lpCmd, nLBA, lpBuf
-					, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * 3, _T(__FUNCTION__), __LINE__)) {
+					, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * (DWORD)byTransferLength, _T(__FUNCTION__), __LINE__)) {
 					continue;
 				}
 				DWORD dwTmpCrc32 = 0;
@@ -407,40 +416,53 @@ BOOL ReadCDForRereadingSectorType1(
 				OutputC2ErrorWithLBALog("crc32[%03u]: 0x%08lx ", nLBA, i, dwTmpCrc32);
 
 				memcpy(pDiscPerSector->data.current, lpBuf, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE);
-				if (1 <= pExtArg->uiSubAddionalNum) {
-					memcpy(pDiscPerSector->data.next, lpBuf + CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE);
-				}
-				if (2 <= pExtArg->uiSubAddionalNum) {
-					memcpy(pDiscPerSector->data.nextNext, lpBuf + CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * 2, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE);
-				}
-				if (1 <= pExtArg->uiSubAddionalNum && 0 < pExtArg->uiC2Offset && pExtArg->uiC2Offset < CD_RAW_READ_C2_294_SIZE){
-					BOOL bRetA = ContainsC2Error(pDevice, pDisc, pExtArg->uiC2Offset, CD_RAW_READ_C2_294_SIZE, pDiscPerSector->data.current, &pDiscPerSector->uiC2errorNum, nLBA, FALSE);
-					UINT c2ErrorBak = pDiscPerSector->uiC2errorNum;
-
-					BOOL bRetB = ContainsC2Error(pDevice, pDisc, 0, pExtArg->uiC2Offset, pDiscPerSector->data.next, &pDiscPerSector->uiC2errorNum, nLBA, FALSE);
-					pDiscPerSector->uiC2errorNum += c2ErrorBak;
-
-					bRet = bRetA == RETURNED_NO_C2_ERROR_1ST ? bRetB : bRetA;
-				}
-				else if (1 <= pExtArg->uiSubAddionalNum && pExtArg->uiC2Offset == CD_RAW_READ_C2_294_SIZE){
-					// Plextor older than PX-712 => +294
-					bRet = ContainsC2Error(pDevice, pDisc, 0, CD_RAW_READ_C2_294_SIZE, pDiscPerSector->data.next, &pDiscPerSector->uiC2errorNum, nLBA, FALSE);
-				}
-				else if (2 <= pExtArg->uiSubAddionalNum && CD_RAW_READ_C2_294_SIZE < pExtArg->uiC2Offset && pExtArg->uiC2Offset < CD_RAW_READ_C2_294_SIZE * 2) {
-					// Plextor PX-712 or newer => +295
-					UINT uiVal = pExtArg->uiC2Offset - CD_RAW_READ_C2_294_SIZE;
-					BOOL bRetA = ContainsC2Error(pDevice, pDisc, uiVal, CD_RAW_READ_C2_294_SIZE, pDiscPerSector->data.next, &pDiscPerSector->uiC2errorNum, nLBA, FALSE);
-					UINT c2ErrorBak = pDiscPerSector->uiC2errorNum;
-
-					BOOL bRetB = ContainsC2Error(pDevice, pDisc, 0, uiVal, pDiscPerSector->data.nextNext, &pDiscPerSector->uiC2errorNum, nLBA, FALSE);
-					pDiscPerSector->uiC2errorNum += c2ErrorBak;
-
-					bRet = bRetA == RETURNED_NO_C2_ERROR_1ST ? bRetB : bRetA;
+				if (IsValid0xF1SupportedDrive(pDevice)) {
+					bRet = ContainsC2Error(pDevice, pDisc, 0, CD_RAW_READ_C2_294_SIZE
+						, pDiscPerSector->data.current, &pDiscPerSector->uiC2errorNum, nLBA, FALSE);
 				}
 				else {
-					bRet = ContainsC2Error(pDevice, pDisc, 0, CD_RAW_READ_C2_294_SIZE, pDiscPerSector->data.current, &pDiscPerSector->uiC2errorNum, nLBA, FALSE);
-				}
+					if (1 <= pExtArg->uiSubAddionalNum) {
+						memcpy(pDiscPerSector->data.next
+							, lpBuf + CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE);
+					}
+					if (2 <= pExtArg->uiSubAddionalNum) {
+						memcpy(pDiscPerSector->data.nextNext
+							, lpBuf + CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * 2, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE);
+					}
+					if (1 <= pExtArg->uiSubAddionalNum && 0 < pExtArg->uiC2Offset && pExtArg->uiC2Offset < CD_RAW_READ_C2_294_SIZE) {
+						BOOL bRetA = ContainsC2Error(pDevice, pDisc, pExtArg->uiC2Offset
+							, CD_RAW_READ_C2_294_SIZE, pDiscPerSector->data.current, &pDiscPerSector->uiC2errorNum, nLBA, FALSE);
+						UINT c2ErrorBak = pDiscPerSector->uiC2errorNum;
 
+						BOOL bRetB = ContainsC2Error(pDevice, pDisc, 0, pExtArg->uiC2Offset
+							, pDiscPerSector->data.next, &pDiscPerSector->uiC2errorNum, nLBA, FALSE);
+						pDiscPerSector->uiC2errorNum += c2ErrorBak;
+
+						bRet = bRetA == RETURNED_NO_C2_ERROR_1ST ? bRetB : bRetA;
+					}
+					else if (1 <= pExtArg->uiSubAddionalNum && pExtArg->uiC2Offset == CD_RAW_READ_C2_294_SIZE) {
+						// Plextor older than PX-712 => +294
+						bRet = ContainsC2Error(pDevice, pDisc, 0, CD_RAW_READ_C2_294_SIZE
+							, pDiscPerSector->data.next, &pDiscPerSector->uiC2errorNum, nLBA, FALSE);
+					}
+					else if (2 <= pExtArg->uiSubAddionalNum && CD_RAW_READ_C2_294_SIZE < pExtArg->uiC2Offset && pExtArg->uiC2Offset < CD_RAW_READ_C2_294_SIZE * 2) {
+						// Plextor PX-712 or newer => +295
+						UINT uiVal = pExtArg->uiC2Offset - CD_RAW_READ_C2_294_SIZE;
+						BOOL bRetA = ContainsC2Error(pDevice, pDisc, uiVal, CD_RAW_READ_C2_294_SIZE
+							, pDiscPerSector->data.next, &pDiscPerSector->uiC2errorNum, nLBA, FALSE);
+						UINT c2ErrorBak = pDiscPerSector->uiC2errorNum;
+
+						BOOL bRetB = ContainsC2Error(pDevice, pDisc, 0, uiVal
+							, pDiscPerSector->data.nextNext, &pDiscPerSector->uiC2errorNum, nLBA, FALSE);
+						pDiscPerSector->uiC2errorNum += c2ErrorBak;
+
+						bRet = bRetA == RETURNED_NO_C2_ERROR_1ST ? bRetB : bRetA;
+					}
+					else {
+						bRet = ContainsC2Error(pDevice, pDisc, 0, CD_RAW_READ_C2_294_SIZE
+							, pDiscPerSector->data.current, &pDiscPerSector->uiC2errorNum, nLBA, FALSE);
+					}
+				}
 				if (bRet == RETURNED_NO_C2_ERROR_1ST) {
 					LONG lSeekMain = CD_RAW_SECTOR_SIZE * (LONG)nLBA - nStart - pDisc->MAIN.nCombinedOffset;
 					fseek(fpImg, lSeekMain, SEEK_SET);
@@ -454,25 +476,45 @@ BOOL ReadCDForRereadingSectorType1(
 					OutputC2ErrorLog("good. Rewrote .scm[%ld-%ld(%lx-%lx)] .c2[%ld-%ld(%lx-%lx)]\n"
 						, lSeekMain, lSeekMain + 2351, (ULONG)lSeekMain, (ULONG)lSeekMain + 2351
 						, lSeekC2, lSeekC2 + 293, (ULONG)lSeekC2, (ULONG)lSeekC2 + 293);
-					break;
+					if (pDisc->MAIN.nC2ErrorCnt == 1) {
+						nC2ErrorCntRemain = 0;
+						break;
+					}
 				}
 				else {
-					if (i == pExtArg->uiMaxRereadNum - 1 && !pDisc->PROTECT.byExist) {
-						OutputLog(standardError | fileC2Error, "\nbad all. need to reread more\n");
-						if (IsCDR(pDisc) && pExtArg->uiMaxRereadNum >= 10000) {
-							throw TRUE;
-						}
-						else {
-							throw FALSE;
-						}
-					}
-					else {
-						OutputC2ErrorLog("bad\n");
+					lpAllLBAOfC2ErrorRemain[nC2ErrorCntRemain++] = nLBA;
+					OutputC2ErrorLog("bad\n");
+				}
+
+				if (nC2ErrorCntRemain == 1) {
+					// Dummy reading
+					// LG/ASUS drive (0xf1 is used) can't reread to infinity. Minimum is 500 or so, Maximum is 2000 or so.
+					// This value varies every time. If rereadings are beyond this value, the drive always returns same hash.
+					if (!ExecReadCD(pExtArg, pDevice, lpCmd, 0, lpBuf
+						, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * (DWORD)byTransferLength, _T(__FUNCTION__), __LINE__)) {
+						continue;
 					}
 				}
-				if (!FlushDriveCache(pExtArg, pDevice, nLBA)) {
-					throw FALSE;
+				else {
+					if (!FlushDriveCache(pExtArg, pDevice, nLBA)) {
+						throw FALSE;
+					}
 				}
+			}
+
+			if (nC2ErrorCntRemain) {
+				OutputLog(standardOut | fileC2Error, "\nRemains %d c2 error. Rereading times: %4u/%4u\n", nC2ErrorCntRemain, i + 1, pExtArg->uiMaxRereadNum);
+				if (!(i == pExtArg->uiMaxRereadNum - 1 && !pDisc->PROTECT.byExist)) {
+					ZeroMemory(pDisc->MAIN.lpAllLBAOfC2Error, pDisc->MAIN.nC2ErrorCnt * sizeof(INT));
+					pDisc->MAIN.nC2ErrorCnt = nC2ErrorCntRemain;
+					memcpy(pDisc->MAIN.lpAllLBAOfC2Error, lpAllLBAOfC2ErrorRemain, nC2ErrorCntRemain * sizeof(INT));
+
+					ZeroMemory(lpAllLBAOfC2ErrorRemain, nC2ErrorCntRemain * sizeof(INT));
+					nC2ErrorCntRemain = 0;
+				}
+			}
+			else {
+				break;
 			}
 		}
 		OutputString("\nDone. See _c2Error.txt\n");
@@ -481,6 +523,7 @@ BOOL ReadCDForRereadingSectorType1(
 		bRet = bErr;
 	}
 	FreeAndNull(lpBuf);
+	FreeAndNull(lpAllLBAOfC2ErrorRemain);
 	return bRet;
 }
 
@@ -1137,7 +1180,7 @@ BOOL ReadCDAll(
 			}
 
 			pDiscPerSector->bReturnCode = FALSE;
-			if (pDevice->by0xF1Drive && nLBA >= pDisc->SCSI.nAllLength) {
+			if (IsValid0xF1SupportedDrive(pDevice) && nLBA >= pDisc->SCSI.nAllLength) {
 				INT nOfs = F1_BUFFER_SIZE * (nLBA - pDisc->SCSI.nAllLength);
 				// main
 				memcpy(pDiscPerSector->data.current, pDisc->lpCachedBuf + nOfs, CD_RAW_SECTOR_SIZE);
@@ -1624,7 +1667,7 @@ BOOL ReadCDAll(
 	}
 	FcloseAndNull(fpScm);
 	FcloseAndNull(fpSub);
-	if (pDevice->by0xF1Drive) {
+	if (IsValid0xF1SupportedDrive(pDevice)) {
 		FreeAndNull(pDisc->lpCachedBuf);
 	}
 	FreeAndNull(pBuf);
@@ -2761,7 +2804,9 @@ BOOL ReadCDOutOfRange(
 			}
 
 			if (((lpSubcode[12] & 0x0f) == ADR_ENCODES_CURRENT_POSITION && lpSubcode[13] == 1 &&
-				lpSubcode[14] == 0 && lpSubcode[19] == 0 && lpSubcode[20] == 0 && lpSubcode[21] == 0)) {
+				lpSubcode[14] == 0 && lpSubcode[19] == 0 && lpSubcode[20] == 0 && lpSubcode[21] == 0) ||
+				((lpSubcode[12] & 0x0f) == ADR_ENCODES_CURRENT_POSITION && lpSubcode[13] == 1 &&
+					lpSubcode[14] == 0 && lpSubcode[19] == 0 && lpSubcode[20] == 0 && lpSubcode[21] == 1)) {
 				bTrack1 = TRUE;
 				FcloseAndNull(fpIn);
 				FcloseAndNull(fpInSub);
