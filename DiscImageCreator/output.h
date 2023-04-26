@@ -453,13 +453,6 @@ VOID OutputIntentionalSubchannel(
 	LPBYTE lpSubcode
 );
 
-VOID OutputHashData(
-	PEXT_ARG pExtArg,
-	FILE* fpHash,
-	PHASH_CHUNK pHash,
-	PMESSAGE_DIGEST_CHUNK pDigest
-);
-
 VOID OutputLastErrorNumAndString(
 	LPCTSTR pszFuncName,
 	LONG lLineNum

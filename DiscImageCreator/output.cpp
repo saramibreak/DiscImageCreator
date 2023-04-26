@@ -2366,45 +2366,6 @@ VOID OutputIntentionalSubchannel(
 
 }
 
-VOID OutputHashData(
-	PEXT_ARG pExtArg,
-	FILE* fpHash,
-	PHASH_CHUNK pHash,
-	PMESSAGE_DIGEST_CHUNK pDigest
-) {
-	_ftprintf(fpHash,
-		_T("\t\t<rom name=\"%s\" size=\"%llu\" crc=\"%08lx\" md5=\""),
-		pHash->szFnameAndExt, pHash->ui64FileSize, pHash->crc32);
-	for (INT i = 0; i < 16; i++) {
-		_ftprintf(fpHash, _T("%02x"), pDigest->md5[i]);
-	}
-	_ftprintf(fpHash, _T("\" sha1=\""));
-	for (INT i = 0; i < 20; i++) {
-		_ftprintf(fpHash, _T("%02x"), pDigest->sha[i]);
-	}
-	if (pExtArg->byDatExpand) {
-		_ftprintf(fpHash, _T("\" sha224=\""));
-		for (INT i = 0; i < 28; i++) {
-			_ftprintf(fpHash, _T("%02x"), pDigest->sha224[i]);
-		}
-		_ftprintf(fpHash, _T("\" sha256=\""));
-		for (INT i = 0; i < 32; i++) {
-			_ftprintf(fpHash, _T("%02x"), pDigest->sha256[i]);
-		}
-		_ftprintf(fpHash, _T("\" sha384=\""));
-		for (INT i = 0; i < 48; i++) {
-			_ftprintf(fpHash, _T("%02x"), pDigest->sha384[i]);
-		}
-		_ftprintf(fpHash, _T("\" sha512=\""));
-		for (INT i = 0; i < 64; i++) {
-			_ftprintf(fpHash, _T("%02x"), pDigest->sha512[i]);
-		}
-		_ftprintf(fpHash, _T("\" xxh3_64=\"%08llx\" xxh3_128=\"%08llx%08llx\"")
-			, pDigest->xxh3_64, pDigest->xxh3_128.high64, pDigest->xxh3_128.low64);
-	}
-	_ftprintf(fpHash, _T("\"/>\n"));
-}
-
 VOID OutputLastErrorNumAndString(
 	LPCTSTR pszFuncName,
 	LONG lLineNum

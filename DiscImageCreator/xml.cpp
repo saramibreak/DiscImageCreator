@@ -179,6 +179,238 @@ BOOL Get1stNonZeroPositionRear(
 }
 
 BOOL OutputHash(
+	PEXT_ARG pExtArg,
+#ifdef _WIN32
+	CComPtr<IXmlWriter> pWriter,
+#else
+	XMLElement* pWriter,
+#endif
+	PHASH_CHUNK pHash,
+	PMESSAGE_DIGEST_CHUNK pDigest
+) {
+#ifdef _WIN32
+	HRESULT hr = S_OK;
+	if (FAILED(hr = pWriter->WriteStartElement(NULL, L"rom", NULL))) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		OutputErrorString("Dat error: %08.8lx\n", hr);
+		return FALSE;
+	}
+	WCHAR wszFnameAndExt[_MAX_FNAME + _MAX_EXT] = {};
+#ifndef UNICODE
+	if (!MultiByteToWideChar(CP_ACP, 0
+		, pHash->szFnameAndExt, SIZE_OF_ARRAY(pHash->szFnameAndExt)
+		, wszFnameAndExt, SIZE_OF_ARRAY(wszFnameAndExt))) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		return FALSE;
+	}
+#else
+	size_t size = SIZE_OF_ARRAY(wszFnameAndExt));
+	wcsncpy(wszFnameAndExt, szFnameAndExt, size);
+	wszFnameAndExt[size - 1] = 0;
+#endif
+	if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"name", NULL, wszFnameAndExt))) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		OutputErrorString("Dat error: %08.8lx\n", hr);
+		return FALSE;
+	}
+	WCHAR buf[128] = {};
+	_snwprintf(buf, SIZE_OF_ARRAY(buf), L"%llu", pHash->ui64FileSize);
+	buf[127] = 0;
+	if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"size", NULL, buf))) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		OutputErrorString("Dat error: %08.8lx\n", hr);
+		return FALSE;
+	}
+	_snwprintf(buf, SIZE_OF_ARRAY(buf), L"%08lx", pHash->crc32);
+	buf[127] = 0;
+	if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"crc", NULL, buf))) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		OutputErrorString("Dat error: %08.8lx\n", hr);
+		return FALSE;
+	}
+	_snwprintf(buf, SIZE_OF_ARRAY(buf)
+		, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
+		, pDigest->md5[0], pDigest->md5[1], pDigest->md5[2], pDigest->md5[3], pDigest->md5[4], pDigest->md5[5], pDigest->md5[6], pDigest->md5[7]
+		, pDigest->md5[8], pDigest->md5[9], pDigest->md5[10], pDigest->md5[11], pDigest->md5[12], pDigest->md5[13], pDigest->md5[14], pDigest->md5[15]);
+	buf[127] = 0;
+	if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"md5", NULL, buf))) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		OutputErrorString("Dat error: %08.8lx\n", hr);
+		return FALSE;
+	}
+	_snwprintf(buf, SIZE_OF_ARRAY(buf)
+		, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
+		, pDigest->sha[0], pDigest->sha[1], pDigest->sha[2], pDigest->sha[3], pDigest->sha[4]
+		, pDigest->sha[5], pDigest->sha[6], pDigest->sha[7], pDigest->sha[8], pDigest->sha[9]
+		, pDigest->sha[10], pDigest->sha[11], pDigest->sha[12], pDigest->sha[13], pDigest->sha[14]
+		, pDigest->sha[15], pDigest->sha[16], pDigest->sha[17], pDigest->sha[18], pDigest->sha[19]);
+	buf[127] = 0;
+	if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"sha1", NULL, buf))) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		OutputErrorString("Dat error: %08.8lx\n", hr);
+		return FALSE;
+	}
+	if (pExtArg->byDatExpand) {
+		WCHAR buf2[256] = {};
+		_snwprintf(buf2, SIZE_OF_ARRAY(buf2)
+			, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
+			, pDigest->sha224[0], pDigest->sha224[1], pDigest->sha224[2], pDigest->sha224[3], pDigest->sha224[4], pDigest->sha224[5], pDigest->sha224[6]
+			, pDigest->sha224[7], pDigest->sha224[8], pDigest->sha224[9], pDigest->sha224[10], pDigest->sha224[11], pDigest->sha224[12], pDigest->sha224[13]
+			, pDigest->sha224[14], pDigest->sha224[15], pDigest->sha224[16], pDigest->sha224[17], pDigest->sha224[18], pDigest->sha224[19], pDigest->sha224[20]
+			, pDigest->sha224[21], pDigest->sha224[22], pDigest->sha224[23], pDigest->sha224[24], pDigest->sha224[25], pDigest->sha224[26], pDigest->sha224[27]);
+		buf2[255] = 0;
+		if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"sha224", NULL, buf2))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			OutputErrorString("Dat error: %08.8lx\n", hr);
+			return FALSE;
+		}
+		_snwprintf(buf2, SIZE_OF_ARRAY(buf2)
+			, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
+			, pDigest->sha256[0], pDigest->sha256[1], pDigest->sha256[2], pDigest->sha256[3], pDigest->sha256[4], pDigest->sha256[5], pDigest->sha256[6], pDigest->sha256[7]
+			, pDigest->sha256[8], pDigest->sha256[9], pDigest->sha256[10], pDigest->sha256[11], pDigest->sha256[12], pDigest->sha256[13], pDigest->sha256[14], pDigest->sha256[15]
+			, pDigest->sha256[16], pDigest->sha256[17], pDigest->sha256[18], pDigest->sha256[19], pDigest->sha256[20], pDigest->sha256[21], pDigest->sha256[22], pDigest->sha256[23]
+			, pDigest->sha256[24], pDigest->sha256[25], pDigest->sha256[26], pDigest->sha256[27], pDigest->sha256[28], pDigest->sha256[29], pDigest->sha256[30], pDigest->sha256[31]);
+		buf2[255] = 0;
+		if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"sha256", NULL, buf2))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			OutputErrorString("Dat error: %08.8lx\n", hr);
+			return FALSE;
+		}
+		_snwprintf(buf2, SIZE_OF_ARRAY(buf2)
+			, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
+			, pDigest->sha384[0], pDigest->sha384[1], pDigest->sha384[2], pDigest->sha384[3], pDigest->sha384[4], pDigest->sha384[5], pDigest->sha384[6], pDigest->sha384[7]
+			, pDigest->sha384[8], pDigest->sha384[9], pDigest->sha384[10], pDigest->sha384[11], pDigest->sha384[12], pDigest->sha384[13], pDigest->sha384[14], pDigest->sha384[15]
+			, pDigest->sha384[16], pDigest->sha384[17], pDigest->sha384[18], pDigest->sha384[19], pDigest->sha384[20], pDigest->sha384[21], pDigest->sha384[22], pDigest->sha384[23]
+			, pDigest->sha384[24], pDigest->sha384[25], pDigest->sha384[26], pDigest->sha384[27], pDigest->sha384[28], pDigest->sha384[29], pDigest->sha384[30], pDigest->sha384[31]
+			, pDigest->sha384[32], pDigest->sha384[33], pDigest->sha384[34], pDigest->sha384[35], pDigest->sha384[36], pDigest->sha384[37], pDigest->sha384[38], pDigest->sha384[39]
+			, pDigest->sha384[40], pDigest->sha384[41], pDigest->sha384[42], pDigest->sha384[43], pDigest->sha384[44], pDigest->sha384[45], pDigest->sha384[46], pDigest->sha384[47]);
+		buf2[255] = 0;
+		if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"sha384", NULL, buf2))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			OutputErrorString("Dat error: %08.8lx\n", hr);
+			return FALSE;
+		}
+		_snwprintf(buf2, SIZE_OF_ARRAY(buf2)
+			, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
+			, pDigest->sha512[0], pDigest->sha512[1], pDigest->sha512[2], pDigest->sha512[3], pDigest->sha512[4], pDigest->sha512[5], pDigest->sha512[6], pDigest->sha512[7]
+			, pDigest->sha512[8], pDigest->sha512[9], pDigest->sha512[10], pDigest->sha512[11], pDigest->sha512[12], pDigest->sha512[13], pDigest->sha512[14], pDigest->sha512[15]
+			, pDigest->sha512[16], pDigest->sha512[17], pDigest->sha512[18], pDigest->sha512[19], pDigest->sha512[20], pDigest->sha512[21], pDigest->sha512[22], pDigest->sha512[23]
+			, pDigest->sha512[24], pDigest->sha512[25], pDigest->sha512[26], pDigest->sha512[27], pDigest->sha512[28], pDigest->sha512[29], pDigest->sha512[30], pDigest->sha512[31]
+			, pDigest->sha512[32], pDigest->sha512[33], pDigest->sha512[34], pDigest->sha512[35], pDigest->sha512[36], pDigest->sha512[37], pDigest->sha512[38], pDigest->sha512[39]
+			, pDigest->sha512[40], pDigest->sha512[41], pDigest->sha512[42], pDigest->sha512[43], pDigest->sha512[44], pDigest->sha512[45], pDigest->sha512[46], pDigest->sha512[47]
+			, pDigest->sha512[48], pDigest->sha512[49], pDigest->sha512[50], pDigest->sha512[51], pDigest->sha512[52], pDigest->sha512[53], pDigest->sha512[54], pDigest->sha512[55]
+			, pDigest->sha512[56], pDigest->sha512[57], pDigest->sha512[58], pDigest->sha512[59], pDigest->sha512[60], pDigest->sha512[61], pDigest->sha512[62], pDigest->sha512[63]);
+		buf2[255] = 0;
+		if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"sha512", NULL, buf2))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			OutputErrorString("Dat error: %08.8lx\n", hr);
+			return FALSE;
+		}
+		_snwprintf(buf2, SIZE_OF_ARRAY(buf2), L"%08llx", pDigest->xxh3_64);
+		if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"xxh3_64", NULL, buf2))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			OutputErrorString("Dat error: %08.8lx\n", hr);
+			return FALSE;
+		}
+		_snwprintf(buf2, SIZE_OF_ARRAY(buf2), L"%08llx%08llx", pDigest->xxh3_128.high64, pDigest->xxh3_128.low64);
+		if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"xxh3_128", NULL, buf2))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			OutputErrorString("Dat error: %08.8lx\n", hr);
+			return FALSE;
+		}
+	}
+	if (FAILED(hr = pWriter->WriteEndElement())) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		OutputErrorString("Dat error: %08.8lx\n", hr);
+		return FALSE;
+	}
+#else
+	XMLElement* newElem4 = pWriter->GetDocument()->NewElement("rom");
+	newElem4->SetAttribute("name", pHash->szFnameAndExt);
+
+	CHAR buf[128] = {};
+	_snprintf(buf, SIZE_OF_ARRAY(buf), "%llu", pHash->ui64FileSize);
+	buf[127] = 0;
+	newElem4->SetAttribute("size", buf);
+
+	_snprintf(buf, SIZE_OF_ARRAY(buf), "%08lx", pHash->crc32);
+	buf[127] = 0;
+	newElem4->SetAttribute("crc", buf);
+
+	_snprintf(buf, SIZE_OF_ARRAY(buf)
+		, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
+		, pDigest->md5[0], pDigest->md5[1], pDigest->md5[2], pDigest->md5[3], pDigest->md5[4], pDigest->md5[5], pDigest->md5[6], pDigest->md5[7]
+		, pDigest->md5[8], pDigest->md5[9], pDigest->md5[10], pDigest->md5[11], pDigest->md5[12], pDigest->md5[13], pDigest->md5[14], pDigest->md5[15]);
+	buf[127] = 0;
+	newElem4->SetAttribute("md5", buf);
+
+	_snprintf(buf, SIZE_OF_ARRAY(buf)
+		, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
+		, pDigest->sha[0], pDigest->sha[1], pDigest->sha[2], pDigest->sha[3], pDigest->sha[4]
+		, pDigest->sha[5], pDigest->sha[6], pDigest->sha[7], pDigest->sha[8], pDigest->sha[9]
+		, pDigest->sha[10], pDigest->sha[11], pDigest->sha[12], pDigest->sha[13], pDigest->sha[14]
+		, pDigest->sha[15], pDigest->sha[16], pDigest->sha[17], pDigest->sha[18], pDigest->sha[19]);
+	buf[127] = 0;
+	newElem4->SetAttribute("sha1", buf);
+
+	if (pExtArg->byDatExpand) {
+		CHAR buf2[256] = {};
+		_snprintf(buf2, SIZE_OF_ARRAY(buf)
+			, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
+			, pDigest->sha224[0], pDigest->sha224[1], pDigest->sha224[2], pDigest->sha224[3], pDigest->sha224[4], pDigest->sha224[5], pDigest->sha224[6]
+			, pDigest->sha224[7], pDigest->sha224[8], pDigest->sha224[9], pDigest->sha224[10], pDigest->sha224[11], pDigest->sha224[12], pDigest->sha224[13]
+			, pDigest->sha224[14], pDigest->sha224[15], pDigest->sha224[16], pDigest->sha224[17], pDigest->sha224[18], pDigest->sha224[19], pDigest->sha224[20]
+			, pDigest->sha224[21], pDigest->sha224[22], pDigest->sha224[23], pDigest->sha224[24], pDigest->sha224[25], pDigest->sha224[26], pDigest->sha224[27]);
+		buf2[255] = 0;
+		newElem4->SetAttribute("sha224", buf2);
+
+		_snprintf(buf2, SIZE_OF_ARRAY(buf2)
+			, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
+			, pDigest->sha256[0], pDigest->sha256[1], pDigest->sha256[2], pDigest->sha256[3], pDigest->sha256[4], pDigest->sha256[5], pDigest->sha256[6], pDigest->sha256[7]
+			, pDigest->sha256[8], pDigest->sha256[9], pDigest->sha256[10], pDigest->sha256[11], pDigest->sha256[12], pDigest->sha256[13], pDigest->sha256[14], pDigest->sha256[15]
+			, pDigest->sha256[16], pDigest->sha256[17], pDigest->sha256[18], pDigest->sha256[19], pDigest->sha256[20], pDigest->sha256[21], pDigest->sha256[22], pDigest->sha256[23]
+			, pDigest->sha256[24], pDigest->sha256[25], pDigest->sha256[26], pDigest->sha256[27], pDigest->sha256[28], pDigest->sha256[29], pDigest->sha256[30], pDigest->sha256[31]);
+		buf2[255] = 0;
+		newElem4->SetAttribute("sha256", buf2);
+
+		_snprintf(buf2, SIZE_OF_ARRAY(buf2)
+			, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
+			, pDigest->sha384[0], pDigest->sha384[1], pDigest->sha384[2], pDigest->sha384[3], pDigest->sha384[4], pDigest->sha384[5], pDigest->sha384[6], pDigest->sha384[7]
+			, pDigest->sha384[8], pDigest->sha384[9], pDigest->sha384[10], pDigest->sha384[11], pDigest->sha384[12], pDigest->sha384[13], pDigest->sha384[14], pDigest->sha384[15]
+			, pDigest->sha384[16], pDigest->sha384[17], pDigest->sha384[18], pDigest->sha384[19], pDigest->sha384[20], pDigest->sha384[21], pDigest->sha384[22], pDigest->sha384[23]
+			, pDigest->sha384[24], pDigest->sha384[25], pDigest->sha384[26], pDigest->sha384[27], pDigest->sha384[28], pDigest->sha384[29], pDigest->sha384[30], pDigest->sha384[31]
+			, pDigest->sha384[32], pDigest->sha384[33], pDigest->sha384[34], pDigest->sha384[35], pDigest->sha384[36], pDigest->sha384[37], pDigest->sha384[38], pDigest->sha384[39]
+			, pDigest->sha384[40], pDigest->sha384[41], pDigest->sha384[42], pDigest->sha384[43], pDigest->sha384[44], pDigest->sha384[45], pDigest->sha384[46], pDigest->sha384[47]);
+		buf2[255] = 0;
+		newElem4->SetAttribute("sha384", buf2);
+
+		_snprintf(buf2, SIZE_OF_ARRAY(buf2)
+			, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
+			, pDigest->sha512[0], pDigest->sha512[1], pDigest->sha512[2], pDigest->sha512[3], pDigest->sha512[4], pDigest->sha512[5], pDigest->sha512[6], pDigest->sha512[7]
+			, pDigest->sha512[8], pDigest->sha512[9], pDigest->sha512[10], pDigest->sha512[11], pDigest->sha512[12], pDigest->sha512[13], pDigest->sha512[14], pDigest->sha512[15]
+			, pDigest->sha512[16], pDigest->sha512[17], pDigest->sha512[18], pDigest->sha512[19], pDigest->sha512[20], pDigest->sha512[21], pDigest->sha512[22], pDigest->sha512[23]
+			, pDigest->sha512[24], pDigest->sha512[25], pDigest->sha512[26], pDigest->sha512[27], pDigest->sha512[28], pDigest->sha512[29], pDigest->sha512[30], pDigest->sha512[31]
+			, pDigest->sha512[32], pDigest->sha512[33], pDigest->sha512[34], pDigest->sha512[35], pDigest->sha512[36], pDigest->sha512[37], pDigest->sha512[38], pDigest->sha512[39]
+			, pDigest->sha512[40], pDigest->sha512[41], pDigest->sha512[42], pDigest->sha512[43], pDigest->sha512[44], pDigest->sha512[45], pDigest->sha512[46], pDigest->sha512[47]
+			, pDigest->sha512[48], pDigest->sha512[49], pDigest->sha512[50], pDigest->sha512[51], pDigest->sha512[52], pDigest->sha512[53], pDigest->sha512[54], pDigest->sha512[55]
+			, pDigest->sha512[56], pDigest->sha512[57], pDigest->sha512[58], pDigest->sha512[59], pDigest->sha512[60], pDigest->sha512[61], pDigest->sha512[62], pDigest->sha512[63]);
+		buf2[255] = 0;
+		newElem4->SetAttribute("sha512", buf2);
+
+		_snprintf(buf2, SIZE_OF_ARRAY(buf2), "%08lx", pDigest->xxh3_64);
+		buf2[255] = 0;
+		newElem4->SetAttribute("xxh3_64", buf2);
+
+		_snprintf(buf2, SIZE_OF_ARRAY(buf2), "%08lx%08lx", pDigest->xxh3_128.high64, pDigest->xxh3_128.low64);
+		buf2[255] = 0;
+		newElem4->SetAttribute("xxh3_128", buf2);
+	}
+	pWriter->InsertEndChild(newElem4);
+#endif
+	return TRUE;
+}
+
+BOOL CalcAndGetHash(
 #ifdef _WIN32
 	CComPtr<IXmlWriter> pWriter,
 #else
@@ -262,9 +494,11 @@ BOOL OutputHash(
 					break;
 				}
 				if (!_tcsncmp(szExt, _T(".bin"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly && !b1stNonZeroFront) {
-					Get1stNonZeroPositionFront(pExtArg, dwBytesPerSector, &hash, &b1stNonZeroFront, (UINT)i, data, &nConsecutiveZeroCnt, &ui1stNonZeroSectorFront, &ui1stNonZeroSectorPosFront, FALSE);
+					Get1stNonZeroPositionFront(pExtArg, dwBytesPerSector, &hash, &b1stNonZeroFront, (UINT)i
+						, data, &nConsecutiveZeroCnt, &ui1stNonZeroSectorFront, &ui1stNonZeroSectorPosFront, FALSE);
 					if (b1stNonZeroFront && ui1stNonZeroSectorFront == 0) {
-						Get1stNonZeroPositionRear(dwBytesPerSector, &b1stNonZeroRear, (INT)i, data, &nConsecutiveZeroCnt, &ui1stNonZeroSectorRear, &ui1stNonZeroSectorPosRear);
+						Get1stNonZeroPositionRear(dwBytesPerSector, &b1stNonZeroRear, (INT)i, data
+							, &nConsecutiveZeroCnt, &ui1stNonZeroSectorRear, &ui1stNonZeroSectorPosRear);
 						if (ui1stNonZeroSectorRear == 0xffffffff && ui1stNonZeroSectorPosRear == 2352) {
 							ui1stNonZeroSectorRear = uiLastNonZeroSectorRear;
 							ui1stNonZeroSectorPosRear = uiLastNonZeroSectorPosRear;
@@ -273,7 +507,8 @@ BOOL OutputHash(
 					}
 				}
 				else if (b1stNonZeroFront && !b1stNonZeroRear) {
-					Get1stNonZeroPositionRear(dwBytesPerSector, &b1stNonZeroRear, (INT)i, data, &nConsecutiveZeroCnt, &ui1stNonZeroSectorRear, &ui1stNonZeroSectorPosRear);
+					Get1stNonZeroPositionRear(dwBytesPerSector, &b1stNonZeroRear, (INT)i, data
+						, &nConsecutiveZeroCnt, &ui1stNonZeroSectorRear, &ui1stNonZeroSectorPosRear);
 				}
 			}
 			if (nConsecutiveZeroCnt < ZERO_BYTE_CHUNK) {
@@ -337,9 +572,16 @@ BOOL OutputHash(
 						}
 					}
 					else {
-						Get1stNonZeroPositionFront(pExtArg, dwBytesPerSector, &hashUni, &b1stNonZeroRear, (UINT)j, data, &nConsecutiveZeroCnt, &ui1stNonZeroSectorRear, &ui1stNonZeroSectorPosRear, TRUE);
+						Get1stNonZeroPositionFront(pExtArg, dwBytesPerSector, &hashUni, &b1stNonZeroRear
+							, (UINT)j, data, &nConsecutiveZeroCnt, &ui1stNonZeroSectorRear, &ui1stNonZeroSectorPosRear, TRUE);
 					}
 				}
+				OutputDiscLog(
+					OUTPUT_DHYPHEN_PLUS_STR("Non-zero byte position of (Track all).img")
+					"\t 1st non-zero byte position (sample based): %6u sector + %4u byte\n"
+					"\tLast non-zero byte position (sample based): %6u sector + %4u byte\n"
+					, ui1stNonZeroSectorRear, ui1stNonZeroSectorPosRear, uiLastNonZeroSectorRear, uiLastNonZeroSectorPosRear
+				);
 			}
 			FcloseAndNull(fpUni);
 		}
@@ -361,254 +603,15 @@ BOOL OutputHash(
 		hash.ui64FileSize = pHash->pHashChunk[pHash->uiCount].ui64FileSize;
 		pHash->uiCount++;
 	}
+
 	MESSAGE_DIGEST_CHUNK digest = {};
-	MESSAGE_DIGEST_CHUNK digestUni = {};
-
 	if (CalcEnd(pExtArg, &hash, &digest)) {
-		if (IsPregapOfTrack1ReadableDrive(pDevice) && !_tcsncmp(szExt, _T(".img"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
-			CalcEnd(pExtArg, &hashUni, &digestUni);
-		}
-		if (!_tcsncmp(szExt, _T(".scm"), 4) ||
-			!_tcsncmp(szExt, _T(".img"), 4) ||
-			!_tcsncmp(szExt, _T(".raw"), 4) ||
-			find_last_string(hash.szFnameAndExt, _T("_SS.bin")) ||
-			find_last_string(hash.szFnameAndExt, _T("_PFI.bin")) ||
-			find_last_string(hash.szFnameAndExt, _T("_DMI.bin")) ||
-			find_last_string(hash.szFnameAndExt, _T("_PIC.bin"))
-			) {
-#ifndef _DEBUG
-			OutputHashData(pExtArg, g_LogFile.fpDisc, &hash, &digest);
-			if (IsPregapOfTrack1ReadableDrive(pDevice) && !_tcsncmp(szExt, _T(".img"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
-				OutputDiscLog(
-					OUTPUT_DHYPHEN_PLUS_STR("Hash(Universal Whole image)")
-					"\t 1st non-zero byte position (sample based): %6u sector + %4u byte\n"
-					"\tLast non-zero byte position (sample based): %6u sector + %4u byte\n"
-					, ui1stNonZeroSectorRear, ui1stNonZeroSectorPosRear, uiLastNonZeroSectorRear, uiLastNonZeroSectorPosRear
-				);
-				OutputHashData(pExtArg, g_LogFile.fpDisc, &hashUni, &digestUni);
-			}
-#endif
-		}
-		else {
-#ifdef _WIN32
-			HRESULT hr = S_OK;
-			if (FAILED(hr = pWriter->WriteStartElement(NULL, L"rom", NULL))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				OutputErrorString("Dat error: %08.8lx\n", hr);
-				return FALSE;
-			}
-			WCHAR wszFnameAndExt[_MAX_FNAME + _MAX_EXT] = {};
-#ifndef UNICODE
-			if (!MultiByteToWideChar(CP_ACP, 0
-				, hash.szFnameAndExt, SIZE_OF_ARRAY(hash.szFnameAndExt)
-				, wszFnameAndExt, SIZE_OF_ARRAY(wszFnameAndExt))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				return FALSE;
-			}
-#else
-			size_t size = SIZE_OF_ARRAY(wszFnameAndExt));
-			wcsncpy(wszFnameAndExt, szFnameAndExt, size);
-			wszFnameAndExt[size - 1] = 0;
-#endif
-			if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"name", NULL, wszFnameAndExt))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				OutputErrorString("Dat error: %08.8lx\n", hr);
-				return FALSE;
-			}
-			WCHAR buf[128] = {};
-			_snwprintf(buf, SIZE_OF_ARRAY(buf), L"%llu", hash.ui64FileSize);
-			buf[127] = 0;
-			if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"size", NULL, buf))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				OutputErrorString("Dat error: %08.8lx\n", hr);
-				return FALSE;
-			}
-			_snwprintf(buf, SIZE_OF_ARRAY(buf), L"%08lx", hash.crc32);
-			buf[127] = 0;
-			if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"crc", NULL, buf))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				OutputErrorString("Dat error: %08.8lx\n", hr);
-				return FALSE;
-			}
-			_snwprintf(buf, SIZE_OF_ARRAY(buf)
-				, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
-				, digest.md5[0], digest.md5[1], digest.md5[2], digest.md5[3], digest.md5[4], digest.md5[5], digest.md5[6], digest.md5[7]
-				, digest.md5[8], digest.md5[9], digest.md5[10], digest.md5[11], digest.md5[12], digest.md5[13], digest.md5[14], digest.md5[15]);
-			buf[127] = 0;
-			if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"md5", NULL, buf))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				OutputErrorString("Dat error: %08.8lx\n", hr);
-				return FALSE;
-			}
-			_snwprintf(buf, SIZE_OF_ARRAY(buf)
-				, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
-				, digest.sha[0], digest.sha[1], digest.sha[2], digest.sha[3], digest.sha[4]
-				, digest.sha[5], digest.sha[6], digest.sha[7], digest.sha[8], digest.sha[9]
-				, digest.sha[10], digest.sha[11], digest.sha[12], digest.sha[13], digest.sha[14]
-				, digest.sha[15], digest.sha[16], digest.sha[17], digest.sha[18], digest.sha[19]);
-			buf[127] = 0;
-			if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"sha1", NULL, buf))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				OutputErrorString("Dat error: %08.8lx\n", hr);
-				return FALSE;
-			}
-			if (pExtArg->byDatExpand) {
-				WCHAR buf2[256] = {};
-				_snwprintf(buf2, SIZE_OF_ARRAY(buf2)
-					, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
-					, digest.sha224[0], digest.sha224[1], digest.sha224[2], digest.sha224[3], digest.sha224[4], digest.sha224[5], digest.sha224[6]
-					, digest.sha224[7], digest.sha224[8], digest.sha224[9], digest.sha224[10], digest.sha224[11], digest.sha224[12], digest.sha224[13]
-					, digest.sha224[14], digest.sha224[15], digest.sha224[16], digest.sha224[17], digest.sha224[18], digest.sha224[19], digest.sha224[20]
-					, digest.sha224[21], digest.sha224[22], digest.sha224[23], digest.sha224[24], digest.sha224[25], digest.sha224[26], digest.sha224[27]);
-				buf2[255] = 0;
-				if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"sha224", NULL, buf2))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					OutputErrorString("Dat error: %08.8lx\n", hr);
-					return FALSE;
-				}
-				_snwprintf(buf2, SIZE_OF_ARRAY(buf2)
-					, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
-					, digest.sha256[0], digest.sha256[1], digest.sha256[2], digest.sha256[3], digest.sha256[4], digest.sha256[5], digest.sha256[6], digest.sha256[7]
-					, digest.sha256[8], digest.sha256[9], digest.sha256[10], digest.sha256[11], digest.sha256[12], digest.sha256[13], digest.sha256[14], digest.sha256[15]
-					, digest.sha256[16], digest.sha256[17], digest.sha256[18], digest.sha256[19], digest.sha256[20], digest.sha256[21], digest.sha256[22], digest.sha256[23]
-					, digest.sha256[24], digest.sha256[25], digest.sha256[26], digest.sha256[27], digest.sha256[28], digest.sha256[29], digest.sha256[30], digest.sha256[31]);
-				buf2[255] = 0;
-				if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"sha256", NULL, buf2))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					OutputErrorString("Dat error: %08.8lx\n", hr);
-					return FALSE;
-				}
-				_snwprintf(buf2, SIZE_OF_ARRAY(buf2)
-					, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
-					, digest.sha384[0], digest.sha384[1], digest.sha384[2], digest.sha384[3], digest.sha384[4], digest.sha384[5], digest.sha384[6], digest.sha384[7]
-					, digest.sha384[8], digest.sha384[9], digest.sha384[10], digest.sha384[11], digest.sha384[12], digest.sha384[13], digest.sha384[14], digest.sha384[15]
-					, digest.sha384[16], digest.sha384[17], digest.sha384[18], digest.sha384[19], digest.sha384[20], digest.sha384[21], digest.sha384[22], digest.sha384[23]
-					, digest.sha384[24], digest.sha384[25], digest.sha384[26], digest.sha384[27], digest.sha384[28], digest.sha384[29], digest.sha384[30], digest.sha384[31]
-					, digest.sha384[32], digest.sha384[33], digest.sha384[34], digest.sha384[35], digest.sha384[36], digest.sha384[37], digest.sha384[38], digest.sha384[39]
-					, digest.sha384[40], digest.sha384[41], digest.sha384[42], digest.sha384[43], digest.sha384[44], digest.sha384[45], digest.sha384[46], digest.sha384[47]);
-				buf2[255] = 0;
-				if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"sha384", NULL, buf2))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					OutputErrorString("Dat error: %08.8lx\n", hr);
-					return FALSE;
-				}
-				_snwprintf(buf2, SIZE_OF_ARRAY(buf2)
-					, L"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
-					, digest.sha512[0], digest.sha512[1], digest.sha512[2], digest.sha512[3], digest.sha512[4], digest.sha512[5], digest.sha512[6], digest.sha512[7]
-					, digest.sha512[8], digest.sha512[9], digest.sha512[10], digest.sha512[11], digest.sha512[12], digest.sha512[13], digest.sha512[14], digest.sha512[15]
-					, digest.sha512[16], digest.sha512[17], digest.sha512[18], digest.sha512[19], digest.sha512[20], digest.sha512[21], digest.sha512[22], digest.sha512[23]
-					, digest.sha512[24], digest.sha512[25], digest.sha512[26], digest.sha512[27], digest.sha512[28], digest.sha512[29], digest.sha512[30], digest.sha512[31]
-					, digest.sha512[32], digest.sha512[33], digest.sha512[34], digest.sha512[35], digest.sha512[36], digest.sha512[37], digest.sha512[38], digest.sha512[39]
-					, digest.sha512[40], digest.sha512[41], digest.sha512[42], digest.sha512[43], digest.sha512[44], digest.sha512[45], digest.sha512[46], digest.sha512[47]
-					, digest.sha512[48], digest.sha512[49], digest.sha512[50], digest.sha512[51], digest.sha512[52], digest.sha512[53], digest.sha512[54], digest.sha512[55]
-					, digest.sha512[56], digest.sha512[57], digest.sha512[58], digest.sha512[59], digest.sha512[60], digest.sha512[61], digest.sha512[62], digest.sha512[63]);
-				buf2[255] = 0;
-				if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"sha512", NULL, buf2))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					OutputErrorString("Dat error: %08.8lx\n", hr);
-					return FALSE;
-				}
-				_snwprintf(buf2, SIZE_OF_ARRAY(buf2), L"%08llx", digest.xxh3_64);
-				if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"xxh3_64", NULL, buf2))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					OutputErrorString("Dat error: %08.8lx\n", hr);
-					return FALSE;
-				}
-				_snwprintf(buf2, SIZE_OF_ARRAY(buf2), L"%08llx%08llx", digest.xxh3_128.high64, digest.xxh3_128.low64);
-				if (FAILED(hr = pWriter->WriteAttributeString(NULL, L"xxh3_128", NULL, buf2))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					OutputErrorString("Dat error: %08.8lx\n", hr);
-					return FALSE;
-				}
-			}
-			if (FAILED(hr = pWriter->WriteEndElement())) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				OutputErrorString("Dat error: %08.8lx\n", hr);
-				return FALSE;
-			}
-#else
-			XMLElement* newElem4 = pWriter->GetDocument()->NewElement("rom");
-			newElem4->SetAttribute("name", hash.szFnameAndExt);
-
-			CHAR buf[128] = {};
-			_snprintf(buf, SIZE_OF_ARRAY(buf), "%llu", hash.ui64FileSize);
-			buf[127] = 0;
-			newElem4->SetAttribute("size", buf);
-
-			_snprintf(buf, SIZE_OF_ARRAY(buf), "%08lx", hash.crc32);
-			buf[127] = 0;
-			newElem4->SetAttribute("crc", buf);
-
-			_snprintf(buf, SIZE_OF_ARRAY(buf)
-				, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
-				, digest.md5[0], digest.md5[1], digest.md5[2], digest.md5[3], digest.md5[4], digest.md5[5], digest.md5[6], digest.md5[7]
-				, digest.md5[8], digest.md5[9], digest.md5[10], digest.md5[11], digest.md5[12], digest.md5[13], digest.md5[14], digest.md5[15]);
-			buf[127] = 0;
-			newElem4->SetAttribute("md5", buf);
-
-			_snprintf(buf, SIZE_OF_ARRAY(buf)
-				, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
-				, digest.sha[0], digest.sha[1], digest.sha[2], digest.sha[3], digest.sha[4]
-				, digest.sha[5], digest.sha[6], digest.sha[7], digest.sha[8], digest.sha[9]
-				, digest.sha[10], digest.sha[11], digest.sha[12], digest.sha[13], digest.sha[14]
-				, digest.sha[15], digest.sha[16], digest.sha[17], digest.sha[18], digest.sha[19]);
-			buf[127] = 0;
-			newElem4->SetAttribute("sha1", buf);
-
-			if (pExtArg->byDatExpand) {
-				CHAR buf2[256] = {};
-				_snprintf(buf2, SIZE_OF_ARRAY(buf)
-					, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
-					, digest.sha224[0], digest.sha224[1], digest.sha224[2], digest.sha224[3], digest.sha224[4], digest.sha224[5], digest.sha224[6]
-					, digest.sha224[7], digest.sha224[8], digest.sha224[9], digest.sha224[10], digest.sha224[11], digest.sha224[12], digest.sha224[13]
-					, digest.sha224[14], digest.sha224[15], digest.sha224[16], digest.sha224[17], digest.sha224[18], digest.sha224[19], digest.sha224[20]
-					, digest.sha224[21], digest.sha224[22], digest.sha224[23], digest.sha224[24], digest.sha224[25], digest.sha224[26], digest.sha224[27]);
-				buf2[255] = 0;
-				newElem4->SetAttribute("sha224", buf2);
-
-				_snprintf(buf2, SIZE_OF_ARRAY(buf2)
-					, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
-					, digest.sha256[0], digest.sha256[1], digest.sha256[2], digest.sha256[3], digest.sha256[4], digest.sha256[5], digest.sha256[6], digest.sha256[7]
-					, digest.sha256[8], digest.sha256[9], digest.sha256[10], digest.sha256[11], digest.sha256[12], digest.sha256[13], digest.sha256[14], digest.sha256[15]
-					, digest.sha256[16], digest.sha256[17], digest.sha256[18], digest.sha256[19], digest.sha256[20], digest.sha256[21], digest.sha256[22], digest.sha256[23]
-					, digest.sha256[24], digest.sha256[25], digest.sha256[26], digest.sha256[27], digest.sha256[28], digest.sha256[29], digest.sha256[30], digest.sha256[31]);
-				buf2[255] = 0;
-				newElem4->SetAttribute("sha256", buf2);
-
-				_snprintf(buf2, SIZE_OF_ARRAY(buf2)
-					, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
-					, digest.sha384[0], digest.sha384[1], digest.sha384[2], digest.sha384[3], digest.sha384[4], digest.sha384[5], digest.sha384[6], digest.sha384[7]
-					, digest.sha384[8], digest.sha384[9], digest.sha384[10], digest.sha384[11], digest.sha384[12], digest.sha384[13], digest.sha384[14], digest.sha384[15]
-					, digest.sha384[16], digest.sha384[17], digest.sha384[18], digest.sha384[19], digest.sha384[20], digest.sha384[21], digest.sha384[22], digest.sha384[23]
-					, digest.sha384[24], digest.sha384[25], digest.sha384[26], digest.sha384[27], digest.sha384[28], digest.sha384[29], digest.sha384[30], digest.sha384[31]
-					, digest.sha384[32], digest.sha384[33], digest.sha384[34], digest.sha384[35], digest.sha384[36], digest.sha384[37], digest.sha384[38], digest.sha384[39]
-					, digest.sha384[40], digest.sha384[41], digest.sha384[42], digest.sha384[43], digest.sha384[44], digest.sha384[45], digest.sha384[46], digest.sha384[47]);
-				buf2[255] = 0;
-				newElem4->SetAttribute("sha384", buf2);
-
-				_snprintf(buf2, SIZE_OF_ARRAY(buf2)
-					, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
-					, digest.sha512[0], digest.sha512[1], digest.sha512[2], digest.sha512[3], digest.sha512[4], digest.sha512[5], digest.sha512[6], digest.sha512[7]
-					, digest.sha512[8], digest.sha512[9], digest.sha512[10], digest.sha512[11], digest.sha512[12], digest.sha512[13], digest.sha512[14], digest.sha512[15]
-					, digest.sha512[16], digest.sha512[17], digest.sha512[18], digest.sha512[19], digest.sha512[20], digest.sha512[21], digest.sha512[22], digest.sha512[23]
-					, digest.sha512[24], digest.sha512[25], digest.sha512[26], digest.sha512[27], digest.sha512[28], digest.sha512[29], digest.sha512[30], digest.sha512[31]
-					, digest.sha512[32], digest.sha512[33], digest.sha512[34], digest.sha512[35], digest.sha512[36], digest.sha512[37], digest.sha512[38], digest.sha512[39]
-					, digest.sha512[40], digest.sha512[41], digest.sha512[42], digest.sha512[43], digest.sha512[44], digest.sha512[45], digest.sha512[46], digest.sha512[47]
-					, digest.sha512[48], digest.sha512[49], digest.sha512[50], digest.sha512[51], digest.sha512[52], digest.sha512[53], digest.sha512[54], digest.sha512[55]
-					, digest.sha512[56], digest.sha512[57], digest.sha512[58], digest.sha512[59], digest.sha512[60], digest.sha512[61], digest.sha512[62], digest.sha512[63]);
-				buf2[255] = 0;
-				newElem4->SetAttribute("sha512", buf2);
-
-				_snprintf(buf2, SIZE_OF_ARRAY(buf2), "%08lx", digest.xxh3_64);
-				buf2[255] = 0;
-				newElem4->SetAttribute("xxh3_64", buf2);
-
-				_snprintf(buf2, SIZE_OF_ARRAY(buf2), "%08lx%08lx", digest.xxh3_128.high64, digest.xxh3_128.low64);
-				buf2[255] = 0;
-				newElem4->SetAttribute("xxh3_128", buf2);
-			}
-			pWriter->InsertEndChild(newElem4);
-#endif
+		OutputHash(pExtArg, pWriter, &hash, &digest);
+	}
+	if (IsPregapOfTrack1ReadableDrive(pDevice) && !_tcsncmp(szExt, _T(".img"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
+		MESSAGE_DIGEST_CHUNK digestUni = {};
+		if (CalcEnd(pExtArg, &hashUni, &digestUni)) {
+			OutputHash(pExtArg, pWriter, &hashUni, &digestUni);
 		}
 	}
 	return TRUE;
@@ -617,31 +620,33 @@ BOOL OutputHash(
 BOOL OutputRomElement(
 #ifdef _WIN32
 	CComPtr<IXmlWriter> pWriter,
+	CComPtr<IXmlWriter> pWriterSuppl,
 #else
 	XMLElement* pWriter,
+	XMLElement* pWriterSuppl,
 #endif
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
 	_TCHAR* pszFullPath,
-	_TCHAR* szPath,
 	SUB_DESYNC_TYPE bDesync,
 	PHASH pHash
 ) {
 	if (*pExecType == fd || *pExecType == disk) {
-		if (!OutputHash(pWriter, pExtArg, pDevice, pDisc, pszFullPath, pDisc->dwBytesPerSector, _T(".bin"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
+		if (!CalcAndGetHash(pWriter, pExtArg, pDevice, pDisc, pszFullPath, pDisc->dwBytesPerSector, _T(".bin"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
 			return FALSE;
 		}
 	}
 	else if (*pExecType == dvd || IsXbox(pExecType) || *pExecType == bd || *pExecType == sacd) {
+		_TCHAR szPath[_MAX_PATH] = {};
 		if (*pExecType == dvd || *pExecType == xbox) {
 			if (*pExecType == xbox) {
 				_tcsncpy(szPath, pszFullPath, _MAX_PATH);
 				PathRemoveExtension(szPath);
 				_tcsncat(szPath, _T("_SS.bin"), _MAX_PATH - _tcslen(szPath) - 1);
 
-				if (!OutputHash(pWriter, pExtArg, pDevice, pDisc, szPath, DISC_MAIN_DATA_SIZE, _T(".bin"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
+				if (!CalcAndGetHash(pWriterSuppl, pExtArg, pDevice, pDisc, szPath, DISC_MAIN_DATA_SIZE, _T(".bin"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
 					return FALSE;
 				}
 			}
@@ -650,7 +655,7 @@ BOOL OutputRomElement(
 			PathRemoveExtension(szPath);
 			_tcsncat(szPath, _T("_PFI.bin"), _MAX_PATH - _tcslen(szPath) - 1);
 
-			if (!OutputHash(pWriter, pExtArg, pDevice, pDisc, szPath, DISC_MAIN_DATA_SIZE, _T(".bin"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
+			if (!CalcAndGetHash(pWriterSuppl, pExtArg, pDevice, pDisc, szPath, DISC_MAIN_DATA_SIZE, _T(".bin"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
 				return FALSE;
 			}
 
@@ -658,7 +663,7 @@ BOOL OutputRomElement(
 			PathRemoveExtension(szPath);
 			_tcsncat(szPath, _T("_DMI.bin"), _MAX_PATH - _tcslen(szPath) - 1);
 
-			if (!OutputHash(pWriter, pExtArg, pDevice, pDisc, szPath, DISC_MAIN_DATA_SIZE, _T(".bin"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
+			if (!CalcAndGetHash(pWriterSuppl, pExtArg, pDevice, pDisc, szPath, DISC_MAIN_DATA_SIZE, _T(".bin"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
 				return FALSE;
 			}
 		}
@@ -667,45 +672,237 @@ BOOL OutputRomElement(
 			PathRemoveExtension(szPath);
 			_tcsncat(szPath, _T("_PIC.bin"), _MAX_PATH - _tcslen(szPath) - 1);
 
-			if (!OutputHash(pWriter, pExtArg, pDevice, pDisc, szPath, DISC_MAIN_DATA_SIZE, _T(".bin"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
+			if (!CalcAndGetHash(pWriterSuppl, pExtArg, pDevice, pDisc, szPath, DISC_MAIN_DATA_SIZE, _T(".bin"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
 				return FALSE;
 			}
 		}
-		if (!OutputHash(pWriter, pExtArg, pDevice, pDisc, pszFullPath, DISC_MAIN_DATA_SIZE, _T(".iso"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
+		if (!CalcAndGetHash(pWriter, pExtArg, pDevice, pDisc, pszFullPath, DISC_MAIN_DATA_SIZE, _T(".iso"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
 			return FALSE;
 		}
 		if (pExtArg->byRawDump) {
-			if (!OutputHash(pWriter, pExtArg, pDevice, pDisc, pszFullPath, DISC_MAIN_DATA_SIZE, _T(".raw"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
+			if (!CalcAndGetHash(pWriterSuppl, pExtArg, pDevice, pDisc, pszFullPath, DISC_MAIN_DATA_SIZE, _T(".raw"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
 				return FALSE;
 			}
 		}
 	}
 	else {
 		if (bDesync == SUB_DESYNC_TYPE::NoDesync) {
-			OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("Hash(Whole image)"));
 			if (pDisc->SCSI.trkType == TRACK_TYPE::dataExist ||
 				pDisc->SCSI.trkType == TRACK_TYPE::pregapDataIn1stTrack) {
-				if (!OutputHash(pWriter, pExtArg, pDevice, pDisc, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".scm"), 1, 1, bDesync, pHash)) {
+				if (!CalcAndGetHash(pWriterSuppl, pExtArg, pDevice, pDisc, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".scm"), 1, 1, bDesync, pHash)) {
 					return FALSE;
 				}
 			}
-			if (!OutputHash(pWriter, pExtArg, pDevice, pDisc, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".img"), 1, 1, bDesync, pHash)) {
+			if (!CalcAndGetHash(pWriterSuppl, pExtArg, pDevice, pDisc, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".img"), 1, 1, bDesync, pHash)) {
 				return FALSE;
 			}
 		}
 		else if (bDesync == SUB_DESYNC_TYPE::CtlDesync) {
-			if (!OutputHash(pWriter, pExtArg, pDevice, pDisc, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".img"), 1, 1, bDesync, pHash)) {
+			if (!CalcAndGetHash(pWriterSuppl, pExtArg, pDevice, pDisc, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".img"), 1, 1, bDesync, pHash)) {
 				return FALSE;
 			}
 		}
 		for (UCHAR i = pDisc->SCSI.toc.FirstTrack; i <= pDisc->SCSI.toc.LastTrack; i++) {
-			if (!OutputHash(pWriter, pExtArg, pDevice, pDisc, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".bin"), i, pDisc->SCSI.toc.LastTrack, bDesync, pHash)) {
+			if (!CalcAndGetHash(pWriter, pExtArg, pDevice, pDisc, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".bin"), i, pDisc->SCSI.toc.LastTrack, bDesync, pHash)) {
 				return FALSE;
 			}
 		}
 	}
 	return TRUE;
 }
+
+BOOL XmlWriterInit(
+#ifdef _WIN32
+	CComPtr<IXmlWriter> pWriter,
+	CComPtr<IStream> pWriteStream
+#else
+	XMLDocument* xmlWriter
+#endif
+) {
+#ifdef _WIN32
+	HRESULT hr = S_OK;
+	if (FAILED(hr = pWriter->SetOutput(pWriteStream))) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		OutputErrorString("Dat error: %08.8lx\n", hr);
+		return FALSE;
+	}
+	if (FAILED(hr = pWriter->SetProperty(XmlWriterProperty_Indent, TRUE))) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		OutputErrorString("Dat error: %08.8lx\n", hr);
+		return FALSE;
+	}
+	if (FAILED(hr = pWriter->WriteStartDocument(XmlStandalone_Omit))) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		OutputErrorString("Dat error: %08.8lx\n", hr);
+		return FALSE;
+	}
+	if (FAILED(hr = pWriter->WriteDocType(L"datafile"
+		, L"-//Logiqx//DTD ROM Management Datafile//EN", L"http://www.logiqx.com/Dats/datafile.dtd", NULL))) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		OutputErrorString("Dat error: %08.8lx\n", hr);
+		return FALSE;
+	}
+#else
+	XMLDeclaration* decl = xmlWriter->NewDeclaration();
+	xmlWriter->InsertEndChild(decl);
+	XMLUnknown* unk = xmlWriter->NewUnknown("DOCTYPE datafile PUBLIC \"-//Logiqx//DTD ROM Management Datafile//EN\" \"http://www.logiqx.com/Dats/datafile.dtd\"");
+	xmlWriter->InsertEndChild(unk);
+#endif
+	return TRUE;
+}
+
+BOOL XmlWriteStartElementForGamename(
+#ifdef _WIN32
+	CComPtr<IXmlWriter> pWriter,
+	LPCWSTR pwszLocalName,
+	LPCWSTR pwszAttributeName,
+	LPWCH pCurrentDir
+#else
+	XMLElement* readElem,
+	XMLDocument* xmlWriter,
+	XMLElement** newElem1
+#endif
+) {
+#ifdef _WIN32
+	HRESULT hr = S_OK;
+	if (FAILED(hr = pWriter->WriteStartElement(NULL, pwszLocalName, NULL))) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		OutputErrorString("Dat error: %08.8lx\n", hr);
+		return FALSE;
+	}
+	if (FAILED(hr = pWriter->WriteAttributeString(NULL, pwszAttributeName, NULL, pCurrentDir))) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		OutputErrorString("Dat error: %08.8lx\n", hr);
+		return FALSE;
+	}
+#else
+	*newElem1 = xmlWriter->NewElement(readElem->Name());
+	if (readElem->GetText() == NULL) {
+		(*newElem1)->SetText("\n");
+	}
+	else {
+		(*newElem1)->SetText(readElem->GetText());
+	}
+#endif
+	return TRUE;
+}
+
+BOOL XmlWriteStartElementForOthername(
+#ifdef _WIN32
+	CComPtr<IXmlWriter> pWriter,
+	LPCWSTR pwszLocalName
+#else
+	XMLElement* readElem2,
+	XMLElement* newElem1,
+	XMLElement** newElem2
+#endif
+) {
+#ifdef _WIN32
+	HRESULT hr = S_OK;
+	if (FAILED(hr = pWriter->WriteStartElement(NULL, pwszLocalName, NULL))) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		OutputErrorString("Dat error: %08.8lx\n", hr);
+		return FALSE;
+	}
+#else
+	*newElem2 = newElem1->GetDocument()->NewElement(readElem2->Name());
+	if (readElem2->GetText() == NULL) {
+		if (!strcmp(readElem2->Name(), "game")) {
+			(*newElem2)->SetAttribute("name", "-insert name-");
+		}
+		else {
+			(*newElem2)->SetText("\n");
+		}
+	}
+	else {
+		(*newElem2)->SetText(readElem2->GetText());
+	}
+#endif
+	return TRUE;
+}
+
+BOOL XmlWriteString(
+#ifdef _WIN32
+	CComPtr<IXmlWriter> pWriter,
+	LPCWSTR pwszLocalName,
+	LPCWSTR pwszValue,
+	LPWCH pCurrentDir
+#else
+	XMLElement* readElem2,
+	XMLElement* newElem2,
+	LPBOOL bDescription
+#endif
+) {
+#ifdef _WIN32
+	HRESULT hr = S_OK;
+	if (!wcsncmp(pwszLocalName, L"description", 11) && !wcsncmp(pwszValue, L"foo", 3)) {
+		if (FAILED(hr = pWriter->WriteString(pCurrentDir))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			OutputErrorString("Dat error: %08.8lx\n", hr);
+			return FALSE;
+		}
+	}
+	else {
+		if (FAILED(hr = pWriter->WriteString(pwszValue))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			OutputErrorString("Dat error: %08.8lx\n", hr);
+			return FALSE;
+		}
+	}
+#else
+	XMLElement* readElem3 = readElem2->FirstChildElement();
+	// description, rom name etc.
+	while (readElem3) {
+		XMLElement* newElem3 = newElem2->GetDocument()->NewElement(readElem3->Name());
+		if (readElem3->GetText() == NULL) {
+			newElem3->SetText("\n");
+		}
+		else {
+			if (!strcmp(readElem3->Name(), "description") && !strcmp(readElem2->Name(), "game")) {
+				newElem3->SetText("-insert description-");
+				*bDescription = TRUE;
+			}
+			else {
+				newElem3->SetText(readElem3->GetText());
+			}
+		}
+		newElem2->InsertEndChild(newElem3);
+		readElem3 = readElem3->NextSiblingElement();
+	}
+#endif
+	return TRUE;
+}
+
+#ifdef _WIN32
+BOOL XmlWriteEndElement(
+	CComPtr<IXmlWriter> pWriter
+) {
+	HRESULT hr = S_OK;
+	if (FAILED(hr = pWriter->WriteEndElement())) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		OutputErrorString("Dat error: %08.8lx\n", hr);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+BOOL XmlWriteEndDocument(
+	CComPtr<IXmlWriter> pWriter
+) {
+	HRESULT hr = S_OK;
+	if (FAILED(hr = pWriter->WriteEndDocument())) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		OutputErrorString("Dat error: %08.8lx\n", hr);
+		return FALSE;
+	}
+	if (FAILED(hr = pWriter->Flush())) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		OutputErrorString("Dat error: %08.8lx\n", hr);
+		return FALSE;
+	}
+	return TRUE;
+}
+#endif
 
 BOOL ReadWriteDat(
 	PEXEC_TYPE pExecType,
@@ -756,71 +953,94 @@ BOOL ReadWriteDat(
 		return FALSE;
 	}
 
-	WCHAR wszPathForDat[_MAX_PATH] = {};
-	_TCHAR szTmpPath[_MAX_PATH] = {};
-
-	_tcsncpy(szTmpPath, pszFullPath, SIZE_OF_ARRAY(szTmpPath) - 1);
+	_TCHAR szDatPath[_MAX_PATH] = {};
+	_TCHAR szDatPathSuppl[_MAX_PATH] = {};
+	_tcsncpy(szDatPath, pszFullPath, SIZE_OF_ARRAY(szDatPath) - 1);
+	_tcsncpy(szDatPathSuppl, pszFullPath, SIZE_OF_ARRAY(szDatPathSuppl) - 1);
 
 	if (bDesync == SUB_DESYNC_TYPE::IdxDesync) {
-		PathRemoveExtension(szTmpPath);
+		PathRemoveExtension(szDatPath);
 		_TCHAR str1[] = _T(" (Subs indexes).dat");
-		_tcsncat(szTmpPath, str1, SIZE_OF_ARRAY(szTmpPath) - _tcslen(szTmpPath) - 1);
+		_tcsncat(szDatPath, str1, SIZE_OF_ARRAY(szDatPath) - _tcslen(szDatPath) - 1);
+
+		PathRemoveExtension(szDatPathSuppl);
+		_TCHAR str2[] = _T("_Suppl (Subs indexes).dat");
+		_tcsncat(szDatPathSuppl, str2, SIZE_OF_ARRAY(szDatPathSuppl) - _tcslen(szDatPathSuppl) - 1);
 	}
 	else if (bDesync == SUB_DESYNC_TYPE::CtlDesync) {
-		PathRemoveExtension(szTmpPath);
+		PathRemoveExtension(szDatPath);
 		_TCHAR str1[] = _T(" (Subs control).dat");
-		_tcsncat(szTmpPath, str1, SIZE_OF_ARRAY(szTmpPath) - _tcslen(szTmpPath) - 1);
+		_tcsncat(szDatPath, str1, SIZE_OF_ARRAY(szDatPath) - _tcslen(szDatPath) - 1);
+
+		PathRemoveExtension(szDatPathSuppl);
+		_TCHAR str2[] = _T("_suppl (Subs control).dat");
+		_tcsncat(szDatPathSuppl, str2, SIZE_OF_ARRAY(szDatPathSuppl) - _tcslen(szDatPathSuppl) - 1);
 	}
 	else {
-		PathRenameExtension(szTmpPath, _T(".dat"));
-	}
+		PathRenameExtension(szDatPath, _T(".dat"));
 
-	szTmpPath[_MAX_FNAME - 1] = 0;
+		PathRemoveExtension(szDatPathSuppl);
+		_TCHAR str1[] = _T("_suppl.dat");
+		_tcsncat(szDatPathSuppl, str1, SIZE_OF_ARRAY(szDatPathSuppl) - _tcslen(szDatPathSuppl) - 1);
+	}
+	szDatPath[_MAX_FNAME - 1] = 0;
+	szDatPathSuppl[_MAX_FNAME - 1] = 0;
+
+	WCHAR wszDatPathForStream[_MAX_PATH] = {};
+	WCHAR wszDatPathForStreamSuppl[_MAX_PATH] = {};
 #ifndef UNICODE
 	if (!MultiByteToWideChar(CP_ACP, 0
-		, szTmpPath, SIZE_OF_ARRAY(szTmpPath)
-		, wszPathForDat, SIZE_OF_ARRAY(wszPathForDat))) {
+		, szDatPath, SIZE_OF_ARRAY(szDatPath)
+		, wszDatPathForStream, SIZE_OF_ARRAY(wszDatPathForStream))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
+	if (!MultiByteToWideChar(CP_ACP, 0
+		, szDatPathSuppl, SIZE_OF_ARRAY(szDatPathSuppl)
+		, wszDatPathForStreamSuppl, SIZE_OF_ARRAY(wszDatPathForStreamSuppl))) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		return FALSE;
+}
 #else
-	size_t size = SIZE_OF_ARRAY(wszPathForDat);
-	wcsncpy(wszPathForDat, szTmpPath, size);
-	wszPathForDat[size - 1] = 0;
+	size_t size = SIZE_OF_ARRAY(wszDatPathForStream);
+	wcsncpy(wszDatPathForStream, szDatPath, size);
+	wszDatPathForStream[size - 1] = 0;
+
+	size = SIZE_OF_ARRAY(wszDatPathForStreamSuppl);
+	wcsncpy(wszDatPathForStreamSuppl, szDatPath, size);
+	wszDatPathForStreamSuppl[size - 1] = 0;
 #endif
 
-	CComPtr<IXmlWriter> pWriter;
-	CComPtr<IStream> pWriteStream;
-	if (FAILED(hr = SHCreateStreamOnFileW(wszPathForDat, STGM_CREATE | STGM_WRITE, &pWriteStream))) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString("Dat error: %08.8lx\n", hr);
-		return FALSE;
-	}
+	CComPtr<IXmlWriter> pWriter = NULL;
 	if (FAILED(hr = CreateXmlWriter(__uuidof(IXmlWriter), reinterpret_cast<void**>(&pWriter), 0))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		OutputErrorString("Dat error: %08.8lx\n", hr);
 		return FALSE;
 	}
-	if (FAILED(hr = pWriter->SetOutput(pWriteStream))) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString("Dat error: %08.8lx\n", hr);
-		return FALSE;
-	}
-	if (FAILED(hr = pWriter->SetProperty(XmlWriterProperty_Indent, TRUE))) {
+	CComPtr<IStream> pWriteStream = NULL;
+	if (FAILED(hr = SHCreateStreamOnFileW(wszDatPathForStream, STGM_CREATE | STGM_WRITE, &pWriteStream))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		OutputErrorString("Dat error: %08.8lx\n", hr);
 		return FALSE;
 	}
 
-	if (FAILED(hr = pWriter->WriteStartDocument(XmlStandalone_Omit))) {
+	CComPtr<IXmlWriter> pWriterSuppl = NULL;
+	if (FAILED(hr = CreateXmlWriter(__uuidof(IXmlWriter), reinterpret_cast<void**>(&pWriterSuppl), 0))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		OutputErrorString("Dat error: %08.8lx\n", hr);
 		return FALSE;
 	}
-	if (FAILED(hr = pWriter->WriteDocType(L"datafile"
-		, L"-//Logiqx//DTD ROM Management Datafile//EN", L"http://www.logiqx.com/Dats/datafile.dtd", NULL))) {
+	CComPtr<IStream> pWriteStreamSuppl = NULL;
+	if (FAILED(hr = SHCreateStreamOnFileW(wszDatPathForStreamSuppl, STGM_CREATE | STGM_WRITE, &pWriteStreamSuppl))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		OutputErrorString("Dat error: %08.8lx\n", hr);
+		return FALSE;
+	}
+
+	if (!XmlWriterInit(pWriter, pWriteStream)) {
+		return FALSE;
+	}
+	if (!XmlWriterInit(pWriterSuppl, pWriteStreamSuppl)) {
 		return FALSE;
 	}
 
@@ -873,23 +1093,20 @@ BOOL ReadWriteDat(
 						return FALSE;
 					}
 					if (!wcsncmp(pwszAttributeName, L"name", 4)) {
-						if (FAILED(hr = pWriter->WriteStartElement(NULL, pwszLocalName, NULL))) {
-							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-							OutputErrorString("Dat error: %08.8lx\n", hr);
+						if (!XmlWriteStartElementForGamename(pWriter, pwszLocalName, pwszAttributeName, pCurrentDir)) {
 							return FALSE;
 						}
-						if (FAILED(hr = pWriter->WriteAttributeString(NULL, pwszAttributeName, NULL, pCurrentDir))) {
-							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-							OutputErrorString("Dat error: %08.8lx\n", hr);
+						if (!XmlWriteStartElementForGamename(pWriterSuppl, pwszLocalName, pwszAttributeName, pCurrentDir)) {
 							return FALSE;
 						}
 					}
 				} while (S_OK == pReader->MoveToNextAttribute());
 			}
 			else {
-				if (FAILED(hr = pWriter->WriteStartElement(NULL, pwszLocalName, NULL))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					OutputErrorString("Dat error: %08.8lx\n", hr);
+				if (!XmlWriteStartElementForOthername(pWriter, pwszLocalName)) {
+					return FALSE;
+				}
+				if (!XmlWriteStartElementForOthername(pWriterSuppl, pwszLocalName)) {
 					return FALSE;
 				}
 			}
@@ -904,19 +1121,11 @@ BOOL ReadWriteDat(
 				OutputErrorString("[L:%d] GetValue is NULL\n", __LINE__);
 				return FALSE;
 			}
-			if (!wcsncmp(pwszLocalName, L"description", 11) && !wcsncmp(pwszValue, L"foo", 3)) {
-				if (FAILED(hr = pWriter->WriteString(pCurrentDir))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					OutputErrorString("Dat error: %08.8lx\n", hr);
-					return FALSE;
-				}
+			if (!XmlWriteString(pWriter, pwszLocalName, pwszValue, pCurrentDir)) {
+				return FALSE;
 			}
-			else {
-				if (FAILED(hr = pWriter->WriteString(pwszValue))) {
-					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-					OutputErrorString("Dat error: %08.8lx\n", hr);
-					return FALSE;
-				}
+			if (!XmlWriteString(pWriterSuppl, pwszLocalName, pwszValue, pCurrentDir)) {
+				return FALSE;
 			}
 			break;
 		case XmlNodeType_EndElement:
@@ -930,11 +1139,12 @@ BOOL ReadWriteDat(
 				return FALSE;
 			}
 			if (!wcsncmp(pwszLocalName, L"game", 4)) {
-				OutputRomElement(pWriter, pExecType, pExtArg, pDevice, pDisc, pszFullPath, szTmpPath, bDesync, pHash);
+				OutputRomElement(pWriter, pWriterSuppl, pExecType, pExtArg, pDevice, pDisc, pszFullPath, bDesync, pHash);
 			}
-			if (FAILED(hr = pWriter->WriteEndElement())) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				OutputErrorString("Dat error: %08.8lx\n", hr);
+			if (!XmlWriteEndElement(pWriter)) {
+				return FALSE;
+			}
+			if (!XmlWriteEndElement(pWriterSuppl)) {
 				return FALSE;
 			}
 			break;
@@ -958,14 +1168,10 @@ BOOL ReadWriteDat(
 			break;
 		}
 	}
-	if (FAILED(hr = pWriter->WriteEndDocument())) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString("Dat error: %08.8lx\n", hr);
+	if (!XmlWriteEndDocument(pWriter)) {
 		return FALSE;
 	}
-	if (FAILED(hr = pWriter->Flush())) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		OutputErrorString("Dat error: %08.8lx\n", hr);
+	if (!XmlWriteEndDocument(pWriterSuppl)) {
 		return FALSE;
 	}
 #else
@@ -1000,87 +1206,78 @@ BOOL ReadWriteDat(
 		return FALSE;
 	}
 
-	CHAR szPathForDat[_MAX_PATH] = {};
-	_TCHAR szTmpPath[_MAX_PATH] = {};
-
-	_tcsncpy(szPathForDat, pszFullPath, sizeof(szPathForDat) - 1);
-
-	if (bDesync) {
-		PathRemoveExtension(szPathForDat);
-		_TCHAR str1[] = _T(" (Subs indexes).dat");
-		_tcsncat(szPathForDat, str1, sizeof(szPathForDat) - _tcslen(szPathForDat) - 1);
-	}
-	else {
-		PathRenameExtension(szPathForDat, _T(".dat"));
-	}
-	szPathForDat[_MAX_PATH - 1] = 0;
-
 	XMLDocument xmlWriter;
-	XMLDeclaration* decl = xmlWriter.NewDeclaration();
-	xmlWriter.InsertEndChild(decl);
-	XMLUnknown* unk = xmlWriter.NewUnknown("DOCTYPE datafile PUBLIC \"-//Logiqx//DTD ROM Management Datafile//EN\" \"http://www.logiqx.com/Dats/datafile.dtd\"");
-	xmlWriter.InsertEndChild(unk);
+	XMLDocument xmlWriterSuppl;
+	XmlWriterInit(&xmlWriter);
+	XmlWriterInit(&xmlWriterSuppl);
 
 	XMLElement* readElem = xmlReader.FirstChildElement();
 	BOOL bDescription = FALSE;
 	// datafile
 	while (readElem) {
-		XMLElement* newElem1 = xmlWriter.NewElement(readElem->Name());
-		if (readElem->GetText() == NULL) {
-			newElem1->SetText("\n");
-		}
-		else {
-			newElem1->SetText(readElem->GetText());
-		}
+		XMLElement* newElem1 = NULL;
+		XMLElement* newElem1Suppl = NULL;
+		XmlWriteStartElementForGamename(readElem, &xmlWriter, &newElem1);
+		XmlWriteStartElementForGamename(readElem, &xmlWriterSuppl, &newElem1Suppl);
 
 		XMLElement* readElem2 = readElem->FirstChildElement();
 		// header, game
 		while (readElem2) {
-			XMLElement* newElem2 = newElem1->GetDocument()->NewElement(readElem2->Name());
-			if (readElem2->GetText() == NULL) {
-				if (!strcmp(readElem2->Name(), "game")) {
-					newElem2->SetAttribute("name", "-insert name-");
-				}
-				else {
-					newElem2->SetText("\n");
-				}
-			}
-			else {
-				newElem2->SetText(readElem2->GetText());
-			}
+			XMLElement* newElem2 = NULL;
+			XMLElement* newElem2Suppl = NULL;
+			XmlWriteStartElementForOthername(readElem2, newElem1, &newElem2);
+			XmlWriteStartElementForOthername(readElem2, newElem1Suppl, &newElem2Suppl);
 
-			XMLElement* readElem3 = readElem2->FirstChildElement();
-			// description, rom name etc.
-			while (readElem3) {
-				XMLElement* newElem3 = newElem2->GetDocument()->NewElement(readElem3->Name());
-				if (readElem3->GetText() == NULL) {
-					newElem3->SetText("\n");
-				}
-				else {
-					if (!strcmp(readElem3->Name(), "description") && !strcmp(readElem2->Name(), "game")) {
-						newElem3->SetText("-insert description-");
-						bDescription = TRUE;
-					}
-					else {
-						newElem3->SetText(readElem3->GetText());
-					}
-				}
-				newElem2->InsertEndChild(newElem3);
-				readElem3 = readElem3->NextSiblingElement();
-			}
-
+			XmlWriteString(readElem2, newElem2, &bDescription);
+			XmlWriteString(readElem2, newElem2Suppl, &bDescription);
 			if (bDescription) {
-				OutputRomElement(newElem2, pExecType, pExtArg, pDevice, pDisc, pszFullPath, szTmpPath, bDesync, pHash);
+				OutputRomElement(newElem2, newElem2Suppl, pExecType, pExtArg, pDevice, pDisc, pszFullPath, bDesync, pHash);
 			}
 
 			newElem1->InsertEndChild(newElem2);
+			newElem1Suppl->InsertEndChild(newElem2Suppl);
 			readElem2 = readElem2->NextSiblingElement();
 		}
 		xmlWriter.InsertEndChild(newElem1);
+		xmlWriterSuppl.InsertEndChild(newElem1Suppl);
 		readElem = readElem->NextSiblingElement();
 	}
 
-	xmlWriter.SaveFile(szPathForDat);
+	CHAR szDatPath[_MAX_PATH] = {};
+	CHAR szDatPathSuppl[_MAX_PATH] = {};
+	_tcsncpy(szDatPath, pszFullPath, sizeof(szDatPath) - 1);
+	_tcsncpy(szDatPathSuppl, pszFullPath, sizeof(szDatPathSuppl) - 1);
+
+	if (bDesync == SUB_DESYNC_TYPE::IdxDesync) {
+		PathRemoveExtension(szDatPath);
+		_TCHAR str1[] = _T(" (Subs indexes).dat");
+		_tcsncat(szDatPath, str1, sizeof(szDatPath) - _tcslen(szDatPath) - 1);
+
+		PathRemoveExtension(szDatPathSuppl);
+		_TCHAR str2[] = _T("_suppl (Subs indexes).dat");
+		_tcsncat(szDatPathSuppl, str2, sizeof(szDatPathSuppl) - _tcslen(szDatPathSuppl) - 1);
+	}
+	else if (bDesync == SUB_DESYNC_TYPE::CtlDesync) {
+		PathRemoveExtension(szDatPath);
+		_TCHAR str1[] = _T(" (Subs control).dat");
+		_tcsncat(szDatPath, str1, sizeof(szDatPath) - _tcslen(szDatPath) - 1);
+
+		PathRemoveExtension(szDatPathSuppl);
+		_TCHAR str2[] = _T("_suppl (Subs control).dat");
+		_tcsncat(szDatPathSuppl, str2, sizeof(szDatPathSuppl) - _tcslen(szDatPathSuppl) - 1);
+	}
+	else {
+		PathRenameExtension(szDatPath, _T(".dat"));
+
+		PathRemoveExtension(szDatPathSuppl);
+		_TCHAR str[] = _T("_suppl.dat");
+		_tcsncat(szDatPathSuppl, str, sizeof(szDatPathSuppl) - _tcslen(szDatPathSuppl) - 1);
+	}
+	szDatPath[_MAX_PATH - 1] = 0;
+	szDatPathSuppl[_MAX_PATH - 1] = 0;
+
+	xmlWriter.SaveFile(szDatPath);
+	xmlWriterSuppl.SaveFile(szDatPathSuppl);
 #endif
 	return TRUE;
 }
