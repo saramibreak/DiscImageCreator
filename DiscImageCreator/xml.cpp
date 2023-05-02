@@ -493,30 +493,32 @@ BOOL CalcAndGetHash(
 				if (!nRet) {
 					break;
 				}
-				if (!_tcsncmp(szExt, _T(".bin"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly && !b1stNonZeroFront) {
-					Get1stNonZeroPositionFront(pExtArg, dwBytesPerSector, &hash, &b1stNonZeroFront, (UINT)i
-						, data, &nConsecutiveZeroCnt, &ui1stNonZeroSectorFront, &ui1stNonZeroSectorPosFront, FALSE);
-					if (b1stNonZeroFront && ui1stNonZeroSectorFront == 0) {
-						Get1stNonZeroPositionRear(dwBytesPerSector, &b1stNonZeroRear, (INT)i, data
-							, &nConsecutiveZeroCnt, &ui1stNonZeroSectorRear, &ui1stNonZeroSectorPosRear);
-						if (ui1stNonZeroSectorRear == 0xffffffff && ui1stNonZeroSectorPosRear == 2352) {
-							ui1stNonZeroSectorRear = uiLastNonZeroSectorRear;
-							ui1stNonZeroSectorPosRear = uiLastNonZeroSectorPosRear;
-							b1stNonZeroRear = TRUE;
+				if (!_tcsncmp(szExt, _T(".bin"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
+					if (!b1stNonZeroFront) {
+						Get1stNonZeroPositionFront(pExtArg, dwBytesPerSector, &hash, &b1stNonZeroFront, (UINT)i
+							, data, &nConsecutiveZeroCnt, &ui1stNonZeroSectorFront, &ui1stNonZeroSectorPosFront, FALSE);
+						if (b1stNonZeroFront && ui1stNonZeroSectorFront == 0) {
+							Get1stNonZeroPositionRear(dwBytesPerSector, &b1stNonZeroRear, (INT)i, data
+								, &nConsecutiveZeroCnt, &ui1stNonZeroSectorRear, &ui1stNonZeroSectorPosRear);
+							if (ui1stNonZeroSectorRear == 0xffffffff && ui1stNonZeroSectorPosRear == 2352) {
+								ui1stNonZeroSectorRear = uiLastNonZeroSectorRear;
+								ui1stNonZeroSectorPosRear = uiLastNonZeroSectorPosRear;
+								b1stNonZeroRear = TRUE;
+							}
 						}
 					}
+					else if (b1stNonZeroFront && !b1stNonZeroRear) {
+						Get1stNonZeroPositionRear(dwBytesPerSector, &b1stNonZeroRear, (INT)i, data
+							, &nConsecutiveZeroCnt, &ui1stNonZeroSectorRear, &ui1stNonZeroSectorPosRear);
+					}
 				}
-				else if (b1stNonZeroFront && !b1stNonZeroRear) {
-					Get1stNonZeroPositionRear(dwBytesPerSector, &b1stNonZeroRear, (INT)i, data
-						, &nConsecutiveZeroCnt, &ui1stNonZeroSectorRear, &ui1stNonZeroSectorPosRear);
-				}
-			}
-			if (nConsecutiveZeroCnt < ZERO_BYTE_CHUNK) {
-				ui1stNonZeroSectorRear = uiLastNonZeroSectorRear;
-				ui1stNonZeroSectorPosRear = uiLastNonZeroSectorPosRear;
 			}
 
 			if (!_tcsncmp(szExt, _T(".bin"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
+				if (nConsecutiveZeroCnt < ZERO_BYTE_CHUNK) {
+					ui1stNonZeroSectorRear = uiLastNonZeroSectorRear;
+					ui1stNonZeroSectorPosRear = uiLastNonZeroSectorPosRear;
+				}
 				OutputDiscLog(
 					OUTPUT_DHYPHEN_PLUS_STR("Non-zero byte position of the track %02d")
 					"\t 1st non-zero byte position (sample based)(Front): %6u sector + %4u byte\n"
@@ -676,13 +678,13 @@ BOOL OutputRomElement(
 				return FALSE;
 			}
 		}
-		if (!CalcAndGetHash(pWriter, pExtArg, pDevice, pDisc, pszFullPath, DISC_MAIN_DATA_SIZE, _T(".iso"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
-			return FALSE;
-		}
 		if (pExtArg->byRawDump) {
 			if (!CalcAndGetHash(pWriterSuppl, pExtArg, pDevice, pDisc, pszFullPath, DISC_MAIN_DATA_SIZE, _T(".raw"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
 				return FALSE;
 			}
+		}
+		if (!CalcAndGetHash(pWriter, pExtArg, pDevice, pDisc, pszFullPath, DISC_MAIN_DATA_SIZE, _T(".iso"), 1, 1, SUB_DESYNC_TYPE::NoDesync, pHash)) {
+			return FALSE;
 		}
 	}
 	else {
