@@ -176,7 +176,7 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 			hash.uiMax = 2; // PIC.bin, .iso
 		}
 		else if (*pExecType == dvd || *pExecType == sacd) {
-			hash.uiMax = 3; // PFI.bin, DMI.bin, .iso or .raw
+			hash.uiMax = 4; // PFI.bin, DMI.bin, .iso and .raw
 		}
 		else if (*pExecType == xbox) {
 			hash.uiMax = 4; // SS.bin, PFI.bin, DMI.bin, .iso
@@ -615,7 +615,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 	return bRet;
 }
 
-int appendExtIfNotExt(_TCHAR* szPathFromArg, size_t pathLen, _TCHAR* szTmpPath)
+int appendExtIfNotExt(_TCHAR* szPathFromArg, PEXEC_TYPE pExecType, PEXT_ARG pExtArg, size_t pathLen, _TCHAR* szTmpPath)
 {
 	_TCHAR ext[5] = {};
 	_tcsncpy(ext, &szPathFromArg[pathLen - 4], SIZE_OF_ARRAY(ext) - 1);
@@ -632,18 +632,33 @@ int appendExtIfNotExt(_TCHAR* szPathFromArg, size_t pathLen, _TCHAR* szTmpPath)
 			return FALSE;
 		}
 		else {
-			OutputString("set .bin\n");
-			_tcsncat(szTmpPath, _T(".bin"), SIZE_OF_ARRAY(ext));
+			if (*pExecType == cd || *pExecType == swap || *pExecType == gd ||
+				*pExecType == data || *pExecType == audio || *pExecType == fd || *pExecType == disk) {
+				OutputString("set .bin\n");
+				_tcsncat(szTmpPath, _T(".bin"), SIZE_OF_ARRAY(ext));
+			}
+			else if (*pExecType == dvd || *pExecType == xbox || *pExecType == xboxswap ||
+				*pExecType == xgd2swap || *pExecType == xgd3swap || *pExecType == sacd ||
+				*pExecType == bd) {
+				if (pExtArg->byRawDump) {
+					OutputString("set .raw\n");
+					_tcsncat(szTmpPath, _T(".raw"), SIZE_OF_ARRAY(ext));
+				}
+				else {
+					OutputString("set .iso\n");
+					_tcsncat(szTmpPath, _T(".iso"), SIZE_OF_ARRAY(ext));
+				}
+			}
 		}
 	}
 	return TRUE;
 }
 
-int printAndSetPath(_TCHAR* szPathFromArg, _TCHAR* pszFullPath, size_t stFullPathlen)
+int printAndSetPath(_TCHAR* szPathFromArg, PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, size_t stFullPathlen)
 {
 	_TCHAR szTmpPath[_MAX_PATH] = {};
 	_tcsncpy(szTmpPath, szPathFromArg, SIZE_OF_ARRAY(szTmpPath) - 1);
-	appendExtIfNotExt(szPathFromArg, _tcslen(szPathFromArg), szTmpPath);
+	appendExtIfNotExt(szPathFromArg, pExecType, pExtArg, _tcslen(szPathFromArg), szTmpPath);
 
 	if (!GetCurrentDirectory(SIZE_OF_ARRAY(s_szCurrentdir), s_szCurrentdir)) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -1149,7 +1164,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					return FALSE;
 				}
 			}
-			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
+			printAndSetPath(argv[3], pExecType, pExtArg, pszFullPath, stFullPathlen);
 		}
 		else if (argc >= 5 && cmdLen == 2 && !_tcsncmp(argv[1], _T("gd"), cmdLen)) {
 			*pExecType = gd;
@@ -1205,7 +1220,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					return FALSE;
 				}
 			}
-			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
+			printAndSetPath(argv[3], pExecType, pExtArg, pszFullPath, stFullPathlen);
 		}
 		else if (argc >= 7 && ((cmdLen == 4 && !_tcsncmp(argv[1], _T("data"), cmdLen)) ||
 			(cmdLen == 5 && !_tcsncmp(argv[1], _T("audio"), cmdLen)))) {
@@ -1304,7 +1319,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					return FALSE;
 				}
 			}
-			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
+			printAndSetPath(argv[3], pExecType, pExtArg, pszFullPath, stFullPathlen);
 		}
 		else if (argc >= 5 && cmdLen == 3 && !_tcsncmp(argv[1], _T("dvd"), cmdLen)) {
 			*pExecType = dvd;
@@ -1382,7 +1397,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					return FALSE;
 				}
 			}
-			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
+			printAndSetPath(argv[3], pExecType, pExtArg, pszFullPath, stFullPathlen);
 		}
 		else if (argc >= 5 && cmdLen == 4 && !_tcsncmp(argv[1], _T("xbox"), 4)) {
 			*pExecType = xbox;
@@ -1419,7 +1434,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					return FALSE;
 				}
 			}
-			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
+			printAndSetPath(argv[3], pExecType, pExtArg, pszFullPath, stFullPathlen);
 		}
 		else if (argc >= 21 && cmdLen == 8 && !_tcsncmp(argv[1], _T("xboxswap"), cmdLen)) {
 			*pExecType = xboxswap;
@@ -1458,7 +1473,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					return FALSE;
 				}
 			}
-			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
+			printAndSetPath(argv[3], pExecType, pExtArg, pszFullPath, stFullPathlen);
 		}
 		else if (argc >= 8 && (cmdLen == 8 && (!_tcsncmp(argv[1], _T("xgd2swap"), cmdLen) || !_tcsncmp(argv[1], _T("xgd3swap"), cmdLen)))) {
 			pExtArg->nAllSectors = (INT)_tcstoul(argv[5], &endptr, 10);
@@ -1507,7 +1522,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					return FALSE;
 				}
 			}
-			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
+			printAndSetPath(argv[3], pExecType, pExtArg, pszFullPath, stFullPathlen);
 		}
 		else if (argc >= 5 && cmdLen == 4 && !_tcsncmp(argv[1], _T("sacd"), cmdLen)) {
 			*pExecType = sacd;
@@ -1519,7 +1534,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					pExtArg->byDatExpand = TRUE;
 				}
 			}
-			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
+			printAndSetPath(argv[3], pExecType, pExtArg, pszFullPath, stFullPathlen);
 		}
 		else if (argc >= 5 && cmdLen == 2 && !_tcsncmp(argv[1], _T("bd"), cmdLen)) {
 			*pExecType = bd;
@@ -1554,13 +1569,13 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					return FALSE;
 				}
 			}
-			printAndSetPath(argv[3], pszFullPath, stFullPathlen);
+			printAndSetPath(argv[3], pExecType, pExtArg, pszFullPath, stFullPathlen);
 		}
 		else if (argc >= 4) {
 			cmdLen = _tcslen(argv[1]);
 			if (cmdLen == 2 && !_tcsncmp(argv[1], _T("fd"), cmdLen)) {
 				*pExecType = fd;
-				printAndSetPath(argv[3], pszFullPath, stFullPathlen);
+				printAndSetPath(argv[3], pExecType, pExtArg, pszFullPath, stFullPathlen);
 				for (INT i = 5; i <= argc; i++) {
 					cmdLen = _tcslen(argv[i - 1]);
 					if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/d"), cmdLen)) {
@@ -1570,7 +1585,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			}
 			else if (cmdLen == 4 && !_tcsncmp(argv[1], _T("disk"), cmdLen)) {
 				*pExecType = disk;
-				printAndSetPath(argv[3], pszFullPath, stFullPathlen);
+				printAndSetPath(argv[3], pExecType, pExtArg, pszFullPath, stFullPathlen);
 				for (INT i = 5; i <= argc; i++) {
 					cmdLen = _tcslen(argv[i - 1]);
 					if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/d"), cmdLen)) {
@@ -1580,7 +1595,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			}
 			else if (cmdLen == 5 && !_tcsncmp(argv[1], _T("merge"), cmdLen)) {
 				*pExecType = merge;
-				printAndSetPath(argv[2], pszFullPath, stFullPathlen);
+				printAndSetPath(argv[2], pExecType, pExtArg, pszFullPath, stFullPathlen);
 			}
 			else {
 				OutputErrorString("Invalid argument\n");
@@ -1609,15 +1624,15 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 			}
 			else if (cmdLen == 3 && !_tcsncmp(argv[1], _T("sub"), cmdLen)) {
 				*pExecType = sub;
-				printAndSetPath(argv[2], pszFullPath, stFullPathlen);
+				printAndSetPath(argv[2], pExecType, pExtArg, pszFullPath, stFullPathlen);
 			}
 			else if (cmdLen == 3 && !_tcsncmp(argv[1], _T("mds"), cmdLen)) {
 				*pExecType = mds;
-				printAndSetPath(argv[2], pszFullPath, stFullPathlen);
+				printAndSetPath(argv[2], pExecType, pExtArg, pszFullPath, stFullPathlen);
 			}
 			else if (cmdLen == 4 && !_tcsncmp(argv[1], _T("tape"), cmdLen)) {
 				*pExecType = tape;
-				printAndSetPath(argv[2], pszFullPath, stFullPathlen);
+				printAndSetPath(argv[2], pExecType, pExtArg, pszFullPath, stFullPathlen);
 			}
 			else {
 				OutputErrorString("Invalid argument\n");
