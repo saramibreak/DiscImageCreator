@@ -18,7 +18,8 @@
 VOID OutputDVDHeader(
 	LPBYTE lpBuf,
 	DWORD dwSectorSize,
-	INT nLBA
+	INT nLBA,
+	BOOL bNintendoDisc
 );
 
 VOID OutputDVDStructureFormat(

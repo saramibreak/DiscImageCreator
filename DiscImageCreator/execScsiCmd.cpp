@@ -42,7 +42,7 @@ BOOL TestUnitReady(
 #endif
 	BYTE byScsiStatus = 0;
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB6GENERIC_LENGTH,
-		NULL, direction, 0, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		NULL, direction, 0, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		return FALSE;
 	}
@@ -66,7 +66,7 @@ BOOL Inquiry(
 #endif
 	BYTE byScsiStatus = 0;
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB6GENERIC_LENGTH, &inquiryData, 
-		direction, sizeof(INQUIRYDATA), &byScsiStatus, _T(__FUNCTION__), __LINE__) ||
+		direction, sizeof(INQUIRYDATA), &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE) ||
 		byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		return FALSE;
 	}
@@ -107,7 +107,7 @@ BOOL ModeSense(
 #endif
 		BYTE byScsiStatus = 0;
 		if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB6GENERIC_LENGTH, &modesense,
-			direction, bySize, &byScsiStatus, _T(__FUNCTION__), __LINE__) ||
+			direction, bySize, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE) ||
 			byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 			// not false.
 		}
@@ -135,7 +135,7 @@ BOOL StartStopUnit(
 #endif
 	BYTE byScsiStatus = 0;
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB6GENERIC_LENGTH
-		, NULL, direction, 0, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		, NULL, direction, 0, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		return FALSE;
 	}
@@ -156,7 +156,7 @@ BOOL SynchronizeCache(
 #endif
 	BYTE byScsiStatus = 0;
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB10GENERIC_LENGTH
-		, NULL, direction, 0, &byScsiStatus, _T(__FUNCTION__), __LINE__) ||
+		, NULL, direction, 0, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE) ||
 		byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		return FALSE;
 	}
@@ -188,7 +188,7 @@ BOOL ReadTOC(
 #endif
 	BYTE byScsiStatus = 0;
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB10GENERIC_LENGTH
-		, &pDisc->SCSI.toc, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__) ||
+		, &pDisc->SCSI.toc, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE) ||
 		byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		if (pDisc->SCSI.wCurrentMedia != ProfileDvdRom) {
 			return FALSE;
@@ -246,7 +246,7 @@ BOOL ReadTOCFull(
 #endif
 	BYTE byScsiStatus = 0;
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB10GENERIC_LENGTH
-		, pFullTocData, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		, pFullTocData, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 #if 0
 		UINT uiBufLen = CD_RAW_SECTOR_SIZE + CD_RAW_READ_SUBCODE_SIZE;
@@ -304,7 +304,7 @@ BOOL ReadTOCFull(
 	BOOL bRet = TRUE;
 	try {
 		if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB10GENERIC_LENGTH
-			, pFullToc, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+			, pFullToc, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 			throw FALSE;
 		}
@@ -375,7 +375,7 @@ BOOL ReadTOCPma(
 #endif
 	BYTE byScsiStatus = 0;
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB10GENERIC_LENGTH
-		, &pma, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		, &pma, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		OutputDriveNoSupportLog("READ_TOC_PMA");
 		return TRUE;
@@ -395,7 +395,7 @@ BOOL ReadTOCPma(
 		size.AsUShort = wTocPmaAll;
 		REVERSE_BYTES_SHORT(&cdb.AllocationLength, &size);
 		if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB10GENERIC_LENGTH
-			, pTocPma, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+			, pTocPma, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 			OutputDriveNoSupportLog("READ_TOC_PMA");
 			return TRUE;
@@ -442,7 +442,7 @@ BOOL ReadTOCAtip(
 #endif
 	BYTE byScsiStatus = 0;
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB10GENERIC_LENGTH
-		, &atip, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		, &atip, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		OutputDriveNoSupportLog("READ_TOC_ATIP");
 		return TRUE;
@@ -460,7 +460,7 @@ BOOL ReadTOCAtip(
 	size.AsUShort = wTocAtipAll;
 	REVERSE_BYTES_SHORT(&cdb.AllocationLength, &size);
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB10GENERIC_LENGTH
-		, pTocAtip, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		, pTocAtip, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		OutputDriveNoSupportLog("READ_TOC_ATIP");
 		return TRUE;
@@ -495,7 +495,7 @@ BOOL ReadTOCText(
 	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("CDTEXT"));
 	BYTE byScsiStatus = 0;
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB10GENERIC_LENGTH
-		, &tocText, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		, &tocText, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		// not false. because undefined mmc1..
 		OutputDriveNoSupportLog("Nothing CDTEXT or READ_TOC_EX_FORMAT_CDTEXT");
@@ -543,7 +543,7 @@ BOOL ReadTOCText(
 	BOOL bRet = TRUE;
 	try {
 		if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB10GENERIC_LENGTH
-			, pTocText, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+			, pTocText, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 			throw FALSE;
 		}
@@ -648,7 +648,7 @@ BOOL GetConfiguration(
 #endif
 	BYTE byScsiStatus = 0;
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB10GENERIC_LENGTH
-		, &configHeader, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		, &configHeader, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		pDisc->SCSI.wCurrentMedia = ProfileCdrom;
 		// not false. because undefined mmc1..
@@ -696,7 +696,7 @@ BOOL GetConfiguration(
 			REVERSE_BYTES_SHORT(&cdb.AllocationLength, &size);
 
 			if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB10GENERIC_LENGTH
-				, lpConf, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+				, lpConf, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 				// not false. because undefined mmc1..
 				OutputDriveNoSupportLog("GET_CONFIGURATION");
@@ -735,7 +735,7 @@ BOOL ReadDiscInformation(
 #endif
 	BYTE byScsiStatus = 0;
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB10GENERIC_LENGTH
-		, &discInformation, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__) ||
+		, &discInformation, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE) ||
 		byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		// not false.
 		OutputDriveNoSupportLog("READ_DISC_INFORMATION");
@@ -767,7 +767,7 @@ BOOL ModeSense10(
 #endif
 	BYTE byScsiStatus = 0;
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB10GENERIC_LENGTH
-		, &modesense, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__) ||
+		, &modesense, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE) ||
 		byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		// not false.
 		OutputDriveNoSupportLog("MODE_SENSE10");
@@ -799,7 +799,7 @@ BOOL ReadBufferCapacity(
 #endif
 		BYTE byScsiStatus = 0;
 		if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH
-			, &readBufCapaData, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+			, &readBufCapaData, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 			// not false.
 			OutputDriveNoSupportLog("READ_BUFFER_CAPACITY");
@@ -834,7 +834,7 @@ BOOL SendKey(
 #endif
 	BYTE byScsiStatus = 0;
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH,
-		key, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		key, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		return FALSE;
 	}
@@ -865,7 +865,7 @@ BOOL ReportKey(
 #endif
 	BYTE byScsiStatus = 0;
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH,
-		key, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		key, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
  		return FALSE;
 	}
@@ -925,7 +925,7 @@ BOOL SetDiscSpeed(
 
 		BYTE byScsiStatus = 0;
 		if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, &setspeed, 
-			direction, sizeof(CDROM_SET_SPEED), &byScsiStatus, _T(__FUNCTION__), __LINE__)
+			direction, sizeof(CDROM_SET_SPEED), &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 			// Somehow PX-W1210S fails...
 			OutputDriveNoSupportLog("SET_CD_SPEED");
@@ -977,7 +977,7 @@ BOOL SetStreaming(
 #endif
 	BYTE byScsiStatus = 0;
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH
-		, &pd, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		, &pd, direction, size.AsUShort, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		return FALSE;
 	}
@@ -1047,7 +1047,7 @@ BOOL SetSpeedRead(
 #endif
 		BYTE byScsiStatus = 0;
 		if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH
-			, buf, direction, sizeof(buf), &byScsiStatus, _T(__FUNCTION__), __LINE__)
+			, buf, direction, sizeof(buf), &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 			return FALSE;
 		}
@@ -1074,7 +1074,7 @@ BOOL Reset(
 #endif
 	BYTE byScsiStatus = 0;
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB6GENERIC_LENGTH
-		, NULL, direction, 0, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		, NULL, direction, 0, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		return FALSE;
 	}
@@ -1138,7 +1138,7 @@ BOOL ReadEeprom(
 			size.AsULong = tLen;
 			REVERSE_BYTES(&cdb.TransferLength, &size);
 			if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH
-				, pBuf, direction, BufLen, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+				, pBuf, direction, BufLen, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 				throw FALSE;
 			}
@@ -1198,7 +1198,7 @@ BOOL ReadCacheForLgAsus(
 #endif
 	BYTE byScsiStatus = 0;
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB10GENERIC_LENGTH
-		, aBuf, direction, dwBufSize, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		, aBuf, direction, dwBufSize, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		return FALSE;
 	}

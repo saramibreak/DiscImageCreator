@@ -21,7 +21,8 @@
 VOID OutputDVDHeader(
 	LPBYTE lpBuf,
 	DWORD dwSectorSize,
-	INT nLBA
+	INT nLBA,
+	BOOL bNintendoDisc
 ) {
 	OutputRawReadableLog(
 		STR_LBA "SectorInfo[%02x]{Layer %d, %s, "
@@ -45,15 +46,25 @@ VOID OutputDVDHeader(
 		break;
 	}
 	UINT gotSectorNum = MAKEUINT(MAKEWORD(lpBuf[3], lpBuf[2]), MAKEWORD(lpBuf[1], 0));
-	OutputRawReadableLog(
-		"%s}, SectorNumber[%06x (%u)], IED[%04x], CPR_MAI[%02x%02x%02x%02x%02x%02x], "
-		, (lpBuf[0] & 0x20) == 0 ? _T("greater than 40%") : _T("40% max")
-		, gotSectorNum, gotSectorNum, MAKEWORD(lpBuf[5], lpBuf[4])
-		, lpBuf[6], lpBuf[7], lpBuf[8], lpBuf[9], lpBuf[10], lpBuf[11]
-	);
+	if (bNintendoDisc) {
+		OutputRawReadableLog(
+			"%s}, SectorNumber[%06x (%8u)], IED[%04x], Unknown[%02x%02x%02x%02x%02x%02x], "
+			, (lpBuf[0] & 0x20) == 0 ? _T("greater than 40%") : _T("         40% max")
+			, gotSectorNum, gotSectorNum, MAKEWORD(lpBuf[5], lpBuf[4])
+			, lpBuf[2054], lpBuf[2055], lpBuf[2056], lpBuf[2057], lpBuf[2058], lpBuf[2059]
+		);
+	}
+	else {
+		OutputRawReadableLog(
+			"%s}, SectorNumber[%06x (%8u)], IED[%04x], CPR_MAI[%02x%02x%02x%02x%02x%02x], "
+			, (lpBuf[0] & 0x20) == 0 ? _T("greater than 40%") : _T("         40% max")
+			, gotSectorNum, gotSectorNum, MAKEWORD(lpBuf[5], lpBuf[4])
+			, lpBuf[6], lpBuf[7], lpBuf[8], lpBuf[9], lpBuf[10], lpBuf[11]
+		);
+	}
 	UINT edc = MAKEUINT(MAKEWORD(lpBuf[2063], lpBuf[2062]), MAKEWORD(lpBuf[2061], lpBuf[2060]));
 	if (dwSectorSize == DVD_RAW_SECTOR2_SIZE) {
-		edc = MAKEUINT(MAKEWORD(lpBuf[2383], lpBuf[2382]), MAKEWORD(lpBuf[2381], lpBuf[2380]));
+		edc = MAKEUINT(MAKEWORD(lpBuf[2173], lpBuf[2172]), MAKEWORD(lpBuf[2171], lpBuf[2170]));
 	}
 	OutputRawReadableLog("EDC[%08x]\n", edc);
 }

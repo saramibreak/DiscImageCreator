@@ -42,7 +42,8 @@ BOOL ScsiPassThroughDirect(
 	DWORD dwBufferLength,
 	LPBYTE byScsiStatus,
 	LPCTSTR pszFuncName,
-	LONG lLineNum
+	LONG lLineNum,
+	BOOL bOutputMsg
 );
 
 BOOL StorageQueryProperty(

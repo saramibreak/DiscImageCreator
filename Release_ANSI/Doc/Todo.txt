@@ -16,22 +16,6 @@
 . support cue file of sub-pchannel version
 
 [main]
-. check IED, EDC of DVD
-  ecma-267 p24
-  [quote]
-  16.2 ID Error Detection Code (IED) 
-  When identifying all bytes of the array shown in figure 16 as Ci,j for i = 0 to 11 and j = 0 to171, the check bytes of 
-  IED are represented by C0,j for j = 4 to 5. Their setting is obtained as follows. 
-  [/quote]
-  
-  [quote]
-  16.4 Error Detection Code (EDC) 
-  This 4-byte field shall contain the check bits of an Error Detection Code computed over the preceding 2 060 bytes 
-  of the Data Frame. Considering the Data Frame as a single bit field starting with the most significant bit of the first 
-  byte of the ID field and ending with the least significant bit of the EDC field, then this msb will be b16 511 and the 
-  lsb will be b0. Each bit bi of the EDC is as follows for i = 31 to 0 : 
-  [/quote]
-
 . support generating ecc/edc when unreadable sectors are generated http://forum.redump.org/post/93774/#p93774
 
 . LBA 2174 has 2352+16 bytes? Due to this sector LBA 2175 ... last are all shifted. http://forum.redump.org/post/92408/#p92408

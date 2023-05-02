@@ -125,7 +125,7 @@ BOOL Read10(
 		cdb.LogicalBlockByte2 = (UCHAR)(dwLBA >> 8);
 		cdb.LogicalBlockByte3 = (UCHAR)dwLBA;
 		if (!ScsiPassThroughDirect(NULL, pDevice, &cdb, CDB10GENERIC_LENGTH, lpBuf,
-			direction, pDisc->dwBytesPerSector * dwTransferLen, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+			direction, pDisc->dwBytesPerSector * dwTransferLen, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 			if (GetLastError() == 87) {
 				OutputString("Change the transfer length: %lu -> ", dwTransferLen);
@@ -501,7 +501,8 @@ BOOL ScsiPassThroughDirect(
 	DWORD dwBufferLength,
 	LPBYTE byScsiStatus,
 	LPCTSTR pszFuncName,
-	LONG lLineNum
+	LONG lLineNum,
+	BOOL bOutputMsg
 ) {
 	SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER swb = {};
 #ifdef _WIN32
@@ -537,7 +538,9 @@ BOOL ScsiPassThroughDirect(
 	SetLastError(NO_ERROR);
 	if (!DeviceIoControl(pDevice->hDevice
 		, IOCTL_SCSI_PASS_THROUGH_DIRECT, &swb, dwLength, &swb, dwLength, &dwReturned, NULL)) {
-		OutputLastErrorNumAndString(pszFuncName, lLineNum);
+		if (bOutputMsg) {
+			OutputLastErrorNumAndString(pszFuncName, lLineNum);
+		}
 		bRet = FALSE;
 		if (pExtArg) {
 			if (!pExtArg->byScanProtectViaFile && /*!_tcscmp(_T("SetDiscSpeed"), pszFuncName) &&*/
@@ -566,10 +569,12 @@ BOOL ScsiPassThroughDirect(
 				nLBA = (swb.Sptd.Cdb[2] << 24) + (swb.Sptd.Cdb[3] << 16)
 					+ (swb.Sptd.Cdb[4] << 8) + swb.Sptd.Cdb[5];
 			}
-			OutputLog(standardError | fileMainError
-				, "\r" STR_LBA "[F:%s][L:%ld]\n\tOpcode: %#02x\n"
-				, nLBA, nLBA, pszFuncName, lLineNum, swb.Sptd.Cdb[0]);
-			OutputScsiStatus(swb.Sptd.ScsiStatus);
+			if (bOutputMsg) {
+				OutputLog(standardError | fileMainError
+					, "\r" STR_LBA "[F:%s][L:%ld]\n\tOpcode: %#02x\n"
+					, nLBA, nLBA, pszFuncName, lLineNum, swb.Sptd.Cdb[0]);
+				OutputScsiStatus(swb.Sptd.ScsiStatus);
+			}
 #else
 		if (swb.io_hdr.status >= SCSISTAT_CHECK_CONDITION && !bNoSense) {
 			INT nLBA = 0;
@@ -578,12 +583,16 @@ BOOL ScsiPassThroughDirect(
 				nLBA = (swb.io_hdr.cmdp[2] << 24) + (swb.io_hdr.cmdp[3] << 16)
 					+ (swb.io_hdr.cmdp[4] << 8) + swb.io_hdr.cmdp[5];
 			}
-			OutputLog(standardError | fileMainError
-				, "\rLBA[%06d, %#07x]: [F:%s][L:%ld]\n\tOpcode: %#02x\n"
-				, nLBA, (UINT)nLBA, pszFuncName, lLineNum, swb.io_hdr.cmdp[0]);
-			OutputScsiStatus(swb.io_hdr.status);
+			if (bOutputMsg) {
+				OutputLog(standardError | fileMainError
+					, "\rLBA[%06d, %#07x]: [F:%s][L:%ld]\n\tOpcode: %#02x\n"
+					, nLBA, (UINT)nLBA, pszFuncName, lLineNum, swb.io_hdr.cmdp[0]);
+				OutputScsiStatus(swb.io_hdr.status);
+			}
 #endif
-			OutputSenseData(&swb.SenseData);
+			if (bOutputMsg) {
+				OutputSenseData(&swb.SenseData);
+			}
 			if (swb.SenseData.SenseKey == SCSI_SENSE_UNIT_ATTENTION) {
 				UINT milliseconds = 40000;
 				OutputLog(standardError | fileMainError

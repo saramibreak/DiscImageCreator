@@ -1060,7 +1060,7 @@ BOOL ReadDVDForFileSystem(
 #endif
 	BYTE byScsiStatus = 0;
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, cdb, CDB12GENERIC_LENGTH, lpBuf,
-		direction, DISC_MAIN_DATA_SIZE * transferLen.AsULong, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		direction, DISC_MAIN_DATA_SIZE * transferLen.AsULong, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		return FALSE;
 	}
@@ -1076,7 +1076,7 @@ BOOL ReadDVDForFileSystem(
 		REVERSE_BYTES(&cdb->TransferLength, &transferLen);
 		REVERSE_BYTES(&cdb->LogicalBlock[0], &LBA);
 		if (!ScsiPassThroughDirect(pExtArg, pDevice, cdb, CDB12GENERIC_LENGTH, lpBuf,
-			direction, DISC_MAIN_DATA_SIZE * transferLen.AsULong, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+			direction, DISC_MAIN_DATA_SIZE * transferLen.AsULong, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 			return FALSE;
 		}
@@ -1089,7 +1089,7 @@ BOOL ReadDVDForFileSystem(
 		REVERSE_BYTES(&cdb->TransferLength, &transferLen);
 		REVERSE_BYTES(&cdb->LogicalBlock[0], &LBA);
 		if (!ScsiPassThroughDirect(pExtArg, pDevice, cdb, CDB12GENERIC_LENGTH, lpBuf,
-			direction, DISC_MAIN_DATA_SIZE * transferLen.AsULong, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+			direction, DISC_MAIN_DATA_SIZE * transferLen.AsULong, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 			return FALSE;
 		}
@@ -1113,7 +1113,7 @@ BOOL ReadDVDForFileSystem(
 					}
 					REVERSE_BYTES(&cdb->LogicalBlock[0], &LBA);
 					if (!ScsiPassThroughDirect(pExtArg, pDevice, cdb, CDB12GENERIC_LENGTH, lpBuf,
-						direction, DISC_MAIN_DATA_SIZE * transferLen.AsULong, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+						direction, DISC_MAIN_DATA_SIZE * transferLen.AsULong, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 						|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 						break;
 					}
@@ -1149,7 +1149,7 @@ BOOL ReadDVDForFileSystem(
 		REVERSE_BYTES(&cdb->TransferLength, &transferLen);
 		REVERSE_BYTES(&cdb->LogicalBlock[0], &LBA);
 		if (!ScsiPassThroughDirect(pExtArg, pDevice, cdb, CDB12GENERIC_LENGTH, lpBuf,
-			direction, DISC_MAIN_DATA_SIZE * transferLen.AsULong, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+			direction, DISC_MAIN_DATA_SIZE * transferLen.AsULong, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 			return FALSE;
 		}
@@ -1163,7 +1163,7 @@ BOOL ReadDVDForFileSystem(
 		REVERSE_BYTES(&cdb->TransferLength, &transferLen);
 		REVERSE_BYTES(&cdb->LogicalBlock[0], &LBA);
 		if (!ScsiPassThroughDirect(pExtArg, pDevice, cdb, CDB12GENERIC_LENGTH, lpBuf,
-			direction, DISC_MAIN_DATA_SIZE * transferLen.AsULong, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+			direction, DISC_MAIN_DATA_SIZE * transferLen.AsULong, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 			return FALSE;
 		}
@@ -1177,7 +1177,7 @@ BOOL ReadDVDForFileSystem(
 		REVERSE_BYTES(&cdb->TransferLength, &transferLen);
 		REVERSE_BYTES(&cdb->LogicalBlock[0], &LBA);
 		if (!ScsiPassThroughDirect(pExtArg, pDevice, cdb, CDB12GENERIC_LENGTH, lpBuf,
-			direction, DISC_MAIN_DATA_SIZE * transferLen.AsULong, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+			direction, DISC_MAIN_DATA_SIZE * transferLen.AsULong, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 			return FALSE;
 		}
@@ -1341,7 +1341,7 @@ BOOL ReadXBOXDirectoryRecord(
 
 		OutputMainInfoLog("uiDirPos: %lu, TransferLength: %u\n", dirPos.AsULong, pCdb->TransferLength[3]);
 		if (!ScsiPassThroughDirect(pExtArg, pDevice, pCdb, CDB12GENERIC_LENGTH, lpBuf,
-			direction, uiReadSize, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+			direction, uiReadSize, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 			FreeAndNull(pBuf);
 			return FALSE;
@@ -1410,7 +1410,7 @@ BOOL ReadXBOXFileSystem(
 	REVERSE_BYTES(&cdb.LogicalBlock, &LBA);
 
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, lpBuf,
-		direction, pDevice->dwMaxTransferLength, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		direction, pDevice->dwMaxTransferLength, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		FreeAndNull(pBuf);
 		return FALSE;
@@ -2092,7 +2092,7 @@ BOOL ReadBDForParamSfo(
 #endif
 	BYTE byScsiStatus = 0;
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, pCdb, CDB12GENERIC_LENGTH, lpBuf,
-		direction, DISC_MAIN_DATA_SIZE, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		direction, DISC_MAIN_DATA_SIZE, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		return FALSE;
 	}
@@ -2182,7 +2182,7 @@ BOOL ReadSACDFileSystem(
 	REVERSE_BYTES(&cdb.LogicalBlock, &LBA);
 
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, lpBuf,
-		direction, DISC_MAIN_DATA_SIZE, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		direction, DISC_MAIN_DATA_SIZE, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		FreeAndNull(pBuf);
 		return FALSE;
@@ -2327,7 +2327,7 @@ BOOL ReadSACDFileSystem(
 		REVERSE_BYTES(&cdb.LogicalBlock, &LBA);
 
 		if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, lpBuf,
-			direction, DISC_MAIN_DATA_SIZE, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+			direction, DISC_MAIN_DATA_SIZE, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 			FreeAndNull(pBuf);
 			return FALSE;
@@ -2457,7 +2457,7 @@ BOOL ReadSACDFileSystem(
 	REVERSE_BYTES(&cdb.LogicalBlock, &LBA);
 
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, lpBuf,
-		direction, DISC_MAIN_DATA_SIZE, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+		direction, DISC_MAIN_DATA_SIZE, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		FreeAndNull(pBuf);
 		return FALSE;
@@ -2473,7 +2473,7 @@ BOOL ReadSACDFileSystem(
 		REVERSE_BYTES(&cdb.LogicalBlock, &LBA);
 
 		if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, lpBuf,
-			direction, DISC_MAIN_DATA_SIZE, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+			direction, DISC_MAIN_DATA_SIZE, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 			FreeAndNull(pBuf);
 			return FALSE;
@@ -2572,7 +2572,7 @@ BOOL ReadSACDFileSystem(
 			REVERSE_BYTES(&cdb.LogicalBlock, &LBA);
 
 			if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, lpBuf,
-				direction, DISC_MAIN_DATA_SIZE, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+				direction, DISC_MAIN_DATA_SIZE, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 				FreeAndNull(pBuf);
 				return FALSE;
@@ -2616,7 +2616,7 @@ BOOL ReadSACDFileSystem(
 		cdb.TransferLength[3] = 2;
 
 		if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, lpBuf,
-			direction, DISC_MAIN_DATA_SIZE * 2, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+			direction, DISC_MAIN_DATA_SIZE * 2, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 			FreeAndNull(pBuf);
 			return FALSE;
@@ -2641,7 +2641,7 @@ BOOL ReadSACDFileSystem(
 			cdb.TransferLength[3] = 32;
 
 			if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, lpBuf,
-				direction, DISC_MAIN_DATA_SIZE * 32, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+				direction, DISC_MAIN_DATA_SIZE * 32, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 				FreeAndNull(pBuf);
 				return FALSE;
@@ -2704,7 +2704,7 @@ BOOL ReadSACDFileSystem(
 			cdb.TransferLength[3] = 1;
 
 			if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, lpBuf,
-				direction, DISC_MAIN_DATA_SIZE, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+				direction, DISC_MAIN_DATA_SIZE, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 				FreeAndNull(pBuf);
 				return FALSE;
@@ -2735,7 +2735,7 @@ BOOL ReadSACDFileSystem(
 			cdb.TransferLength[3] = 1;
 
 			if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, lpBuf,
-				direction, DISC_MAIN_DATA_SIZE, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+				direction, DISC_MAIN_DATA_SIZE, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 				FreeAndNull(pBuf);
 				return FALSE;

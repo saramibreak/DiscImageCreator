@@ -88,7 +88,7 @@ BOOL ExecReadCD(
 #endif
 	BYTE byScsiStatus = 0;
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, lpCmd, CDB12GENERIC_LENGTH
-		, lpBuf, direction, dwBufSize, &byScsiStatus, pszFuncName, lLineNum)
+		, lpBuf, direction, dwBufSize, &byScsiStatus, pszFuncName, lLineNum, TRUE)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		OutputLog(standardError | fileMainError,
 			"lpCmd: %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x\n"
@@ -176,7 +176,7 @@ BOOL ExecReadCDForC2(
 #endif
 	BYTE byScsiStatus = 0;
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, lpCmd, CDB12GENERIC_LENGTH, lpBuf,
-		direction, pDevice->TRANSFER.uiBufLen * byTransferLen, &byScsiStatus, pszFuncName, lLineNum)) {
+		direction, pDevice->TRANSFER.uiBufLen * byTransferLen, &byScsiStatus, pszFuncName, lLineNum, TRUE)) {
 		if (pExtArg->byScanProtectViaFile ||
 			pExtArg->byMultiSession/* && pDisc->MAIN.nFix1stLBAofLeadout <= nLBA && nLBA < pDisc->MAIN.nFix1stLBAofLeadout + 11400*/) {
 			return RETURNED_CONTINUE;
@@ -217,7 +217,7 @@ BOOL FlushDriveCache(
 #endif
 		BYTE byScsiStatus = 0;
 		if (!ScsiPassThroughDirect(pExtArg, pDevice, (LPBYTE)&cdb, CDB12GENERIC_LENGTH,
-			NULL, direction, 0, &byScsiStatus, _T(__FUNCTION__), __LINE__)
+			NULL, direction, 0, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 			return FALSE;
 		}

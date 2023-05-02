@@ -496,7 +496,8 @@ BOOL GetEccEdcCmd(
 
 BOOL GetUnscCmd(
 	LPTSTR pszStr,
-	LPCTSTR pszPath
+	LPCTSTR pszPath,
+	INT nType
 ) {
 	_TCHAR szDrive[_MAX_DRIVE] = {};
 	_TCHAR szDir[_MAX_DIR] = {};
@@ -512,13 +513,13 @@ BOOL GetUnscCmd(
 	BOOL bRet = GetCmd(szPathForUnsc, _T("./unscrambler_linux"), _T(".out"));
 #endif
 	if (bRet && PathFileExists(szPathForUnsc)) {
-		size_t size = _tcslen(szPathForUnsc) + _tcslen(pszPath) + _tcslen(szPathForIso) + 9;
+		size_t size = _tcslen(szPathForUnsc) + _tcslen(pszPath) + _tcslen(szPathForIso) + 12;
 #ifdef _WIN32
 		_sntprintf(pszStr, size,
-			_T("\"\"%s\" \"%s\" \"%s\"\""), szPathForUnsc, pszPath, szPathForIso);
+			_T("\"\"%s\" \"%s\" \"%s\"\" %d"), szPathForUnsc, pszPath, szPathForIso, nType);
 #else
 		_sntprintf(pszStr, size,
-			_T("%s %s %s"), szPathForUnsc, pszPath, szPathForIso);
+			_T("%s %s %s %d"), szPathForUnsc, pszPath, szPathForIso, nType);
 #endif
 	}
 	else {

@@ -127,7 +127,8 @@ BOOL GetEccEdcCmd(
 
 BOOL GetUnscCmd(
 	LPTSTR pszStr,
-	LPCTSTR pszPath
+	LPCTSTR pszPath,
+	INT nType
 );
 
 BOOL GetDVDProtectionCmd(
