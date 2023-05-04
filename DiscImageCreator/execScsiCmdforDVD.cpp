@@ -648,6 +648,8 @@ BOOL ReadDVDRaw(
 	LPBYTE pBuf = NULL;
 	BOOL bRet = TRUE;
 	BOOL bNintendoDisc = IsNintendoDisc(pDisc);
+	DWORD dwSectorSize = DVD_RAW_SECTOR_SIZE;
+
 	try {
 		if (!bNintendoDisc) {
 			if (NULL == (fpIso = CreateOrOpenFile(pszFullPath, NULL, NULL, szFnameAndExtIso, NULL, _T(".iso"), _T("wb"), 0, 0))) {
@@ -659,14 +661,13 @@ BOOL ReadDVDRaw(
 		transferLen.AsULong = 16;
 		DWORD memBlkSize = 1;
 		if (NULL == (pBuf = (LPBYTE)calloc(
-			(size_t)DVD_RAW_SECTOR_SIZE * transferLen.AsULong * 5 + pDevice->AlignmentMask, sizeof(BYTE)))) {
+			(size_t)dwSectorSize * transferLen.AsULong * 5 + pDevice->AlignmentMask, sizeof(BYTE)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
 		LPBYTE lpBuf = (LPBYTE)ConvParagraphBoundary(pDevice, pBuf);
 		INT nCmdType = 0;
 		DWORD baseAddr = 0x80000000;
-		DWORD dwSectorSize = DVD_RAW_SECTOR_SIZE;
 		BYTE cdblen = CDB10GENERIC_LENGTH;
 		// for dumping from memory
 		BYTE CacheCmd[CDB12GENERIC_LENGTH] = {};
@@ -825,7 +826,7 @@ BOOL ReadDVDRaw(
 #if 1
 			_fseeki64(fpRaw, 0, SEEK_SET);
 			for (DWORD n = 0x30000; n < sectorNum; n += transferAndMemSize) {
-				if (fread(lpBuf, sizeof(BYTE), DVD_RAW_SECTOR_SIZE * transferAndMemSize, fpRaw) < DVD_RAW_SECTOR_SIZE * transferAndMemSize) {
+				if (fread(lpBuf, sizeof(BYTE), dwSectorSize * transferAndMemSize, fpRaw) < dwSectorSize * transferAndMemSize) {
 					OutputErrorString("Failed to read [F:%s][L:%d]\n", _T(__FUNCTION__), __LINE__);
 					return FALSE;
 				}
@@ -1133,7 +1134,7 @@ BOOL ReadDVDRaw(
 	FcloseAndNull(fpRaw);
 
 	_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, szFnameAndExtRaw, sizeof(szFnameAndExtRaw));
-	pHash->pHashChunk[pHash->uiIndex].ui64FileSize = DVD_RAW_SECTOR_SIZE * (UINT64)pDisc->SCSI.nAllLength;
+	pHash->pHashChunk[pHash->uiIndex].ui64FileSize = dwSectorSize * (UINT64)pDisc->SCSI.nAllLength;
 
 	if (!bNintendoDisc && pDevice->byPlxtrDrive) {
 		FcloseAndNull(fpIso);
