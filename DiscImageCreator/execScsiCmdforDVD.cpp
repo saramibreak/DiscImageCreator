@@ -890,6 +890,10 @@ BOOL ReadDVDRaw(
 		BYTE prevId = 0;
 		FOUR_BYTE LBA;
 		UINT uiEdcPos = DVD_RAW_SECTOR_SIZE - 4;
+		BOOL bOutputMsg = TRUE;
+		if (pDevice->byPlxtrDrive && bNintendoDisc) {
+			bOutputMsg = FALSE;
+		}
 
 		for (; nLBA < pDisc->SCSI.nAllLength; nLBA += (INT)transferAndMemSize) {
 			if (pExtArg->byFix) {
@@ -899,19 +903,36 @@ BOOL ReadDVDRaw(
 				break;
 			}
 			if ((INT)transferAndMemSize > pDisc->SCSI.nAllLength - nLBA) {
-				memBlkSize = (DWORD)(pDisc->SCSI.nAllLength - nLBA) / transferLen.AsULong;
-//				rawWriteSize = dwSectorSize * transferLen.AsULong * memBlkSize;
+				if (memBlkSize != 1) {
+					memBlkSize = (DWORD)(pDisc->SCSI.nAllLength - nLBA) / transferLen.AsULong;
+				}
+				else {
+					transferLen.AsULong = (ULONG)(pDisc->SCSI.nAllLength - nLBA);
+					dwReadSize = (DWORD)DISC_MAIN_DATA_SIZE * transferLen.AsULong;
+					dwRawReadSize = dwSectorSize * transferLen.AsULong;
+					REVERSE_BYTES(&ReadCdb.TransferLength, &transferLen);
+
+					if (IsSupported0xE7(pDevice)) {
+						CacheCmd[10] = HIBYTE(LOWORD(dwSectorSize * transferLen.AsULong));
+						CacheCmd[11] = LOBYTE(LOWORD(dwSectorSize * transferLen.AsULong));
+					}
+					else {
+						CacheCmd[6] = LOBYTE(HIWORD(dwSectorSize * transferLen.AsULong));
+						CacheCmd[7] = HIBYTE(LOWORD(dwSectorSize * transferLen.AsULong));
+						CacheCmd[8] = LOBYTE(LOWORD(dwSectorSize * transferLen.AsULong));
+					}
+				}
 				transferAndMemSize = transferLen.AsULong * memBlkSize;
 			}
 			LBA.AsULong = (ULONG)nLBA;
 			REVERSE_BYTES(&ReadCdb.LogicalBlock, &LBA);
 			// store the data frame to the drive cache memory
 			if (!ScsiPassThroughDirect(pExtArg, pDevice, &ReadCdb, CDB12GENERIC_LENGTH, lpBuf,
-				direction, dwReadSize, &byScsiStatus, _T(__FUNCTION__), __LINE__, FALSE)
+				direction, dwReadSize, &byScsiStatus, _T(__FUNCTION__), __LINE__, bOutputMsg)
 				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 				if (!(pDevice->byPlxtrDrive && bNintendoDisc)) {
-					FillMemory(lpBuf, DISC_MAIN_DATA_SIZE * transferAndMemSize, 0x00);
-					fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_MAIN_DATA_SIZE * transferLen.AsULong, fpRaw);
+					FillMemory(lpBuf, dwSectorSize * transferAndMemSize, 0x00);
+					fwrite(lpBuf, sizeof(BYTE), (size_t)dwSectorSize * transferLen.AsULong, fpRaw);
 					sectorNum += transferAndMemSize;
 					bReadErr = TRUE;
 					continue;
@@ -1046,7 +1067,7 @@ BOOL ReadDVDRaw(
 					INT tmp = nLBA - (INT)transferAndMemSize;
 					if (bReadErr) {
 						tmp = nLBA;
-							bReadErr = FALSE;
+						bReadErr = FALSE;
 					}
 					if (tmp < 0) {
 						if (IsSupported0xE7Type1(pDevice)) {
