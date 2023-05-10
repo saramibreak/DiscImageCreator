@@ -419,10 +419,6 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 									s_uiFix = (UINT)bRet;
 								}
 								else {
-									// 0 == no error
-									if (bRet == 0) {
-										bRet = TRUE;
-									}
 									break;
 								}
 							}
