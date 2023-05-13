@@ -395,8 +395,7 @@ BOOL ReadDVD(
 					OutputLog(standardOut | fileMainError, "Read retry from %d (Pass %u/%u)\n", nLBA, uiRetryCnt, pExtArg->uiMaxRereadNum);
 					if (pExtArg->byPadSector) {
 						if (transferLen.AsULong != 1) {
-							OutputLog(standardOut | fileMainError,
-								"Change the transfer length to 1\n");
+							OutputLog(standardOut | fileMainError, "Change the transfer length to 1\n");
 							transferLen.AsULong = 1;
 							REVERSE_BYTES(&cdb.TransferLength, &transferLen);
 						}
@@ -878,7 +877,7 @@ BOOL ReadDVDRaw(
 			dwSectorSize * 9, dwSectorSize * 10, dwSectorSize * 11, dwSectorSize * 12,
 			dwSectorSize * 13, dwSectorSize * 14, dwSectorSize * 15
 		};
-		INT nRereadNum = 0;
+		UINT uiRetryCnt = 0;
 
 #ifdef _WIN32
 		INT direction = SCSI_IOCTL_DATA_IN;
@@ -930,12 +929,23 @@ BOOL ReadDVDRaw(
 			if (!ScsiPassThroughDirect(pExtArg, pDevice, &ReadCdb, CDB12GENERIC_LENGTH, lpBuf,
 				direction, dwReadSize, &byScsiStatus, _T(__FUNCTION__), __LINE__, bOutputMsg)
 				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-				if (!(pDevice->byPlxtrDrive && bNintendoDisc)) {
+				if (IsSupported0xE7(pDevice)) {
 					FillMemory(lpBuf, dwSectorSize * transferAndMemSize, 0x00);
 					fwrite(lpBuf, sizeof(BYTE), (size_t)dwSectorSize * transferLen.AsULong, fpRaw);
 					sectorNum += transferAndMemSize;
 					bReadErr = TRUE;
 					continue;
+				}
+				else if (!(pDevice->byPlxtrDrive && bNintendoDisc)) {
+					if (++uiRetryCnt <= pExtArg->uiMaxRereadNum) {
+						OutputLog(standardOut | fileMainError, "Read retry from %d (Pass %u/%u)\n", nLBA, uiRetryCnt, pExtArg->uiMaxRereadNum);
+						nLBA -= transferAndMemSize;
+						continue;
+					}
+					else {
+						bRet = FALSE;
+						break;
+					}
 				}
 			}
 			BOOL bCheckSectorNum = TRUE;
@@ -949,7 +959,7 @@ BOOL ReadDVDRaw(
 					CacheCmd[9] = LOBYTE(LOWORD(readAddrForHG[i]));
 				}
 				else if (nCmdType == 2) {
-					if (nRereadNum == 0) {
+					if (uiRetryCnt == 0) {
 						baseAddr += 0x810 * transferLen.AsULong;
 						if (baseAddr == 0x80008100) {
 							baseAddr = 0x80000000;
@@ -1033,22 +1043,24 @@ BOOL ReadDVDRaw(
 				}
 			}
 			if (bCheckSectorNum) {
-				nRereadNum = 0;
+				if (uiRetryCnt) {
+					OutputLog(standardOut | fileMainError, "LBA %d is retry OK\n", nLBA);
+					uiRetryCnt = 0;
+				}
 				WriteBufWithCalc(pExtArg, lpBuf, dwSectorSize * memBlkSize, transferLen.AsULong, fpRaw, pHash);
 				sectorNum += transferAndMemSize;
 			}
 			else {
-				if (++nRereadNum == 40) {
-					OutputString("Max Reread %d. LBA: %7d\n", nRereadNum, nLBA);
+				if (++uiRetryCnt == pExtArg->uiMaxRereadNum) {
+					OutputString("Max Reread %d. LBA: %7d\n", uiRetryCnt, nLBA);
 					if (!bRetry && (IsSupported0xE7Type2_1(pDevice) || IsSupported0xE7Type2_2(pDevice))) {
 						transferLen.AsULong = 1;
 						transferAndMemSize = transferLen.AsULong * memBlkSize;
 						dwReadSize = (DWORD)DISC_MAIN_DATA_SIZE * transferLen.AsULong;
 						dwRawReadSize = (DWORD)dwSectorSize * transferLen.AsULong;
-//						rawWriteSize = (size_t)dwSectorSize * transferLen.AsULong * memBlkSize;
 						baseAddr = 0x7FFFF7F0;
 						nLBA = (INT)sectorNum - 0x30000 - 2;
-						nRereadNum = 0;
+						uiRetryCnt = 0;
 						CacheCmd[10] = HIBYTE(LOWORD(dwSectorSize * transferLen.AsULong));
 						CacheCmd[11] = LOBYTE(LOWORD(dwSectorSize * transferLen.AsULong));
 						REVERSE_BYTES(&ReadCdb.TransferLength, &transferLen);
@@ -1060,9 +1072,9 @@ BOOL ReadDVDRaw(
 						break;
 					}
 				}
-				OutputString("Reread %d. LBA: %7d\n", nRereadNum, nLBA);
+				OutputString("Reread %d. LBA: %7d\n", uiRetryCnt, nLBA);
 			}
-			if (nRereadNum || IsNintendoDisc(pDisc)) {
+			if (uiRetryCnt || IsNintendoDisc(pDisc)) {
 				if (IsSupported0xE7(pDevice)) {
 					INT tmp = nLBA - (INT)transferAndMemSize;
 					if (bReadErr) {
@@ -1081,34 +1093,34 @@ BOOL ReadDVDRaw(
 							tmp = 0;
 						}
 					}
-					if (nRereadNum) {
+					if (uiRetryCnt) {
 						if (nCmdType == 1) {
 							nLBA = tmp;
 						}
 #if 1
 						else if (!bRetry && nCmdType == 2) {
-							if (nRereadNum == 1) {
+							if (uiRetryCnt == 1) {
 								nLBA = tmp;
 							}
-							else if (nRereadNum == 2) {
+							else if (uiRetryCnt == 2) {
 								nLBA -= 16;
 							}
-							else if (nRereadNum == 4) {
+							else if (uiRetryCnt == 4) {
 								nLBA -= 24;
 							}
-							else if (nRereadNum == 7) {
+							else if (uiRetryCnt == 7) {
 								nLBA -= 32;
 							}
-							else if (nRereadNum == 11) {
+							else if (uiRetryCnt == 11) {
 								nLBA -= 40;
 							}
-							else if (nRereadNum == 16) {
+							else if (uiRetryCnt == 16) {
 								nLBA -= 48;
 							}
-							else if (nRereadNum == 22) {
+							else if (uiRetryCnt == 22) {
 								nLBA -= 56;
 							}
-							else if (nRereadNum == 29) {
+							else if (uiRetryCnt == 29) {
 								nLBA -= 64;
 							}
 						}
@@ -1186,10 +1198,13 @@ BOOL ReadDVDRaw(
 			OutputString("ret = %d\n", bRet);
 			if (bRet == 0) {
 				if (pDisc->DVD.discType == gamecube) {
-					ReadNintendoFileSystem(pDevice, pszFullPath, gamecube);
+					bRet = ReadNintendoFileSystem(pDevice, pszFullPath, gamecube);
 				}
 				else if (pDisc->DVD.discType == wii) {
-					ReadWiiPartition(pDevice, pszFullPath);
+					bRet = ReadWiiPartition(pDevice, pszFullPath);
+				}
+				else {
+					bRet = TRUE;
 				}
 			}
 		}
