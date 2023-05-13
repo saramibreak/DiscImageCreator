@@ -753,7 +753,7 @@ BOOL ReadCDForCheckingPregapSync(
 	INT nSectorNum = 0;
 
 	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("Check Pregap sync, msf, mode"));
-	for (INT nLBA = PREGAP_START_LBA; nLBA < -1150; nLBA++) {
+	for (INT nLBA = LEADIN_START_LBA_SESSION_1; nLBA < -1150; nLBA++) {
 		if (!ExecReadCD(pExtArg, pDevice, lpCmd, nLBA, aBuf,
 			CD_RAW_SECTOR_WITH_SUBCODE_SIZE, _T(__FUNCTION__), __LINE__)
 			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
