@@ -321,10 +321,6 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 					}
 					else {
 						if (*pExecType == cd || *pExecType == swap) {
-							// This func needs the combined offsets
-							if (!ReadCDForCheckingReadInOut(pExecType, pExtArg, pDevice, pDisc)) {
-								throw FALSE;
-							}
 							// open ccd here because ccd is written by ReadTOCFull
 							if (NULL == (fpCcd = CreateOrOpenFile(pszFullPath,
 								NULL, NULL, NULL, NULL, _T(".ccd"), _T(WFLAG), 0, 0))) {
@@ -340,6 +336,19 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 							SetAndOutputTocFull(pDisc, &fullToc, pTocData, wTocEntries, fpCcd);
 						}
 					}
+					if (*pExecType == cd || *pExecType == swap) {
+						if (IsPregapOfTrack1ReadableDrive(pDevice)) {
+							if (!ReadCDOutOfRange(pExecType, pExtArg, pDevice, pDisc, pszFullPath)) {
+								throw FALSE;
+							}
+						}
+						else {
+							// This func needs the combined offsets
+							if (!ReadCDForCheckingReadInOut(pExecType, pExtArg, pDevice, pDisc)) {
+								throw FALSE;
+							}
+						}
+					}
 					if (*pExecType != swap) {
 						if (!ReadCDCheck(pExecType, pExtArg, pDevice, pDisc)) {
 							throw FALSE;
@@ -347,11 +356,6 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 					}
 
 					if (*pExecType == cd) {
-						if (IsPregapOfTrack1ReadableDrive(pDevice)) {
-							if (!ReadCDOutOfRange(pExecType, pExtArg, pDevice, pDisc, pszFullPath)) {
-								throw FALSE;
-							}
-						}
 						bRet = ReadCDAll(pExecType, pExtArg, pDevice, pDisc, &discPerSector, c2, pszFullPath, fpCcd, fpC2);
 
 						if (IsPregapOfTrack1ReadableDrive(pDevice) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
