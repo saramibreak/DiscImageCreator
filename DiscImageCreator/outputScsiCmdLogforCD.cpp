@@ -1579,10 +1579,9 @@ VOID OutputCDSubToLog(
 		else if (pDiscPerSector->subcode.current[13] == 0xaa) {
 			// lead-out area
 			OutputSubReadableLog(
-				"LeadOutAdr5, Track[%02u], Idx[%02x], StartTime[%02x:%02x:%02x]"
-				, BcdToDec((BYTE)(pDiscPerSector->subcode.current[14] >> 4 & 0x0f))
-				, pDiscPerSector->subcode.current[14] & 0x0f, pDiscPerSector->subcode.current[19]
-				, pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
+				"Track[%02x], Point[%02x], StartTime[%02x:%02x:%02x]"
+				, pDiscPerSector->subcode.current[13], pDiscPerSector->subcode.current[14]
+				, pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
 		}
 		break;
 	case ADR_ENCODES_6:
