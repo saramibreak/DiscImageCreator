@@ -338,8 +338,10 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 					}
 					if (*pExecType == cd || *pExecType == swap) {
 						if (IsPregapOfTrack1ReadableDrive(pDevice)) {
-							if (!ReadCDOutOfRange(pExecType, pExtArg, pDevice, pDisc, pszFullPath)) {
-								throw FALSE;
+							for (INT i = 0; i < 5; i++) {
+								if (ReadCDOutOfRange(pExecType, pExtArg, pDevice, pDisc, pszFullPath)) {
+									break;
+								}
 							}
 						}
 						else {
@@ -358,7 +360,7 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 					if (*pExecType == cd) {
 						bRet = ReadCDAll(pExecType, pExtArg, pDevice, pDisc, &discPerSector, c2, pszFullPath, fpCcd, fpC2);
 
-						if (IsPregapOfTrack1ReadableDrive(pDevice) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
+						if (IsPregapOfTrack1ReadableDrive(pDevice) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly && !pExtArg->byAtari) {
 							ConcatenateFromPregapToLeadout(pDisc, pszFullPath);
 						}
 					}
@@ -1111,9 +1113,6 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/am"), cmdLen)) {
 					pExtArg->byScanAntiModStr = TRUE;
 				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/ms"), cmdLen)) {
-					pExtArg->byMultiSession = TRUE;
-				}
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/vn"), cmdLen)) {
 					if (!SetOptionVn(argc, argv, pExtArg, &i)) {
 						return FALSE;
@@ -1291,9 +1290,6 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				}
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/am"), cmdLen)) {
 					pExtArg->byScanAntiModStr = TRUE;
-				}
-				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/ms"), cmdLen)) {
-					pExtArg->byMultiSession = TRUE;
 				}
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/np"), cmdLen)) {
 					pExtArg->bySkipSubP = TRUE;
@@ -1703,15 +1699,16 @@ void printUsage(void)
 	// 120 x 30 (windows 10)
 	OutputString(
 		"Usage\n"
+		"\t/v\tPrint version\n"
 		"\tcd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/d] [/a (val)] [/aj] [/p]\n"
-		"\t   [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4) (val5)] [/f (val)] [/ms]\n"
+		"\t   [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4) (val5)] [/f (val)]\n"
 		"\t   [/vn (val)] [/vnc] [/vnx] [/mscf] [/sf (val)] [/ss] [/np] [/nq] [/nr]\n"
 		"\t   [/nl] [/ns] [/s (val)]\n"
 		"\t\tDump a CD from A to Z\n"
 		"\t\tFor PLEXTOR or drive that can scramble Dumping\n"
 		"\tswap <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/d] [/a (val)]\n"
 		"\t   [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4) (val5)] [/f (val)]\n"
-		"\t   [/p] [/ms] [/sf (val)] [/ss] [/np] [/nq] [/nr] [/nl] [/ns] [/s (val)] [/74]\n"
+		"\t   [/p] [/sf (val)] [/ss] [/np] [/nq] [/nr] [/nl] [/ns] [/s (val)] [/74]\n"
 		"\t\tDump a CD from A to Z using swap trick\n"
 		"\t\tFor no PLEXTOR or drive that can't scramble dumping\n"
 		"\tdata <DriveLetter> <Filename> <DriveSpeed(0-72)> <StartLBA> <EndLBA+1>\n"
@@ -1728,10 +1725,10 @@ void printUsage(void)
 		"\t   [/c2 (val1) (val2) (val3) (val4) (val5)] [/f (val)] [/np] [/nq] [/nr] [/s (val)]\n"
 		"\t\tDump a HD area of GD from A to Z\n"
 		"\tdvd <DriveLetter> <Filename> <DriveSpeed(0-16)> [/c] [/f (val)] [/raw] [/q] [/d]\n"
-		"\t    [/r (startLBA) (EndLBA)] [/avdp] [/ps (val)] [/rr (val)] [/sk (val)]\n"
 	);
 	stopMessage();
 	OutputString(
+		"\t    [/r (startLBA) (EndLBA)] [/avdp] [/ps (val)] [/rr (val)] [/sk (val)]\n"
 		"\t\tDump a DVD from A to Z\n"
 		"\txbox <DriveLetter> <Filename> <DriveSpeed(0-16)> [/f (val)] [/q] [/d] [/nss (val)] [/rr (val)]\n"
 		"\t\tDump a xbox disc from A to Z\n"
@@ -1760,10 +1757,10 @@ void printUsage(void)
 		"\tstart <DriveLetter>\n"
 		"\t\tSpin up the disc\n"
 		"\teject <DriveLetter>\n"
-		"\t\tEject the tray\n"
 	);
 	stopMessage();
 	OutputString(
+		"\t\tEject the tray\n"
 		"\tclose <DriveLetter>\n"
 		"\t\tClose the tray\n"
 		"\treset <DriveLetter>\n"
@@ -1792,10 +1789,10 @@ void printUsage(void)
 		"\t\t\tval1\tvalue to reread (default: 4000)\n"
 		"\t\t\tval2\tvalue to set the C2 offset (default: 0)\n"
 		"\t\t\tval3\t0: reread sector c2 error is reported (default)\n"
-		"\t\t\t    \t1: reread all (or from first to last) sector\n"
 	);
 	stopMessage();
 	OutputString(
+		"\t\t\t    \t1: reread all (or from first to last) sector\n"
 		"\t\t\tval4\tfirst LBA to reread (default: 0)\n"
 		"\t\t\tval5\tlast LBA to reread (default: end-of-sector)\n"
 		"\t\t\t    \tval3, 4 is used when val2 is 1\n"
@@ -1805,8 +1802,6 @@ void printUsage(void)
 		"\t\t\t               PX-704, 708, 712, 714, 716, 755, 760\n"
 		"\t/r\tRead CD from the reverse\n"
 		"\t\t\tFor Alpha-Disc, Tages (very slow)\n"
-		"\t/ms\tRead the lead-out of 1st session and the lead-in of 2nd session\n"
-		"\t\t\tFor Multi-session\n"
 		"\t/74\tRead the lead-out about 74:00:00\n"
 		"\t\t\tFor ring data (a.k.a Saturn Ring) of Sega Saturn\n"
 		"\t/sf\tScan file to detect protect. If reading error exists,\n"
@@ -1824,10 +1819,10 @@ void printUsage(void)
 		"\t\t\tFor PlayStation\n"
 		"\t/vn\tSearch specific bytes\n"
 		"\t\t\tFor VideoNow\n"
-		"\t\t\tval\tCombined offset is shifted for negative direction if positive value is set\n"
 	);
 	stopMessage();
 	OutputString(
+		"\t\t\tval\tCombined offset is shifted for negative direction if positive value is set\n"
 		"\t/vnc\tSearch specific bytes\n"
 		"\t\t\tFor VideoNow Color\n"
 		"\t/vnx\tSearch specific bytes\n"
@@ -1856,10 +1851,10 @@ void printUsage(void)
 		"\t/c\tLog Copyright Management Information\n"
 		"\t/rr\tRetry reading when error occurs\n"
 		"\t\t\tval\tMax retry value (default: 10)\n"
-		"\t/sk\tSkip sector for protect (ARccOS, RipGuard)\n"
 	);
 	stopMessage();
 	OutputString(
+		"\t/sk\tSkip sector for protect (ARccOS, RipGuard)\n"
 		"\t\t\tval\tsector num\n"
 		"\t/nss\tNo skip reading SS sectors (only XBOX)\n"
 		"\t\t\tval\tMax retry value (default: 100)\n"

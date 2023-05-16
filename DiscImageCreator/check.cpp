@@ -791,14 +791,11 @@ BOOL IsValidIntentionalC2error(
 }
 
 BOOL IsCheckingSubChannel(
-	PEXT_ARG pExtArg,
 	PDISC pDisc,
 	INT nLBA
 ) {
 	BOOL bCheckSub = TRUE;
-	if (!pExtArg->byMultiSession &&
-		(pDisc->SCSI.n1stLBAofLeadout <= nLBA &&
-			nLBA < pDisc->SCSI.n1stLBAof2ndSession)) {
+	if ((pDisc->SCSI.n1stLBAofLeadout <= nLBA && nLBA < pDisc->SCSI.n1stLBAof2ndSession)) {
 		bCheckSub = FALSE;
 	}
 	return bCheckSub;

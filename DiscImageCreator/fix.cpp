@@ -1367,13 +1367,6 @@ BOOL FixSubChannel(
 	INT nLBA,
 	LPBOOL bReread
 ) {
-#if 0
-	// https://github.com/saramibreak/DiscImageCreator/issues/166
-	if (pExtArg->byMultiSession && pDisc->SCSI.n1stLBAofLeadout + 6750 <= nLBA &&
-		nLBA < pDisc->SCSI.n1stLBAofLeadout + 11400) {
-		return TRUE;
-	}
-#endif
 	if (pDisc->SUB.nSubChannelOffset) {
 		SetTmpSubchFromBuffer(&pDiscPerSector->subch.next, pDiscPerSector->subcode.next);
 		if (1 <= pExtArg->uiSubAddionalNum) {

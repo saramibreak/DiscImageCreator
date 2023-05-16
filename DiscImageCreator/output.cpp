@@ -482,19 +482,14 @@ VOID WriteCueForMultiSessionMultiBin(
 ) {
 	if (pDisc->SCSI.bMultiSession) {
 		if (byTrackNum == pDisc->SCSI.by1stMultiSessionTrkNum) {
-			BYTE m, s, f;
-			LBAtoMSF(pDisc->SCSI.nLeadoutLenOf1stSession, &m, &s, &f);
-			_ftprintf(fpCue, _T("REM LEAD-OUT %02d:%02d:%02d\n"), m, s, f); // always 01:30:00
+			_ftprintf(fpCue, _T("REM LEAD-OUT 01:30:00\n")); // always 01:30:00
 		}
 		if (byTrackNum == pDisc->SCSI.toc.FirstTrack || byTrackNum == pDisc->SCSI.by1stMultiSessionTrkNum) {
 			_ftprintf(fpCue, _T("REM SESSION %02d\n"), pDisc->SCSI.lpSessionNumList[byTrackNum - 1]);
 		}
 		if (byTrackNum == pDisc->SCSI.by1stMultiSessionTrkNum) {
-			BYTE m, s, f;
-			LBAtoMSF(pDisc->SCSI.nLeadinLenOf2ndSession, &m, &s, &f);
-			_ftprintf(fpCue, _T("REM LEAD-IN %02d:%02d:%02d\n"), m, s, f); // always 01:00:00
-			LBAtoMSF(pDisc->SCSI.nPregapLenOf1stTrkOf2ndSession, &m, &s, &f);
-			_ftprintf(fpCue, _T("REM PREGAP %02d:%02d:%02d\n"), m, s, f); // always 00:02:00
+			_ftprintf(fpCue, _T("REM LEAD-IN 01:00:00\n")); // always 01:00:00
+			_ftprintf(fpCue, _T("REM PREGAP 00:02:00\n")); // always 00:02:00
 		}
 	}
 }
@@ -640,12 +635,12 @@ VOID WriteMainChannel(
 			}
 		}
 		// last sector in 1st session (when session 2 exists)
-		else if (!pExtArg->byMultiSession && pDisc->SCSI.n1stLBAof2ndSession != -1 &&
+		else if (pDisc->SCSI.n1stLBAof2ndSession != -1 &&
 			nLBA == pDisc->MAIN.nFix1stLBAofLeadout - 1) {
 			fwrite(lpBuf, sizeof(BYTE), pDisc->MAIN.uiMainDataSlideSize, fpImg);
 		}
 		// first sector in 2nd Session
-		else if (!pExtArg->byMultiSession && pDisc->SCSI.n1stLBAof2ndSession != -1 &&
+		else if (pDisc->SCSI.n1stLBAof2ndSession != -1 &&
 			nLBA == pDisc->MAIN.nFix1stLBAof2ndSession) {
 			fwrite(lpBuf + pDisc->MAIN.uiMainDataSlideSize, sizeof(BYTE),
 				CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize, fpImg);
@@ -1757,7 +1752,7 @@ VOID DescrambleMainChannelAll(
 			INT nLastLBA = lpLastLBAList[k];
 			OutputDiscLog("\tTrack %2d, %6d - %6d (%#07x - %#07x)\n",
 				k + 1, n1stLBA, nLastLBA, (UINT)n1stLBA, (UINT)nLastLBA);
-			if (!pExtArg->byMultiSession && pDisc->SCSI.lpSessionNumList[k] >= 2) {
+			if (pDisc->SCSI.lpSessionNumList[k] >= 2) {
 				INT nSkipLBA = (SESSION_TO_SESSION_SKIP_LBA * (INT)(pDisc->SCSI.lpSessionNumList[k] - 1));
 				n1stLBA -= nSkipLBA;
 				nLastLBA -= nSkipLBA;
@@ -1895,7 +1890,6 @@ VOID DescrambleMainChannelPartial(
 }
 
 BOOL CreateBin(
-	PEXT_ARG pExtArg,
 	PDISC pDisc,
 	BYTE byTrackNum,
 	INT nLBA,
@@ -1910,28 +1904,21 @@ BOOL CreateBin(
 		nPrevLBA = 0;
 	}
 	else if (byTrackNum == pDisc->SCSI.toc.FirstTrack) {
-		stBufSize = (size_t)nLBA * CD_RAW_SECTOR_SIZE;
 		// last 1st session track
 		if (pDisc->SCSI.lpSessionNumList[byTrackNum - 1] != pDisc->SCSI.lpSessionNumList[byTrackNum]) {
-			stBufSize -= (SESSION_TO_SESSION_SKIP_LBA - 150) * CD_RAW_SECTOR_SIZE;
+			nLBA -= SESSION_TO_SESSION_SKIP_LBA;
 		}
+		stBufSize = (size_t)nLBA * CD_RAW_SECTOR_SIZE;
 		nPrevLBA = 0;
 	}
 	else if (byTrackNum == pDisc->SCSI.toc.LastTrack) {
 		INT nTmpLength = pDisc->SCSI.nAllLength;
-		// first 2nd session track
-		if (pDisc->SCSI.lpSessionNumList[byTrackNum - 1] >= 2 &&
-			pDisc->SCSI.lpSessionNumList[byTrackNum - 2] == 1) {
+		if (pDisc->SCSI.by1stMultiSessionTrkNum) {
 			INT nSessionSize =
 				SESSION_TO_SESSION_SKIP_LBA * (pDisc->SCSI.lpSessionNumList[byTrackNum - 1] - 1);
-			if (!pExtArg->byMultiSession) {
-				nPrevLBA -= nSessionSize;
-				nTmpLength -= nSessionSize;
-			}
-			else {
-				// ignore index 0
-				nPrevLBA += 150;
-			}
+			nPrevLBA -= nSessionSize;
+			nTmpLength -= nSessionSize;
+			nLBA = nTmpLength;
 		}
 		stBufSize = (size_t)(nTmpLength - nPrevLBA) * CD_RAW_SECTOR_SIZE;
 	}
@@ -1939,27 +1926,19 @@ BOOL CreateBin(
 		INT nSessionSize =
 			SESSION_TO_SESSION_SKIP_LBA * (pDisc->SCSI.lpSessionNumList[byTrackNum] - 1);
 		// last 1st session track
-		if (pDisc->SCSI.lpSessionNumList[byTrackNum - 1] != pDisc->SCSI.lpSessionNumList[byTrackNum]) {
+		if (byTrackNum >= 1 && pDisc->SCSI.lpSessionNumList[byTrackNum - 1] != pDisc->SCSI.lpSessionNumList[byTrackNum]) {
 			nLBA -= nSessionSize;
-			if (pExtArg->byMultiSession) {
-				// ignore index 0
-				nLBA += 150;
-			}
 		}
 		// first 2nd session track
-		else if (pDisc->SCSI.lpSessionNumList[byTrackNum - 1] >= 2 &&
-			pDisc->SCSI.lpSessionNumList[byTrackNum - 2] == 1) {
-			if (!pExtArg->byMultiSession) {
+		else if (byTrackNum >= 2 && pDisc->SCSI.lpSessionNumList[byTrackNum - 1] >= 2) {
 				nPrevLBA -= nSessionSize;
 				nLBA -= nSessionSize;
-			}
-			else {
-				// ignore index 0
-				nPrevLBA += 150;
-			}
 		}
 		stBufSize = (size_t)(nLBA - nPrevLBA) * CD_RAW_SECTOR_SIZE;
 	}
+#if 0
+	OutputString(" nLBA - nPrevLBA (%d - %d) --> %d\n", nLBA, nPrevLBA, nLBA - nPrevLBA);
+#endif
 	fseek(fpImg, nPrevLBA * CD_RAW_SECTOR_SIZE, SEEK_SET);
 	LPBYTE lpBuf = (LPBYTE)calloc(stBufSize, sizeof(BYTE));
 	if (!lpBuf) {
@@ -2287,7 +2266,7 @@ BOOL CreateBinCueCcd(
 #ifdef _DEBUG
 			OutputDebugStringEx(" nNextLBA(%d) - nLBA(%d) = %d\n", nNextLBA, nLBA, nNextLBA - nLBA);
 #endif
-			bRet = CreateBin(pExtArg, pDisc, i, nNextLBA, nLBA, fpImg, fpBin);
+			bRet = CreateBin(pDisc, i, nNextLBA, nLBA, fpImg, fpBin);
 			FcloseAndNull(fpBin);
 			if (!bRet) {
 				break;
@@ -2299,7 +2278,7 @@ BOOL CreateBinCueCcd(
 					bRet = FALSE;
 					break;
 				}
-				bRet = CreateBin(pExtArg, pDisc, i, nNextLBA, nLBA, fpImgDesync, fpBinCtlDesync);
+				bRet = CreateBin(pDisc, i, nNextLBA, nLBA, fpImgDesync, fpBinCtlDesync);
 				FcloseAndNull(fpBinCtlDesync);
 				if (!bRet) {
 					break;
@@ -2330,7 +2309,7 @@ BOOL CreateBinCueCcd(
 				if (pExtArg->byPre) {
 					nNextLBA += 150;
 				}
-				bRet = CreateBin(pExtArg, pDisc, i, nNextLBA, nLBA, fpImg, fpBinIdxDesync);
+				bRet = CreateBin(pDisc, i, nNextLBA, nLBA, fpImg, fpBinIdxDesync);
 				FcloseAndNull(fpBinIdxDesync);
 				if (!bRet) {
 					break;

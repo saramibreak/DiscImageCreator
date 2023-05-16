@@ -101,13 +101,6 @@ VOID SetAndOutputCDOffset(
 	INT nSubChannelOffset
 );
 
-VOID ResetAndOutputCDOffset(
-	PDEVICE pDevice,
-	PEXT_ARG pExtArg,
-	PDISC pDisc,
-	INT nSample
-);
-
 VOID SetCDOffset(
 	PEXEC_TYPE pExecType,
 	BYTE byBe,

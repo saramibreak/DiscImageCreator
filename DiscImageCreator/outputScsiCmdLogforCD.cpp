@@ -1462,12 +1462,6 @@ VOID OutputCDSubToLog(
 					, pDiscPerSector->subcode.current[17], pDiscPerSector->subcode.current[19]
 					, pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
 			}
-			if (pDiscPerSector->subcode.prev[13] == 0xaa) {
-				pDisc->SCSI.nLeadoutLenOf1stSession = nLBA - pDisc->SCSI.n1stLBAofLeadout;
-				OutputLog(standardOut | fileDisc
-					, " Lead-out length of 1st session: %d\n", pDisc->SCSI.nLeadoutLenOf1stSession);
-				pDisc->SCSI.n1stLBAofLeadin = nLBA;
-			}
 		}
 		else {
 			OutputSubReadableLog(
@@ -1476,31 +1470,6 @@ VOID OutputCDSubToLog(
 				, pDiscPerSector->subcode.current[15], pDiscPerSector->subcode.current[16]
 				, pDiscPerSector->subcode.current[17], pDiscPerSector->subcode.current[19]
 				, pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
-
-			if (pDiscPerSector->subcode.current[13] != 0xaa && pDisc->SCSI.bMultiSession && pDiscPerSector->subcode.current[13] > 1) {
-				if ((pDiscPerSector->subcode.prev[13] == 0 &&
-					(pDiscPerSector->subcode.prev[14] == 0xa0 ||
-					pDiscPerSector->subcode.prev[14] == 0xa1 ||
-					pDiscPerSector->subcode.prev[14] == 0xa2)) ||
-					(((pDiscPerSector->subch.current.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) &&
-					pDiscPerSector->subcode.current[14] == 0 && pDiscPerSector->subcode.current[15] == 0 &&
-					pDiscPerSector->subcode.current[16] == 1 && pDiscPerSector->subcode.current[17] == 0x74)) {
-					if (pDisc->MAIN.nAdjustSectorNum < 0) {
-						nLBA += pDisc->MAIN.nAdjustSectorNum;
-					}
-					pDisc->SCSI.nLeadinLenOf2ndSession = nLBA - pDisc->SCSI.n1stLBAofLeadin;
-					OutputLog(standardOut | fileDisc
-						, " Lead-in length of 2nd session: %d\n", pDisc->SCSI.nLeadinLenOf2ndSession);
-					pDisc->SCSI.nEndLBAOfLeadin = nLBA;
-				}
-				else if (pDisc->SCSI.nPregapLenOf1stTrkOf2ndSession == 0 &&
-					BcdToDec(pDiscPerSector->subcode.current[13]) == pDisc->SCSI.by1stMultiSessionTrkNum &&
-					pDiscPerSector->subcode.prev[14] == 0 && pDiscPerSector->subcode.current[14] == 1) {
-					pDisc->SCSI.nPregapLenOf1stTrkOf2ndSession = nLBA - pDisc->SCSI.nEndLBAOfLeadin;
-					OutputLog(standardOut | fileDisc
-						, " Pregap length of 1st track of 2nd session: %d\n", pDisc->SCSI.nPregapLenOf1stTrkOf2ndSession);
-				}
-			}
 		}
 		break;
 	case ADR_ENCODES_MEDIA_CATALOG: {

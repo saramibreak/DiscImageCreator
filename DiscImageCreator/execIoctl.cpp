@@ -543,8 +543,7 @@ BOOL ScsiPassThroughDirect(
 		}
 		bRet = FALSE;
 		if (pExtArg) {
-			if (!pExtArg->byScanProtectViaFile && /*!_tcscmp(_T("SetDiscSpeed"), pszFuncName) &&*/
-				!pExtArg->byMultiSession) {
+			if (!pExtArg->byScanProtectViaFile) {
 				// When semaphore time out occurred, if doesn't execute sleep,
 				// UNIT_ATTENSION errors occurs next ScsiPassThroughDirect executing.
 				UINT milliseconds = 25000;

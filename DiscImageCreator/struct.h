@@ -284,8 +284,8 @@ typedef struct _DISC {
 		INT nAllLength;						// get at CDROM_READ_TOC_EX_FORMAT_TOC
 		LPINT lp1stLBAListOnToc;			// get at CDROM_READ_TOC_EX_FORMAT_TOC
 		LPINT lpLastLBAListOnToc;			// get at CDROM_READ_TOC_EX_FORMAT_TOC
-		LPINT lp1stLBAListOfDataTrackOnToc;	// get at CDROM_READ_TOC_EX_FORMAT_TOC
-		LPINT lpLastLBAListOfDataTrackOnToc;// get at CDROM_READ_TOC_EX_FORMAT_TOC
+		LPINT lp1stLBAListOfDataTrkOnToc;	// get at CDROM_READ_TOC_EX_FORMAT_TOC
+		LPINT lpLastLBAListOfDataTrkOnToc;	// get at CDROM_READ_TOC_EX_FORMAT_TOC
 		INT n1stLBAofDataTrk;				// get at CDROM_READ_TOC_EX_FORMAT_TOC
 		INT nLastLBAofDataTrkOnToc;			// get at CDROM_READ_TOC_EX_FORMAT_TOC
 		TRACK_TYPE trkType;					// get at CDROM_READ_TOC_EX_FORMAT_TOC
@@ -296,25 +296,19 @@ typedef struct _DISC {
 		BOOL bMultiSession;					// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
 		LPBYTE lpSessionNumList;			// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
 		INT n1stLBAofLeadout;				// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
-		INT n1stLBAofLeadin;
-		INT nLeadoutLenOf1stSession;
-		INT nLeadinLenOf2ndSession;
-		INT nEndLBAOfLeadin;
-		INT nPregapLenOf1stTrkOf2ndSession;
-		INT n1stLBAof2ndSession;		// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
+		INT n1stLBAof2ndSession;			// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
 		struct _CDTEXT {
-			LPSTR* pszTitle;			// get at CDROM_READ_TOC_EX_FORMAT_CDTEXT
-			LPSTR* pszPerformer;		// get at CDROM_READ_TOC_EX_FORMAT_CDTEXT
-			LPSTR* pszSongWriter;		// get at CDROM_READ_TOC_EX_FORMAT_CDTEXT
+			LPSTR* pszTitle;				// get at CDROM_READ_TOC_EX_FORMAT_CDTEXT
+			LPSTR* pszPerformer;			// get at CDROM_READ_TOC_EX_FORMAT_CDTEXT
+			LPSTR* pszSongWriter;			// get at CDROM_READ_TOC_EX_FORMAT_CDTEXT
 			BOOL bExist;
 		} CDTEXT[MAX_CDTEXT_LANG];
-		WORD wCurrentMedia;				// get at SCSIOP_GET_CONFIGURATION
+		WORD wCurrentMedia;					// get at SCSIOP_GET_CONFIGURATION
 		BYTE padding2[2];
 	} SCSI;
 	struct _MAIN {
 		INT nAdjustSectorNum;
 		INT nCombinedOffset;
-		INT nCombinedOffsetOrg;
 		UINT uiMainDataSlideSize;
 		INT nOffsetStart;
 		INT nOffsetEnd;
@@ -322,7 +316,7 @@ typedef struct _DISC {
 		INT nFixEndLBA;
 		INT nFix1stLBAofLeadout;	// for sliding offset
 		INT nFix1stLBAof2ndSession;	// for sliding offset
-		LPBYTE lpModeList; // 0 origin, max is last track num.
+		LPBYTE lpModeList;			// 0 origin, max is last track num.
 		LPDWORD lpAllSectorCrc32;
 		LPINT lpAllLBAOfC2Error;
 		INT nC2ErrorCnt;
@@ -339,20 +333,20 @@ typedef struct _DISC {
 		BYTE padding[3];
 		BYTE byAdr6;
 		CHAR szAdr6[META_ADR6_SIZE];
-		BYTE byCtlOfLBA0; // for pregap sector of track 1
-		BYTE byIdxOfLBA0; // for pregap sector of track 1
+		BYTE byCtlOfLBA0;						// for pregap sector of track 1
+		BYTE byIdxOfLBA0;						// for pregap sector of track 1
 		INT n1stLBAForISRC[3][2];
 		INT nRangeLBAForISRC[3][2];
 		INT nPrevISRCSector;
-		LPSTR* pszISRC; // 0 origin, max is last track num.
-		LPINT* lp1stLBAListOnSub; // 0 origin, max is last track num. // toc indexes in priority. single ptr: LBA per track. double ptr: LBA per index
-		LPINT* lp1stLBAListOnSubSync; // 0 origin, max is last track num. // sub indexes in priority. single ptr: LBA per track. double ptr: LBA per index
-		LPINT lp1stLBAListOfDataTrackOnSub; // 0 origin, max is last track num.
-		LPINT lpLastLBAListOfDataTrackOnSub; // 0 origin, max is last track num.
-		LPBYTE lpCtlList; // 0 origin, max is last track num.
-		LPBYTE lpEndCtlList; // 0 origin, max is last track num.
-		LPBOOL lpISRCList; // 0 origin, max is last track num.
-		LPBYTE lpRtoWList; // 0 origin, max is last track num.
+		LPSTR* pszISRC;							// 0 origin, max is last track num.
+		LPINT* lp1stLBAListOnSub;				// 0 origin, max is last track num. // toc indexes in priority. single ptr: LBA per track. double ptr: LBA per index
+		LPINT* lp1stLBAListOnSubSync;			// 0 origin, max is last track num. // sub indexes in priority. single ptr: LBA per track. double ptr: LBA per index
+		LPINT lp1stLBAListOfDataTrackOnSub;		// 0 origin, max is last track num.
+		LPINT lpLastLBAListOfDataTrackOnSub;	// 0 origin, max is last track num.
+		LPBYTE lpCtlList;						// 0 origin, max is last track num.
+		LPBYTE lpEndCtlList;					// 0 origin, max is last track num.
+		LPBOOL lpISRCList;						// 0 origin, max is last track num.
+		LPBYTE lpRtoWList;						// 0 origin, max is last track num.
 		INT nCorruptCrcH;
 		INT nCorruptCrcL;
 		INT n1stRmsfOfTrk;
@@ -361,20 +355,20 @@ typedef struct _DISC {
 	struct _PROTECT {
 		BYTE byExist;
 		BYTE byTmpForSafeDisc;
-		BYTE byRestoreCounter; // for SecuROM
+		BYTE byRestoreCounter;							// for SecuROM
 		BYTE reserved;
 		CHAR name[MAX_READ_ERROR_FILE_COUNT][MAX_FNAME_FOR_VOLUME];
-		CHAR name2[MAX_FNAME_FOR_VOLUME]; // for Der KorsaR, DVD Region X
+		CHAR name2[MAX_FNAME_FOR_VOLUME];				// for Der KorsaR, DVD Region X
 		CHAR padding[3];
-		struct _ERROR_SECTOR { // for skipping unreadable file
+		struct _ERROR_SECTOR {							// for skipping unreadable file
 			INT nExtentPos[MAX_READ_ERROR_FILE_COUNT];
-			INT nNextExtentPos; // for safedisc
+			INT nNextExtentPos;							// for safedisc
 			INT nSectorSize[MAX_READ_ERROR_FILE_COUNT];
-			INT nExtentPos2nd; // for Der KorsaR, DVD Region X
-			INT nSectorSize2nd; // for Der KorsaR, DVD Region X
+			INT nExtentPos2nd;							// for Der KorsaR, DVD Region X
+			INT nSectorSize2nd;							// for Der KorsaR, DVD Region X
 		} ERROR_SECTOR;
-		INT nPrevLBAOfPathTablePos; // for CodeLock
-		INT nNextLBAOfLastVolDesc; // for CodeLock
+		INT nPrevLBAOfPathTablePos;						// for CodeLock
+		INT nNextLBAOfLastVolDesc;						// for CodeLock
 		LPINT pExtentPosForExe;
 		LPINT pSectorSizeForExe;
 		LPINT pDataLenForExe;
@@ -384,7 +378,7 @@ typedef struct _DISC {
 	} PROTECT;
 	struct _DVD {
 		UCHAR ucBca;
-		UCHAR version; // for DVD-RAM
+		UCHAR version;						// for DVD-RAM
 		UCHAR pad[2];
 		DISC_TYPE_DVD discType;
 		PROTECT_TYPE_DVD protect;
@@ -395,14 +389,14 @@ typedef struct _DISC {
 		DWORD dwLayer1SectorLength;
 		DWORD dwXboxLayer0SectorLength;
 		DWORD dwXboxLayer1SectorLength;
-		DWORD securitySectorRange[23][2]; // for Xbox
+		DWORD securitySectorRange[23][2];	// for Xbox
 		DWORD dwXboxSwapOfs;
 	} DVD;
 	struct _BD {
 		INT nLBAForParamSfo[MAX_PARAMSFO_NUM];
 		INT nParamSfoCnt;
 	} BD;
-	LPBYTE lpCachedBuf; // for Asus 0xF1 opcode
+	LPBYTE lpCachedBuf;		// for Asus 0xF1 opcode
 	UINT uiCachedSectorNum; // for Asus 0xF1 opcode
 	DWORD dwBytesPerSector; // only use by disk command
 } DISC, *PDISC;
@@ -420,7 +414,7 @@ typedef struct _VOLUME_DESCRIPTOR {
 		UINT uiPathTblPos;
 		UINT uiRootDataLen;
 	} JOLIET;
-	BOOL bPathType; // use path table record
+	BOOL bPathType;				// use path table record
 	UINT uiVolumeSpaceSize;
 } VOLUME_DESCRIPTOR, *PVOLUME_DESCRIPTOR;
 
@@ -430,18 +424,18 @@ typedef struct _PATH_TABLE_RECORD {
 	UINT uiNumOfUpperDir;
 	CHAR szDirName[MAX_FNAME_FOR_VOLUME];
 	CHAR padding[3];
-	UINT uiDirSize; // This is actually DIRECTORY RECORD info
+	UINT uiDirSize;							// This is actually DIRECTORY RECORD info
 } PATH_TABLE_RECORD, *PPATH_TABLE_RECORD;
 
 typedef struct _UDF {
-	UINT uiPVDPos;	// from Anchor Volume Descriptor Pointer
-	UINT uiPVDLen;	// from Anchor Volume Descriptor Pointer
-	UINT uiFSDPos;	// from Logical Volume Descriptor
-	UINT uiFSDLen;	// from Logical Volume Descriptor
+	UINT uiPVDPos;						// from Anchor Volume Descriptor Pointer
+	UINT uiPVDLen;						// from Anchor Volume Descriptor Pointer
+	UINT uiFSDPos;						// from Logical Volume Descriptor
+	UINT uiFSDLen;						// from Logical Volume Descriptor
 	UINT uiLogicalVolumeIntegrityPos;	// from Logical Volume Descriptor
 	UINT uiLogicalVolumeIntegrityLen;	// from Logical Volume Descriptor
-	UINT uiPartitionPos;	// from Partition Descriptor
-	UINT uiPartitionLen;	// from Partition Descriptor
+	UINT uiPartitionPos;				// from Partition Descriptor
+	UINT uiPartitionLen;				// from Partition Descriptor
 	UINT uiFileEntryPos;	
 	UINT uiFileEntryLen;
 } UDF, *PUDF;

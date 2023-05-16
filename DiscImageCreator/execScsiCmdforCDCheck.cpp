@@ -2757,23 +2757,7 @@ BOOL ReadCDCheck(
 	PDISC pDisc
 ) {
 	// needs to call ReadTOCFull
-	if (!pDisc->SCSI.bMultiSession && pExtArg->byMultiSession) {
-		OutputLog(standardOut | fileDisc,
-			"[INFO] This disc isn't Multi-Session. /ms is ignored.\n");
-		pExtArg->byMultiSession = FALSE;
-	}
-	else if (pDisc->SCSI.bMultiSession && !pExtArg->byMultiSession) {
-		OutputLog(standardOut | fileDisc,
-			"[INFO] This disc is Multi-Session. /ms is set.\n");
-		pExtArg->byMultiSession = TRUE;
-	}
-
 	if (!pExtArg->byReverse) {
-		if (pExtArg->byMultiSession && pDevice->byPlxtrDrive && !IsPlextorDVDDrive(pDevice)) {
-			OutputLog(standardOut | fileDisc,
-				"[ERROR] This program doesn't support to dump the multi-session disc by the plextor CD Drive\n");
-			return FALSE;
-		}
 		// Typically, CD+G data is included in audio only disc
 		// But exceptionally, WonderMega Collection (SCD)(mixed disc) exists CD+G data.
 		if (!ReadCDForCheckingSubRtoW(pExecType, pExtArg, pDevice, pDisc)) {

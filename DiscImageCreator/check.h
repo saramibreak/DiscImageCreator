@@ -144,7 +144,6 @@ BOOL IsValidIntentionalC2error(
 );
 
 BOOL IsCheckingSubChannel(
-	PEXT_ARG pExtArg,
 	PDISC pDisc,
 	INT nLBA
 );
