@@ -758,9 +758,9 @@ int SetOptionPs(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	_TCHAR* endptr = NULL;
 	pExtArg->byPadSector = TRUE;
 	if (argc > * i && _tcsncmp(argv[*i], _T("/"), 1)) {
-		pExtArg->uiPadNum = (UINT)_tcstoul(argv[(*i)++], &endptr, 10);
-		if (*endptr) {
-			OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
+		pExtArg->uiPadNum = (UINT)_tcstoul(argv[(*i)++], &endptr, 16);
+		if (*endptr || 0xff < pExtArg->uiPadNum) {
+			OutputErrorString("[%s] is invalid argument. Please input from 0x00 to 0xff.\n", endptr);
 			return FALSE;
 		}
 	}
@@ -1866,8 +1866,7 @@ void printUsage(void)
 		"\t\t\t    supports GC/Wii dumping\n"
 		"\t/avdp\tUse Anchor Volume Descriptor Pointer as file length\n"
 		"\t/ps\tThe sector is padded when reading error occurs\n"
-		"\t\t\tval\t0: Padded by 0x00\n"
-		"\t\t\tval\t1: Padded by 0xAA\n"
+		"\t\t\tval\tPadded by specified hexadecimal number\n"
 		"\t/re\tResume raw (GC/Wii) dumping\n"
 		"\t/fix\tRedump specified frame when completed raw (GC/Wii) dumping but failed to unscramble\n"
 		"\t\t\tval\tframe number that unscrambler.exe showed in the command line screen\n"

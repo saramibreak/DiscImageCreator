@@ -222,17 +222,6 @@ BOOL ReadDVD(
 		FlushLog();
 		CalcInit(pExtArg, &pHash->pHashChunk[pHash->uiIndex]);
 
-		FOUR_BYTE transferLen;
-		transferLen.AsULong = pDevice->dwMaxTransferLength / DISC_MAIN_DATA_SIZE;
-		REVERSE_BYTES(&cdb.TransferLength, &transferLen);
-		BYTE byScsiStatus = 0;
-		INT i = 0;
-		UINT uiRetryCnt = 0;
-		if (pDisc->PROTECT.byExist == arccos || pDisc->PROTECT.byExist == ripGuard) {
-			transferLen.AsULong = 1;
-			REVERSE_BYTES(&cdb.TransferLength, &transferLen);
-		}
-		DWORD dwTransferLenOrg = transferLen.AsULong;
 		INT nFirstErrorLBA = 0;
 		INT nLastErrorLBA = 0;
 		BOOL bErrorForward = FALSE;
@@ -245,7 +234,20 @@ BOOL ReadDVD(
 #else
 		INT direction = SG_DXFER_FROM_DEV;
 #endif
+		BYTE byScsiStatus = 0;
+		INT i = 0;
+		UINT uiRetryCnt = 0;
+
+		FOUR_BYTE transferLen;
+		transferLen.AsULong = pDevice->dwMaxTransferLength / DISC_MAIN_DATA_SIZE;
+		REVERSE_BYTES(&cdb.TransferLength, &transferLen);
+		if (pDisc->PROTECT.byExist == arccos || pDisc->PROTECT.byExist == ripGuard || pExtArg->byPadSector) {
+			transferLen.AsULong = 1;
+			REVERSE_BYTES(&cdb.TransferLength, &transferLen);
+		}
+		DWORD dwTransferLenOrg = transferLen.AsULong;
 		FOUR_BYTE LBA;
+
 		for (INT nLBA = 0; nLBA < pDisc->SCSI.nAllLength; nLBA += (INT)transferLen.AsULong) {
 			if (IsXbox(pExecType)) {
 				if ((nLBA == XBOX_LAYER_BREAK && *pExecType == xboxswap) ||
@@ -321,6 +323,7 @@ BOOL ReadDVD(
 			}
 			LBA.AsULong = (ULONG)nLBA;
 			REVERSE_BYTES(&cdb.LogicalBlock, &LBA);
+
 			if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, lpBuf,
 				direction, DISC_MAIN_DATA_SIZE * transferLen.AsULong, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
@@ -393,26 +396,13 @@ BOOL ReadDVD(
 				}
 				else if (++uiRetryCnt <= pExtArg->uiMaxRereadNum) {
 					OutputLog(standardOut | fileMainError, "Read retry from %d (Pass %u/%u)\n", nLBA, uiRetryCnt, pExtArg->uiMaxRereadNum);
-					if (pExtArg->byPadSector) {
-						if (transferLen.AsULong != 1) {
-							OutputLog(standardOut | fileMainError, "Change the transfer length to 1\n");
-							transferLen.AsULong = 1;
-							REVERSE_BYTES(&cdb.TransferLength, &transferLen);
-						}
-					}
 					nLBA -= (INT)transferLen.AsULong;
 					continue;
 				}
 				else {
 					if (pExtArg->byPadSector) {
-						if (pExtArg->uiPadNum == 0) {
-							OutputLog(standardOut | fileMainError, "Padded by 0x00\n");
-							ZeroMemory(lpBuf, DISC_MAIN_DATA_SIZE);
-						}
-						else if (pExtArg->uiPadNum == 1) {
-							OutputLog(standardOut | fileMainError, "Padded by 0xAA\n");
-							FillMemory(lpBuf, DISC_MAIN_DATA_SIZE, 0xaa);
-						}
+						OutputLog(standardOut | fileMainError, "Padded by 0x%02X\n", pExtArg->uiPadNum);
+						FillMemory(lpBuf, DISC_MAIN_DATA_SIZE * transferLen.AsULong, (INT)pExtArg->uiPadNum);
 						uiRetryCnt = 0;
 					}
 					else {
