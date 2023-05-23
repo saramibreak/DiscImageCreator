@@ -420,7 +420,7 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 								if (pExtArg->byFix) {
 									pDisc->DVD.fixNum = s_uiFix;
 								}
-								bRet = ReadDVDRaw(pExtArg, pDevice, pDisc, pszFullPath, &hash);
+								bRet = ReadDVDRaw(pExtArg, pDevice, pDisc, pszFullPath, (INT)s_nStartLBA, (INT)s_nEndLBA, &hash);
 								if (pExtArg->byFix && bRet > 6) {
 									s_uiFix = (UINT)bRet;
 								}
@@ -446,7 +446,7 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 							if (bRet && uiDiscSize > 8547991552) {
 								OutputLog(standardOut | fileDisc, "Detected disguised file size: %llu\n", uiDiscSize);
 							}
-							bRet = ReadDVD(pExecType, pExtArg, pDevice, pDisc, pszFullPath, &hash);
+							bRet = ReadDVD(pExecType, pExtArg, pDevice, pDisc, pszFullPath, (INT)s_nStartLBA, (INT)s_nEndLBA, &hash);
 						}
 					}
 				}
@@ -459,7 +459,7 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 				if (!IsEnoughDiskSpaceForDump(pExecType, pDisc, szPath)) {
 					throw FALSE;
 				}
-				bRet = ReadXboxDVD(pExecType, pExtArg, pDevice, pDisc, pszFullPath, &hash);
+				bRet = ReadXboxDVD(pExecType, pExtArg, pDevice, pDisc, pszFullPath, (INT)s_nStartLBA, (INT)s_nEndLBA, &hash);
 			}
 			else if (*pExecType == xboxswap || *pExecType == xgd2swap || *pExecType == xgd3swap) {
 				pDisc->DVD.discType = DISC_TYPE_DVD::xboxdvd;
@@ -475,7 +475,7 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 					}
 					bRet = ReadDiscStructure(pExecType, pExtArg, pDevice, pDisc, pszFullPath, &hash);
 					if (bRet) {
-						bRet = ReadDVD(pExecType, pExtArg, pDevice, pDisc, pszFullPath, &hash);
+						bRet = ReadDVD(pExecType, pExtArg, pDevice, pDisc, pszFullPath, (INT)s_nStartLBA, (INT)s_nEndLBA, &hash);
 					}
 				}
 				else {
@@ -1334,8 +1334,26 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 						return FALSE;
 					}
 				}
-				else if (argc >= 8 && cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/r"), cmdLen)) {
-					pExtArg->byReverse = TRUE;
+				else if (argc >= 8 && (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/r"), cmdLen) ||
+					cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/ra"), cmdLen))) {
+					if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/r"), cmdLen)) {
+						pExtArg->byReverse = TRUE;
+					}
+					else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/ra"), cmdLen)) {
+						if (pExtArg->byFix) {
+							OutputErrorString("/ra and /fix cannot be used at the same time. /ra is disabled.\n");
+							continue;
+						}
+						if (pExtArg->byResume) {
+							OutputErrorString("/ra and /re cannot be used at the same time. /ra is disabled.\n");
+							continue;
+						}
+						if (pExtArg->byAnchorVolumeDescriptorPointer) {
+							OutputErrorString("/ra and /avdp cannot be used at the same time. /ra is disabled.\n");
+							continue;
+						}
+						pExtArg->byRange = TRUE;
+					}
 					s_nStartLBA = _tcstol(argv[i], &endptr, 10);
 					if (*endptr) {
 						OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
@@ -1357,11 +1375,19 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					pExtArg->byRawDump = TRUE;
 				}
 				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/fix"), cmdLen)) {
+					if (pExtArg->byRange) {
+						OutputErrorString("/fix and /ra cannot be used at the same time. /fix is disabled.\n");
+						continue;
+					}
 					if (!SetOptionFix(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
 				}
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/re"), cmdLen)) {
+					if (pExtArg->byRange) {
+						OutputErrorString("/re and /ra cannot be used at the same time. /re is disabled.\n");
+						continue;
+					}
 					pExtArg->byResume = TRUE;
 				}
 				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), cmdLen)) {
@@ -1371,6 +1397,10 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					pExtArg->byDatExpand = TRUE;
 				}
 				else if (cmdLen == 5 && !_tcsncmp(argv[i - 1], _T("/avdp"), cmdLen)) {
+					if (pExtArg->byRange) {
+						OutputErrorString("/avdp and /ra cannot be used at the same time. /avdp is disabled.\n");
+						continue;
+					}
 					pExtArg->byAnchorVolumeDescriptorPointer = TRUE;
 				}
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/ps"), cmdLen)) {
@@ -1424,6 +1454,20 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 					if (!SetOptionNss(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
+				}
+				else if (argc >= 8 && cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/ra"), cmdLen)) {
+					pExtArg->byRange = TRUE;
+					s_nStartLBA = _tcstol(argv[i], &endptr, 10);
+					if (*endptr) {
+						OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
+						return FALSE;
+					}
+					s_nEndLBA = _tcstol(argv[i + 1], &endptr, 10);
+					if (*endptr) {
+						OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
+						return FALSE;
+					}
+					i += 2;
 				}
 				else {
 					OutputErrorString("Unknown option: [%s]\n", argv[i - 1]);

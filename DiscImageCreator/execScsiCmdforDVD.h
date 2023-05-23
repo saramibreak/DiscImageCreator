@@ -35,6 +35,8 @@ BOOL ReadDVD(
 	PDEVICE pDevice,
 	PDISC pDisc,
 	LPCTSTR pszFullPath,
+	INT nStartLBA,
+	INT nLastLBA,
 	PHASH pHash
 );
 
@@ -49,6 +51,8 @@ BOOL ReadDVDRaw(
 	PDEVICE pDevice,
 	PDISC pDisc,
 	LPCTSTR pszFullPath,
+	INT nStartLBA,
+	INT nLastLBA,
 	PHASH pHash
 );
 
@@ -73,6 +77,8 @@ BOOL ReadXboxDVD(
 	PDEVICE pDevice,
 	PDISC pDisc,
 	LPCTSTR pszFullPath,
+	INT nStartLBA,
+	INT nLastLBA,
 	PHASH pHash
 );
 
