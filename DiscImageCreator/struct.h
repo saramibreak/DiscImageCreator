@@ -230,8 +230,10 @@ typedef struct _EXT_ARG {
 typedef struct _DEVICE {
 #ifdef _WIN32
 	HANDLE hDevice;
-#else
+#elif __linux__
 	int hDevice;
+#elif __MACH__
+	SCSITaskInterface** hDevice;
 #endif
 	SCSI_ADDRESS address;
 	UINT_PTR AlignmentMask;
@@ -245,8 +247,10 @@ typedef struct _DEVICE {
 	BYTE byLoadingMechanism;
 #ifdef _WIN32
 	BYTE byDriveLetter;
-#else
+#elif __linux__
 	CHAR drivepath[10];
+#elif __MACH__
+	CHAR drivepath[512];
 #endif
 	WORD wMaxReadSpeed;
 	BYTE bySuccessReadToc;

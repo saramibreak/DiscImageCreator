@@ -1,5 +1,11 @@
 TARGET := DiscImageCreator
-INCFLAGS := -I. -I_external -I_linux
+ifeq ($(shell uname),Linux)
+  INCFLAGS := -I. -I_external -I_linux
+else ifeq ($(shell uname),Darwin)
+  INCFLAGS := -I. -I_external -I_linux -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks
+  LIBS := -framework CoreFoundation -framework IOKit
+ # LDFLAGS := -sectcreate __TEXT __info_plist Info.plist
+endif
 CFLAGS := -include _linux/defineForLinux.h
 CXXFLAGS := $(CFLAGS) -std=c++11
 
@@ -14,7 +20,11 @@ ifeq ($(DEBUG), 1)
 	CXXFLAGS += -O0 -g
 else
 	CFLAGS += -O2 -Wall -Wextra -Wno-unknown-pragmas
-	CXXFLAGS += -O2 -Wall -Wextra -Wno-unknown-pragmas -Waggregate-return -Wcast-align -Wcast-qual -Wconditionally-supported -Wdisabled-optimization -Wdouble-promotion -Wfloat-equal -Wformat=2 -Wformat-signedness -Winit-self -Winline -Winvalid-pch -Wlogical-op -Wmissing-include-dirs -Wmultichar -Wnoexcept -Woverlength-strings -Wpacked -Wpointer-arith -Wredundant-decls -Wshadow -Wstack-protector -Wstrict-aliasing=2 -Wstrict-null-sentinel -Wswitch-default -Wswitch-enum -Wtrampolines -Wvariadic-macros -Wvector-operation-performance -Wwrite-strings -Wunused-macros
+  ifeq ($(shell uname),Linux)
+	  CXXFLAGS += -O2 -Wall -Wextra -Wno-unknown-pragmas -Waggregate-return -Wcast-align -Wcast-qual -Wconditionally-supported -Wdisabled-optimization -Wdouble-promotion -Wfloat-equal -Wformat=2 -Wformat-signedness -Winit-self -Winline -Winvalid-pch -Wlogical-op -Wmissing-include-dirs -Wmultichar -Wnoexcept -Woverlength-strings -Wpacked -Wpointer-arith -Wredundant-decls -Wshadow -Wstack-protector -Wstrict-aliasing=2 -Wstrict-null-sentinel -Wswitch-default -Wswitch-enum -Wtrampolines -Wvariadic-macros -Wvector-operation-performance -Wwrite-strings -Wunused-macros
+  else ifeq ($(shell uname),Darwin)
+	  CXXFLAGS += -O2 -Wall -Wextra -Wno-unknown-pragmas -Waggregate-return -Wcast-align -Wcast-qual -Wdisabled-optimization -Wdouble-promotion -Wfloat-equal -Wformat=2 -Winit-self -Winline -Winvalid-pch -Wmissing-include-dirs -Wmultichar -Woverlength-strings -Wpacked -Wpointer-arith -Wredundant-decls -Wshadow -Wstack-protector -Wstrict-aliasing=2 -Wswitch-default -Wswitch-enum -Wvariadic-macros -Wwrite-strings -Wunused-macros
+  endif  
 endif
 
 SOURCES_CXX := \
@@ -92,7 +102,8 @@ ifeq ($(PREFIX),)
 endif
 
 install:
-	install -Dm 0644 ../Release_ANSI/default.dat $(DESTDIR)$(PREFIX)/share/DiscImageCreator/default.dat
-	install -Dm 0755 $(TARGET) $(DESTDIR)$(PREFIX)/bin/$(TARGET)
+	install -m 0644 ../Release_ANSI/default.dat $(DESTDIR)$(PREFIX)/share/$(TARGET)/default.dat
+	install -m 0644 ../Release_ANSI/driveOffset.txt $(DESTDIR)$(PREFIX)/share/$(TARGET)/driveOffset.txt
+	install -m 0755 $(TARGET) $(DESTDIR)$(PREFIX)/bin/$(TARGET)
 
 .PHONY: clean clean-objs buildDateTime

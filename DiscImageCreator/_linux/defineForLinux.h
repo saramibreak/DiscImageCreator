@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef __linux__
+#if defined (__linux__) || defined (__MACH__)
 #define _snprintf    snprintf
 
 // from BaseTsd.h
@@ -67,7 +67,11 @@ typedef unsigned long long DWORD64, *PDWORD64;
 #define CP_UTF8                   65001       // UTF-8 translation
 
 // from WinDef.h
+#ifdef __linux__
 typedef unsigned long ULONG;
+#elif __MACH__
+#include <CoreFoundation.framework/Headers/CFPlugInCOM.h>
+#endif
 typedef ULONG *PULONG;
 typedef unsigned short USHORT;
 typedef USHORT *PUSHORT;
@@ -2233,11 +2237,20 @@ typedef struct _AACS_READ_BINDING_NONCE {
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/statvfs.h>
+#ifdef __linux__
 #include <linux/cdrom.h>
 #include <linux/iso_fs.h>
 #include <linux/mmc/ioctl.h>
 #include <scsi/scsi.h>
 #include <scsi/sg.h>
+#elif __MACH__
+#include <CoreFoundation.framework/Headers/CFPlugIn.h>
+#include <CoreFoundation.framework/Headers/CFUUID.h>
+#include <CoreFoundation.framework/Headers/CoreFoundation.h>
+#include <IOKit.framework/Headers/IOBSD.h>
+#include <IOKit.framework/Headers/IOKitLib.h>
+#include <IOKit.framework/Headers/scsi/SCSITaskLib.h>
+#endif
 #include <wchar.h>
 #include <locale.h>
 #include <libgen.h>
@@ -2361,6 +2374,7 @@ typedef struct _STORAGE_ADAPTER_DESCRIPTOR {
 
 } STORAGE_ADAPTER_DESCRIPTOR, *PSTORAGE_ADAPTER_DESCRIPTOR;
 
+#ifdef __linux__
 #define IOCTL_SCSI_PASS_THROUGH_DIRECT	SG_IO
 #define IOCTL_DISK_GET_DRIVE_GEOMETRY	SG_IO
 #define IOCTL_DISK_GET_MEDIA_TYPES		SG_IO
@@ -2368,10 +2382,30 @@ typedef struct _STORAGE_ADAPTER_DESCRIPTOR {
 #define IOCTL_STORAGE_QUERY_PROPERTY	SG_IO
 #define IOCTL_STORAGE_GET_MEDIA_TYPES_EX	SG_IO
 #define IOCTL_DISK_GET_DRIVE_GEOMETRY_EX	SG_IO
+#elif __MACH__
+#define IOCTL_SCSI_PASS_THROUGH_DIRECT	0
+#define IOCTL_DISK_GET_DRIVE_GEOMETRY	0
+#define IOCTL_DISK_GET_MEDIA_TYPES		0
+#define IOCTL_SCSI_GET_ADDRESS			0
+#define IOCTL_STORAGE_QUERY_PROPERTY	0
+#define IOCTL_STORAGE_GET_MEDIA_TYPES_EX	0
+#define IOCTL_DISK_GET_DRIVE_GEOMETRY_EX	0
+#define SG_DXFER_NONE 0
+#define SG_DXFER_FROM_DEV 0
+#define SG_DXFER_TO_DEV 0
+#define SG_DXFER_TO_FROM_DEV 0
+#endif
 
 typedef struct _SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER {
+#ifdef __linux__
 	sg_io_hdr_t io_hdr;
 	unsigned char Dummy[18];
+#elif __MACH__
+	SCSITaskStatus taskStatus;
+	SCSITaskInterface** task;
+	UInt64 transferCount;
+	SCSI_Sense_Data tmpSenseData;
+#endif
 	SENSE_DATA SenseData;
 } SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER, *PSCSI_PASS_THROUGH_DIRECT_WITH_BUFFER;
 
@@ -2447,6 +2481,8 @@ void SetLastError(int errcode);
 
 int GetLastError(void);
 
+#define FILE_BEGIN SEEK_SET
+#ifdef __linux__
 int CloseHandle(int fd);
 
 int DeviceIoControl(int fd, unsigned long ioCtlCode, void* inbuf
@@ -2454,14 +2490,30 @@ int DeviceIoControl(int fd, unsigned long ioCtlCode, void* inbuf
 
 int ReadFile(int fd, void* inbuf, unsigned long size, unsigned long* d, void* e);
 
-#define FILE_BEGIN SEEK_SET
 off_t SetFilePointer(int fd, off_t pos, void* a, int origin);
 
 off64_t SetFilePointerEx(int fd, LARGE_INTEGER pos, void* a, int origin);
+#elif __MACH__
+SCSITaskInterface** GetSCSITaskInterface(char* path);
 
-unsigned int Sleep(unsigned long seconds);
+int CloseHandle(SCSITaskInterface** task);
+
+int DeviceIoControl(SCSITaskInterface** task, unsigned long aa, void* inbuf
+	, unsigned long a, void* b, unsigned long c, unsigned long* d, void* e);
+
+int ReadFile(SCSITaskInterface** task, void* inbuf, unsigned long size, unsigned long* d, void* e);
+
+off_t SetFilePointer(SCSITaskInterface** task, off_t pos, void* a, int origin);
+#define off64_t off_t
+#define lseek64 lseek
+off64_t SetFilePointerEx(SCSITaskInterface** task, LARGE_INTEGER pos, void* a, int origin);
 #endif
 
+unsigned int Sleep(unsigned long seconds);
+
+#ifdef __MACH__
+#define statvfs64 statvfs
+#endif
 int GetDiskFreeSpaceEx(LPCSTR lpDirectoryName, PULARGE_INTEGER lpFreeBytesAvailableToCaller, PULARGE_INTEGER lpTotalNumberOfBytes, PULARGE_INTEGER lpTotalNumberOfFreeBytes);
 
-int _getch(void);
+#endif

@@ -369,6 +369,7 @@ int GetLastError(void)
 	return errno;
 }
 
+#ifdef __linux__
 int CloseHandle(int fd)
 {
 	int ret = close(fd);
@@ -405,13 +406,171 @@ off_t SetFilePointer(int fd, off_t pos, void* a, int origin)
 	return lseek(fd, pos, origin);
 }
 
-
 off64_t SetFilePointerEx(int fd, LARGE_INTEGER pos, void* a, int origin)
 {
 	UNREFERENCED_PARAMETER(a);
 	off64_t ofs = pos.QuadPart;
 	return lseek64(fd, ofs, origin);
 }
+#elif __MACH__
+// https://developer.apple.com/library/archive/documentation/DeviceDrivers/Conceptual/WorkingWithSAM/WWS_SAMDevInt/WWS_SAM_DevInt.html#//apple_ref/doc/uid/TP30000387-SW1
+IOCFPlugInInterface** plugInInterface;
+MMCDeviceInterface** mmcInterface;
+SCSITaskDeviceInterface** interface;
+
+SCSITaskInterface** GetSCSITaskInterface(char* path)
+{
+#if 0
+	io_service_t service = IORegistryEntryFromPath(kIOMasterPortDefault, path);
+#else
+	// Create the dictionaries
+    CFMutableDictionaryRef matchingDict = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, NULL, NULL);
+    CFMutableDictionaryRef subDict      = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, NULL, NULL);
+ 
+    // Create a dictionary with the "SCSITaskDeviceCategory" key = "SCSITaskAuthoringDevice"
+    CFDictionarySetValue(subDict, CFSTR(kIOPropertySCSITaskDeviceCategory), CFSTR(kIOPropertySCSITaskAuthoringDevice));
+ 
+    // Add the dictionary to the main dictionary with the key "IOPropertyMatch" to
+    // narrow the search to the above dictionary.
+    CFDictionarySetValue(matchingDict, CFSTR(kIOPropertyMatchKey), subDict);
+
+	io_iterator_t iterator = 0;
+	IOServiceGetMatchingServices(kIOMasterPortDefault, matchingDict, &iterator);
+
+	io_service_t service = 0;
+	if (iterator) {
+		io_service_t tmp;
+		do {
+			tmp = IOIteratorNext(iterator);
+			if (tmp) {
+				io_name_t service_class = "";
+				io_string_t service_path = "";
+				IORegistryEntryGetPath(tmp, kIOServicePlane, service_path);
+				IOObjectGetClass(tmp, service_class);
+				printf("Class: %s\nPath: %s\n", service_class, service_path);
+				service = tmp;
+			}
+  		} while (tmp);
+		IOObjectRelease(iterator);
+	}
+	if (!service) {
+		return NULL;
+	}
+#endif
+	CFStringRef deviceNameFromReg;
+	if ((deviceNameFromReg = (CFStringRef)IORegistryEntrySearchCFProperty(
+		(io_registry_entry_t)service, kIOServicePlane, CFSTR(kIOBSDNameKey)
+		, kCFAllocatorDefault, kIORegistryIterateRecursively)) == NULL) {
+		fprintf(stderr, "Failed: IORegistryEntrySearchCFProperty\n");
+		return NULL;
+	}
+
+	char deviceName[_MAX_FNAME];
+	if (CFStringGetCString(deviceNameFromReg, deviceName, sizeof(deviceName), kCFStringEncodingUTF8) == FALSE) {
+		fprintf(stderr, "Failed: CFStringGetCString\n");
+		return NULL;
+	}
+
+	char* unmountCmd;
+	const char* cmd = "sudo /usr/sbin/diskutil unmountDisk";
+	const char* devNull = "> /dev/null";
+	size_t cmdLen = strlen(cmd) + strlen(deviceName) + strlen(devNull) + 3;
+	if ((unmountCmd = (char*)malloc(cmdLen)) == NULL) {
+		fprintf(stderr, "Failed: malloc\n");
+		return NULL;
+	}
+	snprintf(unmountCmd, cmdLen, "%s %s %s", cmd, deviceName, devNull);
+	printf("unmountCmd: %s\n", unmountCmd);
+	CFRelease(deviceNameFromReg);
+
+	if (system(unmountCmd) != 0) {
+		free(unmountCmd);
+		fprintf(stderr, "Failed: system\n");
+		return NULL;
+	}
+	free(unmountCmd);
+
+	SInt32        score;
+	HRESULT       herr;
+	kern_return_t err;
+
+	// Create the IOCFPlugIn interface so we can query it.
+	if (noErr != (err = IOCreatePlugInInterfaceForService(
+		service, kIOMMCDeviceUserClientTypeID, kIOCFPlugInInterfaceID, &plugInInterface, &score))) {
+		fprintf(stderr, "Failed: IOCreatePlugInInterfaceForService returned %x\n", err);
+		return NULL;
+	}
+	// Query the interface for the MMCDeviceInterface.
+	if (S_OK != (herr = (*plugInInterface)->QueryInterface(
+		plugInInterface, CFUUIDGetUUIDBytes(kIOMMCDeviceInterfaceID), (LPVOID*)(&mmcInterface)))) {
+		fprintf(stderr, "Failed: QueryInterface returned %x\n", herr);
+		return NULL;
+	}
+	if (NULL == (interface = (*mmcInterface)->GetSCSITaskDeviceInterface(mmcInterface))) {;
+		fprintf(stderr, "Failed: GetSCSITaskDeviceInterface returned NULL\n");
+		return NULL;
+	}
+	if (noErr != (err = (*interface)->ObtainExclusiveAccess(interface))) {
+		fprintf(stderr, "Failed: ObtainExclusiveAccess returned %x\n", err);
+		return NULL;
+	}
+	// Create a task now that we have exclusive access
+	return (*interface)->CreateSCSITask(interface);
+}
+
+int CloseHandle(SCSITaskInterface** task)
+{
+	// Release the task interface
+    (*task)->Release(task);
+    (*interface)->ReleaseExclusiveAccess(interface);
+ 
+    // Release the SCSITaskDeviceInterface.
+    (*interface)->Release(interface);
+    (*mmcInterface)->Release(mmcInterface);
+ 
+    IODestroyPlugInInterface(plugInInterface);
+	return 1;
+}
+
+int DeviceIoControl(SCSITaskInterface** task, unsigned long aa, void* inbuf, unsigned long a, void* b, unsigned long c, unsigned long* d, void* e)
+{
+	UNREFERENCED_PARAMETER(aa);
+	UNREFERENCED_PARAMETER(a);
+	UNREFERENCED_PARAMETER(b);
+	UNREFERENCED_PARAMETER(c);
+	UNREFERENCED_PARAMETER(d);
+	UNREFERENCED_PARAMETER(e);
+	PSCSI_PASS_THROUGH_DIRECT_WITH_BUFFER p = (PSCSI_PASS_THROUGH_DIRECT_WITH_BUFFER)inbuf;
+	IOReturn ret = (*task)->ExecuteTaskSync(task, &(p->tmpSenseData), &(p->taskStatus), &(p->transferCount));
+	memcpy(&(p->SenseData), &(p->tmpSenseData), 18);
+	ret = ret != -1 ? TRUE : FALSE;
+	return ret;
+}
+
+int ReadFile(SCSITaskInterface** task, void* inbuf, unsigned long size, unsigned long* d, void* e)
+{
+	// TODO
+	UNREFERENCED_PARAMETER(e);
+	int ret = 1;
+	ret = ret != -1 ? TRUE : FALSE;
+	return ret;
+}
+
+off_t SetFilePointer(SCSITaskInterface** task, off_t pos, void* a, int origin)
+{
+	// TODO
+	UNREFERENCED_PARAMETER(a);
+	return 1;
+}
+
+off64_t SetFilePointerEx(SCSITaskInterface** task, LARGE_INTEGER pos, void* a, int origin)
+{
+	// TODO
+	UNREFERENCED_PARAMETER(a);
+	off64_t ofs = pos.QuadPart;
+	return 1;
+}
+#endif
 
 unsigned int Sleep(unsigned long seconds)
 {
@@ -465,18 +624,4 @@ int GetDiskFreeSpaceEx(
 	lpTotalNumberOfFreeBytes->QuadPart = buf.f_frsize * buf.f_bfree;
 
 	return 0;
-}
-
-// https://www.webdevqa.jp.net/ja/c/linux%E3%81%A7c%E3%81%AEgetch%EF%BC%88%EF%BC%89%E9%96%A2%E6%95%B0%E3%82%92%E5%AE%9F%E8%A3%85%E3%81%99%E3%82%8B%E6%96%B9%E6%B3%95%E3%81%AF%EF%BC%9F/969438634/
-int _getch(void)
-{
-	struct termios oldattr, newattr;
-	int ch;
-	tcgetattr(STDIN_FILENO, &oldattr);
-	newattr = oldattr;
-	newattr.c_lflag &= ~(ICANON | ECHO);
-	tcsetattr(STDIN_FILENO, TCSANOW, &newattr);
-	ch = getchar();
-	tcsetattr(STDIN_FILENO, TCSANOW, &oldattr);
-	return ch;
 }

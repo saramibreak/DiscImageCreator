@@ -46,10 +46,16 @@ BOOL GetHandle(
 	szBuf[7] = 0;
 	pDevice->hDevice = CreateFile(szBuf, GENERIC_READ | GENERIC_WRITE,
 		FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
-#else
+#elif __linux__
 	pDevice->hDevice = open(pDevice->drivepath, O_RDONLY | O_NONBLOCK, 0777);
+#elif __MACH__
+	pDevice->hDevice = GetSCSITaskInterface(pDevice->drivepath);
 #endif
+#if defined (_WIN32) || defined (__linux__)
 	if (pDevice->hDevice == INVALID_HANDLE_VALUE) {
+#elif __MACH__
+	if (pDevice->hDevice == NULL) {
+#endif
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
@@ -79,7 +85,7 @@ FILE* GetAppUsedFilePointer(
 	LPCTSTR filename,
 	size_t filelen
 ) {
-	FILE * fp = NULL;
+	FILE* fp = NULL;
 #ifdef _WIN32
 	UNREFERENCED_PARAMETER(filelen);
 	fp = OpenProgrammabledFile(filename, _T("r"));
