@@ -1334,8 +1334,8 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 						return FALSE;
 					}
 				}
-				else if (argc >= 8 && (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/r"), cmdLen) ||
-					cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/ra"), cmdLen))) {
+				else if (argc >= 8 && ((cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/r"), cmdLen)) ||
+					(cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/ra"), cmdLen)))) {
 					if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/r"), cmdLen)) {
 						pExtArg->byReverse = TRUE;
 					}

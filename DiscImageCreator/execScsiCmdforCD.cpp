@@ -1098,10 +1098,12 @@ BOOL ReadCDAll(
 		BOOL bC2Error = FALSE;
 		BOOL bReread = FALSE;
 		INT nLastErrLBA = 0;
+#ifdef _DEBUG
 		INT n2ndSessionLBA = pDisc->MAIN.nFix1stLBAof2ndSession;
 		if (pDisc->MAIN.nAdjustSectorNum < 0) {
 			n2ndSessionLBA = pDisc->SCSI.n1stLBAof2ndSession;
 		}
+#endif
 		INT nRetryCnt = 0;
 
 		while (n1stLBA < nLastLBA) {
@@ -2423,28 +2425,37 @@ BOOL ConvertScmToBin(
 
 ) {
 	BYTE aBuf[CD_RAW_SECTOR_SIZE] = {};
+	FILE* fpBin = NULL;
 	FILE* fpScm = NULL;
 	if (NULL == (fpScm = CreateOrOpenFile(pszPath, appendName0, NULL, NULL, NULL, _T(".scm"), _T("rb"), 0, 0))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
-	DWORD fsize = GetFileSize(0, fpScm);
+	BOOL bRet = TRUE;
+	try {
+		DWORD fsize = GetFileSize(0, fpScm);
 
-	FILE* fpBin = NULL;
-	if (NULL == (fpBin = CreateOrOpenFile(pszPath, appendName0, NULL, NULL, NULL, _T(".bin"), _T("wb"), 0, 0))) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return FALSE;
-	}
-	for (DWORD i = 0; i < fsize; i += CD_RAW_SECTOR_SIZE) {
-		fread(aBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpScm);
-		for (INT n = 0; n < CD_RAW_SECTOR_SIZE; n++) {
-			aBuf[n] ^= scrambled_table[n];
+		if (NULL == (fpBin = CreateOrOpenFile(pszPath, appendName0, NULL, NULL, NULL, _T(".bin"), _T("wb"), 0, 0))) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			throw FALSE;
 		}
-		fwrite(aBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpBin);
+		for (DWORD i = 0; i < fsize; i += CD_RAW_SECTOR_SIZE) {
+			if (fread(aBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpScm) < CD_RAW_SECTOR_SIZE) {
+				OutputErrorString("Failed to read [F:%s][L:%d]\n", _T(__FUNCTION__), __LINE__);
+				throw FALSE;
+			}
+			for (INT n = 0; n < CD_RAW_SECTOR_SIZE; n++) {
+				aBuf[n] ^= scrambled_table[n];
+			}
+			fwrite(aBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpBin);
+		}
+	}
+	catch (BOOL ret) {
+		bRet = ret;
 	}
 	FcloseAndNull(fpScm);
 	FcloseAndNull(fpBin);
-	return TRUE;
+	return bRet;
 }
 
 BOOL ReadCDOutOfRange(
@@ -2895,7 +2906,7 @@ BOOL ReadCDOutOfRange(
 							if (!bNonZeroByteExistIn) {
 								bNonZeroByteExistIn = HasNonZeroByte(addr2, CD_RAW_SECTOR_SIZE, 0, &uiByteOffsetIn, POSITIVE);
 								if (!bNonZeroByteExistIn) {
-									bNonZeroByteExistIn = HasNonZeroByte(addr, size, 0, &uiByteOffsetIn, POSITIVE);
+									bNonZeroByteExistIn = HasNonZeroByte(addr, (UINT)size, 0, &uiByteOffsetIn, POSITIVE);
 								}
 							}
 						}
@@ -2914,7 +2925,7 @@ BOOL ReadCDOutOfRange(
 						if (!bNonZeroByteExistIn) {
 							bNonZeroByteExistIn = HasNonZeroByte(addr3, CD_RAW_SECTOR_SIZE, 0, &uiByteOffsetIn, POSITIVE);
 							if (!bNonZeroByteExistIn) {
-								bNonZeroByteExistIn = HasNonZeroByte(addr2, size, 0, &uiByteOffsetIn, POSITIVE);
+								bNonZeroByteExistIn = HasNonZeroByte(addr2, (UINT)size, 0, &uiByteOffsetIn, POSITIVE);
 							}
 						}
 					}
@@ -2929,7 +2940,7 @@ BOOL ReadCDOutOfRange(
 					if (!bNonZeroByteExistIn) {
 						bNonZeroByteExistIn = HasNonZeroByte(addr4, CD_RAW_SECTOR_SIZE, 0, &uiByteOffsetIn, POSITIVE);
 						if (!bNonZeroByteExistIn) {
-							bNonZeroByteExistIn = HasNonZeroByte(addr3, size, 0, &uiByteOffsetIn, POSITIVE);
+							bNonZeroByteExistIn = HasNonZeroByte(addr3, (UINT)size, 0, &uiByteOffsetIn, POSITIVE);
 						}
 					}
 				}
@@ -2938,7 +2949,7 @@ BOOL ReadCDOutOfRange(
 				fwrite(addr4, sizeof(BYTE), size, fpMain);
 				fwrite(aBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpMain);
 				if ((pDisc->SCSI.toc.TrackData[0].Control & AUDIO_DATA_TRACK) == 0) {
-					bNonZeroByteExistIn = HasNonZeroByte(addr4, size, 0, &uiByteOffsetIn, POSITIVE);
+					bNonZeroByteExistIn = HasNonZeroByte(addr4, (UINT)size, 0, &uiByteOffsetIn, POSITIVE);
 					if (!bNonZeroByteExistIn) {
 						bNonZeroByteExistIn = HasNonZeroByte(aBuf, CD_RAW_SECTOR_SIZE, 0, &uiByteOffsetIn, POSITIVE);
 					}
@@ -2947,7 +2958,7 @@ BOOL ReadCDOutOfRange(
 			else {
 				fwrite(aBuf + pDisc->MAIN.uiMainDataSlideSize, sizeof(BYTE), size, fpMain);
 				if ((pDisc->SCSI.toc.TrackData[0].Control & AUDIO_DATA_TRACK) == 0) {
-					bNonZeroByteExistIn = HasNonZeroByte(aBuf + pDisc->MAIN.uiMainDataSlideSize, size, 0, &uiByteOffsetIn, POSITIVE);
+					bNonZeroByteExistIn = HasNonZeroByte(aBuf + pDisc->MAIN.uiMainDataSlideSize, (UINT)size, 0, &uiByteOffsetIn, POSITIVE);
 				}
 			}
 		}
