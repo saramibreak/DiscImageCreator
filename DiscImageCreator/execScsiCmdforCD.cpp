@@ -2821,6 +2821,8 @@ BOOL ReadCDOutOfRange(
 	BOOL bNonZeroByteExistIn = FALSE;
 	BOOL bTrack1 = FALSE;
 	BYTE aBufBak[CD_RAW_SECTOR_WITH_SUBCODE_SIZE * 4] = {};
+	BYTE lpSubcodeNext[CD_RAW_READ_SUBCODE_SIZE] = {};
+	SetReadDiscCommand(pExecType, pExtArg, pDevice, 4, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::Pack, lpCmd, FALSE);
 
 	for (INT i = LEADIN_START_LBA_SESSION_1; i < -1153; i++) {
 		if (!ExecReadCD(pExtArg, pDevice, lpCmd, i, aBuf,
@@ -2830,6 +2832,7 @@ BOOL ReadCDOutOfRange(
 			return FALSE;
 		}
 		AlignRowSubcode(lpSubcode, &aBuf[CD_RAW_SECTOR_SIZE]);
+		AlignRowSubcode(lpSubcodeNext, &aBuf[CD_RAW_SECTOR_WITH_SUBCODE_SIZE + CD_RAW_SECTOR_SIZE]);
 #if 0
 		OutputCDSub96Align(standardOut, lpSubcode, i);
 #endif
@@ -2849,10 +2852,10 @@ BOOL ReadCDOutOfRange(
 		}
 
 		if (((lpSubcode[12] & 0x0f) == ADR_ENCODES_CURRENT_POSITION && lpSubcode[13] == 1 &&
-				lpSubcode[14] == 0 && lpSubcode[19] == 0 && lpSubcode[20] == 0 && lpSubcode[21] == 0)/* ||
-			((lpSubcode[12] & 0x0f) == ADR_ENCODES_CURRENT_POSITION && lpSubcode[13] == 1 &&
-				lpSubcode[14] == 0 && lpSubcode[19] == 0 && lpSubcode[20] == 0 && lpSubcode[21] == 1)*/
-			) {
+				lpSubcode[14] == 0 && lpSubcode[19] == 0 && lpSubcode[20] == 0 && lpSubcode[21] == 0) ||
+			(((lpSubcode[12] & 0x0f) == ADR_ENCODES_MEDIA_CATALOG && lpSubcode[21] == 0) &&
+				(lpSubcodeNext[12] & 0x0f) == ADR_ENCODES_CURRENT_POSITION && lpSubcodeNext[13] == 1 &&
+				lpSubcodeNext[14] == 0 && lpSubcodeNext[19] == 0 && lpSubcodeNext[20] == 0 && lpSubcodeNext[21] == 1)) {
 			if (nOverreadSize >= 0) {
 				fwrite(aBuf, sizeof(BYTE), pDisc->MAIN.uiMainDataSlideSize, fpMain);
 				if (nOverreadSize >= 1) {
@@ -2966,10 +2969,10 @@ BOOL ReadCDOutOfRange(
 		}
 
 		if (((lpSubcode[12] & 0x0f) == ADR_ENCODES_CURRENT_POSITION && lpSubcode[13] == 1 &&
-			lpSubcode[14] == 0 && lpSubcode[19] == 0 && lpSubcode[20] == 0 && lpSubcode[21] == 0)/* ||
-			((lpSubcode[12] & 0x0f) == ADR_ENCODES_CURRENT_POSITION && lpSubcode[13] == 1 &&
-				lpSubcode[14] == 0 && lpSubcode[19] == 0 && lpSubcode[20] == 0 && lpSubcode[21] == 1)*/
-			) {
+				lpSubcode[14] == 0 && lpSubcode[19] == 0 && lpSubcode[20] == 0 && lpSubcode[21] == 0) ||
+			(((lpSubcode[12] & 0x0f) == ADR_ENCODES_MEDIA_CATALOG && lpSubcode[21] == 0) &&
+				(lpSubcodeNext[12] & 0x0f) == ADR_ENCODES_CURRENT_POSITION && lpSubcodeNext[13] == 1 &&
+				lpSubcodeNext[14] == 0 && lpSubcodeNext[19] == 0 && lpSubcodeNext[20] == 0 && lpSubcodeNext[21] == 1)) {
 			FcloseAndNull(fpSub);
 			if (NULL == (fpSub = CreateOrOpenFile(pszPath, appendName1, NULL, NULL, NULL, _T(".sub"), _T("wb"), 0, 0))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -2986,7 +2989,7 @@ BOOL ReadCDOutOfRange(
 		}
 		else {
 			fwrite(lpSubcode, sizeof(BYTE), CD_RAW_READ_SUBCODE_SIZE, fpSub);
-			memcpy(aBufBak, aBuf, CD_RAW_SECTOR_WITH_SUBCODE_SIZE * 3);
+			memcpy(aBufBak, aBuf, CD_RAW_SECTOR_WITH_SUBCODE_SIZE * 4);
 		}
 	}
 	OutputString("\n");
@@ -3016,6 +3019,7 @@ BOOL ReadCDOutOfRange(
 	}
 
 	if (pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
+		SetReadDiscCommand(pExecType, pExtArg, pDevice, 1, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::Pack, lpCmd, FALSE);
 		if (bNonZeroByteExistIn && !bNonZeroByteExistOut) {
 			INT nTmpLBA = pDisc->SCSI.nAllLength;
 			for (INT i = nTmpLBA, j = 0; nTmpLBA - FIRST_TRACK_PREGAP_SIZE < i; i--, j++) {
