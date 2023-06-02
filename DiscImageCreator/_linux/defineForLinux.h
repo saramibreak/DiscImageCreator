@@ -2250,6 +2250,8 @@ typedef struct _AACS_READ_BINDING_NONCE {
 #include <IOKit.framework/Headers/IOBSD.h>
 #include <IOKit.framework/Headers/IOKitLib.h>
 #include <IOKit.framework/Headers/scsi/SCSITaskLib.h>
+#define ENUM_DYLD_BOOL 1
+#include <mach-o/dyld.h>
 #endif
 #include <wchar.h>
 #include <locale.h>

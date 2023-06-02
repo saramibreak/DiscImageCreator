@@ -312,8 +312,12 @@ off_t _ftelli64(FILE* fp)
 int GetModuleFileName(void* a, char* path, unsigned long size)
 {
 	UNREFERENCED_PARAMETER(a);
+#ifdef __linux__
 	ssize_t v = readlink("/proc/self/exe", path, size);
 	if (v == -1) {
+#elif __MACH__
+	if (_NSGetExecutablePath(path, (uint32_t*)&size) != 0) {
+#endif
 		return FALSE;
 	}
 	return TRUE;
