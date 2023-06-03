@@ -468,7 +468,7 @@ BOOL GetEccEdcCmd(
 #ifdef _WIN32
 	BOOL bRet = GetCmd(szPathForEcc, _T("EccEdc"), _T("exe"));
 #else
-	BOOL bRet = GetCmd(szPathForEcc, _T("./EccEdc_linux"), _T(".out"));
+	BOOL bRet = GetCmd(szPathForEcc, _T("./EccEdc"), _T(".out"));
 #endif
 	if (bRet && PathFileExists(szPathForEcc)) {
 		if (!_tcscmp(pszCmd, _T("check"))) {
@@ -516,7 +516,7 @@ BOOL GetUnscCmd(
 #ifdef _WIN32
 	BOOL bRet = GetCmd(szPathForUnsc, _T("unscrambler"), _T("exe"));
 #else
-	BOOL bRet = GetCmd(szPathForUnsc, _T("./unscrambler_linux"), _T(".out"));
+	BOOL bRet = GetCmd(szPathForUnsc, _T("./unscrambler"), _T(".out"));
 #endif
 	if (bRet && PathFileExists(szPathForUnsc)) {
 		size_t size = _tcslen(szPathForUnsc) + _tcslen(pszPath) + _tcslen(szPathForIso) + 12;
@@ -573,7 +573,7 @@ BOOL GetDVDProtectionCmd(
 	BOOL bRet = GetCmd(szPathForCss, _T("DVDAuth"), _T("exe"));
 #else
 	_tmakepath(szPathForKey, szDrive, szDir, keyPath, _T(".txt"));
-	BOOL bRet = GetCmd(szPathForCss, _T("./DVDAuth_linux"), _T(".out"));
+	BOOL bRet = GetCmd(szPathForCss, _T("./DVDAuth"), _T(".out"));
 #endif
 	if (bRet && PathFileExists(szPathForCss)) {
 #ifdef _WIN32
