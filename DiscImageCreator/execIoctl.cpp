@@ -542,8 +542,8 @@ BOOL ScsiPassThroughDirect(
     IOVirtualRange* range = NULL;
 	// Allocate a virtual range for the buffer. If we had more than 1 scatter-gather entry,
 	// we would allocate more than 1 IOVirtualRange.
-	if (NULL ==	(range = (IOVirtualRange*)malloc(sizeof(IOVirtualRange)))) {
-		printf("*********** ERROR Malloc'ing IOVirtualRange ***********\n\n");
+	if (NULL == (range = (IOVirtualRange*)malloc(sizeof(IOVirtualRange)))) {
+		fprintf(stderr, "*********** ERROR Malloc'ing IOVirtualRange ***********\n\n");
 		return FALSE;
 	}
 	// Set up the range. The address is just the buffer's address. The length is our request size.
