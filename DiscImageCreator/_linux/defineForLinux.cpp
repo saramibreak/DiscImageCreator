@@ -428,15 +428,15 @@ SCSITaskInterface** GetSCSITaskInterface(char* path)
 	io_service_t service = IORegistryEntryFromPath(kIOMasterPortDefault, path);
 #else
 	// Create the dictionaries
-    CFMutableDictionaryRef matchingDict = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, NULL, NULL);
-    CFMutableDictionaryRef subDict      = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, NULL, NULL);
- 
-    // Create a dictionary with the "SCSITaskDeviceCategory" key = "SCSITaskAuthoringDevice"
-    CFDictionarySetValue(subDict, CFSTR(kIOPropertySCSITaskDeviceCategory), CFSTR(kIOPropertySCSITaskAuthoringDevice));
- 
-    // Add the dictionary to the main dictionary with the key "IOPropertyMatch" to
-    // narrow the search to the above dictionary.
-    CFDictionarySetValue(matchingDict, CFSTR(kIOPropertyMatchKey), subDict);
+	CFMutableDictionaryRef matchingDict = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, NULL, NULL);
+	CFMutableDictionaryRef subDict      = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, NULL, NULL);
+
+	// Create a dictionary with the "SCSITaskDeviceCategory" key = "SCSITaskAuthoringDevice"
+	CFDictionarySetValue(subDict, CFSTR(kIOPropertySCSITaskDeviceCategory), CFSTR(kIOPropertySCSITaskAuthoringDevice));
+
+	// Add the dictionary to the main dictionary with the key "IOPropertyMatch" to
+	// narrow the search to the above dictionary.
+	CFDictionarySetValue(matchingDict, CFSTR(kIOPropertyMatchKey), subDict);
 
 	io_iterator_t iterator = 0;
 	IOServiceGetMatchingServices(kIOMasterPortDefault, matchingDict, &iterator);
@@ -454,7 +454,7 @@ SCSITaskInterface** GetSCSITaskInterface(char* path)
 				printf("Class: %s\nPath: %s\n", service_class, service_path);
 				service = tmp;
 			}
-  		} while (tmp);
+		} while (tmp);
 		IOObjectRelease(iterator);
 	}
 	if (!service) {
@@ -525,14 +525,14 @@ SCSITaskInterface** GetSCSITaskInterface(char* path)
 int CloseHandle(SCSITaskInterface** task)
 {
 	// Release the task interface
-    (*task)->Release(task);
-    (*interface)->ReleaseExclusiveAccess(interface);
- 
-    // Release the SCSITaskDeviceInterface.
-    (*interface)->Release(interface);
-    (*mmcInterface)->Release(mmcInterface);
- 
-    IODestroyPlugInInterface(plugInInterface);
+	(*task)->Release(task);
+	(*interface)->ReleaseExclusiveAccess(interface);
+
+	// Release the SCSITaskDeviceInterface.
+	(*interface)->Release(interface);
+	(*mmcInterface)->Release(mmcInterface);
+
+	IODestroyPlugInInterface(plugInInterface);
 	return 1;
 }
 

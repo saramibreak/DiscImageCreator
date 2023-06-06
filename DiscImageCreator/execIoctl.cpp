@@ -538,8 +538,8 @@ BOOL ScsiPassThroughDirect(
 //	swb.io_hdr.flags = SG_FLAG_DIRECT_IO;
 #elif __MACH__
 	// https://developer.apple.com/library/archive/documentation/DeviceDrivers/Conceptual/WorkingWithSAM/WWS_SAMDevInt/WWS_SAM_DevInt.html#//apple_ref/doc/uid/TP30000387-SW1
-    IOReturn         err  = 0;
-    IOVirtualRange* range = NULL;
+	IOReturn         err  = 0;
+	IOVirtualRange* range = NULL;
 	// Allocate a virtual range for the buffer. If we had more than 1 scatter-gather entry,
 	// we would allocate more than 1 IOVirtualRange.
 	if (NULL == (range = (IOVirtualRange*)malloc(sizeof(IOVirtualRange)))) {
