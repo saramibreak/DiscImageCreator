@@ -70,16 +70,34 @@ BOOL ReadDVDReverse(
 		INT direction = SG_DXFER_FROM_DEV;
 #endif
 		BYTE byScsiStatus = 0;
+		UINT uiRetryCnt = 0;
 		FOUR_BYTE LBA;
-		for (LBA.AsULong = (ULONG)nLastLBA; (ULONG)nStartLBA <= LBA.AsULong; LBA.AsULong--) {
+		for (INT nLBA = nLastLBA; nStartLBA <= nLBA; nLBA--) {
+			LBA.AsULong = (ULONG)nLBA;
 			REVERSE_BYTES(&cdb.LogicalBlock, &LBA);
+
 			if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, lpBuf,
 				direction, DISC_MAIN_DATA_SIZE, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-				throw FALSE;
+				if (++uiRetryCnt <= pExtArg->uiMaxRereadNum) {
+					OutputLog(standardOut | fileMainError, "Read retry from %d (Pass %u/%u)\n", nLBA, uiRetryCnt, pExtArg->uiMaxRereadNum);
+					nLBA += (INT)transferLen.AsULong;
+					continue;
+				}
+				else {
+					if (pExtArg->byPadSector) {
+						OutputLog(standardOut | fileMainError, "Padded by 0x%02X\n", pExtArg->uiPadNum);
+						FillMemory(lpBuf, DISC_MAIN_DATA_SIZE * transferLen.AsULong, (INT)pExtArg->uiPadNum);
+						uiRetryCnt = 0;
+					}
+					else {
+						OutputString("Retry NG\n");
+						throw FALSE;
+					}
+				}
 			}
 			fwrite(lpBuf, sizeof(BYTE), (size_t)DISC_MAIN_DATA_SIZE, fpRev);
-			OutputString("\rCreating iso(LBA) %8lu/%8d", LBA.AsULong, nLastLBA);
+			OutputString("\rCreating _reverse.iso(LBA) %8d/%8d", nLBA, nLastLBA);
 		}
 		OutputString("\n");
 		FcloseAndNull(fpRev);
@@ -96,14 +114,17 @@ BOOL ReadDVDReverse(
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
 		}
-		for (INT i = 1; i <= nLastLBA - nStartLBA + 1; i++) {
-			fseek(fpRev, -DISC_MAIN_DATA_SIZE * i, SEEK_END);
+		INT nTotal = nLastLBA - nStartLBA + 1;
+		for (INT i = 1; i <= nTotal; i++) {
+			_fseeki64(fpRev, -DISC_MAIN_DATA_SIZE * static_cast<long long>(i), SEEK_END);
 			if (fread(lpBuf, sizeof(BYTE), DISC_MAIN_DATA_SIZE, fpRev) < DISC_MAIN_DATA_SIZE) {
 				OutputErrorString("Failed to read [F:%s][L:%d]\n", _T(__FUNCTION__), __LINE__);
 				return FALSE;
 			}
 			fwrite(lpBuf, sizeof(BYTE), DISC_MAIN_DATA_SIZE, fp);
+			OutputString("\rCreating iso(LBA) %8d/%8d", i, nTotal);
 		}
+		OutputString("\n");
 		FcloseAndNull(fp);
 	}
 	catch (BOOL ret) {
@@ -897,12 +918,12 @@ BOOL ReadDVDRaw(
 		
 		if (pExtArg->byRange) {
 			if (nStartLBA % transferLen.AsULong) {
-				OutputString("[INFO] startLBA of /ra must be a multiple of 16. It's fixed %d -> %d\n", nStartLBA, nStartLBA - nStartLBA % transferLen.AsULong);
-				nStartLBA -= nStartLBA % transferLen.AsULong;
+				OutputString("[INFO] startLBA of /ra must be a multiple of 16. It's fixed %d -> %ld\n", nStartLBA, nStartLBA - nStartLBA % transferLen.AsULong);
+				nStartLBA -= (INT)(nStartLBA % transferLen.AsULong);
 			}
 			nLBA = nStartLBA;
 			nLast = nLastLBA;
-			sectorNum = 0x30000 + nStartLBA;
+			sectorNum = (DWORD)(0x30000 + nStartLBA);
 		}
 
 		for (; nLBA < nLast; nLBA += (INT)transferAndMemSize) {
@@ -950,7 +971,7 @@ BOOL ReadDVDRaw(
 				else if (!(pDevice->byPlxtrDrive && bNintendoDisc)) {
 					if (++uiRetryCnt <= pExtArg->uiMaxRereadNum) {
 						OutputLog(standardOut | fileMainError, "Read retry from %d (Pass %u/%u)\n", nLBA, uiRetryCnt, pExtArg->uiMaxRereadNum);
-						nLBA -= transferAndMemSize;
+						nLBA -= (INT)transferAndMemSize;
 						continue;
 					}
 					else {
