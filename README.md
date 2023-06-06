@@ -4,7 +4,7 @@
   CD and GD, it can dump considering a drive + CD (=combined) offset.  
   What is the drive offset? Please look [this document](http://dbpoweramp.com/spoons-audio-guide-cd-ripping.htm)
   
-  This program works on Windows PC (Windows XP or higher) and Linux.
+  This program works on Windows PC (Windows XP or higher) and Unix based PC (Linux, macOS).
   
   [MPF](https://github.com/SabreTools/MPF) can work this program with GUI.
 
@@ -146,6 +146,7 @@ See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)
   - Microsoft Xbox One
   - Sony PlayStation 3
   - Sony PlayStation 4
+  - Sony PlayStation 5
 
   Protected Disc
   - Cactus Data Shield 100 [fake TOC]
@@ -253,7 +254,10 @@ See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)
       https://docs.microsoft.com/en-us/windows/wsl/install-win10
 
 - Linux
-  - gcc, make
+  - GCC, make
+
+- macOS
+  - Clang, make, MacOSX.sdk
 
 ## License & Copyright
 See LICENSE  
