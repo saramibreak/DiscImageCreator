@@ -2730,14 +2730,15 @@ BOOL ReadCDOutOfRange(
 		if (i == nStartLBA + nOverreadSize) {
 			fwrite(aBuf + pDisc->MAIN.uiMainDataSlideSize, sizeof(BYTE), CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize, fpMain);
 		}
-		else if (pDisc->SCSI.by1stMultiSessionTrkNum && i == nStartLBA + nLastLBA - 1) {
+		else if (i == nStartLBA + nLastLBA - 1) {
+			// 101th sector can't read by Plextor
 			fwrite(aBuf, sizeof(BYTE), pDisc->MAIN.uiMainDataSlideSize, fpMain);
 		}
 		else {
 			fwrite(aBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpMain);
 		}
 
-		if (nStartLBA <= i) {
+		if (nStartLBA <= i && i < nStartLBA + nLastLBA - 1) {
 			fwrite(lpSubcode, sizeof(BYTE), CD_RAW_READ_SUBCODE_SIZE, fpSub);
 		}
 		OutputString("\rCreating%s%s & .sub (LBA) %8d/%8d", appendNameA, ext, i, nStartLBA + nLastLBA - 1);
