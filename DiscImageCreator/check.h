@@ -44,6 +44,10 @@ BOOL IsValid0xF1SupportedDrive(
 	PDEVICE pDevice
 );
 
+BOOL IsValidAsusDriveWith310(
+	PDEVICE pDevice
+);
+
 BOOL IsValidPlextorDrive(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice

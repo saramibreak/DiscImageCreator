@@ -226,6 +226,19 @@ BOOL IsValid0xF1SupportedDrive(
 	return FALSE;
 }
 
+BOOL IsValidAsusDriveWith310(
+	PDEVICE pDevice
+) {
+	if (!strncmp(pDevice->szVendorId, "ASUS    ", DRIVE_VENDOR_ID_SIZE)) {
+		if (!strncmp(pDevice->szProductId, "BW-16D1HT       ", DRIVE_PRODUCT_ID_SIZE)) {
+			if (!strncmp(pDevice->szProductRevisionLevel, "3.10", DRIVE_VERSION_ID_SIZE)) {
+				return TRUE;
+			}
+		}
+	}
+	return FALSE;
+}
+
 BOOL IsValidPlextorDrive(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice

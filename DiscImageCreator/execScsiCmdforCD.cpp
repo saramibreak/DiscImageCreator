@@ -377,7 +377,7 @@ BOOL ReadCDForRereadingSectorType1(
 ) {
 	LPBYTE lpBuf = NULL;
 	BYTE byTransferLength = 3;
-	if (IsValid0xF1SupportedDrive(pDevice)) {
+	if (IsValid0xF1SupportedDrive(pDevice) || IsValidAsusDriveWith310(pDevice)) {
 		byTransferLength = 1;
 	}
 	if (NULL == (lpBuf = (LPBYTE)calloc(CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * (size_t)byTransferLength, sizeof(BYTE)))) {
@@ -410,7 +410,7 @@ BOOL ReadCDForRereadingSectorType1(
 				OutputC2ErrorWithLBALog("crc32[%03u]: 0x%08lx ", nLBA, i, dwTmpCrc32);
 
 				memcpy(pDiscPerSector->data.current, lpBuf, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE);
-				if (IsValid0xF1SupportedDrive(pDevice)) {
+				if (IsValid0xF1SupportedDrive(pDevice) || IsValidAsusDriveWith310(pDevice)) {
 					bRet = ContainsC2Error(pDevice, pDisc, 0, CD_RAW_READ_C2_294_SIZE
 						, pDiscPerSector->data.current, &pDiscPerSector->uiC2errorNum, nLBA, FALSE);
 				}
