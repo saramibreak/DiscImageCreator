@@ -736,10 +736,12 @@ VOID OutputDVDManufacturerDescriptor(
 	OutputMainChannel(type, dvdManufacturer->ManufacturingInformation
 		, _T("ManufacturingInformation"), 0, sizeof(dvdManufacturer->ManufacturingInformation));
 	if (pDisc->DVD.discType != DISC_TYPE_DVD::xboxdvd) {
-		if (!strncmp((LPCCH)&dvdManufacturer->ManufacturingInformation[16], "Nintendo Game Disk", 18)) {
+		if (!strncmp((LPCCH)&dvdManufacturer->ManufacturingInformation[16], "Nintendo Game Disk", 18) ||
+			!strncmp((LPCCH)&dvdManufacturer->ManufacturingInformation[16], "Nintendo Emulation Disk", 23)) {
 			pDisc->DVD.discType = DISC_TYPE_DVD::gamecube;
 		}
-		else if (!strncmp((LPCCH)&dvdManufacturer->ManufacturingInformation[16], "Nintendo NNGC Disk", 18)) {
+		else if (!strncmp((LPCCH)&dvdManufacturer->ManufacturingInformation[16], "Nintendo NNGC Disk", 18) ||
+			!strncmp((LPCCH)&dvdManufacturer->ManufacturingInformation[16], "Nintendo NNGC Emu. Disk", 23)) {
 			pDisc->DVD.discType = DISC_TYPE_DVD::wii;
 		}
 		else {

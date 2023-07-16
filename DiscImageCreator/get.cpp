@@ -509,8 +509,11 @@ BOOL GetUnscCmd(
 	_TCHAR szDir[_MAX_DIR] = {};
 	_TCHAR szFname[_MAX_FNAME] = {};
 	_TCHAR szPathForIso[_MAX_PATH] = {};
+	_TCHAR szPathForLog[_MAX_PATH] = {};
+
 	_tsplitpath(pszPath, szDrive, szDir, szFname, NULL);
 	_tmakepath(szPathForIso, szDrive, szDir, szFname, _T("iso"));
+	_tmakepath(szPathForLog, szDrive, szDir, szFname, _T("txt"));
 
 	_TCHAR szPathForUnsc[_MAX_PATH] = {};
 #ifdef _WIN32
@@ -519,13 +522,13 @@ BOOL GetUnscCmd(
 	BOOL bRet = GetCmd(szPathForUnsc, _T("./unscrambler"), _T(".out"));
 #endif
 	if (bRet && PathFileExists(szPathForUnsc)) {
-		size_t size = _tcslen(szPathForUnsc) + _tcslen(pszPath) + _tcslen(szPathForIso) + 12;
+		size_t size = _tcslen(szPathForUnsc) + _tcslen(pszPath) + _tcslen(szPathForIso) + _tcslen(szPathForIso) + 22;
 #ifdef _WIN32
 		_sntprintf(pszStr, size,
-			_T("\"\"%s\" \"%s\" \"%s\"\" %d"), szPathForUnsc, pszPath, szPathForIso, nType);
+			_T("\"\"%s\" \"%s\" \"%s\" %d > \"%s\" 2>$1\""), szPathForUnsc, pszPath, szPathForIso, nType, szPathForLog);
 #else
 		_sntprintf(pszStr, size,
-			_T("%s %s %s %d"), szPathForUnsc, pszPath, szPathForIso, nType);
+			_T("%s %s %s %d > %s 2>$1"), szPathForUnsc, pszPath, szPathForIso, nType, szPathForLog);
 #endif
 	}
 	else {

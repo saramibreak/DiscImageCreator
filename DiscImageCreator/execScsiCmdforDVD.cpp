@@ -26,8 +26,11 @@
 #include "outputScsiCmdLogforDVD.h"
 
 #define GAMECUBE_SIZE		(712880)
+#define NR_SIZE				(716464)
 #define WII_SL_SIZE			(2294912)
+#define RVT_SL_SIZE			(2298496)
 #define WII_DL_SIZE			(4155840)
+#define RVT_DL_SIZE			(4171711)
 #define XBOX_SIZE			(3820880)
 #define XBOX_LAYER_BREAK	(1913776)
 #define XGD2_LAYER_BREAK	(1913760)
@@ -631,8 +634,12 @@ BOOL IsNintendoDisc(
 	PDISC pDisc
 ) {
 	if (pDisc->SCSI.nAllLength == GAMECUBE_SIZE ||
+		pDisc->SCSI.nAllLength == NR_SIZE ||
 		pDisc->SCSI.nAllLength == WII_SL_SIZE ||
-		pDisc->SCSI.nAllLength == WII_DL_SIZE) {
+		pDisc->SCSI.nAllLength == RVT_SL_SIZE ||
+		pDisc->SCSI.nAllLength == WII_DL_SIZE ||
+		pDisc->SCSI.nAllLength == RVT_DL_SIZE
+		) {
 		return TRUE;
 	}
 	return FALSE;
@@ -918,7 +925,8 @@ BOOL ReadDVDRaw(
 		
 		if (pExtArg->byRange) {
 			if (nStartLBA % transferLen.AsULong) {
-				OutputString("[INFO] startLBA of /ra must be a multiple of 16. It's fixed %d -> %ld\n", nStartLBA, nStartLBA - nStartLBA % transferLen.AsULong);
+				OutputString("[INFO] startLBA of /ra must be a multiple of 16. It's fixed %d -> %ld\n"
+					, nStartLBA, nStartLBA - nStartLBA % transferLen.AsULong);
 				nStartLBA -= (INT)(nStartLBA % transferLen.AsULong);
 			}
 			nLBA = nStartLBA;
@@ -970,7 +978,8 @@ BOOL ReadDVDRaw(
 				}
 				else if (!(pDevice->byPlxtrDrive && bNintendoDisc)) {
 					if (++uiRetryCnt <= pExtArg->uiMaxRereadNum) {
-						OutputLog(standardOut | fileMainError, "Read retry from %d (Pass %u/%u)\n", nLBA, uiRetryCnt, pExtArg->uiMaxRereadNum);
+						OutputLog(standardOut | fileMainError
+							, "Read retry from %d (Pass %u/%u)\n", nLBA, uiRetryCnt, pExtArg->uiMaxRereadNum);
 						nLBA -= (INT)transferAndMemSize;
 						continue;
 					}
@@ -1318,6 +1327,71 @@ BOOL ExecReadingKey(
 	return bRet;
 }
 
+//#define ControlDataZoneTEST
+BOOL OutputControlDataZone(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	PDISC pDisc,
+	LPCTSTR pszFullPath,
+	INT direction
+) {
+	_TCHAR szPath[_MAX_PATH] = {};
+	_TCHAR szOutPath[_MAX_PATH] = {};
+	BYTE lpBuf[DVD_RAW_SECTOR_SIZE * 16] = {};
+	FILE* fpCdzRaw = NULL;
+
+#ifdef ControlDataZoneTEST
+	_tcsncpy(szOutPath, _T("E:\\!logs\\test_CDZ.raw"), SIZE_OF_ARRAY(szOutPath) - 1);
+#else
+	_tcsncpy(szPath, pszFullPath, SIZE_OF_ARRAY(szPath) - 1);
+
+	fpCdzRaw = CreateOrOpenFile(szPath, _T("_CDZ"), szOutPath, NULL, NULL, _T(".raw"), _T("wb"), 0, 0);
+	if (!fpCdzRaw) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		return FALSE;
+	}
+	BYTE CacheCmd[CDB12GENERIC_LENGTH] = {};
+	CacheCmd[0] = SCSIOP_READ_DATA_BUFF;
+	CacheCmd[1] = 0x02;
+	CacheCmd[6] = LOBYTE(HIWORD(DVD_RAW_SECTOR_SIZE * 16));
+	CacheCmd[7] = HIBYTE(LOWORD(DVD_RAW_SECTOR_SIZE * 16));
+	CacheCmd[8] = LOBYTE(LOWORD(DVD_RAW_SECTOR_SIZE * 16));
+
+	BYTE byScsiStatus = 0;
+	// read the drive cache memory
+	if (!ScsiPassThroughDirect(pExtArg, pDevice, CacheCmd, CDB10GENERIC_LENGTH, lpBuf,
+		direction, DVD_RAW_SECTOR_SIZE * 16, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
+		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+	}
+	fwrite(lpBuf, sizeof(BYTE), DVD_RAW_SECTOR_SIZE * 16, fpCdzRaw);
+	FcloseAndNull(fpCdzRaw);
+	ZeroMemory(lpBuf, DVD_RAW_SECTOR_SIZE * 16);
+#endif
+	BOOL bRet = -1;
+	_TCHAR str[_MAX_PATH * 3 + 4] = {};
+	if (GetUnscCmd(str, szOutPath, 1)) {
+		bRet = _tsystem(str);
+		if (bRet == 0) {
+			fpCdzRaw = CreateOrOpenFile(szOutPath, NULL, NULL, NULL, NULL, _T(".iso"), _T("rb"), 0, 0);
+			if (!fpCdzRaw) {
+				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+				return FALSE;
+			}
+			fread(lpBuf, sizeof(BYTE), DISC_MAIN_DATA_SIZE * 16, fpCdzRaw);
+			FcloseAndNull(fpCdzRaw);
+
+			DWORD dwSectorLen = 0;
+			OutputDVDStructureFormat(pDisc, DvdPhysicalDescriptor, DISC_MAIN_DATA_SIZE, lpBuf, &dwSectorLen, 0);
+			pDisc->SCSI.nAllLength = (INT)dwSectorLen;
+
+			OutputDVDStructureFormat(pDisc, DvdManufacturerDescriptor, DISC_MAIN_DATA_SIZE, lpBuf + DISC_MAIN_DATA_SIZE, &dwSectorLen, 0);
+			// 14 * 2048 sectors of the rest are "Content provider information". It's all zero bytes. See Ecma-267 p.37
+		}
+	}
+	bRet = bRet == 0 ? TRUE : FALSE;
+	return bRet;
+}
+
 #define DVD_STRUCTURE_SIZE (sizeof(DVD_DESCRIPTOR_HEADER) + (sizeof(DVD_STRUCTURE_LIST_ENTRY) * 0xff))
 BOOL ReadDiscStructure(
 	PEXEC_TYPE pExecType,
@@ -1516,6 +1590,10 @@ BOOL ReadDiscStructure(
 				, cdb.RMDBlockNumber[0], cdb.RMDBlockNumber[1], cdb.RMDBlockNumber[2], cdb.RMDBlockNumber[3]
 				, cdb.LayerNumber, cdb.Format, cdb.AllocationLength[0], cdb.AllocationLength[1]
 				, (UCHAR)(cdb.Reserved3 << 6 | cdb.AGID), cdb.Control);
+
+			if (pExtArg->byRawDump && pEntry->FormatCode == DvdManufacturerDescriptor) {
+				OutputControlDataZone(pExtArg, pDevice, pDisc, pszFullPath, direction);
+			}
 			continue;
 		}
 		formatLen.AsUShort = (WORD)(MAKEWORD(lpFormat[1], lpFormat[0]) + 2); // 2 is size of "DVD_DESCRIPTOR_HEADER::Length" itself
@@ -1549,6 +1627,9 @@ BOOL ReadDiscStructure(
 						pHash->pHashChunk[pHash->uiIndex].ui64FileSize = DISC_MAIN_DATA_SIZE;
 						pHash->uiIndex++;
 						FcloseAndNull(fpDmi);
+#ifdef ControlDataZoneTEST
+						OutputControlDataZone(pExtArg, pDevice, pDisc, pszFullPath, direction);
+#endif
 					}
 				}
 				DWORD dwSectorLen = 0;
