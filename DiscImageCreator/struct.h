@@ -208,10 +208,11 @@ typedef struct _EXT_ARG {
 	UINT uiSecuritySector[16];	// for xgd2swap
 	INT nAudioCDOffsetNum;		// for /a and /vn
 	UINT uiMaxRereadNum;		// for /c2 val 1 and /rr and /nss
-	UINT uiC2Offset;			// for /c2 val 2
-	INT nC2RereadingType;		// for /c2 val 3
-	INT nStartLBAForC2;			// for /c2 val 4
-	INT nEndLBAForC2;			// for /c2 val 5
+	UINT uiReadingSpeedForC2;	// for /c2 val 2
+	UINT uiC2Offset;			// for /c2 val 3
+	INT nC2RereadingType;		// for /c2 val 4
+	INT nStartLBAForC2;			// for /c2 val 5
+	INT nEndLBAForC2;			// for /c2 val 6
 	UINT uiCacheDelNum;			// for /f. delete cache of the drive per value. Default is 1 (DEFAULT_CACHE_DELETE_VAL)
 	DWORD dwTimeoutNum;			// for /sf. default is 60 (DEFAULT_SPTD_TIMEOUT_VAL)
 	UINT uiSubAddionalNum;		// for /s

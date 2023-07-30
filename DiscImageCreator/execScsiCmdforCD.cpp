@@ -392,6 +392,7 @@ BOOL ReadCDForRereadingSectorType1(
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
+		SetDiscSpeed(pExecType, pExtArg, pDevice, pExtArg->uiReadingSpeedForC2);
 		SetReadDiscCommand(pExecType, pExtArg, pDevice, byTransferLength
 			, CDFLAG::_READ_CD::byte294, CDFLAG::_READ_CD::Raw, lpCmd, FALSE);
 

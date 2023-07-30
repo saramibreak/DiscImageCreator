@@ -930,65 +930,84 @@ int SetOptionC2(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 			return FALSE;
 		}
 		if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
-			pExtArg->uiC2Offset = (UINT)_tcstoul(argv[(*i)++], &endptr, 10);
+			pExtArg->uiReadingSpeedForC2 = (UINT)_tcstoul(argv[(*i)++], &endptr, 10);
 			if (*endptr) {
 				OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
 				return FALSE;
 			}
-			else if (CD_RAW_READ_C2_294_SIZE * 2 < pExtArg->uiC2Offset) {
-				OutputErrorString("[%u] is invalid argument. Please input from 0 to %d.\n", pExtArg->uiC2Offset, CD_RAW_READ_C2_294_SIZE * 2 - 1);
-				return FALSE;
-			}
 			if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
-				pExtArg->nC2RereadingType = (INT)_tcstol(argv[(*i)++], &endptr, 10);
+				pExtArg->uiC2Offset = (UINT)_tcstoul(argv[(*i)++], &endptr, 10);
 				if (*endptr) {
 					OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
 					return FALSE;
 				}
-				if (pExtArg->nC2RereadingType != 0) {
-					if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1) && pExtArg->nC2RereadingType == 1) {
-						pExtArg->nStartLBAForC2 = (INT)_tcstol(argv[(*i)++], &endptr, 10);
-						if (*endptr) {
-							OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
-							return FALSE;
-						}
-						if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
-							pExtArg->nEndLBAForC2 = (INT)_tcstol(argv[(*i)++], &endptr, 10);
+				else if (CD_RAW_READ_C2_294_SIZE * 2 < pExtArg->uiC2Offset) {
+					OutputErrorString("[%u] is invalid argument. Please input from 0 to %d.\n", pExtArg->uiC2Offset, CD_RAW_READ_C2_294_SIZE * 2 - 1);
+					return FALSE;
+				}
+				if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
+					pExtArg->nC2RereadingType = (INT)_tcstol(argv[(*i)++], &endptr, 10);
+					if (*endptr) {
+						OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
+						return FALSE;
+					}
+					if (pExtArg->nC2RereadingType != 0) {
+						if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1) && pExtArg->nC2RereadingType == 1) {
+							pExtArg->nStartLBAForC2 = (INT)_tcstol(argv[(*i)++], &endptr, 10);
 							if (*endptr) {
 								OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
 								return FALSE;
 							}
+							if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
+								pExtArg->nEndLBAForC2 = (INT)_tcstol(argv[(*i)++], &endptr, 10);
+								if (*endptr) {
+									OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
+									return FALSE;
+								}
+							}
+							else {
+								pExtArg->nEndLBAForC2 = 0;
+								OutputString("/c2 val5 was omitted. set [%d]\n", 0);
+							}
 						}
 						else {
+							pExtArg->nStartLBAForC2 = 0;
+							OutputString("/c2 val4 was omitted. set [%d]\n", 0);
 							pExtArg->nEndLBAForC2 = 0;
 							OutputString("/c2 val5 was omitted. set [%d]\n", 0);
 						}
 					}
-					else {
-						pExtArg->nStartLBAForC2 = 0;
-						OutputString("/c2 val4 was omitted. set [%d]\n", 0);
-						pExtArg->nEndLBAForC2 = 0;
-						OutputString("/c2 val5 was omitted. set [%d]\n", 0);
-					}
+				}
+				else {
+					pExtArg->nC2RereadingType = 0;
+					OutputString("/c2 val4 was omitted. set [%d]\n", 0);
 				}
 			}
 			else {
-				pExtArg->nC2RereadingType = 0;
+				pExtArg->uiC2Offset = 0;
 				OutputString("/c2 val3 was omitted. set [%d]\n", 0);
+				pExtArg->nC2RereadingType = 0;
+				OutputString("/c2 val4 was omitted. set [%d]\n", 0);
 			}
 		}
 		else {
+			pExtArg->uiReadingSpeedForC2 = s_uiSpeed;
+			OutputString("/c2 val2 was omitted. set [%d]\n", s_uiSpeed);
 			pExtArg->uiC2Offset = 0;
-			OutputString("/c2 val2 was omitted. set [%d]\n", 0);
+			OutputString("/c2 val3 was omitted. set [%d]\n", 0);
+			pExtArg->nC2RereadingType = 0;
+			OutputString("/c2 val4 was omitted. set [%d]\n", 0);
 		}
 	}
 	else {
 		pExtArg->uiMaxRereadNum = DEFAULT_REREAD_VAL;
 		OutputString("/c2 val1 was omitted. set [%d]\n", DEFAULT_REREAD_VAL);
+		pExtArg->uiReadingSpeedForC2 = s_uiSpeed;
+		OutputString("/c2 val2 was omitted. set [%d]\n", s_uiSpeed);
 		pExtArg->uiC2Offset = 0;
-		OutputString("/c2 val2 was omitted. set [%d]\n", 0);
-		pExtArg->nC2RereadingType = 0;
 		OutputString("/c2 val3 was omitted. set [%d]\n", 0);
+		pExtArg->nC2RereadingType = 0;
+		OutputString("/c2 val4 was omitted. set [%d]\n", 0);
 	}
 	return TRUE;
 }
@@ -1831,14 +1850,15 @@ void printUsage(void)
 		"\t/d8\tUse 0xd8 as the opcode for Reading CD forcibly\n"
 		"\t/c2\tContinue reading CD to recover C2 error existing sector\n"
 		"\t\t\tval1\tvalue to reread (default: 4000)\n"
-		"\t\t\tval2\tvalue to set the C2 offset (default: 0)\n"
-		"\t\t\tval3\t0: reread sector c2 error is reported (default)\n"
+		"\t\t\tval2\treading speed when fixing the C2 error (default: same as the <DriveSpeed(0-72)>)"
+		"\t\t\tval3\tvalue to set the C2 offset (default: 0)\n"
 	);
 	stopMessage();
 	OutputString(
+		"\t\t\tval4\t0: reread sector c2 error is reported (default)\n"
 		"\t\t\t    \t1: reread all (or from first to last) sector\n"
-		"\t\t\tval4\tfirst LBA to reread (default: 0)\n"
-		"\t\t\tval5\tlast LBA to reread (default: end-of-sector)\n"
+		"\t\t\tval5\tfirst LBA to reread (default: 0)\n"
+		"\t\t\tval6\tlast LBA to reread (default: end-of-sector)\n"
 		"\t\t\t    \tval3, 4 is used when val2 is 1\n"
 		"\t/p\tDumping the AMSF from 00:00:00 to 00:01:74\n"
 		"\t\t\tFor SagaFrontier Original Sound Track (Disc 3) etc.\n"
@@ -1862,10 +1882,10 @@ void printUsage(void)
 		"\t/am\tScan anti-mod string\n"
 		"\t\t\tFor PlayStation\n"
 		"\t/vn\tSearch specific bytes\n"
-		"\t\t\tFor VideoNow\n"
 	);
 	stopMessage();
 	OutputString(
+		"\t\t\tFor VideoNow\n"
 		"\t\t\tval\tCombined offset is shifted for negative direction if positive value is set\n"
 		"\t/vnc\tSearch specific bytes\n"
 		"\t\t\tFor VideoNow Color\n"
@@ -1894,10 +1914,10 @@ void printUsage(void)
 		"Option (for DVD)\n"
 		"\t/c\tLog Copyright Management Information\n"
 		"\t/rr\tRetry reading when error occurs\n"
-		"\t\t\tval\tMax retry value (default: 10)\n"
 	);
 	stopMessage();
 	OutputString(
+		"\t\t\tval\tMax retry value (default: 10)\n"
 		"\t/sk\tSkip sector for protect (ARccOS, RipGuard)\n"
 		"\t\t\tval\tsector num\n"
 		"\t/nss\tNo skip reading SS sectors (only XBOX)\n"
