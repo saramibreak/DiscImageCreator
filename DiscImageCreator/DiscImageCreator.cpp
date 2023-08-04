@@ -338,10 +338,11 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 					}
 					if (*pExecType == cd || *pExecType == swap) {
 						if (IsPregapOfTrack1ReadableDrive(pDevice)) {
-							for (INT i = 0; i < 5; i++) {
+							for (INT i = 1; i <= 5; i++) {
 								if (ReadCDOutOfRange(pExecType, pExtArg, pDevice, pDisc, pszFullPath)) {
 									break;
 								}
+								OutputErrorString("Retry %d/%d\n", i, 5);
 							}
 						}
 						else {
