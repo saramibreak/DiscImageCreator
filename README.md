@@ -35,7 +35,7 @@
    - ASUS
      - BC-12D2HT (Combined offset minus disc only), BW-16D1HT (ditto)
        - BW-16D1HT Firmware 3.02 supports the combined offset plus disc  
-       See also http://wiki.redump.org/index.php?title=DiscImageCreator:_Optical_Disc_Drive_Compatibility#Recommended_Non-Plextor_ODDs
+       See also http://wiki.redump.org/index.php?title=DiscImageCreator:_Optical_Disc_Drive_Compatibility#Non-Plextor_ODDs_.28Plextors_are_preferable.2C_as_more_testing_is_needed_for_these.29
    - Hitachi-LG
      - UH12NS30 (Combined offset minus disc only)
 - CD: (Swappable drive) (This is the comfirmed drive list. Actually, many drive perhaps supports to swap)
@@ -48,6 +48,14 @@
      - TS-H353A, TS-H352C, TS-H192C
      - http://forum.redump.org/post/14552/#p14552 <- This drive might be supported too.
 - DVD: All supported drive
+- DVD (Raw): 
+     - PLEXTOR (No OEM Drive)
+       - DVD model: PX-760, PX-755, PX-716, PX-714, PX-712, PX-708, PX-704
+     - LITE ON
+       - LH-18A1P
+     - ASUS/LG
+       - BW-16D1HT, BC-12D2HT etc. (Firmware 3.02 is needed.)
+       See also http://wiki.redump.org/index.php?title=DiscImageCreator:_Optical_Disc_Drive_Compatibility#Non-Plextor_ODDs_.28Plextors_are_preferable.2C_as_more_testing_is_needed_for_these.29
 - GC/Wii
    - Hitachi-LG
      - GDR-8082N, GDR-8083N, GDR-8084N  
@@ -55,6 +63,13 @@
        GCC-4160N, GCC-4240N, GCC-4243N, GCC-4244N, GCC-4247N  
        (GDR-8085N, GDR-8087N and GCC-4246N haven't tested yet, but probably supports to dump.)  
        (GCC-4241N and GCC-4242N supports to dump but many errors occurred.) 
+     - PLEXTOR (No OEM Drive)
+       - DVD model: PX-760, PX-755, PX-716, PX-714, PX-712, PX-708, PX-704
+         - It's extremely slow.
+- GC/Wii (Dev disc)
+     - PLEXTOR (No OEM Drive)
+       - DVD model: PX-760, PX-755, PX-716, PX-714, PX-712, PX-708, PX-704
+         - It's extremely slow.
 - XBOX, XBOX 360
    - TSSTcorp
      - TS-H353A, TS-H352C, SH-D162C, SH-D162D, SH-D163A, SH-D163B (needs the firmware hacked by kreon)
@@ -189,10 +204,18 @@ See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)
    => This is a BD based disc, but I don't know the details.
 
 ## Created files information
-- _[BuildData].txt  
-  command-line argument.
+- _[BuildDate].txt  
+  command-line argument. "BuildDate" format is [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601)
 - .bin  
-  2352 bytes/sector binary image of the CD. This file is used to a cue file.
+  2352 bytes/sector binary image of the CD. This file is used to a cue file.  
+  - (Track 00).bin / (Track 00)(Session 1).bin / (Track 00)(Session 2).bin  
+    "Lead-in".  
+  - (Track 01)(-LBA).bin  
+    From -150 to -1 sectors of the track 01.  
+  - (Track xx)(Pregap).bin  
+    "Pregap" of the 1st track of the 2nd session.  
+  - (Track AA).bin / (Track AA)(Session 1).bin / (Track AA)(Session 2).bin  
+    "Lead-out".  
 - .c2  
   c2 error binary image of the CD. 1 bit expresses 1 byte.
 - .ccd  
@@ -200,25 +223,29 @@ See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)
 - .cue  
   CD information. Original is [CDRWIN](https://web.archive.org/web/20111008191852/http://www.goldenhawk.com/cdrwin.htm)
 - .dat  
-  crc32/md5/sha1 of the bin file. Original is [Clrmamepro](http://mamedev.emulab.it/clrmamepro/)
+  crc32/md5/sha1 of the bin/iso/img/scm/raw file(s). Original is [Clrmamepro](http://mamedev.emulab.it/clrmamepro/)
 - .img  
   2352 bytes/sector binary image of the CD. This file is used to a ccd file.
+  - (Track all).img
+    a conbined file of the (Track 01)(-LBA).bin, (Track xx).bin and (Track AA).bin (Audio only).
 - .iso  
   2048 bytes/sector binary image of the DVD/BD/GC/Wii/XBOX.
 - .raw  
-  scrambled image of the iso file.
+  2064 or 2384 bytes/sector scrambled binary image of the iso file.
 - .scm  
-  scrambled image of the img file.
+  2352 bytes/sector scrambled binary image of the img file.
 - .sub  
   subchannel data of the CD. This file is used to a ccd file.
+- _CDZ.bin  
+  32,768 bytes binary image of the "Control Data Zone" in the Nintendo Dev disc (NR, RVT-R)
 - _DMI.bin  
-  2048 bytes binary image of the "disc manufacturing information" (DMI) in the DVD
+  2048 bytes binary image of the "Disc Manufacturing Information" (DMI) in the DVD
 - _PFI.bin  
-  2048 bytes binary image of the "physical format information" (PFI) in the DVD
+  2048 bytes binary image of the "Physical Format Information" (PFI) in the DVD
 - _PIC.bin  
-  4100 bytes binary image of the "permanent information and control data" (PIC) in the BD
+  4100 bytes binary image of the "Permanent Information and Control data" (PIC) in the BD
 - _SS.bin  
-  2048 bytes binary image of the "security sector" (SS) in the xbox/xbox 360
+  2048 bytes binary image of the "Security Sector" (SS) in the xbox/xbox 360
 - _c2Error.txt  
   c2 error information which can be gotten by reading the CD.
 - _disc.txt  
@@ -318,7 +345,6 @@ See LICENSE
   i6comp.exe  
     Copyright (c) Jun-16-2000 fOSSiL,Dec-27-2000 Morlac
   
-    
 ## Disclaimer
  Use this tool at own your risk.
  Trouble in regard to the use of this tool, I can not guarantee any.
