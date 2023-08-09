@@ -1392,8 +1392,9 @@ BOOL FixSubChannel(
 		// LBA[208054, 0x32cb6], Audio, 2ch, Copy NG, Pre-emphasis No, Track[56], Idx[01], RMSF[03:15:37], AMSF[46:16:04], RtoW[0, 0, 0, 0]
 		BOOL bAMSF = IsValidSubQAMSF(pExecType, pExtArg->byPre, pDiscPerSector, nLBA);
 		BOOL bAFrame = IsValidSubQAFrame(pDiscPerSector->subcode.current, nLBA);
-
+#if 0
 		if (-76 < nLBA) {
+#endif
 			BOOL bSubOk = FALSE;
 			if (!pDisc->SUB.nCorruptCrcH && !pDisc->SUB.nCorruptCrcL && (bAMSF || bAFrame)) {
 				if (*pExecType == swap) {
@@ -1511,6 +1512,7 @@ BOOL FixSubChannel(
 					}
 //				}
 			}
+#if 0
 		}
 		else {
 			if (pDisc->SUB.nCorruptCrcH || pDisc->SUB.nCorruptCrcL) {
@@ -1519,6 +1521,7 @@ BOOL FixSubChannel(
 				*bReread = FALSE;
 			}
 		}
+#endif
 	}
 	else {
 		// manually fix
