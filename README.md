@@ -216,6 +216,10 @@ See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)
     "Pregap" of the 1st track of the 2nd session.  
   - (Track AA).bin / (Track AA)(Session 1).bin / (Track AA)(Session 2).bin  
     "Lead-out".  
+  - (Subs control) (Track xx).bin  
+    Track is separated with priority given to the subchannel control flag.  
+  - (Subs indexes) (Track xx).bin  
+    Track is separated with priority given to the subchannel indexes.  
 - .c2  
   c2 error binary image of the CD. 1 bit expresses 1 byte.
 - .ccd  
@@ -226,7 +230,7 @@ See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)
   crc32/md5/sha1 of the bin/iso/img/scm/raw file(s). Original is [Clrmamepro](http://mamedev.emulab.it/clrmamepro/)
 - .img  
   2352 bytes/sector binary image of the CD. This file is used to a ccd file.
-  - (Track all).img
+  - (Track all).img  
     a conbined file of the (Track 01)(-LBA).bin, (Track xx).bin and (Track AA).bin (Audio only).
 - .iso  
   2048 bytes/sector binary image of the DVD/BD/GC/Wii/XBOX.
@@ -236,6 +240,8 @@ See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)
   2352 bytes/sector scrambled binary image of the img file.
 - .sub  
   subchannel data of the CD. This file is used to a ccd file.
+- .toc  
+  table of contents of the disc.
 - _CDZ.bin  
   32,768 bytes binary image of the "Control Data Zone" in the Nintendo Dev disc (NR, RVT-R)
 - _DMI.bin  
