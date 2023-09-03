@@ -191,6 +191,9 @@ extern _LOG_FILE g_LogFile;
 #define OutputRawReadableLog(str, ...)		_ftprintf(g_LogFile.fpRawReadable, _T(str), ##__VA_ARGS__);
 #define OutputMdsReadableLog(str, ...)		_ftprintf(g_LogFile.fpMdsReadable, _T(str), ##__VA_ARGS__);
 
+#define OutputCommandLineLog(str, ...)			_ftprintf(g_LogFile.fpCommandLine, _T(str), ##__VA_ARGS__);
+#define OutputCommandLineLogWithT(str, ...)		_ftprintf(g_LogFile.fpCommandLine, str, ##__VA_ARGS__);
+
 #define OutputLog(type, str, ...) \
 { \
 	INT t = type; \
@@ -230,6 +233,9 @@ extern _LOG_FILE g_LogFile;
 	if ((t & fileMds) == fileMds) { \
 		OutputMdsReadableLog(str, ##__VA_ARGS__); \
 	} \
+	if ((t & fileCommandLine) == fileCommandLine) { \
+		OutputCommandLineLog(str, ##__VA_ARGS__); \
+	} \
 }
 #define OutputLogWithT(type, str, ...) \
 { \
@@ -266,6 +272,9 @@ extern _LOG_FILE g_LogFile;
 	} \
 	if ((t & fileC2Error) == fileC2Error) { \
 		OutputC2ErrorLogWithT(str, ##__VA_ARGS__); \
+	} \
+	if ((t & fileCommandLine) == fileCommandLine) { \
+		OutputCommandLineLogWithT(str, ##__VA_ARGS__); \
 	} \
 }
 #endif

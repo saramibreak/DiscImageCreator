@@ -1724,9 +1724,9 @@ int createCmdFile(int argc, _TCHAR* argv[], _TCHAR* pszFullPath, LPTSTR pszDateT
 	if (argc >= 4) {
 		_TCHAR date[17] = {};
 		_sntprintf(date, SIZE_OF_ARRAY(date), _T("_%s"), pszDateTime);
-		FILE* fpCmd = CreateOrOpenFile(
+		g_LogFile.fpCommandLine = CreateOrOpenFile(
 			pszFullPath, date, NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0);
-		if (!fpCmd) {
+		if (!g_LogFile.fpCommandLine) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			if (GetLastError() == 123) {
 				OutputErrorString("Please remove \\, /, :, *, ?, Åg, <, >, | of the filename\n");
@@ -1735,13 +1735,12 @@ int createCmdFile(int argc, _TCHAR* argv[], _TCHAR* pszFullPath, LPTSTR pszDateT
 		}
 		for (int i = 1; i < argc; i++) {
 			if (i == 3) {
-				_ftprintf(fpCmd, _T("%s%s "), s_szFname, s_szExt);
+				_ftprintf(g_LogFile.fpCommandLine, _T("%s%s "), s_szFname, s_szExt);
 			}
 			else {
-				_ftprintf(fpCmd, _T("%s "), argv[i]);
+				_ftprintf(g_LogFile.fpCommandLine, _T("%s "), argv[i]);
 			}
 		}
-		FcloseAndNull(fpCmd);
 	}
 	return TRUE;
 }
@@ -2015,6 +2014,7 @@ int main(int argc, char* argv[])
 			if (nRet) {
 				nRet = exec(argv, &execType, &extArg, szFullPath);
 			}
+			FcloseAndNull(g_LogFile.fpCommandLine);
 
 			now = time(NULL);
 			ts = localtime(&now);

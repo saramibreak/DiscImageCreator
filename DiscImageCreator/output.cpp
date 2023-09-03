@@ -2001,6 +2001,7 @@ BOOL CreateBinCueCcd(
 				FcloseAndNull(fpCueSyncForImg);
 				throw FALSE;
 			}
+			OutputLog(fileCommandLine, "\n(Subs indexes).cue are opened\n");
 			WriteCueForFirst(pDisc, bCanCDText, 0, fpCueSyncForImg);
 			WriteCueForFileDirective(pszImgName, fpCueSyncForImg);
 			WriteCueForMultiSessionWholeBin(pDisc, 1, fpCueSyncForImg);
@@ -2020,7 +2021,7 @@ BOOL CreateBinCueCcd(
 		for (BYTE j = 0; j < MAX_CDTEXT_LANG; j++) {
 			if (0 < j) {
 				if (pDisc->SCSI.CDTEXT[j].bExist) {
-					// This fpBin is dummy to get the AltCue filename
+					// This is dummy to get the AltCue filename
 					_TCHAR out[_MAX_PATH] = {};
 					if (NULL == (fpBin = CreateOrOpenFile(pszPath, pszAltCueStr[j], out, NULL,
 						NULL, _T(".bin"), _T("wb"), 0, 0))) {
@@ -2051,7 +2052,7 @@ BOOL CreateBinCueCcd(
 			for (BYTE i = pDisc->SCSI.toc.FirstTrack; i <= pDisc->SCSI.toc.LastTrack; i++) {
 				OutputString(
 					"\rCreating cue and ccd (Track) %2u/%2u", i, pDisc->SCSI.toc.LastTrack);
-				// This fpBin is dummy to get filename and ext written in cue
+				// This is dummy to get filename and ext written in cue
 				_TCHAR out[_MAX_PATH] = {};
 				if (NULL == (fpBin = CreateOrOpenFile(pszPath, NULL, out, pszFname,
 					NULL, _T(".bin"), _T("wb"), i, pDisc->SCSI.toc.LastTrack))) {
@@ -2070,7 +2071,7 @@ BOOL CreateBinCueCcd(
 
 				_TCHAR pszFnameSync[_MAX_FNAME + _MAX_EXT] = {};
 				if (pDisc->SUB.byIdxDesync) {
-					// This fpBin is dummy
+					// This is dummy to get filename and ext written in cue
 					if (NULL == (fpBinIdxDesync = CreateOrOpenFile(pszPath, _T(" (Subs indexes)"), out,
 						pszFnameSync, NULL, _T(".bin"), _T("wb"), i, pDisc->SCSI.toc.LastTrack))) {
 						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -2291,6 +2292,7 @@ BOOL CreateBinCueCcd(
 					bRet = FALSE;
 					break;
 				}
+				OutputLog(fileCommandLine, "(Subs indexes)(Track %u).bin are opened\n", i);
 				nLBA = pDisc->SUB.lp1stLBAListOnSubSync[i - 1][0] == -1 ?
 					pDisc->SUB.lp1stLBAListOnSubSync[i - 1][1] : pDisc->SUB.lp1stLBAListOnSubSync[i - 1][0];
 				if (pExtArg->byPre) {
@@ -2355,12 +2357,12 @@ VOID OutputLastErrorNumAndString(
 		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM,
 		NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&lpMsgBuf, 0, NULL);
 	// http://blog.livedoor.jp/afsoft/archives/52230222.html
-	OutputErrorString("[F:%s][L:%lu] GetLastError: %lu, %s\n",
+	OutputLog(standardError | fileCommandLine, "[F:%s][L:%lu] GetLastError: %lu, %s\n",
 		pszFuncName, lLineNum, GetLastError(), (LPCTSTR)lpMsgBuf);
 
 	LocalFree(lpMsgBuf);
 #else
-	OutputErrorString("[F:%s][L:%ld] GetLastError: %d, %s\n",
+	OutputLog(standardError | fileCommandLine, "[F:%s][L:%ld] GetLastError: %d, %s\n",
 		pszFuncName, lLineNum, GetLastError(), strerror(GetLastError()));
 #endif
 }
