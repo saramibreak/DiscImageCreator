@@ -993,7 +993,7 @@ int SetOptionC2(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 		}
 		else {
 			pExtArg->uiReadingSpeedForC2 = s_uiSpeed;
-			OutputString("/c2 val2 was omitted. set [%d]\n", s_uiSpeed);
+			OutputString("/c2 val2 was omitted. set [%u]\n", s_uiSpeed);
 			pExtArg->uiC2Offset = 0;
 			OutputString("/c2 val3 was omitted. set [%d]\n", 0);
 			pExtArg->nC2RereadingType = 0;
@@ -1004,7 +1004,7 @@ int SetOptionC2(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 		pExtArg->uiMaxRereadNum = DEFAULT_REREAD_VAL;
 		OutputString("/c2 val1 was omitted. set [%d]\n", DEFAULT_REREAD_VAL);
 		pExtArg->uiReadingSpeedForC2 = s_uiSpeed;
-		OutputString("/c2 val2 was omitted. set [%d]\n", s_uiSpeed);
+		OutputString("/c2 val2 was omitted. set [%u]\n", s_uiSpeed);
 		pExtArg->uiC2Offset = 0;
 		OutputString("/c2 val3 was omitted. set [%d]\n", 0);
 		pExtArg->nC2RereadingType = 0;

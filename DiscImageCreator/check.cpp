@@ -1521,10 +1521,10 @@ BOOL ContainsC2Error(
 		OutputC2ErrorLog("\n              ofs corrected: ");
 		for (INT i = 0; i < nC2ErrPosCnt; i++) {
 			if (0 <= aC2ErrPosBuf[i] + pDisc->MAIN.nCombinedOffset) {
-				OutputC2ErrorLog("%x, ", aC2ErrPosBuf[i] + pDisc->MAIN.nCombinedOffset);
+				OutputC2ErrorLog("%x, ", (UINT)(aC2ErrPosBuf[i] + pDisc->MAIN.nCombinedOffset));
 			}
 			else {
-				OutputC2ErrorLog("-%x, ", abs(pDisc->MAIN.nCombinedOffset + aC2ErrPosBuf[i]));
+				OutputC2ErrorLog("-%x, ", (UINT)(abs(pDisc->MAIN.nCombinedOffset + aC2ErrPosBuf[i])));
 			}
 		}
 		OutputC2ErrorLog("\n");

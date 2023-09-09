@@ -2473,8 +2473,8 @@ BOOL ReadCDOutOfRange(
 	_TCHAR ext[_MAX_EXT] = {};
 	FILE* fpMain = NULL;
 	FILE* fpSub = NULL;
-	_TCHAR appendName0[23] = {};
-	_TCHAR appendName1[20] = {};
+	_TCHAR appendName0[32] = {};
+	_TCHAR appendName1[32] = {};
 
 	UINT uiByteOffsetOut = 0;
 	BOOL bNonZeroByteExistOut = FALSE;

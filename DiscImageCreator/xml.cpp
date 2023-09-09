@@ -644,7 +644,7 @@ BOOL OutputRomElement(
 		_TCHAR szPath[_MAX_PATH] = {};
 		if (*pExecType == dvd || *pExecType == xbox) {
 			if (*pExecType == xbox) {
-				_tcsncpy(szPath, pszFullPath, _MAX_PATH);
+				_tcsncpy(szPath, pszFullPath, _MAX_PATH - 1);
 				PathRemoveExtension(szPath);
 				_tcsncat(szPath, _T("_SS.bin"), _MAX_PATH - _tcslen(szPath) - 1);
 
@@ -653,7 +653,7 @@ BOOL OutputRomElement(
 				}
 			}
 
-			_tcsncpy(szPath, pszFullPath, _MAX_PATH);
+			_tcsncpy(szPath, pszFullPath, _MAX_PATH - 1);
 			PathRemoveExtension(szPath);
 			_tcsncat(szPath, _T("_PFI.bin"), _MAX_PATH - _tcslen(szPath) - 1);
 
@@ -661,7 +661,7 @@ BOOL OutputRomElement(
 				return FALSE;
 			}
 
-			_tcsncpy(szPath, pszFullPath, _MAX_PATH);
+			_tcsncpy(szPath, pszFullPath, _MAX_PATH - 1);
 			PathRemoveExtension(szPath);
 			_tcsncat(szPath, _T("_DMI.bin"), _MAX_PATH - _tcslen(szPath) - 1);
 
@@ -670,7 +670,7 @@ BOOL OutputRomElement(
 			}
 		}
 		else if (*pExecType == bd) {
-			_tcsncpy(szPath, pszFullPath, _MAX_PATH);
+			_tcsncpy(szPath, pszFullPath, _MAX_PATH - 1);
 			PathRemoveExtension(szPath);
 			_tcsncat(szPath, _T("_PIC.bin"), _MAX_PATH - _tcslen(szPath) - 1);
 

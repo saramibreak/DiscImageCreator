@@ -925,7 +925,7 @@ BOOL ReadDVDRaw(
 		
 		if (pExtArg->byRange) {
 			if (nStartLBA % transferLen.AsULong) {
-				OutputString("[INFO] startLBA of /ra must be a multiple of 16. It's fixed %d -> %ld\n"
+				OutputString("[INFO] startLBA of /ra must be a multiple of 16. It's fixed %d -> %lu\n"
 					, nStartLBA, nStartLBA - nStartLBA % transferLen.AsULong);
 				nStartLBA -= (INT)(nStartLBA % transferLen.AsULong);
 			}
@@ -1068,7 +1068,7 @@ BOOL ReadDVDRaw(
 								, lpBuf[dwOfs3 + uiEdcPos + 2]), MAKEWORD(lpBuf[dwOfs3 + uiEdcPos + 1], lpBuf[dwOfs3 + uiEdcPos]));
 							if (edc != sectorEdc) {
 								OutputLog(standardError | fileMainError
-									, STR_LBA "EDC does not match. CalcEDC: %08x, SectorEDC: %08x\n", nRealLBA, nRealLBA, edc, sectorEdc);
+									, STR_LBA "EDC does not match. CalcEDC: %08x, SectorEDC: %08x\n", nRealLBA, (UINT)nRealLBA, edc, sectorEdc);
 							}
 							else {
 								fwrite(main, sizeof(BYTE), DISC_MAIN_DATA_SIZE, fpIso);
@@ -1093,7 +1093,7 @@ BOOL ReadDVDRaw(
 			}
 			else {
 				if (++uiRetryCnt == pExtArg->uiMaxRereadNum) {
-					OutputString("Max Reread %d. LBA: %7d\n", uiRetryCnt, nLBA);
+					OutputString("Max Reread %u. LBA: %7d\n", uiRetryCnt, nLBA);
 					if (!bRetry && (IsSupported0xE7Type2_1(pDevice) || IsSupported0xE7Type2_2(pDevice))) {
 						transferLen.AsULong = 1;
 						transferAndMemSize = transferLen.AsULong * memBlkSize;
@@ -1113,7 +1113,7 @@ BOOL ReadDVDRaw(
 						break;
 					}
 				}
-				OutputString("Reread %d. LBA: %7d\n", uiRetryCnt, nLBA);
+				OutputString("Reread %u. LBA: %7d\n", uiRetryCnt, nLBA);
 			}
 			if (uiRetryCnt || IsNintendoDisc(pDisc)) {
 				if (IsSupported0xE7(pDevice)) {
@@ -1377,7 +1377,10 @@ BOOL OutputControlDataZone(
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				return FALSE;
 			}
-			fread(lpBuf, sizeof(BYTE), DISC_MAIN_DATA_SIZE * 16, fpCdzRaw);
+			if (fread(lpBuf, sizeof(BYTE), DISC_MAIN_DATA_SIZE * 16, fpCdzRaw) < DISC_MAIN_DATA_SIZE * 16) {
+				OutputErrorString("Failed to read [F:%s][L:%d]\n", _T(__FUNCTION__), __LINE__);
+				return FALSE;
+			}
 			FcloseAndNull(fpCdzRaw);
 
 			DWORD dwSectorLen = 0;
