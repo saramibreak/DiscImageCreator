@@ -175,6 +175,7 @@ BOOL IsValid0xF1SupportedDrive(
 				}
 			}
 			else if (!strncmp(pDevice->szProductId, "BD-RE  BH16NS55 ", DRIVE_PRODUCT_ID_SIZE)) {
+				// 1.02 can read the lead-out without 0xF1 https://github.com/saramibreak/DiscImageCreator/issues/227#issuecomment-1698389331
 				if (!strncmp(pDevice->szProductRevisionLevel, "1.00", DRIVE_VERSION_ID_SIZE) ||
 					!strncmp(pDevice->szProductRevisionLevel, "1.01", DRIVE_VERSION_ID_SIZE) ||
 					!strncmp(pDevice->szProductRevisionLevel, "1.02", DRIVE_VERSION_ID_SIZE)) {
@@ -214,6 +215,7 @@ BOOL IsValid0xF1SupportedDrive(
 				}
 			}
 			else if (!strncmp(pDevice->szProductId, "BD-RE  WH16NS60 ", DRIVE_PRODUCT_ID_SIZE)) {
+				// 1.02 doesn't support 0xF1 https://github.com/saramibreak/DiscImageCreator/issues/226#issuecomment-1698268874
 				if (!strncmp(pDevice->szProductRevisionLevel, "1.00", DRIVE_VERSION_ID_SIZE)) {
 					pDevice->by0xF1Drive = TRUE;
 				}
