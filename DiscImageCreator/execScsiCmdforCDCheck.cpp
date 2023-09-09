@@ -934,7 +934,7 @@ BOOL ReadCDForCheckingReadInOut(
 	}
 	else {
 		if (nLBA != 0) {
-			OutputLog(standardOut | fileDrive, "OK\n");
+			OutputLog(standardOut | fileDrive, "OK (LBA %d)\n", nLBA);
 		}
 	}
 	return bRet;
