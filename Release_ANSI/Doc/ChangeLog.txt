@@ -1,4 +1,12 @@
 ================================= Change Log ==================================
+*2023-09-09
+- added: support dumping RVT-R/NR with Plextor drive
+- added: reading speed for /c2
+- added: subchannel correction when the lead-in is dumped
+- added: command-line message to the log file
+- changed: transfer length when fixes C2 errors on BW-16D1HT drive with firmware 3.10
+- changed: (Track AA).scm filesize
+
 *2023-06-06
 - added: support BD-RE BH16NS40 1.03
 - added: print ProductRevisionLevel and VendorSpecific of the drive in the command-line screen
