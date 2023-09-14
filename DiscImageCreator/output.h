@@ -109,6 +109,9 @@ extern _TCHAR logBuffer[DISC_MAIN_DATA_SIZE];
 #define OutputRawReadableLog(str, ...)		OutputDebugStringEx(str, ##__VA_ARGS__)
 #define OutputMdsReadableLog(str, ...)		OutputDebugStringEx(str, ##__VA_ARGS__)
 
+#define OutputCommandLineLog(str, ...)			OutputDebugStringEx(str, ##__VA_ARGS__)
+#define OutputCommandLineLogWithT(str, ...)		OutputDebugStringEx(str, ##__VA_ARGS__)
+
 #define OutputLog(type, str, ...)		OutputDebugStringEx(str, ##__VA_ARGS__)
 #else
 // If it uses g_LogFile, call InitLogFile()

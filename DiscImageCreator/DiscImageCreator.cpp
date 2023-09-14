@@ -1722,6 +1722,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 int createCmdFile(int argc, _TCHAR* argv[], _TCHAR* pszFullPath, LPTSTR pszDateTime)
 {
 	if (argc >= 4) {
+#ifndef _DEBUG
 		_TCHAR date[17] = {};
 		_sntprintf(date, SIZE_OF_ARRAY(date), _T("_%s"), pszDateTime);
 		g_LogFile.fpCommandLine = CreateOrOpenFile(
@@ -1733,12 +1734,13 @@ int createCmdFile(int argc, _TCHAR* argv[], _TCHAR* pszFullPath, LPTSTR pszDateT
 			}
 			return FALSE;
 		}
+#endif
 		for (int i = 1; i < argc; i++) {
 			if (i == 3) {
-				_ftprintf(g_LogFile.fpCommandLine, _T("%s%s "), s_szFname, s_szExt);
+				OutputCommandLineLog(_T("%s%s "), s_szFname, s_szExt);
 			}
 			else {
-				_ftprintf(g_LogFile.fpCommandLine, _T("%s "), argv[i]);
+				OutputCommandLineLog(_T("%s "), argv[i]);
 			}
 		}
 	}
@@ -2014,8 +2016,9 @@ int main(int argc, char* argv[])
 			if (nRet) {
 				nRet = exec(argv, &execType, &extArg, szFullPath);
 			}
+#ifndef _DEBUG
 			FcloseAndNull(g_LogFile.fpCommandLine);
-
+#endif
 			now = time(NULL);
 			ts = localtime(&now);
 			_tcsftime(szBuf, SIZE_OF_ARRAY(szBuf), _T("%FT%T%z"), ts);
