@@ -255,7 +255,7 @@ BOOL FixSubQAdrMCN(
 	}
 	BOOL bRet = TRUE;
 	INT session = 1;
-	if (*pExecType != swap) {
+	if (*pExecType != swap && pDiscPerSector->byTrackNum > 0) {
 		session = pDisc->SCSI.lpSessionNumList[pDiscPerSector->byTrackNum - 1];
 		INT nRangeLBA = pDisc->SUB.nRangeLBAForMCN[0][session - 1];
 		if (nRangeLBA == -1) {
