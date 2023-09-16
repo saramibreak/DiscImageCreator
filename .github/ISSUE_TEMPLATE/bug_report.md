@@ -6,6 +6,7 @@ labels: ''
 assignees: ''
 
 ---
+Please be sure to read through the entire [README](https://github.com/saramibreak/DiscImageCreator/blob/master/README.md) before reporting.
 
 **Version**
 Please use [the latest version](https://github.com/saramibreak/DiscImageCreator/releases) when report the bug.
