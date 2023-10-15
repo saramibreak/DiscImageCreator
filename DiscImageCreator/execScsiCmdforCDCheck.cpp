@@ -1824,6 +1824,11 @@ BOOL ReadCDForCheckingExe(
 	BOOL bIscCab = FALSE;
 #endif
 	for (INT n = 0; pDisc->PROTECT.pExtentPosForExe[n] != 0; n++) {
+		if (pDisc->SCSI.nAllLength <= pDisc->PROTECT.pExtentPosForExe[n]) {
+			OutputMainErrorLog(
+				"%s: Location of Extent size is over the all sector size. Skip reading\n", pDisc->PROTECT.pNameForExe[n]);
+			continue;
+		}
 		if (!ExecReadCD(pExtArg, pDevice, pCdb, pDisc->PROTECT.pExtentPosForExe[n],
 			lpBuf, dwSize, _T(__FUNCTION__), __LINE__)) {
 			continue;
@@ -2146,6 +2151,10 @@ BOOL ReadCDForCheckingExe(
 						if (dwExportSize > 0) {
 							INT nExpSection = pDisc->PROTECT.pExtentPosForExe[n] + (INT)dwExportPointerToRawData / DISC_MAIN_DATA_SIZE;
 							SetCommandForTransferLength(pExecType, pDevice, pCdb, dwExportSectorSize, &byTransferLen, &byRoopLen);
+							if (pDisc->SCSI.nAllLength <= nExpSection) {
+								OutputMainErrorLog("%s: Export size is over the all sector size. Skip reading\n", pDisc->PROTECT.pNameForExe[n]);
+								continue;
+							}
 							if (!ExecReadCD(pExtArg, pDevice, pCdb, nExpSection, lpBuf, dwExportSectorSize, _T(__FUNCTION__), __LINE__)) {
 								continue;
 							}
@@ -2156,6 +2165,10 @@ BOOL ReadCDForCheckingExe(
 						}
 						if (dwImportSize > 0) {
 							INT nImpSection = pDisc->PROTECT.pExtentPosForExe[n] + (INT)dwImportPointerToRawData / DISC_MAIN_DATA_SIZE;
+							if (pDisc->SCSI.nAllLength <= nImpSection) {
+								OutputMainErrorLog("%s: Import size is over the all sector size. Skip reading\n", pDisc->PROTECT.pNameForExe[n]);
+								continue;
+							}
 							SetCommandForTransferLength(pExecType, pDevice, pCdb, dwImportSectorSize, &byTransferLen, &byRoopLen);
 							if (!ExecReadCD(pExtArg, pDevice, pCdb, nImpSection, lpBuf, dwImportSectorSize, _T(__FUNCTION__), __LINE__)) {
 								continue;
@@ -2167,6 +2180,10 @@ BOOL ReadCDForCheckingExe(
 						}
 						if (dwResourceSize > 0) {
 							INT nResSection = pDisc->PROTECT.pExtentPosForExe[n] + (INT)dwResourcePointerToRawData / DISC_MAIN_DATA_SIZE;
+							if (pDisc->SCSI.nAllLength <= nResSection) {
+								OutputMainErrorLog("%s: Resource size is over the all sector size. Skip reading\n", pDisc->PROTECT.pNameForExe[n]);
+								continue;
+							}
 							SetCommandForTransferLength(pExecType, pDevice, pCdb, dwResourceSectorSize, &byTransferLen, &byRoopLen);
 							if (!ExecReadCD(pExtArg, pDevice, pCdb, nResSection, lpBuf, dwResourceSectorSize, _T(__FUNCTION__), __LINE__)) {
 								continue;
