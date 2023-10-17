@@ -254,6 +254,7 @@ typedef struct _DEVICE {
 #elif __MACH__
 	CHAR drivepath[512];
 #endif
+	BOOL bCanReadLeadout;
 	WORD wMaxReadSpeed;
 	BYTE bySuccessReadToc;
 	BYTE bySuccessReadTocFull;

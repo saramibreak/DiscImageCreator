@@ -933,6 +933,9 @@ BOOL ReadCDForCheckingReadInOut(
 		}
 	}
 	else {
+		if (0 < pDisc->MAIN.nCombinedOffset) {
+			pDevice->bCanReadLeadout = TRUE;
+		}
 		if (nLBA != 0) {
 			OutputLog(standardOut | fileDrive, "OK (LBA %d)\n", nLBA);
 		}

@@ -222,7 +222,9 @@ BOOL IsValid0xF1SupportedDrive(
 			}
 		}
 	}
-	if (pDevice->by0xF1Drive) {
+	if (pDevice->by0xF1Drive && !pDevice->bCanReadLeadout) {
+		// Using ASMedia SATA controller and linux, 0xF1 drive can read the lead-out sector using 0xbe
+		// https://github.com/saramibreak/DiscImageCreator/issues/227#issuecomment-1763596504
 		return TRUE;
 	}
 	return FALSE;
