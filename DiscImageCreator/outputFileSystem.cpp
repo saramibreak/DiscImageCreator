@@ -200,7 +200,7 @@ VOID OutputFsDirectoryRecord(
 				pDisc->PROTECT.byExist = cds300;
 				strncpy(pDisc->PROTECT.name[0], fnameForProtect, sizeof(pDisc->PROTECT.name[0]));
 			}
-			else if (!strncmp(fnameForProtect, "BIG.DAT", 7)) {
+			else if (!strncmp(fnameForProtect, "BIG.DAT", 7) || !strncmp(fnameForProtect, "DUMMY.ZIP", 9)) {
 				pDisc->PROTECT.byExist = datel;
 				strncpy(pDisc->PROTECT.name[0], fnameForProtect, sizeof(pDisc->PROTECT.name[0]));
 				pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] = (INT)uiExtentPos;
