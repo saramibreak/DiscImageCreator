@@ -296,7 +296,7 @@ See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)
 See LICENSE  
 - About driveOffset.txt.  
     http://www.accuraterip.com/driveoffsets.htm  
-    Copyright (c) 2018 Illustrate. All Rights Reserved.  
+    Copyright 2023. All Rights Reserved.  
 
 - About _external folder  
   prngcd.cpp  
