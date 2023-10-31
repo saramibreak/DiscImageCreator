@@ -1955,9 +1955,6 @@ BOOL ReadCDForCheckingExe(
 									OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 									return FALSE;
 								}
-								_TCHAR fname[_MAX_PATH] = {};
-								size_t len = 0;
-
 //#define DEBUGTEST4
 #ifdef DEBUGTEST1
 								memcpy(pTrimBuf[6], "TCP", sizeof("TCP"));
@@ -1984,50 +1981,49 @@ BOOL ReadCDForCheckingExe(
 								if (pTrimBuf[8] == NULL) {
 									pTrimBuf[8] = (LPTCH)malloc(32);
 									memcpy(pTrimBuf[8], "Protocol.dll\n", sizeof("Protocol.dll\n"));
-							}
+								}
 								nTrimSize = 8;
 #endif
 #ifdef DEBUGTEST4
 								memcpy(pTrimBuf[6], "utils\\clcompile.exe\n", sizeof("utils\\clcompile.exe\n"));
 #endif
-								// check 4 types
-								if (nTrimSize == 6) {
-									// 1: with path and no space => nTrimSize is 6, needs to search '\\'
-									_TCHAR* p = _tcsrchr(pTrimBuf[6], '\\');
-									if (p) {
-										// exclude path
-										// 03-27-2003 11:07     274432 A___     128354   56 utils\clcompile.exe
-										len = _tcslen(p + sizeof(_TCHAR));
-										_tcsncpy(fname, p + sizeof(_TCHAR), len);
+#ifdef DEBUGTEST5
+								memcpy(pTrimBuf[6], "Data\\RTLibs\\1st", sizeof("Data\\RTLibs\\1st"));
+								if (pTrimBuf[7] == NULL) {
+									pTrimBuf[7] = (LPTCH)malloc(32);
+									memcpy(pTrimBuf[7], "trailer.dll\n", sizeof("trailer.dll\n"));
+								}
+								nTrimSize = 7;
+#endif
+								_TCHAR fpath[_MAX_PATH] = {};
+								_TCHAR fname[_MAX_FNAME] = {};
+								size_t len = 0;
+
+								for (INT idx = 6; idx <= nTrimSize; idx++) {
+									//           0      1         2     3          4   5   6
+									// ----------------------------------------------------------------------------
+									// 08-16-2002 18:06      36957 A___      12034   41 TCP Protocol.dll
+									// 08-16-2002 18:06      36957 A___      12034   41 TCP version\TCP Protocol.dll
+									// 03-27-2003 11:07     274432 A___     128354   56 utils\clcompile.exe
+									// 10-11-1999 14:01    6500356 A___    5305562  253 Data\RTLibs\1st trailer.dll
+									// 05-01-2003 11:46   11870212 A___   11492648  256 Data\RTLibs\L 01 in.dll
+									_tcscat(fpath, pTrimBuf[idx]);
+									len += _tcslen(pTrimBuf[idx]);
+									if (idx < nTrimSize) {
+										_tcscat(fpath, _T(" "));
+										len++;
 									}
-									else {
-										// 2: no path and no space => nTrimSize is 6
-										len = _tcslen(pTrimBuf[6]);
-										_tcsncpy(fname, pTrimBuf[6], len);
-									}
+								}
+								_TCHAR* p = _tcsrchr(fpath, '\\');
+								if (p) {
+									// exclude path
+									len = _tcslen(p + sizeof(_TCHAR));
+									_tcsncpy(fname, p + sizeof(_TCHAR), len);
 								}
 								else {
-									// 3: with path and with space => nTrimSize is 7 or larger, needs to search '\\'
-									INT idx = 6;
-									for (INT j = 6; j <= nTrimSize; j++) {
-										_TCHAR* p = _tcsrchr(pTrimBuf[j], '\\');
-										if (p) {
-											pTrimBuf[j] = p + sizeof(_TCHAR);
-											idx++;
-										}
-									}
-
-									// 4: no path and with space => nTrimSize is 7 or larger
-									for (; idx <= nTrimSize; idx++) {
-										// 08-16-2002 18:06      36957 A___      12034   41 TCP Protocol.dll
-										_tcscat(fname, pTrimBuf[idx]);
-										len += _tcslen(pTrimBuf[idx]);
-										if (idx < nTrimSize) {
-											_tcscat(fname, _T(" "));
-											len++;
-										}
-									}
+									_tcsncpy(fname, fpath, _MAX_FNAME);
 								}
+
 								// Delete '\n'
 								fname[len - sizeof(_TCHAR)] = '\0';
 								_tcscat(szTmpFullPath, _T("\\"));
