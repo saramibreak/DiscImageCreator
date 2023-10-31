@@ -64,7 +64,7 @@
 #define META_CDTEXT_SIZE		(160 + 1)
 #define MAX_CDTEXT_LANG         (8)
 
-#define EXELBA_STORE_SIZE (4096) // TODO
+#define EXELBA_STORE_SIZE (6144) // TODO
 #define EXENAME_STORE_SIZE (64) // TODO
 // î•ñŒğŠ·‚Ì…€
 // …€	1	2	3
