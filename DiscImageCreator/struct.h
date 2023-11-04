@@ -402,6 +402,7 @@ typedef struct _DISC {
 	} DVD;
 	struct _BD {
 		INT nLBAForParamSfo[MAX_PARAMSFO_NUM];
+		INT nSectorSizeForParamSfo[MAX_PARAMSFO_NUM];
 		INT nParamSfoCnt;
 	} BD;
 	LPBYTE lpCachedBuf;		// for Asus 0xF1 opcode

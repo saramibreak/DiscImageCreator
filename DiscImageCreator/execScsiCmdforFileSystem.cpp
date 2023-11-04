@@ -2081,7 +2081,7 @@ BOOL ReadBDForParamSfo(
 	LPBYTE lpBuf,
 	INT idx
 ) {
-	pCdb->TransferLength[3] = 1;
+	pCdb->TransferLength[3] = (UCHAR)(pDisc->BD.nSectorSizeForParamSfo[idx]);
 	FOUR_BYTE LBA;
 	LBA.AsULong = (ULONG)pDisc->BD.nLBAForParamSfo[idx];
 	REVERSE_BYTES(pCdb->LogicalBlock, &LBA);
@@ -2092,7 +2092,7 @@ BOOL ReadBDForParamSfo(
 #endif
 	BYTE byScsiStatus = 0;
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, pCdb, CDB12GENERIC_LENGTH, lpBuf,
-		direction, DISC_MAIN_DATA_SIZE, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
+		direction, (DWORD)(DISC_MAIN_DATA_SIZE * pDisc->BD.nSectorSizeForParamSfo[idx]), &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		return FALSE;
 	}

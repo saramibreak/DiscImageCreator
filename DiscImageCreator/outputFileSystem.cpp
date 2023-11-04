@@ -163,7 +163,13 @@ VOID OutputFsDirectoryRecord(
 	}
 	if (!strncmp(fname, "PARAM.SFO", 9)) {
 		if (pDisc->BD.nParamSfoCnt < MAX_PARAMSFO_NUM) {
-			pDisc->BD.nLBAForParamSfo[pDisc->BD.nParamSfoCnt++] = (INT)uiExtentPos;
+			pDisc->BD.nLBAForParamSfo[pDisc->BD.nParamSfoCnt] = (INT)uiExtentPos;
+			INT quotient = (INT)(uiDataLen / DISC_MAIN_DATA_SIZE);
+			INT mod = (INT)(uiDataLen % DISC_MAIN_DATA_SIZE);
+			if (mod != 0) {
+				quotient++;
+			}
+			pDisc->BD.nSectorSizeForParamSfo[pDisc->BD.nParamSfoCnt++] = quotient;
 		}
 		else {
 			OutputVolDescLog("PARAM.SFO is over %d files\n", MAX_PARAMSFO_NUM);
