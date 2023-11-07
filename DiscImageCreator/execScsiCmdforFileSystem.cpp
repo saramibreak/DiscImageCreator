@@ -2073,6 +2073,234 @@ BOOL ReadWiiPartition(
 	return TRUE;
 }
 
+BOOL ReadBDForPs3DiscSfb(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	PDISC pDisc,
+	CDB::_READ12* pCdb,
+	LPBYTE lpBuf
+) {
+	pCdb->TransferLength[3] = (UCHAR)(pDisc->BD.nSectorSizeForPs3DiscSfb);
+	FOUR_BYTE LBA;
+	LBA.AsULong = (ULONG)pDisc->BD.nLBAForPs3DiscSfb;
+	REVERSE_BYTES(pCdb->LogicalBlock, &LBA);
+#ifdef _WIN32
+	INT direction = SCSI_IOCTL_DATA_IN;
+#else
+	INT direction = SG_DXFER_FROM_DEV;
+#endif
+	BYTE byScsiStatus = 0;
+	if (!ScsiPassThroughDirect(pExtArg, pDevice, pCdb, CDB12GENERIC_LENGTH, lpBuf,
+		direction, (DWORD)(DISC_MAIN_DATA_SIZE * pDisc->BD.nSectorSizeForPs3DiscSfb), &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
+		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+		return FALSE;
+	}
+	// https://psdevwiki.com/ps3/PS3_DISC.SFB
+	OutputDiscLog(
+		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("PS3_DISC.SFB")
+		"\tmagic: %c%c%c%c\n"
+		"\tversion: %08x\n"
+		, pDisc->BD.nLBAForPs3DiscSfb, (UINT)pDisc->BD.nLBAForPs3DiscSfb
+		, lpBuf[0], lpBuf[1], lpBuf[2], lpBuf[3]
+		, MAKEUINT(MAKEWORD(lpBuf[4], lpBuf[5]), MAKEWORD(lpBuf[6], lpBuf[7]))
+	);
+	if (lpBuf[0x20] != 0) {
+		OutputDiscLog(
+			"\t%" CHARWIDTH "s: %" CHARWIDTH "s\n"
+			, lpBuf + 0x20, lpBuf + 0x200
+		);
+	}
+	if (lpBuf[0x40] != 0) {
+		OutputDiscLog(
+			"\t%" CHARWIDTH "s: %" CHARWIDTH "s\n"
+			, lpBuf + 0x40, lpBuf + 0x220
+		);
+	}
+	if (lpBuf[0x60] != 0) {
+		OutputDiscLog(
+			"\t%" CHARWIDTH "s: %" CHARWIDTH "s\n"
+			, lpBuf + 0x60, lpBuf + 0x230
+		);
+	}
+	return TRUE;
+}
+
+BOOL ReadBDForPup(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	PDISC pDisc,
+	CDB::_READ12* pCdb,
+	LPBYTE lpBuf
+) {
+	pCdb->TransferLength[3] = (UCHAR)(pDisc->BD.nSectorSizeForPup);
+	FOUR_BYTE LBA;
+	LBA.AsULong = (ULONG)pDisc->BD.nLBAForPup;
+	REVERSE_BYTES(pCdb->LogicalBlock, &LBA);
+#ifdef _WIN32
+	INT direction = SCSI_IOCTL_DATA_IN;
+#else
+	INT direction = SG_DXFER_FROM_DEV;
+#endif
+	BYTE byScsiStatus = 0;
+	if (!ScsiPassThroughDirect(pExtArg, pDevice, pCdb, CDB12GENERIC_LENGTH, lpBuf,
+		direction, (DWORD)(DISC_MAIN_DATA_SIZE * pDisc->BD.nSectorSizeForPup), &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
+		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+		return FALSE;
+	}
+	// https://www.psdevwiki.com/ps3/Playstation_Update_Package_(PUP)#Structure
+	EIGHT_BYTE package_version;
+	REVERSE_BYTES_QUAD(&package_version, lpBuf + 8);
+	EIGHT_BYTE image_version;
+	REVERSE_BYTES_QUAD(&image_version, lpBuf + 0x10);
+	EIGHT_BYTE segment_num;
+	REVERSE_BYTES_QUAD(&segment_num, lpBuf + 0x18);
+	EIGHT_BYTE file_offset;
+	REVERSE_BYTES_QUAD(&file_offset, lpBuf + 0x20);
+	EIGHT_BYTE file_size;
+	REVERSE_BYTES_QUAD(&file_size, lpBuf + 0x28);
+
+	OutputDiscLog(
+		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("PS3UPDAT.PUP")
+		"\t          magic: %c%c%c%c%c\n"
+		"\t    Format Flag: %x\n"
+		"\tPackage Version: %#llx\n"
+		"\t  Image Version: %#llx\n"
+		"\t Segment Number: %#llx\n"
+		"\t  Header Length: %#llx\n"
+		"\t    Data Length: %#llx\n"
+		, pDisc->BD.nLBAForPup, (UINT)pDisc->BD.nLBAForPup
+		, lpBuf[0], lpBuf[1], lpBuf[2], lpBuf[3], lpBuf[4]
+		, lpBuf[7], package_version.AsULongLong, image_version.AsULongLong
+		, segment_num.AsULongLong, file_offset.AsULongLong, file_size.AsULongLong
+	);
+	
+	EIGHT_BYTE id;
+	EIGHT_BYTE offset;
+	EIGHT_BYTE size;
+	FOUR_BYTE sign_algorithm;
+	BYTE buf[DISC_MAIN_DATA_SIZE + 1] = {};
+
+	for (ULONGLONG i = 0; i < segment_num.AsULongLong; i++) {
+		REVERSE_BYTES_QUAD(&id, lpBuf + 0x30 + 0x20 * i);
+		REVERSE_BYTES_QUAD(&offset, lpBuf + 0x30 + 0x20 * i + 8);
+		REVERSE_BYTES_QUAD(&size, lpBuf + 0x30 + 0x20 * i + 0x10);
+		REVERSE_BYTES(&sign_algorithm, lpBuf + 0x30 + 0x20 * i + 0x18);
+		OutputDiscLog(
+			"\tSegmentEntry[%lld]\n"
+			"\t\t    ID: %#llx\n"
+			"\t\tOffset: %#llx\n"
+			"\t\t  Size: %#llx\n"
+			"\t\tSignature Algorithm: %s\n"
+			, i, id.AsULongLong, offset.AsULongLong, size.AsULongLong
+			, sign_algorithm.AsULong == 0 ? _T("HMAC-SHA1") : _T("HMAC-SHA256")
+		);
+		if (id.AsULongLong == 0x100) {
+			OutputDiscLog("\t\tversion: %.5s", lpBuf + offset.AsULongLong);
+		}
+		else if (id.AsULongLong == 0x101) {
+			OutputDiscLog("\t\tlicense.xml: %s", lpBuf + offset.AsULongLong);
+			ULONGLONG remain = size.AsULongLong - (DISC_MAIN_DATA_SIZE - offset.AsULongLong);
+			UINT mod = remain % DISC_MAIN_DATA_SIZE;
+			UINT modSector = 0;
+			if (mod != 0) { 
+				modSector = 1;
+			}
+			ULONGLONG sectorSize = remain / DISC_MAIN_DATA_SIZE + modSector;
+			for (UINT j = 1; j <= sectorSize; j++) {
+				LBA.AsULong = (ULONG)pDisc->BD.nLBAForPup + j;
+				REVERSE_BYTES(pCdb->LogicalBlock, &LBA);
+
+				if (!ScsiPassThroughDirect(pExtArg, pDevice, pCdb, CDB12GENERIC_LENGTH, buf,
+					direction, DISC_MAIN_DATA_SIZE, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
+					|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+					return FALSE;
+				}
+				if (j == sectorSize) {
+					for (UINT k = 0; k < mod; k++) {
+						OutputDiscLog("%c", buf[k]);
+					}
+				}
+				else {
+					OutputDiscLog("%s", buf);
+				}
+			}
+		}
+		else if (id.AsULongLong == 0x102) {
+			OutputDiscLog("\t\tpromo_flags.txt: abbr.\n");
+		}
+		else if (id.AsULongLong == 0x103) {
+			ULONGLONG sectorSize = offset.AsULongLong / DISC_MAIN_DATA_SIZE;
+			LBA.AsULong = (ULONG)(pDisc->BD.nLBAForPup + sectorSize);
+			REVERSE_BYTES(pCdb->LogicalBlock, &LBA);
+
+			if (!ScsiPassThroughDirect(pExtArg, pDevice, pCdb, CDB12GENERIC_LENGTH, buf,
+				direction, DISC_MAIN_DATA_SIZE, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
+				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+				return FALSE;
+			}
+			OutputDiscLog("\t\tupdate_flags.txt: %.5s", buf + offset.AsULongLong - DISC_MAIN_DATA_SIZE * sectorSize);
+		}
+		else if (id.AsULongLong == 0x104) {
+			OutputDiscLog("\t\tpatch_build.txt: abbr.\n");
+		}
+		else if (id.AsULongLong == 0x200) {
+			OutputDiscLog("\t\tps3swu.self: abbr.\n");
+		}
+		else if (id.AsULongLong == 0x201) {
+			OutputDiscLog("\t\tvsh.tar: abbr.\n");
+		}
+		else if (id.AsULongLong == 0x202) {
+			OutputDiscLog("\t\tdots.txt: abbr.\n");
+		}
+		else if (id.AsULongLong == 0x203) {
+			OutputDiscLog("\t\tpatch_data.pkg: abbr.\n");
+		}
+		else if (id.AsULongLong == 0x300) {
+			OutputDiscLog("\t\tupdate_files.tar: abbr.\n");
+		}
+		else if (id.AsULongLong == 0x501) {
+			OutputDiscLog("\t\tspkg_hdr.tar: abbr.\n");
+		}
+		else if (id.AsULongLong == 0x601) {
+			OutputDiscLog("\t\tps3swu2.self: abbr.\n");
+		}
+	}
+
+	EIGHT_BYTE segment_index;
+	BYTE digest[20] = {};
+
+	LPBYTE digestEntry = lpBuf + 0x30 + 0x20 * segment_num.AsULongLong;
+
+	for (ULONGLONG i = 0; i < segment_num.AsULongLong; i++) {
+		REVERSE_BYTES_QUAD(&segment_index, digestEntry + 0x20 * i);
+		memcpy(digest, digestEntry + 0x20 * i + 8, sizeof(digest));
+		OutputDiscLog(
+			"\tDigestEntry[%lld]\n"
+			"\t\t     Segment Index: %#llx\n"
+			"\t\tDigest (HMAC-SHA1): %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n"
+			, i, segment_index.AsULongLong
+			, digest[0], digest[1], digest[2], digest[3]
+			, digest[4], digest[5], digest[6], digest[7]
+			, digest[8], digest[9], digest[10], digest[11]
+			, digest[12], digest[13], digest[14], digest[15]
+			, digest[16], digest[17], digest[18], digest[19]
+		);
+	}
+
+	LPBYTE headerDigest = lpBuf + 0x30 + 0x40 * segment_num.AsULongLong;
+	OutputDiscLog(
+		"\tHeaderDigest\n"
+		"\t\tDigest (HMAC-SHA1): %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n"
+		, headerDigest[0], headerDigest[1], headerDigest[2], headerDigest[3]
+		, headerDigest[4], headerDigest[5], headerDigest[6], headerDigest[7]
+		, headerDigest[8], headerDigest[9], headerDigest[10], headerDigest[11]
+		, headerDigest[12], headerDigest[13], headerDigest[14], headerDigest[15]
+		, headerDigest[16], headerDigest[17], headerDigest[18], headerDigest[19]
+	);
+
+	return TRUE;
+}
+
 BOOL ReadBDForParamSfo(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
@@ -2096,7 +2324,7 @@ BOOL ReadBDForParamSfo(
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		return FALSE;
 	}
-	// http://www.psdevwiki.com/ps3/PARAM.SFO
+	// https://www.psdevwiki.com/ps3/PARAM.SFO
 	typedef struct _sfo_header {
 		UINT magic; /************ Always PSF */
 		UINT version; /********** Usually 1.1 */

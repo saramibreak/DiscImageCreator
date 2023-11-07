@@ -161,7 +161,15 @@ VOID OutputFsDirectoryRecord(
 		}
 		OutputVolDescLog("\n\n");
 	}
-	if (!strncmp(fname, "PARAM.SFO", 9)) {
+	if (!strncmp(fname, "PS3_DISC.SFB", 12)) {
+		pDisc->BD.nLBAForPs3DiscSfb = (INT)uiExtentPos;
+		pDisc->BD.nSectorSizeForPs3DiscSfb = 1;
+	}
+	else if (!strncmp(fname, "PS3UPDAT.PUP", 12)) {
+		pDisc->BD.nLBAForPup = (INT)uiExtentPos;
+		pDisc->BD.nSectorSizeForPup = 1;
+	}
+	else if (!strncmp(fname, "PARAM.SFO", 9)) {
 		if (pDisc->BD.nParamSfoCnt < MAX_PARAMSFO_NUM) {
 			pDisc->BD.nLBAForParamSfo[pDisc->BD.nParamSfoCnt] = (INT)uiExtentPos;
 			INT quotient = (INT)(uiDataLen / DISC_MAIN_DATA_SIZE);

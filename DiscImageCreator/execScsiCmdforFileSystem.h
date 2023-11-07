@@ -65,6 +65,22 @@ BOOL ReadWiiPartition(
 	LPCTSTR pszFullPath
 );
 
+BOOL ReadBDForPs3DiscSfb(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	PDISC pDisc,
+	CDB::_READ12* pCdb,
+	LPBYTE lpBuf
+);
+
+BOOL ReadBDForPup(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	PDISC pDisc,
+	CDB::_READ12* pCdb,
+	LPBYTE lpBuf
+);
+
 BOOL ReadBDForParamSfo(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,

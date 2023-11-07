@@ -404,6 +404,10 @@ typedef struct _DISC {
 		INT nLBAForParamSfo[MAX_PARAMSFO_NUM];
 		INT nSectorSizeForParamSfo[MAX_PARAMSFO_NUM];
 		INT nParamSfoCnt;
+		INT nLBAForPs3DiscSfb;
+		INT nSectorSizeForPs3DiscSfb;
+		INT nLBAForPup;
+		INT nSectorSizeForPup;
 	} BD;
 	LPBYTE lpCachedBuf;		// for Asus 0xF1 opcode
 	UINT uiCachedSectorNum; // for Asus 0xF1 opcode

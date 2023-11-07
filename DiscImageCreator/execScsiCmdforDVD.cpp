@@ -234,16 +234,18 @@ BOOL ReadDVD(
 			}
 		}
 		else if (*pExecType == bd) {
+			ReadBDForPs3DiscSfb(pExtArg, pDevice, pDisc, &cdb, lpBuf);
 			for (INT i = 0; i < MAX_PARAMSFO_NUM; i++) {
 				if (pDisc->BD.nLBAForParamSfo[i] != 0) {
 					if (!ReadBDForParamSfo(pExtArg, pDevice, pDisc, &cdb, lpBuf, i)) {
 						throw FALSE;
 					}
-					else {
-						break;
-					}
+				}
+				else {
+					break;
 				}
 			}
+			ReadBDForPup(pExtArg, pDevice, pDisc, &cdb, lpBuf);
 		}
 		FlushLog();
 		CalcInit(pExtArg, &pHash->pHashChunk[pHash->uiIndex]);
