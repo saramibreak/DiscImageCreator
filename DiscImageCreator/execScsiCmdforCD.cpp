@@ -831,11 +831,20 @@ VOID ProcessReturnedContinue(
 	WriteErrorBuffer(pExecType, pExtArg, pDevice, pDisc, pDiscPerSector,
 		scrambled_table, nLBA, nLastErrLBA, nMainDataType, nPadType, fpImg, fpSub, fpC2);
 	UpdateTmpMainHeader(pDiscPerSector, nMainDataType);
+
+	BYTE trk = (BYTE)(pDiscPerSector->subch.current.byTrackNum + 1);
+	if (trk <= pDisc->SCSI.toc.LastTrack &&
+		pDisc->SCSI.lp1stLBAListOnToc[trk - 1] == nLBA &&
+		pDisc->SUB.lp1stLBAListOnSub[trk - 1][1] == -1) {
+		pDisc->SUB.lp1stLBAListOnSub[trk - 1][1] = nLBA;
+		pDiscPerSector->subch.current.byTrackNum++;
+	}
 	UpdateTmpSubch(pDiscPerSector);
 #if 1
 	if ((pDiscPerSector->subch.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 		LPBYTE pBuf = NULL;
-		if (pExtArg->byBe) {
+		if (*pExecType == data) {
+//		if (pExtArg->byBe) {
 			pBuf = pDiscPerSector->mainHeader.current;
 		}
 		else {
@@ -869,7 +878,7 @@ BOOL ProcessDescramble(
 		return FALSE;
 	}
 	// audio only -> from .scm to .img. other descramble img.
-	if (pExtArg->byBe || (pDisc->SCSI.trkType != TRACK_TYPE::dataExist && pDisc->SCSI.trkType != TRACK_TYPE::pregapDataIn1stTrack)) {
+	if (/*pExtArg->byBe || */(pDisc->SCSI.trkType != TRACK_TYPE::dataExist && pDisc->SCSI.trkType != TRACK_TYPE::pregapDataIn1stTrack)) {
 		OutputString("Moving .scm to .img\n");
 		if (!MoveFileEx(pszOutScmFile, pszNewPath, MOVEFILE_REPLACE_EXISTING)) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -985,7 +994,8 @@ BOOL ReadCDAll(
 	LPBYTE pNextBuf = NULL;
 	LPBYTE pNextNextBuf = NULL;
 	INT nMainDataType = scrambled;
-	if (pExtArg->byBe) {
+	if (*pExecType == data) {
+//	if (pExtArg->byBe) {
 		nMainDataType = unscrambled;
 	}
 
@@ -1071,10 +1081,12 @@ BOOL ReadCDAll(
 		for (UINT p = 0; p < pDisc->SCSI.toc.LastTrack; p++) {
 			if (!ExecReadCD(pExtArg, pDevice, lpCmd, pDisc->SCSI.lp1stLBAListOnToc[p]
 				, pDiscPerSector->data.current, pDevice->TRANSFER.uiBufLen * byTransferLen, _T(__FUNCTION__), __LINE__)) {
-				throw FALSE;
+				pDisc->SUB.lpEndCtlList[p] = pDisc->SCSI.toc.TrackData[p + 1].Control;
 			}
-			AlignRowSubcode(pDiscPerSector->subcode.current, pDiscPerSector->data.current + pDevice->TRANSFER.uiBufSubOffset);
-			pDisc->SUB.lpEndCtlList[p] = (BYTE)((pDiscPerSector->subcode.current[12] >> 4) & 0x0f);
+			else {
+				AlignRowSubcode(pDiscPerSector->subcode.current, pDiscPerSector->data.current + pDevice->TRANSFER.uiBufSubOffset);
+				pDisc->SUB.lpEndCtlList[p] = (BYTE)((pDiscPerSector->subcode.current[12] >> 4) & 0x0f);
+			}
 			OutputString("\rChecking SubQ ctl (Track) %2u/%2u", p + 1, pDisc->SCSI.toc.LastTrack);
 		}
 		OutputString("\n");
@@ -1185,10 +1197,13 @@ BOOL ReadCDAll(
 			}
 			else if (pDiscPerSector->bReturnCode == RETURNED_CONTINUE) {
 				if (!(pExtArg->byPre && -1149 <= nLBA && nLBA <= -76)) {
-						INT nPadType = padByUsr55;
-						ProcessReturnedContinue(pExecType, pExtArg, pDevice, pDisc
-							, pDiscPerSector, nLBA, nLastErrLBA, nMainDataType, nPadType, fpScm, fpSub, fpC2);
-						FlushLog();
+					INT nPadType = padByUsr55;
+					if ((pDisc->SCSI.toc.TrackData[pDiscPerSector->byTrackNum - 1].Control & AUDIO_DATA_TRACK) == 0) {
+						nPadType = padByAll0;
+					}
+					ProcessReturnedContinue(pExecType, pExtArg, pDevice, pDisc
+						, pDiscPerSector, nLBA, nLastErrLBA, nMainDataType, nPadType, fpScm, fpSub, fpC2);
+					FlushLog();
 				}
 			}
 			else if (pDiscPerSector->bReturnCode == RETURNED_FALSE) {
@@ -1475,7 +1490,7 @@ BOOL ReadCDForSwap(
 	FILE* fpLeadout = NULL;
 	LPBYTE pBuf = NULL;
 	INT nMainDataType = scrambled;
-	if (*pExecType == data || pExtArg->byBe) {
+	if (*pExecType == data/* || pExtArg->byBe*/) {
 		nMainDataType = unscrambled;
 	}
 
@@ -1881,7 +1896,7 @@ BOOL ReadCDPartial(
 	LPBYTE pNextBuf = NULL;
 	LPBYTE pNextNextBuf = NULL;
 	INT nMainDataType = scrambled;
-	if (*pExecType == data || pExtArg->byBe || pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
+	if (*pExecType == data || /*pExtArg->byBe ||*/ pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
 		nMainDataType = unscrambled;
 	}
 	INT nPadType = padByUsr55;

@@ -170,7 +170,8 @@ VOID InitMainDataHeader(
 	memcpy(pMain->current, g_aSyncHeader, sizeof(g_aSyncHeader));
 	BYTE m, s, f;
 	LBAtoMSF(nLBA + 150, &m, &s, &f);
-	if (!pExtArg->byBe && *pExecType != data) {
+	if (*pExecType != data) {
+//	if (!pExtArg->byBe && *pExecType != data) {
 		pMain->current[12] = (BYTE)(DecToBcd(m) ^ 0x01);
 		pMain->current[13] = (BYTE)(DecToBcd(s) ^ 0x80);
 	}

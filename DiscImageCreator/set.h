@@ -54,6 +54,7 @@ VOID SetCommandForTransferLength(
 
 VOID SetBufferSizeForReadCD(
 	PEXEC_TYPE pExecType,
+	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	DRIVE_DATA_ORDER order
 );

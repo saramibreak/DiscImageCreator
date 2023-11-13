@@ -2707,10 +2707,10 @@ VOID ReadCDForCheckingByteOrder(
 	PDEVICE pDevice,
 	CDFLAG::_READ_CD::_ERROR_FLAGS* c2
 ) {
-	SetBufferSizeForReadCD(pExecType, pDevice, DRIVE_DATA_ORDER::NoC2);
+	SetBufferSizeForReadCD(pExecType, pExtArg, pDevice, DRIVE_DATA_ORDER::NoC2);
 	if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
 		*c2 = CDFLAG::_READ_CD::byte294;
-		SetBufferSizeForReadCD(pExecType, pDevice, DRIVE_DATA_ORDER::MainC2Sub);
+		SetBufferSizeForReadCD(pExecType, pExtArg, pDevice, DRIVE_DATA_ORDER::MainC2Sub);
 		pDevice->driveOrder = DRIVE_DATA_ORDER::MainC2Sub;
 		CDFLAG::_READ_CD::_SUB_CHANNEL_SELECTION sub = CDFLAG::_READ_CD::Raw;
 
@@ -2746,13 +2746,13 @@ VOID ReadCDForCheckingByteOrder(
 				*c2 = CDFLAG::_READ_CD::NoC2;
 				pDevice->driveOrder = DRIVE_DATA_ORDER::NoC2;
 				pDevice->FEATURE.byC2ErrorData = FALSE;
-				SetBufferSizeForReadCD(pExecType, pDevice, DRIVE_DATA_ORDER::NoC2);
+				SetBufferSizeForReadCD(pExecType, pExtArg, pDevice, DRIVE_DATA_ORDER::NoC2);
 			}
 		}
 		if (pDevice->driveOrder == DRIVE_DATA_ORDER::MainSubC2) {
 			OutputDriveLog(
 				"\tByte order of this drive is main + sub + c2\n");
-			SetBufferSizeForReadCD(pExecType, pDevice, DRIVE_DATA_ORDER::MainSubC2);
+			SetBufferSizeForReadCD(pExecType, pExtArg, pDevice, DRIVE_DATA_ORDER::MainSubC2);
 		}
 		else if (pDevice->driveOrder == DRIVE_DATA_ORDER::MainC2Sub) {
 			OutputDriveLog(

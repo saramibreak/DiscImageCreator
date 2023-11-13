@@ -716,7 +716,7 @@ VOID WriteErrorBuffer(
 ) {
 	UINT uiSize = 0;
 	BYTE zeroByte[CD_RAW_SECTOR_SIZE] = {};
-	if (*pExecType == data || pExtArg->byBe) {
+	if (*pExecType == data/* || pExtArg->byBe*/) {
 		uiSize = CD_RAW_SECTOR_SIZE;
 		if (nPadType == padByUsr55 || nPadType == padByUsr0) {
 			if ((pDiscPerSector->subch.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
