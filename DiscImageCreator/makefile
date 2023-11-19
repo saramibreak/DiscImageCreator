@@ -102,8 +102,14 @@ ifeq ($(PREFIX),)
 endif
 
 install:
-	install -m 0644 ../Release_ANSI/default.dat $(DESTDIR)$(PREFIX)/share/$(TARGET)/default.dat
-	install -m 0644 ../Release_ANSI/driveOffset.txt $(DESTDIR)$(PREFIX)/share/$(TARGET)/driveOffset.txt
-	install -m 0755 $(TARGET) $(DESTDIR)$(PREFIX)/bin/$(TARGET)
+	ifeq ($(shell uname),Linux)
+		install -Dm 0644 ../Release_ANSI/default.dat "$(DESTDIR)$(PREFIX)/share/$(TARGET)/default.dat"
+		install -Dm 0644 ../Release_ANSI/driveOffset.txt "$(DESTDIR)$(PREFIX)/share/$(TARGET)/driveOffset.txt"
+		install -Dm 0755 "$(TARGET)" "$(DESTDIR)$(PREFIX)/bin/$(TARGET)"
+	else ifeq ($(shell uname),Darwin)
+		install -m 0644 ../Release_ANSI/default.dat "$(DESTDIR)$(PREFIX)/share/$(TARGET)/default.dat"
+		install -m 0644 ../Release_ANSI/driveOffset.txt "$(DESTDIR)$(PREFIX)/share/$(TARGET)/driveOffset.txt"
+		install -m 0755 "$(TARGET)" "$(DESTDIR)$(PREFIX)/bin/$(TARGET)"
+	endif
 
 .PHONY: clean clean-objs buildDateTime
