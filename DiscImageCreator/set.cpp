@@ -59,10 +59,10 @@ VOID SetReadD8Command(
 }
 
 VOID SetReadDiscCommand(
-	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	BYTE byTransferLen,
+	CDFLAG::_READ_CD::_EXPECTED_SECTOR_TYPE type,
 	CDFLAG::_READ_CD::_ERROR_FLAGS c2,
 	CDFLAG::_READ_CD::_SUB_CHANNEL_SELECTION tmpsub,
 	LPBYTE lpCmd,
@@ -87,10 +87,6 @@ VOID SetReadDiscCommand(
 	else {
 		// non plextor && support scrambled ripping
 		CDB::_READ_CD cdb = {};
-		CDFLAG::_READ_CD::_EXPECTED_SECTOR_TYPE type = CDFLAG::_READ_CD::CDDA;
-		if (/*pExtArg->byBe ||*/ (pExecType != NULL && *pExecType == data)) {
-			type = CDFLAG::_READ_CD::All;
-		}
 		CDFLAG::_READ_CD::_SUB_CHANNEL_SELECTION sub = tmpsub;
 		if (pExtArg->byPack || tmpsub == CDFLAG::_READ_CD::Pack) {
 			_tcsncpy(szSubCode, _T("Pack"), SIZE_OF_ARRAY(szSubCode));
@@ -157,8 +153,6 @@ VOID SetCommandForTransferLength(
 }
 
 VOID SetBufferSizeForReadCD(
-	PEXEC_TYPE pExecType,
-	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	DRIVE_DATA_ORDER order
 ) {
@@ -166,33 +160,16 @@ VOID SetBufferSizeForReadCD(
 		pDevice->TRANSFER.uiBufLen = CD_RAW_SECTOR_WITH_SUBCODE_SIZE;
 		pDevice->TRANSFER.uiBufC2Offset = 0;
 		pDevice->TRANSFER.uiBufSubOffset = CD_RAW_SECTOR_SIZE;
-		if (*pExecType == gd) {
-			pDevice->sub = CDFLAG::_READ_CD::Raw;
-		}
-		else {
-			pDevice->sub = CDFLAG::_READ_CD::Pack;
-		}
 	}
 	else if (order == DRIVE_DATA_ORDER::MainC2Sub) {
 		pDevice->TRANSFER.uiBufLen = CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE;
 		pDevice->TRANSFER.uiBufC2Offset = CD_RAW_SECTOR_SIZE;
 		pDevice->TRANSFER.uiBufSubOffset = CD_RAW_SECTOR_WITH_C2_294_SIZE;
-		pDevice->sub = CDFLAG::_READ_CD::Raw;
 	}
 	else if (order == DRIVE_DATA_ORDER::MainSubC2) {
 		pDevice->TRANSFER.uiBufLen = CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE;
 		pDevice->TRANSFER.uiBufSubOffset = CD_RAW_SECTOR_SIZE;
 		pDevice->TRANSFER.uiBufC2Offset = CD_RAW_SECTOR_WITH_SUBCODE_SIZE;
-		pDevice->sub = CDFLAG::_READ_CD::Raw;
-	}
-
-	if (pExtArg->byBe) {
-		if (pExtArg->byPack) {
-			pDevice->sub = CDFLAG::_READ_CD::Pack;
-		}
-		else {
-			pDevice->sub = CDFLAG::_READ_CD::Raw;
-		}
 	}
 }
 

@@ -23,7 +23,6 @@ BOOL ReadCDForSearchingOffset(
 );
 
 VOID ReadCDForCheckingByteOrder(
-	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	CDFLAG::_READ_CD::_ERROR_FLAGS* c2
@@ -37,7 +36,6 @@ BOOL ReadCDForCheckingReadInOut(
 );
 
 BOOL ReadCDForCheckingSubQ1stIndex(
-	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc

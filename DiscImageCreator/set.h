@@ -33,10 +33,10 @@ VOID SetReadD8Command(
 );
 
 VOID SetReadDiscCommand(
-	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	BYTE byTransferLen,
+	CDFLAG::_READ_CD::_EXPECTED_SECTOR_TYPE type,
 	CDFLAG::_READ_CD::_ERROR_FLAGS c2,
 	CDFLAG::_READ_CD::_SUB_CHANNEL_SELECTION tmpsub,
 	LPBYTE lpCmd,
@@ -53,8 +53,6 @@ VOID SetCommandForTransferLength(
 );
 
 VOID SetBufferSizeForReadCD(
-	PEXEC_TYPE pExecType,
-	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	DRIVE_DATA_ORDER order
 );

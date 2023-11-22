@@ -370,6 +370,7 @@ BOOL ReadCDForRereadingSectorType1(
 	PDEVICE pDevice,
 	PDISC pDisc,
 	PDISC_PER_SECTOR pDiscPerSector,
+	CDFLAG::_READ_CD::_EXPECTED_SECTOR_TYPE type,
 	LPBYTE lpCmd,
 	FILE* fpImg,
 	FILE* fpC2,
@@ -393,8 +394,8 @@ BOOL ReadCDForRereadingSectorType1(
 			throw FALSE;
 		}
 		SetDiscSpeed(pExecType, pExtArg, pDevice, pExtArg->uiReadingSpeedForC2);
-		SetReadDiscCommand(pExecType, pExtArg, pDevice, byTransferLength
-			, CDFLAG::_READ_CD::byte294, CDFLAG::_READ_CD::Raw, lpCmd, FALSE);
+		SetReadDiscCommand(pExtArg, pDevice, byTransferLength
+			, type, CDFLAG::_READ_CD::byte294, CDFLAG::_READ_CD::Raw, lpCmd, FALSE);
 
 		for (UINT i = 0; i < pExtArg->uiMaxRereadNum; i++) {
 			for (INT m = 0; m < pDisc->MAIN.nC2ErrorCnt; m++) {
@@ -527,6 +528,7 @@ BOOL ReadCDForRereadingSectorType2(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc,
+	CDFLAG::_READ_CD::_EXPECTED_SECTOR_TYPE type,
 	LPBYTE lpCmd,
 	FILE* fpImg,
 	FILE* fpC2,
@@ -587,8 +589,8 @@ BOOL ReadCDForRereadingSectorType2(
 				throw FALSE;
 			}
 		}
-		SetReadDiscCommand(pExecType, pExtArg, pDevice, (BYTE)dwTransferLen
-			, CDFLAG::_READ_CD::byte294, CDFLAG::_READ_CD::Raw, lpCmd, FALSE);
+		SetReadDiscCommand(pExtArg, pDevice, (BYTE)dwTransferLen
+			, type, CDFLAG::_READ_CD::byte294, CDFLAG::_READ_CD::Raw, lpCmd, FALSE);
 
 		INT nLBA = nStartLBA;
 		INT nLastLBA = nEndLBA;
@@ -994,10 +996,6 @@ BOOL ReadCDAll(
 	LPBYTE pNextBuf = NULL;
 	LPBYTE pNextNextBuf = NULL;
 	INT nMainDataType = scrambled;
-	if (*pExecType == data) {
-//	if (pExtArg->byBe) {
-		nMainDataType = unscrambled;
-	}
 
 	try {
 		// init start
@@ -1029,7 +1027,8 @@ BOOL ReadCDAll(
 			}
 		}
 		BYTE lpCmd[CDB12GENERIC_LENGTH] = {};
-		SetReadDiscCommand(pExecType, pExtArg, pDevice, byTransferLen, c2, pDevice->sub, lpCmd, TRUE);
+		SetReadDiscCommand(pExtArg, pDevice
+			, byTransferLen, CDFLAG::_READ_CD::CDDA, c2, pDevice->sub, lpCmd, TRUE);
 
 		BYTE lpPrevSubcode[CD_RAW_READ_SUBCODE_SIZE] = {};
 		// to get prevSubQ
@@ -1407,7 +1406,8 @@ BOOL ReadCDAll(
 		if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
 			if (bC2Error && pDisc->MAIN.nC2ErrorCnt > 0) {
 				if (pExtArg->nC2RereadingType == 0) {
-					if (!ReadCDForRereadingSectorType1(pExecType, pExtArg, pDevice, pDisc, pDiscPerSector, lpCmd, fpScm, fpC2, 0)) {
+					if (!ReadCDForRereadingSectorType1(pExecType, pExtArg, pDevice
+						, pDisc, pDiscPerSector, CDFLAG::_READ_CD::CDDA, lpCmd, fpScm, fpC2, 0)) {
 						throw FALSE;
 					}
 				}
@@ -1418,7 +1418,8 @@ BOOL ReadCDAll(
 						nStartLBA = pDisc->MAIN.nOffsetStart;
 						nEndLBA = pDisc->SCSI.nAllLength + pDisc->MAIN.nOffsetEnd;
 					}
-					if (!ReadCDForRereadingSectorType2(pExecType, pExtArg, pDevice, pDisc, lpCmd, fpScm, fpC2, nStartLBA, nEndLBA)) {
+					if (!ReadCDForRereadingSectorType2(pExecType, pExtArg, pDevice, pDisc
+						, CDFLAG::_READ_CD::CDDA, lpCmd, fpScm, fpC2, nStartLBA, nEndLBA)) {
 						throw FALSE;
 					}
 				}
@@ -1490,7 +1491,7 @@ BOOL ReadCDForSwap(
 	FILE* fpLeadout = NULL;
 	LPBYTE pBuf = NULL;
 	INT nMainDataType = scrambled;
-	if (*pExecType == data/* || pExtArg->byBe*/) {
+	if (pExtArg->byBe) {
 		nMainDataType = unscrambled;
 	}
 
@@ -1517,7 +1518,11 @@ BOOL ReadCDForSwap(
 			throw FALSE;
 		}
 		BYTE lpCmd[CDB12GENERIC_LENGTH] = {};
-		SetReadDiscCommand(pExecType, pExtArg, pDevice, byTransferLen, c2, pDevice->sub, lpCmd, TRUE);
+		CDFLAG::_READ_CD::_EXPECTED_SECTOR_TYPE type = CDFLAG::_READ_CD::CDDA;
+		if (pExtArg->byBe) {
+			type = CDFLAG::_READ_CD::All;
+		}
+		SetReadDiscCommand(pExtArg, pDevice, byTransferLen, type, c2, pDevice->sub, lpCmd, TRUE);
 		SetCDOffset(pExecType, pExtArg->byBe, pDevice->byPlxtrDrive, pDisc, nStart, nEnd);
 		pDiscPerSector->byTrackNum = 1;
 
@@ -1663,7 +1668,8 @@ BOOL ReadCDForSwap(
 		if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
 			if (bC2Error && pDisc->MAIN.nC2ErrorCnt > 0) {
 				if (pExtArg->nC2RereadingType == 0) {
-					if (!ReadCDForRereadingSectorType1(pExecType, pExtArg, pDevice, pDisc, pDiscPerSector, lpCmd, fpScm, fpC2, 0)) {
+					if (!ReadCDForRereadingSectorType1(pExecType, pExtArg
+						, pDevice, pDisc, pDiscPerSector, type, lpCmd, fpScm, fpC2, 0)) {
 						throw FALSE;
 					}
 				}
@@ -1674,7 +1680,8 @@ BOOL ReadCDForSwap(
 						nStartLBA = nStart;
 						nEndLBA = nEnd;
 					}
-					if (!ReadCDForRereadingSectorType2(pExecType, pExtArg, pDevice, pDisc, lpCmd, fpScm, fpC2, nStartLBA, nEndLBA)) {
+					if (!ReadCDForRereadingSectorType2(pExecType, pExtArg
+						, pDevice, pDisc, type, lpCmd, fpScm, fpC2, nStartLBA, nEndLBA)) {
 						throw FALSE;
 					}
 				}
@@ -1935,7 +1942,11 @@ BOOL ReadCDPartial(
 			}
 		}
 		BYTE lpCmd[CDB12GENERIC_LENGTH] = {};
-		SetReadDiscCommand(pExecType, pExtArg, pDevice, byTransferLen, c2, pDevice->sub, lpCmd, TRUE);
+		CDFLAG::_READ_CD::_EXPECTED_SECTOR_TYPE type = CDFLAG::_READ_CD::CDDA;
+		if (*pExecType == data || !pDevice->bySupportedScrambled) {
+			type = CDFLAG::_READ_CD::All;
+		}
+		SetReadDiscCommand(pExtArg, pDevice, byTransferLen, type, c2, pDevice->sub, lpCmd, TRUE);
 
 		BYTE lpPrevSubcode[CD_RAW_READ_SUBCODE_SIZE] = {};
 		if (pDisc->SUB.nSubChannelOffset) { // confirmed PXS88T, TS-H353A
@@ -1995,11 +2006,13 @@ BOOL ReadCDPartial(
 			for (UINT p = 0; p < pDisc->SCSI.toc.LastTrack; p++) {
 				if (!ExecReadCD(pExtArg, pDevice, lpCmd, pDisc->SCSI.lp1stLBAListOnToc[p]
 					, pDiscPerSector->data.current, pDevice->TRANSFER.uiBufLen * byTransferLen, _T(__FUNCTION__), __LINE__)) {
-					throw FALSE;
+					pDisc->SUB.lpEndCtlList[p] = pDisc->SCSI.toc.TrackData[p + 1].Control;
 				}
-				AlignRowSubcode(pDiscPerSector->subcode.current, pDiscPerSector->data.current + pDevice->TRANSFER.uiBufSubOffset);
-				pDisc->SUB.lpEndCtlList[p] = (BYTE)((pDiscPerSector->subcode.current[12] >> 4) & 0x0f);
-				OutputString("\rChecking SubQ ctl (Track) %2u/%2u", p + 1, pDisc->SCSI.toc.LastTrack);
+				else {
+					AlignRowSubcode(pDiscPerSector->subcode.current, pDiscPerSector->data.current + pDevice->TRANSFER.uiBufSubOffset);
+					pDisc->SUB.lpEndCtlList[p] = (BYTE)((pDiscPerSector->subcode.current[12] >> 4) & 0x0f);
+					OutputString("\rChecking SubQ ctl (Track) %2u/%2u", p + 1, pDisc->SCSI.toc.LastTrack);
+				}
 			}
 			OutputString("\n");
 		}
@@ -2290,7 +2303,8 @@ BOOL ReadCDPartial(
 		if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
 			if (bC2Error && pDisc->MAIN.nC2ErrorCnt > 0) {
 				if (pExtArg->nC2RereadingType == 0) {
-					if (!ReadCDForRereadingSectorType1(pExecType, pExtArg, pDevice, pDisc, pDiscPerSector, lpCmd, fpBin, fpC2, nStart)) {
+					if (!ReadCDForRereadingSectorType1(pExecType, pExtArg, pDevice
+						, pDisc, pDiscPerSector, type, lpCmd, fpBin, fpC2, nStart)) {
 						throw FALSE;
 					}
 				}
@@ -2301,7 +2315,8 @@ BOOL ReadCDPartial(
 						nStartLBA = nStart;
 						nEndLBA = nEnd;
 					}
-					if (!ReadCDForRereadingSectorType2(pExecType, pExtArg, pDevice, pDisc, lpCmd, fpBin, fpC2, nStartLBA, nEndLBA)) {
+					if (!ReadCDForRereadingSectorType2(pExecType, pExtArg
+						, pDevice, pDisc, type, lpCmd, fpBin, fpC2, nStartLBA, nEndLBA)) {
 						throw FALSE;
 					}
 				}
@@ -2510,7 +2525,8 @@ BOOL ReadCDOutOfRange(
 	SetCDOffset(pExecType, pExtArg->byBe, pDevice->byPlxtrDrive, pDisc, 0, pDisc->SCSI.nAllLength);
 
 	if (pDisc->SCSI.by1stMultiSessionTrkNum) {
-		SetReadDiscCommand(pExecType, pExtArg, pDevice, 2, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::Pack, lpCmd, FALSE);
+		SetReadDiscCommand(pExtArg, pDevice, 2
+			, CDFLAG::_READ_CD::All, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::Pack, lpCmd, FALSE);
 		BOOL bPregap = FALSE;
 		if ((pDisc->SCSI.toc.TrackData[pDisc->SCSI.by1stMultiSessionTrkNum - 1].Control & AUDIO_DATA_TRACK) == 0) {
 			_tcsncpy(ext, _T(".bin"), SIZE_OF_ARRAY(ext));
@@ -2642,7 +2658,8 @@ BOOL ReadCDOutOfRange(
 		}
 
 		// 2nd session lead-out
-		SetReadDiscCommand(pExecType, pExtArg, pDevice, 1, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::Pack, lpCmd, FALSE);
+		SetReadDiscCommand(pExtArg, pDevice, 1
+			, CDFLAG::_READ_CD::All, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::Pack, lpCmd, FALSE);
 		if ((pDisc->SCSI.toc.TrackData[pDisc->SCSI.toc.LastTrack - 1].Control & AUDIO_DATA_TRACK) == 0) {
 			_tcsncpy(ext, _T(".bin"), SIZE_OF_ARRAY(ext));
 		}
@@ -2769,7 +2786,8 @@ BOOL ReadCDOutOfRange(
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
-	SetReadDiscCommand(pExecType, pExtArg, pDevice, 1, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::Pack, lpCmd, FALSE);
+	SetReadDiscCommand(pExtArg, pDevice, 1
+		, CDFLAG::_READ_CD::All, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::Pack, lpCmd, FALSE);
 
 	for (INT i = nStartLBA + nOverreadSize; i < nStartLBA + nLastLBA; i++) {
 		if (!ExecReadCD(pExtArg, pDevice, lpCmd, i, aBuf,
@@ -2889,7 +2907,8 @@ BOOL ReadCDOutOfRange(
 	INT n1stLeadinLBA = -150;
 	BYTE aBufBak[CD_RAW_SECTOR_WITH_SUBCODE_SIZE * 4] = {};
 	BYTE lpSubcodeNext[CD_RAW_READ_SUBCODE_SIZE] = {};
-	SetReadDiscCommand(pExecType, pExtArg, pDevice, 4, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::Pack, lpCmd, FALSE);
+	SetReadDiscCommand(pExtArg, pDevice, 4
+		, CDFLAG::_READ_CD::All, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::Pack, lpCmd, FALSE);
 
 	for (INT i = LEADIN_START_LBA_SESSION_1; i < -1153; i++) {
 		if (!ExecReadCD(pExtArg, pDevice, lpCmd, i, aBuf,
@@ -3100,7 +3119,8 @@ BOOL ReadCDOutOfRange(
 	}
 
 	if (pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
-		SetReadDiscCommand(pExecType, pExtArg, pDevice, 1, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::Pack, lpCmd, FALSE);
+		SetReadDiscCommand(pExtArg, pDevice, 1
+			, CDFLAG::_READ_CD::All, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::Pack, lpCmd, FALSE);
 		if (bNonZeroByteExistIn && !bNonZeroByteExistOut) {
 			INT nTmpLBA = pDisc->SCSI.nAllLength;
 			for (INT i = nTmpLBA, j = 0; nTmpLBA - FIRST_TRACK_PREGAP_SIZE < i; i--, j++) {

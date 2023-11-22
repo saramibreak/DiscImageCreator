@@ -197,7 +197,8 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 #else
 					__attribute__((aligned(4))) CDROM_TOC_FULL_TOC_DATA fullToc = {};
 #endif
-					if (!ReadCDForCheckingSubQ1stIndex(pExecType, pExtArg, pDevice, pDisc)) {
+					pDevice->sub = CDFLAG::_READ_CD::Raw;
+					if (!ReadCDForCheckingSubQ1stIndex(pExtArg, pDevice, pDisc)) {
 						throw FALSE;
 					}
 					PCDROM_TOC_FULL_TOC_DATA_BLOCK pTocData = NULL;
@@ -236,7 +237,7 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 					make_crc6_table();
 #endif
 					CDFLAG::_READ_CD::_ERROR_FLAGS c2 = CDFLAG::_READ_CD::NoC2;
-					ReadCDForCheckingByteOrder(pExecType, pExtArg, pDevice, &c2);
+					ReadCDForCheckingByteOrder(pExtArg, pDevice, &c2);
 					if (pExtArg->byC2) {
 						if (pDevice->FEATURE.byC2ErrorData && c2 != CDFLAG::_READ_CD::NoC2) {
 							if (NULL == (fpC2 = CreateOrOpenFile(

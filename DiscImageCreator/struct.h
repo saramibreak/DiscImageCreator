@@ -258,6 +258,9 @@ typedef struct _DEVICE {
 	WORD wMaxReadSpeed;
 	BYTE bySuccessReadToc;
 	BYTE bySuccessReadTocFull;
+	BYTE bySupportedPackMode;
+	BYTE bySupportedScrambled;
+	BYTE padding[2];
 	CDFLAG::_READ_CD::_ERROR_FLAGS supportedC2Type;
 	CDFLAG::_READ_CD::_SUB_CHANNEL_SELECTION sub;
 	DWORD dwTimeOutValue;
