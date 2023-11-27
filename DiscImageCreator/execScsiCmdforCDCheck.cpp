@@ -2753,31 +2753,25 @@ VOID ReadCDForCheckingByteOrder(
 		*c2 = CDFLAG::_READ_CD::byte294;
 		SetBufferSizeForReadCD(pDevice, DRIVE_DATA_ORDER::MainC2Sub);
 		pDevice->driveOrder = DRIVE_DATA_ORDER::MainC2Sub;
-		CDFLAG::_READ_CD::_SUB_CHANNEL_SELECTION sub = CDFLAG::_READ_CD::Raw;
 
-		if (!ExecCheckingByteOrder(pExtArg, pDevice, *c2, sub)) {
+		if (!ExecCheckingByteOrder(pExtArg, pDevice, *c2, CDFLAG::_READ_CD::Raw)) {
 			BOOL bRet = FALSE;
 			if (!pExtArg->byD8 && !pDevice->byPlxtrDrive) {
 				bRet = TRUE;
-				sub = CDFLAG::_READ_CD::Q;
-				if (!ExecCheckingByteOrder(pExtArg, pDevice, *c2, sub)) {
+				if (!ExecCheckingByteOrder(pExtArg, pDevice, *c2, CDFLAG::_READ_CD::Q)) {
 					// not return FALSE
 				}
-				sub = CDFLAG::_READ_CD::Pack;
-				if (!ExecCheckingByteOrder(pExtArg, pDevice, *c2, sub)) {
+				if (!ExecCheckingByteOrder(pExtArg, pDevice, *c2, CDFLAG::_READ_CD::Pack)) {
 					// not return FALSE
 				}
 				*c2 = CDFLAG::_READ_CD::byte296;
-				sub = CDFLAG::_READ_CD::Raw;
-				if (!ExecCheckingByteOrder(pExtArg, pDevice, *c2, sub)) {
+				if (!ExecCheckingByteOrder(pExtArg, pDevice, *c2, CDFLAG::_READ_CD::Raw)) {
 					bRet = FALSE;
 				}
-				sub = CDFLAG::_READ_CD::Q;
-				if (!ExecCheckingByteOrder(pExtArg, pDevice, *c2, sub)) {
+				if (!ExecCheckingByteOrder(pExtArg, pDevice, *c2, CDFLAG::_READ_CD::Q)) {
 					// not return FALSE
 				}
-				sub = CDFLAG::_READ_CD::Pack;
-				if (!ExecCheckingByteOrder(pExtArg, pDevice, *c2, sub)) {
+				if (!ExecCheckingByteOrder(pExtArg, pDevice, *c2, CDFLAG::_READ_CD::Pack)) {
 					// not return FALSE
 				}
 			}
