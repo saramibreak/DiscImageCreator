@@ -163,7 +163,6 @@ BOOL InitTocTextData(
 
 VOID InitMainDataHeader(
 	PEXEC_TYPE pExecType,
-	PEXT_ARG pExtArg,
 	PMAIN_HEADER pMain,
 	INT nLBA
 ) {
@@ -171,7 +170,6 @@ VOID InitMainDataHeader(
 	BYTE m, s, f;
 	LBAtoMSF(nLBA + 150, &m, &s, &f);
 	if (*pExecType != data) {
-//	if (!pExtArg->byBe && *pExecType != data) {
 		pMain->current[12] = (BYTE)(DecToBcd(m) ^ 0x01);
 		pMain->current[13] = (BYTE)(DecToBcd(s) ^ 0x80);
 	}

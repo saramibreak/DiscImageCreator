@@ -102,7 +102,6 @@ VOID SetAndOutputCDOffset(
 
 VOID SetCDOffset(
 	PEXEC_TYPE pExecType,
-	BYTE byBe,
 	BYTE byPlxtrDrive,
 	PDISC pDisc,
 	INT nStartLBA,

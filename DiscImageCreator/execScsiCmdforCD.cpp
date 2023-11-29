@@ -1089,7 +1089,7 @@ BOOL ReadCDAll(
 			OutputString("\rChecking SubQ ctl (Track) %2u/%2u", p + 1, pDisc->SCSI.toc.LastTrack);
 		}
 		OutputString("\n");
-		SetCDOffset(pExecType, pExtArg->byBe, pDevice->byPlxtrDrive, pDisc, 0, pDisc->SCSI.nAllLength);
+		SetCDOffset(pExecType, pDevice->byPlxtrDrive, pDisc, 0, pDisc->SCSI.nAllLength);
 
 		pDiscPerSector->byTrackNum = pDisc->SCSI.toc.FirstTrack;
 		INT n1stLBAForSub = 0;
@@ -1523,7 +1523,7 @@ BOOL ReadCDForSwap(
 			type = CDFLAG::_READ_CD::All;
 		}
 		SetReadDiscCommand(pExtArg, pDevice, byTransferLen, type, c2, pDevice->sub, lpCmd, TRUE);
-		SetCDOffset(pExecType, pExtArg->byBe, pDevice->byPlxtrDrive, pDisc, nStart, nEnd);
+		SetCDOffset(pExecType, pDevice->byPlxtrDrive, pDisc, nStart, nEnd);
 		pDiscPerSector->byTrackNum = 1;
 
 		INT n1stLBA = nStart + pDisc->MAIN.nOffsetStart;
@@ -2016,7 +2016,7 @@ BOOL ReadCDPartial(
 			}
 			OutputString("\n");
 		}
-		SetCDOffset(pExecType, pExtArg->byBe, pDevice->byPlxtrDrive, pDisc, nStart, nEnd);
+		SetCDOffset(pExecType, pDevice->byPlxtrDrive, pDisc, nStart, nEnd);
 #ifdef _DEBUG
 		OutputString(
 			"byBe: %d, nCombinedOffset: %d, uiMainDataSlideSize: %u, nOffsetStart: %d, nOffsetEnd: %d, nFixStartLBA: %d, nFixEndLBA: %d\n"
@@ -2522,7 +2522,7 @@ BOOL ReadCDOutOfRange(
 	if (pDisc->MAIN.nCombinedOffset < 0) {
 		nOverreadSize = pDisc->MAIN.nAdjustSectorNum;
 	}
-	SetCDOffset(pExecType, pExtArg->byBe, pDevice->byPlxtrDrive, pDisc, 0, pDisc->SCSI.nAllLength);
+	SetCDOffset(pExecType, pDevice->byPlxtrDrive, pDisc, 0, pDisc->SCSI.nAllLength);
 
 	if (pDisc->SCSI.by1stMultiSessionTrkNum) {
 		SetReadDiscCommand(pExtArg, pDevice, 2

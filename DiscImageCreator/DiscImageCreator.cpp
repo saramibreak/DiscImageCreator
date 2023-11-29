@@ -216,7 +216,7 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 						throw FALSE;
 					}
 
-					InitMainDataHeader(pExecType, pExtArg, &mainHeader, (INT)s_nStartLBA);
+					InitMainDataHeader(pExecType, &mainHeader, (INT)s_nStartLBA);
 					if (!InitSubData(pExecType, &pDisc)) {
 						throw FALSE;
 					}

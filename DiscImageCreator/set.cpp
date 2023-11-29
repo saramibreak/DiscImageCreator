@@ -1101,7 +1101,6 @@ VOID SetAndOutputCDOffset(
 
 VOID SetCDOffset(
 	PEXEC_TYPE pExecType,
-	BYTE byBe,
 	BYTE byPlxtrDrive,
 	PDISC pDisc,
 	INT nStartLBA,
@@ -1109,7 +1108,6 @@ VOID SetCDOffset(
 ) {
 	if (pDisc->MAIN.nCombinedOffset > 0) {
 		if (*pExecType == data) {
-//		if (*pExecType != gd && byBe && pDisc->SCSI.trkType != TRACK_TYPE::audioOnly) {
 			pDisc->MAIN.uiMainDataSlideSize = 0;
 			pDisc->MAIN.nOffsetStart = 0;
 			pDisc->MAIN.nOffsetEnd = 0;
@@ -1133,7 +1131,6 @@ VOID SetCDOffset(
 	}
 	else if (pDisc->MAIN.nCombinedOffset < 0) {
 		if (*pExecType == data) {
-//		if (*pExecType != gd && byBe && pDisc->SCSI.trkType != TRACK_TYPE::audioOnly) {
 			pDisc->MAIN.uiMainDataSlideSize = 0;
 			pDisc->MAIN.nOffsetStart = 0;
 			pDisc->MAIN.nOffsetEnd = 0;
