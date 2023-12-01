@@ -1,4 +1,22 @@
 ================================= Change Log ==================================
+*2023-12-01
+- added support non-plextor and non-lg/asus drive when data/audio command is used (but some drive failed to dump. e.g. SH-216BB)
+- added again -D option in install command of makefile for linux
+- added parsing PS3_DISC.SFB and PS3UPDAT.PUP
+- added detecting protection (DUMMY.ZIP)
+- added a flag indicating readable the lead-out sector (Using ASMedia SATA controller and linux, 0xF1 drive can read the lead-out sector using 0xbe)
+- added checking if export, import, resource size are correct
+- changed if sync or msf or mode is invalid, it skips descrambling
+- changed EXELBA_STORE_SIZE
+- fixed /be option
+- fixed error sector reading
+- fixed reading the multiple PARAM.SFO
+- fixed reading PARAM.SFO
+- fixed the crash when cab file was extracted
+- fixed division by zero
+- fixed DEBUG build error
+- Updated driveOffset.txt
+
 *2023-09-09
 - added: support dumping RVT-R/NR with Plextor drive
 - added: reading speed for /c2
