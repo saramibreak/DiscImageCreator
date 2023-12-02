@@ -1853,7 +1853,7 @@ void printUsage(void)
 		"\t/d8\tUse 0xd8 as the opcode for Reading CD forcibly\n"
 		"\t/c2\tContinue reading CD to recover C2 error existing sector\n"
 		"\t\t\tval1\tvalue to reread (default: 4000)\n"
-		"\t\t\tval2\treading speed when fixing the C2 error (default: same as the <DriveSpeed(0-72)>)"
+		"\t\t\tval2\treading speed when fixing the C2 error (default: same as the <DriveSpeed(0-72)>)\n"
 		"\t\t\tval3\tvalue to set the C2 offset (default: 0)\n"
 	);
 	stopMessage();
