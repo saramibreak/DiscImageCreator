@@ -2516,6 +2516,8 @@ BOOL ReadCDOutOfRange(
 	PDISC_PER_SECTOR pDiscPerSector = &discPerSector;
 	BOOL bReread = FALSE;
 	BYTE bakSkipSubP = pExtArg->bySkipSubP;
+
+	pDiscPerSector->byTrackNum = pDisc->SCSI.toc.FirstTrack;
 	pExtArg->bySkipSubP = TRUE;
 
 	INT nOverreadSize = pDisc->MAIN.nCombinedOffset / CD_RAW_SECTOR_SIZE;

@@ -341,7 +341,7 @@ BOOL FixSubQAdrISRC(
 	PDISC_PER_SECTOR pDiscPerSector,
 	INT nLBA
 ) {
-	if (pDisc->SUB.lpISRCList[pDiscPerSector->byTrackNum - 1] == 0) {
+	if (pDiscPerSector->byTrackNum > 0 && pDisc->SUB.lpISRCList[pDiscPerSector->byTrackNum - 1] == 0) {
 		return FALSE;
 	}
 	else if (pDiscPerSector->subch.current.byAdr == ADR_ENCODES_ISRC) {
@@ -349,13 +349,13 @@ BOOL FixSubQAdrISRC(
 		BOOL bISRC = IsValidSubQAdrISRC(pDiscPerSector->subcode.current);
 		SetISRCToString(pDisc, pDiscPerSector, szISRC, FALSE);
 
-		if (!strncmp(pDisc->SUB.pszISRC[pDiscPerSector->byTrackNum - 1], szISRC, META_ISRC_SIZE) && bISRC) {
+		if (pDiscPerSector->byTrackNum > 0 && !strncmp(pDisc->SUB.pszISRC[pDiscPerSector->byTrackNum - 1], szISRC, META_ISRC_SIZE) && bISRC) {
 			return TRUE;
 		}
 	}
 	BOOL bRet = TRUE;
 	INT session = 1;
-	if (*pExecType != swap) {
+	if (*pExecType != swap && pDiscPerSector->byTrackNum > 0) {
 		session = pDisc->SCSI.lpSessionNumList[pDiscPerSector->byTrackNum - 1];
 		INT nRangeLBA = pDisc->SUB.nRangeLBAForISRC[0][session - 1];
 		if (nRangeLBA == -1) {
@@ -386,7 +386,7 @@ BOOL FixSubQAdrISRC(
 			BOOL bISRC = IsValidSubQAdrISRC(pDiscPerSector->subcode.current);
 			SetISRCToString(pDisc, pDiscPerSector, szISRC, FALSE);
 
-			if (strncmp(pDisc->SUB.pszISRC[pDiscPerSector->byTrackNum - 1], szISRC, META_ISRC_SIZE) || !bISRC) {
+			if (pDiscPerSector->byTrackNum > 0 && strncmp(pDisc->SUB.pszISRC[pDiscPerSector->byTrackNum - 1], szISRC, META_ISRC_SIZE) || !bISRC) {
 				OutputSubErrorWithLBALog(
 					"Q[13-20]:ISRC[%12" CHARWIDTH "s], SubQ[20]Lo:[%x] -> [%12" CHARWIDTH "s], SubQ[20]Lo:[0]\n"
 					, nLBA, pDiscPerSector->byTrackNum, szISRC
@@ -415,7 +415,7 @@ BOOL FixSubQAdrISRC(
 			BOOL bISRC = IsValidSubQAdrISRC(pDiscPerSector->subcode.current);
 			SetISRCToString(pDisc, pDiscPerSector, szISRC, FALSE);
 
-			if (strncmp(pDisc->SUB.pszISRC[pDiscPerSector->byTrackNum - 1], szISRC, META_ISRC_SIZE) || !bISRC) {
+			if (pDiscPerSector->byTrackNum > 0 && strncmp(pDisc->SUB.pszISRC[pDiscPerSector->byTrackNum - 1], szISRC, META_ISRC_SIZE) || !bISRC) {
 				OutputSubErrorWithLBALog("Q[12]:Adr[%d] -> No ISRC frame\n"
 					, nLBA, pDiscPerSector->byTrackNum, pDiscPerSector->subch.current.byAdr);
 				return FALSE;
@@ -704,7 +704,7 @@ VOID FixSubQ(
 				}
 			}
 		}
-		if (pDisc->SUB.lpISRCList[pDiscPerSector->byTrackNum - 1] == 0) {
+		if (pDiscPerSector->byTrackNum > 0 && pDisc->SUB.lpISRCList[pDiscPerSector->byTrackNum - 1] == 0) {
 			CHAR szISRC[META_ISRC_SIZE] = {};
 			BOOL bISRC = IsValidSubQAdrISRC(pDiscPerSector->subcode.current);
 			SetISRCToString(pDisc, pDiscPerSector, szISRC, FALSE);
@@ -863,7 +863,7 @@ VOID FixSubQ(
 				tmpIdx = pDiscPerSector->subch.prevPrev.byIndex;
 			}
 
-			if (nLBA == pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->byTrackNum - 1]) {
+			if (pDiscPerSector->byTrackNum > 0 && nLBA == pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->byTrackNum - 1]) {
 				tmpIdx = 1;
 			}
 //			else if (IsValidPregapSector(pDisc, &pDiscPerSector->subch, nLBA)) {
@@ -1091,7 +1091,7 @@ VOID FixSubQ(
 		}
 	}
 
-	if (!IsValidSubQCtl(&pDiscPerSector->subch, pDisc->SUB.lpEndCtlList[pDiscPerSector->byTrackNum - 1])) {
+	if (pDiscPerSector->byTrackNum > 0 && !IsValidSubQCtl(&pDiscPerSector->subch, pDisc->SUB.lpEndCtlList[pDiscPerSector->byTrackNum - 1])) {
 		OutputSubErrorWithLBALog("Q[12]:Ctl[%hhu] -> [%hhu], [L:%ld]\n", nLBA, pDiscPerSector->byTrackNum
 			, pDiscPerSector->subch.current.byCtl, pDiscPerSector->subch.prev.byCtl, s_lineNum);
 		pDiscPerSector->subch.current.byCtl = pDiscPerSector->subch.prev.byCtl;
@@ -1414,7 +1414,7 @@ BOOL FixSubChannel(
 				else if (pDiscPerSector->subch.current.byAdr == ADR_ENCODES_ISRC) {
 					UpdateTmpSubchForISRC(&pDiscPerSector->subch);
 					pDisc->SUB.nPrevISRCSector = nLBA;
-					if (pDisc->SUB.lpISRCList[pDiscPerSector->byTrackNum - 1] == 0) {
+					if (pDiscPerSector->byTrackNum > 0 && pDisc->SUB.lpISRCList[pDiscPerSector->byTrackNum - 1] == 0) {
 						CHAR szISRC[META_ISRC_SIZE] = {};
 						SetISRCToString(pDisc, pDiscPerSector, szISRC, TRUE);
 					}
