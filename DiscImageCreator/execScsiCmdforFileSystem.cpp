@@ -2198,31 +2198,40 @@ BOOL ReadBDForPup(
 			OutputDiscLog("\t\tversion: %.5s", lpBuf + offset.AsULongLong);
 		}
 		else if (id.AsULongLong == 0x101) {
-			OutputDiscLog("\t\tlicense.xml: %s", lpBuf + offset.AsULongLong);
-			ULONGLONG remain = size.AsULongLong - (DISC_MAIN_DATA_SIZE - offset.AsULongLong);
-			UINT mod = remain % DISC_MAIN_DATA_SIZE;
-			UINT modSector = 0;
-			if (mod != 0) { 
-				modSector = 1;
-			}
-			ULONGLONG sectorSize = remain / DISC_MAIN_DATA_SIZE + modSector;
-			for (UINT j = 1; j <= sectorSize; j++) {
-				LBA.AsULong = (ULONG)pDisc->BD.nLBAForPup + j;
-				REVERSE_BYTES(pCdb->LogicalBlock, &LBA);
-
-				if (!ScsiPassThroughDirect(pExtArg, pDevice, pCdb, CDB12GENERIC_LENGTH, buf,
-					direction, DISC_MAIN_DATA_SIZE, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
-					|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-					return FALSE;
+			OutputDiscLog("\t\tlicense.xml: ");
+			if (!strncmp((LPCCH)(lpBuf + offset.AsULongLong), "<xml", 4)) {
+				OutputDiscLog("%s", lpBuf + offset.AsULongLong);
+				ULONGLONG remain = size.AsULongLong - (DISC_MAIN_DATA_SIZE - offset.AsULongLong);
+				UINT mod = remain % DISC_MAIN_DATA_SIZE;
+				UINT modSector = 0;
+				if (mod != 0) {
+					modSector = 1;
 				}
-				if (j == sectorSize) {
-					for (UINT k = 0; k < mod; k++) {
-						OutputDiscLog("%c", buf[k]);
+				ULONGLONG sectorSize = remain / DISC_MAIN_DATA_SIZE + modSector;
+				for (UINT j = 1; j <= sectorSize; j++) {
+					LBA.AsULong = (ULONG)pDisc->BD.nLBAForPup + j;
+					REVERSE_BYTES(pCdb->LogicalBlock, &LBA);
+
+					if (!ScsiPassThroughDirect(pExtArg, pDevice, pCdb, CDB12GENERIC_LENGTH, buf,
+						direction, DISC_MAIN_DATA_SIZE, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
+						|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+						return FALSE;
+					}
+					if (j == sectorSize) {
+						for (UINT k = 0; k < mod; k++) {
+							OutputDiscLog("%c", buf[k]);
+						}
+					}
+					else {
+						OutputDiscLog("%s", buf);
 					}
 				}
-				else {
-					OutputDiscLog("%s", buf);
+			}
+			else {
+				for (ULONGLONG k = 0; k < size.AsULongLong; k++) {
+					OutputDiscLog("%c", lpBuf[offset.AsULongLong + k]);
 				}
+				OutputDiscLog("\n");
 			}
 		}
 		else if (id.AsULongLong == 0x102) {
