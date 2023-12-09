@@ -281,6 +281,12 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 						}
 					}
 
+					if (*pExecType != swap) {
+						if (!ReadCDCheck(pExecType, pExtArg, pDevice, pDisc)) {
+							throw FALSE;
+						}
+					}
+
 					// This func needs the TOC
 					if (!ReadCDForSearchingOffset(pExecType, pExtArg, pDevice, pDisc)) {
 						throw FALSE;
@@ -351,11 +357,6 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 							if (!ReadCDForCheckingReadInOut(pExecType, pExtArg, pDevice, pDisc)) {
 								throw FALSE;
 							}
-						}
-					}
-					if (*pExecType != swap) {
-						if (!ReadCDCheck(pExecType, pExtArg, pDevice, pDisc)) {
-							throw FALSE;
 						}
 					}
 
