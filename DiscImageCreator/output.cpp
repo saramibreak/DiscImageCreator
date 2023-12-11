@@ -2809,9 +2809,10 @@ BOOL OutputMergedFile(
 		FcloseAndNull(fpSrc2);
 		return FALSE;
 	}
-	BYTE buf[2352] = {};
-	if (fread(buf, sizeof(BYTE), sizeof(buf), fpSrc2) < sizeof(buf)) {
-		OutputErrorString("Failed to read: read size %zu [F:%s][L:%d]\n", sizeof(buf), _T(__FUNCTION__), __LINE__);
+	BYTE buf[CD_RAW_SECTOR_SIZE] = {};
+	size_t readsize = fread(buf, sizeof(BYTE), sizeof(buf), fpSrc2);
+	if (readsize < sizeof(buf)) {
+		OutputErrorString("Failed to read: read size %zu [F:%s][L:%d]\n", readsize, _T(__FUNCTION__), __LINE__);
 		FcloseAndNull(fpSrc1);
 		FcloseAndNull(fpSrc2);
 		FcloseAndNull(fpDst);
@@ -2821,8 +2822,16 @@ BOOL OutputMergedFile(
 	rewind(fpSrc2);
 
 	for (INT i = 0; i < nLBA; i++) {
-		if (fread(buf, sizeof(BYTE), sizeof(buf), fpSrc1) < sizeof(buf)) {
-			OutputErrorString("Failed to read: read size %zu [F:%s][L:%d]\n", sizeof(buf), _T(__FUNCTION__), __LINE__);
+		readsize = fread(buf, sizeof(BYTE), sizeof(buf), fpSrc1);
+		if (feof(fpSrc1)) {
+			break;
+		}
+		if (ferror(fpSrc1)) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			break;
+		}
+		if (readsize < sizeof(buf)) {
+			OutputErrorString("Failed to read: read size %zu [F:%s][L:%d]\n", readsize, _T(__FUNCTION__), __LINE__);
 			FcloseAndNull(fpSrc1);
 			FcloseAndNull(fpSrc2);
 			FcloseAndNull(fpDst);
@@ -2830,44 +2839,42 @@ BOOL OutputMergedFile(
 		}
 		fwrite(buf, sizeof(BYTE), sizeof(buf), fpDst);
 	}
-
-	if (fread(buf, sizeof(BYTE), sizeof(buf), fpSrc2) < sizeof(buf)) {
-		OutputErrorString("Failed to read: read size %zu [F:%s][L:%d]\n", sizeof(buf), _T(__FUNCTION__), __LINE__);
-		FcloseAndNull(fpSrc1);
-		FcloseAndNull(fpSrc2);
-		FcloseAndNull(fpDst);
-		return FALSE;
-	};
-	fseek(fpSrc1, sizeof(buf), SEEK_CUR);
-	while (!feof(fpSrc2) && !ferror(fpSrc2)) {
-		fwrite(buf, sizeof(BYTE), sizeof(buf), fpDst);
-		if (fread(buf, sizeof(BYTE), sizeof(buf), fpSrc2) < sizeof(buf)) {
-			OutputErrorString("Failed to read: read size %zu [F:%s][L:%d]\n", sizeof(buf), _T(__FUNCTION__), __LINE__);
+	while (1) {
+		readsize = fread(buf, sizeof(BYTE), sizeof(buf), fpSrc2);
+		if (feof(fpSrc2)) {
+			break;
+		}
+		if (ferror(fpSrc2)) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			break;
+		}
+		if (readsize < sizeof(buf)) {
+			OutputErrorString("Failed to read: read size %zu [F:%s][L:%d]\n", readsize, _T(__FUNCTION__), __LINE__);
 			FcloseAndNull(fpSrc1);
 			FcloseAndNull(fpSrc2);
 			FcloseAndNull(fpDst);
 			return FALSE;
 		};
+		fwrite(buf, sizeof(BYTE), sizeof(buf), fpDst);
 		fseek(fpSrc1, sizeof(buf), SEEK_CUR);
 	}
-	fseek(fpSrc1, -2352, SEEK_CUR);
-
-	if (fread(buf, sizeof(BYTE), sizeof(buf), fpSrc1) < sizeof(buf)) {
-		OutputErrorString("Failed to read: read size %zu [F:%s][L:%d]\n", sizeof(buf), _T(__FUNCTION__), __LINE__);
-		FcloseAndNull(fpSrc1);
-		FcloseAndNull(fpSrc2);
-		FcloseAndNull(fpDst);
-		return FALSE;
-	}
-	while (!feof(fpSrc1) && !ferror(fpSrc1)) {
-		fwrite(buf, sizeof(BYTE), sizeof(buf), fpDst);
-		if (fread(buf, sizeof(BYTE), sizeof(buf), fpSrc1) < sizeof(buf)) {
-			OutputErrorString("Failed to read: read size %zu [F:%s][L:%d]\n", sizeof(buf), _T(__FUNCTION__), __LINE__);
+	while (1) {
+		readsize = fread(buf, sizeof(BYTE), sizeof(buf), fpSrc1);
+		if (feof(fpSrc1)) {
+			break;
+		}
+		if (ferror(fpSrc1)) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+			break;
+		}
+		if (readsize < sizeof(buf)) {
+			OutputErrorString("Failed to read: read size %zu [F:%s][L:%d]\n", readsize, _T(__FUNCTION__), __LINE__);
 			FcloseAndNull(fpSrc1);
 			FcloseAndNull(fpSrc2);
 			FcloseAndNull(fpDst);
 			return FALSE;
 		}
+		fwrite(buf, sizeof(BYTE), sizeof(buf), fpDst);
 	}
 	FcloseAndNull(fpSrc1);
 	FcloseAndNull(fpSrc2);
