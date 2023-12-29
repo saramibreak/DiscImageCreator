@@ -1803,6 +1803,7 @@ VOID DescrambleMainChannelAll(
 ) {
 	BYTE aSrcBuf[CD_RAW_SECTOR_SIZE] = {};
 	LONG lSeekPtr = 0;
+	INT nSessionLBA = 0;
 
 	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("Data sector range (%s)"), pszType);
 	for (INT k = pDisc->SCSI.by1stDataTrkNum - 1; k < pDisc->SCSI.byLastDataTrkNum; k++) {
@@ -1812,9 +1813,9 @@ VOID DescrambleMainChannelAll(
 			OutputDiscLog("\tTrack %2d, %6d - %6d (%#07x - %#07x)\n",
 				k + 1, n1stLBA, nLastLBA, (UINT)n1stLBA, (UINT)nLastLBA);
 			if (pDisc->SCSI.lpSessionNumList[k] >= 2) {
-				INT nSkipLBA = (SESSION_TO_SESSION_SKIP_LBA * (INT)(pDisc->SCSI.lpSessionNumList[k] - 1));
-				n1stLBA -= nSkipLBA;
-				nLastLBA -= nSkipLBA;
+				nSessionLBA = (SESSION_TO_SESSION_SKIP_LBA * (INT)(pDisc->SCSI.lpSessionNumList[k] - 1));
+				n1stLBA -= nSessionLBA;
+				nLastLBA -= nSessionLBA;
 			}
 			if (pExtArg->byPre) {
 //				n1stLBA += 75;
@@ -1830,7 +1831,7 @@ VOID DescrambleMainChannelAll(
 						, n1stLBA, (UINT)n1stLBA, _T(__FUNCTION__), __LINE__);
 					break;
 				}
-				if (IsValidDataSector(pDisc, aSrcBuf, lpScrambledBuf, n1stLBA, k + 1)) {
+				if (IsValidDataSector(pDisc, aSrcBuf, lpScrambledBuf, n1stLBA + nSessionLBA, k + 1)) {
 					fseek(fpImg, -CD_RAW_SECTOR_SIZE, SEEK_CUR);
 					for (INT n = 0; n < CD_RAW_SECTOR_SIZE; n++) {
 						aSrcBuf[n] ^= lpScrambledBuf[n];
