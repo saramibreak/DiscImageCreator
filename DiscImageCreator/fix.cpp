@@ -386,7 +386,7 @@ BOOL FixSubQAdrISRC(
 			BOOL bISRC = IsValidSubQAdrISRC(pDiscPerSector->subcode.current);
 			SetISRCToString(pDisc, pDiscPerSector, szISRC, FALSE);
 
-			if (pDiscPerSector->byTrackNum > 0 && strncmp(pDisc->SUB.pszISRC[pDiscPerSector->byTrackNum - 1], szISRC, META_ISRC_SIZE) || !bISRC) {
+			if ((pDiscPerSector->byTrackNum > 0 && strncmp(pDisc->SUB.pszISRC[pDiscPerSector->byTrackNum - 1], szISRC, META_ISRC_SIZE)) || !bISRC) {
 				OutputSubErrorWithLBALog(
 					"Q[13-20]:ISRC[%12" CHARWIDTH "s], SubQ[20]Lo:[%x] -> [%12" CHARWIDTH "s], SubQ[20]Lo:[0]\n"
 					, nLBA, pDiscPerSector->byTrackNum, szISRC
@@ -415,7 +415,7 @@ BOOL FixSubQAdrISRC(
 			BOOL bISRC = IsValidSubQAdrISRC(pDiscPerSector->subcode.current);
 			SetISRCToString(pDisc, pDiscPerSector, szISRC, FALSE);
 
-			if (pDiscPerSector->byTrackNum > 0 && strncmp(pDisc->SUB.pszISRC[pDiscPerSector->byTrackNum - 1], szISRC, META_ISRC_SIZE) || !bISRC) {
+			if ((pDiscPerSector->byTrackNum > 0 && strncmp(pDisc->SUB.pszISRC[pDiscPerSector->byTrackNum - 1], szISRC, META_ISRC_SIZE)) || !bISRC) {
 				OutputSubErrorWithLBALog("Q[12]:Adr[%d] -> No ISRC frame\n"
 					, nLBA, pDiscPerSector->byTrackNum, pDiscPerSector->subch.current.byAdr);
 				return FALSE;

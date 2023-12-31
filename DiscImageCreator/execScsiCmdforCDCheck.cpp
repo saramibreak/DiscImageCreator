@@ -1263,7 +1263,6 @@ BOOL ReadCDForCheckingSubPack(
 }
 
 BOOL ReadCDForCheckingSubRtoW(
-	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
 	PDISC pDisc
@@ -2851,7 +2850,7 @@ BOOL ReadCDCheck(
 		if (pDevice->bySupportedPackMode) {
 			// Typically, CD+G data is included in audio only disc
 			// But exceptionally, WonderMega Collection (SCD)(mixed disc) exists CD+G data.
-			if (!ReadCDForCheckingSubRtoW(pExecType, pExtArg, pDevice, pDisc)) {
+			if (!ReadCDForCheckingSubRtoW(pExtArg, pDevice, pDisc)) {
 				return FALSE;
 			}
 		}
