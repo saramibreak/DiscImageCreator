@@ -386,8 +386,14 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 							, c2, pszFullPath, FIRST_LBA_FOR_GD, 549149 + 1, fpC2);
 					}
 					else if (*pExecType == data || *pExecType == audio) {
-						bRet = ReadCDPartial(pExecType, pExtArg, pDevice, pDisc, &discPerSector
-							, c2, pszFullPath, (INT)s_nStartLBA, (INT)s_nEndLBA, fpC2);
+						if (pExtArg->byTages) {
+							bRet = ReadCDForTages(pExecType, pExtArg, pDevice, pDisc, &discPerSector
+								, c2, pszFullPath, (INT)s_nStartLBA, (INT)s_nEndLBA, fpC2);
+						}
+						else {
+							bRet = ReadCDPartial(pExecType, pExtArg, pDevice, pDisc, &discPerSector
+								, c2, pszFullPath, (INT)s_nStartLBA, (INT)s_nEndLBA, fpC2);
+						}
 					}
 				}
 				else {
@@ -840,6 +846,24 @@ int SetOptionVn(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	else {
 		pExtArg->nAudioCDOffsetNum = 0;
 		OutputString("/vn val was omitted. set [%d]\n", pExtArg->nAudioCDOffsetNum);
+	}
+	return TRUE;
+}
+
+int SetOptionT(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
+{
+	_TCHAR* endptr = NULL;
+	pExtArg->byTages = TRUE;
+	if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
+		pExtArg->uiMaxRereadNum = (UINT)_tcstoul(argv[(*i)++], &endptr, 10);
+		if (*endptr) {
+			OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
+			return FALSE;
+		}
+	}
+	else {
+		pExtArg->uiMaxRereadNum = 20;
+		OutputString("/t val was omitted. set [%u]\n", pExtArg->uiMaxRereadNum);
 	}
 	return TRUE;
 }
@@ -1301,6 +1325,11 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				}
 				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/r"), cmdLen)) {
 					pExtArg->byReverse = TRUE;
+				}
+				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/t"), cmdLen)) {
+					if (!SetOptionT(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
 				}
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/sf"), cmdLen)) {
 					if (!SetOptionSf(argc, argv, pExtArg, &i)) {
@@ -1780,7 +1809,7 @@ void printUsage(void)
 		"\t\tFor no PLEXTOR or drive that can't scramble dumping\n"
 		"\tdata <DriveLetter> <Filename> <DriveSpeed(0-72)> <StartLBA> <EndLBA+1>\n"
 		"\t     [/q] [/d] [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4) (val5)] [/f (val)]\n"
-		"\t     [/sf (val)] [/sk (val1) (val2)] [/ss] [/r] [/np] [/nq] [/nr] [/s (val)]\n"
+		"\t     [/sf (val)] [/sk (val1) (val2)] [/ss] [/r] [/np] [/nq] [/nr] [/s (val)] [/t (val)]\n"
 		"\t\tDump a CD from start to end (using 'all' flag)\n"
 		"\t\tFor no PLEXTOR or drive that can't scramble dumping\n"
 		"\taudio <DriveLetter> <Filename> <DriveSpeed(0-72)> <StartLBA> <EndLBA+1>\n"
@@ -1869,7 +1898,7 @@ void printUsage(void)
 		"\t\t\tSupport drive: PLEXTOR PX-W4012, 5224, PREMIUM, PREMIUM2\n"
 		"\t\t\t               PX-704, 708, 712, 714, 716, 755, 760\n"
 		"\t/r\tRead CD from the reverse\n"
-		"\t\t\tFor Alpha-Disc, Tages (very slow)\n"
+		"\t\t\tFor Alpha-Disc (very slow)\n"
 		"\t/74\tRead the lead-out about 74:00:00\n"
 		"\t\t\tFor ring data (a.k.a Saturn Ring) of Sega Saturn\n"
 		"\t/sf\tScan file to detect protect. If reading error exists,\n"
@@ -1883,12 +1912,15 @@ void printUsage(void)
 		"\t/ss\tScan sector to detect protect. If reading error exists,\n"
 		"\t   \tcontinue reading and ignore c2 error on specific sector\n"
 		"\t\t\tFor ProtectCD-VOB\n"
+		"\t/t\tRead CD from the reverse\n"
+		"\t\t\tFor Tages\n"
+		"\t\t\tval\tretry num (default:20)\n"
 		"\t/am\tScan anti-mod string\n"
 		"\t\t\tFor PlayStation\n"
-		"\t/vn\tSearch specific bytes\n"
 	);
 	stopMessage();
 	OutputString(
+		"\t/vn\tSearch specific bytes\n"
 		"\t\t\tFor VideoNow\n"
 		"\t\t\tval\tCombined offset is shifted for negative direction if positive value is set\n"
 		"\t/vnc\tSearch specific bytes\n"
@@ -1917,10 +1949,10 @@ void printUsage(void)
 		"\t\t\t   \t2: read next & next next sub (slow, precision)\n"
 		"Option (for DVD)\n"
 		"\t/c\tLog Copyright Management Information\n"
-		"\t/rr\tRetry reading when error occurs\n"
 	);
 	stopMessage();
 	OutputString(
+		"\t/rr\tRetry reading when error occurs\n"
 		"\t\t\tval\tMax retry value (default: 10)\n"
 		"\t/sk\tSkip sector for protect (ARccOS, RipGuard)\n"
 		"\t\t\tval\tsector num\n"

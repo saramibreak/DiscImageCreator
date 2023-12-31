@@ -82,7 +82,21 @@ BOOL ReadCDForSwap(
 	FILE* fpCcd,
 	FILE* fpC2
 );
+
 BOOL ReadCDPartial(
+	PEXEC_TYPE pExecType,
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	PDISC pDisc,
+	PDISC_PER_SECTOR pDiscPerSector,
+	CDFLAG::_READ_CD::_ERROR_FLAGS c2,
+	LPCTSTR pszPath,
+	INT nStart,
+	INT nEnd,
+	FILE* fpC2
+);
+
+BOOL ReadCDForTages(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice,
