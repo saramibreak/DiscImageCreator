@@ -1,4 +1,13 @@
 ================================= Change Log ==================================
+*2024-01-01
+- added /t option in the data command for Tages
+- fixed fail to dump blu-ray disc except for PS3 (2023-12-01 version bug)
+- fixed incorrect Enhanced CD data track (2023-12-01 version bug)
+- fixed error handling for merge command
+- fixed fail to dump when LG/ASUS drive is used (2023-12-01 version bug)
+- fixed parsing PS3UPDAT.PUP (2023-12-01 version bug)
+- fixed access outside the array range
+
 *2023-12-01
 - added support non-plextor and non-lg/asus drive when data/audio command is used (but some drive failed to dump. e.g. SH-216BB)
 - added again -D option in install command of makefile for linux
