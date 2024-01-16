@@ -1580,6 +1580,7 @@ VOID OutputFsPcfxSector(
 
 // Start of ECMA-167
 VOID OutputFsRecordingDateAndTime(
+	LPCCH nest,
 	LPBYTE lpBuf
 ) {
 	WORD sTime = MAKEWORD(lpBuf[0], lpBuf[1]);
@@ -1587,8 +1588,8 @@ VOID OutputFsRecordingDateAndTime(
 	SHORT nTime = sTime & 0xfff;
 
 	OutputVolDescLog(
-		"\tRecording Date and Time: %u-%02u-%02uT%02u:%02u:%02u.%02u%02u%02u%+03d:%02d"
-		, MAKEWORD(lpBuf[2], lpBuf[3]), lpBuf[4], lpBuf[5],	lpBuf[6], lpBuf[7], lpBuf[8], lpBuf[9], lpBuf[10], lpBuf[11], nTime / 60, nTime % 60);
+		"%s Date and Time: %u-%02u-%02uT%02u:%02u:%02u.%02u%02u%02u%+03d:%02d"
+		, nest, MAKEWORD(lpBuf[2], lpBuf[3]), lpBuf[4], lpBuf[5], lpBuf[6], lpBuf[7], lpBuf[8], lpBuf[9], lpBuf[10], lpBuf[11], nTime / 60, nTime % 60);
 	if (cTimeZone == 0) {
 		OutputVolDescLog(" (UTC)\n");
 	}
@@ -1604,26 +1605,18 @@ VOID OutputFsRecordingDateAndTime(
 }
 
 VOID OutputFsRegid(
+	LPCCH nest,
 	LPBYTE lpBuf
 ) {
 	OutputVolDescLog(
-		"\t\tFlags: %u\n"
-		"\t\tIdentifier: %.23" CHARWIDTH "s\n"
-		"\t\tIdentifier Suffix: ",
-		lpBuf[0],
-		&lpBuf[1]);
+		"%s            Flags: %u\n"
+		"%s       Identifier: %.23" CHARWIDTH "s\n"
+		"%sIdentifier Suffix: "
+		, nest, lpBuf[0]
+		, nest, &lpBuf[1]
+		, nest
+	);
 	for (INT i = 24; i < 32; i++) {
-		OutputVolDescLog("%02x", lpBuf[i]);
-	}
-	OutputVolDescLog("\n");
-}
-
-VOID OutputFsNSRDescriptor(
-	LPBYTE lpBuf
-) {
-	OutputVolDescLog(
-		"\tStructure Data: ");
-	for (INT i = 8; i < 2048; i++) {
 		OutputVolDescLog("%02x", lpBuf[i]);
 	}
 	OutputVolDescLog("\n");
@@ -1633,27 +1626,29 @@ VOID OutputFsBootDescriptor(
 	LPBYTE lpBuf
 ) {
 	OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR("Architecture Type"));
-	OutputFsRegid(lpBuf + 8);
+	OutputFsRegid("\t", lpBuf + 8);
 	OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR("Boot Identifier"));
-	OutputFsRegid(lpBuf + 8);
+	OutputFsRegid("\t", lpBuf + 8);
 
 	OutputVolDescLog(
 		"\tBoot Extent Location: %u\n"
-		"\tBoot Extent Length: %u\n"
-		"\tLoad Address: %u%u\n"
-		"\tStart Address: %u%u\n",
-		MAKEUINT(MAKEWORD(lpBuf[72], lpBuf[73]), MAKEWORD(lpBuf[74], lpBuf[75])),
-		MAKEUINT(MAKEWORD(lpBuf[76], lpBuf[77]), MAKEWORD(lpBuf[78], lpBuf[79])),
-		MAKEUINT(MAKEWORD(lpBuf[80], lpBuf[81]), MAKEWORD(lpBuf[82], lpBuf[83])),
-		MAKEUINT(MAKEWORD(lpBuf[84], lpBuf[85]), MAKEWORD(lpBuf[86], lpBuf[87])),
-		MAKEUINT(MAKEWORD(lpBuf[88], lpBuf[89]), MAKEWORD(lpBuf[90], lpBuf[91])),
-		MAKEUINT(MAKEWORD(lpBuf[92], lpBuf[93]), MAKEWORD(lpBuf[94], lpBuf[95])));
+		"\t  Boot Extent Length: %u\n"
+		"\t        Load Address: %u%u\n"
+		"\t       Start Address: %u%u\n"
+		, MAKEUINT(MAKEWORD(lpBuf[72], lpBuf[73]), MAKEWORD(lpBuf[74], lpBuf[75]))
+		, MAKEUINT(MAKEWORD(lpBuf[76], lpBuf[77]), MAKEWORD(lpBuf[78], lpBuf[79]))
+		, MAKEUINT(MAKEWORD(lpBuf[80], lpBuf[81]), MAKEWORD(lpBuf[82], lpBuf[83]))
+		, MAKEUINT(MAKEWORD(lpBuf[84], lpBuf[85]), MAKEWORD(lpBuf[86], lpBuf[87]))
+		, MAKEUINT(MAKEWORD(lpBuf[88], lpBuf[89]), MAKEWORD(lpBuf[90], lpBuf[91]))
+		, MAKEUINT(MAKEWORD(lpBuf[92], lpBuf[93]), MAKEWORD(lpBuf[94], lpBuf[95]))
+	);
 
-	OutputFsRecordingDateAndTime(lpBuf + 96);
+	OutputFsRecordingDateAndTime("\tDescriptor Creation", lpBuf + 96);
 	OutputVolDescLog(
-		"\tFlags: %u\n"
-		"\tBoot Use: ",
-		MAKEWORD(lpBuf[108], lpBuf[109]));
+		"\t   Flags: %u\n"
+		"\tBoot Use: "
+		, MAKEWORD(lpBuf[108], lpBuf[109])
+	);
 	for (INT i = 142; i < 2048; i++) {
 		OutputVolDescLog("%02x", lpBuf[i]);
 	}
@@ -1663,9 +1658,18 @@ VOID OutputFsBootDescriptor(
 VOID OutputFsTerminatingExtendedAreaDescriptor(
 	LPBYTE lpBuf
 ) {
-	OutputVolDescLog(
-		"\tStructure Data: ");
+	OutputVolDescLog("\t     Structure Data: ");
 	for (INT i = 7; i < 2048; i++) {
+		OutputVolDescLog("%02x", lpBuf[i]);
+	}
+	OutputVolDescLog("\n");
+}
+
+VOID OutputFsNSRDescriptor(
+	LPBYTE lpBuf
+) {
+	OutputVolDescLog("\t     Structure Data: ");
+	for (INT i = 8; i < 2048; i++) {
 		OutputVolDescLog("%02x", lpBuf[i]);
 	}
 	OutputVolDescLog("\n");
@@ -1674,8 +1678,7 @@ VOID OutputFsTerminatingExtendedAreaDescriptor(
 VOID OutputFsBeginningExtendedAreaDescriptor(
 	LPBYTE lpBuf
 ) {
-	OutputVolDescLog(
-		"\tStructure Data: ");
+	OutputVolDescLog("\t     Structure Data: ");
 	for (INT i = 7; i < 2048; i++) {
 		OutputVolDescLog("%02x", lpBuf[i]);
 	}
@@ -1688,9 +1691,9 @@ VOID OutputFsVolumeStructureDescriptorFormat(
 ) {
 	OutputVolDescLog(
 		OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Volume Recognition Sequence")
-		"\tStructure Type: %u\n"
+		"\t     Structure Type: %u\n"
 		"\tStandard Identifier: %.5" CHARWIDTH "s\n"
-		"\tStructure Version: %u\n"
+		"\t  Structure Version: %u\n"
 		, nLBA, (UINT)nLBA, lpBuf[0], &lpBuf[1], lpBuf[6]);
 }
 
@@ -1727,89 +1730,106 @@ VOID OutputFsVolumeRecognitionSequence(
 }
 
 VOID OutputFsCharspec(
+	LPCCH nest,
 	LPBYTE lpBuf
 ) {
 	OutputVolDescLog(
-		"\t\tCharacter Set Type: %u\n"
-		"\t\tCharacter Set Information: %.63" CHARWIDTH "s\n",
-		lpBuf[0], &lpBuf[1]);
+		"%s       Character Set Type: %u\n"
+		"%sCharacter Set Information: %.63" CHARWIDTH "s\n"
+		, nest, lpBuf[0]
+		, nest, &lpBuf[1]
+	);
 }
 
 VOID OutputFsExtentDescriptor(
+	LPCCH nest,
 	LPBYTE lpBuf
 ) {
 	OutputVolDescLog(
-		"\t\tExtent Length: %u\n"
-		"\t\tExtent Location: %u\n",
-		MAKEUINT(MAKEWORD(lpBuf[0], lpBuf[1]), MAKEWORD(lpBuf[2], lpBuf[3])),
-		MAKEUINT(MAKEWORD(lpBuf[4], lpBuf[5]), MAKEWORD(lpBuf[6], lpBuf[7])));
+		"%s  Extent Length: %u\n"
+		"%sExtent Location: %u\n"
+		, nest, MAKEUINT(MAKEWORD(lpBuf[0], lpBuf[1]), MAKEWORD(lpBuf[2], lpBuf[3]))
+		, nest, MAKEUINT(MAKEWORD(lpBuf[4], lpBuf[5]), MAKEWORD(lpBuf[6], lpBuf[7]))
+	);
 }
 
 VOID OutputFsRecordedAddress(
+	LPCCH nest,
 	LPBYTE lpBuf
 ) {
 	OutputVolDescLog(
-		"\t\tLogical Block Number: %u\n"
-		"\t\tPartition Reference Number: %u\n",
-		MAKEUINT(MAKEWORD(lpBuf[0], lpBuf[1]), MAKEWORD(lpBuf[2], lpBuf[3])),
-		MAKEWORD(lpBuf[4], lpBuf[5])
+		"%s      Logical Block Number: %u\n"
+		"%sPartition Reference Number: %u\n"
+		, nest, MAKEUINT(MAKEWORD(lpBuf[0], lpBuf[1]), MAKEWORD(lpBuf[2], lpBuf[3]))
+		, nest, MAKEWORD(lpBuf[4], lpBuf[5])
 	);
 }
 
 VOID OutputFsShortAllocationDescriptor(
+	LPCCH nest,
 	LPBYTE lpBuf
 ) {
 	OutputVolDescLog(
-		"\t\tExtent Length: %u\n"
-		"\t\tFlags: %d\n"
-		"\t\tExtent Position: %u\n"
-		, MAKEUINT(MAKEWORD(lpBuf[0], lpBuf[1]), MAKEWORD(lpBuf[2], lpBuf[3] & 0x3f))
-		, lpBuf[3] & 0xc0
-		, MAKEUINT(MAKEWORD(lpBuf[4], lpBuf[5]), MAKEWORD(lpBuf[6], lpBuf[3]))
+		"%s  Extent Length: %u\n"
+		"%s          Flags: %d\n"
+		"%sExtent Position: %u\n"
+		, nest, MAKEUINT(MAKEWORD(lpBuf[0], lpBuf[1]), MAKEWORD(lpBuf[2], lpBuf[3] & 0x3f))
+		, nest, lpBuf[3] & 0xc0
+		, nest, MAKEUINT(MAKEWORD(lpBuf[4], lpBuf[5]), MAKEWORD(lpBuf[6], lpBuf[3]))
 	);
 }
 
 VOID OutputFsLongAllocationDescriptor(
+	LPCCH nest,
 	LPBYTE lpBuf
 ) {
+#if 0
 	OutputVolDescLog(
-		"\t\tExtent Length: %u\n"
-		"\t\tFlags: %d\n"
-		"\t\tExtent Location\n"
-		, MAKEUINT(MAKEWORD(lpBuf[0], lpBuf[1]), MAKEWORD(lpBuf[2], lpBuf[3] & 0x7f))
-		, lpBuf[3] & 0x80
+		"%sExtent Length: %u\n"
+		"\t%s    Flags: %d\n"
+		"\t%sExtent Location\n"
+		, nest, MAKEUINT(MAKEWORD(lpBuf[0], lpBuf[1]), MAKEWORD(lpBuf[2], lpBuf[3] & 0x7f))
+		, nest, lpBuf[3] & 0x80, nest
 	);
-	OutputFsRecordedAddress(lpBuf + 4);
+#else
+	OutputVolDescLog(
+		"%s     Extent Length: %u\n"
+		"%s   Extent Location\n"
+		, nest, MAKEUINT(MAKEWORD(lpBuf[0], lpBuf[1]), MAKEWORD(lpBuf[2], lpBuf[3]))
+		, nest
+	);
+#endif
+	OutputFsRecordedAddress(nest, lpBuf + 4);
 
 	OutputVolDescLog(
-		"\t\tImplementation Use\n"
-		"\t\t\tADImpUse\n"
-		"\t\t\t\tFlags: %u\n"
-		"\t\t\t\tUnique Id: %u\n"
-		, MAKEWORD(lpBuf[10], lpBuf[11])
-		, MAKEUINT(MAKEWORD(lpBuf[12], lpBuf[13]), MAKEWORD(lpBuf[14], lpBuf[15]))
+		"%sImplementation Use\n"
+		"\t%s         Flags: %u\n"
+		"\t%s     Unique Id: %u\n"
+		, nest, nest, MAKEWORD(lpBuf[10], lpBuf[11])
+		, nest, MAKEUINT(MAKEWORD(lpBuf[12], lpBuf[13]), MAKEWORD(lpBuf[14], lpBuf[15]))
 	);
 }
 
 VOID OutputFsDescriptorTag(
+	LPCCH nest,
 	LPBYTE lpBuf
 ) {
 	OutputVolDescLog(
-		"\tDescriptor Tag\n"
-		"\t\tTag Identifier: %u\n"
-		"\t\tDescriptor Version: %u\n"
-		"\t\tTag Checksum: %u\n"
-		"\t\tTag Serial Number: %u\n"
-		"\t\tDescriptor CRC: %04x\n"
-		"\t\tDescriptor CRC Length: %u\n"
-		"\t\tTag Location: %u\n",
-		MAKEWORD(lpBuf[0], lpBuf[1]),
-		MAKEWORD(lpBuf[2], lpBuf[3]),
-		lpBuf[4],
-		MAKEWORD(lpBuf[6], lpBuf[7]),
-		MAKEWORD(lpBuf[8], lpBuf[9]),
-		MAKEWORD(lpBuf[10], lpBuf[11]),
-		MAKEUINT(MAKEWORD(lpBuf[12], lpBuf[13]), MAKEWORD(lpBuf[14], lpBuf[15]))
+		"%s           Descriptor Tag\n"
+		"\t%s       Tag Identifier: %u\n"
+		"\t%s   Descriptor Version: %u\n"
+		"\t%s         Tag Checksum: %u\n"
+		"\t%s    Tag Serial Number: %u\n"
+		"\t%s       Descriptor CRC: %04x\n"
+		"\t%sDescriptor CRC Length: %u\n"
+		"\t%s         Tag Location: %u\n"
+		, nest, nest, MAKEWORD(lpBuf[0], lpBuf[1])
+		, nest, MAKEWORD(lpBuf[2], lpBuf[3])
+		, nest, lpBuf[4]
+		, nest, MAKEWORD(lpBuf[6], lpBuf[7])
+		, nest, MAKEWORD(lpBuf[8], lpBuf[9])
+		, nest, MAKEWORD(lpBuf[10], lpBuf[11])
+		, nest, MAKEUINT(MAKEWORD(lpBuf[12], lpBuf[13]), MAKEWORD(lpBuf[14], lpBuf[15]))
 	);
 }
 
@@ -1817,30 +1837,30 @@ VOID OutputFsFileEntry(
 	LPBYTE lpBuf
 ) {
 	OutputVolDescLog(
-		"\tICB Tag\n"
+		"\t                                    ICB Tag\n"
 		"\t\tPrior Recorded Number of Direct Entries: %u\n"
-		"\t\tStrategy Type: %u\n"
-		"\t\tStrategy Parameter: %u %u\n"
-		"\t\tMaximum Number of Entries: %u\n"
-		"\t\tFile Type: %u\n"
-		"\t\tParent ICB Location\n"
+		"\t\t                          Strategy Type: %u\n"
+		"\t\t                     Strategy Parameter: %02u%02u\n"
+		"\t\t              Maximum Number of Entries: %u\n"
+		"\t\t                              File Type: %u\n"
+		"\t\t                    Parent ICB Location\n"
 		, MAKEUINT(MAKEWORD(lpBuf[16], lpBuf[17]), MAKEWORD(lpBuf[18], lpBuf[19]))
 		, MAKEWORD(lpBuf[20], lpBuf[21]), lpBuf[22], lpBuf[23]
 		, MAKEWORD(lpBuf[24], lpBuf[25]), lpBuf[27]
 	);
-	OutputFsRecordedAddress(lpBuf + 28);
+	OutputFsRecordedAddress("\t\t\t         ", lpBuf + 28);
 
 	OutputVolDescLog(
-		"\t\tFlags: %#04x\n"
-		"\tUid: %x\n"
-		"\tGid: %x\n"
-		"\tPermissions: %#04x\n"
-		"\tFile Link Count: %u\n"
-		"\tRecord Format: %u\n"
-		"\tRecord Display Attributes: %u\n"
-		"\tRecord Length: %u\n"
-		"\tInformation Length: %llu\n"
-		"\tLogical Blocks Recorded: %llu\n"
+		"\t\t                                  Flags: %#04x\n"
+		"\t                                        Uid: %x\n"
+		"\t                                        Gid: %x\n"
+		"\t                                Permissions: %#04x\n"
+		"\t                            File Link Count: %u\n"
+		"\t                              Record Format: %u\n"
+		"\t                  Record Display Attributes: %u\n"
+		"\t                              Record Length: %u\n"
+		"\t                         Information Length: %llu\n"
+		"\t                    Logical Blocks Recorded: %llu\n"
 		, MAKEWORD(lpBuf[34], lpBuf[35])
 		, MAKEUINT(MAKEWORD(lpBuf[36], lpBuf[37]), MAKEWORD(lpBuf[38], lpBuf[39]))
 		, MAKEUINT(MAKEWORD(lpBuf[40], lpBuf[41]), MAKEWORD(lpBuf[42], lpBuf[43]))
@@ -1852,74 +1872,163 @@ VOID OutputFsFileEntry(
 		, MAKEUINT64(MAKEUINT(MAKEWORD(lpBuf[64], lpBuf[65]), MAKEWORD(lpBuf[66], lpBuf[67]))
 			, MAKEUINT(MAKEWORD(lpBuf[68], lpBuf[69]), MAKEWORD(lpBuf[70], lpBuf[71])))
 	);
-	OutputFsRecordingDateAndTime(lpBuf + 72);
-	OutputFsRecordingDateAndTime(lpBuf + 84);
-	OutputFsRecordingDateAndTime(lpBuf + 96);
+	OutputFsRecordingDateAndTime("\t                       Access", lpBuf + 72);
+	OutputFsRecordingDateAndTime("\t                 Modification", lpBuf + 84);
+	OutputFsRecordingDateAndTime("\t                    Attribute", lpBuf + 96);
 	OutputVolDescLog(
-		"\tCheckpoint: %u\n"
+		"\t                                 Checkpoint: %u\n"
 		, MAKEUINT(MAKEWORD(lpBuf[108], lpBuf[109]), MAKEWORD(lpBuf[110], lpBuf[111]))
 	);
-	OutputVolDescLog("\tExtended Attribute ICB\n");
-	OutputFsLongAllocationDescriptor(lpBuf + 112);
+	OutputVolDescLog("\t                     Extended Attribute ICB\n");
+	OutputFsLongAllocationDescriptor("\t\t                     ", lpBuf + 112);
 
-	OutputVolDescLog("\tImplementation Identifier\n");
-	OutputFsRegid(lpBuf + 128);
+	OutputVolDescLog("\t                  Implementation Identifier\n");
+	OutputFsRegid("\t                          ", lpBuf + 128);
 
-	OutputVolDescLog("\tUnique Id: %llu\n"
+	UINT L_EA = MAKEUINT(MAKEWORD(lpBuf[168], lpBuf[169]), MAKEWORD(lpBuf[170], lpBuf[171]));
+	UINT L_AD = MAKEUINT(MAKEWORD(lpBuf[172], lpBuf[173]), MAKEWORD(lpBuf[174], lpBuf[175]));
+	OutputVolDescLog(
+		"\t                                  Unique Id: %llu\n"
+		"\t              Length of Extended Attributes: %u\n"
+		"\t           Length of Allocation Descriptors: %u\n"
 		, MAKEUINT64(MAKEUINT(MAKEWORD(lpBuf[160], lpBuf[161]), MAKEWORD(lpBuf[162], lpBuf[163]))
 			, MAKEUINT(MAKEWORD(lpBuf[164], lpBuf[165]), MAKEWORD(lpBuf[166], lpBuf[167])))
+		, L_EA, L_AD
 	);
-	UINT L_EA = MAKEUINT(MAKEWORD(lpBuf[168], lpBuf[169]), MAKEWORD(lpBuf[170], lpBuf[171]));
-	//	UINT L_AD = MAKEUINT(MAKEWORD(lpBuf[172], lpBuf[173]), MAKEWORD(lpBuf[174], lpBuf[175]));
 
 	OutputVolDescLog(
-		"\tExtended Attributes\n"
-		"\t\tExtended Attribute Header Descriptor\n"
+		"\t                        Extended Attributes\n"
+		"\t\t   Extended Attribute Header Descriptor\n"
 	);
-	INT nOfs = 176;
-	OutputFsDescriptorTag(lpBuf + nOfs);
+	UINT uiOfs = 176;
+	OutputFsDescriptorTag("\t\t\t          ", lpBuf + uiOfs);
 
-	UINT ImplAttrPos = MAKEUINT(MAKEWORD(lpBuf[nOfs + 16], lpBuf[nOfs + 17]), MAKEWORD(lpBuf[nOfs + 18], lpBuf[nOfs + 19]));
-	UINT AppAttrPos = MAKEUINT(MAKEWORD(lpBuf[nOfs + 20], lpBuf[nOfs + 21]), MAKEWORD(lpBuf[nOfs + 22], lpBuf[nOfs + 23]));
+	UINT ImplAttrPos = MAKEUINT(MAKEWORD(lpBuf[uiOfs + 16], lpBuf[uiOfs + 17]), MAKEWORD(lpBuf[uiOfs + 18], lpBuf[uiOfs + 19]));
+	UINT AppAttrPos = MAKEUINT(MAKEWORD(lpBuf[uiOfs + 20], lpBuf[uiOfs + 21]), MAKEWORD(lpBuf[uiOfs + 22], lpBuf[uiOfs + 23]));
 	OutputVolDescLog(
-		"\t\tImplementation Attributes Location: %u\n"
-		"\t\tApplication Attributes Location: %u\n"
+		"\t\t\t Implementation Attributes Location: %u\n"
+		"\t\t\t    Application Attributes Location: %u\n"
 		, ImplAttrPos, AppAttrPos
 	);
-	nOfs += 24;
+	uiOfs += 24;
 
-	UINT aType = MAKEUINT(MAKEWORD(lpBuf[nOfs], lpBuf[nOfs + 1])
-		, MAKEWORD(lpBuf[nOfs + 2], lpBuf[nOfs + 3]));
-	do {
-		if (aType == 2048) {
-			UINT A_L = MAKEUINT(MAKEWORD(lpBuf[nOfs + 8], lpBuf[nOfs + 9])
-				, MAKEWORD(lpBuf[nOfs + 10], lpBuf[nOfs + 11]));
-			UINT IU_L = MAKEUINT(MAKEWORD(lpBuf[nOfs + 12], lpBuf[nOfs + 13])
-				, MAKEWORD(lpBuf[nOfs + 14], lpBuf[nOfs + 15]));
+	while (uiOfs < 176 + L_EA) {
+		UINT aType = MAKEUINT(MAKEWORD(lpBuf[uiOfs], lpBuf[uiOfs + 1])
+			, MAKEWORD(lpBuf[uiOfs + 2], lpBuf[uiOfs + 3]));
+		UINT A_L = MAKEUINT(MAKEWORD(lpBuf[uiOfs + 8], lpBuf[uiOfs + 9])
+			, MAKEWORD(lpBuf[uiOfs + 10], lpBuf[uiOfs + 11]));
+		UINT IU_L = MAKEUINT(MAKEWORD(lpBuf[uiOfs + 12], lpBuf[uiOfs + 13])
+			, MAKEWORD(lpBuf[uiOfs + 14], lpBuf[uiOfs + 15]));
+		if (aType == 1) {
 			OutputVolDescLog(
-				"\t\tImplementation Use Extended Attribute\n"
-				"\t\t\tAttribute Type: %u\n"
-				"\t\t\tAttribute Subtype: %u\n"
-				"\t\t\tAttribute Length: %u\n"
-				"\t\t\tImplementation Use Length: %u\n"
-				"\t\t\tImplementation Identifier\n"
-				, aType, lpBuf[nOfs + 4], A_L, IU_L
+				"\t\t              Character Set Information\n"
+				"\t\t\t                     Attribute Type: %u\n"
+				"\t\t\t                  Attribute Subtype: %u\n"
+				"\t\t\t                   Attribute Length: %u\n"
+				"\t\t\t            Escape Sequences Length: %u\n"
+				"\t\t\t                 Character Set Type: %u\n"
+				"\t\t\t                   Escape Sequences: "
+				, aType, lpBuf[uiOfs + 4], A_L, IU_L, lpBuf[uiOfs + 16]
 			);
-			OutputFsRegid(lpBuf + nOfs + 16);
-
-			OutputVolDescLog("\t\t\tImplementation Use:");
-			for (INT i = nOfs + 48; i < (INT)(nOfs + 48 + IU_L); i++) {
+			for (UINT i = uiOfs + 17; i < uiOfs + 17 + IU_L; i++) {
 				OutputVolDescLog(" %02x", lpBuf[i]);
 			}
 			OutputVolDescLog("\n");
-			nOfs += 48 + IU_L;
-			aType = MAKEUINT(MAKEWORD(lpBuf[nOfs], lpBuf[nOfs + 1])
-				, MAKEWORD(lpBuf[nOfs + 2], lpBuf[nOfs + 3]));
+			uiOfs += 17 + IU_L;
 		}
-	} while (aType == 2048);
+		else if (aType == 3) {
+			OutputVolDescLog(
+				"\t\t                   Altinate Permissions\n"
+				"\t\t\t                     Attribute Type: %u\n"
+				"\t\t\t                  Attribute Subtype: %u\n"
+				"\t\t\t                   Attribute Length: %u\n"
+				"\t\t\t               Owner Identification: %u\n"
+				"\t\t\t               Group Identification: %u\n"
+				"\t\t\t                         Permission: %u\n"
+				, aType, lpBuf[uiOfs + 4], A_L, MAKEWORD(lpBuf[uiOfs + 12], lpBuf[uiOfs + 13])
+				, MAKEWORD(lpBuf[uiOfs + 14], lpBuf[uiOfs + 15]), MAKEWORD(lpBuf[uiOfs + 16], lpBuf[uiOfs + 17])
+			);
+			uiOfs += 18;
+		}
+		else if (aType == 5) {
+			OutputVolDescLog(
+				"\t\t          File Times Extended Attribute\n"
+				"\t\t\t                     Attribute Type: %u\n"
+				"\t\t\t                  Attribute Subtype: %u\n"
+				"\t\t\t                   Attribute Length: %u\n"
+				"\t\t\t                        Data Length: %u\n"
+				"\t\t\t               File Times Existence: %u\n"
+				"\t\t\t                         File Times:"
+				, aType, lpBuf[uiOfs + 4], A_L, IU_L
+				, MAKEUINT(MAKEWORD(lpBuf[uiOfs + 16], lpBuf[uiOfs + 17]), MAKEWORD(lpBuf[uiOfs + 18], lpBuf[uiOfs + 19]))
+			);
+			for (UINT i = uiOfs + 20; i < uiOfs + 20 + IU_L; i++) {
+				OutputVolDescLog(" %02x", lpBuf[i]);
+			}
+			OutputVolDescLog("\n");
+			uiOfs += 20 + IU_L;
+		}
+		else if (aType == 6) {
+			OutputVolDescLog(
+				"\t\t   Information Times Extended Attribute\n"
+				"\t\t\t                     Attribute Type: %u\n"
+				"\t\t\t                  Attribute Subtype: %u\n"
+				"\t\t\t                   Attribute Length: %u\n"
+				"\t\t\t                        Data Length: %u\n"
+				"\t\t\t        Information Times Existence: %u\n"
+				"\t\t\t                  Information Times:"
+				, aType, lpBuf[uiOfs + 4], A_L, IU_L
+				, MAKEUINT(MAKEWORD(lpBuf[uiOfs + 16], lpBuf[uiOfs + 17]), MAKEWORD(lpBuf[uiOfs + 18], lpBuf[uiOfs + 19]))
+			);
+			for (UINT i = uiOfs + 20; i < uiOfs + 20 + IU_L; i++) {
+				OutputVolDescLog(" %02x", lpBuf[i]);
+			}
+			OutputVolDescLog("\n");
+			uiOfs += 20 + IU_L;
+		}
+		else if (aType == 12) {
+			OutputVolDescLog(
+				"\t\tDevice Specification Extended Attribute\n"
+				"\t\t\t                     Attribute Type: %u\n"
+				"\t\t\t                  Attribute Subtype: %u\n"
+				"\t\t\t                   Attribute Length: %u\n"
+				"\t\t\t          Implementation Use Length: %u\n"
+				"\t\t\t        Major Device Identification: %u\n"
+				"\t\t\t        Minor Device Identification: %u\n"
+				"\t\t\t                 Implementation Use:"
+				, aType, lpBuf[uiOfs + 4], A_L, IU_L
+				, MAKEUINT(MAKEWORD(lpBuf[uiOfs + 16], lpBuf[uiOfs + 17]), MAKEWORD(lpBuf[uiOfs + 18], lpBuf[uiOfs + 19]))
+				, MAKEUINT(MAKEWORD(lpBuf[uiOfs + 20], lpBuf[uiOfs + 21]), MAKEWORD(lpBuf[uiOfs + 22], lpBuf[uiOfs + 23]))
+			);
+			for (UINT i = uiOfs + 24; i < uiOfs + 24 + IU_L; i++) {
+				OutputVolDescLog(" %02x", lpBuf[i]);
+			}
+			OutputVolDescLog("\n");
+			uiOfs += 24 + IU_L;
+		}
+		else if (aType == 2048) {
+			OutputVolDescLog(
+				"\t\t  Implementation Use Extended Attribute\n"
+				"\t\t\t                     Attribute Type: %u\n"
+				"\t\t\t                  Attribute Subtype: %u\n"
+				"\t\t\t                   Attribute Length: %u\n"
+				"\t\t\t          Implementation Use Length: %u\n"
+				"\t\t\t          Implementation Identifier\n"
+				, aType, lpBuf[uiOfs + 4], A_L, IU_L
+			);
+			OutputFsRegid("\t\t\t\t              ", lpBuf + uiOfs + 16);
 
-	OutputVolDescLog("\tAllocation descriptors\n");
-	OutputFsShortAllocationDescriptor(lpBuf + 176 + L_EA);
+			OutputVolDescLog("\t\t\t                 Implementation Use:");
+			for (UINT i = uiOfs + 48; i < uiOfs + 48 + IU_L; i++) {
+				OutputVolDescLog(" %02x", lpBuf[i]);
+			}
+			OutputVolDescLog("\n");
+			uiOfs += 48 + IU_L;
+		}
+	}
+
+	OutputVolDescLog("\t                     Allocation descriptors\n");
+	OutputFsShortAllocationDescriptor("\t\t                        ", lpBuf + 176 + L_EA);
 	//	*lpNextFileLen = MAKEUINT(MAKEWORD(lpBuf[176 + L_EA], lpBuf[176 + L_EA + 1])
 	//		, MAKEWORD(lpBuf[176 + L_EA + 2], lpBuf[176 + L_EA + 3] & 0x3f));
 	//	*lpNextFilePos = MAKEUINT(MAKEWORD(lpBuf[176 + L_EA + 4] & 0x3f, lpBuf[176 + L_EA + 5])
@@ -1933,18 +2042,18 @@ VOID OutputFsFileIdentifierDescriptor(
 	//	do {
 	BYTE L_FI = lpBuf[19 + uiOfs];
 	OutputVolDescLog(
-		"\tFile Version Number: %u\n"
-		"\tFile Characteristics: %u\n"
+		"\t      File Version Number: %u\n"
+		"\t     File Characteristics: %u\n"
 		"\tLength of File Identifier: %u\n"
 		"\tICB\n"
 		, MAKEWORD(lpBuf[16 + uiOfs], lpBuf[17 + uiOfs]), lpBuf[18 + uiOfs], L_FI
 	);
-	OutputFsLongAllocationDescriptor(lpBuf + 20 + uiOfs);
+	OutputFsLongAllocationDescriptor("\t\t", lpBuf + 20 + uiOfs);
 
 	WORD L_IU = MAKEWORD(lpBuf[36 + uiOfs], lpBuf[37 + uiOfs]);
 	OutputVolDescLog(
 		"\tLength of Implementation Use: %u\n"
-		"\tImplementation Use:\n"
+		"\t          Implementation Use:\n"
 		, L_IU
 	);
 	for (UINT i = 38 + uiOfs; i < 38 + L_IU + uiOfs; i++) {
@@ -1961,19 +2070,40 @@ VOID OutputFsFileIdentifierDescriptor(
 //	} while (uiOfs < uiExtLen);
 }
 
+VOID ConvUTF16toUTF8(
+	CONST PCHAR nest,
+	BYTE byFlag,
+	LPBYTE pIn,
+	INT nInSize,
+	PCHAR pOut
+) {
+	WCHAR tmpW[128] = {};
+	OutputVolDescLog("%sCompression ID: %02u, ", nest, byFlag);
+	if (byFlag == 16) {
+		LittleToBig(tmpW, (LPWCH)pIn, nInSize);
+		if (!WideCharToMultiByte(CP_ACP, 0,
+			tmpW, -1, pOut, 256, NULL, NULL)) {
+			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		}
+	}
+	else {
+		strncpy(pOut, (LPCCH)pIn, (size_t)nInSize);
+	}
+}
+
 VOID OutputFsFileSetDescriptor(
 	LPBYTE lpBuf,
 	PUDF pUdf
 ) {
-	OutputFsRecordingDateAndTime(lpBuf + 16);
+	OutputFsRecordingDateAndTime("\t                      Recording", lpBuf + 16);
 	OutputVolDescLog(
-		"\tInterchange Level: %u\n"
-		"\tMaximum Interchange Level: %u\n"
-		"\tCharacter Set List: %u\n"
-		"\tMaximum Character Set List: %u\n"
-		"\tFile Set Number: %u\n"
-		"\tFile Set Descriptor Number: %u\n"
-		"\tLogical Volume Identifier Character Set\n"
+		"\t                            Interchange Level: %u\n"
+		"\t                    Maximum Interchange Level: %u\n"
+		"\t                           Character Set List: %u\n"
+		"\t                   Maximum Character Set List: %u\n"
+		"\t                              File Set Number: %u\n"
+		"\t                   File Set Descriptor Number: %u\n"
+		"\t      Logical Volume Identifier Character Set\n"
 		, MAKEWORD(lpBuf[28], lpBuf[29])
 		, MAKEWORD(lpBuf[30], lpBuf[31])
 		, MAKEUINT(MAKEWORD(lpBuf[32], lpBuf[33]), MAKEWORD(lpBuf[34], lpBuf[35]))
@@ -1981,50 +2111,58 @@ VOID OutputFsFileSetDescriptor(
 		, MAKEUINT(MAKEWORD(lpBuf[40], lpBuf[41]), MAKEWORD(lpBuf[42], lpBuf[43]))
 		, MAKEUINT(MAKEWORD(lpBuf[44], lpBuf[45]), MAKEWORD(lpBuf[46], lpBuf[47]))
 	);
-	OutputFsCharspec(lpBuf + 48);
+	OutputFsCharspec("\t\t                ", lpBuf + 48);
 
+	CHAR tmp[256] = {};
+	ConvUTF16toUTF8("\t", lpBuf[112], &lpBuf[113], 127, tmp);
 	OutputVolDescLog(
-		"\tLogical Volume Identifier: %.128" CHARWIDTH "s\n"
-		"\tFile Set Character Set\n"
-		, &lpBuf[112]);
-	OutputFsCharspec(lpBuf + 240);
+		"Logical Volume Identifier: % .127" CHARWIDTH "s\n"
+		"\t                       File Set Character Set\n"
+		, tmp
+	);
+	ZeroMemory(tmp, sizeof(tmp));
+	OutputFsCharspec("\t\t                ", lpBuf + 240);
 
-	OutputVolDescLog(
-		"\tFile Set Identifier: %.32" CHARWIDTH "s\n"
-		"\tCopyright File Identifier: %.32" CHARWIDTH "s\n"
-		"\tAbstract File Identifier: %.32" CHARWIDTH "s\n"
-		, &lpBuf[304]
-		, &lpBuf[336]
-		, &lpBuf[368]);
+	ConvUTF16toUTF8("\t", lpBuf[304], &lpBuf[305], 31, tmp);
+	OutputVolDescLog("      File Set Identifier: %.31" CHARWIDTH "s\n", tmp);
+	ZeroMemory(tmp, sizeof(tmp));
 
-	OutputVolDescLog("\tRoot Directory ICB\n");
-	OutputFsLongAllocationDescriptor(lpBuf + 400);
+	ConvUTF16toUTF8("\t", lpBuf[336], &lpBuf[337], 31, tmp);
+	OutputVolDescLog("Copyright File Identifier: %.31" CHARWIDTH "s\n", tmp);
+	ZeroMemory(tmp, sizeof(tmp));
+
+	ConvUTF16toUTF8("\t", lpBuf[368], &lpBuf[369], 31, tmp);
+	OutputVolDescLog(" Abstract File Identifier: %.31" CHARWIDTH "s\n", tmp);
+	ZeroMemory(tmp, sizeof(tmp));
+
+	OutputVolDescLog("\t                           Root Directory ICB\n");
+	OutputFsLongAllocationDescriptor("\t\t                       ", lpBuf + 400);
 	pUdf->uiFileEntryLen = MAKEUINT(MAKEWORD(lpBuf[400], lpBuf[401]), MAKEWORD(lpBuf[402], lpBuf[403] & 0x7f));
 	pUdf->uiFileEntryPos = MAKEUINT(MAKEWORD(lpBuf[404], lpBuf[405]), MAKEWORD(lpBuf[406], lpBuf[407]));
 
-	OutputVolDescLog("\tDomain Identifier\n");
-	OutputFsRegid(lpBuf + 416);
+	OutputVolDescLog("\t                            Domain Identifier\n");
+	OutputFsRegid("\t\t                        ", lpBuf + 416);
 
-	OutputVolDescLog("\tNext Extent\n");
-	OutputFsLongAllocationDescriptor(lpBuf + 448);
+	OutputVolDescLog("\t                                  Next Extent\n");
+	OutputFsLongAllocationDescriptor("\t\t                       ", lpBuf + 448);
 
-	OutputVolDescLog("\tSystem Stream Directory ICB\n");
-	OutputFsLongAllocationDescriptor(lpBuf + 464);
+	OutputVolDescLog("\t                  System Stream Directory ICB\n");
+	OutputFsLongAllocationDescriptor("\t\t                       ", lpBuf + 464);
 }
 
 VOID OutputFsLogicalVolumeIntegrityDescriptor(
 	LPBYTE lpBuf
 ) {
-	OutputFsRecordingDateAndTime(lpBuf + 16);
+	OutputFsRecordingDateAndTime("\t         Recording", lpBuf + 16);
 	OutputVolDescLog(
-		"\tIntegrity Type: %u\n"
-		"\tNext Integrity Extent\n"
+		"\t                  Integrity Type: %u\n"
+		"\t           Next Integrity Extent\n"
 		, MAKEUINT(MAKEWORD(lpBuf[28], lpBuf[29]), MAKEWORD(lpBuf[30], lpBuf[31])));
-	OutputFsExtentDescriptor(lpBuf + 32);
+	OutputFsExtentDescriptor("\t\t             ", lpBuf + 32);
 
 	OutputVolDescLog(
 		"\tLogical Volume Header Descriptor\n"
-		"\t\tUnique ID: %llu\n"
+		"\t\t                   Unique ID: %llu\n"
 		, MAKEUINT64(MAKEUINT(MAKEWORD(lpBuf[40], lpBuf[41]), MAKEWORD(lpBuf[42], lpBuf[43]))
 			, MAKEUINT(MAKEWORD(lpBuf[44], lpBuf[45]), MAKEWORD(lpBuf[46], lpBuf[47])))
 	);
@@ -2034,17 +2172,18 @@ VOID OutputFsLogicalVolumeIntegrityDescriptor(
 	UINT L_IU =
 		MAKEUINT(MAKEWORD(lpBuf[76], lpBuf[77]), MAKEWORD(lpBuf[78], lpBuf[79]));
 	OutputVolDescLog(
-		"\tNumber of Partitions: %u\n"
-		"\tLength of Implementation Use: %u\n"
+		"\t            Number of Partitions: %u\n"
+		"\t    Length of Implementation Use: %u\n"
 		, N_P, L_IU);
+
 	UINT nOfs = N_P * 4;
 	if (0 < N_P) {
-		OutputVolDescLog("\tFree Space Table: ");
+		OutputVolDescLog("\t                Free Space Table: ");
 		for (UINT i = 0; i < nOfs; i += 4) {
 			OutputVolDescLog("%u, "
 				, MAKEUINT(MAKEWORD(lpBuf[80 + i], lpBuf[81 + i]), MAKEWORD(lpBuf[82 + i], lpBuf[83 + i])));
 		}
-		OutputVolDescLog("\n\tSize Table: ");
+		OutputVolDescLog("\n\t                      Size Table: ");
 		for (UINT i = 80 + nOfs, j = 0; j < nOfs; j += 4) {
 			OutputVolDescLog("%u, "
 				, MAKEUINT(MAKEWORD(lpBuf[i + j], lpBuf[i + 1 + j]), MAKEWORD(lpBuf[i + 2 + j], lpBuf[i + 3 + j])));
@@ -2054,16 +2193,15 @@ VOID OutputFsLogicalVolumeIntegrityDescriptor(
 	if (0 < L_IU) {
 		nOfs = 80 + N_P * 8;
 		OutputVolDescLog(
-			"\tImplementation Use\n"
-			"\t\tImplementation ID\n"
-			"\t\t\tflags: %d\n"
-			"\t\t\tid: %.23" CHARWIDTH "s\n"
-			"\t\t\tsuffix: %.8" CHARWIDTH "s\n"
-			"\t\tNumber of Files: %u\n"
-			"\t\tNumber of Directories: %u\n"
-			"\t\tMinimum UDF Read Revision: %#04x\n"
-			"\t\tMinimum UDF Write Revision: %#04x\n"
-			"\t\tMaximum UDF Write Revision: %#04x\n"
+			"\t               Implementation ID\n"
+			"\t\t                       flags: %d\n"
+			"\t\t                          id: %.23" CHARWIDTH "s\n"
+			"\t\t                      suffix: %.8" CHARWIDTH "s\n"
+			"\t                 Number of Files: %u\n"
+			"\t           Number of Directories: %u\n"
+			"\t       Minimum UDF Read Revision: %#04x\n"
+			"\t      Minimum UDF Write Revision: %#04x\n"
+			"\t      Maximum UDF Write Revision: %#04x\n"
 			, lpBuf[nOfs], &lpBuf[nOfs + 1], &lpBuf[nOfs + 25]
 			, MAKEUINT(MAKEWORD(lpBuf[nOfs + 32], lpBuf[nOfs + 33]), MAKEWORD(lpBuf[nOfs + 34], lpBuf[nOfs + 35]))
 			, MAKEUINT(MAKEWORD(lpBuf[nOfs + 36], lpBuf[nOfs + 37]), MAKEWORD(lpBuf[nOfs + 38], lpBuf[nOfs + 39]))
@@ -2088,13 +2226,13 @@ VOID OutputFsUnallocatedSpaceDescriptor(
 		MAKEUINT(MAKEWORD(lpBuf[20], lpBuf[21]), MAKEWORD(lpBuf[22], lpBuf[23]));
 	OutputVolDescLog(
 		"\tVolume Descriptor Sequence Number: %u\n"
-		"\tNumber of Allocation Descriptors: %u\n"
+		"\t Number of Allocation Descriptors: %u\n"
 		, MAKEUINT(MAKEWORD(lpBuf[16], lpBuf[17]), MAKEWORD(lpBuf[18], lpBuf[19])),
 		N_AD);
 	if (0 < N_AD) {
 		OutputVolDescLog("\tAllocation Descriptors\n");
 		for (UINT i = 0; i < N_AD * 8; i += 8) {
-			OutputFsExtentDescriptor(lpBuf + 24 + i);
+			OutputFsExtentDescriptor("\t\t", lpBuf + 24 + i);
 		}
 	}
 }
@@ -2104,82 +2242,90 @@ VOID OutputFsLogicalVolumeDescriptor(
 	PUDF pUdf
 ) {
 	OutputVolDescLog(
-		"\tVolume Descriptor Sequence Number: %u\n"
-		"\tDescriptor Character Set\n",
-		MAKEUINT(MAKEWORD(lpBuf[16], lpBuf[17]), MAKEWORD(lpBuf[18], lpBuf[19])));
-	OutputFsCharspec(lpBuf + 20);
+		"\t            Volume Descriptor Sequence Number: %u\n"
+		"\t                     Descriptor Character Set\n"
+		, MAKEUINT(MAKEWORD(lpBuf[16], lpBuf[17]), MAKEWORD(lpBuf[18], lpBuf[19]))
+	);
+	OutputFsCharspec("\t\t                ", lpBuf + 20);
+
+	CHAR tmp[256] = {};
+	ConvUTF16toUTF8("\t", lpBuf[84], &lpBuf[85], 127, tmp);
+	OutputVolDescLog("Logical Volume Identifier: %.127" CHARWIDTH "s\n", tmp);
 
 	OutputVolDescLog(
-		"\tLogical Volume Identifier: %.128" CHARWIDTH "s\n"
-		"\tLogical Block Size : %u\n"
-		"\tDomain Identifier\n",
-		&lpBuf[84],
-		MAKEUINT(MAKEWORD(lpBuf[212], lpBuf[213]), MAKEWORD(lpBuf[214], lpBuf[215])));
-	OutputFsRegid(lpBuf + 216);
+		"\t                           Logical Block Size: %u\n"
+		"\t                            Domain Identifier\n"
+		, MAKEUINT(MAKEWORD(lpBuf[212], lpBuf[213]), MAKEWORD(lpBuf[214], lpBuf[215]))
+	);
+	OutputFsRegid("\t\t                        ", lpBuf + 216);
 
-	OutputVolDescLog("\tLogical Volume Contents Use\n");
-	OutputFsLongAllocationDescriptor(lpBuf + 248);
+	OutputVolDescLog("\t                  Logical Volume Contents Use\n");
+	OutputFsLongAllocationDescriptor("\t\t                       ", lpBuf + 248);
 	pUdf->uiFSDLen = MAKEUINT(MAKEWORD(lpBuf[248], lpBuf[249]), MAKEWORD(lpBuf[250], lpBuf[251] & 0x7f));
 	pUdf->uiFSDPos = MAKEUINT(MAKEWORD(lpBuf[252], lpBuf[253]), MAKEWORD(lpBuf[254], lpBuf[255]));
 
 	UINT MT_L = MAKEUINT(MAKEWORD(lpBuf[264], lpBuf[265]), MAKEWORD(lpBuf[266], lpBuf[267]));
+	UINT N_PM = MAKEUINT(MAKEWORD(lpBuf[268], lpBuf[269]), MAKEWORD(lpBuf[270], lpBuf[271]));
 	OutputVolDescLog(
-		"\tMap Table Length: %u\n"
-		"\tNumber of Partition Maps: %u\n"
-		"\tImplementation Identifier\n",
-		MT_L,
-		MAKEUINT(MAKEWORD(lpBuf[268], lpBuf[269]), MAKEWORD(lpBuf[270], lpBuf[271])));
-	OutputFsRegid(lpBuf + 272);
+		"\t                             Map Table Length: %u\n"
+		"\t                     Number of Partition Maps: %u\n"
+		"\t                    Implementation Identifier\n"
+		, MT_L
+		, N_PM
+	);
+	OutputFsRegid("\t\t                        ", lpBuf + 272);
 
-	OutputVolDescLog("\tImplementation Use: ");
+	OutputVolDescLog("\t                           Implementation Use: ");
 	for (INT i = 304; i < 432; i++) {
 		OutputVolDescLog("%02x", lpBuf[i]);
 	}
-	OutputVolDescLog(
-		"\n"
-		"\tIntegrity Sequence Extent\n");
-	OutputFsExtentDescriptor(lpBuf + 432);
+	OutputVolDescLog("\n\t                    Integrity Sequence Extent\n");
+	OutputFsExtentDescriptor("\t\t                          ", lpBuf + 432);
 	pUdf->uiLogicalVolumeIntegrityLen = MAKEUINT(MAKEWORD(lpBuf[432], lpBuf[433]), MAKEWORD(lpBuf[434], lpBuf[435]));
 	pUdf->uiLogicalVolumeIntegrityPos = MAKEUINT(MAKEWORD(lpBuf[436], lpBuf[437]), MAKEWORD(lpBuf[438], lpBuf[439]));
 
-	if (0 < MT_L) {
-		if (lpBuf[440] == 1) {
-			OutputVolDescLog(
-				"\tPartition Maps\n"
-				"\t\tPartition Map Type: %d\n"
-				"\t\tPartition Map Length: %d\n"
-				"\t\tVolume Sequence Number: %d\n"
-				"\t\tPartition Number: %d\n"
-				, lpBuf[440], lpBuf[441]
-				, MAKEWORD(lpBuf[442], lpBuf[443])
-				, MAKEWORD(lpBuf[444], lpBuf[445])
-			);
-			if (6 < MT_L) {
+	for (UINT k = 0; k < N_PM; k++) {
+		if (0 < MT_L) {
+			if (lpBuf[440] == 1) {
 				OutputVolDescLog(
-					"\tPartition Maps\n"
-					"\t\tPartition Map Type: %d\n"
-					"\t\tPartition Map Length: %d\n"
-					"\t\tPartition Identifier: "
-					, lpBuf[446], lpBuf[447]
+					"\t                               Partition Maps\n"
+					"\t\t                       Partition Map Type: %d\n"
+					"\t\t                     Partition Map Length: %d\n"
+					"\t\t                   Volume Sequence Number: %d\n"
+					"\t\t                         Partition Number: %d\n"
+					, lpBuf[440], lpBuf[441]
+					, MAKEWORD(lpBuf[442], lpBuf[443])
+					, MAKEWORD(lpBuf[444], lpBuf[445])
 				);
-				for (INT i = 448; i < 510; i++) {
+#if 0
+				if (6 < MT_L) {
+					OutputVolDescLog(
+						"\tPartition Maps\n"
+						"\t\t  Partition Map Type: %d\n"
+						"\t\tPartition Map Length: %d\n"
+						"\t\tPartition Identifier: "
+						, lpBuf[446], lpBuf[447]
+					);
+					for (INT i = 448; i < 510; i++) {
+						OutputVolDescLog("%02x", lpBuf[i]);
+					}
+					OutputVolDescLog("\n");
+				}
+#endif
+			}
+			else if (lpBuf[440] == 2) {
+				OutputVolDescLog(
+					"\t                               Partition Maps\n"
+					"\t\t                     Partition Map Type: %d\n"
+					"\t\t                   Partition Map Length: %d\n"
+					"\t\t                   Partition Identifier: "
+					, lpBuf[440], lpBuf[441]
+				);
+				for (INT i = 442; i < 504; i++) {
 					OutputVolDescLog("%02x", lpBuf[i]);
 				}
 				OutputVolDescLog("\n");
 			}
-		}
-		else if (lpBuf[440] == 2) {
-			OutputVolDescLog(
-				"\tPartition Maps\n"
-				"\t\tPartition Map Type: %d\n"
-				"\t\tPartition Map Length: %d\n"
-				"\t\tPartition Identifier: "
-				, lpBuf[440], lpBuf[441]
-			);
-			for (INT i = 442; i < 504; i++) {
-				OutputVolDescLog("%02x", lpBuf[i]);
-			}
-			OutputVolDescLog("\n");
 		}
 	}
 }
@@ -2190,41 +2336,44 @@ VOID OutputFsPartitionDescriptor(
 ) {
 	OutputVolDescLog(
 		"\tVolume Descriptor Sequence Number: %u\n"
-		"\tPartition Flags: %u\n"
-		"\tPartition Number: %u\n"
-		"\tPartition Contents\n",
-		MAKEUINT(MAKEWORD(lpBuf[16], lpBuf[17]), MAKEWORD(lpBuf[18], lpBuf[19])),
-		MAKEWORD(lpBuf[20], lpBuf[21]),
-		MAKEWORD(lpBuf[22], lpBuf[23]));
+		"\t                  Partition Flags: %u\n"
+		"\t                 Partition Number: %u\n"
+		"\t               Partition Contents\n"
+		, MAKEUINT(MAKEWORD(lpBuf[16], lpBuf[17]), MAKEWORD(lpBuf[18], lpBuf[19]))
+		, MAKEWORD(lpBuf[20], lpBuf[21])
+		, MAKEWORD(lpBuf[22], lpBuf[23])
+	);
 
-	OutputFsRegid(lpBuf + 24);
-
+	OutputFsRegid("\t\t            ", lpBuf + 24);
+#if 0
 	OutputVolDescLog(
 		"\tPartition Contents Use\n"
 		"\tPartition Header Descriptor\n"
-		"\t\tUnallocated Space Table\n");
-	OutputFsShortAllocationDescriptor(lpBuf + 56);
+		"\t\tUnallocated Space Table\n"
+	);
+	OutputFsShortAllocationDescriptor("\t\t\t", lpBuf + 56);
 
-	OutputVolDescLog(
-		"\t\tUnallocated Space Bitmap\n");
-	OutputFsShortAllocationDescriptor(lpBuf + 64);
+	OutputVolDescLog("\t\tUnallocated Space Bitmap\n");
+	OutputFsShortAllocationDescriptor("\t\t\t", lpBuf + 64);
 
-	OutputVolDescLog(
-		"\t\tPartition Integrity Table\n");
-	OutputFsShortAllocationDescriptor(lpBuf + 72);
+	OutputVolDescLog("\t\tPartition Integrity Table\n");
+	OutputFsShortAllocationDescriptor("\t\t\t", lpBuf + 72);
 
-	OutputVolDescLog(
-		"\t\tFreed Space Table\n");
-	OutputFsShortAllocationDescriptor(lpBuf + 80);
+	OutputVolDescLog("\t\tFreed Space Table\n");
+	OutputFsShortAllocationDescriptor("\t\t\t", lpBuf + 80);
 
-	OutputVolDescLog(
-		"\t\tFreed Space Bitmap\n");
-	OutputFsShortAllocationDescriptor(lpBuf + 88);
-
+	OutputVolDescLog("\t\tFreed Space Bitmap\n");
+	OutputFsShortAllocationDescriptor("\t\t\t", lpBuf + 88);
+#else
+	OutputVolDescLog("\t           Partition Contents Use: ");
+	for (INT i = 56; i < 184; i++) {
+		OutputVolDescLog("%02x", lpBuf[i]);
+	}
+#endif
 	pUdf->uiPartitionPos = MAKEUINT(MAKEWORD(lpBuf[188], lpBuf[189]), MAKEWORD(lpBuf[190], lpBuf[191]));
 	pUdf->uiPartitionLen = MAKEUINT(MAKEWORD(lpBuf[192], lpBuf[193]), MAKEWORD(lpBuf[194], lpBuf[195]));
 	UINT accessType = MAKEUINT(MAKEWORD(lpBuf[184], lpBuf[185]), MAKEWORD(lpBuf[186], lpBuf[187]));
-	OutputVolDescLog("\tAccess Type: %u ", accessType);
+	OutputVolDescLog("\n\t                      Access Type: %u ", accessType);
 
 	switch (accessType) {
 	case 0:
@@ -2246,16 +2395,16 @@ VOID OutputFsPartitionDescriptor(
 		OutputVolDescLog("(Reserved)\n");
 		break;
 	}
+
 	OutputVolDescLog(
-		"\tPartition Starting Location: %u\n"
-		"\tPartition Length: %u\n"
-		"\tImplementation Identifier\n"
+		"\t      Partition Starting Location: %u\n"
+		"\t                 Partition Length: %u\n"
+		"\t        Implementation Identifier\n"
 		, pUdf->uiPartitionPos, pUdf->uiPartitionLen
 	);
+	OutputFsRegid("\t\t            ", lpBuf + 196);
 
-	OutputFsRegid(lpBuf + 196);
-
-	OutputVolDescLog("\tImplementation Use: ");
+	OutputVolDescLog("\t               Implementation Use: ");
 	for (INT i = 228; i < 356; i++) {
 		OutputVolDescLog("%02x", lpBuf[i]);
 	}
@@ -2266,32 +2415,37 @@ VOID OutputFsImplementationUseVolumeDescriptor(
 	LPBYTE lpBuf
 ) {
 	OutputVolDescLog(
-		"\tVolume Descriptor Sequence Number: %u\n"
-		"\tImplementation Identifier\n",
+		"\t               Volume Descriptor Sequence Number: %u\n"
+		"\t                       Implementation Identifier\n",
 		MAKEUINT(MAKEWORD(lpBuf[16], lpBuf[17]), MAKEWORD(lpBuf[18], lpBuf[19])));
-	OutputFsRegid(lpBuf + 20);
+	OutputFsRegid("\t\t                           ", lpBuf + 20);
 
 	INT nOfs = 52;
-	OutputVolDescLog(
-		"\tLogical Volume Information\n"
-		"\t\tLVI Charset\n"
-	);
-	OutputFsCharspec(lpBuf + nOfs);
+	OutputVolDescLog("\t              Logical Volume Information Charset\n");
+	OutputFsCharspec("\t\t                   ", lpBuf + nOfs);
 
-	OutputVolDescLog(
-		"\t\tLogical Volume Identifier: %.128" CHARWIDTH "s\n"
-		"\t\tLV Info 1: %.36" CHARWIDTH "s\n"
-		"\t\tLV Info 2: %.36" CHARWIDTH "s\n"
-		"\t\tLV Info 3: %.36" CHARWIDTH "s\n"
-		"\t\tImplemention ID\n"
-		, &lpBuf[nOfs + 64]
-		, &lpBuf[nOfs + 192]
-		, &lpBuf[nOfs + 228]
-		, &lpBuf[nOfs + 264]
-	);
-	OutputFsRegid(lpBuf + 352);
+	CHAR tmp[256] = {};
+	ConvUTF16toUTF8("\t   ", lpBuf[nOfs + 64], &lpBuf[nOfs + 65], 127, tmp);
+	OutputVolDescLog("Logical Volume Identifier: %.127" CHARWIDTH "s\n", tmp);
+	ZeroMemory(tmp, sizeof(tmp));
 
-	OutputVolDescLog("\t\tImplementation Use: ");
+	ConvUTF16toUTF8("\t", lpBuf[nOfs + 192], &lpBuf[nOfs + 193], 36, tmp);
+	OutputVolDescLog("Logical Volume Information 1: %.36" CHARWIDTH "s\n", tmp);
+	ZeroMemory(tmp, sizeof(tmp));
+
+	ConvUTF16toUTF8("\t", lpBuf[nOfs + 228], &lpBuf[nOfs + 229], 36, tmp);
+	OutputVolDescLog("Logical Volume Information 2: %.36" CHARWIDTH "s\n", tmp);
+	ZeroMemory(tmp, sizeof(tmp));
+
+	ConvUTF16toUTF8("\t", lpBuf[nOfs + 264], &lpBuf[nOfs + 265], 36, tmp);
+	OutputVolDescLog(
+		"Logical Volume Information 3: %.36" CHARWIDTH "s\n"
+		"\t                                 Implemention ID\n"
+		, tmp
+	);
+	OutputFsRegid("\t\t                           ", lpBuf + 352);
+
+	OutputVolDescLog("\t                              Implementation Use: ");
 	for (INT i = nOfs + 332; i < nOfs + 460; i++) {
 		OutputVolDescLog("%02x", lpBuf[i]);
 	}
@@ -2303,77 +2457,85 @@ VOID OutputFsVolumeDescriptorPointer(
 ) {
 	OutputVolDescLog(
 		"\tVolume Descriptor Sequence Number: %u\n"
-		"\tNext Volume Descriptor Sequence Extent\n",
-		MAKEUINT(MAKEWORD(lpBuf[16], lpBuf[17]), MAKEWORD(lpBuf[18], lpBuf[19]))
+		"\tNext Volume Descriptor Sequence Extent\n"
+		, MAKEUINT(MAKEWORD(lpBuf[16], lpBuf[17]), MAKEWORD(lpBuf[18], lpBuf[19]))
 	);
-	OutputFsExtentDescriptor(lpBuf + 20);
+	OutputFsExtentDescriptor("\t\t", lpBuf + 20);
 }
 
 VOID OutputFsAnchorVolumeDescriptorPointer(
 	LPBYTE lpBuf,
 	PUDF pUdf
 ) {
-	OutputVolDescLog("\tMain Volume Descriptor Sequence Extent\n");
-	OutputFsExtentDescriptor(lpBuf + 16);
+	OutputVolDescLog("\t   Main Volume Descriptor Sequence Extent\n");
+	OutputFsExtentDescriptor("\t\t                      ", lpBuf + 16);
 	pUdf->uiPVDLen = MAKEUINT(MAKEWORD(lpBuf[16], lpBuf[17]), MAKEWORD(lpBuf[18], lpBuf[19]));
 	pUdf->uiPVDPos = MAKEUINT(MAKEWORD(lpBuf[20], lpBuf[21]), MAKEWORD(lpBuf[22], lpBuf[23]));
 	OutputVolDescLog("\tReserve Volume Descriptor Sequence Extent\n");
-	OutputFsExtentDescriptor(lpBuf + 24);
+	OutputFsExtentDescriptor("\t\t                      ", lpBuf + 24);
 }
 
 VOID OutputFsPrimaryVolumeDescriptorForUDF(
 	LPBYTE lpBuf
 ) {
 	OutputVolDescLog(
-		"\tVolume Descriptor Sequence Number: %u\n"
-		"\tPrimary Volume Descriptor Number: %u\n"
-		"\tVolume Identifier: %.32" CHARWIDTH "s\n"
-		"\tVolume Sequence Number: %u\n"
-		"\tMaximum Volume Sequence Number: %u\n"
-		"\tInterchange Level: %u\n"
-		"\tMaximum Interchange Level: %u\n"
-		"\tCharacter Set List: %u\n"
-		"\tMaximum Character Set List: %u\n"
-		"\tVolume Set Identifier: %.128" CHARWIDTH "s\n"
-		"\tDescriptor Character Set\n",
-		MAKEUINT(MAKEWORD(lpBuf[16], lpBuf[17]), MAKEWORD(lpBuf[18], lpBuf[19])),
-		MAKEUINT(MAKEWORD(lpBuf[20], lpBuf[21]), MAKEWORD(lpBuf[22], lpBuf[23])),
-		&lpBuf[24],
-		MAKEWORD(lpBuf[56], lpBuf[57]),
-		MAKEWORD(lpBuf[58], lpBuf[59]),
-		MAKEWORD(lpBuf[60], lpBuf[61]),
-		MAKEWORD(lpBuf[62], lpBuf[63]),
-		MAKEUINT(MAKEWORD(lpBuf[64], lpBuf[65]), MAKEWORD(lpBuf[66], lpBuf[67])),
-		MAKEUINT(MAKEWORD(lpBuf[68], lpBuf[69]), MAKEWORD(lpBuf[70], lpBuf[71])),
-		&lpBuf[72]);
+		"\t              Volume Descriptor Sequence Number: %u\n"
+		"\t               Primary Volume Descriptor Number: %u\n"
+		, MAKEUINT(MAKEWORD(lpBuf[16], lpBuf[17]), MAKEWORD(lpBuf[18], lpBuf[19]))
+		, MAKEUINT(MAKEWORD(lpBuf[20], lpBuf[21]), MAKEWORD(lpBuf[22], lpBuf[23]))
+	);
+	CHAR tmp[256] = {};
+	ConvUTF16toUTF8("\t          ", lpBuf[24], &lpBuf[25], 31, tmp);
+	OutputVolDescLog("Volume Identifier: %.31" CHARWIDTH "s\n", tmp);
+	ZeroMemory(tmp, sizeof(tmp));
 
-	OutputFsCharspec(lpBuf + 200);
+	OutputVolDescLog(
+		"\t                         Volume Sequence Number: %u\n"
+		"\t                 Maximum Volume Sequence Number: %u\n"
+		"\t                              Interchange Level: %u\n"
+		"\t                      Maximum Interchange Level: %u\n"
+		"\t                             Character Set List: %u\n"
+		"\t                     Maximum Character Set List: %u\n"
+		, MAKEWORD(lpBuf[56], lpBuf[57])
+		, MAKEWORD(lpBuf[58], lpBuf[59])
+		, MAKEWORD(lpBuf[60], lpBuf[61])
+		, MAKEWORD(lpBuf[62], lpBuf[63])
+		, MAKEUINT(MAKEWORD(lpBuf[64], lpBuf[65]), MAKEWORD(lpBuf[66], lpBuf[67]))
+		, MAKEUINT(MAKEWORD(lpBuf[68], lpBuf[69]), MAKEWORD(lpBuf[70], lpBuf[71]))
+	);
+	ConvUTF16toUTF8("\t      ", lpBuf[72], &lpBuf[73], 127, tmp);
+	OutputVolDescLog(
+		"Volume Set Identifier: %.127" CHARWIDTH "s\n"
+		"\t                       Descriptor Character Set\n"
+		, tmp
+	);
 
-	OutputVolDescLog("\tExplanatory Character Set\n");
-	OutputFsCharspec(lpBuf + 264);
+	OutputFsCharspec("\t\t                  ", lpBuf + 200);
 
-	OutputVolDescLog("\tVolume Abstract\n");
-	OutputFsExtentDescriptor(lpBuf + 328);
+	OutputVolDescLog("\t                      Explanatory Character Set\n");
+	OutputFsCharspec("\t\t                  ", lpBuf + 264);
 
-	OutputVolDescLog("\tVolume Copyright Notice\n");
-	OutputFsExtentDescriptor(lpBuf + 336);
+	OutputVolDescLog("\t                                Volume Abstract\n");
+	OutputFsExtentDescriptor("\t                                ", lpBuf + 328);
 
-	OutputVolDescLog("\tApplication Identifier\n");
-	OutputFsRegid(lpBuf + 344);
+	OutputVolDescLog("\t                        Volume Copyright Notice\n");
+	OutputFsExtentDescriptor("\t\t                            ", lpBuf + 336);
 
-	OutputFsRecordingDateAndTime(lpBuf + 376);
+	OutputVolDescLog("\t                         Application Identifier\n");
+	OutputFsRegid("\t\t                          ", lpBuf + 344);
 
-	OutputVolDescLog("\tImplementation Identifier\n");
-	OutputFsRegid(lpBuf + 388);
+	OutputFsRecordingDateAndTime("\t                        Recording", lpBuf + 376);
 
-	OutputVolDescLog("\tImplementation Use: ");
+	OutputVolDescLog("\t                      Implementation Identifier\n");
+	OutputFsRegid("\t\t                          ", lpBuf + 388);
+
+	OutputVolDescLog("\t                             Implementation Use: ");
 	for (INT i = 420; i < 484; i++) {
 		OutputVolDescLog("%02x", lpBuf[i]);
 	}
 	OutputVolDescLog(
-		"\n"
-		"\tPredecessor Volume Descriptor Sequence Location: %u\n"
-		"\tFlags: %u\n"
+		"\n\tPredecessor Volume Descriptor Sequence Location: %u\n"
+		"\t                                          Flags: %u\n"
 		, MAKEUINT(MAKEWORD(lpBuf[484], lpBuf[485]), MAKEWORD(lpBuf[486], lpBuf[487]))
 		, MAKEWORD(lpBuf[488], lpBuf[489]));
 }
@@ -2390,99 +2552,100 @@ VOID OutputFsVolumeDescriptorSequence(
 	switch (wTagId) {
 	case 1:
 		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Primary Volume Descriptor"), nLBA, (UINT)nLBA);
-		OutputFsDescriptorTag(lpBuf);
+		OutputFsDescriptorTag("\t                      ", lpBuf);
 		OutputFsPrimaryVolumeDescriptorForUDF(lpBuf);
 		break;
 	case 2:
 		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Anchor Volume Descriptor Pointer"), nLBA, (UINT)nLBA);
-		OutputFsDescriptorTag(lpBuf);
+		OutputFsDescriptorTag("\t                ", lpBuf);
 		OutputFsAnchorVolumeDescriptorPointer(lpBuf, pUDF);
 		break;
 	case 3:
 		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Volume Descriptor Pointer"), nLBA, (UINT)nLBA);
-		OutputFsDescriptorTag(lpBuf);
+		OutputFsDescriptorTag("\t                           ", lpBuf);
 		OutputFsVolumeDescriptorPointer(lpBuf);
 		break;
 	case 4:
 		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Implementation Use Volume Descriptor"), nLBA, (UINT)nLBA);
-		OutputFsDescriptorTag(lpBuf);
+		OutputFsDescriptorTag("\t                       ", lpBuf);
 		OutputFsImplementationUseVolumeDescriptor(lpBuf);
 		break;
 	case 5:
 		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Partition Descriptor"), nLBA, (UINT)nLBA);
-		OutputFsDescriptorTag(lpBuf);
+		OutputFsDescriptorTag("\t        ", lpBuf);
 		OutputFsPartitionDescriptor(lpBuf, pUDF);
 		break;
 	case 6:
 		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Logical Volume Descriptor"), nLBA, (UINT)nLBA);
-		OutputFsDescriptorTag(lpBuf);
+		OutputFsDescriptorTag("\t                    ", lpBuf);
 		OutputFsLogicalVolumeDescriptor(lpBuf, pUDF);
 		break;
 	case 7:
 		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Unallocated Space Descriptor"), nLBA, (UINT)nLBA);
-		OutputFsDescriptorTag(lpBuf);
+		OutputFsDescriptorTag("\t        ", lpBuf);
 		OutputFsUnallocatedSpaceDescriptor(lpBuf);
 		break;
 	case 8:
 		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Terminating Descriptor"), nLBA, (UINT)nLBA);
-		OutputFsDescriptorTag(lpBuf);
+		OutputFsDescriptorTag("\t", lpBuf);
 		OutputFsTerminatingDescriptor(lpBuf);
 		break;
 	case 9:
 		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Logical Volume Integrity Descriptor"), nLBA, (UINT)nLBA);
-		OutputFsDescriptorTag(lpBuf);
+		OutputFsDescriptorTag("\t       ", lpBuf);
 		OutputFsLogicalVolumeIntegrityDescriptor(lpBuf);
 		break;
 	case 256:
 		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("File Set Descriptor"), nLBA, (UINT)nLBA);
-		OutputFsDescriptorTag(lpBuf);
+		OutputFsDescriptorTag("\t                    ", lpBuf);
 		OutputFsFileSetDescriptor(lpBuf, pUDF);
 		break;
 	case 257:
 		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("File Identifier Descriptor"), nLBA, (UINT)nLBA);
-		OutputFsDescriptorTag(lpBuf);
+		OutputFsDescriptorTag("\t                           ", lpBuf);
 		OutputFsFileIdentifierDescriptor(lpBuf);
 		break;
 	case 258:
 		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Allocation Extent Descriptor"), nLBA, (UINT)nLBA);
-		OutputFsDescriptorTag(lpBuf);
+		OutputFsDescriptorTag("\t                           ", lpBuf);
 		break;
 	case 259:
 		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Indirect Entry"), nLBA, (UINT)nLBA);
-		OutputFsDescriptorTag(lpBuf);
+		OutputFsDescriptorTag("\t                           ", lpBuf);
 		break;
 	case 260:
 		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Terminal Entry"), nLBA, (UINT)nLBA);
-		OutputFsDescriptorTag(lpBuf);
+		OutputFsDescriptorTag("\t                           ", lpBuf);
 		break;
 	case 261:
 		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("File Entry"), nLBA, (UINT)nLBA);
-		OutputFsDescriptorTag(lpBuf);
+		OutputFsDescriptorTag("\t                  ", lpBuf);
 		OutputFsFileEntry(lpBuf);
 		break;
 	case 262:
 		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Extended Attribute Header Descriptor"), nLBA, (UINT)nLBA);
-		OutputFsDescriptorTag(lpBuf);
+		OutputFsDescriptorTag("\t                           ", lpBuf);
 		break;
 	case 263:
 		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Unallocated Space Entry"), nLBA, (UINT)nLBA);
-		OutputFsDescriptorTag(lpBuf);
+		OutputFsDescriptorTag("\t                           ", lpBuf);
 		break;
 	case 264:
 		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Space Bitmap Descriptor"), nLBA, (UINT)nLBA);
-		OutputFsDescriptorTag(lpBuf);
+		OutputFsDescriptorTag("\t                           ", lpBuf);
 		break;
 	case 265:
 		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Partition Integrity Entry"), nLBA, (UINT)nLBA);
-		OutputFsDescriptorTag(lpBuf);
+		OutputFsDescriptorTag("\t                           ", lpBuf);
 		break;
 	case 266:
 		OutputVolDescLog(OUTPUT_DHYPHEN_PLUS_STR_WITH_LBA_F("Extended File Entry"), nLBA, (UINT)nLBA);
-		OutputFsDescriptorTag(lpBuf);
+		OutputFsDescriptorTag("\t                           ", lpBuf);
 		break;
 	default:
 		break;
 	}
+	OutputMainChannel(fileMainInfo, lpBuf, NULL, nLBA, DISC_MAIN_DATA_SIZE);
 	return;
 }
 // End of ECMA-167
