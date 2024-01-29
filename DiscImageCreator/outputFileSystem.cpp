@@ -1283,7 +1283,7 @@ VOID OutputFsMasterDirectoryBlocks(
 	tm* ltime = gmtime(&t);
 	_TCHAR szBufl[128] = {};
 	if (lastTime) {
-		_tcsftime(szBufl, SIZE_OF_ARRAY(szBufl), _T("%FT%T"), mtime);
+		_tcsftime(szBufl, SIZE_OF_ARRAY(szBufl), _T("%FT%T"), ltime);
 	}
 
 	OutputVolDescWithLBALog2("Master Directory Blocks",
