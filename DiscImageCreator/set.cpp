@@ -1119,8 +1119,14 @@ VOID SetCDOffset(
 				(UINT)pDisc->MAIN.nCombinedOffset % CD_RAW_SECTOR_SIZE;
 			pDisc->MAIN.nOffsetStart = 0;
 			pDisc->MAIN.nOffsetEnd = pDisc->MAIN.nAdjustSectorNum;
-			pDisc->MAIN.nFixStartLBA = nStartLBA + pDisc->MAIN.nAdjustSectorNum - 1;
-			pDisc->MAIN.nFixEndLBA = nEndLBA + pDisc->MAIN.nAdjustSectorNum;
+			if (pDisc->MAIN.uiMainDataSlideSize != 0) {
+				pDisc->MAIN.nFixStartLBA = nStartLBA + pDisc->MAIN.nAdjustSectorNum - 1;
+				pDisc->MAIN.nFixEndLBA = nEndLBA + pDisc->MAIN.nAdjustSectorNum;
+			}
+			else {
+				pDisc->MAIN.nFixStartLBA = nStartLBA + pDisc->MAIN.nAdjustSectorNum;
+				pDisc->MAIN.nFixEndLBA = nEndLBA + pDisc->MAIN.nAdjustSectorNum + 1;
+			}
 		}
 		if (pDisc->SCSI.n1stLBAof2ndSession != -1) {
 			pDisc->MAIN.nFix1stLBAofLeadout =
