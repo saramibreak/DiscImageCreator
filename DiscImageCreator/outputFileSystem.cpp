@@ -1265,21 +1265,25 @@ VOID OutputFsMasterDirectoryBlocks(
 	time_t modificationTime = MAKEUINT(MAKEWORD(lpBuf[9], lpBuf[8]), MAKEWORD(lpBuf[7], lpBuf[6]));
 	time_t lastTime = MAKELONG(MAKEWORD(lpBuf[66], lpBuf[65]), MAKEWORD(lpBuf[64], lpBuf[63]));
 
-	tm* ctime = gmtime(&creationTime);
-	ctime->tm_year -= 66; // HFS starts from 1904, while UNIX starts from 1970
+	// HFS starts from 1904, while UNIX starts from 1970
+	// 66 years (365 * 66) + 17 leep days
+	const time_t diff = 2082844800;
+
+	time_t t = creationTime - diff;
+	tm* ctime = gmtime(&t);
 	_TCHAR szBufc[128] = {};
 	_tcsftime(szBufc, SIZE_OF_ARRAY(szBufc), _T("%FT%T"), ctime);
 
-	tm* mtime = gmtime(&modificationTime);
-	mtime->tm_year -= 66;
+	t = modificationTime - diff;
+	tm* mtime = gmtime(&t);
 	_TCHAR szBufm[128] = {};
 	_tcsftime(szBufm, SIZE_OF_ARRAY(szBufm), _T("%FT%T"), mtime);
 
-	tm* ltime = gmtime(&lastTime);
-	ltime->tm_year -= 66;
+	t = lastTime - diff;
+	tm* ltime = gmtime(&t);
 	_TCHAR szBufl[128] = {};
 	if (lastTime) {
-		_tcsftime(szBufl, SIZE_OF_ARRAY(szBufl), _T("%FT%T"), mtime);
+		_tcsftime(szBufl, SIZE_OF_ARRAY(szBufl), _T("%FT%T"), ltime);
 	}
 
 	OutputVolDescWithLBALog2("Master Directory Blocks",
