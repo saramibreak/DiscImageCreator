@@ -2828,6 +2828,10 @@ BOOL ReadCDCheck(
 		if (!pDevice->byPlxtrDrive && pDisc->SCSI.by1stDataTrkNum) {
 			ReadCDForCheckingScrambled(pExtArg, pDevice, pDisc);
 		}
+		else if (pDisc->SCSI.trkType == TRACK_TYPE::audioOnly ||
+			pDisc->SCSI.trkType == TRACK_TYPE::pregapAudioIn1stTrack) {
+			pDevice->bySupportedScrambled = TRUE; // for dummy
+		}
 
 		ReadCDForCheckingSubPack(pExtArg, pDevice);
 		if (pExtArg->byBe) {
