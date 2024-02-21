@@ -926,6 +926,7 @@ BOOL WriteParsingSubfile(
 				}
 			}
 			byPrevTrackNum = byTrackNum;
+			AlignColumnSubcode(lpSubcodeRtoW, discPerSector.subcode.current);
 			OutputCDSubToLog(&discData, &discPerSector, lpSubcodeRtoW, nLBA);
 			OutputString(
 				"\rParsing sub (Size) %8d/%8lu", i + CD_RAW_READ_SUBCODE_SIZE, dwFileSize);

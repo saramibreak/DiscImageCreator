@@ -104,6 +104,7 @@ BOOL AlignColumnSubcode(
 	LPBYTE lpColumnSubcode,
 	LPBYTE lpRowSubcode
 ) {
+	ZeroMemory(lpColumnSubcode, CD_RAW_READ_SUBCODE_SIZE);
 	INT nRow = 0;
 	UINT nMask = 0x80;
 	for (INT bitNum = 0; bitNum < CHAR_BIT; bitNum++) {

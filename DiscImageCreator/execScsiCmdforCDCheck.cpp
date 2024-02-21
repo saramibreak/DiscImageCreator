@@ -1291,9 +1291,9 @@ BOOL ReadCDForCheckingSubRtoW(
 	for (BYTE i = (BYTE)(pDisc->SCSI.toc.FirstTrack - 1); i < pDisc->SCSI.toc.LastTrack; i++) {
 		try {
 			OutputDiscLog(
-				OUTPUT_DHYPHEN_PLUS_STR_WITH_TRACK_F("Check CD + G")
+				OUTPUT_DHYPHEN_PLUS_STR_WITH_TRACK_F("Check CD+G")
 				, lpCmd[0], lpCmd[10], i + 1);
-			INT nTmpLBA = pDisc->SCSI.lp1stLBAListOnToc[i] + 100;
+			INT nTmpLBA = pDisc->SCSI.lp1stLBAListOnToc[i] + 150;
 			if (!ExecReadCD(pExtArg, pDevice, lpCmd, nTmpLBA, lpBuf,
 				uiBufLen, _T(__FUNCTION__), __LINE__)) {
 				// skip checking
