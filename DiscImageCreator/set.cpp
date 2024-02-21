@@ -286,6 +286,7 @@ VOID SetAndOutputToc(
 					trkType = TRACK_TYPE::pregapDataIn1stTrack;
 				}
 				else {
+					// Op Jacht Naar Vernuft (Germany) etc.
 					OutputDiscLog(
 						"\t  Data Track %2u, LBA        0 - %8d, Length %8d\n"
 						, i, pDisc->SCSI.lp1stLBAListOnToc[tIdx] - 1, pDisc->SCSI.lp1stLBAListOnToc[tIdx]);
@@ -1346,6 +1347,10 @@ VOID SetTrackAttribution(
 					pDisc->SUB.lp1stLBAListOfDataTrackOnSub[tIdx - 1] = pDisc->SCSI.lp1stLBAListOnToc[tIdx - 1];
 					pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tIdx - 1] = nLBA - 1;
 				}
+				if (pDisc->SCSI.lp1stLBAListOfDataTrkOnToc[tIdx - 1] != -1) {
+					OutputSubInfoWithLBALog("Last LBA of this data track on TOC\n", nLBA - 1, tmpPrevTrackNum);
+					pDisc->SCSI.lpLastLBAListOfDataTrkOnToc[tIdx - 1] = nLBA - 1;
+				}
 			}
 
 			if (pDiscPerSector->subch.current.nRelativeTime != 0) {
@@ -1503,13 +1508,14 @@ VOID SetTrackAttribution(
 #endif
 		}
 
-		INT tIdx2 = tIdx;
-		if (pDisc->SCSI.byFormat == DISK_TYPE_CDI && pDisc->SCSI.toc.LastTrack > 1) {
-			tIdx2 -= 1;
-			if (tIdx2 < 0) {
-				return;
+		if (pDisc->SCSI.byFormat == DISK_TYPE_CDI && pDisc->SCSI.toc.LastTrack > 1 &&
+			pDisc->SCSI.trkType == TRACK_TYPE::dataExist && tIdx == 0) {
+			if (pDisc->SCSI.lp1stLBAListOfDataTrkOnToc[tIdx] == -1) {
+				OutputSubInfoWithLBALog("1st LBA of this data track on TOC\n", nLBA, tmpCurrentTrackNum);
+				pDisc->SCSI.lp1stLBAListOfDataTrkOnToc[tIdx] = nLBA;
 			}
 		}
+
 		if (pExtArg->byReverse) {
 			// preserve last LBA per data track
 			if (nLBA == pDisc->SCSI.nLastLBAofDataTrkOnToc) {
