@@ -2965,8 +2965,9 @@ BOOL ConcatenateFromPregapToLeadout(
 	PDISC pDisc,
 	LPCTSTR pszPath
 ) {
+	_TCHAR szOutPathFull[_MAX_PATH] = {};
 	FILE* fpImgFull = NULL;
-	if (NULL == (fpImgFull = CreateOrOpenFile(pszPath, _T(" (Track all)"), NULL, NULL, NULL, _T(".img"), _T("wb"), 0, 0))) {
+	if (NULL == (fpImgFull = CreateOrOpenFile(pszPath, _T(" (Track all)"), szOutPathFull, NULL, NULL, _T(".img"), _T("wb"), 0, 0))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
@@ -2979,9 +2980,12 @@ BOOL ConcatenateFromPregapToLeadout(
 	}
 	OutputString("Creating (Track all).img\n");
 
+	_TCHAR szOutPath[_MAX_PATH] = {};
 	FILE* fpIn = NULL;
-	if (NULL == (fpIn = CreateOrOpenFile(pszPath, appendName1, NULL, NULL, NULL, _T(".bin"), _T("rb"), 0, 0))) {
+	if (NULL == (fpIn = CreateOrOpenFile(pszPath, appendName1, szOutPath, NULL, NULL, _T(".bin"), _T("rb"), 0, 0))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		OutputErrorString("Failed to generate %s because there is not %s\n", szOutPathFull, szOutPath);
+		FcloseAndNull(fpImgFull);
 		return FALSE;
 	}
 	if (!ConcatenateFile(fpIn, fpImgFull, _T(__FUNCTION__), __LINE__)) {
