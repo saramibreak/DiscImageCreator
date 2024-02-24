@@ -101,6 +101,15 @@ BOOL IsCDR(
 	return FALSE;
 }
 
+BOOL IsCDiFormatWithMultiTrack(
+	PDISC pDisc
+) {
+	if (pDisc->SCSI.byFormat == DISK_TYPE_CDI && pDisc->SCSI.toc.LastTrack > 1) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
 BOOL IsValidPS3Drive(
 	PDEVICE pDevice
 ) {

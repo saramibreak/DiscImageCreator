@@ -36,6 +36,10 @@ BOOL IsCDR(
 	PDISC pDisc
 );
 
+BOOL IsCDiFormatWithMultiTrack(
+	PDISC pDisc
+);
+
 BOOL IsValidPS3Drive(
 	PDEVICE pDevice
 );

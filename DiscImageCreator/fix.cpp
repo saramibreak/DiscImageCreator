@@ -168,19 +168,7 @@ VOID FixMainHeader(
 	}
 
 	if (adr == ADR_ENCODES_CURRENT_POSITION) {
-		if (pDisc->SCSI.byFormat == DISK_TYPE_CDI && pDisc->SCSI.toc.LastTrack > 1 && trk == 1) {
-			if ((ctl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK && !bHeader) {
-				OutputMainInfoWithLBALog(
-					"Hidden track, Data sector, there is not a sync\n", nLBA + nAdd, trk);
-				OutputMainChannel(fileMainInfo, lpWorkBuf, NULL, nLBA + nAdd, MAINHEADER_MODE1_SIZE);
-			}
-			else if ((ctl & AUDIO_DATA_TRACK) == 0 && bHeader) {
-				OutputMainInfoWithLBALog(
-					"Hidden track, Audio sector, there is a sync\n", nLBA + nAdd, trk);
-				OutputMainChannel(fileMainInfo, lpWorkBuf, NULL, nLBA + nAdd, MAINHEADER_MODE1_SIZE);
-			}
-		}
-		else if ((pDisc->SCSI.toc.TrackData[trk - 1].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+		if ((pDisc->SCSI.toc.TrackData[trk - 1].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 			if ((ctl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK && !bHeader) {
 				OutputMainInfoWithLBALog(
 					"Data track, Data sector, there is not a sync\n", nLBA + nAdd, trk);

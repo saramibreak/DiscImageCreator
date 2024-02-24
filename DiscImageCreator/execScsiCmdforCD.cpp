@@ -906,7 +906,12 @@ BOOL ProcessDescramble(
 		DescrambleMainChannelAll(pExtArg, pDisc, pDisc->SCSI.lp1stLBAListOfDataTrkOnToc
 			, pDisc->SCSI.lpLastLBAListOfDataTrkOnToc, _T("TOC based"), scrambled_table, fpImg);
 		FcloseAndNull(fpImg);
-		ExecEccEdc(pExtArg, pDisc->PROTECT, _T("TOC"), pszImgPath, pDisc->PROTECT.ERROR_SECTOR);
+		if (IsCDiFormatWithMultiTrack(pDisc)) {
+			ExecEccEdc(pExtArg, pDisc->PROTECT, _T("Sub"), pszImgPath, pDisc->PROTECT.ERROR_SECTOR);
+		}
+		else {
+			ExecEccEdc(pExtArg, pDisc->PROTECT, _T("TOC"), pszImgPath, pDisc->PROTECT.ERROR_SECTOR);
+		}
 
 		for (INT k = pDisc->SCSI.by1stDataTrkNum - 1; k < pDisc->SCSI.byLastDataTrkNum; k++) {
 			if (pDisc->SCSI.lp1stLBAListOfDataTrkOnToc[k] != pDisc->SUB.lp1stLBAListOfDataTrackOnSub[k]) {
@@ -1140,10 +1145,16 @@ BOOL ReadCDAll(
 				INT nOfs = F1_BUFFER_SIZE * (nLBA - pDisc->SCSI.nAllLength);
 				// main
 				memcpy(pDiscPerSector->data.current, pDisc->lpCachedBuf + nOfs, CD_RAW_SECTOR_SIZE);
-				// c2
-				memcpy(pDiscPerSector->data.current + CD_RAW_SECTOR_SIZE, pDisc->lpCachedBuf + nOfs + 0x9A4, CD_RAW_READ_C2_294_SIZE);
-				// sub
-				memcpy(pDiscPerSector->data.current + CD_RAW_SECTOR_WITH_C2_294_SIZE, pDisc->lpCachedBuf + nOfs + CD_RAW_SECTOR_SIZE, CD_RAW_READ_SUBCODE_SIZE);
+				if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
+					// c2
+					memcpy(pDiscPerSector->data.current + CD_RAW_SECTOR_SIZE, pDisc->lpCachedBuf + nOfs + 0x9A4, CD_RAW_READ_C2_294_SIZE);
+					// sub
+					memcpy(pDiscPerSector->data.current + CD_RAW_SECTOR_WITH_C2_294_SIZE, pDisc->lpCachedBuf + nOfs + CD_RAW_SECTOR_SIZE, CD_RAW_READ_SUBCODE_SIZE);
+				}
+				else {
+					// sub
+					memcpy(pDiscPerSector->data.current + CD_RAW_SECTOR_WITH_SUBCODE_SIZE, pDisc->lpCachedBuf + nOfs + CD_RAW_SECTOR_SIZE, CD_RAW_READ_SUBCODE_SIZE);
+				}
 				AlignRowSubcode(pDiscPerSector->subcode.current, pDisc->lpCachedBuf + nOfs + CD_RAW_SECTOR_SIZE);
 #ifdef _DEBUG
 				OutputMainChannel(fileMainInfo, pDiscPerSector->data.current, NULL, nLBA, CD_RAW_SECTOR_SIZE);
@@ -1306,7 +1317,7 @@ BOOL ReadCDAll(
 								}
 								else if (nRetryCnt++ == 1) {
 									DISC_PER_SECTOR tmp = {};
-									memcpy(&tmp, pDiscPerSector,sizeof(DISC_PER_SECTOR));
+									memcpy(&tmp, pDiscPerSector, sizeof(DISC_PER_SECTOR));
 									ProcessReadCD(pExecType, pExtArg, pDevice, pDisc, &tmp, lpCmd, nLBA - 100);
 									continue;
 								}
@@ -1366,13 +1377,6 @@ BOOL ReadCDAll(
 		FlushLog();
 
 		for (INT i = 0; i < pDisc->SCSI.toc.LastTrack; i++) {
-			INT i2 = i;
-			if (pDisc->SCSI.byFormat == DISK_TYPE_CDI && pDisc->SCSI.toc.LastTrack > 1) {
-				i2 -= 1;
-				if (i2 < 0) {
-					continue;
-				}
-			}
 			if (pDisc->PROTECT.byExist == cds300 && i == pDisc->SCSI.toc.LastTrack - 1) {
 				break;
 			}
@@ -1386,7 +1390,7 @@ BOOL ReadCDAll(
 				bErr = TRUE;
 				lLine = __LINE__;
 			}
-			else if ((pDisc->SCSI.toc.TrackData[i2].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+			else if ((pDisc->SCSI.toc.TrackData[i].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 				if (pDisc->SUB.lp1stLBAListOfDataTrackOnSub[i] == -1) {
 					bErr = TRUE;
 					lLine = __LINE__;

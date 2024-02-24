@@ -190,10 +190,92 @@ VOID SetFeatureRealTimeStreaming(
 	pDevice->FEATURE.byReadBufCapa = pRTS->ReadBufferCapacityBlock;
 }
 
+VOID RegenerateToc(
+	PDISC pDisc
+) {
+	CDROM_TOC localToc = {};
+	CONST size_t TocHeaderSize = 4;
+	WORD length = MAKEWORD(pDisc->SCSI.toc.Length[1], pDisc->SCSI.toc.Length[0]);
+	OutputMainInfoLog(
+		OUTPUT_DHYPHEN_PLUS_STR("TOC (Raw)")
+		"\tLength: %d, FirstTrack: %d, LastTrack: %d\n"
+		, length, pDisc->SCSI.toc.FirstTrack, pDisc->SCSI.toc.LastTrack
+	);
+	memcpy(&localToc, &pDisc->SCSI.toc, TocHeaderSize);
+
+	UINT size = (length - 2) / sizeof(TRACK_DATA);
+	for (UINT i = 0; i < size; i++) {
+		OutputMainInfoLog(
+			"\tControl: %d, Adr: %d, TrackNumber: %2d, Address: %08d\n"
+			, pDisc->SCSI.toc.TrackData[i].Control
+			, pDisc->SCSI.toc.TrackData[i].Adr
+			, pDisc->SCSI.toc.TrackData[i].TrackNumber
+			, MAKEUINT(MAKEWORD(pDisc->SCSI.toc.TrackData[i].Address[3], pDisc->SCSI.toc.TrackData[i].Address[2])
+				, MAKEWORD(pDisc->SCSI.toc.TrackData[i].Address[1], pDisc->SCSI.toc.TrackData[i].Address[0]))
+		);
+		if (pDisc->SCSI.toc.TrackData[i].TrackNumber <= localToc.LastTrack) {
+			memcpy(&localToc.TrackData[pDisc->SCSI.toc.TrackData[i].TrackNumber - 1], &pDisc->SCSI.toc.TrackData[i], sizeof(TRACK_DATA));
+		}
+		else if (pDisc->SCSI.toc.TrackData[i].TrackNumber == 0xaa) {
+			memcpy(&localToc.TrackData[localToc.LastTrack], &pDisc->SCSI.toc.TrackData[i], sizeof(TRACK_DATA));
+		}
+		else {
+			OutputMainInfoLog("\t -> Detected corrupt TOC in Track %d\n", i + 1);
+		}
+	}
+	if (pDisc->SCSI.toc.FirstTrack != 1) {
+		OutputMainInfoLog("\t -> FirstTrack is fixed to 1\n");
+		localToc.FirstTrack = 1;
+	}
+	length = TocHeaderSize + (localToc.LastTrack + 1) * sizeof(TRACK_DATA);
+	localToc.Length[0] = (UCHAR)((length & 0xff00) >> 8);
+	localToc.Length[1] = (UCHAR)(length & 0xff);
+	size = (length - 2) / sizeof(TRACK_DATA);
+
+	OutputMainInfoLog("\n\tSet missing track\n");
+	for (UINT i = 0; i < size; i++) {
+		OutputMainInfoLog(
+			"\tControl: %d, Adr: %d, TrackNumber: %2d, Address: %08d\n"
+			, localToc.TrackData[i].Control
+			, localToc.TrackData[i].Adr
+			, localToc.TrackData[i].TrackNumber
+			, MAKEUINT(MAKEWORD(localToc.TrackData[i].Address[3], localToc.TrackData[i].Address[2])
+				, MAKEWORD(localToc.TrackData[i].Address[1], localToc.TrackData[i].Address[0]))
+		);
+		if (i == 0 && localToc.TrackData[i].TrackNumber == 0) {
+			OutputMainInfoLog("\t -> Set Control to 4, Adr to 1, TrackNumber to 1\n");
+			localToc.TrackData[i].Control = 4;
+			localToc.TrackData[i].Adr = 1;
+			localToc.TrackData[i].TrackNumber = 1;
+		}
+		else if (i == 0 && localToc.TrackData[i].TrackNumber == 1) {
+			OutputMainInfoLog("\t -> Set Control to 4, Adr to 1, Address to 0\n");
+			localToc.TrackData[i].Control = 4;
+			localToc.TrackData[i].Adr = 1;
+			localToc.TrackData[i].Address[3] = 0;
+			localToc.TrackData[i].Address[2] = 0;
+			localToc.TrackData[i].Address[1] = 0;
+			localToc.TrackData[i].Address[0] = 0;
+		}
+		else if (localToc.TrackData[i].TrackNumber == localToc.LastTrack &&
+			localToc.TrackData[i + 1].TrackNumber == 0) {
+			// corrupt toc (not found 0xAA (lead-out)
+			// [CD-i] op jacht naar vernuft
+			OutputMainInfoLog("\t -> Set Adr to 1, TrackNumber to aa, Address: %08d\n", pDisc->SCSI.n1stLBAofLeadout);
+			localToc.TrackData[i + 1].Adr = 1;
+			localToc.TrackData[i + 1].TrackNumber = 0xaa;
+			localToc.TrackData[i + 1].Address[0] = (UCHAR)((pDisc->SCSI.n1stLBAofLeadout & 0xff000000) >> 24);
+			localToc.TrackData[i + 1].Address[1] = (UCHAR)((pDisc->SCSI.n1stLBAofLeadout & 0xff0000) >> 16);
+			localToc.TrackData[i + 1].Address[2] = (UCHAR)((pDisc->SCSI.n1stLBAofLeadout & 0xff00) >> 8);
+			localToc.TrackData[i + 1].Address[3] = (UCHAR)(pDisc->SCSI.n1stLBAofLeadout & 0xff);
+		}
+	}
+	memcpy(&pDisc->SCSI.toc, &localToc, sizeof(CDROM_TOC));
+}
+
 VOID SetAndOutputToc(
 	PDISC pDisc
 ) {
-	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("TOC"));
 	CONST INT typeSize = 7 * sizeof(_TCHAR);
 	_TCHAR strType[typeSize] = {};
 	BOOL bFirstData = TRUE;
@@ -201,28 +283,13 @@ VOID SetAndOutputToc(
 	// for swap command
 	pDisc->SCSI.nAllLength = 0;
 
-	for (INT i = pDisc->SCSI.toc.FirstTrack - 1; i < pDisc->SCSI.toc.LastTrack; i++) {
-		// corrupt toc
-		// [CD-i] Op Jacht Naar Vernuft (Netherlands)
-		if (pDisc->SCSI.toc.TrackData[i - 1].TrackNumber == 0xff) {
-			OutputLog(standardOut | fileDisc
-				, "Detected corrupt TOC in Track%d. Fixed it\n", pDisc->SCSI.toc.TrackData[i].TrackNumber - 1);
-			for (INT k = i; k <= pDisc->SCSI.toc.LastTrack; k++) {
-				memcpy(&pDisc->SCSI.toc.TrackData[k - 1], &pDisc->SCSI.toc.TrackData[k], sizeof(TRACK_DATA));
-			}
-		}
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("TOC"));
+	if (IsCDiFormatWithMultiTrack(pDisc)) {
+		OutputDiscLog("Regenerate TOC because drive often returns corrupt TOC when reads CD-i format with CD-DA\n");
+		RegenerateToc(pDisc);
 	}
-
 	for (BYTE i = pDisc->SCSI.toc.FirstTrack; i <= pDisc->SCSI.toc.LastTrack; i++) {
 		INT tIdx = i - 1;
-		if (pDisc->SCSI.byFormat == DISK_TYPE_CDI && pDisc->SCSI.toc.LastTrack > 1) {
-			if (i == pDisc->SCSI.toc.LastTrack) {
-				break;
-			}
-			else {
-				tIdx = i;
-			}
-		}
 		// for swap command
 		pDisc->SCSI.lp1stLBAListOnToc[tIdx] = 0;
 		pDisc->SCSI.lpLastLBAListOnToc[tIdx] = 0;
@@ -230,13 +297,6 @@ VOID SetAndOutputToc(
 		for (INT j = 0, k = 24; j < 4; j++, k -= 8) {
 			pDisc->SCSI.lp1stLBAListOnToc[tIdx] |= pDisc->SCSI.toc.TrackData[i - 1].Address[j] << k;
 			pDisc->SCSI.lpLastLBAListOnToc[tIdx] |= pDisc->SCSI.toc.TrackData[i].Address[j] << k;
-		}
-		if (pDisc->SCSI.toc.TrackData[i].TrackNumber == 0x00) {
-			// corrupt toc (not found 0xAA (lead-out)
-			// [CD-i] op jacht naar vernuft
-			pDisc->SCSI.toc.TrackData[i].Adr = 1;
-			pDisc->SCSI.toc.TrackData[i].TrackNumber = 0xaa;
-			pDisc->SCSI.lpLastLBAListOnToc[tIdx] = pDisc->SCSI.n1stLBAofLeadout;
 		}
 		pDisc->SCSI.lpLastLBAListOnToc[tIdx] -= 1;
 		pDisc->SCSI.nAllLength += 
@@ -274,38 +334,10 @@ VOID SetAndOutputToc(
 				}
 			}
 		}
-		INT idx = i;
-		if (pDisc->SCSI.byFormat == DISK_TYPE_CDI && pDisc->SCSI.toc.LastTrack > 1) {
-			if (i == pDisc->SCSI.toc.FirstTrack) {
-				if (pDisc->SUB.byIdxOfLBA0 == 0) {
-					// [CD-i Ready] Dimo's Quest (USA)
-					OutputDiscLog(
-						"\tPregap Track   , LBA        0 -        ?, Length        ?\n"
-						"\t Audio Track %2u, LBA        ? - %8d, Length        ?\n"
-						, i, pDisc->SCSI.lp1stLBAListOnToc[tIdx] - 1);
-					trkType = TRACK_TYPE::pregapDataIn1stTrack;
-				}
-				else {
-					// Op Jacht Naar Vernuft (Germany) etc.
-					OutputDiscLog(
-						"\t  Data Track %2u, LBA        0 - %8d, Length %8d\n"
-						, i, pDisc->SCSI.lp1stLBAListOnToc[tIdx] - 1, pDisc->SCSI.lp1stLBAListOnToc[tIdx]);
-					trkType = TRACK_TYPE::dataExist;
-				}
-				pDisc->SCSI.n1stLBAofDataTrk = 0;
-				pDisc->SCSI.by1stDataTrkNum = 1;
-				pDisc->SCSI.byLastDataTrkNum = 1;
-			}
-			idx = i + 1;
-		}
 		OutputDiscLog(
-			"\t%s Track %2d, LBA %8d - %8d, Length %8d\n", strType, idx,
+			"\t%s Track %2d, LBA %8d - %8d, Length %8d\n", strType, i,
 			pDisc->SCSI.lp1stLBAListOnToc[tIdx], pDisc->SCSI.lpLastLBAListOnToc[tIdx],
 			pDisc->SCSI.lpLastLBAListOnToc[tIdx] - pDisc->SCSI.lp1stLBAListOnToc[tIdx] + 1);
-	}
-	if (pDisc->SCSI.byFormat == DISK_TYPE_CDI && pDisc->SCSI.toc.LastTrack > 1) {
-		pDisc->SCSI.lpLastLBAListOnToc[0] = pDisc->SCSI.lp1stLBAListOnToc[1] - 1;
-		pDisc->SCSI.nAllLength += pDisc->SCSI.lp1stLBAListOnToc[1];
 	}
 	OutputDiscLog(
 		"\t                                          Total  %8d\n", pDisc->SCSI.nAllLength);
@@ -1340,19 +1372,6 @@ VOID SetTrackAttribution(
 		// preserve the 1st LBA of the changed trackNum
 		if (tmpPrevTrackNum + 1 == tmpCurrentTrackNum) {
 			pDiscPerSector->byTrackNum = tmpCurrentTrackNum;
-//			tIdx = pDiscPerSector->byTrackNum - 1;
-
-			if (pDisc->SCSI.byFormat == DISK_TYPE_CDI && pDisc->SCSI.toc.LastTrack > 1) {
-				if ((pDiscPerSector->subch.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
-					pDisc->SUB.lp1stLBAListOfDataTrackOnSub[tIdx - 1] = pDisc->SCSI.lp1stLBAListOnToc[tIdx - 1];
-					pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tIdx - 1] = nLBA - 1;
-				}
-				if (pDisc->SCSI.lp1stLBAListOfDataTrkOnToc[tIdx - 1] != -1) {
-					OutputSubInfoWithLBALog("Last LBA of this data track on TOC\n", nLBA - 1, tmpPrevTrackNum);
-					pDisc->SCSI.lpLastLBAListOfDataTrkOnToc[tIdx - 1] = nLBA - 1;
-				}
-			}
-
 			if (pDiscPerSector->subch.current.nRelativeTime != 0) {
 				OutputSubInfoWithLBALog("1st RMSF of this track[%d]\n"
 					, nLBA, tmpCurrentTrackNum, pDiscPerSector->subch.current.nRelativeTime);
@@ -1400,7 +1419,7 @@ VOID SetTrackAttribution(
 					(pDisc->SCSI.toc.TrackData[tmpPrevTrackNum - 1].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 
 					OutputSubInfoWithLBALog(
-						"Last LBA of this data track\n", nTmpLastLBA, tmpPrevTrackNum);
+						"Last LBA of this data track on TOC\n", nTmpLastLBA, tmpPrevTrackNum);
 					pDisc->SCSI.lpLastLBAListOfDataTrkOnToc[tmpPrevTrackNum - 1] = nTmpLastLBA;
 
 					OutputSubInfoWithLBALog(
@@ -1415,7 +1434,7 @@ VOID SetTrackAttribution(
 					(pDiscPerSector->subch.prev.byCtl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 
 					OutputSubInfoWithLBALog(
-						"Last LBA of this data track\n", nTmpLastLBA, tmpPrevTrackNum);
+						"Last LBA of this data track on subchannel\n", nTmpLastLBA, tmpPrevTrackNum);
 					pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tmpPrevTrackNum - 1] = nTmpLastLBA;
 
 					OutputSubInfoWithLBALog(
@@ -1449,13 +1468,14 @@ VOID SetTrackAttribution(
 			}
 			else {
 				if (nLBA != pDisc->SCSI.lp1stLBAListOnToc[tIdx]) {
-					if (pDisc->SCSI.byFormat == DISK_TYPE_CDI && pDisc->SCSI.toc.LastTrack > 1) {
+					if (IsCDiFormatWithMultiTrack(pDisc)) {
 						// [CD-i Ready] Dimo's Quest (USA)
 						// LBA[075149, 0x1258d]: P[ff], Q[41010000000100164374349d]{ Data,      Copy NG,                  Track[01], Idx[00], RMSF[00:00:01], AMSF[16:43:74]}, RtoW[0, 0, 0, 0]
 						// LBA[075150, 0x1258e]: P[ff], Q[010101000000001644000c81]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[01], Idx[01], RMSF[00:00:00], AMSF[16:44:00]}, RtoW[0, 0, 0, 0]
-						pDisc->SCSI.lp1stLBAListOnToc[tIdx] = nLBA;
 						pDisc->SUB.lp1stLBAListOfDataTrackOnSub[tIdx] = 0;
 						pDisc->SUB.lpLastLBAListOfDataTrackOnSub[tIdx] = nLBA - 1;
+						pDisc->SCSI.lp1stLBAListOfDataTrkOnToc[tIdx] = 0;
+						pDisc->SCSI.lpLastLBAListOfDataTrkOnToc[tIdx] = nLBA - 1;
 					}
 					else {
 						OutputSubInfoWithLBALog(
@@ -1507,15 +1527,6 @@ VOID SetTrackAttribution(
 			}
 #endif
 		}
-
-		if (pDisc->SCSI.byFormat == DISK_TYPE_CDI && pDisc->SCSI.toc.LastTrack > 1 &&
-			pDisc->SCSI.trkType == TRACK_TYPE::dataExist && tIdx == 0) {
-			if (pDisc->SCSI.lp1stLBAListOfDataTrkOnToc[tIdx] == -1) {
-				OutputSubInfoWithLBALog("1st LBA of this data track on TOC\n", nLBA, tmpCurrentTrackNum);
-				pDisc->SCSI.lp1stLBAListOfDataTrkOnToc[tIdx] = nLBA;
-			}
-		}
-
 		if (pExtArg->byReverse) {
 			// preserve last LBA per data track
 			if (nLBA == pDisc->SCSI.nLastLBAofDataTrkOnToc) {
