@@ -110,6 +110,26 @@ BOOL IsCDiFormatWithMultiTrack(
 	return FALSE;
 }
 
+BOOL IsAudioOnlyDisc(
+	PDISC pDisc
+) {
+	if (pDisc->SCSI.trkType == TRACK_TYPE::audioTrack ||
+		pDisc->SCSI.trkType == (TRACK_TYPE::audioTrack | TRACK_TYPE::pregapAudioIn1stTrack)) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
+BOOL IsDataDisc(
+	PDISC pDisc
+) {
+	if (pDisc->SCSI.trkType & TRACK_TYPE::dataTrack ||
+		pDisc->SCSI.trkType & TRACK_TYPE::pregapDataIn1stTrack) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
 BOOL IsValidPS3Drive(
 	PDEVICE pDevice
 ) {

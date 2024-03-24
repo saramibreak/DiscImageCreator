@@ -15,7 +15,7 @@
 
  if you report a bug, try to use the latest test version.  
    Windows: http://www.mediafire.com/file/eq80y20l9cwf48f/DiscImageCreator_test.7z  
-   Linux: http://www.mediafire.com/file/uw3e03kdkmsmvvq/DiscImageCreator_linux_test.tar.gz 
+   Linux: http://www.mediafire.com/file/uw3e03kdkmsmvvq/DiscImageCreator_test.tar.gz 
 
  Nevertheless a bug exists, please upload all .txt file the app created.
 
@@ -216,10 +216,8 @@ See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)
     "Pregap" of the 1st track of the 2nd session.  
   - (Track AA).bin / (Track AA)(Session 1).bin / (Track AA)(Session 2).bin  
     "Lead-out".  
-  - (Subs control) (Track xx).bin  
-    Track is separated with priority given to the subchannel control flag.  
-  - (Subs indexes) (Track xx).bin  
-    Track is separated with priority given to the subchannel indexes.  
+  - (Subs desync) (Track xx).bin  
+    Track is separated with priority given to the subchannel control flag and/or indexes.  
 - .c2  
   c2 error binary image of the CD. 1 bit expresses 1 byte.
 - .ccd  

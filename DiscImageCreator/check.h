@@ -40,6 +40,14 @@ BOOL IsCDiFormatWithMultiTrack(
 	PDISC pDisc
 );
 
+BOOL IsAudioOnlyDisc(
+	PDISC pDisc
+);
+
+BOOL IsDataDisc(
+	PDISC pDisc
+);
+
 BOOL IsValidPS3Drive(
 	PDEVICE pDevice
 );

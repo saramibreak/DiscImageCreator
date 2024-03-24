@@ -192,15 +192,14 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 		else {
 			if (*pExecType == cd || *pExecType == swap || *pExecType == gd || *pExecType == data || *pExecType == audio) {
 				if (IsCDorRelatedDisc(pExecType, pDisc)) {
+					if (!IsEnoughDiskSpaceForDump(pExecType, pDisc, szPath)) {
+						throw FALSE;
+					}
 #ifdef _WIN32
 					_declspec(align(4)) CDROM_TOC_FULL_TOC_DATA fullToc = { 0 };
 #else
 					__attribute__((aligned(4))) CDROM_TOC_FULL_TOC_DATA fullToc = {};
 #endif
-					pDevice->sub = CDFLAG::_READ_CD::Raw;
-					if (!ReadCDForCheckingSubQ1stIndex(pExtArg, pDevice, pDisc)) {
-						throw FALSE;
-					}
 					PCDROM_TOC_FULL_TOC_DATA_BLOCK pTocData = NULL;
 					WORD wTocEntries = 0;
 					if (*pExecType != swap && *pExecType != gd) {
@@ -212,8 +211,11 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 					if (!ReadTOC(pExtArg, pExecType, pDevice, pDisc, pszFullPath)) {
 						throw FALSE;
 					}
-					if (!IsEnoughDiskSpaceForDump(pExecType, pDisc, szPath)) {
-						throw FALSE;
+					pDevice->sub = CDFLAG::_READ_CD::Raw;
+					if (pDisc->SCSI.trkType & TRACK_TYPE::pregapIn1stTrack) {
+						if (!ReadCDForCheckingSubQ1stIndex(pExtArg, pDevice, pDisc)) {
+							throw FALSE;
+						}
 					}
 
 					InitMainDataHeader(pExecType, &mainHeader, (INT)s_nStartLBA);
@@ -287,10 +289,6 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 						}
 					}
 
-					// This func needs the TOC
-					if (!ReadCDForSearchingOffset(pExecType, pExtArg, pDevice, pDisc)) {
-						throw FALSE;
-					}
 					if (pExtArg->byC2 && pDevice->byPlxtrDrive == _PLXTR_DRIVE_TYPE::No) {
 						// Re-set c2 flag
 						c2 = pDevice->supportedC2Type;
@@ -363,7 +361,7 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 					if (*pExecType == cd) {
 						bRet = ReadCDAll(pExecType, pExtArg, pDevice, pDisc, &discPerSector, c2, pszFullPath, fpCcd, fpC2);
 
-						if (IsPregapOfTrack1ReadableDrive(pDevice) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly && !pExtArg->byAtari) {
+						if (IsPregapOfTrack1ReadableDrive(pDevice) && IsAudioOnlyDisc(pDisc) && !pExtArg->byAtari) {
 							ConcatenateFromPregapToLeadout(pDisc, pszFullPath);
 						}
 					}
@@ -505,11 +503,8 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 		}
 		if (bRet && (*pExecType != audio && *pExecType != data)) {
 			bRet = ReadWriteDat(pExecType, pExtArg, pDevice, pDisc, pszFullPath, s_szDir, SUB_DESYNC_TYPE::NoDesync, &hash);
-			if (pDisc->SUB.byIdxDesync) {
-				bRet = ReadWriteDat(pExecType, pExtArg, pDevice, pDisc, pszFullPath, s_szDir, SUB_DESYNC_TYPE::IdxDesync, &hash);
-			}
-			if (pDisc->SUB.byCtlDesync) {
-				bRet = ReadWriteDat(pExecType, pExtArg, pDevice, pDisc, pszFullPath, s_szDir, SUB_DESYNC_TYPE::CtlDesync, &hash);
+			if (pDisc->SUB.byDesync) {
+				bRet = ReadWriteDat(pExecType, pExtArg, pDevice, pDisc, pszFullPath, s_szDir, SUB_DESYNC_TYPE::Desync, &hash);
 			}
 		}
 		FreeAndNull(hash.pHashChunk);

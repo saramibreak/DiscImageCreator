@@ -658,7 +658,7 @@ BOOL ReadVolumeDescriptor(
 		//	Pregap Track   , LBA        0 -        0, Length        1
 		//	  Data Track  1, LBA        1 -   317021, Length   317021
 		//	                                          Total    317022
-		if (pDisc->SCSI.lp1stLBAListOnToc[byIdx] != 1 && pDisc->SCSI.trkType == TRACK_TYPE::dataExist) {
+		if (pDisc->SCSI.lp1stLBAListOnToc[byIdx] != 1 && IsDataDisc(pDisc)) {
 			nPVD += pDisc->SCSI.lp1stLBAListOnToc[byIdx];
 		}
 	}
@@ -729,8 +729,7 @@ BOOL ReadCDForFileSystem(
 ) {
 	BOOL bRet = TRUE;
 	for (BYTE i = 0; i < pDisc->SCSI.toc.LastTrack; i++) {
-		if ((pDisc->SCSI.toc.TrackData[i].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK ||
-			(i == 0 && (pDisc->SCSI.byFormat == DISK_TYPE_CDI || pDisc->SCSI.trkType == TRACK_TYPE::pregapDataIn1stTrack))) {
+		if (pDisc->SCSI.toc.TrackData[i].Control & AUDIO_DATA_TRACK) {
 			// for Label Gate CD, XCP
 			if (i > 1 && pDisc->SCSI.lpLastLBAListOnToc[i] - pDisc->SCSI.lp1stLBAListOnToc[i] + 1 <= 750) {
 				return TRUE;

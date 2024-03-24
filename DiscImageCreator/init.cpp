@@ -54,21 +54,21 @@ BOOL InitLBAPerTrack(
 			return FALSE;
 		}
 	}
-	if (NULL == (*pDisc)->SCSI.lp1stLBAListOfDataTrkOnToc) {
-		if (NULL == ((*pDisc)->SCSI.lp1stLBAListOfDataTrkOnToc = (LPINT)calloc(dwTrackAllocSize, sizeof(INT)))) {
+	if (NULL == (*pDisc)->MAIN.lp1stLBAListCanDescrambled) {
+		if (NULL == ((*pDisc)->MAIN.lp1stLBAListCanDescrambled = (LPINT)calloc(dwTrackAllocSize, sizeof(INT)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
 		}
 	}
-	if (NULL == (*pDisc)->SCSI.lpLastLBAListOfDataTrkOnToc) {
-		if (NULL == ((*pDisc)->SCSI.lpLastLBAListOfDataTrkOnToc = (LPINT)calloc(dwTrackAllocSize, sizeof(INT)))) {
+	if (NULL == (*pDisc)->MAIN.lpLastLBAListCanDescrambled) {
+		if (NULL == ((*pDisc)->MAIN.lpLastLBAListCanDescrambled = (LPINT)calloc(dwTrackAllocSize, sizeof(INT)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
 		}
 	}
 	for (size_t h = 0; h < dwTrackAllocSize; h++) {
-		(*pDisc)->SCSI.lp1stLBAListOfDataTrkOnToc[h] = -1;
-		(*pDisc)->SCSI.lpLastLBAListOfDataTrkOnToc[h] = -1;
+		(*pDisc)->MAIN.lp1stLBAListCanDescrambled[h] = -1;
+		(*pDisc)->MAIN.lpLastLBAListCanDescrambled[h] = -1;
 	}
 	return TRUE;
 }
@@ -252,16 +252,6 @@ BOOL InitSubData(
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			throw FALSE;
 		}
-		if (NULL == ((*pDisc)->SUB.lp1stLBAListOfDataTrackOnSub = 
-			(LPINT)calloc(dwTrackAllocSize, sizeof(INT)))) {
-			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-			throw FALSE;
-		}
-		if (NULL == ((*pDisc)->SUB.lpLastLBAListOfDataTrackOnSub = 
-			(LPINT)calloc(dwTrackAllocSize, sizeof(INT)))) {
-			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-			throw FALSE;
-		}
 		if (NULL == ((*pDisc)->SUB.lpISRCList = 
 			(LPBOOL)calloc(dwTrackAllocSize, sizeof(BOOL)))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -301,8 +291,6 @@ BOOL InitSubData(
 				throw FALSE;
 			}
 			FillMemory((*pDisc)->SUB.lp1stLBAListOnSubSync[h], dwIndexAllocSize, -1);
-			(*pDisc)->SUB.lp1stLBAListOfDataTrackOnSub[h] = -1;
-			(*pDisc)->SUB.lpLastLBAListOfDataTrackOnSub[h] = -1;
 		}
 		(*pDisc)->SUB.byCatalog = FALSE;
 		for (INT i = 0; i < 3; i++) {
@@ -451,8 +439,8 @@ VOID TerminateLBAPerTrack(
 ) {
 	FreeAndNull((*pDisc)->SCSI.lp1stLBAListOnToc);
 	FreeAndNull((*pDisc)->SCSI.lpLastLBAListOnToc);
-	FreeAndNull((*pDisc)->SCSI.lp1stLBAListOfDataTrkOnToc);
-	FreeAndNull((*pDisc)->SCSI.lpLastLBAListOfDataTrkOnToc);
+	FreeAndNull((*pDisc)->MAIN.lp1stLBAListCanDescrambled);
+	FreeAndNull((*pDisc)->MAIN.lpLastLBAListCanDescrambled);
 }
 
 VOID TerminateTocFullData(
@@ -525,8 +513,6 @@ VOID TerminateSubData(
 	FreeAndNull((*pDisc)->SUB.lpRtoWList);
 	FreeAndNull((*pDisc)->SUB.lp1stLBAListOnSub);
 	FreeAndNull((*pDisc)->SUB.lp1stLBAListOnSubSync);
-	FreeAndNull((*pDisc)->SUB.lp1stLBAListOfDataTrackOnSub);
-	FreeAndNull((*pDisc)->SUB.lpLastLBAListOfDataTrackOnSub);
 	FreeAndNull((*pDisc)->SUB.lpCtlList);
 	FreeAndNull((*pDisc)->SUB.lpEndCtlList);
 	FreeAndNull((*pDisc)->SUB.lpISRCList);

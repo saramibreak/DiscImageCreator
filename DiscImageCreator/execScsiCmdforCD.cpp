@@ -137,7 +137,7 @@ BOOL ExecReadGD(
 		nOfs = CD_RAW_SECTOR_SIZE + pDisc->MAIN.nCombinedOffset;
 	}
 #if 0
-	OutputMainChannel(fileMainInfo, lpInBuf + idx, NULL, nLBA, CD_RAW_SECTOR_SIZE);
+	OutputMainChannel(fileMainInfo, lpInBuf + nOfs, NULL, nLBA, CD_RAW_SECTOR_SIZE);
 #endif
 	for (BYTE i = 0; i < byTransferLen; i++) {
 		for (INT j = 0; j < CD_RAW_SECTOR_SIZE; j++) {
@@ -880,7 +880,7 @@ BOOL ProcessDescramble(
 		return FALSE;
 	}
 	// audio only -> from .scm to .img. other descramble img.
-	if (/*pExtArg->byBe || */(pDisc->SCSI.trkType != TRACK_TYPE::dataExist && pDisc->SCSI.trkType != TRACK_TYPE::pregapDataIn1stTrack)) {
+	if (IsAudioOnlyDisc(pDisc) || pDisc->SCSI.trkType & TRACK_TYPE::pregapAudioWithSyncIn1stTrack) {
 		OutputString("Moving .scm to .img\n");
 		if (!MoveFileEx(pszOutScmFile, pszNewPath, MOVEFILE_REPLACE_EXISTING)) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -896,6 +896,7 @@ BOOL ProcessDescramble(
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
 		}
+		SetLBAtoDescrambleSector(pDisc, pszPath);
 		FILE* fpImg = NULL;
 		_TCHAR pszImgPath[_MAX_PATH] = {};
 		if (NULL == (fpImg = CreateOrOpenFile(
@@ -903,76 +904,10 @@ BOOL ProcessDescramble(
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
 		}
-		DescrambleMainChannelAll(pExtArg, pDisc, pDisc->SCSI.lp1stLBAListOfDataTrkOnToc
-			, pDisc->SCSI.lpLastLBAListOfDataTrkOnToc, _T("TOC based"), scrambled_table, fpImg);
+		DescrambleMainChannelAll(pExtArg, pDisc, scrambled_table, fpImg);
 		FcloseAndNull(fpImg);
-		if (IsCDiFormatWithMultiTrack(pDisc)) {
-			ExecEccEdc(pExtArg, pDisc->PROTECT, _T("Sub"), pszImgPath, pDisc->PROTECT.ERROR_SECTOR);
-		}
-		else {
-			ExecEccEdc(pExtArg, pDisc->PROTECT, _T("TOC"), pszImgPath, pDisc->PROTECT.ERROR_SECTOR);
-		}
-
-		for (INT k = pDisc->SCSI.by1stDataTrkNum - 1; k < pDisc->SCSI.byLastDataTrkNum; k++) {
-			if (pDisc->SCSI.lp1stLBAListOfDataTrkOnToc[k] != pDisc->SUB.lp1stLBAListOfDataTrackOnSub[k]) {
-				pDisc->SUB.byCtlDesync = TRUE;
-			}
-		}
-		if (pDisc->SUB.byCtlDesync) {
-			ZeroMemory(pszNewPath, _MAX_PATH);
-			_tcsncpy(pszNewPath, pszOutScmFile, SIZE_OF_ARRAY(pszNewPath));
-			pszNewPath[_MAX_PATH - 1] = 0;
-			PathRemoveExtension(pszNewPath);
-			_tcsncat(pszNewPath, _T(" (Subs control).img"), sizeof(pszNewPath) - _tcslen(pszNewPath) - 1);
-
-			OutputString("Copying .scm to .img (Subs control)\n");
-			if (!CopyFile(pszOutScmFile, pszNewPath, FALSE)) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				return FALSE;
-			}
-			if (NULL == (fpImg = CreateOrOpenFile(
-				pszPath, _T(" (Subs control)"), pszImgPath, NULL, NULL, _T(".img"), _T("rb+"), 0, 0))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				return FALSE;
-			}
-			DescrambleMainChannelAll(pExtArg, pDisc, pDisc->SUB.lp1stLBAListOfDataTrackOnSub
-				, pDisc->SUB.lpLastLBAListOfDataTrackOnSub, _T("Sub based"), scrambled_table, fpImg);
-			FcloseAndNull(fpImg);
-			ExecEccEdc(pExtArg, pDisc->PROTECT, _T("Sub"), pszImgPath, pDisc->PROTECT.ERROR_SECTOR);
-		}
+		ExecEccEdc(pExtArg, pDisc->PROTECT, _T("Sub"), pszImgPath, pDisc->PROTECT.ERROR_SECTOR);
 	}
-	return TRUE;
-}
-
-BOOL ProcessCreateBin(
-	PEXT_ARG pExtArg,
-	PDEVICE pDevice,
-	PDISC pDisc,
-	LPCTSTR pszPath,
-	FILE* fpCcd
-) {
-	FILE* fpImg = NULL;
-	_TCHAR pszImgName[_MAX_FNAME + _MAX_EXT] = {};
-	FILE* fpImgDesync = NULL;
-
-	if (NULL == (fpImg = CreateOrOpenFile(
-		pszPath, NULL, NULL, pszImgName, NULL, _T(".img"), _T("rb"), 0, 0))) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-	}
-	else {
-		if (pDisc->SUB.byCtlDesync) {
-			if (NULL == (fpImgDesync = CreateOrOpenFile(
-				pszPath, _T(" (Subs control)"), NULL, NULL, NULL, _T(".img"), _T("rb"), 0, 0))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				return FALSE;
-			}
-		}
-		if (!CreateBinCueCcd(pExtArg, pDisc, pszPath, pszImgName,
-			pDevice->FEATURE.byCanCDText, fpImg, fpImgDesync, fpCcd)) {
-		}
-	}
-	FcloseAndNull(fpImg);
-	FcloseAndNull(fpImgDesync);
 	return TRUE;
 }
 
@@ -1336,7 +1271,7 @@ BOOL ReadCDAll(
 							OutputCDSub96Raw(standardOut, lpSubcodeRaw, nLBA);
 #endif
 							WriteSubChannel(pDisc, pDiscPerSector, lpSubcodeRaw, nLBA, fpSub);
-							SetTrackAttribution(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA);
+							SetTrackAttribution(pExecType, pDisc, pDiscPerSector, nLBA);
 							FixMainHeader(pExtArg, pDisc, pDiscPerSector, nLBA, nMainDataType);
 							UpdateTmpSubch(pDiscPerSector);
 						}
@@ -1390,16 +1325,6 @@ BOOL ReadCDAll(
 				bErr = TRUE;
 				lLine = __LINE__;
 			}
-			else if ((pDisc->SCSI.toc.TrackData[i].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
-				if (pDisc->SUB.lp1stLBAListOfDataTrackOnSub[i] == -1) {
-					bErr = TRUE;
-					lLine = __LINE__;
-				}
-				else if (pDisc->SUB.lpLastLBAListOfDataTrackOnSub[i] == -1) {
-					bErr = TRUE;
-					lLine = __LINE__;
-				}
-			}
 			if (bErr) {
 				OutputLog(standardError | fileSubError,
 					"[L:%ld] Internal error. Failed to analyze the subchannel. Track[%02d]/[%02u]\n",
@@ -1444,7 +1369,10 @@ BOOL ReadCDAll(
 		if (!ProcessDescramble(pExtArg, pDisc, pszPath, pszOutScmFile)) {
 			throw FALSE;
 		}
-		if (!ProcessCreateBin(pExtArg, pDevice, pDisc, pszPath, fpCcd)) {
+		if (!CreateCueCcd(pExtArg, pDisc, pszPath, pDevice->FEATURE.byCanCDText, fpCcd)) {
+			throw FALSE;
+		}
+		if (!ProcessCreatingBin(pExtArg, pDisc, pszPath)) {
 			throw FALSE;
 		}
 	}
@@ -1796,7 +1724,7 @@ BOOL ReadCDForSwap(
 					, NULL, pDisc->SCSI.lp1stLBAListOnToc[pDiscPerSector->byTrackNum - 1], MAINHEADER_MODE1_SIZE);
 #endif
 			}
-			SetTrackAttribution(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA);
+			SetTrackAttribution(pExecType, pDisc, pDiscPerSector, nLBA);
 			UpdateTmpSubch(pDiscPerSector);
 			nLBA++;
 		}
@@ -1805,7 +1733,10 @@ BOOL ReadCDForSwap(
 		if (!ProcessDescramble(pExtArg, pDisc, pszPath, pszScmPath)) {
 			throw FALSE;
 		}
-		if (!ProcessCreateBin(pExtArg, pDevice, pDisc, pszPath, fpCcd)) {
+		if (!CreateCueCcd(pExtArg, pDisc, pszPath, pDevice->FEATURE.byCanCDText, fpCcd)) {
+			throw FALSE;
+		}
+		if (!ProcessCreatingBin(pExtArg, pDisc, pszPath)) {
 			throw FALSE;
 		}
 		if (pExtArg->by74Min) {
@@ -1907,11 +1838,11 @@ BOOL ReadCDPartial(
 	LPBYTE pNextBuf = NULL;
 	LPBYTE pNextNextBuf = NULL;
 	INT nMainDataType = scrambled;
-	if (*pExecType == data || /*pExtArg->byBe ||*/ pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
+	if (*pExecType == data || pDisc->SCSI.trkType == TRACK_TYPE::audioTrack) {
 		nMainDataType = unscrambled;
 	}
 	INT nPadType = padByUsr55;
-	if (pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
+	if (pDisc->SCSI.trkType == TRACK_TYPE::audioTrack) {
 		nPadType = padByAll0;
 	}
 
@@ -2044,7 +1975,7 @@ BOOL ReadCDPartial(
 			, pDisc->MAIN.nOffsetStart, pDisc->MAIN.nOffsetEnd, pDisc->MAIN.nFixStartLBA, pDisc->MAIN.nFixEndLBA);
 #endif
 		INT n1stLBA = nStart + pDisc->MAIN.nOffsetStart - 1;
-		if (pDisc->SCSI.trkType == audioOnly) {
+		if (IsAudioOnlyDisc(pDisc)) {
 			n1stLBA = nStart;
 		}
 		if (*pExecType == gd) {
@@ -2220,7 +2151,7 @@ BOOL ReadCDPartial(
 					SetTmpSubchFromBuffer(&pDiscPerSector->subch.next, pDiscPerSector->subcode.next);
 				}
 
-				if (n1stLBA <= nLBA && nLBA < nLastLBA) {
+				if (nStart <= nLBA && nLBA < nLastLBA) {
 					BYTE lpSubcodeRaw[CD_RAW_READ_SUBCODE_SIZE] = {};
 					if (!pExtArg->byReverse) {
 						if (IsCheckingSubChannel(pDisc, nLBA)) {
@@ -2248,7 +2179,7 @@ BOOL ReadCDPartial(
 #endif
 							WriteSubChannel(pDisc, pDiscPerSector, lpSubcodeRaw, nLBA, fpSub);
 							if (!(*pExecType == audio || *pExecType == data)) {
-								SetTrackAttribution(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA);
+								SetTrackAttribution(pExecType, pDisc, pDiscPerSector, nLBA);
 							}
 							FixMainHeader(pExtArg, pDisc, pDiscPerSector, nLBA, nMainDataType);
 						}
@@ -2290,16 +2221,6 @@ BOOL ReadCDPartial(
 				if (pDisc->SUB.lp1stLBAListOnSub[i][1] == -1) {
 					bErr = TRUE;
 					lLine = __LINE__;
-				}
-				else if ((pDisc->SCSI.toc.TrackData[i].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
-					if (pDisc->SUB.lp1stLBAListOfDataTrackOnSub[i] == -1) {
-						bErr = TRUE;
-						lLine = __LINE__;
-					}
-					else if (pDisc->SUB.lpLastLBAListOfDataTrackOnSub[i] == -1) {
-						bErr = TRUE;
-						lLine = __LINE__;
-					}
 				}
 				if (bErr) {
 					OutputErrorString(
@@ -2626,7 +2547,7 @@ BOOL ReadCDForTages(
 #endif
 						WriteSubChannel(pDisc, pDiscPerSector, lpSubcodeRaw, nLBA, fpSubForward);
 						if (!(*pExecType == audio || *pExecType == data)) {
-							SetTrackAttribution(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA);
+							SetTrackAttribution(pExecType, pDisc, pDiscPerSector, nLBA);
 						}
 						FixMainHeader(pExtArg, pDisc, pDiscPerSector, nLBA, nMainDataType);
 					}
@@ -2759,7 +2680,7 @@ BOOL ReadCDForTages(
 #endif
 							WriteSubChannel(pDisc, pDiscPerSector, lpSubcodeRaw, nLBA, fpSubBack);
 							if (!(*pExecType == audio || *pExecType == data)) {
-								SetTrackAttribution(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA);
+								SetTrackAttribution(pExecType, pDisc, pDiscPerSector, nLBA);
 							}
 							FixMainHeader(pExtArg, pDisc, pDiscPerSector, nLBA, nMainDataType);
 						}
@@ -3001,11 +2922,11 @@ BOOL ReadCDOutOfRange(
 		SetReadDiscCommand(pExtArg, pDevice, 2
 			, CDFLAG::_READ_CD::All, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::Pack, lpCmd, FALSE);
 		BOOL bPregap = FALSE;
-		if ((pDisc->SCSI.toc.TrackData[pDisc->SCSI.by1stMultiSessionTrkNum - 1].Control & AUDIO_DATA_TRACK) == 0) {
-			_tcsncpy(ext, _T(".bin"), SIZE_OF_ARRAY(ext));
+		if (pDisc->SCSI.toc.TrackData[pDisc->SCSI.by1stMultiSessionTrkNum - 1].Control & AUDIO_DATA_TRACK) {
+			_tcsncpy(ext, _T(".scm"), SIZE_OF_ARRAY(ext));
 		}
 		else {
-			_tcsncpy(ext, _T(".scm"), SIZE_OF_ARRAY(ext));
+			_tcsncpy(ext, _T(".bin"), SIZE_OF_ARRAY(ext));
 		}
 		// 2nd session lead-in
 		if (pDisc->SCSI.toc.LastTrack > 9) {
@@ -3039,7 +2960,7 @@ BOOL ReadCDOutOfRange(
 					AlignRowSubcode(pDiscPerSector->subcode.current, &aBuf[CD_RAW_SECTOR_SIZE]);
 					AlignRowSubcode(pDiscPerSector->subcode.next, &aBuf[CD_RAW_SECTOR_WITH_SUBCODE_SIZE + CD_RAW_SECTOR_SIZE]);
 
-					FixSubChannel(pExecType, pExtArg, pDevice, pDisc, pDiscPerSector, ++n1stLeadinLBA, &bReread);
+					FixSubChannel(pExecType, pExtArg, pDevice, pDisc, pDiscPerSector, n1stLeadinLBA++, &bReread);
 
 					memcpy(lpSubcode, pDiscPerSector->subcode.current, CD_RAW_READ_SUBCODE_SIZE);
 //					memcpy(lpSubcodeNext, pDiscPerSector->subcode.next, CD_RAW_READ_SUBCODE_SIZE);
@@ -3133,11 +3054,11 @@ BOOL ReadCDOutOfRange(
 		// 2nd session lead-out
 		SetReadDiscCommand(pExtArg, pDevice, 1
 			, CDFLAG::_READ_CD::All, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::Pack, lpCmd, FALSE);
-		if ((pDisc->SCSI.toc.TrackData[pDisc->SCSI.toc.LastTrack - 1].Control & AUDIO_DATA_TRACK) == 0) {
-			_tcsncpy(ext, _T(".bin"), SIZE_OF_ARRAY(ext));
+		if (pDisc->SCSI.toc.TrackData[pDisc->SCSI.toc.LastTrack - 1].Control & AUDIO_DATA_TRACK) {
+			_tcsncpy(ext, _T(".scm"), SIZE_OF_ARRAY(ext));
 		}
 		else {
-			_tcsncpy(ext, _T(".scm"), SIZE_OF_ARRAY(ext));
+			_tcsncpy(ext, _T(".bin"), SIZE_OF_ARRAY(ext));
 		}
 
 		if (NULL == (fpMain = CreateOrOpenFile(pszPath, _T(" (Track AA)(Session 2)"), NULL, NULL, NULL, ext, _T("wb"), 0, 0))) {
@@ -3244,11 +3165,11 @@ BOOL ReadCDOutOfRange(
 		_tcsncpy(appendNameA, _T(" (Track AA)"), SIZE_OF_ARRAY(appendNameA));
 	}
 
-	if ((pDisc->SCSI.toc.TrackData[uiLastTrk - 1].Control & AUDIO_DATA_TRACK) == 0) {
-		_tcsncpy(ext, _T(".bin"), SIZE_OF_ARRAY(ext));
+	if (pDisc->SCSI.toc.TrackData[uiLastTrk - 1].Control & AUDIO_DATA_TRACK) {
+		_tcsncpy(ext, _T(".scm"), SIZE_OF_ARRAY(ext));
 	}
 	else {
-		_tcsncpy(ext, _T(".scm"), SIZE_OF_ARRAY(ext));
+		_tcsncpy(ext, _T(".bin"), SIZE_OF_ARRAY(ext));
 	}
 
 	if (NULL == (fpMain = CreateOrOpenFile(pszPath, appendNameA, NULL, NULL, NULL, ext, _T("wb"), 0, 0))) {
@@ -3339,11 +3260,12 @@ BOOL ReadCDOutOfRange(
 	}
 
 	// 1st session lead-in
-	if ((pDisc->SCSI.toc.TrackData[0].Control & AUDIO_DATA_TRACK) == 0) {
-		_tcsncpy(ext, _T(".bin"), SIZE_OF_ARRAY(ext));
+	if (pDisc->SCSI.toc.TrackData[0].Control & AUDIO_DATA_TRACK ||
+		pDisc->SUB.byCtlOfLBA0 & AUDIO_DATA_TRACK) {
+		_tcsncpy(ext, _T(".scm"), SIZE_OF_ARRAY(ext));
 	}
 	else {
-		_tcsncpy(ext, _T(".scm"), SIZE_OF_ARRAY(ext));
+		_tcsncpy(ext, _T(".bin"), SIZE_OF_ARRAY(ext));
 	}
 
 	if (pDisc->SCSI.toc.LastTrack > 9) {
@@ -3380,6 +3302,7 @@ BOOL ReadCDOutOfRange(
 	INT n1stLeadinLBA = -150;
 	BYTE aBufBak[CD_RAW_SECTOR_WITH_SUBCODE_SIZE * 4] = {};
 	BYTE lpSubcodeNext[CD_RAW_READ_SUBCODE_SIZE] = {};
+	BYTE lpSubcodeTmp[CD_RAW_READ_SUBCODE_SIZE] = {};
 	SetReadDiscCommand(pExtArg, pDevice, 4
 		, CDFLAG::_READ_CD::All, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::Pack, lpCmd, FALSE);
 
@@ -3407,30 +3330,37 @@ BOOL ReadCDOutOfRange(
 		OutputCDSub96Align(standardOut, lpSubcode, i);
 #endif
 		BOOL bLastPregapSector = FALSE;
-		if (lpSubcode[13] == 1 && (lpSubcode[14] == 0 || lpSubcode[14] == 1)) {
-			if (lpSubcode[19] == 0 && lpSubcode[20] == 0 && lpSubcode[21] == 0) {
+		if ((lpSubcode[12] & 0x0f) == ADR_ENCODES_CURRENT_POSITION) {
+			memcpy(lpSubcodeTmp, lpSubcode, CD_RAW_READ_SUBCODE_SIZE);
+		}
+		else {
+			memcpy(lpSubcodeTmp, lpSubcodeNext, CD_RAW_READ_SUBCODE_SIZE);
+		}
+		if (lpSubcodeTmp[13] == 1 && (lpSubcodeTmp[14] == 0 || lpSubcodeTmp[14] == 1)) {
+			if ((lpSubcodeTmp[19] == 0 && lpSubcodeTmp[20] == 0 && lpSubcodeTmp[21] == 0 && nOverreadSize <= 0) ||
+				(lpSubcodeTmp[19] == 0 && lpSubcodeTmp[20] == 0 && lpSubcodeTmp[21] == 1 && nOverreadSize == 1) ||
+				(lpSubcodeTmp[19] == 0 && lpSubcodeTmp[20] == 0 && lpSubcodeTmp[21] == 2 && nOverreadSize == 2) ||
+				(lpSubcodeTmp[19] == 0 && lpSubcodeTmp[20] == 0 && lpSubcodeTmp[21] == 3 && nOverreadSize == 3)
+				) {
 				b1stPregapSector = TRUE;
 			}
-			else if ((lpSubcode[19] == 0 && lpSubcode[20] == 1 && BcdToDec(lpSubcode[21]) == 71 && nOverreadSize == -4) ||
-				(lpSubcode[19] == 0 && lpSubcode[20] == 1 && BcdToDec(lpSubcode[21]) == 72 && nOverreadSize == -3) ||
-				(lpSubcode[19] == 0 && lpSubcode[20] == 1 && BcdToDec(lpSubcode[21]) == 73 && nOverreadSize == -2) ||
-				(lpSubcode[19] == 0 && lpSubcode[20] == 1 && BcdToDec(lpSubcode[21]) == 74 && nOverreadSize == -1) ||
-				(lpSubcode[19] == 0 && lpSubcode[20] == 2 && lpSubcode[21] == 0 && nOverreadSize == 0) ||
-				(lpSubcode[19] == 0 && lpSubcode[20] == 2 && lpSubcode[21] == 1 && nOverreadSize == 1) ||
-				(lpSubcode[19] == 0 && lpSubcode[20] == 2 && lpSubcode[21] == 2 && nOverreadSize == 2) ||
-				(lpSubcode[19] == 0 && lpSubcode[20] == 2 && lpSubcode[21] == 3 && nOverreadSize == 3)
+			else if ((lpSubcodeTmp[19] == 0 && lpSubcodeTmp[20] == 1 && BcdToDec(lpSubcodeTmp[21]) == 71 && nOverreadSize == -4) ||
+				(lpSubcodeTmp[19] == 0 && lpSubcodeTmp[20] == 1 && BcdToDec(lpSubcodeTmp[21]) == 72 && nOverreadSize == -3) ||
+				(lpSubcodeTmp[19] == 0 && lpSubcodeTmp[20] == 1 && BcdToDec(lpSubcodeTmp[21]) == 73 && nOverreadSize == -2) ||
+				(lpSubcodeTmp[19] == 0 && lpSubcodeTmp[20] == 1 && BcdToDec(lpSubcodeTmp[21]) == 74 && nOverreadSize == -1) ||
+				(lpSubcodeTmp[19] == 0 && lpSubcodeTmp[20] == 2 && lpSubcodeTmp[21] == 0 && nOverreadSize == 0) ||
+				(lpSubcodeTmp[19] == 0 && lpSubcodeTmp[20] == 2 && lpSubcodeTmp[21] == 1 && nOverreadSize == 1) ||
+				(lpSubcodeTmp[19] == 0 && lpSubcodeTmp[20] == 2 && lpSubcodeTmp[21] == 2 && nOverreadSize == 2) ||
+				(lpSubcodeTmp[19] == 0 && lpSubcodeTmp[20] == 2 && lpSubcodeTmp[21] == 3 && nOverreadSize == 3)
 				) {
 				bLastPregapSector = TRUE;
 			}
 		}
 
-		if (((lpSubcode[12] & 0x0f) == ADR_ENCODES_CURRENT_POSITION && lpSubcode[13] == 1 &&
-				lpSubcode[14] == 0 && lpSubcode[19] == 0 && lpSubcode[20] == 0 && lpSubcode[21] == 0) ||
-			(((lpSubcode[12] & 0x0f) == ADR_ENCODES_MEDIA_CATALOG && lpSubcode[21] == 0) &&
-				(lpSubcodeNext[12] & 0x0f) == ADR_ENCODES_CURRENT_POSITION && lpSubcodeNext[13] == 1 &&
-				lpSubcodeNext[14] == 0 && lpSubcodeNext[19] == 0 && lpSubcodeNext[20] == 0 && lpSubcodeNext[21] == 1)) {
+		if (b1stPregapSector) {
 			if (nOverreadSize >= 0) {
 				fwrite(aBuf, sizeof(BYTE), pDisc->MAIN.uiMainDataSlideSize, fpMain);
+#if 0
 				if (nOverreadSize >= 1) {
 					fwrite(aBuf + CD_RAW_SECTOR_WITH_SUBCODE_SIZE, sizeof(BYTE), pDisc->MAIN.uiMainDataSlideSize, fpMain);
 					if (nOverreadSize >= 2) {
@@ -3440,6 +3370,7 @@ BOOL ReadCDOutOfRange(
 						}
 					}
 				}
+#endif
 			}
 			FcloseAndNull(fpMain);
 			bTrack1 = TRUE;
@@ -3461,17 +3392,8 @@ BOOL ReadCDOutOfRange(
 				fwrite(aBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpMain);
 				if ((pDisc->SCSI.toc.TrackData[0].Control & AUDIO_DATA_TRACK) == 0) {
 					bNonZeroByteExistIn = HasNonZeroByte(aBuf, CD_RAW_SECTOR_SIZE, 0, &uiByteOffsetIn, POSITIVE);
-					if (!bNonZeroByteExistIn) {
-						bNonZeroByteExistIn = HasNonZeroByte(addr4, CD_RAW_SECTOR_SIZE, 0, &uiByteOffsetIn, POSITIVE);
-						if (!bNonZeroByteExistIn) {
-							bNonZeroByteExistIn = HasNonZeroByte(addr3, CD_RAW_SECTOR_SIZE, 0, &uiByteOffsetIn, POSITIVE);
-							if (!bNonZeroByteExistIn) {
-								bNonZeroByteExistIn = HasNonZeroByte(addr2, CD_RAW_SECTOR_SIZE, 0, &uiByteOffsetIn, POSITIVE);
-								if (!bNonZeroByteExistIn) {
-									bNonZeroByteExistIn = HasNonZeroByte(addr, (UINT)size, 0, &uiByteOffsetIn, POSITIVE);
-								}
-							}
-						}
+					if (bNonZeroByteExistIn) {
+						uiByteOffsetIn += CD_RAW_SECTOR_SIZE * 3 + size;
 					}
 				}
 			}
@@ -3482,14 +3404,8 @@ BOOL ReadCDOutOfRange(
 				fwrite(aBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpMain);
 				if ((pDisc->SCSI.toc.TrackData[0].Control & AUDIO_DATA_TRACK) == 0) {
 					bNonZeroByteExistIn = HasNonZeroByte(aBuf, CD_RAW_SECTOR_SIZE, 0, &uiByteOffsetIn, POSITIVE);
-					if (!bNonZeroByteExistIn) {
-						bNonZeroByteExistIn = HasNonZeroByte(addr4, CD_RAW_SECTOR_SIZE, 0, &uiByteOffsetIn, POSITIVE);
-						if (!bNonZeroByteExistIn) {
-							bNonZeroByteExistIn = HasNonZeroByte(addr3, CD_RAW_SECTOR_SIZE, 0, &uiByteOffsetIn, POSITIVE);
-							if (!bNonZeroByteExistIn) {
-								bNonZeroByteExistIn = HasNonZeroByte(addr2, (UINT)size, 0, &uiByteOffsetIn, POSITIVE);
-							}
-						}
+					if (bNonZeroByteExistIn) {
+						uiByteOffsetIn += CD_RAW_SECTOR_SIZE * 2 + size;
 					}
 				}
 			}
@@ -3499,11 +3415,8 @@ BOOL ReadCDOutOfRange(
 				fwrite(aBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpMain);
 				if ((pDisc->SCSI.toc.TrackData[0].Control & AUDIO_DATA_TRACK) == 0) {
 					bNonZeroByteExistIn = HasNonZeroByte(aBuf, CD_RAW_SECTOR_SIZE, 0, &uiByteOffsetIn, POSITIVE);
-					if (!bNonZeroByteExistIn) {
-						bNonZeroByteExistIn = HasNonZeroByte(addr4, CD_RAW_SECTOR_SIZE, 0, &uiByteOffsetIn, POSITIVE);
-						if (!bNonZeroByteExistIn) {
-							bNonZeroByteExistIn = HasNonZeroByte(addr3, (UINT)size, 0, &uiByteOffsetIn, POSITIVE);
-						}
+					if (bNonZeroByteExistIn) {
+						uiByteOffsetIn += CD_RAW_SECTOR_SIZE + size;
 					}
 				}
 			}
@@ -3511,9 +3424,9 @@ BOOL ReadCDOutOfRange(
 				fwrite(addr4, sizeof(BYTE), size, fpMain);
 				fwrite(aBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpMain);
 				if ((pDisc->SCSI.toc.TrackData[0].Control & AUDIO_DATA_TRACK) == 0) {
-					bNonZeroByteExistIn = HasNonZeroByte(addr4, (UINT)size, 0, &uiByteOffsetIn, POSITIVE);
-					if (!bNonZeroByteExistIn) {
-						bNonZeroByteExistIn = HasNonZeroByte(aBuf, CD_RAW_SECTOR_SIZE, 0, &uiByteOffsetIn, POSITIVE);
+					bNonZeroByteExistIn = HasNonZeroByte(aBuf, CD_RAW_SECTOR_SIZE, 0, &uiByteOffsetIn, POSITIVE);
+					if (bNonZeroByteExistIn) {
+						uiByteOffsetIn += size;
 					}
 				}
 			}
@@ -3523,6 +3436,7 @@ BOOL ReadCDOutOfRange(
 					bNonZeroByteExistIn = HasNonZeroByte(aBuf + pDisc->MAIN.uiMainDataSlideSize, (UINT)size, 0, &uiByteOffsetIn, POSITIVE);
 				}
 			}
+			b1stPregapSector = FALSE;
 		}
 		else if (i == LEADIN_START_LBA_SESSION_1 && nOverreadSize >= 0) {
 			fwrite(aBuf + pDisc->MAIN.uiMainDataSlideSize, sizeof(BYTE), CD_RAW_SECTOR_SIZE - pDisc->MAIN.uiMainDataSlideSize, fpMain);
@@ -3561,8 +3475,10 @@ BOOL ReadCDOutOfRange(
 			break;
 		}
 		else {
-			fwrite(lpSubcode, sizeof(BYTE), CD_RAW_READ_SUBCODE_SIZE, fpSub);
-			memcpy(aBufBak, aBuf, CD_RAW_SECTOR_WITH_SUBCODE_SIZE * 4);
+			if ((bTrack1 && lpSubcodeTmp[14] == 0) || !bTrack1) {
+				fwrite(lpSubcode, sizeof(BYTE), CD_RAW_READ_SUBCODE_SIZE, fpSub);
+				memcpy(aBufBak, aBuf, CD_RAW_SECTOR_WITH_SUBCODE_SIZE * 4);
+			}
 		}
 	}
 	OutputString("\n");
@@ -3591,7 +3507,7 @@ BOOL ReadCDOutOfRange(
 		}
 	}
 
-	if (pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
+	if (IsAudioOnlyDisc(pDisc)) {
 		SetReadDiscCommand(pExtArg, pDevice, 1
 			, CDFLAG::_READ_CD::All, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::Pack, lpCmd, FALSE);
 		if (bNonZeroByteExistIn && !bNonZeroByteExistOut) {

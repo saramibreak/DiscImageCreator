@@ -247,7 +247,7 @@ BOOL ExecSearchingOffset(
 			OUTPUT_DHYPHEN_PLUS_STR_WITH_C2_SUBCH_F("Check Drive + CD offset"), lpCmd[0], (lpCmd[9] & 0x6) >> 1, lpCmd[10]);
 	}
 
-	if (pDisc->SCSI.trkType != TRACK_TYPE::audioOnly || *pExecType == swap) {
+	if (*pExecType == swap || IsDataDisc(pDisc)) {
 		if (*pExecType != data) {
 			OutputMainChannel(fileMainInfo, lpBuf, NULL, nLBA, CD_RAW_SECTOR_SIZE);
 		}
@@ -265,7 +265,8 @@ BOOL ExecSearchingOffset(
 		}
 	}
 	else {
-		if (pDisc->SCSI.trkType != TRACK_TYPE::audioOnly || *pExecType == swap) {
+		if (*pExecType == swap || IsDataDisc(pDisc) ||
+			pDisc->SCSI.trkType & TRACK_TYPE::pregapAudioWithSyncIn1stTrack) {
 			// http://forum.redump.org/post/81925/#p81925
 			INT nSectorNum = 5;
 			LPBYTE pBuf2 = NULL;
@@ -288,56 +289,54 @@ BOOL ExecSearchingOffset(
 					memcpy(lpBuf2 + CD_RAW_SECTOR_SIZE * i, aBuf, CD_RAW_SECTOR_SIZE);
 				}
 
-				if (pDisc->SCSI.trkType != TRACK_TYPE::audioOnly || *pExecType == swap) {
-					if (!GetWriteOffset(pDisc, lpBuf2, nSectorNum, nLBA)) {
-						if (pDisc->SCSI.trkType == TRACK_TYPE::dataExist ||
-							pDisc->SCSI.trkType == TRACK_TYPE::pregapDataIn1stTrack) {
-							OutputLog(standardError | fileDisc, "Failed to get write-offset\n");
-							return FALSE;
-						}
-						OutputLog(standardOut | fileDisc,
-							"There isn't data sector in pregap sector of track 1. Change the TRACK_TYPE to audioOnly\n");
-						pDisc->SCSI.trkType = TRACK_TYPE::audioOnly;
-						break;
+				if (!GetWriteOffset(pDisc, lpBuf2, nSectorNum, nLBA)) {
+					if (IsDataDisc(pDisc) ||
+						pDisc->SCSI.trkType & TRACK_TYPE::pregapAudioWithSyncIn1stTrack) {
+						OutputLog(standardError | fileDisc, "Failed to get write-offset\n");
+						return FALSE;
 					}
-					else {
-						if (pDisc->MAIN.nCombinedOffset > 0) {
-							INT nOverRead = pDisc->MAIN.nCombinedOffset / CD_RAW_SECTOR_SIZE;
-							// [FMT] Sangokushi IV http://forum.redump.org/post/82784/#p82784
-							// [FMT] Lip 3: Lipstick Adventure 3 http://forum.redump.org/post/80180/#p80180
-							// [FMT] Gulf War: Soukouden http://forum.redump.org/topic/16418/addedfmt-5-new-dumps/
-							if (nOverRead > 0) {
-								if (k == 0) {
-									SetAndOutputCDOffset(pExtArg, pDisc, bGetDriveOffset
-										, pDevice->nDriveSampleOffset, nDriveOffset, pDisc->SUB.nSubChannelOffset);
-									nTmpCombinedOffset = pDisc->MAIN.nCombinedOffset;
-									nLBA += nOverRead;
-									if (!ExecReadCD(pExtArg, pDevice, lpCmd, nLBA
-										, aBuf, uiBufSize, _T(__FUNCTION__), __LINE__)) {
-										return FALSE;
-									}
-									OutputMainChannel(fileMainInfo, aBuf, NULL, nLBA, CD_RAW_SECTOR_SIZE);
-									memcpy(lpBuf2, aBuf, CD_RAW_SECTOR_SIZE);
+					OutputLog(standardOut | fileDisc,
+						"There isn't data sector in pregap sector of track 1. Change the TRACK_TYPE to audioOnly\n");
+					pDisc->SCSI.trkType = (TRACK_TYPE)(TRACK_TYPE::audioTrack);
+					break;
+				}
+				else {
+					if (pDisc->MAIN.nCombinedOffset > 0) {
+						INT nOverRead = pDisc->MAIN.nCombinedOffset / CD_RAW_SECTOR_SIZE;
+						// [FMT] Sangokushi IV http://forum.redump.org/post/82784/#p82784
+						// [FMT] Lip 3: Lipstick Adventure 3 http://forum.redump.org/post/80180/#p80180
+						// [FMT] Gulf War: Soukouden http://forum.redump.org/topic/16418/addedfmt-5-new-dumps/
+						if (nOverRead > 0) {
+							if (k == 0) {
+								SetAndOutputCDOffset(pExtArg, pDisc, bGetDriveOffset
+									, pDevice->nDriveSampleOffset, nDriveOffset, pDisc->SUB.nSubChannelOffset);
+								nTmpCombinedOffset = pDisc->MAIN.nCombinedOffset;
+								nLBA += nOverRead;
+								if (!ExecReadCD(pExtArg, pDevice, lpCmd, nLBA
+									, aBuf, uiBufSize, _T(__FUNCTION__), __LINE__)) {
+									return FALSE;
 								}
-								else if (k == 1) {
-									if (nTmpCombinedOffset != pDisc->MAIN.nCombinedOffset) {
-										OutputDiscLog("There is a different combined offset. See also _mainInfo.txt\n");
-									}
-								}
+								OutputMainChannel(fileMainInfo, aBuf, NULL, nLBA, CD_RAW_SECTOR_SIZE);
+								memcpy(lpBuf2, aBuf, CD_RAW_SECTOR_SIZE);
 							}
-							else {
-								break;
+							else if (k == 1) {
+								if (nTmpCombinedOffset != pDisc->MAIN.nCombinedOffset) {
+									OutputDiscLog("There is a different combined offset. See also _mainInfo.txt\n");
+								}
 							}
 						}
 						else {
 							break;
 						}
 					}
+					else {
+						break;
+					}
 				}
 			}
 			FreeAndNull(pBuf2);
 		}
-		else if (pDisc->SCSI.trkType == TRACK_TYPE::audioOnly &&
+		else if (pDisc->SCSI.trkType == TRACK_TYPE::audioTrack &&
 			(pExtArg->byVideoNow || pExtArg->byVideoNowColor || pExtArg->byVideoNowXp)) {
 			LPBYTE pBuf2 = NULL;
 			LPBYTE lpBuf2 = NULL;
@@ -446,7 +445,7 @@ BOOL ExecSearchingOffset(
 			}
 			FreeAndNull(pBuf2);
 		}
-		else if (pDisc->SCSI.trkType == TRACK_TYPE::audioOnly && pExtArg->byAtari) {
+		else if (pDisc->SCSI.trkType == TRACK_TYPE::audioTrack && pExtArg->byAtari) {
 			// Atari Jaguar CD Header
 			//  00 00 54 41 49 52 54 41  49 52 54 41 49 52 54 41   ..TAIRTAIRTAIRTA
 			//  49 52 54 41 49 52 54 41  49 52 54 41 49 52 54 41   IRTAIRTAIRTAIRTA
@@ -548,8 +547,7 @@ BOOL ReadCDForSearchingOffset(
 	}
 
 	INT nDriveOffset = pDevice->nDriveSampleOffset * 4; // byte size * 4 = sample size
-	if (pDisc->SCSI.trkType != TRACK_TYPE::dataExist &&
-		pDisc->SCSI.trkType != TRACK_TYPE::pregapDataIn1stTrack) {
+	if (IsAudioOnlyDisc(pDisc)) {
 		pDisc->MAIN.nCombinedOffset = nDriveOffset;
 	}
 	LPBYTE pBuf = NULL;
@@ -571,7 +569,7 @@ BOOL ReadCDForSearchingOffset(
 		INT nLBA = pDisc->SCSI.n1stLBAofDataTrk;
 		ZeroMemory(lpBuf, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE);
 
-		if (pDisc->SCSI.trkType != TRACK_TYPE::audioOnly) {
+		if (IsDataDisc(pDisc)) {
 			if (!ExecSearchingOffset(pExecType, pExtArg, pDevice, pDisc, lpCmd, nLBA, lpBuf
 				, CD_RAW_SECTOR_SIZE, bGetDriveOffset, nDriveOffset)) {
 				bRet = FALSE;
@@ -637,7 +635,7 @@ BOOL ReadCDForSearchingOffset(
 				SetReadCDCommand(pDevice, &cdb, flg
 					, 1, CDFLAG::_READ_CD::byte294, CDFLAG::_READ_CD::NoSub);
 				memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
-				if (pDisc->SCSI.trkType != TRACK_TYPE::audioOnly) {
+				if (IsDataDisc(pDisc)) {
 					// Audio only disc doesn't call this because of NoSub mode 
 					if (!ExecSearchingOffset(pExecType, pExtArg, pDevice, pDisc, lpCmd, nLBA, lpBuf
 						, CD_RAW_SECTOR_WITH_C2_294_SIZE, bGetDriveOffset, nDriveOffset)) {
@@ -668,7 +666,7 @@ BOOL ReadCDForSearchingOffset(
 					SetReadCDCommand(pDevice, &cdb, flg
 						, 1, CDFLAG::_READ_CD::byte296, CDFLAG::_READ_CD::NoSub);
 					memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
-					if (pDisc->SCSI.trkType != TRACK_TYPE::audioOnly) {
+					if (IsDataDisc(pDisc)) {
 						if (!ExecSearchingOffset(pExecType, pExtArg, pDevice, pDisc, lpCmd, nLBA, lpBuf
 							, CD_RAW_SECTOR_WITH_C2_SIZE, bGetDriveOffset, nDriveOffset)) {
 							// not return FALSE
@@ -701,7 +699,7 @@ BOOL ReadCDForSearchingOffset(
 				}
 			}
 			else {
-				if (*pExecType != data && pDisc->SCSI.trkType != TRACK_TYPE::audioOnly) {
+				if (*pExecType != data && IsDataDisc(pDisc)) {
 					lpCmd[10] = (BYTE)CDFLAG::_READ_CD::NoSub;
 					// Audio only disc doesn't call this because of NoSub mode 
 					if (!ExecSearchingOffset(pExecType, pExtArg, pDevice, pDisc, lpCmd, nLBA, lpBuf
@@ -959,27 +957,53 @@ BOOL ReadCDForCheckingSubQ1stIndex(
 	BYTE lpCmd[CDB12GENERIC_LENGTH] = {};
 	if (pExtArg->byD8 || pDevice->byPlxtrDrive) {
 //		pDevice->sub = CDFLAG::_READ_CD::Pack;
-		SetReadDiscCommand(pExtArg, pDevice, 1, CDFLAG::_READ_CD::All, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::Pack, lpCmd, FALSE);
+		SetReadDiscCommand(pExtArg, pDevice, 2, CDFLAG::_READ_CD::All, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::Pack, lpCmd, FALSE);
 	}
 	else {
-		SetReadDiscCommand(pExtArg, pDevice, 1, CDFLAG::_READ_CD::All, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::Raw, lpCmd, FALSE);
+		CDFLAG::_READ_CD::_EXPECTED_SECTOR_TYPE type = CDFLAG::_READ_CD::All;
+		if (IsAudioOnlyDisc(pDisc)) {
+			type = CDFLAG::_READ_CD::CDDA;
+		}
+		SetReadDiscCommand(pExtArg, pDevice, 2, type, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::Raw, lpCmd, FALSE);
 	}
 
 	INT nLBA = 0;
-	BYTE lpSubcode[CD_RAW_READ_SUBCODE_SIZE] = {};
-	BYTE aBuf[CD_RAW_SECTOR_WITH_SUBCODE_SIZE] = {};
+	BYTE aBuf[CD_RAW_SECTOR_WITH_SUBCODE_SIZE * 2] = {};
+	BYTE aMainBuf[CD_RAW_SECTOR_SIZE * 2] = {};
+	BYTE aSubcode[CD_RAW_READ_SUBCODE_SIZE] = {};
 	BYTE byScsiStatus = 0;
 	do {
 		if (!ExecReadCD(pExtArg, pDevice, lpCmd, nLBA, aBuf,
-			CD_RAW_SECTOR_WITH_SUBCODE_SIZE, _T(__FUNCTION__), __LINE__)
+			CD_RAW_SECTOR_WITH_SUBCODE_SIZE * 2, _T(__FUNCTION__), __LINE__)
 			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 			return FALSE;
 		}
 		else {
-			AlignRowSubcode(lpSubcode, aBuf + CD_RAW_SECTOR_SIZE);
-			if ((BYTE)(lpSubcode[12] & 0x0f) == ADR_ENCODES_CURRENT_POSITION) {
-				pDisc->SUB.byCtlOfLBA0 = BcdToDec((BYTE)((lpSubcode[12] >> 4) & 0x0f));
-				pDisc->SUB.byIdxOfLBA0 = BcdToDec(lpSubcode[14]);
+			memcpy(aMainBuf, aBuf, CD_RAW_SECTOR_SIZE);
+			memcpy(aMainBuf + CD_RAW_SECTOR_SIZE, aBuf + CD_RAW_SECTOR_WITH_SUBCODE_SIZE, CD_RAW_SECTOR_SIZE);
+			AlignRowSubcode(aSubcode, aBuf + CD_RAW_SECTOR_SIZE);
+
+			if ((BYTE)(aSubcode[12] & 0x0f) == ADR_ENCODES_CURRENT_POSITION) {
+				pDisc->SUB.byCtlOfLBA0 = BcdToDec((BYTE)((aSubcode[12] >> 4) & 0x0f));
+				if (pDisc->SUB.byCtlOfLBA0 & AUDIO_DATA_TRACK) {
+					// Star Wars - Shadows of the Empire Soundtrack
+					pDisc->SCSI.trkType = (TRACK_TYPE)(TRACK_TYPE::pregapDataIn1stTrack | pDisc->SCSI.trkType);
+				}
+				else {
+					BOOL bBreak = FALSE;
+					for (INT i = 0; i < CD_RAW_SECTOR_SIZE; i++) {
+						if (IsValidMainDataHeader(aMainBuf + i)) {
+							// CD-i Ready
+							pDisc->SCSI.trkType = (TRACK_TYPE)(TRACK_TYPE::pregapAudioWithSyncIn1stTrack | pDisc->SCSI.trkType);
+							bBreak = TRUE;
+							break;
+						}
+					}
+					if (!bBreak) {
+						// HTOA
+						pDisc->SCSI.trkType = (TRACK_TYPE)(TRACK_TYPE::pregapAudioIn1stTrack | pDisc->SCSI.trkType);
+					}
+				}
 				break;
 			}
 			else {
@@ -2828,8 +2852,7 @@ BOOL ReadCDCheck(
 		if (!pDevice->byPlxtrDrive && pDisc->SCSI.by1stDataTrkNum) {
 			ReadCDForCheckingScrambled(pExtArg, pDevice, pDisc);
 		}
-		else if (pDisc->SCSI.trkType == TRACK_TYPE::audioOnly ||
-			pDisc->SCSI.trkType == TRACK_TYPE::pregapAudioIn1stTrack) {
+		else if (IsAudioOnlyDisc(pDisc) || *pExecType == gd) {
 			pDevice->bySupportedScrambled = TRUE; // for dummy
 		}
 
@@ -2858,7 +2881,11 @@ BOOL ReadCDCheck(
 				return FALSE;
 			}
 		}
-		if (pDisc->SCSI.trkType != TRACK_TYPE::audioOnly) {
+		// This func needs the TOC
+		if (!ReadCDForSearchingOffset(pExecType, pExtArg, pDevice, pDisc)) {
+			throw FALSE;
+		}
+		if (IsDataDisc(pDisc)) {
 			if (*pExecType == gd) {
 				if (!ReadGDForFileSystem(pExecType, pExtArg, pDevice, pDisc)) {
 					return FALSE;

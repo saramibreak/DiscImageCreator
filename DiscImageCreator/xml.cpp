@@ -445,15 +445,8 @@ BOOL CalcAndGetHash(
 	if (pHash->uiMax == 0 || (pExtArg->byRawDump && !_tcsncmp(szExt, _T(".iso"), 4))) {
 		// for CD
 		FILE* fp = NULL;
-		if (bDesync == SUB_DESYNC_TYPE::IdxDesync) {
-			if (NULL == (fp = CreateOrOpenFile(pszFullPath, _T(" (Subs indexes)"), NULL
-				, hash.szFnameAndExt, NULL, szExt, _T("rb"), uiTrack, uiLastTrack))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				return FALSE;
-			}
-		}
-		else if (bDesync == SUB_DESYNC_TYPE::CtlDesync) {
-			if (NULL == (fp = CreateOrOpenFile(pszFullPath, _T(" (Subs control)"), NULL
+		if (bDesync == SUB_DESYNC_TYPE::Desync) {
+			if (NULL == (fp = CreateOrOpenFile(pszFullPath, _T(" (Subs desync)"), NULL
 				, hash.szFnameAndExt, NULL, szExt, _T("rb"), uiTrack, uiLastTrack))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				return FALSE;
@@ -474,7 +467,7 @@ BOOL CalcAndGetHash(
 			BYTE data[CD_RAW_SECTOR_SIZE] = {};
 			int nRet = TRUE;
 
-			if (!_tcsncmp(szExt, _T(".bin"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
+			if (!_tcsncmp(szExt, _T(".bin"), 4) && IsAudioOnlyDisc(pDisc)) {
 				GetLastNonZeroPosition(dwBytesPerSector, hash.ui64FileSize, fp, data, ui64SectorSizeAll
 					, &uiLastNonZeroSectorRear, &uiLastNonZeroSectorPosRear, &uiLastNonZeroSectorFront, &uiLastNonZeroSectorPosFront);
 			}
@@ -493,7 +486,7 @@ BOOL CalcAndGetHash(
 				if (!nRet) {
 					break;
 				}
-				if (!_tcsncmp(szExt, _T(".bin"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
+				if (!_tcsncmp(szExt, _T(".bin"), 4) && IsAudioOnlyDisc(pDisc)) {
 					if (!b1stNonZeroFront) {
 						Get1stNonZeroPositionFront(pExtArg, dwBytesPerSector, &hash, &b1stNonZeroFront, (UINT)i
 							, data, &nConsecutiveZeroCnt, &ui1stNonZeroSectorFront, &ui1stNonZeroSectorPosFront, FALSE);
@@ -514,7 +507,7 @@ BOOL CalcAndGetHash(
 				}
 			}
 
-			if (!_tcsncmp(szExt, _T(".bin"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly) {
+			if (!_tcsncmp(szExt, _T(".bin"), 4) && IsAudioOnlyDisc(pDisc)) {
 				if (nConsecutiveZeroCnt < ZERO_BYTE_CHUNK) {
 					ui1stNonZeroSectorRear = uiLastNonZeroSectorRear;
 					ui1stNonZeroSectorPosRear = uiLastNonZeroSectorPosRear;
@@ -539,7 +532,7 @@ BOOL CalcAndGetHash(
 			FILE* fpUni = NULL;
 			UINT64 ui64SectorSizeAllUni = 0;
 
-			if (IsPregapOfTrack1ReadableDrive(pDevice) && !_tcsncmp(szExt, _T(".img"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly && !pExtArg->byAtari) {
+			if (IsPregapOfTrack1ReadableDrive(pDevice) && !_tcsncmp(szExt, _T(".img"), 4) && IsAudioOnlyDisc(pDisc) && !pExtArg->byAtari) {
 				if (NULL == (fpUni = CreateOrOpenFile(pszFullPath, _T(" (Track all)"), NULL
 					, hashUni.szFnameAndExt, NULL, szExt, _T("rb"), uiTrack, uiLastTrack))) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -610,7 +603,7 @@ BOOL CalcAndGetHash(
 	if (CalcEnd(pExtArg, &hash, &digest)) {
 		OutputHash(pExtArg, pWriter, &hash, &digest);
 	}
-	if (IsPregapOfTrack1ReadableDrive(pDevice) && !_tcsncmp(szExt, _T(".img"), 4) && pDisc->SCSI.trkType == TRACK_TYPE::audioOnly && !pExtArg->byAtari) {
+	if (IsPregapOfTrack1ReadableDrive(pDevice) && !_tcsncmp(szExt, _T(".img"), 4) && IsAudioOnlyDisc(pDisc) && !pExtArg->byAtari) {
 		MESSAGE_DIGEST_CHUNK digestUni = {};
 		if (CalcEnd(pExtArg, &hashUni, &digestUni)) {
 			OutputHash(pExtArg, pWriter, &hashUni, &digestUni);
@@ -689,17 +682,11 @@ BOOL OutputRomElement(
 	}
 	else {
 		if (bDesync == SUB_DESYNC_TYPE::NoDesync) {
-			if (pDisc->SCSI.trkType == TRACK_TYPE::dataExist ||
-				pDisc->SCSI.trkType == TRACK_TYPE::pregapDataIn1stTrack) {
+			if (IsDataDisc(pDisc)) {
 				if (!CalcAndGetHash(pWriterSuppl, pExtArg, pDevice, pDisc, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".scm"), 1, 1, bDesync, pHash)) {
 					return FALSE;
 				}
 			}
-			if (!CalcAndGetHash(pWriterSuppl, pExtArg, pDevice, pDisc, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".img"), 1, 1, bDesync, pHash)) {
-				return FALSE;
-			}
-		}
-		else if (bDesync == SUB_DESYNC_TYPE::CtlDesync) {
 			if (!CalcAndGetHash(pWriterSuppl, pExtArg, pDevice, pDisc, pszFullPath, CD_RAW_SECTOR_SIZE, _T(".img"), 1, 1, bDesync, pHash)) {
 				return FALSE;
 			}
@@ -960,22 +947,13 @@ BOOL ReadWriteDat(
 	_tcsncpy(szDatPath, pszFullPath, SIZE_OF_ARRAY(szDatPath) - 1);
 	_tcsncpy(szDatPathSuppl, pszFullPath, SIZE_OF_ARRAY(szDatPathSuppl) - 1);
 
-	if (bDesync == SUB_DESYNC_TYPE::IdxDesync) {
+	if (bDesync == SUB_DESYNC_TYPE::Desync) {
 		PathRemoveExtension(szDatPath);
-		_TCHAR str1[] = _T(" (Subs indexes).dat");
+		_TCHAR str1[] = _T(" (Subs desync).dat");
 		_tcsncat(szDatPath, str1, SIZE_OF_ARRAY(szDatPath) - _tcslen(szDatPath) - 1);
 
 		PathRemoveExtension(szDatPathSuppl);
-		_TCHAR str2[] = _T("_Suppl (Subs indexes).dat");
-		_tcsncat(szDatPathSuppl, str2, SIZE_OF_ARRAY(szDatPathSuppl) - _tcslen(szDatPathSuppl) - 1);
-	}
-	else if (bDesync == SUB_DESYNC_TYPE::CtlDesync) {
-		PathRemoveExtension(szDatPath);
-		_TCHAR str1[] = _T(" (Subs control).dat");
-		_tcsncat(szDatPath, str1, SIZE_OF_ARRAY(szDatPath) - _tcslen(szDatPath) - 1);
-
-		PathRemoveExtension(szDatPathSuppl);
-		_TCHAR str2[] = _T("_suppl (Subs control).dat");
+		_TCHAR str2[] = _T("_Suppl (Subs desync).dat");
 		_tcsncat(szDatPathSuppl, str2, SIZE_OF_ARRAY(szDatPathSuppl) - _tcslen(szDatPathSuppl) - 1);
 	}
 	else {
@@ -1250,22 +1228,13 @@ BOOL ReadWriteDat(
 	_tcsncpy(szDatPath, pszFullPath, sizeof(szDatPath) - 1);
 	_tcsncpy(szDatPathSuppl, pszFullPath, sizeof(szDatPathSuppl) - 1);
 
-	if (bDesync == SUB_DESYNC_TYPE::IdxDesync) {
+	if (bDesync == SUB_DESYNC_TYPE::Desync) {
 		PathRemoveExtension(szDatPath);
-		_TCHAR str1[] = _T(" (Subs indexes).dat");
+		_TCHAR str1[] = _T(" (Subs desync).dat");
 		_tcsncat(szDatPath, str1, sizeof(szDatPath) - _tcslen(szDatPath) - 1);
 
 		PathRemoveExtension(szDatPathSuppl);
-		_TCHAR str2[] = _T("_suppl (Subs indexes).dat");
-		_tcsncat(szDatPathSuppl, str2, sizeof(szDatPathSuppl) - _tcslen(szDatPathSuppl) - 1);
-	}
-	else if (bDesync == SUB_DESYNC_TYPE::CtlDesync) {
-		PathRemoveExtension(szDatPath);
-		_TCHAR str1[] = _T(" (Subs control).dat");
-		_tcsncat(szDatPath, str1, sizeof(szDatPath) - _tcslen(szDatPath) - 1);
-
-		PathRemoveExtension(szDatPathSuppl);
-		_TCHAR str2[] = _T("_suppl (Subs control).dat");
+		_TCHAR str2[] = _T("_suppl (Subs desync).dat");
 		_tcsncat(szDatPathSuppl, str2, sizeof(szDatPathSuppl) - _tcslen(szDatPathSuppl) - 1);
 	}
 	else {

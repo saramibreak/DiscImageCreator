@@ -208,7 +208,7 @@ BOOL ReadTOC(
 		pDevice->bySuccessReadToc = TRUE;
 		SetAndOutputToc(pDisc);
 		if (*pExecType == gd) {
-			pDisc->SCSI.trkType = TRACK_TYPE::dataExist;
+			pDisc->SCSI.trkType = TRACK_TYPE::dataTrack;
 			OutputDiscLog("This is the TOC of audio trap disc\n");
 		}
 		else {

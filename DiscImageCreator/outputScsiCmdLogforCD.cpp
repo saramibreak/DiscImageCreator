@@ -1285,7 +1285,7 @@ VOID OutputTocWithPregap(
 		}
 		OutputDiscLog("\n");
 	}
-	if (pDisc->SUB.byIdxDesync) {
+	if (pDisc->SUB.byDesync) {
 		OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("TOC with pregap on desync"));
 		for (INT i = pDisc->SCSI.toc.FirstTrack - 1; i < pDisc->SCSI.toc.LastTrack; i++) {
 			OutputDiscLog("\tTrack %2d, Ctl %u, Mode %u", i + 1,

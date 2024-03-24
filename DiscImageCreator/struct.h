@@ -295,15 +295,13 @@ typedef struct _DISC {
 		INT nAllLength;						// get at CDROM_READ_TOC_EX_FORMAT_TOC
 		LPINT lp1stLBAListOnToc;			// get at CDROM_READ_TOC_EX_FORMAT_TOC
 		LPINT lpLastLBAListOnToc;			// get at CDROM_READ_TOC_EX_FORMAT_TOC
-		LPINT lp1stLBAListOfDataTrkOnToc;	// get at CDROM_READ_TOC_EX_FORMAT_TOC
-		LPINT lpLastLBAListOfDataTrkOnToc;	// get at CDROM_READ_TOC_EX_FORMAT_TOC
 		INT n1stLBAofDataTrk;				// get at CDROM_READ_TOC_EX_FORMAT_TOC
 		INT nLastLBAofDataTrkOnToc;			// get at CDROM_READ_TOC_EX_FORMAT_TOC
 		TRACK_TYPE trkType;					// get at CDROM_READ_TOC_EX_FORMAT_TOC
 		BYTE by1stDataTrkNum;				// get at CDROM_READ_TOC_EX_FORMAT_TOC
-		BYTE byLastDataTrkNum;				// get at CDROM_READ_TOC_EX_FORMAT_TOC
 		BYTE byFormat;						// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
 		BYTE by1stMultiSessionTrkNum;		// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
+		BYTE padding;
 		BOOL bMultiSession;					// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
 		LPBYTE lpSessionNumList;			// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
 		INT n1stLBAofLeadout;				// get at CDROM_READ_TOC_EX_FORMAT_FULL_TOC
@@ -331,29 +329,27 @@ typedef struct _DISC {
 		LPDWORD lpAllSectorCrc32;
 		LPINT lpAllLBAOfC2Error;
 		INT nC2ErrorCnt;
+		LPINT lp1stLBAListCanDescrambled;
+		LPINT lpLastLBAListCanDescrambled;
 	} MAIN;
 	struct _SUB {
 		INT nSubChannelOffset;
 		INT n1stLBAForMCN[3][2];
 		INT nRangeLBAForMCN[3][2];
 		INT nPrevMCNSector;
-		BYTE byIdxDesync;
-		BYTE byCtlDesync;
+		BYTE byDesync;
 		BYTE byCatalog;
 		CHAR szCatalog[META_CATALOG_SIZE];
-		BYTE padding[3];
 		BYTE byAdr6;
 		CHAR szAdr6[META_ADR6_SIZE];
 		BYTE byCtlOfLBA0;						// for pregap sector of track 1
-		BYTE byIdxOfLBA0;						// for pregap sector of track 1
+		BYTE padding;
 		INT n1stLBAForISRC[3][2];
 		INT nRangeLBAForISRC[3][2];
 		INT nPrevISRCSector;
 		LPSTR* pszISRC;							// 0 origin, max is last track num.
 		LPINT* lp1stLBAListOnSub;				// 0 origin, max is last track num. // toc indexes in priority. single ptr: LBA per track. double ptr: LBA per index
 		LPINT* lp1stLBAListOnSubSync;			// 0 origin, max is last track num. // sub indexes in priority. single ptr: LBA per track. double ptr: LBA per index
-		LPINT lp1stLBAListOfDataTrackOnSub;		// 0 origin, max is last track num.
-		LPINT lpLastLBAListOfDataTrackOnSub;	// 0 origin, max is last track num.
 		LPBYTE lpCtlList;						// 0 origin, max is last track num.
 		LPBYTE lpEndCtlList;					// 0 origin, max is last track num.
 		LPBOOL lpISRCList;						// 0 origin, max is last track num.

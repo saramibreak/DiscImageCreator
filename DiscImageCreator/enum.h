@@ -74,8 +74,7 @@ typedef enum _SUB_RTOW_TYPE {
 
 typedef enum _SUB_DESYNC_TYPE {
 	NoDesync,
-	IdxDesync,
-	CtlDesync
+	Desync
 } SUB_DESYNC_TYPE, *PSUB_DESYNC_TYPE;
 
 typedef enum _BYTE_PAD_TYPE {
@@ -86,10 +85,13 @@ typedef enum _BYTE_PAD_TYPE {
 } BYTE_PAD_TYPE, *PBYTE_PAD_TYPE;
 
 typedef enum _TRACK_TYPE {
-	audioOnly,
-	dataExist,
-	pregapAudioIn1stTrack,
-	pregapDataIn1stTrack
+	unknown,
+	audioTrack = 1,
+	dataTrack = 1 << 1,
+	pregapIn1stTrack = 1 << 2,
+	pregapAudioIn1stTrack = 1 << 3,
+	pregapDataIn1stTrack = 1 << 4,
+	pregapAudioWithSyncIn1stTrack = 1 << 5,
 } TRACK_TYPE, *PTRACK_TYPE;
 
 // Protection list

@@ -108,9 +108,13 @@ VOID SetCDOffset(
 	INT nEndLBA
 );
 
+BOOL SetLBAtoDescrambleSector(
+	PDISC pDisc,
+	LPCTSTR pszPath
+);
+
 VOID SetTrackAttribution(
 	PEXEC_TYPE pExecType,
-	PEXT_ARG pExtArg,
 	PDISC pDisc,
 	PDISC_PER_SECTOR pDiscPerSector,
 	INT nLBA
