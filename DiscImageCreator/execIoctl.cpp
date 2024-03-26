@@ -372,7 +372,8 @@ BOOL ReadFileSystem(
 							}
 						}
 						else if (IsValidMacDataHeader(lpBuf)) {
-							OutputFsMasterDirectoryBlocks(lpBuf, (INT)firstPartition);
+							UINT uiCatalogFileSize = 0;
+							OutputFsMasterDirectoryBlocks(lpBuf, (INT)firstPartition, &uiCatalogFileSize);
 							break;
 						}
 						else {

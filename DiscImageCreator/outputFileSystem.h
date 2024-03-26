@@ -138,7 +138,15 @@ VOID OutputFsPartitionMap(
 
 VOID OutputFsMasterDirectoryBlocks(
 	LPBYTE lpBuf,
-	INT nLBA
+	INT nLBA,
+	LPUINT lpuiCatalogFileSize
+);
+
+VOID OutputFsCatalogFiles(
+	LPBYTE lpBuf,
+	INT nLBA,
+	LPINT lpOfs,
+	INT nAdditionalOfs
 );
 
 VOID OutputFs3doHeader(

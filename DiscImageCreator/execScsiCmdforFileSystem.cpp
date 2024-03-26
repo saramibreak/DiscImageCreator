@@ -721,6 +721,58 @@ BOOL ReadVolumeDescriptor(
 	return TRUE;
 }
 
+BOOL ReadCDForHfsCatalogFiles(
+	PEXT_ARG pExtArg,
+	PDEVICE pDevice,
+	CDB::_READ12 cdb,
+	LPBYTE lpBuf,
+	UINT uiCatalogFileSize
+) {
+	INT n1stCatalogSector = (INT)(6 + uiCatalogFileSize / DISC_MAIN_DATA_SIZE);
+	INT nPad = (INT)(uiCatalogFileSize % DISC_MAIN_DATA_SIZE);
+
+	for (INT k = 0; k < n1stCatalogSector - 7; k++) {
+		if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, n1stCatalogSector + k, lpBuf,
+			DISC_MAIN_DATA_SIZE, _T(__FUNCTION__), __LINE__)) {
+			return FALSE;
+		}
+		OutputMainChannel(fileMainInfo, lpBuf, NULL, n1stCatalogSector + k, DISC_MAIN_DATA_SIZE);
+
+		INT nRoop = lpBuf[11];
+		INT nMaxBlk = 4;
+		if (k == 0) {
+			nRoop = lpBuf[11 + nPad];
+			if (nPad == 512) {
+				nMaxBlk = 3;
+			}
+			else if (nPad == 1024) {
+				nMaxBlk = 2;
+			}
+			else if (nPad == 1536) {
+				nMaxBlk = 1;
+			}
+		}
+		INT nOfs = 14;
+		INT nOfs2 = 0;
+		for (INT blk = 1; blk <= nMaxBlk; blk++) {
+			for (INT m = 0; m < nRoop; m++) {
+				if (k == 0 && nOfs2 == 0 && nPad != 0) {
+					nOfs2 = nPad;
+				}
+				OutputFsCatalogFiles(lpBuf + nOfs + nOfs2, n1stCatalogSector + k, &nOfs, nOfs2);
+			}
+			nOfs = 512 * blk;
+			if (nOfs + nOfs2 + 11 < DISC_MAIN_DATA_SIZE) {
+				nRoop = lpBuf[nOfs + nOfs2 + 11];
+			}
+			nOfs += 14;
+		}
+		OutputString("\rReading CatalogFiles %u/%u", k + 1, n1stCatalogSector - 7);
+	}
+	OutputString("\n");
+	return TRUE;
+}
+
 BOOL ReadCDForFileSystem(
 	PEXEC_TYPE pExecType,
 	PEXT_ARG pExtArg,
@@ -856,11 +908,15 @@ BOOL ReadCDForFileSystem(
 							DISC_MAIN_DATA_SIZE, _T(__FUNCTION__), __LINE__)) {
 							throw FALSE;
 						}
+						UINT uiCatalogFileSize = 0;
 						if (IsValidMacDataHeader(lpBuf + 1024)) {
-							OutputFsMasterDirectoryBlocks(lpBuf + 1024, nLBA);
+							OutputFsMasterDirectoryBlocks(lpBuf + 1024, nLBA, &uiCatalogFileSize);
 						}
 						else if (IsValidMacDataHeader(lpBuf + 512)) {
-							OutputFsMasterDirectoryBlocks(lpBuf + 512, nLBA);
+							OutputFsMasterDirectoryBlocks(lpBuf + 512, nLBA, &uiCatalogFileSize);
+						}
+						if (uiCatalogFileSize) {
+							ReadCDForHfsCatalogFiles(pExtArg, pDevice, cdb, lpBuf, uiCatalogFileSize);
 						}
 						// for MAC pattern 2
 						nLBA += 15;
@@ -869,7 +925,8 @@ BOOL ReadCDForFileSystem(
 							throw FALSE;
 						}
 						if (IsValidMacDataHeader(lpBuf + 1024)) {
-							OutputFsMasterDirectoryBlocks(lpBuf + 1024, nLBA);
+							OutputFsMasterDirectoryBlocks(lpBuf + 1024, nLBA, &uiCatalogFileSize);
+							ReadCDForHfsCatalogFiles(pExtArg, pDevice, cdb, lpBuf, uiCatalogFileSize);
 						}
 					}
 					bMac = TRUE;

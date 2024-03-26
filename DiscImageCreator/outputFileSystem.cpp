@@ -1256,36 +1256,55 @@ VOID OutputFsPartitionMap(
 	}
 }
 
+VOID GetMacTime(
+	LPBYTE lpBuf,
+	time_t* lpuiTime,
+	PCHAR lpBufTime,
+	size_t lpBufTimeSize
+) {
+	*lpuiTime = MAKEUINT(MAKEWORD(lpBuf[3], lpBuf[2]), MAKEWORD(lpBuf[1], lpBuf[0]));
+
+	// HFS starts from 1904, while UNIX starts from 1970
+	// 365 days * 49 years + 366 days * 17 years
+	time_t t = *lpuiTime - 2082844800;
+	if (t > 0) {
+		tm* tmTime = gmtime(&t);
+		_tcsftime(lpBufTime, lpBufTimeSize, _T("%FT%T"), tmTime);
+	}
+}
+
+VOID OutputFsExtentDataRecord(
+	LPBYTE lpBuf
+) {
+	for (INT i = 0; i < 12; i += 4) {
+		OutputVolDescLog(
+			"\t\t               first allocation block: %u\n"
+			"\t\t           number of allocation block: %u\n"
+			, MAKEWORD(lpBuf[1 + i], lpBuf[0 + i])
+			, MAKEWORD(lpBuf[3 + i], lpBuf[2 + i])
+		);
+	}
+}
+
 // https://developer.apple.com/library/archive/documentation/mac/Files/Files-102.html
 VOID OutputFsMasterDirectoryBlocks(
 	LPBYTE lpBuf,
-	INT nLBA
+	INT nLBA,
+	LPUINT lpuiCatalogFileSize
 ) {
-	time_t creationTime = MAKEUINT(MAKEWORD(lpBuf[5], lpBuf[4]), MAKEWORD(lpBuf[3], lpBuf[2]));
-	time_t modificationTime = MAKEUINT(MAKEWORD(lpBuf[9], lpBuf[8]), MAKEWORD(lpBuf[7], lpBuf[6]));
-	time_t lastTime = MAKELONG(MAKEWORD(lpBuf[66], lpBuf[65]), MAKEWORD(lpBuf[64], lpBuf[63]));
-
-	// HFS starts from 1904, while UNIX starts from 1970
-	// 66 years (365 * 66) + 17 leep days
-	const time_t diff = 2082844800;
-
-	time_t t = creationTime - diff;
-	tm* ctime = gmtime(&t);
+	time_t creationTime = 0;
 	_TCHAR szBufc[128] = {};
-	_tcsftime(szBufc, SIZE_OF_ARRAY(szBufc), _T("%FT%T"), ctime);
+	GetMacTime(&lpBuf[2], &creationTime, szBufc, 128);
 
-	t = modificationTime - diff;
-	tm* mtime = gmtime(&t);
+	time_t modificationTime = 0;
 	_TCHAR szBufm[128] = {};
-	_tcsftime(szBufm, SIZE_OF_ARRAY(szBufm), _T("%FT%T"), mtime);
+	GetMacTime(&lpBuf[6], &modificationTime, szBufm, 128);
 
-	t = lastTime - diff;
-	tm* ltime = gmtime(&t);
+	time_t lastTime = 0;
 	_TCHAR szBufl[128] = {};
-	if (lastTime) {
-		_tcsftime(szBufl, SIZE_OF_ARRAY(szBufl), _T("%FT%T"), ltime);
-	}
+	GetMacTime(&lpBuf[63], &lastTime, szBufl, 128);
 
+	*lpuiCatalogFileSize = MAKEUINT(MAKEWORD(lpBuf[81], lpBuf[80]), MAKEWORD(lpBuf[79], lpBuf[78]));
 	OutputVolDescWithLBALog2("Master Directory Blocks",
 		"\t                       volume signature: %04x\n"
 		"\t       date and time of volume creation: %llu (%s)\n"
@@ -1300,7 +1319,8 @@ VOID OutputFsMasterDirectoryBlocks(
 		"\t       first allocation block in volume: %u\n"
 		"\t            next unused catalog node ID: %u\n"
 		"\t     number of unused allocation blocks: %u\n"
-		"\t                            volume name: %.27" CHARWIDTH "s\n"
+		"\t                     volume name length: %u\n"
+		"\t                            volume name: %.*" CHARWIDTH "s\n"
 		"\t           date and time of last backup: %llu (%s)\n"
 		"\t          volume backup sequence number: %u\n"
 		"\t                     volume write count: %u\n"
@@ -1309,30 +1329,6 @@ VOID OutputFsMasterDirectoryBlocks(
 		"\tnumber of directories in root directory: %u\n"
 		"\t              number of files in volume: %u\n"
 		"\t        number of directories in volume: %u\n"
-		, nLBA, MAKEWORD(lpBuf[1], lpBuf[0])
-		, creationTime, szBufc
-		, modificationTime, szBufm
-		, MAKEWORD(lpBuf[11], lpBuf[10])
-		, MAKEWORD(lpBuf[13], lpBuf[12])
-		, MAKEWORD(lpBuf[15], lpBuf[14])
-		, MAKEWORD(lpBuf[17], lpBuf[16])
-		, MAKEWORD(lpBuf[19], lpBuf[18])
-		, MAKEUINT(MAKEWORD(lpBuf[23], lpBuf[22]), MAKEWORD(lpBuf[21], lpBuf[20]))
-		, MAKEUINT(MAKEWORD(lpBuf[27], lpBuf[26]), MAKEWORD(lpBuf[25], lpBuf[24]))
-		, MAKEWORD(lpBuf[29], lpBuf[28])
-		, MAKEUINT(MAKEWORD(lpBuf[33], lpBuf[32]), MAKEWORD(lpBuf[31], lpBuf[30]))
-		, MAKEWORD(lpBuf[35], lpBuf[34])
-		, &lpBuf[37]
-		, lastTime, szBufl
-		, MAKEWORD(lpBuf[69], lpBuf[68])
-		, MAKEUINT(MAKEWORD(lpBuf[73], lpBuf[72]), MAKEWORD(lpBuf[71], lpBuf[70]))
-		, MAKEUINT(MAKEWORD(lpBuf[77], lpBuf[76]), MAKEWORD(lpBuf[75], lpBuf[74]))
-		, MAKEUINT(MAKEWORD(lpBuf[81], lpBuf[80]), MAKEWORD(lpBuf[79], lpBuf[78]))
-		, MAKEWORD(lpBuf[83], lpBuf[82])
-		, MAKEUINT(MAKEWORD(lpBuf[87], lpBuf[86]), MAKEWORD(lpBuf[85], lpBuf[84]))
-		, MAKEUINT(MAKEWORD(lpBuf[91], lpBuf[90]), MAKEWORD(lpBuf[89], lpBuf[88]))
-	);
-	OutputVolDescLog(
 		"\t         information used by the Finder: %u\n"
 		"\t         information used by the Finder: %u\n"
 		"\t         information used by the Finder: %u\n"
@@ -1346,20 +1342,28 @@ VOID OutputFsMasterDirectoryBlocks(
 		"\tsize (in blocks) of common volume cache: %u\n"
 		"\t          size of extents overflow file: %u\n"
 		"\textent record for extents overflow file\n"
-		"\t\t               first allocation block: %u\n"
-		"\t\t           number of allocation block: %u\n"
-		"\t\t               first allocation block: %u\n"
-		"\t\t           number of allocation block: %u\n"
-		"\t\t               first allocation block: %u\n"
-		"\t\t           number of allocation block: %u\n"
-		"\t                   size of catalog file: %u\n"
-		"\t         extent record for catalog file:\n"
-		"\t\t               first allocation block: %u\n"
-		"\t\t           number of allocation block: %u\n"
-		"\t\t               first allocation block: %u\n"
-		"\t\t           number of allocation block: %u\n"
-		"\t\t               first allocation block: %u\n"
-		"\t\t           number of allocation block: %u\n"
+		, nLBA, MAKEWORD(lpBuf[1], lpBuf[0])
+		, creationTime, szBufc
+		, modificationTime, szBufm
+		, MAKEWORD(lpBuf[11], lpBuf[10])
+		, MAKEWORD(lpBuf[13], lpBuf[12])
+		, MAKEWORD(lpBuf[15], lpBuf[14])
+		, MAKEWORD(lpBuf[17], lpBuf[16])
+		, MAKEWORD(lpBuf[19], lpBuf[18])
+		, MAKEUINT(MAKEWORD(lpBuf[23], lpBuf[22]), MAKEWORD(lpBuf[21], lpBuf[20]))
+		, MAKEUINT(MAKEWORD(lpBuf[27], lpBuf[26]), MAKEWORD(lpBuf[25], lpBuf[24]))
+		, MAKEWORD(lpBuf[29], lpBuf[28])
+		, MAKEUINT(MAKEWORD(lpBuf[33], lpBuf[32]), MAKEWORD(lpBuf[31], lpBuf[30]))
+		, MAKEWORD(lpBuf[35], lpBuf[34])
+		, lpBuf[36], lpBuf[36], &lpBuf[37]
+		, lastTime, szBufl
+		, MAKEWORD(lpBuf[69], lpBuf[68])
+		, MAKEUINT(MAKEWORD(lpBuf[73], lpBuf[72]), MAKEWORD(lpBuf[71], lpBuf[70]))
+		, MAKEUINT(MAKEWORD(lpBuf[77], lpBuf[76]), MAKEWORD(lpBuf[75], lpBuf[74]))
+		, *lpuiCatalogFileSize
+		, MAKEWORD(lpBuf[83], lpBuf[82])
+		, MAKEUINT(MAKEWORD(lpBuf[87], lpBuf[86]), MAKEWORD(lpBuf[85], lpBuf[84]))
+		, MAKEUINT(MAKEWORD(lpBuf[91], lpBuf[90]), MAKEWORD(lpBuf[89], lpBuf[88]))
 		, MAKEUINT(MAKEWORD(lpBuf[95], lpBuf[94]), MAKEWORD(lpBuf[93], lpBuf[92]))
 		, MAKEUINT(MAKEWORD(lpBuf[99], lpBuf[98]), MAKEWORD(lpBuf[97], lpBuf[96]))
 		, MAKEUINT(MAKEWORD(lpBuf[103], lpBuf[102]), MAKEWORD(lpBuf[101], lpBuf[100]))
@@ -1372,14 +1376,174 @@ VOID OutputFsMasterDirectoryBlocks(
 		, MAKEWORD(lpBuf[125], lpBuf[124])
 		, MAKEWORD(lpBuf[127], lpBuf[126])
 		, MAKEUINT(MAKEWORD(lpBuf[131], lpBuf[130]), MAKEWORD(lpBuf[129], lpBuf[128]))
-		, MAKEWORD(lpBuf[133], lpBuf[132]), MAKEWORD(lpBuf[135], lpBuf[134])
-		, MAKEWORD(lpBuf[137], lpBuf[136]), MAKEWORD(lpBuf[139], lpBuf[138])
-		, MAKEWORD(lpBuf[141], lpBuf[140]), MAKEWORD(lpBuf[143], lpBuf[142])
-		, MAKEUINT(MAKEWORD(lpBuf[147], lpBuf[146]), MAKEWORD(lpBuf[145], lpBuf[144]))
-		, MAKEWORD(lpBuf[149], lpBuf[148]), MAKEWORD(lpBuf[151], lpBuf[150])
-		, MAKEWORD(lpBuf[153], lpBuf[152]), MAKEWORD(lpBuf[155], lpBuf[154])
-		, MAKEWORD(lpBuf[157], lpBuf[156]), MAKEWORD(lpBuf[159], lpBuf[158])
 	);
+	OutputFsExtentDataRecord(&lpBuf[132]);
+	OutputVolDescLog(
+		"\t                   size of catalog file: %u\n"
+		"\t         extent record for catalog file:\n"
+		, MAKEUINT(MAKEWORD(lpBuf[147], lpBuf[146]), MAKEWORD(lpBuf[145], lpBuf[144]))
+	);
+	OutputFsExtentDataRecord(&lpBuf[148]);
+}
+
+// https://developer.apple.com/library/archive/documentation/mac/Files/Files-105.html
+VOID OutputFsCatalogFiles(
+	LPBYTE lpBuf,
+	INT nLBA,
+	LPINT lpOfs,
+	INT nAdditionalOfs
+) {
+	BYTE keyLength = lpBuf[0];
+	OutputVolDescWithLBALog2("Catalog Files [ofs; %u, %#x]",
+		"\t                         key length: %u\n"
+		"\t                parent directory ID: %u\n"
+		"\t           catalog node name length: %u\n"
+		"\t                  catalog node name: %.*" CHARWIDTH "s\n"
+		, nLBA, *lpOfs + nAdditionalOfs, *lpOfs + nAdditionalOfs, keyLength
+		, MAKEUINT(MAKEWORD(lpBuf[5], lpBuf[4]), MAKEWORD(lpBuf[3], lpBuf[2]))
+		, lpBuf[6], lpBuf[6], &lpBuf[7]
+	);
+	INT ofs = 7 + lpBuf[6];
+	if (lpBuf[6] % 2 == 0) {
+		ofs++;
+	}
+	OutputVolDescLog(
+		"\t                        record type: %u\n"
+		, lpBuf[ofs]);
+
+	time_t creationTime = 0;
+	_TCHAR szBufc[128] = {};
+	time_t modificationTime = 0;
+	_TCHAR szBufm[128] = {};
+	time_t lastTime = 0;
+	_TCHAR szBufl[128] = {};
+
+	switch (lpBuf[ofs]) {
+	case 1:
+		GetMacTime(&lpBuf[ofs + 10], &creationTime, szBufc, 128);
+		GetMacTime(&lpBuf[ofs + 14], &modificationTime, szBufm, 128);
+		GetMacTime(&lpBuf[ofs + 18], &lastTime, szBufl, 128);
+		OutputVolDescLog(
+			"\t                    directory flags: %u\n"
+			"\t                  directory valence: %u\n"
+			"\t                       directory ID: %u\n"
+			"\t          date and time of creation: %llu (%s)\n"
+			"\t date and time of last modification: %llu (%s)\n"
+			"\t       date and time of last backup: %llu (%s)\n"
+			"\t                 Finder information\n"
+			"\t\t        folder's window rectangle: %016llX\n"
+			"\t\t                            flags: %04X\n"
+			"\t\t      folder's location in window: %08X\n"
+			"\t\t                    folder's view: %04X\n"
+			"\t      additional Finder information\n"
+			"\t\t                  scroll position: %08X\n"
+			"\t\tdirectory ID cain of open folders: %u\n"
+			"\t\t             script flag and code: %u\n"
+			"\t\t                       comment ID: %u\n"
+			"\t\t                home directory ID: %u\n"
+			, MAKEWORD(lpBuf[ofs + 3], lpBuf[ofs + 2])
+			, MAKEWORD(lpBuf[ofs + 5], lpBuf[ofs + 4])
+			, MAKEUINT(MAKEWORD(lpBuf[ofs + 9], lpBuf[ofs + 8]), MAKEWORD(lpBuf[ofs + 7], lpBuf[ofs + 6]))
+			, creationTime, szBufc
+			, modificationTime, szBufm
+			, lastTime, szBufl
+			, MAKEUINT64(MAKEUINT(MAKEWORD(lpBuf[ofs + 29], lpBuf[ofs + 28]), MAKEWORD(lpBuf[ofs + 27], lpBuf[ofs + 26]))
+			, MAKEUINT(MAKEWORD(lpBuf[ofs + 25], lpBuf[ofs + 24]), MAKEWORD(lpBuf[ofs + 23], lpBuf[ofs + 22])))
+			, MAKEWORD(lpBuf[ofs + 31], lpBuf[ofs + 30])
+			, MAKEUINT(MAKEWORD(lpBuf[ofs + 35], lpBuf[ofs + 34]), MAKEWORD(lpBuf[ofs + 33], lpBuf[ofs + 32]))
+			, MAKEWORD(lpBuf[ofs + 37], lpBuf[ofs + 36])
+			, MAKEUINT(MAKEWORD(lpBuf[ofs + 41], lpBuf[ofs + 40]), MAKEWORD(lpBuf[ofs + 39], lpBuf[ofs + 38]))
+			, MAKEUINT(MAKEWORD(lpBuf[ofs + 45], lpBuf[ofs + 44]), MAKEWORD(lpBuf[ofs + 43], lpBuf[ofs + 42]))
+			, lpBuf[ofs + 46]
+			, MAKEWORD(lpBuf[ofs + 49], lpBuf[ofs + 48])
+			, MAKEUINT(MAKEWORD(lpBuf[ofs + 53], lpBuf[ofs + 52]), MAKEWORD(lpBuf[ofs + 51], lpBuf[ofs + 50]))
+		);
+		*lpOfs += 70 + ofs;
+		break;
+	case 2:
+		GetMacTime(&lpBuf[ofs + 44], &creationTime, szBufc, 128);
+		GetMacTime(&lpBuf[ofs + 48], &modificationTime, szBufm, 128);
+		GetMacTime(&lpBuf[ofs + 52], &lastTime, szBufl, 128);
+		OutputVolDescLog(
+			"\t                         file flags: %u\n"
+			"\t                          file type: %u\n"
+			"\t                 Finder information\n"
+			"\t\t                        file type: %08X\n"
+			"\t\t                     file creator: %08X\n"
+			"\t\t                     Finder flags: %04X\n"
+			"\t\t        file's location in window: %08X\n"
+			"\t\t        window that contains file: %04X\n"
+			"\t                            file ID: %u\n"
+			"\t     first alloc. blk. of data fork: %u\n"
+			"\t           logical EOF of data fork: %u\n"
+			"\t          physical EOF of data fork: %u\n"
+			"\t first alloc. blk. of resource fork: %u\n"
+			"\t       logical EOF of resource fork: %u\n"
+			"\t      physical EOF of resource fork: %u\n"
+			"\t          date and time of creation: %llu (%s)\n"
+			"\t date and time of last modification: %llu (%s)\n"
+			"\t       date and time of last backup: %llu (%s)\n"
+			"\t      additional Finder information\n"
+			"\t\t                          icon ID: %u\n"
+			"\t\t             script flag and code: %u\n"
+			"\t\t                       comment ID: %u\n"
+			"\t\t                home directory ID: %u\n"
+			"\t                    file clump size: %u\n"
+			"\t      first data fork extent record\n"
+			, lpBuf[ofs + 2]
+			, lpBuf[ofs + 3]
+			, MAKEUINT(MAKEWORD(lpBuf[ofs + 7], lpBuf[ofs + 6]), MAKEWORD(lpBuf[ofs + 5], lpBuf[ofs + 4]))
+			, MAKEUINT(MAKEWORD(lpBuf[ofs + 11], lpBuf[ofs + 10]), MAKEWORD(lpBuf[ofs + 9], lpBuf[ofs + 8]))
+			, MAKEWORD(lpBuf[ofs + 13], lpBuf[ofs + 12])
+			, MAKEUINT(MAKEWORD(lpBuf[ofs + 17], lpBuf[ofs + 16]), MAKEWORD(lpBuf[ofs + 15], lpBuf[ofs + 14]))
+			, MAKEWORD(lpBuf[ofs + 19], lpBuf[ofs + 18])
+			, MAKEUINT(MAKEWORD(lpBuf[ofs + 23], lpBuf[ofs + 22]), MAKEWORD(lpBuf[ofs + 21], lpBuf[ofs + 20]))
+			, MAKEWORD(lpBuf[ofs + 25], lpBuf[ofs + 24])
+			, MAKEUINT(MAKEWORD(lpBuf[ofs + 29], lpBuf[ofs + 28]), MAKEWORD(lpBuf[ofs + 27], lpBuf[ofs + 26]))
+			, MAKEUINT(MAKEWORD(lpBuf[ofs + 33], lpBuf[ofs + 32]), MAKEWORD(lpBuf[ofs + 31], lpBuf[ofs + 30]))
+			, MAKEWORD(lpBuf[ofs + 35], lpBuf[ofs + 34])
+			, MAKEUINT(MAKEWORD(lpBuf[ofs + 39], lpBuf[ofs + 38]), MAKEWORD(lpBuf[ofs + 37], lpBuf[ofs + 36]))
+			, MAKEUINT(MAKEWORD(lpBuf[ofs + 43], lpBuf[ofs + 42]), MAKEWORD(lpBuf[ofs + 41], lpBuf[ofs + 40]))
+			, creationTime, szBufc
+			, modificationTime, szBufm
+			, lastTime, szBufl
+			, MAKEWORD(lpBuf[ofs + 57], lpBuf[ofs + 56])
+			, lpBuf[ofs + 64]
+			, MAKEWORD(lpBuf[ofs + 67], lpBuf[ofs + 66])
+			, MAKEUINT(MAKEWORD(lpBuf[ofs + 71], lpBuf[ofs + 70]), MAKEWORD(lpBuf[ofs + 69], lpBuf[ofs + 68]))
+			, MAKEWORD(lpBuf[ofs + 73], lpBuf[ofs + 72])
+		);
+		OutputFsExtentDataRecord(&lpBuf[ofs + 74]);
+		OutputVolDescLog(
+			"\t  first resource fork extent record\n"
+		);
+		OutputFsExtentDataRecord(&lpBuf[ofs + 86]);
+		*lpOfs += 102 + ofs;
+		break;
+	case 3:
+		OutputVolDescLog(
+			"\t     parent ID for this directory: %u\n"
+			"\t    name length of this directory: %u\n"
+			"\t           name of this directory: %.*" CHARWIDTH "s\n"
+			, MAKEUINT(MAKEWORD(lpBuf[ofs + 13], lpBuf[ofs + 12]), MAKEWORD(lpBuf[ofs + 11], lpBuf[ofs + 10]))
+			, lpBuf[ofs + 14], lpBuf[ofs + 14], &lpBuf[ofs + 15]
+		);
+		*lpOfs += 46 + ofs;
+		break;
+	case 4:
+		OutputVolDescLog(
+			"\t          parent ID for this file: %u\n"
+			"\t         name length of this file: %u\n"
+			"\t                name of this file: %.*" CHARWIDTH "s\n"
+			, MAKEUINT(MAKEWORD(lpBuf[ofs + 13], lpBuf[ofs + 12]), MAKEWORD(lpBuf[ofs + 11], lpBuf[ofs + 10]))
+			, lpBuf[ofs + 14], lpBuf[ofs + 14], &lpBuf[ofs + 15]
+		);
+		*lpOfs += 46 + ofs;
+		break;
+	default:
+		*lpOfs += 42;
+		break;
+	}
 }
 
 VOID OutputFs3doHeader(
@@ -2075,7 +2239,7 @@ VOID OutputFsFileIdentifierDescriptor(
 }
 
 VOID ConvUTF16toUTF8(
-	CONST PCHAR nest,
+	LPCCH nest,
 	BYTE byFlag,
 	LPBYTE pIn,
 	INT nInSize,
