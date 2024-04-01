@@ -1,4 +1,20 @@
 ================================= Change Log ==================================
+*2024-04-01
+- added output HFS Catalog Files
+- added RegenerateToc for dumping CD-i format with multi-track disc
+- changed the descrambling range
+-- support "audio track, data sector, there is a sync"
+-- re-support descrambling the sector that bit 7 .. 5 of the mode byte is used
+- changed "subs control" and "subs indexes" to "subs desync"
+- changed the control flag of the cue file, it prefers TOC
+- changed checking CD+G sector
+- fixed to dump the pregap file
+- fixed fail to dump GD-ROM
+- fixed dumping audio disc (and CD-i Ready) when ASUS BW-16D1HT 3.02 is used
+- fixed dumping of the CD-i format with CD-DA
+- fixed HFS time
+- fixed UDF log
+
 *2024-01-01
 - added /t option in the data command for Tages
 - fixed fail to dump blu-ray disc except for PS3 (2023-12-01 version bug)
