@@ -3393,7 +3393,7 @@ BOOL ReadCDOutOfRange(
 				if ((pDisc->SCSI.toc.TrackData[0].Control & AUDIO_DATA_TRACK) == 0) {
 					bNonZeroByteExistIn = HasNonZeroByte(aBuf, CD_RAW_SECTOR_SIZE, 0, &uiByteOffsetIn, POSITIVE);
 					if (bNonZeroByteExistIn) {
-						uiByteOffsetIn += CD_RAW_SECTOR_SIZE * 3 + size;
+						uiByteOffsetIn += (UINT)(CD_RAW_SECTOR_SIZE * 3 + size);
 					}
 				}
 			}
@@ -3405,7 +3405,7 @@ BOOL ReadCDOutOfRange(
 				if ((pDisc->SCSI.toc.TrackData[0].Control & AUDIO_DATA_TRACK) == 0) {
 					bNonZeroByteExistIn = HasNonZeroByte(aBuf, CD_RAW_SECTOR_SIZE, 0, &uiByteOffsetIn, POSITIVE);
 					if (bNonZeroByteExistIn) {
-						uiByteOffsetIn += CD_RAW_SECTOR_SIZE * 2 + size;
+						uiByteOffsetIn += (UINT)(CD_RAW_SECTOR_SIZE * 2 + size);
 					}
 				}
 			}
@@ -3416,7 +3416,7 @@ BOOL ReadCDOutOfRange(
 				if ((pDisc->SCSI.toc.TrackData[0].Control & AUDIO_DATA_TRACK) == 0) {
 					bNonZeroByteExistIn = HasNonZeroByte(aBuf, CD_RAW_SECTOR_SIZE, 0, &uiByteOffsetIn, POSITIVE);
 					if (bNonZeroByteExistIn) {
-						uiByteOffsetIn += CD_RAW_SECTOR_SIZE + size;
+						uiByteOffsetIn += (UINT)(CD_RAW_SECTOR_SIZE + size);
 					}
 				}
 			}
@@ -3426,7 +3426,7 @@ BOOL ReadCDOutOfRange(
 				if ((pDisc->SCSI.toc.TrackData[0].Control & AUDIO_DATA_TRACK) == 0) {
 					bNonZeroByteExistIn = HasNonZeroByte(aBuf, CD_RAW_SECTOR_SIZE, 0, &uiByteOffsetIn, POSITIVE);
 					if (bNonZeroByteExistIn) {
-						uiByteOffsetIn += size;
+						uiByteOffsetIn += (UINT)size;
 					}
 				}
 			}
