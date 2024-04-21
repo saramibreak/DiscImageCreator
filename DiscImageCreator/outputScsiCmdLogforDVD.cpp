@@ -63,7 +63,7 @@ VOID OutputDVDHeader(
 		);
 	}
 	UINT edc = MAKEUINT(MAKEWORD(lpBuf[2063], lpBuf[2062]), MAKEWORD(lpBuf[2061], lpBuf[2060]));
-	if (dwSectorSize == DVD_RAW_SECTOR2_SIZE) {
+	if (dwSectorSize == DVD_RAW_SECTOR_SIZE_2384) {
 		edc = MAKEUINT(MAKEWORD(lpBuf[2173], lpBuf[2172]), MAKEWORD(lpBuf[2171], lpBuf[2170]));
 	}
 	OutputRawReadableLog("EDC[%08x]\n", edc);

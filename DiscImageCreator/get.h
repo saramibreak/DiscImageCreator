@@ -37,6 +37,13 @@ BOOL GetDriveOffsetAuto(
 	LPINT lpDriveOffset
 );
 
+BOOL GetReadBufParamAndSize(
+	PDEVICE pDevice,
+	LPBYTE lpCommand,
+	LPDWORD lpdwBufSize,
+	LPBOOL lpScrambled
+);
+
 BOOL GetReadErrorFileName(
 	PEXT_ARG pExtArg,
 	CHAR protectFname[MAX_FNAME_FOR_VOLUME]

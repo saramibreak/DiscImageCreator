@@ -120,7 +120,8 @@ BOOL GetDriveOffsetAuto(
 	LPINT lpDriveOffset
 ) {
 	BOOL bGetOffset = FALSE;
-	FILE* fpDrive = GetAppUsedFilePointer(_T("driveOffset.txt"), _tcslen(_T("driveOffset.txt")));
+	CONST _TCHAR* fname = _T("driveOffset.txt");
+	FILE* fpDrive = GetAppUsedFilePointer(fname, _tcslen(fname));
 	if (!fpDrive) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
@@ -159,6 +160,106 @@ BOOL GetDriveOffsetAuto(
 	}
 	fclose(fpDrive);
 	return bGetOffset;
+}
+
+// https://hima-tubusi.blogspot.com/2014/09/strtok.html
+char* strtoks(char* s1, const char* s2) {
+	static char* str = 0;
+	register size_t i, j;
+
+	if (s1) {
+		str = s1;
+	}
+	else {
+		s1 = str;
+	}
+	if (!s1) { return(0); }
+
+	j = strlen(s2);
+
+	while (1) {
+		if (!*str) {
+			str = 0;
+			return(s1);
+		}
+
+		for (i = 0; i < j; i++) {
+			if (*str == s2[i]) {
+				*str++ = 0;
+				return(s1);
+			}
+		}
+
+		str++;
+	}
+}
+
+BOOL GetReadBufParamAndSize(
+	PDEVICE pDevice,
+	LPBYTE lpCommand,
+	LPDWORD lpdwBufSize,
+	LPBOOL lpScrambled
+) {
+	BOOL bGet = FALSE;
+	CONST _TCHAR* fname = _T("DVDRawBruteforce - Drive Sheet - Sheet1.tsv");
+	FILE* fp = GetAppUsedFilePointer(fname, _tcslen(fname));
+	if (!fp) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		return FALSE;
+	}
+
+	CHAR szTmpProduct[DRIVE_PRODUCT_ID_SIZE + 1] = {};
+	memcpy(szTmpProduct, pDevice->szProductId, DRIVE_PRODUCT_ID_SIZE);
+
+	CHAR szTmpProduct2[DRIVE_PRODUCT_ID_SIZE + 1] = {};
+	LPCH pTrimProduct[3] = {};
+	
+	pTrimProduct[0] = strtok(szTmpProduct, " "); // space
+	for (INT nRoop = 1; nRoop < 3; nRoop++) {
+		pTrimProduct[nRoop] = strtok(NULL, " "); // space
+	}
+	for (INT nRoop = 2; 0 < nRoop; nRoop--) {
+		if (pTrimProduct[nRoop] != NULL) {
+			memcpy(szTmpProduct2, pTrimProduct[nRoop], strlen(pTrimProduct[nRoop]));
+			break;
+		}
+	}
+
+	LPCH pTrimBuf[12] = {};
+	CHAR lpBuf[1024] = {};
+	LPCH pTrimCommand[3] = {};
+
+	while ((fgets(lpBuf, sizeof(lpBuf), fp))) {
+		pTrimBuf[0] = strtoks(lpBuf, "	"); // tab
+		for (INT nRoop = 1; nRoop < 12; nRoop++) {
+			pTrimBuf[nRoop] = strtoks(NULL, "	"); // tab
+		}
+		if (strstr(pTrimBuf[1], szTmpProduct2) != NULL) {
+			_TCHAR* tmpCmd = pTrimBuf[4];
+			if (!strncmp(tmpCmd, "No", 2)) {
+				OutputErrorString("[ERROR] This drive [%.16s] doesn't support DVD raw dumping\n", pDevice->szProductId);
+				return FALSE;
+			}
+			pTrimCommand[0] = strtok(tmpCmd, " "); // space
+			lpCommand[0] = (BYTE)strtoul(pTrimCommand[0], NULL, 16);
+			for (INT nRoop = 1; nRoop < 3; nRoop++) {
+				pTrimCommand[nRoop] = strtok(NULL, " "); // space
+				lpCommand[nRoop] = (BYTE)strtoul(pTrimCommand[nRoop], NULL, 16);
+			}
+			*lpdwBufSize = (DWORD)atoi(pTrimBuf[5]);
+			if (!strncmp(pTrimBuf[6], "Yes", 3)) {
+				*lpScrambled = TRUE;
+			}
+			bGet = TRUE;
+			break;
+		}
+	}
+	fclose(fp);
+
+	if (!bGet) {
+		OutputErrorString("[ERROR] This drive [%.16s] isn't defined in [%s]\n", pDevice->szProductId, fname);
+	}
+	return bGet;
 }
 
 BOOL GetReadErrorFileName(
@@ -525,10 +626,10 @@ BOOL GetUnscCmd(
 		size_t size = _tcslen(szPathForUnsc) + _tcslen(pszPath) + _tcslen(szPathForIso) + _tcslen(szPathForIso) + 22;
 #ifdef _WIN32
 		_sntprintf(pszStr, size,
-			_T("\"\"%s\" \"%s\" \"%s\" %d > \"%s\" 2>$1\""), szPathForUnsc, pszPath, szPathForIso, nType, szPathForLog);
+			_T("\"\"%s\" \"%s\" \"%s\" %d > \"%s\" 2>&1\""), szPathForUnsc, pszPath, szPathForIso, nType, szPathForLog);
 #else
 		_sntprintf(pszStr, size,
-			_T("%s %s %s %d > %s 2>$1"), szPathForUnsc, pszPath, szPathForIso, nType, szPathForLog);
+			_T("%s %s %s %d > %s 2>&1"), szPathForUnsc, pszPath, szPathForIso, nType, szPathForLog);
 #endif
 	}
 	else {

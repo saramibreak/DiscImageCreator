@@ -1,0 +1,223 @@
+Vendor	Model	FW Ver	Notes	Buffer Read Support	Size Per Sector in Buff	Scrambled	ECC	Returns Uncorrected Data	Date Submitted	Program Version	Submitted By
+ASUS	BC-12B1ST	1.01		No	No	No	No	No	2023-10-11	2023-10-01a	ehw
+ASUS	BC-12D2HT			No	No	No	No	No	2023-09-30	2023-06-17	flashfire42
+ASUS	BW-16D1HT	3.02		3C 03 02 F1 06	2384	Yes	Yes	No	2023-09-30	2023-06-17	Sazpaimon
+ASUS	BW-16D1HT	3.10 (Rib)	3.10 - using RibShark's custom firmware. F1 and 3C were removed from anything 3.10 and above.	No	No	No	No	No	2023-10-01	2023-10-01	MrPepka
+ASUS	DRW-1608P3S			No	No	No	No	No	2023-09-30	2023-06-17	Sazpaimon
+ASUS	DRW-1814BL		(NEEDS REVISITING) Drive will return errors to the cache but because all SCSI errors return medium errors, it seems that whats stored on cache is unreliable. Sometimes the previously read sector is still there, sometimes the 2366 bytes are null, sometimes it returns the right sector but with errors. Special considerations need to be made for behavior like this.	3C 02 00	2384	Yes	Yes	Yes (NOTE)	2023-09-30	2023-06-17	Sazpaimon
+ASUS	DRW-24B1ST	1.03		3C 01 01	2384	Yes	Yes	?	2024-01-29	2023-12-12a	flashfire42
+ASUS	DRW-24F1ST		does not include 11 strips of 10 byte PI data in sector	3C 01 01 F1 06	2236	Yes	PO Only	Yes	2023-09-30	2023-06-17	Sazpaimon
+BenQ	DH-16A1P19C		lite-on rebadge	3C 01 01	2384	Yes	Yes		2023-09-30	2023-06-17	Sazpaimon
+BenQ	DW1620	B7W9		No	No	No	No	No	2023-12-10	2023-11-26	Sazpaimon
+BenQ	VAD6038	0442	Xbox 360 drive? Doesn't seem to be able to read normal DVDs?	No	No	No	No	No	2023-10-08	2023-10-01a	JustAnyone
+Buffalo	BU40N			No	No	No	No	No	2023-09-30	2023-06-17	Sazpaimon
+e-elei	EL-R12			No	No	No	No	No	2023-09-30	2023-07-09	Dobby233Liu
+Hitachi	GD-2500	A011	E7 is supported with this drive but exact params aren't known, since this is an older drive the E7 opcode for memory dumping is different from the modernish LG used for Wii/Gamecube dumping.	No	No	No	No	No	2023-12-13	2023-12-12a	Sazpaimon
+HL-DT-ST	BH10LS30	1.02	Strange drive. 3C 01 11, a unique opcode param set, gives you 2064 unscrambled with EDC. 3C 02 00 gives you scrambled but the sectors in the cache appear out of order and have random sizes, probably not usable.	3C 01 11 3C 02 00 (?)	2064 (3C 01 11 - Unscrambled) ??? (3C 02 00 - Scrambled, see notes)	No/Yes	No/Yes(?)	?	2023-12-18	2023-12-12a	alisson_df
+HL-DT-ST	BH16NS40	1.03		3C 01 00	2384	Yes	Yes	?	2023-10-01	2023-09-30	ScHIAuChi
+HL-DT-ST	BP50NB40	1.00	Drive stalls when reading beyond 3C 0B FF, might also support F1 06.	3C 02 00 3C 03 02	2384	Yes	Yes	?	2023-12-09	2023-11-26	darksabre76
+HL-DT-ST	BU40N			No	No	No	No	No	2023-09-30	2023-06-17	Deterous
+HL-DT-ST	DH10N	0D08		No	No	No	No	No	2023-10-30	2023-10-01a	Lazerdude
+HL-DT-ST	DH18NS61	1.00	several variants of 3C return the same raw sector data, same hash. not sure why. 3c 02 00 is the first that returns data	3C 02 00	2384	Yes	Yes	?	2023-11-14	2023-10-01a	olofolleola4
+HL-DT-ST	GCA-4040N	1.17		No	No	No	No	No	2023-11-21	2023-10-01a	Lazerdude
+HL-DT-ST	GCC-4480B	1.02		3C 02 00 F1 06	2816	Yes	Yes	?	2023-12-18	2023-12-12a	alisson_df
+HL-DT-ST	GCC-4521B	1.05		3C 02 00	2816	Yes	Yes	?	2023-12-18	2023-12-12a	alisson_df
+HL-DT-ST	GCC-T20N	1.07	A rare variant of 2064 byte return where it's actually scrambled on the cache.	3C 01 80	2064	Yes	No	?	2023-10-13	2023-10-01a	ehw
+HL-DT-ST	GDR3120L	0047		No	No	No	No	No	2023-10-08	2023-10-01a	JustAnyone
+HL-DT-ST	GDR8082N	0106		No	No	No	No	No	2023-10-04	2023-10-01a	Lazerdude
+HL-DT-ST	GDR8084N	1.02		3C 01 80	2064	Yes	No	?	2023-10-31	2023-10-01a	Lazerdude
+HL-DT-ST	GDR8163B	0D20		No	No	No	No	No	2023-10-30	2023-10-01a	Lazerdude
+HL-DT-ST	GGW-H20L	YL05	opcode 3e returned a response but contains no data.	3C 02 00 3C 05 11 3C 05 12	768? (with 3C 02 00) 2816? (with 3C 02 00) 2064 (with 3C 05 12)	Yes	Yes	?	2023-10-31	2023-10-01a	Lazerdude
+HL-DT-ST	GH15L	RA02	opcode 3e returned a response but contains no data.	3C 02 00 3C 05 11 3C 05 12	768? (with 3C 02 00) 2816? (with 3C 02 00) 2064 (with 3C 05 12)	Yes	Yes	?	2023-10-31	2023-10-01a	Lazerdude
+HL-DT-ST	GH20NS10	EL00		3C 02 00 3C 05 11 3C 05 12	768? (with 3C 02 00) 2816? (with 3C 02 00) 2064 (with 3C 05 12)	Yes	Yes	?	2023-12-18	2023-12-12a	alisson_df
+HL-DT-ST	GH22LP20	2.00		3C 01 00	2064	No	No	?	2023-12-10	2023-11-26	Sazpaimon
+HL-DT-ST	GH22NS50	TN03	VERY weird. The first LBA in the cache is 768 bytes long, and includes sync. But every PSN after that represents a 2816 byte sector that seems complete.	3C 02 00	768? 2816?	Yes	Yes?	?	2023-10-05	2023-10-01a	bikerspade
+HL-DT-ST	GH24NS90	IN01	does not include 11 strips of 10 byte PI data in sector	3C 02 00	2236	Yes	PO Only	?	2023-09-30	2023-07-09	flashfire42
+HL-DT-ST	GH24NS95	RN01	stalled at 3C 08 00	No	No	No	No	No	2023-12-26	2023-12-12a	registryeditor
+HL-DT-ST	GH30N	A102	cache only contained data for one sector and not a whole block	3C 00 00	2064	No	No	?	2023-10-31	2023-10-01a	Lazerdude
+HL-DT-ST	GHB0N			No	No	No	No	No	2023-09-30	2023-07-09	ndiddy
+HL-DT-ST	GMA-4082N	HQ04	3C 02 00 seems to contain the scrambled version but it seems interweaved with random data.	3C 05 12	2064	No	No	?	2023-10-04	2023-10-01a	jason098
+HL-DT-ST	GS23NR	UR04	does not include 11 strips of 10 byte PI data in sector	3C 02 00	2236	Yes	PO Only	?	2023-10-04	2023-10-01a	Lazerdude
+HL-DT-ST	GSA-E60L	1.00	Returns 2064 bytes unscrambled with EDC and sync only. Using 3C 00 00 with sg_raw only returned a max of 2064 bytes but it seems 3C 01 00 returns the block.	3C 00 00 3C 01 00	2064	No	No	?	2023-10-10	2023-10-01a	ehw
+HL-DT-ST	GSA-H10A	JL02		3C 02 00 3C 05 11 3C 05 12	768? (with 3C 02 00) 2816? (with 3C 02 00) 2064 (with 3C 05 12)	Yes	Yes	?	2023-12-18	2023-12-12a	alisson_df
+HL-DT-ST	GSA-H30N	1.06		3C 01 00	2064	No	No	?	2023-12-10	2023-12-10	Sazpaimon
+HL-DT-ST	GSA-H58N	1.01		3C 01 00	2064	No	No	?	2023-12-18	2023-12-12a	alisson_df
+HL-DT-ST	GSA-H62N	CL00	Returns 768 bytes for the first sector, then 2816 bytes for every other sector when 3C 02 00 or 3C 05 11 are used. However, 2064 is returned with 3C 05 12, which only contains the header/sync and EDC bytes, and the user data is unscrambled.	3C 02 00 3C 05 11 3C 05 12	768? (with 3C 02 00) 2816? (with 3C 02 00) 2064 (with 3C 05 12)	Yes	Yes	?	2023-10-30	2023-10-01a	Lazerdude
+HL-DT-ST	GSA-T20N	WT03		3C 02 00 3C 05 11 3C 05 12	768? (with 3C 02 00) 2816? (with 3C 02 00) 2064 (with 3C 05 12)	Yes	Yes	?	2023-12-11	2023-12-10	Sazpaimon
+HL-DT-ST	GSA-T50L	SC04	3C 02 00 seems to contain the scrambled version but it seems interweaved with random data.	3C 05 12	2064	No	No	?	2023-10-04	2023-10-01a	Lazerdude
+HL-DT-ST	GSA-T50N	RH03		3C 02 00 3C 05 11 3C 05 12	768? (with 3C 02 00) 2816? (with 3C 02 00) 2064 (with 3C 05 12)	Yes	Yes	?	2023-12-18	2023-12-12a	alisson_df
+HL-DT-ST	GSA-T50N	RV06		3C 02 00 3C 05 11 3C 05 12	768? (with 3C 02 00) 2816? (with 3C 02 00) 2064 (with 3C 05 12)	Yes	Yes	?	2023-12-25	2023-12-12a	registryeditor
+HL-DT-ST	GSA-U10N	HP06	3C 02 00 seems to contain the scrambled version but it seems interweaved with random data.	3C 05 12	2064	No	No	?	2023-10-04	2023-10-01a	Lazerdude
+HL-DT-ST	GT20N	CT11	Returns 768 bytes for the first sector, then 2816 bytes for every other sector when 3C 02 00 or 3C 05 11 are used. However, 2064 is returned with 3C 05 12, which only contains the header/sync and EDC bytes, and the user data is unscrambled.	3C 02 00 3C 05 11 3C 05 12	768? (with 3C 02 00) 2816? (with 3C 02 00) 2064 (with 3C 05 12)	Yes	Yes	?	2023-11-18	2023-10-01a	olofolleola4
+HL-DT-ST	GT32N	1.00	E7 command was able to return something but it's blank. Why did this attempt not return any?	No	No	No	No	No	2023-09-30	2023-06-17	Deterous
+HL-DT-ST	GT32N	1.00		3C 01 00	2064	No	No	?	2023-10-04	2023-10-01a	Lazerdude
+HL-DT-ST	GT60N	A102		3C 01 00	2064	No	No	?	2023-10-11	2023-10-01a	ehw
+HL-DT-ST	GT70N	YG01	E7 returned data but its all 00.	3C 01 00 E7?	2064	No	No	?	2023-12-18	2023-12-12a	alisson_df
+HL-DT-ST	GTA0N	A100		3C 01 00	2064	No	No	?	2023-10-11	2023-10-01a	ehw
+HL-DT-ST	GU71N	1.01	does not include 11 strips of 10 byte PI data in sector	3C 02 00	2236	Yes	PO Only	?	2023-10-04	2023-10-01a	Lazerdude
+HL-DT-ST	GU90N	A1C1	does not include 11 strips of 10 byte PI data in sector, DVD+-RW, FW A1C1	3C 02 00	2236	Yes	PO Only	?	2023-10-01	2023-10-01a	Lazerdude
+HL-DT-ST	GU90N	LU20	Just like Plextor 700 series, EDC and sync data only, DVDRAM	3C 01 00	2064	No	No	?	2023-10-01	2023-10-01a	Lazerdude
+HL-DT-ST	GU90N	A1B0		3C 01 00	2064	No	No	?	2024-02-24	2023-12-12a	alisson_df
+HL-DT-ST	GUA0N	AS00		3C 02 00 F1 06	2236	Yes	Yes	?	2023-12-18	2023-12-12a	alisson_df
+HL-DT-ST	GWA-4165B	DG01		3C 02 00 3C 05 11 3C 05 12	768? (with 3C 02 00) 2816? (with 3C 02 00) 2064 (with 3C 05 12)	Yes	Yes	?	2023-12-14	2023-12-11a	Sazpaimon
+HL-DT-ST	SP80NB80	RC00		3C 02 00	2236	Yes	PO Only	?	2023-10-08	2023-10-01a	FoxHack
+HL-DT-ST	WH14NS40	1.03		3C 02 00	2384	Yes	Yes	?	2023-09-30	2023-07-09	Lugamo
+hp	640v	JOU4		No	No	No	No	No	2023-10-01	2023-10-01	MysticSageJosh
+hp	AD-7290H5	1H44		No	No	No	No	No	2023-10-26	2023-10-01a	ehw
+hp	DH16A6L	ZH39		3C 01 01 3C 01 02	2384	Yes	Yes	?	2023-11-21	2023-10-01a	Lazerdude
+hp	DH16ABSH	YHD9	does not include 11 strips of 10 byte PI data in sector	3C 01 01 3C 01 02	2236	Yes	PO Only	?	2023-10-11	2023-10-01a	ehw
+hp	DH16ACSH	JHD6	does not include 11 strips of 10 byte PI data in sector	3C 01 01 3C 01 02	2236	Yes	PO Only	?	2023-10-26	2023-10-01a	ehw
+hp	DH16ACSHR	JHG7	does not include 11 strips of 10 byte PI data in sector	3C 01 01 3C 01 02	2236	Yes	PO Only	?	2023-10-11	2023-10-01a	ehw
+hp	DH16ALBH	3HD9	does not include 11 strips of 10 byte PI data in sector	3C 01 01 3C 01 02	2236	Yes	PO Only	?	2023-10-30	2023-10-01a	Lazerdude
+hp	DU8A6SH	DH61	does not include 11 strips of 10 byte PI data in sector	3C 01 01	2236	Yes	PO Only	?	2023-10-04	2023-10-01a	jason098, ehw
+hp	GCC-4482B	1.05	MT1685 Firmware Copyright 2004	3C 02 00	2816	Yes	Yes	?	2023-12-10	2023-11-26	Sazpaimon
+hp	GH60L	RD05	VERY weird. The first LBA in the cache is 768 bytes long, and includes sync. But every PSN after that represents a 2816 byte sector that seems complete.	3C 02 00	768? 2816?	Yes	Yes?	?	2023-10-06	2023-10-01a	Bestest
+hp	GH80N	RF03	VERY weird. The first LBA in the cache is 768 bytes long, and includes sync. But every PSN after that represents a 2816 byte sector that seems complete.	3C 02 00	768? 2816?	Yes	Yes?	?	2023-10-11	2023-10-01a	ehw
+hp	GHA3N	RH06	VERY weird. The first LBA in the cache is 768 bytes long, and includes sync. But every PSN after that represents a 2816 byte sector that seems complete.	3C 02 00	768? 2816?	Yes	Yes?	?	2023-10-13	2023-10-01a	ehw
+hp	GUB0N	UB00		3C 01 00	2064	No	No	?	2023-10-04	2023-10-01a	Lazerdude
+hp	GUD1N	LD07	does not include 11 strips of 10 byte PI data in sector	3C 02 00	2236	Yes	PO Only	?	2023-10-11	2023-10-01a	ehw
+hp	SH-216BB			No	No	No	No	No	2023-10-01	2023-10-01	MrPepka
+hp	SN-208FB	HJ10	does not include 11 strips of 10 byte PI data in sector	3C 02 00	2236	Yes	PO Only	?	2023-10-11	2023-10-01a	ehw
+hp	SU-208CB	HH00		3C 02 00	2236	Yes	PO Only	?	2023-10-01	2023-10-01	Edness
+hp	SW810	HA05	does not include 11 strips of 10 byte PI data in sector	3C 02 00	2236	Yes	PO Only	?	2023-10-11	2023-10-01a	ehw
+hp	SW820	UH05	does not include 11 strips of 10 byte PI data in sector	3C 02 00	2236	Yes	PO Only	?	2023-10-13	2023-10-01a	ehw
+hp	TS-H653T	H6D1	does not include 11 strips of 10 byte PI data in sector	3C 02 00	2236	Yes	PO Only	?	2023-10-13	2023-10-01a	ehw
+hp	TS-L633N	0300		3C 02 00	2384	Yes	Yes	?	2023-11-14	2023-10-01a	olofolleola4
+hp	UJ8D1	H.01	does not include 11 strips of 10 byte PI data in sector	3C 02 00	2236	Yes	PO Only	?	2023-10-01	2023-10-01a	Lazerdude
+hp	UJ8E1	4H01	does not include 11 strips of 10 byte PI data in sector	3C 02 00	2236	Yes	PO Only	?	2023-09-30	2023-06-17	ehw
+LG	CT10L	YC09	VERY weird drive. 3C 02 00 and 3C 05 11 return scrambled raw but sectors appear out of order within the cache, so the exact size can't be determined. 3C 05 12 however, is normal 2064 unscrambled that appears to be in order. The data return for 3C 02 00 and 3C 05 11 are the same.	3C 02 00 (see note) 3C 05 12	? (3C 02 00, see note) 2064 (with 3C 05 12)	Yes/No (See note)	Yes/No (See note)	?	2023-12-10	2023-11-26	Sazpaimon
+LG	CT10L	YC07	VERY weird drive. 3C 02 00 and 3C 05 11 return scrambled raw but sectors appear out of order within the cache, so the exact size can't be determined. 3C 05 12 however, is normal 2064 unscrambled that appears to be in order. The data return for 3C 02 00 and 3C 05 11 are the same.	3C 02 00 (see note) 3C 05 12	? (3C 02 00, see note) 2064 (with 3C 05 12)	Yes/No (See note)	Yes/No (See note)	?	2023-12-18	2023-12-12a	alisson_df
+LG	GCC-4243N			3C 01 80 E7	2064	Yes	No	?	2023-09-30	2023-06-17	Sazpaimon
+LG	GCC-4244N			3C 01 80 E7	2064	Yes	No	?	2023-09-30	2023-06-17	Sazpaimon
+LG	GDR-8082N			3C 01 80 E7	2064	Yes	No	?	2023-09-30	2023-06-17	Sazpaimon
+LG	GDR-8161B			E7	2064	Yes	No	?	2023-09-30	2023-06-17	Sazpaimon
+LG	GDR-8162B			E7	2064	Yes	No	?	2023-09-30	2023-06-17	Sazpaimon
+LG	GDR-8164B			3C 01 80 E7	2064	Yes	No	?	2023-09-30	2023-06-17	Sazpaimon
+LG	GDR-H30N			3C 01 80 E7	2064	Yes	No	?	2023-09-30	2023-06-17	Sazpaimon
+LG	GH20LS10		WTF, parts of raw sector data is stored in separate memory pages rather than stored together.	3C 05 11 (ecc + head) 3C 05 12 (edc + head) 3C 05 13 (user only)	2384	Yes	Yes	?	2023-09-30	2023-06-17	Sazpaimon
+LG	GH24NSC0B		does not include 11 strips of 10 byte PI data in sector	3C 02 00	2236	Yes	PO Only	Yes	2023-09-30	2023-06-17	Sazpaimon
+LG	GH24NSD1		does not include 11 strips of 10 byte PI data in sector	3C 02 00	2236	Yes	PO Only	?	2023-10-01	2023-10-01	jason098
+LG	GSA-4040B	A304		3C 02 00 3C 05 11 3C 05 12	768? (with 3C 02 00) 2816? (with 3C 02 00) 2064 (with 3C 05 12)	Yes	Yes	?	2023-12-10	2023-12-10	Sazpaimon
+LG	GSA-4163B	A106		3C 02 00	768	Yes	Yes	?	
+LG	WH16NS40			3C 03 02 F1 06	2384	Yes	Yes	No	2023-09-30	2023-06-17	Sazpaimon
+Lite-On	DH20A4P	9P55		3C 01 01 3C 01 02	2384	Yes	Yes	?	2023-10-30	2023-10-01a	Lazerdude
+Lite-On	DRW-6S160P	PSG6		3C 01 01	2384	Yes	Yes	?	2023-10-02	2023-10-01a	Edness
+Lite-On	DS8A4SH	CA11		3C 01 01	2384	Yes	Yes	?	2023-11-18	2023-10-01a	olofolleola4
+Lite-On	DU-8A5LH	6D11	does not include 11 strips of 10 byte PI data in sector	3C 01 01	2236	Yes	PO Only	?	2023-10-01	2023-10-01a	A1RA
+Lite-On	iHAS122	EL9H		3C 01 01 3C 01 02 F1 06	2236	Yes	PO Only	?	2023-12-18	2023-12-12a	alisson_df
+Lite-On	iHAS124	AL0S	Supports F1 06 but for some reason the sector ID byte (first byte in the sector) is set to 0x50 instead of 0x00 for the same disc. This indicates that the tracking is set to "groove" and the 4th bit is "reserved".  Otherwise, 3c 01 01 returns normal data. It's possible bruteforcing the first 5 values of F1 changed the byte on the cache.	3C 01 01 F1 06 (see note)	2236	Yes	PO Only	?	2023-12-09	2023-11-26	drfsupercenter
+Lite-On	iHBS112			3C 02 00	2384	Yes	Yes	Yes	2023-09-30	2023-06-17	Sazpaimon
+Lite-On	LDW-411S	FS0K		3C 01 01 3C 01 02	2384	Yes	Yes	?	2023-12-11	2023-12-11a	Sazpaimon
+Lite-On	LH-18A1P			3C 01 01	2384	Yes	Yes	Yes	2023-09-30	2023-06-17	Sazpaimon
+Lite-On	LH-20A1H	LL0D		3C 01 01 3C 01 02	2384	Yes	Yes	Yes	2023-12-11	2023-12-11a	Sazpaimon
+Lite-On	LTC-48161H	KH0G		3C 01 01	2816	Yes	Yes	?	2023-10-31	2023-10-01a	Lazerdude
+Lite-On	LTD-163	GDHF		3C 00 00	2816	Yes	Yes	?	2023-12-20	2023-12-12a	Sazpaimon
+Lite-On	LTD-165H		2366 sector data, the rest might be F1 debugging data. doesnt match the hd166s' data at all. drive doesn't want to stay stopped.	3C 01 01	2816	Yes	Yes	Yes	2023-09-30	2023-06-17	Sazpaimon
+Lite-On	SHW-160P6S	PGS1		3C 01 01 3C 01 02	2384	Yes	Yes	?	2023-12-11	2023-12-11a	Sazpaimon
+Lite-On	SOHC-4836K	SPJ2	Returns 2372 bytes of actual sector data but interestingly pads out the rest of return with null (FF) bytes rather than memory garbage.	3C 01 01	2816	Yes	Yes	?	2023-10-30	2023-10-01a	Lazerdude
+Lite-On	SOHC-5232K	NK0J		3C 01 01	2816	Yes	Yes	?	2023-12-11	2023-12-11a	Sazpaimon
+Lite-On	SOHD-167T	9S19	3C 01 01 seems to have something but the first 4 bytes are 20 03 00 00, not 00 03 00 00. this seems to suggest that the first byte, which is the sector description byte, has the "reflectivity" bit set to 1 for some reason (>40%). it should always be 0. this could be caused by the user's disc however.	3C 01 01	2816	Yes	Yes	?	2023-10-01	2023-10-01	MrPepka
+Lite-On	SOHD-16P9SV	F$01		3C 01 01	2816	Yes	Yes	?	2023-10-30	2023-10-01a	Lazerdude
+Lite-On	SOHW-1213S	TS09		3C 01 01 3C 01 02	2384	Yes	Yes	?	2023-10-30	2023-10-01a	Lazerdude
+Lite-On	SOHW-1693S	KS04		3C 01 01 3C 01 02	2384	Yes	Yes	?	2023-12-11	2023-12-11a	Sazpaimon
+Lite-On	SOHW-812S	US0F		3C 01 01 3C 01 02	2384	Yes	Yes	?	2023-10-31	2023-10-01a	Lazerdude
+Lite-On	XJ-HD165H		JLMS	3C 01 01	2816	Yes	Yes	Yes	2023-09-30	2023-06-17	Sazpaimon
+Lite-On	XJ-HD166S		2366 sector data, the rest might be F1 debugging data. JLMS	3C 01 01	2816	Yes	Yes	Yes	2023-09-30	2023-06-17	Sazpaimon
+Lite-On	XJ-SD081D	BM07	JLMS	3C 01 01	2816	Yes	Yes	?	2023-12-11	2023-12-11a	Sazpaimon
+Matshita	SW-5582A	B101		No	No	No	No	No	2023-12-12	2023-12-12	Sazpaimon
+Matshita	SW-9585S	PG30	rvt-r writer fw	No	No	No	No	No	2023-12-11	2023-12-10	Sazpaimon
+Matshita	SW820	D.03	does not include 11 strips of 10 byte PI data in sector	3C 02 00	2236	Yes	PO Only	?	2023-10-06	2023-10-01a	bikerspade
+Matshita	UJ141AF	1.00		No	No	No	No	No	2023-11-18	2023-10-01a	olofolleola4
+Matshita	UJ172 S	1.00		No	No	No	No	No	2023-10-04	2023-10-01a	Lazerdude
+Matshita	UJ862A	1.02		No	No	No	No	No	2023-11-18	2023-10-01a	olofolleola4
+Matshita	UJ862BJ	1.00		No	No	No	No	No	2023-10-01	2023-10-01a	Lazerdude
+Matshita	UJ870QJ	1.00		No	No	No	No	No	2023-12-19	2023-12-12a	alisson_df
+Matshita	UJ870QJ	1.01		No	No	No	No	No	2023-12-19	2023-12-12a	alisson_df
+Matshita	UJ8C0	1.00		No	No	No	No	No	2023-10-04	2023-10-01a	Lazerdude
+Matshita	UJDA782	VB03		No	No	No	No	No	2023-10-13	2023-10-01a	ehw
+Memorex	525G v1			3C 00 00	2064	No	No	?	2023-09-30	2023-06-17	Sazpaimon
+NEC	DV-5700A	1.05		No	No	No	No	No	2023-12-20	2023-12-12a	Sazpaimon
+NEC	DV-5800A	1.07		No	No	No	No	?	2023-10-31	2023-10-01a	Lazerdude
+NEC	ND-1100A			No	No	No	No	No	2023-09-30	2023-06-17	Sazpaimon
+NEC	ND-3520AW	3.07		No	No	No	No	No	2023-12-11	2023-12-10	Sazpaimon
+NEC	ND-3540A	1.04		No	No	No	No	No	2023-12-11	2023-12-10	Sazpaimon
+NEC	ND-3550A	1.07		No	No	No	No	No	2023-12-11	2023-12-10	Sazpaimon
+Panasonic	UJ8A0			No	No	No	No	No	2023-09-30	2023-06-17	Sazpaimon
+Philips	DROM6016/44		Disc shows as 1 sector larger than other drives. This returns 26 extra bytes in pairs of two bytes interweaved within the sector, not sure what it is. seems to be added bytes around PI/PO area?	3C 02 00	2392	Yes	Yes	No	2023-09-30	2023-06-17	Sazpaimon
+Philips	DVD8301/42	7H29	HP DVD Writer 300c USB Device	No	No	No	No	No	2023-12-20	2023-12-12a	Sazpaimon
+Philips	DVD8301/44	7H29	HP DVD Writer 300c USB Device	No	No	No	No	No	2023-12-20	2023-12-12a	Sazpaimon
+Philips	SCB5265	TX07		No	No	No	No	No	2023-10-04	2023-10-01a	Lazerdude
+Pioneer	BDR-209D	1.51		No	No	No	No	No	2023-10-01	2023-10-01a	bikerspade
+Pioneer	BDR-212V			No	No	No	No	No	2023-09-30	2023-06-17	Sazpaimon
+Pioneer	BDR-S13U	1.04		No	No	No	No	No	2023-10-18	2023-10-01a	cell21633
+Pioneer	BDR-TD03VA			No	No	No	No	No	2023-09-30	2023-06-17	Sazpaimon
+Pioneer	DVR-107D	1.16		No	No	No	No	No	2023-12-12	2023-12-12	Sazpaimon
+Pioneer	DVR-108	1.20		No	No	No	No	No	2023-10-30	2023-10-01a	Lazerdude
+Pioneer	DVR-108VA		Returns 2064 bytes of unscrambled, oddly enough the data is offset and does not exist at the beginning of this region of RAM.	3C 00 C4	2064	No	No	Yes	2023-09-30	2023-06-17	Sazpaimon
+Pioneer	DVR-111L	8.29		No	No	No	No	No	2023-12-18	2023-12-12a	alisson_df
+Pioneer	DVR-112D	1.21		No	No	No	No	No	2023-10-30	2023-10-01a	Lazerdude
+Pioneer	DVR-215	1.19		No	No	No	No	?	2023-10-31	2023-10-01a	Lazerdude
+Pioneer	DVR-K17RS	1.00		No	No	No	No	No	2023-12-19	2023-12-12a	alisson_df
+PLDS	DH-16AES	DD12		3C 01 01 3C 01 02 F1 06	2236	Yes	PO Only	?	2023-12-26	2023-12-12a	registryeditor
+PLDS	DH-8B2SH	UD11	3C 01 01 and 3C 02 00 return the same data. There seems to be several values of F1 that return data but unsure if any of them would've had sector data, as there are some values of F1's opcode that might be writing and replacing data in the cache.	3C 01 01 3C 02 00 F1 ??	2384	Yes	Yes	?	2023-12-11	2023-12-11	Sazpaimon
+PLDS	DS-8A4S	JD12		3C 01 01	2384	Yes	Yes	?	2023-11-18	2023-10-01a	olofolleola4
+PLDS	DS-8A8SH	KD11	does not include 11 strips of 10 byte PI data in sector	3C 01 01 3C 01 02	2236	Yes	PO Only	?	2023-10-11	2023-10-01a	ehw
+PLDS	DS-8A9SH	ED11	does not include 11 strips of 10 byte PI data in sector	3C 01 01 3C 01 02	2236	Yes	PO Only	?	2023-10-11	2023-10-01a	ehw
+Plextor	PX-708A			3C 02 00	2064	No	No	No	2023-09-30	2023-06-17	Sazpaimon
+Plextor	PX-712A			3C 02 00	2064	No	No	No	2023-09-30	2023-06-17	Sazpaimon
+Plextor	PX-716A			3C 02 00	2064	No	No	No	2023-09-30	2023-06-17	Sazpaimon
+Plextor	PX-716AL			3C 02 00	2064	No	No	No	2023-09-30	2023-06-17	Sazpaimon
+Plextor	PX-755A			3C 02 00	2064	No	No	No	2023-09-30	2023-06-17	Sazpaimon
+Plextor	PX-760A			3C 02 00	2064	No	No	No	2023-09-30	2023-06-17	Sazpaimon
+Plextor	PX-800A			No	No	No	No	No	2023-09-30	2023-06-17	Sazpaimon
+Plextor	PX-870A			3C 01 01	2384	Yes	Yes	Yes	2023-09-30	2023-06-17	Sazpaimon
+Plextor	PX-880SA			3C 01 01	2384	Yes	Yes	Yes	2023-09-30	2023-06-17	Sazpaimon
+Samsung	SD-616E	F501		No	No	No	No	No	2023-10-08	2023-10-01a	bikerspade
+Samsung	SE-506CB		used in coasterburn experiments	3C 02 00	2384	Yes	Yes	Yes	2023-09-30	2023-06-17	Sazpaimon
+Samsung	SM-352N	TA01		3C 02 00	2816	Yes	Yes	?	2023-09-30	2023-07-09	flashfire42
+Sony	AD-7190S		last 12 bytes are AA.	3C 01 01 3C 01 02	2384	Yes	Yes	Yes	2023-09-30	2023-06-17	Sazpaimon
+Sony	BWU-200S	1.0a		No	No	No	No	No	2023-09-30	2023-06-17	Sazpaimon
+Sony	BWU-300S	1.0a		No	No	No	No	No	2023-12-13	2023-12-12a	Sazpaimon
+Sony	DDU1611	GYS1		3C 00 00	2816	Yes	Yes	?	2023-10-01	2023-10-01	MrPepka
+Sony	DRU-830A	SS20		No	No	No	No	No	2023-09-30	2023-07-09	flashfire42
+Sony	DW-D26A	JYS2		3C 01 01 3C 01 02	2384	Yes	Yes	?	2023-11-21	2023-10-01a	Lazerdude
+Sony	DW-Q30A	YYS2		3C 01 01 3C 01 02	2384	Yes	Yes	?	2023-10-31	2023-10-01a	Lazerdude
+Sony	PS-SYSTEM 402R	0100	PS4 BluRay Drive	No	No	No	No	No	2023-10-02	2023-10-01a	jason098
+Sony Optiarc	AD-5540A	103C		No	No	No	No	?	2023-10-31	2023-10-01a	Lazerdude
+Sony Optiarc	AD-7240S	1.03		No	No	No	No	No	2023-10-30	2023-10-01a	Lazerdude
+Sony Optiarc	AD-7280S			No	No	No	No	No	2023-09-30	2023-06-17	Sazpaimon
+Sony Optiarc	AD-7530B	NX03		3C 02 00	2384	Yes	Yes	?	2023-12-19	2023-12-12a	alisson_df
+Sony Optiarc	AD-7561S	AH03		3C 02 00 F1 06	2384	Yes	Yes	?	2023-12-18	2023-12-12a	alisson_df
+Sony Optiarc	AD-7580S	FX04		3C 02 00	2384	Yes	Yes	?	2023-11-14	2023-10-01a	olofolleola4
+Sony Optiarc	AD-7585H	KX04		3C 02 00	2384	Yes	Yes	?	2023-11-14	2023-10-01a	olofolleola4
+Sony Optiarc	AD-7710H	A833		No	No	No	No	No	2023-10-09	2023-10-01a	ehw
+Sony Optiarc	AD-7930H	1.D1		No	No	No	No	No	2023-10-18	2023-10-01a	cell21633
+Sony Optiarc	BC-5541H	2.81	hp	No	No	No	No	No	2023-12-18	2023-12-12a	alisson_df
+Toshiba	SD-R2102			No	No	No	No	No	2023-09-30	2023-06-17	Sazpaimon
+TSSTCorp	SE-208DB		does not include 11 strips of 10 byte PI data in sector	3C 02 00	2236	Yes	PO Only	?	2023-10-01	2023-09-30	Edness
+TSSTCorp	SE-S084C	TU00		3C 02 00 F1 06	2384	Yes	Yes	?	2024-02-24	2023-12-12a	alisson_df
+TSSTCorp	SH-216DB	D100	does not include 11 strips of 10 byte PI data in sector	3C 02 00	2236	Yes	PO Only	?	2023-12-12	2023-12-12	Sazpaimon
+TSSTCorp	SH-224DB	SB01	pending investigation: PI data is stored in an accessible area in cache with 3c 02 00 but comes after 2236 sector data. the drive puts 240 sectors (15 blocks) onto cache, then at 0x83040 the drive puts pi data interweaved with potentially sync data. this data could theoretically be accessible with "3c 02 00 08 30 40 00 40 04 00" in 16388 ($4004) byte chunks, no more than that at a time (it might be preferable to do 2752 ($ac0) instead). however, this data could shift and vary from drive to drive and as the disc is being read so the data might not always be in a fixed location. 	3C 02 00	2236	Yes	PO Only	?	2023-12-12	2023-12-12	Sazpaimon
+TSSTCorp	SH-224FB	SB00	does not include 11 strips of 10 byte PI data in sector	3C 02 00	2236	Yes	PO Only	?	2023-10-01	2023-10-01	Dink
+TSSTCorp	SH-D162D	SB00 - Kreon		No	No	No	No	No	2023-10-30	2023-10-01a	Edness
+TSSTCorp	SH-D163A	SB01	TS-H353B	No	No	No	No	No	2023-12-12	2023-12-12a	Sazpaimon
+TSSTCorp	SH-D163B	SB01 - Kreon	Loads psn 030040 onto cache with READ12 at the first block for some reason. Looks like it returns 2384 bytes but the firmware might be modified to affect the start PSN in order to read Xbox discs. It's possible the normal stock firmware would work just fine with 3c 02 00.	No? See note	2384?	Yes	Yes	?	2023-12-09	2023-11-26	darksabre76
+TSSTCorp	SH-S222	SB02		3C 02 00	2384	Yes	Yes	?	2023-10-08	2023-10-01a	JustAnyone
+TSSTCorp	SH-S223C	SB04	"00 FF FF FF FF FF FF FF FF FF" interweaved every 181 bytes, 11/12 times? No ECC?	3C 01 00	2304	Yes	No	?	2023-09-30	2023-07-09	flashfire42
+TSSTCorp	SN-108BB	D200	does not include 11 strips of 10 byte PI data in sector	3C 02 00	2236	Yes	PO Only	?	2023-10-06	2023-10-01a	bikerspade
+TSSTCorp	SN-208BB	D300	does not include 11 strips of 10 byte PI data in sector	3C 02 00	2236	Yes	PO Only	?	2023-10-11	2023-10-01a	ehw
+TSSTCorp	SN-208FB	D100		3C 02 00 F1 06	2236	Yes	PO Only	?	2023-12-25	2023-12-12a	registryeditor
+TSSTCorp	SU-208FB	TE00		3C 02 00 F1 06	2236	Yes	PO Only	?	2024-02-24	2023-12-12a	alisson_df
+TSSTCorp	SU-208GB			No	No	No	No	No	2023-09-30	2023-06-17	Deterous
+TSSTCorp	TS-H552D		Takes too long to retry sectors (12 bytes/sec). Drive OPU is defective	3C 02 00	2384	Yes	Yes	?	2023-09-30	2023-06-17	Sazpaimon
+TSSTCorp	TS-H653G	D200		3C 02 00	2384	Yes	Yes	?	2023-10-07	2023-10-01a	bikerspade
+TSSTCorp	TS-H653Q	HC01		3C 02 00	2384	Yes	Yes	?	2023-10-30	2023-10-01a	Lazerdude
+TSSTCorp	TS-L632H	D400		3C 02 00	2384	Yes	Yes	?	2023-10-04	2023-10-01a	Lazerdude
+TSSTCorp	TS-L632H	TMC0		3C 02 00	2384	Yes	Yes	?	2023-12-19	2023-12-12a	alisson_df
+TSSTCorp	TS-L633A	D500	for some reason does not support F1 06.	3C 02 00	2384	Yes	Yes	?	2023-12-12	2023-12-11a	Sazpaimon
+TSSTCorp	TS-L633A	TM00		3C 02 00 F1 06	2384	Yes	Yes	?	2023-12-18	2023-12-12a	alisson_df
+TSSTCorp	TS-L633C	AC01		3C 02 00	2384	Yes	Yes	?	2023-11-14	2023-10-01a	olofolleola4
+TSSTCorp	TS-L633C	TM01		3C 02 00 F1 06	2384	Yes	Yes	?	2023-12-18	2023-12-12a	alisson_df
+TSSTCorp	TS-L633F	TF01	does not include 11 strips of 10 byte PI data in sector	3C 02 00	2236	Yes	PO Only	?	2023-10-01	2023-06-17	flashfire42
+TSSTCorp	TS-L633L	0400		3C 02 00	2384	Yes	Yes	?	2023-11-14	2023-10-01a	olofolleola4
+TSSTCorp	TS-U633A	AC01		3C 02 00 F1 06	2384	Yes	Yes	?	2023-12-18	2023-12-12a	alisson_df

@@ -683,8 +683,10 @@ BOOL ReadDVDRaw(
 	LPBYTE pBuf = NULL;
 	BOOL bRet = TRUE;
 	BOOL bNintendoDisc = IsNintendoDisc(pDisc);
-	DWORD dwSectorSize = DVD_RAW_SECTOR_SIZE;
+	DWORD dwSectorSize = DVD_RAW_SECTOR_SIZE_2064;
 	INT nLast = pDisc->SCSI.nAllLength;
+	BOOL bScrambled = FALSE;
+	LPBYTE workBuf = NULL; // for sector size 2304
 
 	try {
 		if (!bNintendoDisc) {
@@ -707,119 +709,64 @@ BOOL ReadDVDRaw(
 		BYTE cdblen = CDB10GENERIC_LENGTH;
 		// for dumping from memory
 		BYTE CacheCmd[CDB12GENERIC_LENGTH] = {};
+
 		INT nDriveSampleOffset = 0;
 		if (!GetDriveOffsetAuto(pDevice, &nDriveSampleOffset)) {
 			GetDriveOffsetManually(&nDriveSampleOffset);
 		}
 		// Panasonic MN103S chip
-		if (nDriveSampleOffset == 102) {
-			if (IsSupported0xE7(pDevice)) {
-				if (IsSupported0xE7Type1(pDevice)) {
-					// address which data frame is cached
-					// a08000 - a0ffff (8000), a13000 - a1ffff (d000), a23000 - a2ffff (d000)
-					// a48000 - a4ffff (8000), a53000 - a5ffff (d000), a63000 - a6ffff (d000)
-					// a88000 - a8ffff (8000), a93000 - a9ffff (d000), aa3000 - aaffff (d000)
-					// ac8000 - acffff (8000), ad3000 - adffff (d000), ae3000 - aeffff (d000)
-					// b08000 - b0ffff (8000), b13000 - b1ffff (d000), b23000 - b2ffff (d000)
-					//  :
-					baseAddr = 0xa13000;
-					nCmdType = 1;
-				}
-				else if (IsSupported0xE7Type2_1(pDevice)) {
-					transferLen.AsULong = 4;
-					baseAddr -= 0x810 * transferLen.AsULong;
-					nCmdType = 2;
-				}
-				else if (IsSupported0xE7Type2_2(pDevice)) {
-					baseAddr -= 0x810 * transferLen.AsULong;
-					nCmdType = 2;
-				}
-				else if (IsSupported0xE7Type3(pDevice) || IsSupported0xE7Type4(pDevice)) {
-					memBlkSize = 5;
-					nCmdType = 1;
-				}
-				// https://web.archive.org/web/20080629151440/http://www.xboxhacker.net/index.php?option=com_smf&Itemid=33&topic=76.msg1656;topicseen#msg1656
-				CacheCmd[0] = 0xE7; // vendor specific command
-				CacheCmd[1] = 0x48; // H
-				CacheCmd[2] = 0x49; // I
-				CacheCmd[3] = 0x54; // T
-				CacheCmd[4] = 0x01; // read MCU memory sub-command
-				CacheCmd[10] = HIBYTE(LOWORD(dwSectorSize * transferLen.AsULong));
-				CacheCmd[11] = LOBYTE(LOWORD(dwSectorSize * transferLen.AsULong));
-				cdblen = CDB12GENERIC_LENGTH;
+		if (IsSupported0xE7(pDevice)) {
+			if (IsSupported0xE7Type1(pDevice)) {
+				// address which data frame is cached
+				// a08000 - a0ffff (8000), a13000 - a1ffff (d000), a23000 - a2ffff (d000)
+				// a48000 - a4ffff (8000), a53000 - a5ffff (d000), a63000 - a6ffff (d000)
+				// a88000 - a8ffff (8000), a93000 - a9ffff (d000), aa3000 - aaffff (d000)
+				// ac8000 - acffff (8000), ad3000 - adffff (d000), ae3000 - aeffff (d000)
+				// b08000 - b0ffff (8000), b13000 - b1ffff (d000), b23000 - b2ffff (d000)
+				//  :
+				baseAddr = 0xa13000;
+				nCmdType = 1;
 			}
-			else {
-				CacheCmd[0] = SCSIOP_READ_DATA_BUFF;
-				CacheCmd[1] = 0x01;
-				CacheCmd[6] = LOBYTE(HIWORD(dwSectorSize * transferLen.AsULong));
-				CacheCmd[7] = HIBYTE(LOWORD(dwSectorSize * transferLen.AsULong));
-				CacheCmd[8] = LOBYTE(LOWORD(dwSectorSize * transferLen.AsULong));
-				nCmdType = 3;
+			else if (IsSupported0xE7Type2_1(pDevice)) {
+				transferLen.AsULong = 4;
+				baseAddr -= 0x810 * transferLen.AsULong;
+				nCmdType = 2;
 			}
+			else if (IsSupported0xE7Type2_2(pDevice)) {
+				baseAddr -= 0x810 * transferLen.AsULong;
+				nCmdType = 2;
+			}
+			else if (IsSupported0xE7Type3(pDevice) || IsSupported0xE7Type4(pDevice)) {
+				memBlkSize = 5;
+				nCmdType = 1;
+			}
+			// https://web.archive.org/web/20080629151440/http://www.xboxhacker.net/index.php?option=com_smf&Itemid=33&topic=76.msg1656;topicseen#msg1656
+			CacheCmd[0] = 0xE7; // vendor specific command
+			CacheCmd[1] = 0x48; // H
+			CacheCmd[2] = 0x49; // I
+			CacheCmd[3] = 0x54; // T
+			CacheCmd[4] = 0x01; // read MCU memory sub-command
+			CacheCmd[10] = HIBYTE(LOWORD(dwSectorSize * transferLen.AsULong));
+			CacheCmd[11] = LOBYTE(LOWORD(dwSectorSize * transferLen.AsULong));
+			cdblen = CDB12GENERIC_LENGTH;
 		}
-		// Plextor
-		else if (IsValidPlextorDrive(pExtArg, pDevice)) {
-			CacheCmd[0] = SCSIOP_READ_DATA_BUFF;
-			CacheCmd[1] = 0x02;
-			CacheCmd[6] = LOBYTE(HIWORD(dwSectorSize * transferLen.AsULong));
-			CacheCmd[7] = HIBYTE(LOWORD(dwSectorSize * transferLen.AsULong));
-			CacheCmd[8] = LOBYTE(LOWORD(dwSectorSize * transferLen.AsULong));
-		}
-		// Mediatek MT chip
-		// LITE-ON - LH-18A1P supports
-		//  0x3c 0x01 0x01(or 0x02) -> rawdata
-		//   (172bytes[raw] + 10bytes[garbage?]) * 12 + 200bytes[garbage?] = 2384bytes
-		//  0x3c 0x01 0xe2 and 0x3c 0x01 0xf1 -> eeprom?
-		else if (IsLiteOn(pDevice)) {
-			dwSectorSize = DVD_RAW_SECTOR2_SIZE;
-			CacheCmd[0] = SCSIOP_READ_DATA_BUFF;
-			CacheCmd[1] = 0x01;
-			CacheCmd[2] = 0x01;
-			CacheCmd[6] = LOBYTE(HIWORD(dwSectorSize * transferLen.AsULong));
-			CacheCmd[7] = HIBYTE(LOWORD(dwSectorSize * transferLen.AsULong));
-			CacheCmd[8] = LOBYTE(LOWORD(dwSectorSize * transferLen.AsULong));
-		}
-		// ASUS - BC-12D2HT supports
-		//  0x3c 0x05 -> eeprom?
-		//  0x3c 0x07 -> perhaps same as 0x00 of spc3r23
-		//  0x3c 0x0c -> many sectors are zero, then same the main channel?
-		//  0x3c 0x0d -> same the main channel?
-		else if (IsValid0xF1SupportedDrive(pDevice)) {
-			dwSectorSize = DVD_RAW_SECTOR2_SIZE;
-			CacheCmd[0] = SCSIOP_READ_DATA_BUFF;
-			CacheCmd[1] = 0x02;
-			CacheCmd[6] = LOBYTE(HIWORD(dwSectorSize * transferLen.AsULong));
-			CacheCmd[7] = HIBYTE(LOWORD(dwSectorSize * transferLen.AsULong));
-			CacheCmd[8] = LOBYTE(LOWORD(dwSectorSize * transferLen.AsULong));
-		}
-#if 1
-		// Renesas chip
-		// LG Electronics - GSA-4163B supports (lsb 3 bits is used)
-		//  0x3c 0x00, 0x01 -> perhaps same as spc3r23
-		//  0x3c 0x02 -> perhaps same as spc3r23, but rawdata is imcomplete
-		//  0x3c 0x03 -> perhaps same as spc3r23
-		//  0x3c 0x05 -> eeprom?
-		else if (nDriveSampleOffset == 667) {
-			CacheCmd[0] = SCSIOP_READ_DATA_BUFF;
-			CacheCmd[1] = 0x02;
-			CacheCmd[6] = LOBYTE(HIWORD(dwSectorSize * transferLen.AsULong));
-			CacheCmd[7] = HIBYTE(LOWORD(dwSectorSize * transferLen.AsULong));
-			CacheCmd[8] = LOBYTE(LOWORD(dwSectorSize * transferLen.AsULong));
-		}
-		// Other
-		// TOSHIBA - SD-H802A doesn't support 0x3c
-		// Tsstcorp - TS-H352C doesn't support 0x3c
-		// Optiarc - AD-7280S supports
-		//  0x3c 0x01 0x01 and 0x3c 0x01 0x02 -> eeprom?
 		else {
-			CacheCmd[0] = SCSIOP_READ_DATA_BUFF;
-			CacheCmd[1] = 0x02;
+			if (!GetReadBufParamAndSize(pDevice, CacheCmd, &dwSectorSize, &bScrambled)) {
+				throw FALSE;
+			}
+			if (dwSectorSize == 768) {
+				dwSectorSize = DVD_RAW_SECTOR_SIZE_2304; // 2400h * 4 / transferLen.AsULong
+				if (NULL == (workBuf = (LPBYTE)calloc((size_t)(dwSectorSize * transferLen.AsULong), sizeof(BYTE)))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					throw FALSE;
+				}
+			}
 			CacheCmd[6] = LOBYTE(HIWORD(dwSectorSize * transferLen.AsULong));
 			CacheCmd[7] = HIBYTE(LOWORD(dwSectorSize * transferLen.AsULong));
 			CacheCmd[8] = LOBYTE(LOWORD(dwSectorSize * transferLen.AsULong));
 		}
-#endif
-		OutputString("Rawdump command [0]:%#04x [1]:%#04x [2]:%#04x\n", CacheCmd[0], CacheCmd[1], CacheCmd[2]);
+		OutputString("Rawdump command [0]:%#04x [1]:%#04x [2]:%#04x, Sector size:%ld, Scrambled:%s\n"
+			, CacheCmd[0], CacheCmd[1], CacheCmd[2], dwSectorSize, bScrambled == 1 ? "Yes" : "No");
 
 		// for dumping from the disc
 		CDB::_READ12 ReadCdb = {};
@@ -923,7 +870,7 @@ BOOL ReadDVDRaw(
 		BOOL bReadErr = FALSE;
 		BYTE prevId = 0;
 		FOUR_BYTE LBA;
-		UINT uiEdcPos = DVD_RAW_SECTOR_SIZE - 4;
+		UINT uiEdcPos = DVD_RAW_SECTOR_SIZE_2064 - 4;
 		BOOL bOutputMsg = TRUE;
 		if (pDevice->byPlxtrDrive && bNintendoDisc) {
 			bOutputMsg = FALSE;
@@ -1017,12 +964,6 @@ BOOL ReadDVDRaw(
 					CacheCmd[8] = HIBYTE(LOWORD(baseAddr));
 					CacheCmd[9] = LOBYTE(LOWORD(baseAddr));
 				}
-				else if (nCmdType == 3) {
-					INT n = nLBA % 688;
-					CacheCmd[3] = LOBYTE(HIWORD(n * DVD_RAW_SECTOR_SIZE));
-					CacheCmd[4] = HIBYTE(LOWORD(n * DVD_RAW_SECTOR_SIZE));
-					CacheCmd[5] = LOBYTE(LOWORD(n * DVD_RAW_SECTOR_SIZE));
-				}
 
 				DWORD dwOfs2 = dwRawReadSize * i;
 				// read the drive cache memory
@@ -1037,9 +978,42 @@ BOOL ReadDVDRaw(
 					continue;
 #endif
 				}
-
+				if (dwSectorSize == DVD_RAW_SECTOR_SIZE_2304) {
+					/*
+						   0   40   80   c0    100  140  180  1c0    200  240  280  2c0 |  300  340  380  3c0
+						 400  440  480  4c0    500  540  580  5c0    600  640  680  6c0 |  700  740  780  7c0
+						 800  840  880  8c0    900  940  980  9c0    a00  a40  a80  ac0 |  b00  b40  b80  bc0
+						-------------------------------------------------------------------------------------
+						 c00  c40  c80  cc0    d00  d40  d80  dc0 |  e00  e40  e80  ec0    f00  f40  f80  fc0
+						1000 1040 1080 10c0   1100 1140 1180 11c0 | 1200 1240 1280 12c0   1300 1340 1380 13c0
+						1400 1440 1480 14c0   1500 1540 1580 15c0 | 1600 1640 1680 16c0   1700 1740 1780 17c0
+						-------------------------------------------------------------------------------------
+						1800 1840 1880 18c0 | 1900 19c0 1980 19c0   1a00 1a40 1a80 1ac0   1b00 1b40 1b80 1bc0
+						1c00 1c40 1c80 1cc0 | 1d00 1d40 1d80 1dc0   1e00 1e40 1e80 1ec0   1f00 1f40 1f80 1fc0
+						2000 2040 2080 20c0 | 2100 2140 2180 21c0   2200 2240 2280 22c0   2300 2340 2380 23c0
+					*/
+					for (INT j = 0; j < 4; j++) {
+						for (INT m = 0, n = 0; m < 0x10; m++, n += 0xc0) {
+							memcpy(workBuf + n + 0x2400 * j, lpBuf + 0x40 * m + 0x2400 * j, 0x40);
+							memcpy(workBuf + 0x40 + n + 0x2400 * j, lpBuf + 0x400 + 0x40 * m + 0x2400 * j, 0x40);
+							memcpy(workBuf + 0x80 + n + 0x2400 * j, lpBuf + 0x800 + 0x40 * m + 0x2400 * j, 0x40);
+						}
+						for (INT m = 0, n = 0; m < 0x10; m++, n += 0xc0) {
+							memcpy(workBuf + 0xc00 + n + 0x2400 * j, lpBuf + 0xc00 + 0x40 * m + 0x2400 * j, 0x40);
+							memcpy(workBuf + 0xc40 + n + 0x2400 * j, lpBuf + 0x1000 + 0x40 * m + 0x2400 * j, 0x40);
+							memcpy(workBuf + 0xc80 + n + 0x2400 * j, lpBuf + 0x1400 + 0x40 * m + 0x2400 * j, 0x40);
+						}
+						for (INT m = 0, n = 0; m < 0x10; m++, n += 0xc0) {
+							memcpy(workBuf + 0x1800 + n + 0x2400 * j, lpBuf + 0x1800 + 0x40 * m + 0x2400 * j, 0x40);
+							memcpy(workBuf + 0x1840 + n + 0x2400 * j, lpBuf + 0x1c00 + 0x40 * m + 0x2400 * j, 0x40);
+							memcpy(workBuf + 0x1880 + n + 0x2400 * j, lpBuf + 0x2000 + 0x40 * m + 0x2400 * j, 0x40);
+						}
+					}
+					memcpy(lpBuf, workBuf, dwSectorSize * transferLen.AsULong);
+				}
 				for (UINT j = 0; j < transferLen.AsULong; j++) {
 					DWORD dwOfs3 = dwOfs2 + dwOfs[j];
+//					OutputMainChannel(fileMainInfo, lpBuf + dwOfs3, NULL, nLBA, dwSectorSize * transferLen.AsULong);
 					id = lpBuf[dwOfs3];
 					gotSectorNum = MAKEUINT(MAKEWORD(lpBuf[3 + dwOfs3]
 						, lpBuf[2 + dwOfs3]), MAKEWORD(lpBuf[1 + dwOfs3], 0));
@@ -1060,27 +1034,25 @@ BOOL ReadDVDRaw(
 					PUCHAR src = lpBuf + dwOfs3;
 					LPBYTE main = src + 0xc;
 					INT nRealLBA = nLBA + (INT)(j + i * transferLen.AsULong);
-//					OutputMainChannel(fileMainInfo, src, NULL, nLBA + j, DVD_RAW_SECTOR_SIZE);
+//					OutputMainChannel(fileMainInfo, src, NULL, nLBA + j, dwSectorSize);
 					OutputDVDHeader(src, dwSectorSize, nRealLBA, bNintendoDisc);
 
-					if (!bNintendoDisc) {
-						if (pDevice->byPlxtrDrive) {
-							UINT edc = 0;
-							UINT uiEdcCalcSize = DVD_RAW_SECTOR_SIZE - 4;
-							while (uiEdcCalcSize--) {
-								edc = (edc << 8) ^ edcLut[((edc >> 24) ^ (*src++)) & 0xFF];
-							}
-							UINT sectorEdc = MAKEUINT(MAKEWORD(lpBuf[dwOfs3 + uiEdcPos + 3]
-								, lpBuf[dwOfs3 + uiEdcPos + 2]), MAKEWORD(lpBuf[dwOfs3 + uiEdcPos + 1], lpBuf[dwOfs3 + uiEdcPos]));
-							if (edc != sectorEdc) {
-								OutputLog(standardError | fileMainError
-									, STR_LBA "EDC does not match. CalcEDC: %08x, SectorEDC: %08x\n", nRealLBA, (UINT)nRealLBA, edc, sectorEdc);
-							}
-							else {
-								fwrite(main, sizeof(BYTE), DISC_MAIN_DATA_SIZE, fpIso);
-								CalcHash(pExtArg, &pHash->pHashChunk[pHash->uiIndex + 1], main, DISC_MAIN_DATA_SIZE);
-								OutputMainInfoWithLBALog("CalcEDC: %08x, SectorEDC: %08x\n", nRealLBA, 0, edc, sectorEdc);
-							}
+					if (!bNintendoDisc && !bScrambled) {
+						UINT edc = 0;
+						UINT uiEdcCalcSize = DVD_RAW_SECTOR_SIZE_2064 - 4;
+						while (uiEdcCalcSize--) {
+							edc = (edc << 8) ^ edcLut[((edc >> 24) ^ (*src++)) & 0xFF];
+						}
+						UINT sectorEdc = MAKEUINT(MAKEWORD(lpBuf[dwOfs3 + uiEdcPos + 3]
+							, lpBuf[dwOfs3 + uiEdcPos + 2]), MAKEWORD(lpBuf[dwOfs3 + uiEdcPos + 1], lpBuf[dwOfs3 + uiEdcPos]));
+						if (edc != sectorEdc) {
+							OutputLog(standardError | fileMainError
+								, STR_LBA "EDC does not match. CalcEDC: %08x, SectorEDC: %08x\n", nRealLBA, (UINT)nRealLBA, edc, sectorEdc);
+						}
+						else {
+							fwrite(main, sizeof(BYTE), DISC_MAIN_DATA_SIZE, fpIso);
+							CalcHash(pExtArg, &pHash->pHashChunk[pHash->uiIndex + 1], main, DISC_MAIN_DATA_SIZE);
+							OutputMainInfoWithLBALog("CalcEDC: %08x, SectorEDC: %08x\n", nRealLBA, 0, edc, sectorEdc);
 						}
 					}
 				}
@@ -1210,47 +1182,53 @@ BOOL ReadDVDRaw(
 		bRet = bErr;
 	}
 	FreeAndNull(pBuf);
+	FreeAndNull(workBuf);
 	FcloseAndNull(fpRaw);
 
-	_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, szFnameAndExtRaw, sizeof(szFnameAndExtRaw));
-	pHash->pHashChunk[pHash->uiIndex].ui64FileSize = dwSectorSize * (UINT64)nLast;
+	if (bRet) {
+		_tcsncpy(pHash->pHashChunk[pHash->uiIndex].szFnameAndExt, szFnameAndExtRaw, sizeof(szFnameAndExtRaw));
+		pHash->pHashChunk[pHash->uiIndex].ui64FileSize = dwSectorSize * (UINT64)nLast;
 
-	if (!bNintendoDisc && pDevice->byPlxtrDrive) {
-		FcloseAndNull(fpIso);
-		_tcsncpy(pHash->pHashChunk[pHash->uiIndex + 1].szFnameAndExt, szFnameAndExtIso, sizeof(szFnameAndExtIso));
-		pHash->pHashChunk[pHash->uiIndex + 1].ui64FileSize = DISC_MAIN_DATA_SIZE * (UINT64)nLast;
-	}
-
-	if (bRet && (!(pDevice->byPlxtrDrive && !bNintendoDisc))) {
-		INT nType = 0; // Nintendo Disc
-		if (IsSupported0xE7(pDevice) && !bNintendoDisc) {
-			nType = 1; // 2064 bytes, scrambled
-		}
-		else if (IsLiteOn(pDevice) || pDevice->by0xF1Drive) {
-			nType = 2; // 2384 bytes, scrambled
+		if (!bNintendoDisc && !bScrambled) {
+			FcloseAndNull(fpIso);
+			_tcsncpy(pHash->pHashChunk[pHash->uiIndex + 1].szFnameAndExt, szFnameAndExtIso, sizeof(szFnameAndExtIso));
+			pHash->pHashChunk[pHash->uiIndex + 1].ui64FileSize = DISC_MAIN_DATA_SIZE * (UINT64)nLast;
 		}
 
-		_TCHAR str[_MAX_PATH * 3 + 4] = {};
-		if (GetUnscCmd(str, pszOutPath, nType)) {
-			bRet = _tsystem(str);
-			// unscrambler error code
-			// 0 == no error
-			// 1 == failed open .raw
-			// 2 == failed open .iso
-			// 3 == no enough cache space for this seed
-			// 6 == can't write to .iso
-			// frame num == no seed found for recording frame xx
-			// frame num == error unscrambling recording frame xx
-			OutputString("ret = %d\n", bRet);
-			if (bRet == 0) {
-				if (pDisc->DVD.discType == gamecube) {
-					bRet = ReadNintendoFileSystem(pDevice, pszFullPath, gamecube);
-				}
-				else if (pDisc->DVD.discType == wii) {
-					bRet = ReadWiiPartition(pDevice, pszFullPath);
-				}
-				else {
-					bRet = TRUE;
+		if (bScrambled || bNintendoDisc) {
+			INT nType = 0; // Nintendo Disc
+			if (dwSectorSize == DVD_RAW_SECTOR_SIZE_2064 && !bNintendoDisc) {
+				nType = 1; // 2064 bytes, scrambled
+			}
+			else if (dwSectorSize == DVD_RAW_SECTOR_SIZE_2304) {
+				nType = 2; // 2304 bytes, scrambled
+			}
+			else if (dwSectorSize == DVD_RAW_SECTOR_SIZE_2384) {
+				nType = 3; // 2384 bytes, scrambled
+			}
+
+			_TCHAR str[_MAX_PATH * 3 + 4] = {};
+			if (GetUnscCmd(str, pszOutPath, nType)) {
+				bRet = _tsystem(str);
+				// unscrambler error code
+				// 0 == no error
+				// 1 == failed open .raw
+				// 2 == failed open .iso
+				// 3 == no enough cache space for this seed
+				// 6 == can't write to .iso
+				// frame num == no seed found for recording frame xx
+				// frame num == error unscrambling recording frame xx
+				OutputString("ret = %d\n", bRet);
+				if (bRet == 0) {
+					if (pDisc->DVD.discType == gamecube) {
+						bRet = ReadNintendoFileSystem(pDevice, pszFullPath, gamecube);
+					}
+					else if (pDisc->DVD.discType == wii) {
+						bRet = ReadWiiPartition(pDevice, pszFullPath);
+					}
+					else {
+						bRet = TRUE;
+					}
 				}
 			}
 		}
@@ -1343,7 +1321,7 @@ BOOL OutputControlDataZone(
 ) {
 	_TCHAR szPath[_MAX_PATH] = {};
 	_TCHAR szOutPath[_MAX_PATH] = {};
-	BYTE lpBuf[DVD_RAW_SECTOR_SIZE * 16] = {};
+	BYTE lpBuf[DVD_RAW_SECTOR_SIZE_2064 * 16] = {};
 	FILE* fpCdzRaw = NULL;
 
 #ifdef ControlDataZoneTEST
@@ -1359,19 +1337,19 @@ BOOL OutputControlDataZone(
 	BYTE CacheCmd[CDB12GENERIC_LENGTH] = {};
 	CacheCmd[0] = SCSIOP_READ_DATA_BUFF;
 	CacheCmd[1] = 0x02;
-	CacheCmd[6] = LOBYTE(HIWORD(DVD_RAW_SECTOR_SIZE * 16));
-	CacheCmd[7] = HIBYTE(LOWORD(DVD_RAW_SECTOR_SIZE * 16));
-	CacheCmd[8] = LOBYTE(LOWORD(DVD_RAW_SECTOR_SIZE * 16));
+	CacheCmd[6] = LOBYTE(HIWORD(DVD_RAW_SECTOR_SIZE_2064 * 16));
+	CacheCmd[7] = HIBYTE(LOWORD(DVD_RAW_SECTOR_SIZE_2064 * 16));
+	CacheCmd[8] = LOBYTE(LOWORD(DVD_RAW_SECTOR_SIZE_2064 * 16));
 
 	BYTE byScsiStatus = 0;
 	// read the drive cache memory
 	if (!ScsiPassThroughDirect(pExtArg, pDevice, CacheCmd, CDB10GENERIC_LENGTH, lpBuf,
-		direction, DVD_RAW_SECTOR_SIZE * 16, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
+		direction, DVD_RAW_SECTOR_SIZE_2064 * 16, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 		|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 	}
-	fwrite(lpBuf, sizeof(BYTE), DVD_RAW_SECTOR_SIZE * 16, fpCdzRaw);
+	fwrite(lpBuf, sizeof(BYTE), DVD_RAW_SECTOR_SIZE_2064 * 16, fpCdzRaw);
 	FcloseAndNull(fpCdzRaw);
-	ZeroMemory(lpBuf, DVD_RAW_SECTOR_SIZE * 16);
+	ZeroMemory(lpBuf, DVD_RAW_SECTOR_SIZE_2064 * 16);
 #endif
 	BOOL bRet = -1;
 	_TCHAR str[_MAX_PATH * 3 + 4] = {};

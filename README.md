@@ -292,10 +292,6 @@ See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)
 
 ## License & Copyright
 See LICENSE  
-- About driveOffset.txt.  
-    http://www.accuraterip.com/driveoffsets.htm  
-    Copyright 2023. All Rights Reserved.  
-
 - About _external folder  
   prngcd.cpp  
     Copyright (c) 2015 Jonathan Gevaryahu. All rights reserved.  
@@ -342,10 +338,19 @@ See LICENSE
     Copyright (c) 2012-2021 Yann Collet. All rights reserved.
 
 - About Release_ANSI folder  
+  driveOffset.txt.  
+    http://www.accuraterip.com/driveoffsets.htm  
+    Copyright 2023. All Rights Reserved.  
+
+  DVDRawBruteforce - Drive Sheet - Sheet1  
+    https://docs.google.com/spreadsheets/d/1pu3oXHRJ_qlyXrsHUyXOzD5mNp7dU8rgrfVuRBLyQFA/edit?pli=1#gid=0
+    https://github.com/hiddenpalaceorg/DVDRawBruteforce
+    Author: ehw (Hidden-Palace.org R&D)
+
   E_WISE_W.EXE  
     http://kannegieser.net/veit/  
     Copyright (c) 2002. 7. 1 Veit Kannegieser
-    
+
   i6comp.exe  
     Copyright (c) Jun-16-2000 fOSSiL,Dec-27-2000 Morlac
   
