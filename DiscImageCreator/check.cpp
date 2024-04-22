@@ -114,7 +114,7 @@ BOOL IsAudioOnlyDisc(
 	PDISC pDisc
 ) {
 	if (pDisc->SCSI.trkType == TRACK_TYPE::audioTrack ||
-		pDisc->SCSI.trkType == (TRACK_TYPE::audioTrack | TRACK_TYPE::pregapAudioIn1stTrack)) {
+		pDisc->SCSI.trkType == (TRACK_TYPE::audioTrack | TRACK_TYPE::pregapIn1stTrack | TRACK_TYPE::pregapAudioIn1stTrack)) {
 		return TRUE;
 	}
 	return FALSE;

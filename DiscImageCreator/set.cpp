@@ -1069,7 +1069,7 @@ VOID SetAndOutputCDOffset(
 	}
 	OutputDiscLog(STR_DOUBLE_HYPHEN_E);
 
-	if (pExtArg->byAdd && pDisc->SCSI.trkType == TRACK_TYPE::audioTrack) {
+	if (pExtArg->byAdd && IsAudioOnlyDisc(pDisc)) {
 		pDisc->MAIN.nCombinedOffset += pExtArg->nAudioCDOffsetNum * 4;
 		pExtArg->nAudioCDOffsetNum = 0; // If it is possible, I want to repair it by a better method...
 		OutputDiscLog(
