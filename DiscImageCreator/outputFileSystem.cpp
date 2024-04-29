@@ -2193,6 +2193,9 @@ VOID OutputFsFileEntry(
 			OutputVolDescLog("\n");
 			uiOfs += 48 + IU_L;
 		}
+		else {
+			break;
+		}
 	}
 
 	OutputVolDescLog("\t                     Allocation descriptors\n");
