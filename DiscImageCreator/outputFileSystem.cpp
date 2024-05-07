@@ -33,21 +33,6 @@ VOID OutputFsBootRecord(
 	OutputVolDescLog("\n");
 }
 
-VOID OutputFsVolumeDescriptorFirst(
-	PDISC pDisc,
-	LPBYTE lpBuf,
-	CHAR str32[][33],
-	PVOLUME_DESCRIPTOR pVolDesc
-) {
-	UINT vss = GetSizeOrUintForVolDesc(lpBuf + 80, UINT(pDisc->SCSI.nAllLength * DISC_MAIN_DATA_SIZE));
-	OutputVolDescLog(
-		"\t                            System Identifier: %.32" CHARWIDTH "s\n"
-		"\t                            Volume Identifier: %.32" CHARWIDTH "s\n"
-		"\t                            Volume Space Size: %u\n"
-		, str32[0], str32[1], vss);
-	pVolDesc->uiVolumeSpaceSize = vss;
-}
-
 VOID OutputFsDirectoryRecord(
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
@@ -335,14 +320,37 @@ VOID OutputFsDirectoryRecord(
 	}
 }
 
-VOID OutputFsVolumeDescriptorSecond(
+VOID OutputFsVolumeDescriptorDetail(
 	PEXT_ARG pExtArg,
 	PDISC pDisc,
 	LPBYTE lpBuf,
-	CHAR str128[][129],
-	CHAR str37[][38],
-	BOOL bTCHAR
+	PVOLUME_DESCRIPTOR pVolDesc
 ) {
+	pVolDesc->uiVolumeSpaceSize = GetSizeOrUintForVolDesc(lpBuf + 80, UINT(pDisc->SCSI.nAllLength * DISC_MAIN_DATA_SIZE));
+
+	if (lpBuf[0] == 2) {
+		WCHAR lpWBuf[32] = {};
+		for (INT i = 0, j = 8; i < 32; i++, j += 2) {
+			lpWBuf[i] = (WCHAR)((lpBuf[j] << 8) | (lpBuf[j + 1]));
+		}
+		OutputVolDescLog(
+			"\t                            System Identifier: %.16ls\n"
+			"\t                            Volume Identifier: %.16ls\n"
+			"\t                            Volume Space Size: %u\n"
+			, &lpWBuf[0], &lpWBuf[16], pVolDesc->uiVolumeSpaceSize);
+	}
+	else {
+		OutputVolDescLog(
+			"\t                            System Identifier: %.32" CHARWIDTH "s\n"
+			"\t                            Volume Identifier: %.32" CHARWIDTH "s\n"
+			"\t                            Volume Space Size: %u\n"
+			, &lpBuf[8], &lpBuf[40], pVolDesc->uiVolumeSpaceSize);
+	}
+	if (lpBuf[0] == 2) {
+		OutputVolDescLog(
+			"\t                             Escape Sequences: %.32" CHARWIDTH "s\n", &lpBuf[88]);
+	}
+
 	WORD vss = GetSizeOrWordForVolDesc(lpBuf + 120);
 	WORD vsn = GetSizeOrWordForVolDesc(lpBuf + 124);
 	WORD lbs = GetSizeOrWordForVolDesc(lpBuf + 128);
@@ -378,16 +386,33 @@ VOID OutputFsVolumeDescriptorSecond(
 	UINT uiDataLen = GetSizeOrUintForVolDesc(lpBuf + 166, UINT(pDisc->SCSI.nAllLength * DISC_MAIN_DATA_SIZE));
 	CHAR fname[64] = {};
 	OutputFsDirectoryRecord(pExtArg, pDisc, lpBuf + 156, uiExtentPos, uiDataLen, fname, NULL, 0);
-	if (bTCHAR) {
+
+	if (lpBuf[0] == 2) {
+		WCHAR lpWBuf[256] = {};
+		for (INT i = 0, j = 190; i < 256; i++, j += 2) {
+			lpWBuf[i] = (WCHAR)((lpBuf[j] << 8) | (lpBuf[j + 1]));
+		}
+		WCHAR lpWBufCopyright[18] = {};
+		for (INT i = 0, j = 702; i < 18; i++, j += 2) {
+			lpWBufCopyright[i] = (WCHAR)((lpBuf[j] << 8) | (lpBuf[j + 1]));
+		}
+		WCHAR lpWBufAbstract[18] = {};
+		for (INT i = 0, j = 739; i < 18; i++, j += 2) {
+			lpWBufAbstract[i] = (WCHAR)((lpBuf[j] << 8) | (lpBuf[j + 1]));
+		}
+		WCHAR lpWBufBibliographic[18] = {};
+		for (INT i = 0, j = 776; i < 18; i++, j += 2) {
+			lpWBufBibliographic[i] = (WCHAR)((lpBuf[j] << 8) | (lpBuf[j + 1]));
+		}
 		OutputVolDescLog(
-			"\t                        Volume Set Identifier: %.64" CHARWIDTH "s\n"
-			"\t                         Publisher Identifier: %.64" CHARWIDTH "s\n"
-			"\t                     Data Preparer Identifier: %.64" CHARWIDTH "s\n"
-			"\t                       Application Identifier: %.64" CHARWIDTH "s\n"
-			"\t                    Copyright File Identifier: %.18" CHARWIDTH "s\n"
-			"\t                     Abstract File Identifier: %.18" CHARWIDTH "s\n"
-			"\t                Bibliographic File Identifier: %.18" CHARWIDTH "s\n"
-			, str128[0], str128[1], str128[2], str128[3], str37[0], str37[1], str37[2]);
+			"\t                        Volume Set Identifier: %.64ls\n"
+			"\t                         Publisher Identifier: %.64ls\n"
+			"\t                     Data Preparer Identifier: %.64ls\n"
+			"\t                       Application Identifier: %.64ls\n"
+			"\t                    Copyright File Identifier: %.18ls\n"
+			"\t                     Abstract File Identifier: %.18ls\n"
+			"\t                Bibliographic File Identifier: %.18ls\n"
+			, &lpWBuf, &lpWBuf[64], &lpWBuf[128], &lpWBuf[192], &lpWBufCopyright, &lpWBufAbstract, &lpWBufBibliographic);
 	}
 	else {
 		OutputVolDescLog(
@@ -398,7 +423,7 @@ VOID OutputFsVolumeDescriptorSecond(
 			"\t                    Copyright File Identifier: %.37" CHARWIDTH "s\n"
 			"\t                     Abstract File Identifier: %.37" CHARWIDTH "s\n"
 			"\t                Bibliographic File Identifier: %.37" CHARWIDTH "s\n"
-			, str128[0], str128[1], str128[2], str128[3], str37[0], str37[1], str37[2]);
+			, &lpBuf[190], &lpBuf[318], &lpBuf[446], &lpBuf[574], &lpBuf[702], &lpBuf[739], &lpBuf[776]);
 	}
 	OutputVolDescLog(
 		"\t                Volume Creation Date and Time: %.4" CHARWIDTH "s-%.2" CHARWIDTH "s-%.2" CHARWIDTH "sT%.2" CHARWIDTH "s:%.2" CHARWIDTH "s:%.2" CHARWIDTH "s.%.2" CHARWIDTH "s%+03d:%02d\n"
@@ -424,158 +449,6 @@ VOID OutputFsVolumeDescriptorSecond(
 		OutputVolDescLog("%x", lpBuf[i]);
 	}
 	OutputVolDescLog("\n");
-}
-
-VOID OutputFsVolumeDescriptorForISO9660(
-	PEXT_ARG pExtArg,
-	PDISC pDisc,
-	LPBYTE lpBuf,
-	PVOLUME_DESCRIPTOR pVolDesc
-) {
-	CHAR str32[2][32 + 1] = { {} };
-	CHAR str128[4][128 + 1] = { {} };
-	CHAR str37[3][37 + 1] = { {} };
-	strncpy(str32[0], (LPCCH)&lpBuf[8], sizeof(str32[0]) - 1);
-	strncpy(str32[1], (LPCCH)&lpBuf[40], sizeof(str32[1]) - 1);
-	strncpy(str128[0], (LPCCH)&lpBuf[190], sizeof(str128[0]) - 1);
-	strncpy(str128[1], (LPCCH)&lpBuf[318], sizeof(str128[1]) - 1);
-	strncpy(str128[2], (LPCCH)&lpBuf[446], sizeof(str128[2]) - 1);
-	strncpy(str128[3], (LPCCH)&lpBuf[574], sizeof(str128[3]) - 1);
-	strncpy(str37[0], (LPCCH)&lpBuf[702], sizeof(str37[0]) - 1);
-	strncpy(str37[1], (LPCCH)&lpBuf[739], sizeof(str37[1]) - 1);
-	strncpy(str37[2], (LPCCH)&lpBuf[776], sizeof(str37[2]) - 1);
-	OutputFsVolumeDescriptorFirst(pDisc, lpBuf, str32, pVolDesc);
-	if (lpBuf[0] == 2) {
-		OutputVolDescLog(
-			"\t                             Escape Sequences: %.32" CHARWIDTH "s\n", &lpBuf[88]);
-	}
-	OutputFsVolumeDescriptorSecond(pExtArg, pDisc, lpBuf, str128, str37, FALSE);
-}
-
-VOID OutputFsVolumeDescriptorForJoliet(
-	PEXT_ARG pExtArg,
-	PDISC pDisc,
-	LPBYTE lpBuf,
-	PVOLUME_DESCRIPTOR pVolDesc
-) {
-	CHAR str32[2][32 + 1] = {};
-	CHAR str128[4][128 + 1] = {};
-	CHAR str37[3][37 + 1] = {};
-	WCHAR tmp16[3][16 + 1] = {};
-	WCHAR tmp64[4][64 + 1] = {};
-	WCHAR tmp18[3][18 + 1] = {};
-	BOOL bTCHAR = FALSE;
-	if (lpBuf[8] == 0 && lpBuf[9] >= 0x20) {
-		LittleToBig(tmp16[0], (LPWCH)&lpBuf[8], 16);
-		bTCHAR = TRUE;
-	}
-	else if (lpBuf[8] >= 0x20 && lpBuf[9] == 0) {
-		wcsncpy(tmp16[0], (LPWCH)&lpBuf[8], sizeof(tmp16[0]) / sizeof(tmp16[0][0]));
-		bTCHAR = TRUE;
-	}
-	if (bTCHAR) {
-		if (!WideCharToMultiByte(CP_ACP, 0,
-			(LPCWSTR)&tmp16[0], 16, str32[0], sizeof(str32[0]), NULL, NULL)) {
-			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		}
-	}
-	else {
-		strncpy(str32[0], (LPCCH)&lpBuf[8], sizeof(str32[0]) - 1);
-	}
-
-	if (lpBuf[40] == 0 && lpBuf[41] >= 0x20) {
-		LittleToBig(tmp16[1], (LPWCH)&lpBuf[40], 16);
-	}
-	else if (lpBuf[40] >= 0x20 && lpBuf[41] == 0) {
-		wcsncpy(tmp16[1], (LPWCH)&lpBuf[40], sizeof(tmp16[1]) / sizeof(tmp16[1][0]));
-	}
-	if (!WideCharToMultiByte(CP_ACP, 0,
-		(LPCWSTR)&tmp16[1], 16, str32[1], sizeof(str32[1]), NULL, NULL)) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-	}
-
-	if (lpBuf[190] == 0 && lpBuf[191] >= 0x20) {
-		LittleToBig(tmp64[0], (LPWCH)&lpBuf[190], 64);
-	}
-	else if (lpBuf[190] >= 0x20 && lpBuf[191] == 0) {
-		wcsncpy(tmp64[0], (LPWCH)&lpBuf[190], sizeof(tmp64[0]) / sizeof(tmp64[0][0]));
-	}
-	if (!WideCharToMultiByte(CP_ACP, 0,
-		(LPCWSTR)&tmp64[0], 64, str128[0], sizeof(str128[0]), NULL, NULL)) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-	}
-
-	if (lpBuf[318] == 0 && lpBuf[319] >= 0x20) {
-		LittleToBig(tmp64[1], (LPWCH)&lpBuf[318], 64);
-	}
-	else if (lpBuf[318] >= 0x20 && lpBuf[319] == 0) {
-		wcsncpy(tmp64[1], (LPWCH)&lpBuf[318], sizeof(tmp64[1]) / sizeof(tmp64[1][0]));
-	}
-	if (!WideCharToMultiByte(CP_ACP, 0,
-		(LPCWSTR)&tmp64[1], 64, str128[1], sizeof(str128[1]), NULL, NULL)) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-	}
-
-	if (lpBuf[446] == 0 && lpBuf[447] >= 0x20) {
-		LittleToBig(tmp64[2], (LPWCH)&lpBuf[446], 64);
-	}
-	else if (lpBuf[446] >= 0x20 && lpBuf[447] == 0) {
-		wcsncpy(tmp64[2], (LPWCH)&lpBuf[446], sizeof(tmp64[2]) / sizeof(tmp64[2][0]));
-	}
-	if (!WideCharToMultiByte(CP_ACP, 0,
-		(LPCWSTR)&tmp64[2], 64, str128[2], sizeof(str128[2]), NULL, NULL)) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-	}
-
-	if (lpBuf[574] == 0 && lpBuf[575] >= 0x20) {
-		LittleToBig(tmp64[3], (LPWCH)&lpBuf[574], 64);
-	}
-	else if (lpBuf[574] >= 0x20 && lpBuf[575] == 0) {
-		wcsncpy(tmp64[3], (LPWCH)&lpBuf[574], sizeof(tmp64[3]) / sizeof(tmp64[3][0]));
-	}
-	if (!WideCharToMultiByte(CP_ACP, 0,
-		(LPCWSTR)&tmp64[3], 64, str128[3], sizeof(str128[3]), NULL, NULL)) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-	}
-
-	if (lpBuf[702] == 0 && lpBuf[703] >= 0x20) {
-		LittleToBig(tmp18[0], (LPWCH)&lpBuf[702], 18);
-	}
-	else if (lpBuf[702] >= 0x20 && lpBuf[703] == 0) {
-		wcsncpy(tmp18[0], (LPWCH)&lpBuf[702], sizeof(tmp18[0]) / sizeof(tmp18[0][0]));
-	}
-	if (!WideCharToMultiByte(CP_ACP, 0,
-		(LPCWSTR)&tmp18[0], 18, str37[0], sizeof(str37[0]) - 1, NULL, NULL)) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-	}
-
-	if (lpBuf[739] == 0 && lpBuf[740] >= 0x20) {
-		LittleToBig(tmp18[1], (LPWCH)&lpBuf[739], 18);
-	}
-	else if (lpBuf[739] >= 0x20 && lpBuf[740] == 0) {
-		wcsncpy(tmp18[1], (LPWCH)&lpBuf[739], sizeof(tmp18[1]) / sizeof(tmp18[1][0]));
-	}
-	if (!WideCharToMultiByte(CP_ACP, 0,
-		(LPCWSTR)&tmp18[1], 18, str37[1], sizeof(str37[1]) - 1, NULL, NULL)) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-	}
-
-	if (lpBuf[776] == 0 && lpBuf[777] >= 0x20) {
-		LittleToBig(tmp18[2], (LPWCH)&lpBuf[776], 18);
-	}
-	else if (lpBuf[776] >= 0x20 && lpBuf[777] == 0) {
-		wcsncpy(tmp18[2], (LPWCH)&lpBuf[776], sizeof(tmp18[2]) / sizeof(tmp18[2][0]));
-	}
-	if (!WideCharToMultiByte(CP_ACP, 0,
-		(LPCWSTR)&tmp18[2], 18, str37[2], sizeof(str37[2]) - 1, NULL, NULL)) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-	}
-
-	OutputFsVolumeDescriptorFirst(pDisc, lpBuf, str32, pVolDesc);
-
-	OutputVolDescLog(
-		"\t                             Escape Sequences: %.32" CHARWIDTH "s\n", &lpBuf[88]);
-	OutputFsVolumeDescriptorSecond(pExtArg, pDisc, lpBuf, str128, str37, TRUE);
 }
 
 VOID OutputFsVolumePartitionDescriptor(
@@ -622,11 +495,8 @@ VOID OutputFsVolumeDescriptor(
 	if (lpBuf[0] == 0) {
 		OutputFsBootRecord(lpBuf);
 	}
-	else if (lpBuf[0] == 1) {
-		OutputFsVolumeDescriptorForISO9660(pExtArg, pDisc, lpBuf, pVolDesc);
-	}
-	else if (lpBuf[0] == 2) {
-		OutputFsVolumeDescriptorForJoliet(pExtArg, pDisc, lpBuf, pVolDesc);
+	else if (lpBuf[0] == 1 || lpBuf[0] == 2) {
+		OutputFsVolumeDescriptorDetail(pExtArg, pDisc, lpBuf, pVolDesc);
 	}
 	else if (lpBuf[0] == 3) {
 		OutputFsVolumePartitionDescriptor(lpBuf);
