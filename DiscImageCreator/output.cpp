@@ -1757,15 +1757,19 @@ BOOL IsValidDataSector(
 	BYTE m, s, f = 0;
 	LBAtoMSF(nLBA + 150, &m, &s, &f);
 	if ((BcdToDec(aSrcBuf[0x0c] ^ 0x01)) != m || (BcdToDec(aSrcBuf[0x0d] ^ 0x80)) != s || BcdToDec(aSrcBuf[0x0e]) != f) {
-		OutputMainErrorWithLBALog("Invalid MSF - ", nLBA, nTrack);
-		if (BcdToDec(aSrcBuf[0x0c]) == m || BcdToDec(aSrcBuf[0x0d]) == s || BcdToDec(aSrcBuf[0x0e]) == f) {
-			OutputMainErrorLog("Reversed. Skip descrambling\n");
+		if (!(pDisc->PROTECT.byExist == smartE &&
+			pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] <= nLBA &&
+			nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] + pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0])) {
+			OutputMainErrorWithLBALog("Invalid MSF - ", nLBA, nTrack);
+			if (BcdToDec(aSrcBuf[0x0c]) == m || BcdToDec(aSrcBuf[0x0d]) == s || BcdToDec(aSrcBuf[0x0e]) == f) {
+				OutputMainErrorLog("Reversed. Skip descrambling\n");
+			}
+			else {
+				OutputMainErrorLog("Other. Skip descrambling\n");
+			}
+			OutputMainChannel(fileMainError, aSrcBuf, NULL, nLBA, CD_RAW_SECTOR_SIZE);
+			return FALSE;
 		}
-		else {
-			OutputMainErrorLog("Other. Skip descrambling\n");
-		}
-		OutputMainChannel(fileMainError, aSrcBuf, NULL, nLBA, CD_RAW_SECTOR_SIZE);
-		return FALSE;
 	}
 	
 	if (aSrcBuf[0x0f] != 0x60 && aSrcBuf[0x0f] != 0x61 && aSrcBuf[0x0f] != 0x62) {
