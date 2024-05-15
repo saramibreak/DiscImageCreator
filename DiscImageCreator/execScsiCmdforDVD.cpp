@@ -1200,11 +1200,14 @@ BOOL ReadDVDRaw(
 			if (dwSectorSize == DVD_RAW_SECTOR_SIZE_2064 && !bNintendoDisc) {
 				nType = 1; // 2064 bytes, scrambled
 			}
+			else if (dwSectorSize == DVD_RAW_SECTOR_SIZE_2236) {
+				nType = 2; // 2236 bytes, scrambled
+			}
 			else if (dwSectorSize == DVD_RAW_SECTOR_SIZE_2304) {
-				nType = 2; // 2304 bytes, scrambled
+				nType = 3; // 2304 bytes, scrambled
 			}
 			else if (dwSectorSize == DVD_RAW_SECTOR_SIZE_2384) {
-				nType = 3; // 2384 bytes, scrambled
+				nType = 4; // 2384 bytes, scrambled
 			}
 
 			_TCHAR str[_MAX_PATH * 3 + 4] = {};
