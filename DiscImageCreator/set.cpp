@@ -1300,10 +1300,6 @@ BOOL SetLBAtoDescrambleSector(
 				if (bHeader) {
 					OutputMainInfoWithLBALog(
 						"Audio track, Data sector, there is a sync\n", nLBA, trk);
-					if (pDisc->MAIN.lp1stLBAListCanDescrambled[trk - 1] == -1) {
-						pDisc->MAIN.lp1stLBAListCanDescrambled[trk - 1] = nLBA;
-					}
-					pDisc->MAIN.lpLastLBAListCanDescrambled[trk - 1] = nLBA;
 				}
 				else {
 					OutputMainInfoWithLBALog(
