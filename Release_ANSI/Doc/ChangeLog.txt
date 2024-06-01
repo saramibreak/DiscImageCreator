@@ -1,4 +1,15 @@
 ================================= Change Log ==================================
+*2024-06-01
+- added "DVDRawBruteforce - Drive Sheet - Sheet1.tsv" to get DVD raw sector size etc.
+- added support to dump DVD raw sector (2304 bytes/sector)
+- added support to descramble of DVD raw (2236 bytes/sector)
+- fixed /a is invalid when pregap sector exists in the 1st track.
+- fixed infinite loop occurs when reading UDF
+- fixed output Joliet identifiers
+- fixed smartE sectors don't descramble
+- fixed regression in track handling between versions 20240101 and 20240401
+- fixed output irregular CD-TEXT
+
 *2024-04-01
 - added output HFS Catalog Files
 - added RegenerateToc for dumping CD-i format with multi-track disc
