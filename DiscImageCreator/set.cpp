@@ -616,9 +616,14 @@ VOID SetAndOutputTocCDText(
 	UINT uiPacksOfDiscId[MAX_CDTEXT_LANG] = {};
 	UINT uiPacksOfGenre[MAX_CDTEXT_LANG] = {};
 	UINT uiPacksOfUpcEan[MAX_CDTEXT_LANG] = {};
+	BOOL bSizeInfo = FALSE;
 
 	for (INT i = 0; i < wTocTextEntries; i++) {
-		if (pDesc[i].PackType == CDROM_CD_TEXT_PACK_SIZE_INFO) {
+		if (pDesc[i].PackType == CDROM_CD_TEXT_PACK_ALBUM_NAME) {
+			// The Hacker - A.N.D. N.O.W...
+			uiPacksOfAlbum[pDesc[i].BlockNumber] += 1;
+		}
+		else if (pDesc[i].PackType == CDROM_CD_TEXT_PACK_SIZE_INFO) {
 			uiLastTrackNum = pDesc[i].Text[2];
 			uiPacksOfAlbum[pDesc[i].BlockNumber] = pDesc[i].Text[4];
 			uiPacksOfPerformer[pDesc[i].BlockNumber] = pDesc[i].Text[5];
@@ -630,9 +635,14 @@ VOID SetAndOutputTocCDText(
 			uiPacksOfGenre[pDesc[i].BlockNumber] = pDesc[i].Text[11];
 			uiPacksOfUpcEan[pDesc[i].BlockNumber] = pDesc[i + 1].Text[6];
 			i += 2;
+			bSizeInfo = TRUE;
 		}
 	}
-	UCHAR ucLastTrkNum = 0;
+	if (!bSizeInfo) {
+		// The Hacker - A.N.D. N.O.W...
+		uiLastTrackNum = pDisc->SCSI.toc.LastTrack;
+	}
+	UCHAR ucLastTrkNumForTocInfo = 0;
 
 	for (UINT j = 0; j < wTocTextEntries; j++) {
 		if (pDesc[j].PackType == CDROM_CD_TEXT_PACK_ALBUM_NAME) {
@@ -900,11 +910,11 @@ VOID SetAndOutputTocCDText(
 					"\t     Lead-out(msf): %02u:%02u:%02u\n"
 					, pDesc[j].Text[0], pDesc[j].Text[1], pDesc[j].Text[3]
 					, pDesc[j].Text[4], pDesc[j].Text[5]);
-				ucLastTrkNum = pDesc[j].Text[1];
+				ucLastTrkNumForTocInfo = pDesc[j].Text[1];
 			}
 			else {
 				for (INT i = pDesc[j].TrackNumber, k = 0; i < pDesc[j].TrackNumber + 4; i++, k += 3) {
-					if (ucLastTrkNum < i) {
+					if (ucLastTrkNumForTocInfo < i) {
 						break;
 					}
 					OutputDiscLog(
