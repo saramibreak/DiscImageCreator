@@ -1,0 +1,5 @@
+#pragma once
+
+#define BUILD_DATE "@build_date@"
+
+#define BUILD_TIME "@build_time@"
