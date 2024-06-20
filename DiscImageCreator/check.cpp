@@ -249,6 +249,7 @@ BOOL IsValid0xF1SupportedDrive(
 					pDevice->by0xF1Drive = TRUE;
 				}
 			}
+			// BD-RE BP60NB10 1.02 does not support https://github.com/saramibreak/DiscImageCreator/issues/280
 		}
 	}
 	if (pDevice->by0xF1Drive && !pDevice->bCanReadLeadout) {

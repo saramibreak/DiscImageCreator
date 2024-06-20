@@ -3038,8 +3038,6 @@ BOOL ReadCDOutOfRange(
 		}
 		FcloseAndNull(fpMain);
 		FcloseAndNull(fpSub);
-		ZeroMemory(aBuf, CD_RAW_SECTOR_WITH_SUBCODE_SIZE * 4);
-		ZeroMemory(lpSubcode, CD_RAW_READ_SUBCODE_SIZE);
 
 		if (!bPregap || !bOK2ndSessionLeadin) {
 			pExtArg->bySkipSubP = bakSkipSubP;
@@ -3070,6 +3068,9 @@ BOOL ReadCDOutOfRange(
 			return FALSE;
 		}
 
+		ZeroMemory(aBuf, CD_RAW_SECTOR_WITH_SUBCODE_SIZE * 4);
+		ZeroMemory(lpSubcode, CD_RAW_READ_SUBCODE_SIZE);
+
 		for (INT i = pDisc->SCSI.nAllLength + nOverreadSize; i < pDisc->SCSI.nAllLength + LAST_TRACK_LEADOUT_SIZE; i++) {
 			if (!ExecReadCD(pExtArg, pDevice, lpCmd, i, aBuf,
 				CD_RAW_SECTOR_WITH_SUBCODE_SIZE, _T(__FUNCTION__), __LINE__)
@@ -3098,8 +3099,6 @@ BOOL ReadCDOutOfRange(
 		OutputString("\n");
 		FcloseAndNull(fpMain);
 		FcloseAndNull(fpSub);
-		ZeroMemory(aBuf, CD_RAW_SECTOR_WITH_SUBCODE_SIZE * 4);
-		ZeroMemory(lpSubcode, CD_RAW_READ_SUBCODE_SIZE);
 
 		if (!_tcsncmp(ext, _T(".scm"), SIZE_OF_ARRAY(ext))) {
 			ConvertScmToBin(pszPath, _T(" (Track AA)(Session 2)"), __LINE__);
@@ -3183,6 +3182,9 @@ BOOL ReadCDOutOfRange(
 	SetReadDiscCommand(pExtArg, pDevice, 1
 		, CDFLAG::_READ_CD::All, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::Pack, lpCmd, FALSE);
 
+	ZeroMemory(aBuf, CD_RAW_SECTOR_WITH_SUBCODE_SIZE * 4);
+	ZeroMemory(lpSubcode, CD_RAW_READ_SUBCODE_SIZE);
+
 	for (INT i = nStartLBA + nOverreadSize; i < nStartLBA + nLastLBA; i++) {
 		if (!ExecReadCD(pExtArg, pDevice, lpCmd, i, aBuf,
 			CD_RAW_SECTOR_WITH_SUBCODE_SIZE, _T(__FUNCTION__), __LINE__)
@@ -3211,8 +3213,6 @@ BOOL ReadCDOutOfRange(
 	OutputString("\n");
 	FcloseAndNull(fpMain);
 	FcloseAndNull(fpSub);
-	ZeroMemory(aBuf, CD_RAW_SECTOR_WITH_SUBCODE_SIZE * 4);
-	ZeroMemory(lpSubcode, CD_RAW_READ_SUBCODE_SIZE);
 
 	if (!_tcsncmp(ext, _T(".scm"), SIZE_OF_ARRAY(ext))) {
 		ConvertScmToBin(pszPath, appendNameA, __LINE__);
@@ -3305,6 +3305,9 @@ BOOL ReadCDOutOfRange(
 	BYTE lpSubcodeTmp[CD_RAW_READ_SUBCODE_SIZE] = {};
 	SetReadDiscCommand(pExtArg, pDevice, 4
 		, CDFLAG::_READ_CD::All, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::Pack, lpCmd, FALSE);
+
+	ZeroMemory(aBuf, CD_RAW_SECTOR_WITH_SUBCODE_SIZE * 4);
+	ZeroMemory(lpSubcode, CD_RAW_READ_SUBCODE_SIZE);
 
 	for (INT i = LEADIN_START_LBA_SESSION_1; i < -1153; i++) {
 		if (!ExecReadCD(pExtArg, pDevice, lpCmd, i, aBuf,
@@ -3484,16 +3487,14 @@ BOOL ReadCDOutOfRange(
 	OutputString("\n");
 	FcloseAndNull(fpMain);
 	FcloseAndNull(fpSub);
-	ZeroMemory(aBuf, CD_RAW_SECTOR_WITH_SUBCODE_SIZE * 4);
+	if (!bTrack1) {
+		OutputLog(standardError | fileMainError, "Failed to get%s\n", appendName1);
+		return FALSE;
+	}
 
 	if (!_tcsncmp(ext, _T(".scm"), SIZE_OF_ARRAY(ext))) {
 		ConvertScmToBin(pszPath, appendName0, __LINE__);
 		ConvertScmToBin(pszPath, appendName1, __LINE__);
-	}
-
-	if (!bTrack1) {
-		OutputErrorString("Failed to get%s\n", appendName1);
-		return FALSE;
 	}
 
 	if ((pDisc->SCSI.toc.TrackData[0].Control & AUDIO_DATA_TRACK) == 0) {
@@ -3506,6 +3507,8 @@ BOOL ReadCDOutOfRange(
 			OutputLog(standardOut | fileDisc, "\tThere is not non-zero byte in the%s\n", appendName1);
 		}
 	}
+
+	ZeroMemory(aBuf, CD_RAW_SECTOR_WITH_SUBCODE_SIZE * 4);
 
 	if (IsAudioOnlyDisc(pDisc)) {
 		SetReadDiscCommand(pExtArg, pDevice, 1

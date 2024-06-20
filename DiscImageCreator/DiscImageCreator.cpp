@@ -347,7 +347,7 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 								if (ReadCDOutOfRange(pExecType, pExtArg, pDevice, pDisc, pszFullPath)) {
 									break;
 								}
-								OutputErrorString("Retry %d/%d\n", i, 5);
+								OutputLog(standardError | fileMainError, "Retry %d/%d\n", i, 5);
 							}
 						}
 						else {

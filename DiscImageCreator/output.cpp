@@ -2400,12 +2400,12 @@ VOID OutputLastErrorNumAndString(
 		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM,
 		NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&lpMsgBuf, 0, NULL);
 	// http://blog.livedoor.jp/afsoft/archives/52230222.html
-	OutputLog(standardError | fileCommandLine, "[F:%s][L:%lu] GetLastError: %lu, %s\n",
+	OutputLog(standardError | fileMainError, "[F:%s][L:%lu] GetLastError: %lu, %s\n",
 		pszFuncName, lLineNum, GetLastError(), (LPCTSTR)lpMsgBuf);
 
 	LocalFree(lpMsgBuf);
 #else
-	OutputLog(standardError | fileCommandLine, "[F:%s][L:%ld] GetLastError: %d, %s\n",
+	OutputLog(standardError | fileMainError, "[F:%s][L:%ld] GetLastError: %d, %s\n",
 		pszFuncName, lLineNum, GetLastError(), strerror(GetLastError()));
 #endif
 }
