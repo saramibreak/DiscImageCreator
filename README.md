@@ -35,7 +35,7 @@
    - ASUS
      - BC-12D2HT (Combined offset minus disc only), BW-16D1HT (ditto)
        - BW-16D1HT Firmware 3.02 supports the combined offset plus disc  
-       See also http://wiki.redump.org/index.php?title=DiscImageCreator:_Optical_Disc_Drive_Compatibility#Non-Plextor_ODDs_.28Plextors_are_preferable.2C_as_more_testing_is_needed_for_these.29
+       See also http://wiki.redump.org/index.php?title=Optical_Disc_Drive_Compatibility#Non-Plextor_ODDs_.28Plextors_are_preferable.2C_as_more_testing_is_needed_for_these.29
    - Hitachi-LG
      - UH12NS30 (Combined offset minus disc only)
 - CD: (Swappable drive) (This is the comfirmed drive list. Actually, many drive perhaps supports to swap)
@@ -55,7 +55,9 @@
        - LH-18A1P
      - ASUS/LG
        - BW-16D1HT, BC-12D2HT etc. (Firmware 3.02 is needed.)
-       See also http://wiki.redump.org/index.php?title=DiscImageCreator:_Optical_Disc_Drive_Compatibility#Non-Plextor_ODDs_.28Plextors_are_preferable.2C_as_more_testing_is_needed_for_these.29
+       See also http://wiki.redump.org/index.php?title=Optical_Disc_Drive_Compatibility#Non-Plextor_ODDs_.28Plextors_are_preferable.2C_as_more_testing_is_needed_for_these.29
+     - Other
+       - See "DVDRawBruteforce - Drive Sheet - Sheet1.tsv" in the Release_ANSI folder
 - GC/Wii
    - Hitachi-LG
      - GDR-8082N, GDR-8083N, GDR-8084N  
@@ -221,7 +223,7 @@ See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)
 - .c2  
   c2 error binary image of the CD. 1 bit expresses 1 byte.
 - .ccd  
-  CD information. Original is [CloneCD](https://www.redfox.bz/ja/clonecd.html)
+  CD information. Original is [CloneCD](https://web.archive.org/web/20240501024626/https://www.redfox.bz/ja/clonecd.html)
 - .cue  
   CD information. Original is [CDRWIN](https://web.archive.org/web/20111008191852/http://www.goldenhawk.com/cdrwin.htm)
 - .dat  
@@ -344,7 +346,7 @@ See LICENSE
 
   DVDRawBruteforce - Drive Sheet - Sheet1  
     https://docs.google.com/spreadsheets/d/1pu3oXHRJ_qlyXrsHUyXOzD5mNp7dU8rgrfVuRBLyQFA/edit?pli=1#gid=0
-    https://github.com/hiddenpalaceorg/DVDRawBruteforce
+    https://github.com/hiddenpalaceorg/DVDRawBruteforce  
     Author: ehw (Hidden-Palace.org R&D)
 
   E_WISE_W.EXE  
