@@ -68,15 +68,12 @@
 
 #define EXELBA_STORE_SIZE (6144) // TODO
 #define EXENAME_STORE_SIZE (64) // TODO
-// 情報交換の水準
-// 水準	1	2	3
-// ファイル識別子	8+3文字	30文字	30文字
-// ディレクトリ識別子	8文字	31文字	31文字
-// Romeo Extensions
-// 1バイト文字で128文字までの長いファイル名を記録できる。
-// Joliet Extensions
-// Unicodeで64文字までの長いファイル名を記録できる。
-#define MAX_FNAME_FOR_VOLUME (128 + 1)
+// https://en.wikipedia.org/wiki/ISO_9660
+// ISO 9660 Level 1: File names are limited to eight characters with a three-character extension. Directory names are limited to eight characters.
+// Rock Ridge: Longer file names (up to 255 bytes)
+// Joliet: filenames to be up to 64 Unicode characters in length.
+// Romeo: long filenames up to 128 characters
+#define MAX_FNAME_FOR_VOLUME (255 + 1)
 #define MIN_LEN_DR (34)
 
 #define FILE_VERSION_SIZE (256)

@@ -366,7 +366,6 @@ typedef struct _DISC {
 		BYTE reserved;
 		CHAR name[MAX_READ_ERROR_FILE_COUNT][MAX_FNAME_FOR_VOLUME];
 		CHAR name2[MAX_FNAME_FOR_VOLUME];				// for Der KorsaR, DVD Region X
-		CHAR padding[3];
 		struct _ERROR_SECTOR {							// for skipping unreadable file
 			INT nExtentPos[MAX_READ_ERROR_FILE_COUNT];
 			INT nNextExtentPos;							// for safedisc
@@ -435,8 +434,7 @@ typedef struct _PATH_TABLE_RECORD {
 	UINT uiPosOfDir;
 	UINT uiNumOfUpperDir;
 	CHAR szDirName[MAX_FNAME_FOR_VOLUME];
-	CHAR padding[3];
-	UINT uiDirSize;							// This is actually DIRECTORY RECORD info
+	UINT uiDirSize;						// This is actually DIRECTORY RECORD info
 } PATH_TABLE_RECORD, *PPATH_TABLE_RECORD;
 
 typedef struct _UDF {
