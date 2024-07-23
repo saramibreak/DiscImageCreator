@@ -3343,7 +3343,9 @@ BOOL ReadCDOutOfRange(
 			if ((lpSubcodeTmp[19] == 0 && lpSubcodeTmp[20] == 0 && lpSubcodeTmp[21] == 0 && nOverreadSize <= 0) ||
 				(lpSubcodeTmp[19] == 0 && lpSubcodeTmp[20] == 0 && lpSubcodeTmp[21] == 1 && nOverreadSize == 1) ||
 				(lpSubcodeTmp[19] == 0 && lpSubcodeTmp[20] == 0 && lpSubcodeTmp[21] == 2 && nOverreadSize == 2) ||
-				(lpSubcodeTmp[19] == 0 && lpSubcodeTmp[20] == 0 && lpSubcodeTmp[21] == 3 && nOverreadSize == 3)
+				(lpSubcodeTmp[19] == 0 && lpSubcodeTmp[20] == 0 && lpSubcodeTmp[21] == 3 && nOverreadSize == 3) ||
+				(lpSubcodeTmp[19] == 0 && lpSubcodeTmp[20] == 0 && lpSubcodeTmp[21] == 4 && nOverreadSize == 4) ||
+				(lpSubcodeTmp[19] == 0 && lpSubcodeTmp[20] == 0 && lpSubcodeTmp[21] == 5 && nOverreadSize == 5)
 				) {
 				b1stPregapSector = TRUE;
 			}
@@ -3354,7 +3356,9 @@ BOOL ReadCDOutOfRange(
 				(lpSubcodeTmp[19] == 0 && lpSubcodeTmp[20] == 2 && lpSubcodeTmp[21] == 0 && nOverreadSize == 0) ||
 				(lpSubcodeTmp[19] == 0 && lpSubcodeTmp[20] == 2 && lpSubcodeTmp[21] == 1 && nOverreadSize == 1) ||
 				(lpSubcodeTmp[19] == 0 && lpSubcodeTmp[20] == 2 && lpSubcodeTmp[21] == 2 && nOverreadSize == 2) ||
-				(lpSubcodeTmp[19] == 0 && lpSubcodeTmp[20] == 2 && lpSubcodeTmp[21] == 3 && nOverreadSize == 3)
+				(lpSubcodeTmp[19] == 0 && lpSubcodeTmp[20] == 2 && lpSubcodeTmp[21] == 3 && nOverreadSize == 3) ||
+				(lpSubcodeTmp[19] == 0 && lpSubcodeTmp[20] == 2 && lpSubcodeTmp[21] == 4 && nOverreadSize == 4) ||
+				(lpSubcodeTmp[19] == 0 && lpSubcodeTmp[20] == 2 && lpSubcodeTmp[21] == 5 && nOverreadSize == 5)
 				) {
 				bLastPregapSector = TRUE;
 			}
