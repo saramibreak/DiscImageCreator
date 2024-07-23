@@ -1805,17 +1805,12 @@ BOOL ExtractSecuritySector(
 	PHASH pHash
 ) {
 	_TCHAR szPath[_MAX_PATH] = {};
-	_tcsncpy(szPath, pszFullPath, SIZE_OF_ARRAY(szPath) - 1);
-	if (!PathRemoveFileSpec(szPath)) {
-		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-		return FALSE;
-	}
 	_TCHAR szOutPathSS[_MAX_PATH] = {};
 	_TCHAR szFnameAndExtSS[_MAX_FNAME + _MAX_EXT] = {};
-
 	FILE* fp = NULL;
-	if (NULL == (fp = CreateOrOpenFile(
-		szPath, _T("_SS"), szOutPathSS, szFnameAndExtSS, NULL, _T(".bin"), _T("wb"), 0, 0))) {
+
+	_tcsncpy(szPath, pszFullPath, SIZE_OF_ARRAY(szPath) - 1);
+	if (NULL == (fp = CreateOrOpenFile(szPath, _T("_SS"), szOutPathSS, szFnameAndExtSS, NULL, _T(".bin"), _T("wb"), 0, 0))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
