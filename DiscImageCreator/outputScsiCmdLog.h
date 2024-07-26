@@ -77,6 +77,7 @@ VOID OutputSetSpeed(
 );
 
 VOID OutputEeprom(
+	PDEVICE pDevice,
 	LPBYTE pBuf,
 	INT nRoop,
 	BOOL byPlxtrDrive

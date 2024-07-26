@@ -513,6 +513,11 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 		bRet = bErr;
 	}
 	FlushLog();
+	if (pDevice->byDisabldSpeedRead) {
+		OutputString("SpeedRead set to OFF\n")
+		SetSpeedRead(pExtArg, pDevice, FALSE);
+	}
+
 	if (*pExecType == cd || *pExecType == swap) {
 		FcloseAndNull(fpCcd);
 	}

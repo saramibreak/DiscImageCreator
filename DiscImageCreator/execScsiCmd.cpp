@@ -1157,7 +1157,7 @@ BOOL ReadEeprom(
 				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
 				throw FALSE;
 			}
-			OutputEeprom(pBuf, idx, pDevice->byPlxtrDrive);
+			OutputEeprom(pDevice, pBuf, idx, pDevice->byPlxtrDrive);
 			if (bHigh) {
 				tLen += 0x10000;
 			}
@@ -1325,7 +1325,10 @@ BOOL ReadDriveInformation(
 					}
 					ReadEeprom(pExtArg, pDevice);
 				}
-				SetSpeedRead(pExtArg, pDevice, TRUE);
+				if (pDevice->byDisabldSpeedRead) {
+					SetSpeedRead(pExtArg, pDevice, TRUE);
+					OutputString("SpeedRead set to ON temporarily\n");
+				}
 			}
 		}
 		else {

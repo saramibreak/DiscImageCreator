@@ -260,7 +260,8 @@ typedef struct _DEVICE {
 	BYTE bySuccessReadTocFull;
 	BYTE bySupportedPackMode;
 	BYTE bySupportedScrambled;
-	BYTE padding[2];
+	BYTE byDisabldSpeedRead;
+	BYTE padding;
 	CDFLAG::_READ_CD::_ERROR_FLAGS supportedC2Type;
 	CDFLAG::_READ_CD::_SUB_CHANNEL_SELECTION sub;
 	DWORD dwTimeOutValue;

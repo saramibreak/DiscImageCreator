@@ -3384,6 +3384,7 @@ VOID OutputEepromUnknownByte(
 }
 
 VOID OutputEepromOverPX712(
+	PDEVICE pDevice,
 	LPBYTE pBuf
 ) {
 	OutputDriveLog("\t    Silent Mode: ");
@@ -3425,6 +3426,7 @@ VOID OutputEepromOverPX712(
 	}
 	else if (pBuf[29] == 0xff || pBuf[29] == 0x0f) {
 		OutputDriveLog("Disable");
+		pDevice->byDisabldSpeedRead = TRUE;
 	}
 	OutputDriveLog("\n\t        Unknown: %x\n", pBuf[30]);
 
@@ -3526,6 +3528,7 @@ VOID OutputEepromOverPX712(
 }
 
 VOID OutputEeprom(
+	PDEVICE pDevice,
 	LPBYTE pBuf,
 	INT nRoop,
 	BOOL byPlxtrDrive
@@ -3567,7 +3570,7 @@ VOID OutputEeprom(
 			break;
 		case PLXTR_DRIVE_TYPE::PX712A:
 			OutputEepromUnknownByte(pBuf, 108, 255);
-			OutputEepromOverPX712(&pBuf[256]);
+			OutputEepromOverPX712(pDevice, &pBuf[256]);
 			OutputEepromUnknownByte(pBuf, 372, 510);
 			OutputDriveLog(
 				"\t            Sum: %02x (SpeedRead: %02x + Spindown Time: %02x + BookType: %02x + Others)\n"
@@ -3690,7 +3693,7 @@ VOID OutputEeprom(
 		}
 	}
 	else if (nRoop == 1 && byPlxtrDrive <= PLXTR_DRIVE_TYPE::PX714A) {
-		OutputEepromOverPX712(pBuf);
+		OutputEepromOverPX712(pDevice, pBuf);
 		
 		OutputDriveLog("\t  Auto Strategy: ");
 		switch (pBuf[116]) {
