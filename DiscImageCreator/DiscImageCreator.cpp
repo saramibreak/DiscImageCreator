@@ -343,12 +343,13 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 					}
 					if (*pExecType == cd || *pExecType == swap) {
 						if (IsPregapOfTrack1ReadableDrive(pDevice)) {
-							for (INT i = 1; i <= 5; i++) {
+							UINT i = 0;
+							do {
 								if (ReadCDOutOfRange(pExecType, pExtArg, pDevice, pDisc, pszFullPath)) {
 									break;
 								}
-								OutputLog(standardError | fileMainError, "Retry %d/%d\n", i, 5);
-							}
+								OutputLog(standardError | fileMainError, "Read attempt %d/%d\n", i + 1, pExtArg->uiTryReadingPregapCnt);
+							} while (++i < pExtArg->uiTryReadingPregapCnt);
 						}
 						else {
 							// This func needs the combined offsets
@@ -744,6 +745,23 @@ int printAndSetPath(_TCHAR* szPathFromArg, PEXEC_TYPE pExecType, PEXT_ARG pExtAr
 	return TRUE;
 }
 
+int SetOptionTrp(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
+{
+	_TCHAR* endptr = NULL;
+	if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
+		pExtArg->uiTryReadingPregapCnt = (UINT)_tcstoul(argv[(*i)++], &endptr, 10);
+		if (*endptr) {
+			OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
+			return FALSE;
+		}
+	}
+	else {
+		pExtArg->uiTryReadingPregapCnt = 5;
+		OutputString("/trp val was omitted. set [%u]\n", pExtArg->uiTryReadingPregapCnt);
+	}
+	return TRUE;
+}
+
 int SetOptionMr(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 {
 	_TCHAR* endptr = NULL;
@@ -1105,6 +1123,8 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				return FALSE;
 			}
 			pExtArg->uiSubAddionalNum = 1;
+			pExtArg->uiTryReadingPregapCnt = 5;
+
 			for (INT i = 6; i <= argc; i++) {
 				cmdLen = _tcslen(argv[i - 1]);
 				if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/q"), cmdLen)) {
@@ -1198,6 +1218,11 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				}
 				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/s"), cmdLen)) {
 					if (!SetOptionS(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
+				}
+				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/trp"), cmdLen)) {
+					if (!SetOptionTrp(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
 				}
@@ -1799,12 +1824,12 @@ void printUsage(void)
 		"\tcd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/d] [/a (val)] [/aj] [/p]\n"
 		"\t   [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4) (val5)] [/f (val)]\n"
 		"\t   [/vn (val)] [/vnc] [/vnx] [/mscf] [/sf (val)] [/ss] [/np] [/nq] [/nr]\n"
-		"\t   [/nl] [/ns] [/s (val)]\n"
+		"\t   [/nl] [/ns] [/s (val)] [/trp (val)]\n"
 		"\t\tDump a CD from A to Z\n"
 		"\t\tFor PLEXTOR or drive that can scramble Dumping\n"
 		"\tswap <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/d] [/a (val)]\n"
 		"\t   [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4) (val5)] [/f (val)]\n"
-		"\t   [/p] [/sf (val)] [/ss] [/np] [/nq] [/nr] [/nl] [/ns] [/s (val)] [/74]\n"
+		"\t   [/p] [/sf (val)] [/ss] [/np] [/nq] [/nr] [/nl] [/ns] [/s (val)] [/74] [/trp (val)]\n"
 		"\t\tDump a CD from A to Z using swap trick\n"
 		"\t\tFor no PLEXTOR or drive that can't scramble dumping\n"
 		"\tdata <DriveLetter> <Filename> <DriveSpeed(0-72)> <StartLBA> <EndLBA+1>\n"
@@ -1933,6 +1958,8 @@ void printUsage(void)
 		"\t\t\tFor output exe file info in detail\n"
 		"\t/mr\tMulti sector reading of the lead-out for 0xf1 drive\n"
 		"\t\t\tval\tretry count (default 50)\n"
+		"\t/trp\tTry reading pregap sectors of track 1 starting from minus LBA\n"
+		"\t\t\tval\ttry count (default 5)\n"
 		"Option (for CD SubChannel)\n"
 		"\t/np\tNot fix SubP\n"
 		"\t/nq\tNot fix SubQ\n"
@@ -1947,11 +1974,11 @@ void printUsage(void)
 		"\t\t\tval\t0: no read next sub (fast, but lack precision)\n"
 		"\t\t\t   \t1: read next sub (normal, this val is default)\n"
 		"\t\t\t   \t2: read next & next next sub (slow, precision)\n"
-		"Option (for DVD)\n"
-		"\t/c\tLog Copyright Management Information\n"
 	);
 	stopMessage();
 	OutputString(
+		"Option (for DVD)\n"
+		"\t/c\tLog Copyright Management Information\n"
 		"\t/rr\tRetry reading when error occurs\n"
 		"\t\t\tval\tMax retry value (default: 10)\n"
 		"\t/sk\tSkip sector for protect (ARccOS, RipGuard)\n"

@@ -2895,8 +2895,8 @@ BOOL ReadCDOutOfRange(
 	_TCHAR ext[_MAX_EXT] = {};
 	FILE* fpMain = NULL;
 	FILE* fpSub = NULL;
-	_TCHAR appendName0[32] = {};
-	_TCHAR appendName1[32] = {};
+	_TCHAR appendName0[36] = {};
+	_TCHAR appendName1[36] = {};
 
 	UINT uiByteOffsetOut = 0;
 	BOOL bNonZeroByteExistOut = FALSE;
@@ -2930,11 +2930,11 @@ BOOL ReadCDOutOfRange(
 		}
 		// 2nd session lead-in
 		if (pDisc->SCSI.toc.LastTrack > 9) {
-			_tcsncpy(appendName0, _T(" (Track 00)(Session 2)"), SIZE_OF_ARRAY(appendName0));
+			_tcsncpy(appendName0, _T(" (Lead-in)(Track 00)(Session 2)"), SIZE_OF_ARRAY(appendName0));
 			_sntprintf(appendName1, SIZE_OF_ARRAY(appendName1), _T(" (Track %02d)(Pregap)"), pDisc->SCSI.by1stMultiSessionTrkNum);
 		}
 		else {
-			_tcsncpy(appendName0, _T(" (Track 0)(Session 2)"), SIZE_OF_ARRAY(appendName0));
+			_tcsncpy(appendName0, _T(" (Lead-in)(Track 0)(Session 2)"), SIZE_OF_ARRAY(appendName0));
 			_sntprintf(appendName1, SIZE_OF_ARRAY(appendName1), _T(" (Track %d)(Pregap)"), pDisc->SCSI.by1stMultiSessionTrkNum);
 		}
 
@@ -3048,8 +3048,9 @@ BOOL ReadCDOutOfRange(
 			ConvertScmToBin(pszPath, appendName0, __LINE__);
 			ConvertScmToBin(pszPath, appendName1, __LINE__);
 		}
-
+		
 		// 2nd session lead-out
+		CONST _TCHAR appendNameA2[36] = _T(" (Lead-out)(Track AA)(Session 2)");
 		SetReadDiscCommand(pExtArg, pDevice, 1
 			, CDFLAG::_READ_CD::All, CDFLAG::_READ_CD::NoC2, CDFLAG::_READ_CD::Pack, lpCmd, FALSE);
 		if (pDisc->SCSI.toc.TrackData[pDisc->SCSI.toc.LastTrack - 1].Control & AUDIO_DATA_TRACK) {
@@ -3059,11 +3060,11 @@ BOOL ReadCDOutOfRange(
 			_tcsncpy(ext, _T(".bin"), SIZE_OF_ARRAY(ext));
 		}
 
-		if (NULL == (fpMain = CreateOrOpenFile(pszPath, _T(" (Track AA)(Session 2)"), NULL, NULL, NULL, ext, _T("wb"), 0, 0))) {
+		if (NULL == (fpMain = CreateOrOpenFile(pszPath, appendNameA2, NULL, NULL, NULL, ext, _T("wb"), 0, 0))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
 		}
-		if (NULL == (fpSub = CreateOrOpenFile(pszPath, _T(" (Track AA)(Session 2)"), NULL, NULL, NULL, _T(".sub"), _T("wb"), 0, 0))) {
+		if (NULL == (fpSub = CreateOrOpenFile(pszPath, appendNameA2, NULL, NULL, NULL, _T(".sub"), _T("wb"), 0, 0))) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			return FALSE;
 		}
@@ -3094,18 +3095,18 @@ BOOL ReadCDOutOfRange(
 			if (pDisc->SCSI.nAllLength <= i && i < pDisc->SCSI.nAllLength + LAST_TRACK_LEADOUT_SIZE - 1) {
 				fwrite(lpSubcode, sizeof(BYTE), CD_RAW_READ_SUBCODE_SIZE, fpSub);
 			}
-			OutputString("\rCreating (Track AA)(Session 2)%s & .sub (LBA) %8d/%8d", ext, i, pDisc->SCSI.nAllLength + 99);
+			OutputString("\rCreating%s%s & .sub (LBA) %8d/%8d", appendNameA2, ext, i, pDisc->SCSI.nAllLength + 99);
 		}
 		OutputString("\n");
 		FcloseAndNull(fpMain);
 		FcloseAndNull(fpSub);
 
 		if (!_tcsncmp(ext, _T(".scm"), SIZE_OF_ARRAY(ext))) {
-			ConvertScmToBin(pszPath, _T(" (Track AA)(Session 2)"), __LINE__);
+			ConvertScmToBin(pszPath, appendNameA2, __LINE__);
 		}
 
 		if ((pDisc->SCSI.toc.TrackData[pDisc->SCSI.toc.LastTrack - 1].Control & AUDIO_DATA_TRACK) == 0) {
-			if (NULL == (fpMain = CreateOrOpenFile(pszPath, _T(" (Track AA)(Session 2)"), NULL, NULL, NULL, ext, _T("rb"), 0, 0))) {
+			if (NULL == (fpMain = CreateOrOpenFile(pszPath, appendNameA2, NULL, NULL, NULL, ext, _T("rb"), 0, 0))) {
 				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 				return FALSE;
 			}
@@ -3155,13 +3156,13 @@ BOOL ReadCDOutOfRange(
 		uiLastTrk = (UINT)(pDisc->SCSI.by1stMultiSessionTrkNum - 1);
 		nStartLBA = pDisc->SCSI.n1stLBAofLeadout;
 		nLastLBA = 6750;
-		_tcsncpy(appendNameA, _T(" (Track AA)(Session 1)"), SIZE_OF_ARRAY(appendNameA));
+		_tcsncpy(appendNameA, _T(" (Lead-out)(Track AA)(Session 1)"), SIZE_OF_ARRAY(appendNameA));
 	}
 	else {
 		uiLastTrk = pDisc->SCSI.toc.LastTrack;
 		nStartLBA = pDisc->SCSI.nAllLength;
 		nLastLBA = LAST_TRACK_LEADOUT_SIZE;
-		_tcsncpy(appendNameA, _T(" (Track AA)"), SIZE_OF_ARRAY(appendNameA));
+		_tcsncpy(appendNameA, _T(" (Lead-out)(Track AA)"), SIZE_OF_ARRAY(appendNameA));
 	}
 
 	if (pDisc->SCSI.toc.TrackData[uiLastTrk - 1].Control & AUDIO_DATA_TRACK) {
@@ -3270,19 +3271,19 @@ BOOL ReadCDOutOfRange(
 
 	if (pDisc->SCSI.toc.LastTrack > 9) {
 		if (pDisc->SCSI.by1stMultiSessionTrkNum) {
-			_tcsncpy(appendName0, _T(" (Track 00)(Session 1)"), SIZE_OF_ARRAY(appendName0));
+			_tcsncpy(appendName0, _T(" (Lead-in)(Track 00)(Session 1)"), SIZE_OF_ARRAY(appendName0));
 		}
 		else {
-			_tcsncpy(appendName0, _T(" (Track 00)"), SIZE_OF_ARRAY(appendName0));
+			_tcsncpy(appendName0, _T(" (Lead-in)(Track 00)"), SIZE_OF_ARRAY(appendName0));
 		}
 		_tcsncpy(appendName1, _T(" (Track 01)(-LBA)"), SIZE_OF_ARRAY(appendName1));
 	}
 	else {
 		if (pDisc->SCSI.by1stMultiSessionTrkNum) {
-			_tcsncpy(appendName0, _T(" (Track 0)(Session 1)"), SIZE_OF_ARRAY(appendName0));
+			_tcsncpy(appendName0, _T(" (Lead-in)(Track 0)(Session 1)"), SIZE_OF_ARRAY(appendName0));
 		}
 		else {
-			_tcsncpy(appendName0, _T(" (Track 0)"), SIZE_OF_ARRAY(appendName0));
+			_tcsncpy(appendName0, _T(" (Lead-in)(Track 0)"), SIZE_OF_ARRAY(appendName0));
 		}
 		_tcsncpy(appendName1, _T(" (Track 1)(-LBA)"), SIZE_OF_ARRAY(appendName1));
 	}
@@ -3364,7 +3365,7 @@ BOOL ReadCDOutOfRange(
 			}
 		}
 
-		if (b1stPregapSector) {
+		if (b1stPregapSector && pExtArg->uiTryReadingPregapCnt != 0) {
 			if (nOverreadSize >= 0) {
 				fwrite(aBuf, sizeof(BYTE), pDisc->MAIN.uiMainDataSlideSize, fpMain);
 #if 0
@@ -3468,12 +3469,23 @@ BOOL ReadCDOutOfRange(
 				(lpSubcodeNext[12] & 0x0f) == ADR_ENCODES_CURRENT_POSITION && lpSubcodeNext[13] == 1 &&
 				lpSubcodeNext[14] == 0 && lpSubcodeNext[19] == 0 && lpSubcodeNext[20] == 0 && lpSubcodeNext[21] == 1)) {
 			FcloseAndNull(fpSub);
-			if (NULL == (fpSub = CreateOrOpenFile(pszPath, appendName1, NULL, NULL, NULL, _T(".sub"), _T("wb"), 0, 0))) {
-				OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
-				return FALSE;
+
+			if (pExtArg->uiTryReadingPregapCnt == 0) {
+				break;
+			}
+			else {
+				if (NULL == (fpSub = CreateOrOpenFile(pszPath, appendName1, NULL, NULL, NULL, _T(".sub"), _T("wb"), 0, 0))) {
+					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+					return FALSE;
+				}
 			}
 		}
-		OutputString("\rCreating%s%s & .sub,%s%s & .sub (LBA) %8d/%8d", appendName0, ext, appendName1, ext, i, LEADIN_START_LBA_SESSION_1);
+		if (pExtArg->uiTryReadingPregapCnt == 0) {
+			OutputString("\rCreating%s%s & .sub (LBA) %8d/%8d", appendName0, ext, i, LEADIN_START_LBA_SESSION_1);
+		}
+		else {
+			OutputString("\rCreating%s%s & .sub,%s%s & .sub (LBA) %8d/%8d", appendName0, ext, appendName1, ext, i, LEADIN_START_LBA_SESSION_1);
+		}
 
 		if (bLastPregapSector) {
 			if (nOverreadSize < 0) {
@@ -3489,19 +3501,30 @@ BOOL ReadCDOutOfRange(
 		}
 	}
 	OutputString("\n");
+
+	if (!bTrack1) {
+		if (nOverreadSize >= 0) {
+			fwrite(aBuf, sizeof(BYTE), pDisc->MAIN.uiMainDataSlideSize, fpMain);
+		}
+		if (pExtArg->uiTryReadingPregapCnt == 0) {
+			OutputLog(standardOut | fileMainInfo, "Skip creating pregap sectors of track 1 starting from minus LBA\n");
+		}
+		else {
+			OutputLog(standardError | fileMainError, "Failed to get pregap sectors of track 1 starting from minus LBA\n");
+			return FALSE;
+		}
+	}
 	FcloseAndNull(fpMain);
 	FcloseAndNull(fpSub);
-	if (!bTrack1) {
-		OutputLog(standardError | fileMainError, "Failed to get%s\n", appendName1);
-		return FALSE;
-	}
 
 	if (!_tcsncmp(ext, _T(".scm"), SIZE_OF_ARRAY(ext))) {
 		ConvertScmToBin(pszPath, appendName0, __LINE__);
-		ConvertScmToBin(pszPath, appendName1, __LINE__);
+		if (bTrack1) {
+			ConvertScmToBin(pszPath, appendName1, __LINE__);
+		}
 	}
 
-	if ((pDisc->SCSI.toc.TrackData[0].Control & AUDIO_DATA_TRACK) == 0) {
+	if (pExtArg->uiTryReadingPregapCnt != 0 && (pDisc->SCSI.toc.TrackData[0].Control & AUDIO_DATA_TRACK) == 0) {
 		if (bNonZeroByteExistIn) {
 			INT ofs = (INT)(uiByteOffsetIn - pDisc->MAIN.uiMainDataSlideSize) - 352800;
 			INT sample = (ofs + (ofs % 4)) / 4;

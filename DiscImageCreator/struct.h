@@ -221,6 +221,7 @@ typedef struct _EXT_ARG {
 	UINT uiSkipSectors2;		// for /sk
 	UINT uiPadNum;				// for /ps. 0 : main channel is padded by 0x00, 1 : main channel is padded by 0xAA
 	UINT uiRetryCnt;			// for /mr
+	UINT uiTryReadingPregapCnt;	// for /trp
 	struct _FILE {
 		CHAR readError[MAX_READ_ERROR_FILE_COUNT][MAX_FNAME_FOR_VOLUME];
 		INT readErrCnt;
