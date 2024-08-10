@@ -832,6 +832,23 @@ int SetOptionRr(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	return TRUE;
 }
 
+int SetOptionRa(_TCHAR* argv[], int* i)
+{
+	_TCHAR* endptr = NULL;
+	s_nStartLBA = _tcstol(argv[*i], &endptr, 10);
+	if (*endptr) {
+		OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
+		return FALSE;
+	}
+	s_nEndLBA = _tcstol(argv[*i + 1], &endptr, 10);
+	if (*endptr) {
+		OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
+		return FALSE;
+	}
+	*i += 2;
+	return TRUE;
+}
+
 int SetOptionNss(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 {
 	_TCHAR* endptr = NULL;
@@ -1430,17 +1447,9 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 						}
 						pExtArg->byRange = TRUE;
 					}
-					s_nStartLBA = _tcstol(argv[i], &endptr, 10);
-					if (*endptr) {
-						OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
+					if (!SetOptionRa(argv, &i)) {
 						return FALSE;
 					}
-					s_nEndLBA = _tcstol(argv[i + 1], &endptr, 10);
-					if (*endptr) {
-						OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
-						return FALSE;
-					}
-					i += 2;
 				}
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/sf"), cmdLen)) {
 					if (!SetOptionSf(argc, argv, pExtArg, &i)) {
@@ -1533,17 +1542,9 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				}
 				else if (argc >= 8 && cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/ra"), cmdLen)) {
 					pExtArg->byRange = TRUE;
-					s_nStartLBA = _tcstol(argv[i], &endptr, 10);
-					if (*endptr) {
-						OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
+					if (!SetOptionRa(argv, &i)) {
 						return FALSE;
 					}
-					s_nEndLBA = _tcstol(argv[i + 1], &endptr, 10);
-					if (*endptr) {
-						OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
-						return FALSE;
-					}
-					i += 2;
 				}
 				else {
 					OutputErrorString("Unknown option: [%s]\n", argv[i - 1]);
@@ -1679,6 +1680,12 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				}
 				else if (cmdLen == 5 && !_tcsncmp(argv[i - 1], _T("/avdp"), cmdLen)) {
 					pExtArg->byAnchorVolumeDescriptorPointer = TRUE;
+				}
+				else if (argc >= 8 && cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/ra"), cmdLen)) {
+					pExtArg->byRange = TRUE;
+					if (!SetOptionRa(argv, &i)) {
+						return FALSE;
+					}
 				}
 				else {
 					OutputErrorString("Unknown option: [%s]\n", argv[i - 1]);
@@ -1849,9 +1856,11 @@ void printUsage(void)
 	);
 	stopMessage();
 	OutputString(
-		"\t    [/r (startLBA) (EndLBA)] [/avdp] [/ps (val)] [/rr (val)] [/sk (val)]\n"
+		"\t    [/r (StartLBA) (EndLBA)] [/avdp] [/ps (val)] [/ra (StartLBA) (EndLBA)]\n"
+		"\t    [/rr (val)] [/sk (val)]\n"
 		"\t\tDump a DVD from A to Z\n"
-		"\txbox <DriveLetter> <Filename> <DriveSpeed(0-16)> [/f (val)] [/q] [/d] [/nss (val)] [/rr (val)]\n"
+		"\txbox <DriveLetter> <Filename> <DriveSpeed(0-16)> [/f (val)] [/q] [/d]\n"
+		"\t     [/nss (val)] [/ra (StartLBA) (EndLBA)] [/rr (val)]\n"
 		"\t\tDump a xbox disc from A to Z\n"
 		"\txboxswap <DriveLetter> <Filename> <DriveSpeed(0-16)>\n"
 		"\t                                  <StartLBAOfSecuritySector1>\n"
@@ -1867,7 +1876,8 @@ void printUsage(void)
 		"\t\tDump a XGD3 disc from A to Z using swap trick\n"
 		"\tsacd <DriveLetter> <Filename> <DriveSpeed(0-16)> [/q] [/d]\n"
 		"\t\tDump a Super Audio CD from A to Z\n"
-		"\tbd <DriveLetter> <Filename> <DriveSpeed(0-12)> [/f (val)] [/q] [/d] [/avdp] [/rr (val)]\n"
+		"\tbd <DriveLetter> <Filename> <DriveSpeed(0-12)> [/f (val)] [/q] [/d] [/avdp]\n"
+		"\t   [/ra (StartLBA) (EndLBA)] [/rr (val)]\n"
 		"\t\tDump a BD from A to Z\n"
 		"\tfd <DriveLetter> <Filename> [/d]\n"
 		"\t\tDump a floppy disk\n"
@@ -1875,12 +1885,12 @@ void printUsage(void)
 		"\t\tDump a removable media other than floppy\n"
 		"\tstop <DriveLetter>\n"
 		"\t\tSpin off the disc\n"
-		"\tstart <DriveLetter>\n"
-		"\t\tSpin up the disc\n"
-		"\teject <DriveLetter>\n"
 	);
 	stopMessage();
 	OutputString(
+		"\tstart <DriveLetter>\n"
+		"\t\tSpin up the disc\n"
+		"\teject <DriveLetter>\n"
 		"\t\tEject the tray\n"
 		"\tclose <DriveLetter>\n"
 		"\t\tClose the tray\n"
@@ -1907,12 +1917,12 @@ void printUsage(void)
 		"\t\t\t   \tpack: sub channel mode is pack\n"
 		"\t/d8\tUse 0xd8 as the opcode for Reading CD forcibly\n"
 		"\t/c2\tContinue reading CD to recover C2 error existing sector\n"
-		"\t\t\tval1\tvalue to reread (default: 4000)\n"
-		"\t\t\tval2\treading speed when fixing the C2 error (default: same as the <DriveSpeed(0-72)>)\n"
-		"\t\t\tval3\tvalue to set the C2 offset (default: 0)\n"
 	);
 	stopMessage();
 	OutputString(
+		"\t\t\tval1\tvalue to reread (default: 4000)\n"
+		"\t\t\tval2\treading speed when fixing the C2 error (default: same as the <DriveSpeed(0-72)>)\n"
+		"\t\t\tval3\tvalue to set the C2 offset (default: 0)\n"
 		"\t\t\tval4\t0: reread sector c2 error is reported (default)\n"
 		"\t\t\t    \t1: reread all (or from first to last) sector\n"
 		"\t\t\tval5\tfirst LBA to reread (default: 0)\n"
@@ -1939,12 +1949,12 @@ void printUsage(void)
 		"\t\t\tFor ProtectCD-VOB\n"
 		"\t/t\tRead CD from the reverse\n"
 		"\t\t\tFor Tages\n"
-		"\t\t\tval\tretry num (default:20)\n"
-		"\t/am\tScan anti-mod string\n"
-		"\t\t\tFor PlayStation\n"
 	);
 	stopMessage();
 	OutputString(
+		"\t\t\tval\tretry num (default:20)\n"
+		"\t/am\tScan anti-mod string\n"
+		"\t\t\tFor PlayStation\n"
 		"\t/vn\tSearch specific bytes\n"
 		"\t\t\tFor VideoNow\n"
 		"\t\t\tval\tCombined offset is shifted for negative direction if positive value is set\n"
@@ -1971,13 +1981,13 @@ void printUsage(void)
 		"\t   \t                            or (LBA 30000 - 49999)\n"
 		"\t\t\tFor SecuROM\n"
 		"\t/s\tUse if it reads subchannel precisely\n"
-		"\t\t\tval\t0: no read next sub (fast, but lack precision)\n"
-		"\t\t\t   \t1: read next sub (normal, this val is default)\n"
-		"\t\t\t   \t2: read next & next next sub (slow, precision)\n"
 	);
 	stopMessage();
 	OutputString(
-		"Option (for DVD)\n"
+		"\t\t\tval\t0: no read next sub (fast, but lack precision)\n"
+		"\t\t\t   \t1: read next sub (normal, this val is default)\n"
+		"\t\t\t   \t2: read next & next next sub (slow, precision)\n"
+		"Option (for DVD, BD, XBOX)\n"
 		"\t/c\tLog Copyright Management Information\n"
 		"\t/rr\tRetry reading when error occurs\n"
 		"\t\t\tval\tMax retry value (default: 10)\n"
@@ -1986,6 +1996,9 @@ void printUsage(void)
 		"\t/nss\tNo skip reading SS sectors (only XBOX)\n"
 		"\t\t\tval\tMax retry value (default: 100)\n"
 		"\t/r\tRead DVD from the reverse\n"
+		"\t/ra\tSectors are dumped to a specified extent\n"
+		"\t\t\tStart LBA\tsector num\n"
+		"\t\t\t  End LBA\tsector num\n"
 		"\t/raw\tDumping DVD by raw (2064 or 2384 bytes/sector)\n"
 		"\t\t\tComfirmed drive: Mediatec MT chip (Lite-on etc.), PLEXTOR\n"
 		"\t\t\t               Hitachi-LG GDR, GCC\n"
