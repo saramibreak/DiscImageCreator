@@ -832,20 +832,31 @@ int SetOptionRr(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	return TRUE;
 }
 
-int SetOptionRa(_TCHAR* argv[], int* i)
+int SetOptionRa(int argc, _TCHAR* argv[], int* i)
 {
 	_TCHAR* endptr = NULL;
-	s_nStartLBA = _tcstol(argv[*i], &endptr, 10);
-	if (*endptr) {
-		OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
+	if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
+		s_nStartLBA = _tcstol(argv[(*i)++], &endptr, 10);
+		if (*endptr) {
+			OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
+			return FALSE;
+		}
+		if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
+			s_nEndLBA = _tcstol(argv[(*i)++], &endptr, 10);
+			if (*endptr) {
+				OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
+				return FALSE;
+			}
+		}
+		else {
+			OutputErrorString("/ra EndLBA was omitted.\n");
+			return FALSE;
+		}
+	}
+	else {
+		OutputErrorString("/ra StartLBA was omitted.\n");
 		return FALSE;
 	}
-	s_nEndLBA = _tcstol(argv[*i + 1], &endptr, 10);
-	if (*endptr) {
-		OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
-		return FALSE;
-	}
-	*i += 2;
 	return TRUE;
 }
 
@@ -1447,7 +1458,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 						}
 						pExtArg->byRange = TRUE;
 					}
-					if (!SetOptionRa(argv, &i)) {
+					if (!SetOptionRa(argc, argv, &i)) {
 						return FALSE;
 					}
 				}
@@ -1542,7 +1553,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				}
 				else if (argc >= 8 && cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/ra"), cmdLen)) {
 					pExtArg->byRange = TRUE;
-					if (!SetOptionRa(argv, &i)) {
+					if (!SetOptionRa(argc, argv, &i)) {
 						return FALSE;
 					}
 				}
@@ -1683,7 +1694,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				}
 				else if (argc >= 8 && cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/ra"), cmdLen)) {
 					pExtArg->byRange = TRUE;
-					if (!SetOptionRa(argv, &i)) {
+					if (!SetOptionRa(argc, argv, &i)) {
 						return FALSE;
 					}
 				}
