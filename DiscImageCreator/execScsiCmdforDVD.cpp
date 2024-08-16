@@ -1958,7 +1958,7 @@ BOOL GetFeatureListForXBox(
 	PEXT_ARG pExtArg,
 	PDEVICE pDevice
 ) {
-	BYTE lpCmd[CDB6GENERIC_LENGTH] = {};
+	BYTE lpCmd[CDB10GENERIC_LENGTH] = {};
 	lpCmd[0] = 0xff;
 	lpCmd[1] = 0x08;
 	lpCmd[2] = 0x01;
@@ -1972,7 +1972,7 @@ BOOL GetFeatureListForXBox(
 	INT direction = SG_DXFER_FROM_DEV;
 #endif
 	BYTE scsiStatus = 0;
-	if (!ScsiPassThroughDirect(pExtArg, pDevice, lpCmd, CDB6GENERIC_LENGTH,
+	if (!ScsiPassThroughDirect(pExtArg, pDevice, lpCmd, CDB10GENERIC_LENGTH,
 		buf, direction, 26, &scsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 		|| scsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		return FALSE;
@@ -2032,7 +2032,7 @@ BOOL SetLockState(
 	PDEVICE pDevice,
 	BYTE byState
 ) {
-	BYTE lpCmd[CDB6GENERIC_LENGTH] = {};
+	BYTE lpCmd[CDB10GENERIC_LENGTH] = {};
 	lpCmd[0] = 0xff;
 	lpCmd[1] = 0x08;
 	lpCmd[2] = 0x01;
@@ -2045,7 +2045,7 @@ BOOL SetLockState(
 	INT direction = SG_DXFER_NONE;
 #endif
 	BYTE scsiStatus = 0;
-	if (!ScsiPassThroughDirect(pExtArg, pDevice, lpCmd, CDB6GENERIC_LENGTH,
+	if (!ScsiPassThroughDirect(pExtArg, pDevice, lpCmd, CDB10GENERIC_LENGTH,
 		NULL, direction, 0, &scsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 		|| scsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		return FALSE;
@@ -2063,7 +2063,7 @@ BOOL SetErrorSkipState(
 	PDEVICE pDevice,
 	BYTE byState
 ) {
-	BYTE lpCmd[CDB6GENERIC_LENGTH] = {};
+	BYTE lpCmd[CDB10GENERIC_LENGTH] = {};
 	lpCmd[0] = 0xff;
 	lpCmd[1] = 0x08;
 	lpCmd[2] = 0x01;
@@ -2076,7 +2076,7 @@ BOOL SetErrorSkipState(
 	INT direction = SG_DXFER_NONE;
 #endif
 	BYTE scsiStatus = 0;
-	if (!ScsiPassThroughDirect(pExtArg, pDevice, lpCmd, CDB6GENERIC_LENGTH,
+	if (!ScsiPassThroughDirect(pExtArg, pDevice, lpCmd, CDB10GENERIC_LENGTH,
 		NULL, direction, 0, &scsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
 		|| scsiStatus >= SCSISTAT_CHECK_CONDITION) {
 		return FALSE;
