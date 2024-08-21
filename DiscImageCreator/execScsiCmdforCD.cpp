@@ -3117,9 +3117,6 @@ BOOL ReadCDOutOfRange(
 			for (UINT i = 1; i < fsize; i++) {
 				fseek(fpMain, (LONG)(fsize - i), SEEK_SET);
 				if ((fread(&buf, sizeof(BYTE), sizeof(buf), fpMain)) < sizeof(buf)) {
-					if (feof(fpMain)) {
-						break;
-					}
 					if (ferror(fpMain)) {
 						OutputErrorString("Failed to read: read size %zu [F:%s][L:%d]\n", sizeof(buf), __FUNCTION__, __LINE__);
 						return FALSE;
@@ -3231,9 +3228,6 @@ BOOL ReadCDOutOfRange(
 		for (UINT i = 1; i < fsize; i++) {
 			fseek(fpMain, (LONG)(fsize - i), SEEK_SET);
 			if ((fread(&buf, sizeof(BYTE), sizeof(buf), fpMain)) < sizeof(buf)) {
-				if (feof(fpMain)) {
-					break;
-				}
 				if (ferror(fpMain)) {
 					OutputErrorString("Failed to read: read size %zu [F:%s][L:%d]\n", sizeof(buf), __FUNCTION__, __LINE__);
 					return FALSE;
