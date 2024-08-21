@@ -2116,19 +2116,13 @@ VOID ConvUTF16toUTF8(
 	BYTE byFlag,
 	LPBYTE pIn,
 	INT nInSize,
-	PCHAR pOut
+	WCHAR* pWOut
 ) {
-	WCHAR tmpW[128] = {};
 	OutputVolDescLog("%sCompression ID: %02u, ", nest, byFlag);
 	if (byFlag == 16) {
-		LittleToBig(tmpW, (LPWCH)pIn, nInSize);
-		if (!WideCharToMultiByte(CP_ACP, 0,
-			tmpW, -1, pOut, 256, NULL, NULL)) {
-			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		for (INT i = 0, j = 0; i < nInSize; i++, j += 2) {
+			pWOut[i] = (WCHAR)((pIn[j] << 8) | (pIn[j + 1]));
 		}
-	}
-	else {
-		strncpy(pOut, (LPCCH)pIn, (size_t)nInSize);
 	}
 }
 
@@ -2154,27 +2148,45 @@ VOID OutputFsFileSetDescriptor(
 	);
 	OutputFsCharspec("\t\t                ", lpBuf + 48);
 
-	CHAR tmp[256] = {};
-	ConvUTF16toUTF8("\t", lpBuf[112], &lpBuf[113], 127, tmp);
-	OutputVolDescLog(
-		"Logical Volume Identifier: % .127" CHARWIDTH "s\n"
-		"\t                       File Set Character Set\n"
-		, tmp
-	);
-	ZeroMemory(tmp, sizeof(tmp));
+	WCHAR tmpW[128] = {};
+	ConvUTF16toUTF8("\t", lpBuf[112], &lpBuf[113], 127, tmpW);
+	if (lpBuf[112] == 16) {
+		OutputVolDescLog("Logical Volume Identifier: %.63ls\n", tmpW);
+		ZeroMemory(tmpW, sizeof(tmpW));
+	}
+	else {
+		OutputVolDescLog("Logical Volume Identifier: %.127" CHARWIDTH "s\n", &lpBuf[113]);
+	}
+
+	OutputVolDescLog("\t                       File Set Character Set\n");
 	OutputFsCharspec("\t\t                ", lpBuf + 240);
 
-	ConvUTF16toUTF8("\t", lpBuf[304], &lpBuf[305], 31, tmp);
-	OutputVolDescLog("      File Set Identifier: %.31" CHARWIDTH "s\n", tmp);
-	ZeroMemory(tmp, sizeof(tmp));
+	ConvUTF16toUTF8("\t", lpBuf[304], &lpBuf[305], 31, tmpW);
+	if (lpBuf[304] == 16) {
+		OutputVolDescLog("      File Set Identifier: %.15ls\n", tmpW);
+		ZeroMemory(tmpW, sizeof(tmpW));
+	}
+	else {
+		OutputVolDescLog("      File Set Identifier: %.31" CHARWIDTH "s\n", &lpBuf[305]);
+	}
 
-	ConvUTF16toUTF8("\t", lpBuf[336], &lpBuf[337], 31, tmp);
-	OutputVolDescLog("Copyright File Identifier: %.31" CHARWIDTH "s\n", tmp);
-	ZeroMemory(tmp, sizeof(tmp));
+	ConvUTF16toUTF8("\t", lpBuf[336], &lpBuf[337], 31, tmpW);
+	if (lpBuf[336] == 16) {
+		OutputVolDescLog("Copyright File Identifier: %.15ls\n", tmpW);
+		ZeroMemory(tmpW, sizeof(tmpW));
+	}
+	else {
+		OutputVolDescLog("Copyright File Identifier: %.31" CHARWIDTH "s\n", &lpBuf[337]);
+	}
 
-	ConvUTF16toUTF8("\t", lpBuf[368], &lpBuf[369], 31, tmp);
-	OutputVolDescLog(" Abstract File Identifier: %.31" CHARWIDTH "s\n", tmp);
-	ZeroMemory(tmp, sizeof(tmp));
+	ConvUTF16toUTF8("\t", lpBuf[368], &lpBuf[369], 31, tmpW);
+	if (lpBuf[368] == 16) {
+		OutputVolDescLog(" Abstract File Identifier: %.15ls\n", tmpW);
+		ZeroMemory(tmpW, sizeof(tmpW));
+	}
+	else {
+		OutputVolDescLog(" Abstract File Identifier: %.31" CHARWIDTH "s\n", &lpBuf[369]);
+	}
 
 	OutputVolDescLog("\t                           Root Directory ICB\n");
 	OutputFsLongAllocationDescriptor("\t\t                       ", lpBuf + 400);
@@ -2289,10 +2301,14 @@ VOID OutputFsLogicalVolumeDescriptor(
 	);
 	OutputFsCharspec("\t\t                ", lpBuf + 20);
 
-	CHAR tmp[256] = {};
-	ConvUTF16toUTF8("\t", lpBuf[84], &lpBuf[85], 127, tmp);
-	OutputVolDescLog("Logical Volume Identifier: %.127" CHARWIDTH "s\n", tmp);
-
+	WCHAR tmpW[128] = {};
+	ConvUTF16toUTF8("\t", lpBuf[84], &lpBuf[85], 127, tmpW);
+	if (lpBuf[84] == 16) {
+		OutputVolDescLog("Logical Volume Identifier: %.63ls\n", tmpW);
+	}
+	else {
+		OutputVolDescLog("Logical Volume Identifier: %.127" CHARWIDTH "s\n", &lpBuf[85]);
+	}
 	OutputVolDescLog(
 		"\t                           Logical Block Size: %u\n"
 		"\t                            Domain Identifier\n"
@@ -2465,25 +2481,39 @@ VOID OutputFsImplementationUseVolumeDescriptor(
 	OutputVolDescLog("\t              Logical Volume Information Charset\n");
 	OutputFsCharspec("\t\t                   ", lpBuf + nOfs);
 
-	CHAR tmp[256] = {};
-	ConvUTF16toUTF8("\t   ", lpBuf[nOfs + 64], &lpBuf[nOfs + 65], 127, tmp);
-	OutputVolDescLog("Logical Volume Identifier: %.127" CHARWIDTH "s\n", tmp);
-	ZeroMemory(tmp, sizeof(tmp));
-
-	ConvUTF16toUTF8("\t", lpBuf[nOfs + 192], &lpBuf[nOfs + 193], 36, tmp);
-	OutputVolDescLog("Logical Volume Information 1: %.36" CHARWIDTH "s\n", tmp);
-	ZeroMemory(tmp, sizeof(tmp));
-
-	ConvUTF16toUTF8("\t", lpBuf[nOfs + 228], &lpBuf[nOfs + 229], 36, tmp);
-	OutputVolDescLog("Logical Volume Information 2: %.36" CHARWIDTH "s\n", tmp);
-	ZeroMemory(tmp, sizeof(tmp));
-
-	ConvUTF16toUTF8("\t", lpBuf[nOfs + 264], &lpBuf[nOfs + 265], 36, tmp);
-	OutputVolDescLog(
-		"Logical Volume Information 3: %.36" CHARWIDTH "s\n"
-		"\t                                 Implemention ID\n"
-		, tmp
-	);
+	WCHAR tmpW[128] = {};
+	ConvUTF16toUTF8("\t   ", lpBuf[nOfs + 64], &lpBuf[nOfs + 65], 127, tmpW);
+	if (lpBuf[nOfs + 64] == 16) {
+		OutputVolDescLog("Logical Volume Identifier: %.63ls\n", tmpW);
+		ZeroMemory(tmpW, sizeof(tmpW));
+	}
+	else {
+		OutputVolDescLog("Logical Volume Identifier: %.127" CHARWIDTH "s\n", &lpBuf[nOfs + 65]);
+	}
+	ConvUTF16toUTF8("\t", lpBuf[nOfs + 192], &lpBuf[nOfs + 193], 36, tmpW);
+	if (lpBuf[nOfs + 192] == 16) {
+		OutputVolDescLog("Logical Volume Information 1: %.18ls\n", tmpW);
+		ZeroMemory(tmpW, sizeof(tmpW));
+	}
+	else {
+		OutputVolDescLog("Logical Volume Information 1: %.36" CHARWIDTH "s\n", &lpBuf[nOfs + 193]);
+	}
+	ConvUTF16toUTF8("\t", lpBuf[nOfs + 228], &lpBuf[nOfs + 229], 36, tmpW);
+	if (lpBuf[nOfs + 228] == 16) {
+		OutputVolDescLog("Logical Volume Information 2: %.18ls\n", tmpW);
+		ZeroMemory(tmpW, sizeof(tmpW));
+	}
+	else {
+		OutputVolDescLog("Logical Volume Information 2: %.36" CHARWIDTH "s\n", &lpBuf[nOfs + 229]);
+	}
+	ConvUTF16toUTF8("\t", lpBuf[nOfs + 264], &lpBuf[nOfs + 265], 36, tmpW);
+	if (lpBuf[nOfs + 264] == 16) {
+		OutputVolDescLog("Logical Volume Information 3: %.18ls\n", tmpW);
+	}
+	else {
+		OutputVolDescLog("Logical Volume Information 3: %.36" CHARWIDTH "s\n", &lpBuf[nOfs + 265]);
+	}
+	OutputVolDescLog("\t                                 Implemention ID\n");
 	OutputFsRegid("\t\t                           ", lpBuf + 352);
 
 	OutputVolDescLog("\t                              Implementation Use: ");
@@ -2525,11 +2555,15 @@ VOID OutputFsPrimaryVolumeDescriptorForUDF(
 		, MAKEUINT(MAKEWORD(lpBuf[16], lpBuf[17]), MAKEWORD(lpBuf[18], lpBuf[19]))
 		, MAKEUINT(MAKEWORD(lpBuf[20], lpBuf[21]), MAKEWORD(lpBuf[22], lpBuf[23]))
 	);
-	CHAR tmp[256] = {};
-	ConvUTF16toUTF8("\t          ", lpBuf[24], &lpBuf[25], 31, tmp);
-	OutputVolDescLog("Volume Identifier: %.31" CHARWIDTH "s\n", tmp);
-	ZeroMemory(tmp, sizeof(tmp));
-
+	WCHAR tmpW[128] = {};
+	ConvUTF16toUTF8("\t          ", lpBuf[24], &lpBuf[25], 31, tmpW);
+	if (lpBuf[24] == 16) {
+		OutputVolDescLog("Volume Identifier: %.15ls\n", tmpW);
+		ZeroMemory(tmpW, sizeof(tmpW));
+	}
+	else {
+		OutputVolDescLog("Volume Identifier: %.31" CHARWIDTH "s\n", &lpBuf[25]);
+	}
 	OutputVolDescLog(
 		"\t                         Volume Sequence Number: %u\n"
 		"\t                 Maximum Volume Sequence Number: %u\n"
@@ -2544,13 +2578,14 @@ VOID OutputFsPrimaryVolumeDescriptorForUDF(
 		, MAKEUINT(MAKEWORD(lpBuf[64], lpBuf[65]), MAKEWORD(lpBuf[66], lpBuf[67]))
 		, MAKEUINT(MAKEWORD(lpBuf[68], lpBuf[69]), MAKEWORD(lpBuf[70], lpBuf[71]))
 	);
-	ConvUTF16toUTF8("\t      ", lpBuf[72], &lpBuf[73], 127, tmp);
-	OutputVolDescLog(
-		"Volume Set Identifier: %.127" CHARWIDTH "s\n"
-		"\t                       Descriptor Character Set\n"
-		, tmp
-	);
-
+	ConvUTF16toUTF8("\t      ", lpBuf[72], &lpBuf[73], 127, tmpW);
+	if (lpBuf[72] == 16) {
+		OutputVolDescLog("Volume Set Identifier: %.63ls\n", tmpW);
+	}
+	else {
+		OutputVolDescLog("Volume Set Identifier: %.127" CHARWIDTH "s\n", &lpBuf[73]);
+	}
+	OutputVolDescLog("\t                       Descriptor Character Set\n");
 	OutputFsCharspec("\t\t                  ", lpBuf + 200);
 
 	OutputVolDescLog("\t                      Explanatory Character Set\n");
