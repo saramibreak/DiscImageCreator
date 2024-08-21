@@ -3065,7 +3065,7 @@ BOOL ConcatenateFromPregapToLeadout(
 	FcloseAndNull(fpImg);
 
 	FILE* fpOut = NULL;
-	if (NULL == (fpOut = CreateOrOpenFile(pszPath, _T(" (Track AA)"), NULL, NULL, NULL, _T(".bin"), _T("rb"), 0, 0))) {
+	if (NULL == (fpOut = CreateOrOpenFile(pszPath, _T(" (Lead-out)(Track AA)"), NULL, NULL, NULL, _T(".bin"), _T("rb"), 0, 0))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return FALSE;
 	}
