@@ -362,7 +362,8 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 					if (*pExecType == cd) {
 						bRet = ReadCDAll(pExecType, pExtArg, pDevice, pDisc, &discPerSector, c2, pszFullPath, fpCcd, fpC2);
 
-						if (IsPregapOfTrack1ReadableDrive(pDevice) && IsAudioOnlyDisc(pDisc) && !pExtArg->byAtari) {
+						if (IsPregapOfTrack1ReadableDrive(pDevice) && IsAudioOnlyDisc(pDisc) &&
+							!pExtArg->byAtari && pExtArg->uiTryReadingPregapCnt != 0) {
 							ConcatenateFromPregapToLeadout(pDisc, pszFullPath);
 						}
 					}
