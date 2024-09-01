@@ -1,4 +1,18 @@
 ================================= Change Log ==================================
+*2024-09-01
+- added support meson
+- added /trp option to skip creating pregap sectors of track 1 starting from minus LBA
+- added /ra to the bd command
+- changed SS.bin output place
+- changed SpeedRead Setting
+- changed filename of the (Track 0), (Track 00) and (Track AA) to (Lead-in)(Track 0), (Lead-in)(Track 00) and (Lead-out)(Track AA)
+- improved detecting 1st track pregap sector when reading lead-in
+- fixed error handling when lead-in area is read
+- fixed overflow iso9660 filename
+- fixed Kreon drive on Linux with CDB10 for libata
+- fixed UDF Volume Identifier not detected
+- fixed failed to output "There is non-zero byte in the (Lead-out)(Track AA)" to the _disc.txt
+
 *2024-06-01
 - added "DVDRawBruteforce - Drive Sheet - Sheet1.tsv" to get DVD raw sector size etc.
 - added support to dump DVD raw sector (2304 bytes/sector)
