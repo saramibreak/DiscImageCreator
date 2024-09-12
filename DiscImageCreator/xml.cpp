@@ -532,7 +532,8 @@ BOOL CalcAndGetHash(
 			FILE* fpUni = NULL;
 			UINT64 ui64SectorSizeAllUni = 0;
 
-			if (IsPregapOfTrack1ReadableDrive(pDevice) && !_tcsncmp(szExt, _T(".img"), 4) && IsAudioOnlyDisc(pDisc) && !pExtArg->byAtari) {
+			if (IsPregapOfTrack1ReadableDrive(pDevice) && !_tcsncmp(szExt, _T(".img"), 4) &&
+				IsAudioOnlyDisc(pDisc) && !pExtArg->byAtari && pExtArg->uiTryReadingPregapCnt != 0) {
 				if (NULL == (fpUni = CreateOrOpenFile(pszFullPath, _T(" (Track all)"), NULL
 					, hashUni.szFnameAndExt, NULL, szExt, _T("rb"), uiTrack, uiLastTrack))) {
 					OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -603,7 +604,8 @@ BOOL CalcAndGetHash(
 	if (CalcEnd(pExtArg, &hash, &digest)) {
 		OutputHash(pExtArg, pWriter, &hash, &digest);
 	}
-	if (IsPregapOfTrack1ReadableDrive(pDevice) && !_tcsncmp(szExt, _T(".img"), 4) && IsAudioOnlyDisc(pDisc) && !pExtArg->byAtari) {
+	if (IsPregapOfTrack1ReadableDrive(pDevice) && !_tcsncmp(szExt, _T(".img"), 4) &&
+		IsAudioOnlyDisc(pDisc) && !pExtArg->byAtari && pExtArg->uiTryReadingPregapCnt != 0) {
 		MESSAGE_DIGEST_CHUNK digestUni = {};
 		if (CalcEnd(pExtArg, &hashUni, &digestUni)) {
 			OutputHash(pExtArg, pWriter, &hashUni, &digestUni);
