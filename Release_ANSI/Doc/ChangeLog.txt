@@ -1,4 +1,8 @@
 ================================= Change Log ==================================
+*2024-10-01
+- added support to dump DVD raw sector (2816 bytes/sector)
+- fixed skip hashing of (Track all).img when /trp is 0
+
 *2024-09-01
 - added support meson
 - added /trp option to skip creating pregap sectors of track 1 starting from minus LBA
