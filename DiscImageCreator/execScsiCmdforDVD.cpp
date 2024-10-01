@@ -1209,6 +1209,9 @@ BOOL ReadDVDRaw(
 			else if (dwSectorSize == DVD_RAW_SECTOR_SIZE_2384) {
 				nType = 4; // 2384 bytes, scrambled
 			}
+			else if (dwSectorSize == DVD_RAW_SECTOR_SIZE_2816) {
+				nType = 5; // 2816 bytes, scrambled
+			}
 
 			_TCHAR str[_MAX_PATH * 3 + 4] = {};
 			if (GetUnscCmd(str, pszOutPath, nType)) {
