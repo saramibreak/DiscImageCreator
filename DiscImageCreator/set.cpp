@@ -1268,7 +1268,35 @@ BOOL SetLBAtoDescrambleSector(
 				OutputSubInfoWithLBALog("P-channel is different. Set next track\n", nLBA, trk);
 			}
 		}
-		if ((pDisc->SCSI.toc.TrackData[trk - 1].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+		if (trk == 110) {
+			if ((ctl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+				if (bHeader) {
+					if (pDisc->MAIN.lp1stLBAListCanDescrambled[pDisc->SCSI.toc.LastTrack - 1] == -1) {
+						pDisc->MAIN.lp1stLBAListCanDescrambled[pDisc->SCSI.toc.LastTrack - 1] = nLBA;
+					}
+					pDisc->MAIN.lpLastLBAListCanDescrambled[pDisc->SCSI.toc.LastTrack - 1] = nLBA;
+				}
+				else {
+					OutputMainInfoWithLBALog(
+						"Lead-out, Data sector, there is not a sync\n", nLBA, trk);
+					OutputMainChannel(fileMainInfo, lpMainBuf, NULL, nLBA, MAINHEADER_MODE1_SIZE);
+				}
+			}
+			else if ((ctl & AUDIO_DATA_TRACK) == 0) {
+				if (bHeader) {
+					OutputMainInfoWithLBALog(
+						"Lead-out, Audio sector, there is a sync\n", nLBA, trk);
+					OutputMainChannel(fileMainInfo, lpMainBuf, NULL, nLBA, MAINHEADER_MODE1_SIZE);
+				}
+				else {
+					if (pDisc->MAIN.lp1stLBAListCanDescrambled[pDisc->SCSI.toc.LastTrack - 1] == -1) {
+						pDisc->MAIN.lp1stLBAListCanDescrambled[pDisc->SCSI.toc.LastTrack - 1] = nLBA;
+					}
+					pDisc->MAIN.lpLastLBAListCanDescrambled[pDisc->SCSI.toc.LastTrack - 1] = nLBA;
+				}
+			}
+		}
+		else if ((pDisc->SCSI.toc.TrackData[trk - 1].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 			if ((ctl & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
 				if (bHeader) {
 					if (pDisc->MAIN.lp1stLBAListCanDescrambled[trk - 1] == -1) {
