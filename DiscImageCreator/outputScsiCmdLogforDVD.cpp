@@ -1398,7 +1398,8 @@ VOID OutputBDDiscInformation(
 	BOOL bBdRom = TRUE;
 	INT nSize = 2048;
 	INT nBlock = 64;
-	if (strncmp((CONST CHAR*)&lpFormat[8], "BDO", 3)) {
+	if (!strncmp((CONST CHAR*)&lpFormat[8], "BDR", 3) ||
+		!strncmp((CONST CHAR*) & lpFormat[8], "BDW", 3)) {
 		bBdRom = FALSE;
 		nSize = 3584;
 		nBlock = 112;
