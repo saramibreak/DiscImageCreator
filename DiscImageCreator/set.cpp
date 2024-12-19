@@ -552,33 +552,7 @@ VOID SetAndOutputTocFull(
 				OutputDiscLog(
 					"      Track %2u, AMSF %02u:%02u:%02u (LBA[%06d, %#07x])\n"
 					, pTocData[a].Point, pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2], nTmpLBA, (UINT)nTmpLBA);
-				if (fullToc->LastCompleteSession > 1) {
-#if 0
-					// Rayman (USA) [SS], Wolfchild (Europe) [MCD]
-					// Last LBA is corrupt, so this doesn't use in single session disc.
-					if (pTocData[a].Point == 1) {
-						pDisc->SCSI.lp1stLBAListOnToc[pTocData[a].Point - 1] = nTmpLBA - 150;
-					}
-					else if (pTocData[a].Point >= 2 && pTocData[a].Point <= 100) {
-						pDisc->SCSI.lpLastLBAListOnToc[pTocData[a].Point - 2] = nTmpLBA - 150 - 1;
-						pDisc->SCSI.lp1stLBAListOnToc[pTocData[a].Point - 1] = nTmpLBA - 150;
-					}
-					// Track 2 is incorrect...
-					//	Session 1, Ctl 0, Adr 5, Point 0xb0,   NextSession, AMSF 02:36:02 (LBA[011702, 0x02db6])
-					//	                    Outermost Lead-out of the disc, AMSF 16:19:71 (LBA[073496, 0x11f18])
-					//	                         Num of pointers in Mode 5, 02
-					//	Session 1, Ctl 0, Adr 5, Point 0xc0, Optimum recording power, 00
-					//	                         First Lead-in of the disc, AMSF 95:00:00 (LBA[427500, 0x685ec])
-					//	Session 2, Ctl 4, Adr 1, Point 0xa0, FirstTrack  2, Format: CD-ROM-XA
-					//	Session 2, Ctl 4, Adr 1, Point 0xa1,  LastTrack  2
-					//	Session 2, Ctl 4, Adr 1, Point 0xa2,      Lead-out, AMSF 16:19:71 (LBA[073496, 0x11f18])
-					//	Session 2, Ctl 4, Adr 1, Point 0x02,      Track  2, AMSF 02:00:00 (LBA[009000, 0x02328])
-					if (pTocData[a].SessionNumber == 2 && bFirst2ndSession) {
-						pDisc->SCSI.n1stLBAof2ndSession = nTmpLBA - 150;
-						bFirst2ndSession = FALSE;
-					}
-#endif
-				}
+
 				if (pDisc->SCSI.byFormat == DISK_TYPE_CDI && pTocData[a].Point == 0x02) {
 					pDisc->SCSI.lpSessionNumList[0] = pTocData[a].SessionNumber;
 				}
@@ -598,6 +572,127 @@ VOID SetAndOutputTocFull(
 			break;
 		}
 	}
+}
+
+// http://forum.redump.org/post/55534/#p55534
+// https://github.com/saramibreak/DiscImageCreator/issues/42
+// https://github.com/saramibreak/DiscImageCreator/issues/291
+// https://github.com/saramibreak/DiscImageCreator/issues/294#issuecomment-2553444667
+// Some IDE to USB adapter (e.g. UGREEN's adapter) returns the truncated Full TOC, then TOC is needed instead of Full TOC
+VOID SetFullTocUsingToc(
+	PDISC pDisc,
+	PCDROM_TOC_FULL_TOC_DATA_BLOCK pTocData,
+	WORD wTocEntries
+) {
+	BOOL b1stTrack = FALSE;
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("FULL TOC overwritten by TOC"));
+	for (WORD a = 0; a < wTocEntries; a++) {
+		if (pTocData[a].Point == 0xa0 && !b1stTrack) {
+			pTocData[a].Msf[0] = pDisc->SCSI.toc.FirstTrack;
+			b1stTrack = TRUE;
+			OutputDiscLog("\tSession %u, Ctl %hhu, Adr %hhu, Point 0x%02x,"
+				, pTocData[a].SessionNumber, pTocData[a].Control, pTocData[a].Adr, pTocData[a].Point);
+			OutputDiscLog(" FirstTrack %2u\n", pTocData[a].Msf[0]);
+		}
+		else if (pTocData[a].Point == 0xa1) {
+			pTocData[a].Msf[0] = pDisc->SCSI.toc.LastTrack;
+			OutputDiscLog("\tSession %u, Ctl %hhu, Adr %hhu, Point 0x%02x,"
+				, pTocData[a].SessionNumber, pTocData[a].Control, pTocData[a].Adr, pTocData[a].Point);
+			OutputDiscLog("  LastTrack %2u\n", pTocData[a].Msf[0]);
+		}
+	}
+
+	for (BYTE i = pDisc->SCSI.toc.FirstTrack; i <= pDisc->SCSI.toc.LastTrack; i++) {
+		INT tIdx = i - 1;
+		for (WORD a = 0; a < wTocEntries; a++) {
+			if (pTocData[a].Point < 100) {
+				if (pTocData[a].Point == pDisc->SCSI.toc.TrackData[tIdx].TrackNumber) {
+					pTocData[a].Adr = pDisc->SCSI.toc.TrackData[tIdx].Adr;
+					pTocData[a].Control = pDisc->SCSI.toc.TrackData[tIdx].Control;
+					BYTE m, s, f = 0;
+					LBAtoMSF(pDisc->SCSI.lp1stLBAListOnToc[tIdx], &m, &s, &f);
+					pTocData[a].Msf[0] = m;
+					pTocData[a].Msf[1] = s;
+					pTocData[a].Msf[2] = f;
+					OutputDiscLog("\tSession %u, Ctl %hhu, Adr %hhu, Point 0x%02x,"
+						, pTocData[a].SessionNumber, pTocData[a].Control, pTocData[a].Adr, pTocData[a].Point);
+					OutputDiscLog(
+						"      Track %2u, AMSF %02u:%02u:%02u (LBA[%06d, %#07x])\n"
+						, pTocData[a].Point, pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]
+						, pDisc->SCSI.lp1stLBAListOnToc[tIdx], (UINT)pDisc->SCSI.lp1stLBAListOnToc[tIdx]);
+					break;
+				}
+			}
+		}
+	}
+}
+
+// Some drive (e.g. PX-4824) returns corrupt TOC, then Full TOC is need instead of TOC.
+VOID SetTocUsingFullToc(
+	PDISC pDisc,
+	PCDROM_TOC_FULL_TOC_DATA fullToc,
+	PCDROM_TOC_FULL_TOC_DATA_BLOCK pTocData,
+	WORD wTocEntries
+) {
+	CONST INT typeSize = 7 * sizeof(_TCHAR);
+	_TCHAR strType[100][typeSize] = {};
+	BOOL bFirstAudio = TRUE;
+	BOOL bFirstData = TRUE;
+	TRACK_TYPE trkType = TRACK_TYPE::unknown;
+	UCHAR ucLastTrack = 0;
+	OutputDiscLog(OUTPUT_DHYPHEN_PLUS_STR("TOC overwritten by FULL TOC"));
+
+	for (WORD a = 0; a < wTocEntries; a++) {
+		if (pTocData[a].Point < 0xa0) {
+			INT tIdx = pTocData[a].Point - 1;
+			if (pTocData[a].Adr == 1) {
+				pDisc->SCSI.lp1stLBAListOnToc[tIdx] = MSFtoLBA(pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]) - 150;
+				if (2 < pTocData[a].Point) {
+					pDisc->SCSI.lpLastLBAListOnToc[tIdx - 1] = pDisc->SCSI.lp1stLBAListOnToc[tIdx] - 1;
+				}
+				if ((pTocData[a].Control & AUDIO_DATA_TRACK) == 0) {
+					_tcsncpy(strType[tIdx], _T(" Audio"), typeSize);
+					if (bFirstAudio) {
+						trkType = (TRACK_TYPE)(TRACK_TYPE::audioTrack | trkType);
+						bFirstAudio = FALSE;
+					}
+				}
+				else if ((pTocData[a].Control & AUDIO_DATA_TRACK) == AUDIO_DATA_TRACK) {
+					_tcsncpy(strType[tIdx], _T("  Data"), typeSize);
+					if (bFirstData) {
+						pDisc->SCSI.n1stLBAofDataTrk = pDisc->SCSI.lp1stLBAListOnToc[tIdx];
+						pDisc->SCSI.by1stDataTrkNum = pTocData[a].Point;
+						bFirstData = FALSE;
+						trkType = (TRACK_TYPE)(TRACK_TYPE::dataTrack | trkType);
+					}
+					pDisc->SCSI.nLastLBAofDataTrkOnToc = pDisc->SCSI.lpLastLBAListOnToc[tIdx];
+				}
+				pDisc->SCSI.toc.TrackData[tIdx].Adr = pTocData[a].Adr;
+				pDisc->SCSI.toc.TrackData[tIdx].Control = pTocData[a].Control;
+				pDisc->SCSI.toc.TrackData[tIdx].TrackNumber = pTocData[a].Point;
+			}
+		}
+		if (pTocData[a].Point == 0xa1) {
+			ucLastTrack = pTocData[a].Msf[0];
+			pDisc->SCSI.toc.LastTrack = ucLastTrack;
+		}
+		else if (pTocData[a].Point == 0xa2) {
+			if (pTocData[a].SessionNumber != fullToc->LastCompleteSession) {
+				continue;
+			}
+			pDisc->SCSI.lpLastLBAListOnToc[ucLastTrack - 1] = MSFtoLBA(pTocData[a].Msf[0], pTocData[a].Msf[1], pTocData[a].Msf[2]) - 150 - 1;
+			pDisc->SCSI.nAllLength = pDisc->SCSI.lpLastLBAListOnToc[ucLastTrack - 1] + 1;
+		}
+	}
+	for (INT i = 0; i < ucLastTrack; i++) {
+		OutputDiscLog(
+			"\t%s Track %2d, LBA %8d - %8d, Length %8d\n", strType[i], i + 1,
+			pDisc->SCSI.lp1stLBAListOnToc[i], pDisc->SCSI.lpLastLBAListOnToc[i],
+			pDisc->SCSI.lpLastLBAListOnToc[i] - pDisc->SCSI.lp1stLBAListOnToc[i] + 1);
+	}
+	OutputDiscLog(
+		"\t                                          Total  %8d\n", pDisc->SCSI.nAllLength);
+	pDisc->SCSI.trkType = trkType;
 }
 
 VOID SetAndOutputTocCDText(

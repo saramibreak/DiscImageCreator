@@ -84,6 +84,19 @@ VOID SetAndOutputTocFull(
 	FILE* fpCcd
 );
 
+VOID SetFullTocUsingToc(
+	PDISC pDisc,
+	PCDROM_TOC_FULL_TOC_DATA_BLOCK pTocData,
+	WORD wTocEntries
+);
+
+VOID SetTocUsingFullToc(
+	PDISC pDisc,
+	PCDROM_TOC_FULL_TOC_DATA fullToc,
+	PCDROM_TOC_FULL_TOC_DATA_BLOCK pTocData,
+	WORD wTocEntries
+);
+
 VOID SetAndOutputTocCDText(
 	PDISC pDisc,
 	PCDROM_TOC_CD_TEXT_DATA_BLOCK pDesc,

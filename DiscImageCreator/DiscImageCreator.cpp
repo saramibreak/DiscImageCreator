@@ -211,6 +211,13 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 					if (!ReadTOC(pExtArg, pExecType, pDevice, pDisc, pszFullPath)) {
 						throw FALSE;
 					}
+					if (pExtArg->byToc) {
+						SetFullTocUsingToc(pDisc, pTocData, wTocEntries);
+					}
+					else if (pExtArg->byFullToc) {
+						SetTocUsingFullToc(pDisc, &fullToc, pTocData, wTocEntries);
+					}
+
 					pDevice->sub = CDFLAG::_READ_CD::Raw;
 					if (pDisc->SCSI.trkType & TRACK_TYPE::pregapIn1stTrack) {
 						if (!ReadCDForCheckingSubQ1stIndex(pExtArg, pDevice, pDisc)) {
@@ -1197,6 +1204,14 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 						pExtArg->byPre = FALSE;
 					}
 				}
+				else if (cmdLen == 4 && !_tcsncmp(argv[i - 1], _T("/toc"), cmdLen)) {
+					pExtArg->byToc = TRUE;
+					pExtArg->byFullToc = FALSE;
+				}
+				else if (cmdLen == 8 && !_tcsncmp(argv[i - 1], _T("/fulltoc"), cmdLen)) {
+					pExtArg->byFullToc = TRUE;
+					pExtArg->byToc = FALSE;
+				}
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/sf"), cmdLen)) {
 					if (!SetOptionSf(argc, argv, pExtArg, &i)) {
 						return FALSE;
@@ -1843,7 +1858,7 @@ void printUsage(void)
 		"\tcd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/d] [/a (val)] [/aj] [/p]\n"
 		"\t   [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4) (val5)] [/f (val)]\n"
 		"\t   [/vn (val)] [/vnc] [/vnx] [/mscf] [/sf (val)] [/ss] [/np] [/nq] [/nr]\n"
-		"\t   [/nl] [/ns] [/s (val)] [/trp (val)]\n"
+		"\t   [/nl] [/ns] [/s (val)] [/trp (val)] [/toc] [/fulltoc]\n"
 		"\t\tDump a CD from A to Z\n"
 		"\t\tFor PLEXTOR or drive that can scramble Dumping\n"
 		"\tswap <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/d] [/a (val)]\n"
@@ -1982,6 +1997,8 @@ void printUsage(void)
 		"\t\t\tval\tretry count (default 50)\n"
 		"\t/trp\tTry reading pregap sectors of track 1 starting from minus LBA\n"
 		"\t\t\tval\ttry count (default 5)\n"
+		"\t/toc\tFull TOC is overwritten by TOC\n"
+		"\t/fulltoc\tTOC is overwritten by Full TOC\n"
 		"Option (for CD SubChannel)\n"
 		"\t/np\tNot fix SubP\n"
 		"\t/nq\tNot fix SubQ\n"
@@ -1991,11 +2008,11 @@ void printUsage(void)
 		"\t\t\tFor PlayStation LibCrypt\n"
 		"\t/ns\tNot fix SubQ (RMSF, AMSF, CRC) (LBA 0 - 7, 5000 - 24999)\n"
 		"\t   \t                            or (LBA 30000 - 49999)\n"
-		"\t\t\tFor SecuROM\n"
-		"\t/s\tUse if it reads subchannel precisely\n"
 	);
 	stopMessage();
 	OutputString(
+		"\t\t\tFor SecuROM\n"
+		"\t/s\tUse if it reads subchannel precisely\n"
 		"\t\t\tval\t0: no read next sub (fast, but lack precision)\n"
 		"\t\t\t   \t1: read next sub (normal, this val is default)\n"
 		"\t\t\t   \t2: read next & next next sub (slow, precision)\n"
