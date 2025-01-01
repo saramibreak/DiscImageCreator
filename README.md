@@ -94,9 +94,6 @@
    - SecuRom 3
      - PLEXTOR
        PX-4824A (ecc/edc of the 2 sector doesn't match)
-   - CDS100, CDS200, Label Gate, XCP
-     - PLEXTOR
-       PX-4824A (doesn't get the TOC correctly)
 
 ## How to use
 See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)

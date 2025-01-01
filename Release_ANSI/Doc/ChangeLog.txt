@@ -1,4 +1,12 @@
 ================================= Change Log ==================================
+*2025-01-01
+- added /toc option for bad IDE-to-USB adatper (e.g. UGREEN's adapter)
+- added /fulltoc option for PX-W4824
+- improved subQ channel fixing
+- fixed do not request CD-Text on PX-32TS and PX-20TS
+- fixed fail to dump PS2 unlicensed discs since 20231201
+- fixed PIC.bin when XBOX One disc is dumped
+
 *2024-10-01
 - added support to dump DVD raw sector (2816 bytes/sector)
 - fixed skip hashing of (Track all).img when /trp is 0
