@@ -310,6 +310,11 @@ See LICENSE
     Paulo Barreto <paulo.barreto@terra.com.br>  
     This code is hereby placed in the public domain.
 
+  ECCEDC.cpp, CheckSector.h  
+    http://www.storeroom.info/cdm/  
+    Copyright(C) 2003, Y.Kanechika. All rights reserved.
+    Copyright(C) 2006, C-yan. All rights reserved.
+
   crc16  
     http://oku.edu.mie-u.ac.jp/~okumura/algo/  src\crc16t.c in algo.lzh  
     Copyright (c) 1991 Haruhiko Okumura

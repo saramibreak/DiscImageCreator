@@ -24,6 +24,7 @@
 #include "outputScsiCmdLogforCD.h"
 #include "outputScsiCmdLogforDVD.h"
 #include "set.h"
+#include "_external/CheckSector.h"
 
 #ifdef _DEBUG
 _TCHAR logBuffer[DISC_MAIN_DATA_SIZE];
@@ -1740,105 +1741,166 @@ BOOL IsValidReservedByte(
 	return bRet;
 }
 
+BOOL CheckEcc(
+	BYTE byDecMode,
+	LPBYTE aSrcBuf,
+	INT mode,
+	INT nLBA,
+	INT nTrack
+) {
+	INT nEccError = 0;
+	BYTE store[4] = {};
+	if (mode == 2) {
+		store[0] = aSrcBuf[12];
+		store[1] = aSrcBuf[13];
+		store[2] = aSrcBuf[14];
+		store[3] = aSrcBuf[15];
+		aSrcBuf[12] = 0;
+		aSrcBuf[13] = 0;
+		aSrcBuf[14] = 0;
+		aSrcBuf[15] = 0;
+	}
+	CalcEccP(aSrcBuf + 0x0c);
+	if (MemCmp(aSrcBuf + 0x81c, GetEccP(), 172)) {
+		if ((byDecMode & DESCRAMBLE_INVALID_ECC) == 0) {
+			nEccError ^= 1;
+		}
+		else {
+			OutputLog(standardError | fileMainError, STR_LBA STR_TRACK "EccP error. Force descramble\n", nLBA, nLBA, nTrack);
+		}
+	}
+	CalcEccQ(aSrcBuf + 0x0c);
+	if (MemCmp(aSrcBuf + 0x8c8, GetEccQ(), 104)) {
+		if ((byDecMode & DESCRAMBLE_INVALID_ECC) == 0) {
+			nEccError ^= 2;
+		}
+		else {
+			OutputLog(standardError | fileMainError, STR_LBA STR_TRACK "EccQ error. Force descramble\n", nLBA, nLBA, nTrack);
+		}
+	}
+	if (mode == 2) {
+		aSrcBuf[12] = store[0];
+		aSrcBuf[13] = store[1];
+		aSrcBuf[14] = store[2];
+		aSrcBuf[15] = store[3];
+	}
+	switch (nEccError) {
+	case 1:
+		OutputLog(standardError | fileMainError, STR_LBA STR_TRACK "EccP error. Skip descrambling\n", nLBA, nLBA, nTrack);
+		break;
+	case 2:
+		OutputLog(standardError | fileMainError, STR_LBA STR_TRACK "EccQ error. Skip descrambling\n", nLBA, nLBA, nTrack);
+		break;
+	case 3:
+		OutputLog(standardError | fileMainError, STR_LBA STR_TRACK "EccP/Q error. Skip descrambling\n", nLBA, nLBA, nTrack);
+		break;
+	}
+	if (nEccError != 0) {
+		OutputMainChannel(fileMainError, aSrcBuf, NULL, nLBA, CD_RAW_SECTOR_SIZE);
+		return FALSE;
+	}
+	return TRUE;
+}
+
 BOOL IsValidDataSector(
+	BYTE byDecMode,
 	PDISC pDisc,
 	LPBYTE aSrcBuf,
 	LPBYTE lpScrambledBuf,
 	INT nLBA,
 	INT nTrack
 ) {
-	if (!IsValidMainDataHeader(aSrcBuf)) {
-		if (pDisc && IsDataDisc(pDisc)) {
-			OutputMainErrorWithLBALog("Invalid Sync. Skip descrambling\n", nLBA, nTrack);
-			OutputMainChannel(fileMainError, aSrcBuf, NULL, nLBA, CD_RAW_SECTOR_SIZE);
-			return FALSE;
-		}
-	}
-	BYTE m, s, f = 0;
-	LBAtoMSF(nLBA + 150, &m, &s, &f);
-	if ((BcdToDec(aSrcBuf[0x0c] ^ 0x01)) != m || (BcdToDec(aSrcBuf[0x0d] ^ 0x80)) != s || BcdToDec(aSrcBuf[0x0e]) != f) {
-		if (!(pDisc->PROTECT.byExist == smartE &&
-			pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] <= nLBA &&
-			nLBA <= pDisc->PROTECT.ERROR_SECTOR.nExtentPos[0] + pDisc->PROTECT.ERROR_SECTOR.nSectorSize[0])) {
-			OutputMainErrorWithLBALog("Invalid MSF - ", nLBA, nTrack);
-			if (BcdToDec(aSrcBuf[0x0c]) == m || BcdToDec(aSrcBuf[0x0d]) == s || BcdToDec(aSrcBuf[0x0e]) == f) {
-				OutputMainErrorLog("Reversed. Skip descrambling\n");
-			}
-			else {
-				OutputMainErrorLog("Other. Skip descrambling\n");
-			}
-			OutputMainChannel(fileMainError, aSrcBuf, NULL, nLBA, CD_RAW_SECTOR_SIZE);
-			return FALSE;
-		}
-	}
-	
-	if (aSrcBuf[0x0f] != 0x60 && aSrcBuf[0x0f] != 0x61 && aSrcBuf[0x0f] != 0x62) {
-		if (aSrcBuf[0x0f] == 0x00 || aSrcBuf[0x0f] == 0x01 || aSrcBuf[0x0f] == 0x02) {
-			OutputMainErrorWithLBALog("Invalid mode - Reversed. Skip descrambling\n", nLBA, nTrack);
-			OutputMainChannel(fileMainError, aSrcBuf, NULL, nLBA, CD_RAW_SECTOR_SIZE);
-			return FALSE;
-		}
-		else {
-			INT mode = aSrcBuf[0x0f] & 0x03;
-			if (mode < 3 && (aSrcBuf[0x0f] & 0x1c) == 0) {
-				INT blk = (aSrcBuf[0x0f] ^ 0x60) >> 5;
-				switch (blk) {
-				case 0:
-					OutputMainInfoWithLBALog("User Data block and Mode %d\n", nLBA, nTrack, mode);
-					break;
-				case 1:
-					OutputMainInfoWithLBALog("Fourth Run-in block and Mode %d\n", nLBA, nTrack, mode);
-					break;
-				case 2:
-					OutputMainInfoWithLBALog("Third Run-in block and Mode %d\n", nLBA, nTrack, mode);
-					break;
-				case 3:
-					OutputMainInfoWithLBALog("Second Run-in block and Mode %d\n", nLBA, nTrack, mode);
-					break;
-				case 4:
-					OutputMainInfoWithLBALog("First Run-in block and Mode %d\n", nLBA, nTrack, mode);
-					break;
-				case 5:
-					OutputMainInfoWithLBALog("Link block and Mode %d\n", nLBA, nTrack, mode);
-					break;
-				case 6:
-					OutputMainInfoWithLBALog("Second Run-out block and Mode %d\n", nLBA, nTrack, mode);
-					break;
-				case 7:
-					OutputMainInfoWithLBALog("First Run-out block and Mode %d\n", nLBA, nTrack, mode);
-					break;
-				default:
-					break;
-				}
-				OutputMainChannel(fileMainError, aSrcBuf, NULL, nLBA, CD_RAW_SECTOR_SIZE);
-			}
-			else {
-				OutputMainErrorWithLBALog("Invalid mode - Other. Skip descrambling\n", nLBA, nTrack);
-				OutputMainChannel(fileMainError, aSrcBuf, NULL, nLBA, CD_RAW_SECTOR_SIZE);
-				return FALSE;
-			}
-		}
-	}
-	if (aSrcBuf[0x0f] == 0x60) {
-		for (INT n = 0x10; n < CD_RAW_SECTOR_SIZE; n++) {
+	if (lpScrambledBuf) {
+		BOOL bAllZero = TRUE;
+		for (INT n = 0; n < CD_RAW_SECTOR_SIZE; n++) {
 			if (aSrcBuf[n] != lpScrambledBuf[n]) {
-				OutputMainErrorWithLBALog(
-					"Mode 0, but user data is not all zero sectors. Skip descrambling\n", nLBA, nTrack);
-				OutputMainChannel(fileMainError, aSrcBuf, NULL, nLBA, CD_RAW_SECTOR_SIZE);
-				return FALSE;
+				bAllZero = FALSE;
+				break;
 			}
 		}
-	}
-	else if (aSrcBuf[0x0f] == 0x61) {
-		if (IsValidReservedByte(aSrcBuf)) {
-			// [SS] Sim City 2000 (Europe)
-			OutputMainErrorWithLBALog("A part of reversed\n", nLBA, nTrack);
-			OutputMainChannel(fileMainError, aSrcBuf, NULL, nLBA, CD_RAW_SECTOR_SIZE);
+		if (bAllZero) {
+			OutputLog(standardError | fileMainError, STR_LBA STR_TRACK "All zero sector. Skip descrambling\n", nLBA, nLBA, nTrack);
+			return FALSE;
 		}
-		else if (aSrcBuf[0x814] != 0x48 || aSrcBuf[0x815] != 0x64 || aSrcBuf[0x816] != 0x36 ||
-			aSrcBuf[0x817] != 0xab || aSrcBuf[0x818] != 0x56 || aSrcBuf[0x819] != 0xff ||
-			aSrcBuf[0x81a] != 0x7e || aSrcBuf[0x81b] != 0xc0) {
-			OutputMainErrorLog("Invalid reserved byte\n");
+	}
+	BOOL bValidSync = TRUE;
+	if (!IsValidMainDataHeader(aSrcBuf)) {
+		if ((byDecMode & DESCRAMBLE_INVALID_SYNC) == 0) {
+			OutputLog(standardError | fileMainError, STR_LBA STR_TRACK "Invalid Sync. Skip descrambling\n", nLBA, nLBA, nTrack);
+			OutputMainChannel(fileMainError, aSrcBuf, NULL, nLBA, CD_RAW_SECTOR_SIZE);
+			return FALSE;
+		}
+		if (pDisc && IsDataDisc(pDisc)) {
+			bValidSync = FALSE;
+			OutputLog(standardError | fileMainError, STR_LBA STR_TRACK "Invalid Sync\n", nLBA, nLBA, nTrack);
+		}
+	}
+	INT mode = aSrcBuf[0x0f] & 0x03;
+	if (mode == 0x03) {
+		OutputLog(standardError | fileMainError, STR_LBA STR_TRACK "Invalid Mode. Skip descrambling\n", nLBA, nLBA, nTrack);
+		OutputMainChannel(fileMainError, aSrcBuf, NULL, nLBA, CD_RAW_SECTOR_SIZE);
+		return FALSE;
+	}
+	if (!bValidSync || (bValidSync && pDisc->SCSI.nLastLBAofDataTrkOnToc - 225 < nLBA)) {
+		UINT edcSrc = 0;
+		UINT edcCalc = 0;
+
+		if (mode == 0x00 && !bValidSync) {
+			OutputLog(standardError | fileMainError, STR_LBA STR_TRACK "Invalid Sync, Skip descrambling\n", nLBA, nLBA, nTrack);
+			OutputMainChannel(fileMainError, aSrcBuf, NULL, nLBA, CD_RAW_SECTOR_SIZE);
+			return FALSE;
+		}
+		else if (mode == 0x01) {
+			edcSrc = MAKEUINT(MAKEWORD(aSrcBuf[0x810], aSrcBuf[0x811]), MAKEWORD(aSrcBuf[0x812], aSrcBuf[0x813]));
+			edcCalc = CalcEDC(aSrcBuf, 0x810);
+			if (edcSrc != edcCalc) {
+				if ((byDecMode & DESCRAMBLE_INVALID_EDC) == 0) {
+					OutputLog(standardError | fileMainError, STR_LBA STR_TRACK "Mode 1 edc error. Skip descrambling\n", nLBA, nLBA, nTrack);
+					OutputMainChannel(fileMainError, aSrcBuf, NULL, nLBA, CD_RAW_SECTOR_SIZE);
+					return FALSE;
+				}
+				else {
+					OutputLog(standardError | fileMainError, STR_LBA STR_TRACK "Mode 1 edc error. Force descramble\n", nLBA, nLBA, nTrack);
+				}
+			}
+			return CheckEcc(byDecMode, aSrcBuf, mode, nLBA, nTrack);
+		}
+		else if (mode == 0x02) {
+			if ((aSrcBuf[0x12] & 0x20) == 0x20 || (aSrcBuf[0x16] & 0x20) == 0x20) {
+				// Mode 2 form 2
+				UINT edcSrc2 = MAKEUINT(MAKEWORD(aSrcBuf[0x92c], aSrcBuf[0x92d]), MAKEWORD(aSrcBuf[0x92e], aSrcBuf[0x92f]));
+				if (edcSrc2 == 0) {
+					OutputMainInfoWithLBALog("Mode 2 form 2 no edc\n", nLBA, nTrack);
+					return TRUE;
+				}
+				UINT edcCalc2 = CalcEDC(aSrcBuf + 0x10, 0x91c);
+				if (edcSrc2 != edcCalc2) {
+					if ((byDecMode & DESCRAMBLE_INVALID_EDC) == 0) {
+						OutputLog(standardError | fileMainError, STR_LBA STR_TRACK "Mode 2 form 2 edc error. Skip descrambling\n", nLBA, nLBA, nTrack);
+						OutputMainChannel(fileMainError, aSrcBuf, NULL, nLBA, CD_RAW_SECTOR_SIZE);
+						return FALSE;
+					}
+					else {
+						OutputLog(standardError | fileMainError, STR_LBA STR_TRACK "Mode 2 form 2 edc error. Force descramble\n", nLBA, nLBA, nTrack);
+					}
+				}
+			}
+			else {
+				// Mode 2 form 1
+				edcSrc = MAKEUINT(MAKEWORD(aSrcBuf[0x818], aSrcBuf[0x819]), MAKEWORD(aSrcBuf[0x81a], aSrcBuf[0x81b]));
+				edcCalc = CalcEDC(aSrcBuf + 0x10, 0x808);
+				if (edcSrc != edcCalc) {
+					if ((byDecMode & DESCRAMBLE_INVALID_EDC) == 0) {
+						OutputLog(standardError | fileMainError, STR_LBA STR_TRACK "Mode 2 form 1 edc error. Skip descrambling\n", nLBA, nLBA, nTrack);
+						OutputMainChannel(fileMainError, aSrcBuf, NULL, nLBA, CD_RAW_SECTOR_SIZE);
+						return FALSE;
+					}
+					else {
+						OutputLog(standardError | fileMainError, STR_LBA STR_TRACK "Mode 2 form 1 edc error. Force descramble\n", nLBA, nLBA, nTrack);
+					}
+				}
+				return CheckEcc(byDecMode, aSrcBuf, mode, nLBA, nTrack);
+			}
 		}
 	}
 	return TRUE;
@@ -1880,13 +1942,16 @@ VOID DescrambleMainChannelAll(
 						, n1stLBA, (UINT)n1stLBA, _T(__FUNCTION__), __LINE__);
 					break;
 				}
-				if (IsValidDataSector(pDisc, aSrcBuf, lpScrambledBuf, n1stLBA, k + 1)) {
-					fseek(fpImg, -CD_RAW_SECTOR_SIZE, SEEK_CUR);
+				fseek(fpImg, -CD_RAW_SECTOR_SIZE, SEEK_CUR);
+				for (INT n = 0; n < CD_RAW_SECTOR_SIZE; n++) {
+					aSrcBuf[n] ^= lpScrambledBuf[n];
+				}
+				if (!IsValidDataSector(pExtArg->byForceDescramble, pDisc, aSrcBuf, lpScrambledBuf, n1stLBA, k + 1)) {
 					for (INT n = 0; n < CD_RAW_SECTOR_SIZE; n++) {
 						aSrcBuf[n] ^= lpScrambledBuf[n];
 					}
-					fwrite(aSrcBuf, sizeof(BYTE), sizeof(aSrcBuf), fpImg);
 				}
+				fwrite(aSrcBuf, sizeof(BYTE), sizeof(aSrcBuf), fpImg);
 				OutputString(
 					"\rDescrambling data sector of img: %6d/%6d", n1stLBA, nLastLBA);
 			}
@@ -1910,7 +1975,7 @@ VOID DescrambleMainChannelPartial(
 			OutputErrorString("Failed to read [F:%s][L:%d]\n", _T(__FUNCTION__), __LINE__);
 			break;
 		}
-		if (IsValidDataSector(NULL, aSrcBuf, lpScrambledBuf, nStartLBA, 0)) {
+		if (IsValidDataSector(0, NULL, aSrcBuf, lpScrambledBuf, nStartLBA, 0)) {
 			fseek(fpImg, -CD_RAW_SECTOR_SIZE, SEEK_CUR);
 			for (INT n = 0; n < CD_RAW_SECTOR_SIZE; n++) {
 				aSrcBuf[n] ^= lpScrambledBuf[n];

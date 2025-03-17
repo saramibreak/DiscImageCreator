@@ -367,8 +367,15 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 					}
 
 					if (*pExecType == cd) {
+#ifdef TEST
+						BYTE aSrcBuf[2352] = {};
+						FILE* fp = fopen("E:\\source\\repos\\DiscImageCreator\\test\\fmt_0_sector202347_valid_sync_valid_mode_truncated.bin", "rb");
+						fread(aSrcBuf, 2352, 1, fp);
+						fclose(fp);
+						IsValidDataSector(pExtArg->byForceDescramble, pDisc, aSrcBuf, NULL, 225355, 1);
+#else
 						bRet = ReadCDAll(pExecType, pExtArg, pDevice, pDisc, &discPerSector, c2, pszFullPath, fpCcd, fpC2);
-
+#endif
 						if (IsPregapOfTrack1ReadableDrive(pDevice) && IsAudioOnlyDisc(pDisc) &&
 							!pExtArg->byAtari && pExtArg->uiTryReadingPregapCnt != 0) {
 							ConcatenateFromPregapToLeadout(pDisc, pszFullPath);
@@ -766,6 +773,95 @@ int SetOptionTrp(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	else {
 		pExtArg->uiTryReadingPregapCnt = 5;
 		OutputString("/trp val was omitted. set [%u]\n", pExtArg->uiTryReadingPregapCnt);
+	}
+	return TRUE;
+}
+
+int SetOptionFdesc(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
+{
+	if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
+		if (!_tcsncmp(argv[*i], _T("sync"), 4)) {
+			argv[(*i)++];
+			pExtArg->byForceDescramble = DESCRAMBLE_INVALID_SYNC;
+			if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
+				if (!_tcsncmp(argv[*i], _T("edc"), 3)) {
+					argv[(*i)++];
+					pExtArg->byForceDescramble |= DESCRAMBLE_INVALID_EDC;
+					if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
+						if (!_tcsncmp(argv[*i], _T("ecc"), 3)) {
+							argv[(*i)++];
+							pExtArg->byForceDescramble |= DESCRAMBLE_INVALID_ECC;
+						}
+					}
+				}
+				else if (!_tcsncmp(argv[*i], _T("ecc"), 3)) {
+					argv[(*i)++];
+					pExtArg->byForceDescramble |= DESCRAMBLE_INVALID_ECC;
+					if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
+						if (!_tcsncmp(argv[*i], _T("edc"), 3)) {
+							argv[(*i)++];
+							pExtArg->byForceDescramble |= DESCRAMBLE_INVALID_EDC;
+						}
+					}
+				}
+			}
+		}
+		else if (!_tcsncmp(argv[*i], _T("edc"), 3)) {
+			argv[(*i)++];
+			pExtArg->byForceDescramble = DESCRAMBLE_INVALID_EDC;
+			if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
+				if (!_tcsncmp(argv[*i], _T("sync"), 4)) {
+					argv[(*i)++];
+					pExtArg->byForceDescramble |= DESCRAMBLE_INVALID_SYNC;
+					if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
+						if (!_tcsncmp(argv[*i], _T("ecc"), 3)) {
+							argv[(*i)++];
+							pExtArg->byForceDescramble |= DESCRAMBLE_INVALID_ECC;
+						}
+					}
+				}
+				else if (!_tcsncmp(argv[*i], _T("ecc"), 3)) {
+					argv[(*i)++];
+					pExtArg->byForceDescramble |= DESCRAMBLE_INVALID_ECC;
+					if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
+						if (!_tcsncmp(argv[*i], _T("sync"), 4)) {
+							argv[(*i)++];
+							pExtArg->byForceDescramble |= DESCRAMBLE_INVALID_SYNC;
+						}
+					}
+				}
+			}
+		}
+		else if (!_tcsncmp(argv[*i], _T("ecc"), 3)) {
+			argv[(*i)++];
+			pExtArg->byForceDescramble = DESCRAMBLE_INVALID_ECC;
+			if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
+				if (!_tcsncmp(argv[*i], _T("sync"), 4)) {
+					argv[(*i)++];
+					pExtArg->byForceDescramble |= DESCRAMBLE_INVALID_SYNC;
+					if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
+						if (!_tcsncmp(argv[*i], _T("edc"), 3)) {
+							argv[(*i)++];
+							pExtArg->byForceDescramble |= DESCRAMBLE_INVALID_EDC;
+						}
+					}
+				}
+				else if (!_tcsncmp(argv[*i], _T("edc"), 3)) {
+					argv[(*i)++];
+					pExtArg->byForceDescramble |= DESCRAMBLE_INVALID_EDC;
+					if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
+						if (!_tcsncmp(argv[*i], _T("sync"), 4)) {
+							argv[(*i)++];
+							pExtArg->byForceDescramble |= DESCRAMBLE_INVALID_SYNC;
+						}
+					}
+				}
+			}
+		}
+	}
+	else {
+		pExtArg->byForceDescramble = 0;
+		OutputString("/fdesc str was omitted. set [%u]\n", pExtArg->byForceDescramble);
 	}
 	return TRUE;
 }
@@ -1242,6 +1338,11 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				}
 				else if (cmdLen == 3 && !_tcsncmp(argv[i - 1], _T("/mr"), cmdLen)) {
 					if (!SetOptionMr(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
+				}
+				else if (cmdLen == 6 && !_tcsncmp(argv[i - 1], _T("/fdesc"), cmdLen)) {
+					if (!SetOptionFdesc(argc, argv, pExtArg, &i)) {
 						return FALSE;
 					}
 				}
@@ -1858,7 +1959,7 @@ void printUsage(void)
 		"\tcd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/d] [/a (val)] [/aj] [/p]\n"
 		"\t   [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4) (val5)] [/f (val)]\n"
 		"\t   [/vn (val)] [/vnc] [/vnx] [/mscf] [/sf (val)] [/ss] [/np] [/nq] [/nr]\n"
-		"\t   [/nl] [/ns] [/s (val)] [/trp (val)] [/toc] [/fulltoc]\n"
+		"\t   [/nl] [/ns] [/s (val)] [/trp (val)] [/toc] [/fulltoc] [/fdesc (str)]\n"
 		"\t\tDump a CD from A to Z\n"
 		"\t\tFor PLEXTOR or drive that can scramble Dumping\n"
 		"\tswap <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/d] [/a (val)]\n"
@@ -1999,7 +2100,18 @@ void printUsage(void)
 		"\t\t\tval\ttry count (default 5)\n"
 		"\t/toc\tFull TOC is overwritten by TOC\n"
 		"\t/fulltoc\tTOC is overwritten by Full TOC\n"
+		"\t/fdesc\tForce descramble sector\n"
+		"\t\t\tstr\t        sync: descramble invalid sync sector (e.g. some CD-i)\n"
+		"\t\t\t   \t         edc: descramble edc error sector\n"
+		"\t\t\t   \t    sync edc: descramble invalid sync sector and edc error sector\n"
+		"\t\t\t   \t         ecc: descramble ecc error sector (e.g. some PSX)\n"
+		"\t\t\t   \t    sync ecc: descramble invalid sync sector and ecc error sector\n"
+		"\t\t\t   \t     edc ecc: descramble edc error sector and ecc error sector (e.g. some IBM-PC, SS, FMT)\n"
+		"\t\t\t   \tsync edc ecc: descramble invalid sync sector and edc error sector and ecc error sector\n"
 		"Option (for CD SubChannel)\n"
+	);
+	stopMessage();
+	OutputString(
 		"\t/np\tNot fix SubP\n"
 		"\t/nq\tNot fix SubQ\n"
 		"\t/nr\tNot fix SubRtoW\n"
@@ -2008,9 +2120,6 @@ void printUsage(void)
 		"\t\t\tFor PlayStation LibCrypt\n"
 		"\t/ns\tNot fix SubQ (RMSF, AMSF, CRC) (LBA 0 - 7, 5000 - 24999)\n"
 		"\t   \t                            or (LBA 30000 - 49999)\n"
-	);
-	stopMessage();
-	OutputString(
 		"\t\t\tFor SecuROM\n"
 		"\t/s\tUse if it reads subchannel precisely\n"
 		"\t\t\tval\t0: no read next sub (fast, but lack precision)\n"
@@ -2032,6 +2141,9 @@ void printUsage(void)
 		"\t\t\tComfirmed drive: Mediatec MT chip (Lite-on etc.), PLEXTOR\n"
 		"\t\t\t               Hitachi-LG GDR, GCC\n"
 		"\t\t\t -> GDR (8082N, 8161B to 8164B) and GCC (4160N, 4240N to 4247N)\n"
+	);
+	stopMessage();
+	OutputString(
 		"\t\t\t    supports GC/Wii dumping\n"
 		"\t/avdp\tUse Anchor Volume Descriptor Pointer as file length\n"
 		"\t/ps\tThe sector is padded when reading error occurs\n"

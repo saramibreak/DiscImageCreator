@@ -431,7 +431,14 @@ BOOL CreateBinCueForGD(
 	PDISC pDisc,
 	LPCTSTR pszPath
 );
-
+BOOL IsValidDataSector(
+	BYTE byDecMode,
+	PDISC pDisc,
+	LPBYTE aSrcBuf,
+	LPBYTE lpScrambledBuf,
+	INT nLBA,
+	INT nTrack
+);
 VOID DescrambleMainChannelAll(
 	PEXT_ARG pExtArg,
 	PDISC pDisc,

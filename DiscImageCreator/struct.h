@@ -207,7 +207,8 @@ typedef struct _EXT_ARG {
 	BYTE byMicroSoftCabFile;
 	BYTE byPadSector;
 	BYTE byMultiSectorReading; // for 0xF1 supported drive
-	BYTE byPadding[2];
+	BYTE byForceDescramble;
+	BYTE byPadding;
 	INT nAllSectors;			// for xgd2swap
 	UINT uiSecuritySector[16];	// for xgd2swap
 	INT nAudioCDOffsetNum;		// for /a and /vn

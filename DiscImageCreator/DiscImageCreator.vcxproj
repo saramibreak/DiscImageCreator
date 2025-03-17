@@ -396,6 +396,7 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="xml.h" />
     <ClInclude Include="_external\abgx360.h" />
+    <ClInclude Include="_external\CheckSector.h" />
     <ClInclude Include="_external\crc16ccitt.h" />
     <ClInclude Include="_external\crc32.h" />
     <ClInclude Include="_external\global.h" />
@@ -454,6 +455,7 @@
     <ClCompile Include="_external\aes.cpp" />
     <ClCompile Include="_external\crc16ccitt.cpp" />
     <ClCompile Include="_external\crc32.cpp" />
+    <ClCompile Include="_external\ECCEDC.cpp" />
     <ClCompile Include="_external\md5c.cpp" />
     <ClCompile Include="_external\NonStandardFunction.cpp" />
     <ClCompile Include="_external\platform_util.cpp" />
