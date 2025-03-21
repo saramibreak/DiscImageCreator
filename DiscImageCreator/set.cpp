@@ -1462,7 +1462,7 @@ VOID SetTrackAttribution(
 
 	if (*pExecType != gd && pDiscPerSector->subch.current.byAdr != ADR_ENCODES_CURRENT_POSITION) {
 		if (nLBA == 0) {
-			// [CD-i] Jazz Giants - From Big Band to Bossa Nova (Europe)
+			// [CD-i] Jazz Giants - From Big Band to Bossa Nova (Europe) http://redump.org/disc/52711/
 			// LBA[000000, 0000000]: P[ff], Q[46cf3cf0cff0fff000001202]{ Data,      Copy NG,                  Unknown Data    [cf3cf0cff0fff000], AMSF[     :00]}, RtoW[0, 0, 0, 0]
 			// LBA[000001, 0x00001]: P[00], Q[410101000001000002019242]{ Data,      Copy NG,                  Track[01], Idx[01], RMSF[00:00:01], AMSF[00:02:01]}, RtoW[0, 0, 0, 0]
 			tmpCurrentTrackNum = pDiscPerSector->subch.next.byTrackNum;
@@ -1473,13 +1473,20 @@ VOID SetTrackAttribution(
 		}
 		else if (pDiscPerSector->subch.current.byP == 0x00 && pDiscPerSector->subch.next.byP == 0xff &&
 			pDiscPerSector->subch.prev.byTrackNum + 1 == pDiscPerSector->subch.next.byTrackNum) {
-			if (pDisc->SUB.n1stRmsfOfTrk == 149 || pDisc->SUB.n1stRmsfOfTrk == 150 ||
-				pDisc->SUB.n1stRmsfOfTrk == 224 || pDiscPerSector->subch.next.byTrackNum == 2) {
-				// [FMT] Winning Post (Japan)
+			if (pDisc->SUB.n1stRmsfOfTrk == 149 || // 01:74:00
+				pDisc->SUB.n1stRmsfOfTrk == 150 || // 02:00:00
+				pDisc->SUB.n1stRmsfOfTrk == 199 || // 02:49:00
+				pDisc->SUB.n1stRmsfOfTrk == 224 || // 02:74:00
+				pDiscPerSector->subch.next.byTrackNum == 2) {
+				// [FMT] Winning Post (Japan) http://redump.org/disc/75346/
 				// LBA[007949, 0x01f0d]: P[00], Q[01030100207400014774c6dd]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[03], Idx[01], RMSF[00:20:74], AMSF[01:47:74]}, RtoW[0, 0, 0, 0]
 				// LBA[007950, 0x01f0e]: P[00], Q[020000000000000000002175]{Audio, 2ch, Copy NG, Pre-emphasis No, MediaCatalogNumber [0000000000000], AMSF[     :00]}, RtoW[0, 0, 0, 0]
 				// LBA[007951, 0x01f0f]: P[ff], Q[010400000174000148017e01]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[04], Idx[00], RMSF[00:01:74], AMSF[01:48:01]}, RtoW[0, 0, 0, 0]
-				// [PCE] Cosmic Fantasy 3 - Bouken Shounen Rei (Japan)
+				// [FMT] F-BASIC386 V1.1 L21 (Japan) http://redump.org/disc/74375/
+				// LBA[068994, 0x10d82]: P[00], Q[01030101225200152169cd7e]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[03], Idx[01], RMSF[01:22:52], AMSF[15:21:69]}, RtoW[0, 0, 0, 0]
+				// LBA[068995, 0x10d83]: P[00], Q[02200591111171600070cac6]{Audio, 2ch, Copy NG, Pre-emphasis No, MediaCatalogNumber [2005911111716], AMSF[     :70]}, RtoW[0, 0, 0, 0]
+				// LBA[068996, 0x10d84]: P[ff], Q[0104000002480015217167a2]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[04], Idx[00], RMSF[00:02:48], AMSF[15:21:71]}, RtoW[0, 0, 0, 0]
+				// [PCE] Cosmic Fantasy 3 - Bouken Shounen Rei (Japan) http://redump.org/disc/2416/
 				// LBA[261585, 0x3fdd1]: P[00], Q[01950100136900580960087c]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[95], Idx[01], RMSF[00:13:69], AMSF[58:09:60]}, RtoW[0, 0, 0, 0]
 				// LBA[261586, 0x3fdd2]: P[00], Q[020000000000000000615df2]{Audio, 2ch, Copy NG, Pre-emphasis No, MediaCatalogNumber [0000000000000], AMSF[     :61]}, RtoW[0, 0, 0, 0]
 				// LBA[261587, 0x3fdd3]: P[ff], Q[019600000273005809625f79]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[96], Idx[00], RMSF[00:02:73], AMSF[58:09:62]}, RtoW[0, 0, 0, 0]
@@ -1490,7 +1497,7 @@ VOID SetTrackAttribution(
 				pDiscPerSector->bNextTrk = TRUE;
 			}
 			else {
-				// [IBM PC] Quake (Canada)
+				// [IBM PC] Quake (Canada) http://redump.org/disc/26485/ or http://redump.org/disc/70559/
 				// LBA[039728, 0x09b30]: P[00], Q[110201050644000851531709]{Audio, 2ch, Copy NG, Pre-emphasis Yes, Track[02], Idx[01], RMSF[05:06:44], AMSF[08:51:53]}, RtoW[0, 0, 0, 0]
 				// LBA[039729, 0x09b31]: P[00], Q[11020105064500085154cdbf]{Audio, 2ch, Copy NG, Pre-emphasis Yes, Track[02], Idx[01], RMSF[05:06:45], AMSF[08:51:54]}, RtoW[0, 0, 0, 0]
 				// LBA[039730, 0x09b32]: P[ff], Q[1103000001730008515501e3]{Audio, 2ch, Copy NG, Pre-emphasis Yes, Track[03], Idx[00], RMSF[00:01:73], AMSF[08:51:55]}, RtoW[0, 0, 0, 0]
@@ -1509,7 +1516,7 @@ VOID SetTrackAttribution(
 		}
 		else if (pDiscPerSector->subch.current.byP == 0xff && pDiscPerSector->subch.next.byP == 0x00) {
 			if (pDiscPerSector->subch.prev.byTrackNum + 1 == pDiscPerSector->subch.next.byTrackNum) {
-				// [PCE] Madou Monogatari I - Honoo no Sotsuenji (Japan)
+				// [PCE] Madou Monogatari I - Honoo no Sotsuenji (Japan) http://redump.org/disc/37150/
 				// LBA[183031, 0x2caf7]: P[ff], Q[01210100317000404231bc6d]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[21], Idx[01], RMSF[00:31:70], AMSF[40:42:31]}, RtoW[0, 0, 0, 0]
 				// LBA[183032, 0x2caf8]: P[ff], Q[020000000000000000323764]{Audio, 2ch, Copy NG, Pre-emphasis No, MediaCatalogNumber [0000000000000], AMSF[     :32]}, RtoW[0, 0, 0, 0]
 				// LBA[183033, 0x2caf9]: P[00], Q[012201000001004042336c90]{Audio, 2ch, Copy NG, Pre-emphasis No, Track[22], Idx[01], RMSF[00:00:01], AMSF[40:42:33]}, RtoW[0, 0, 0, 0]
@@ -1519,7 +1526,7 @@ VOID SetTrackAttribution(
 				pDiscPerSector->bNextTrk = TRUE;
 			}
 			else if (pDiscPerSector->subch.prev.byIndex + 1 == pDiscPerSector->subch.next.byIndex) {
-				// [PCE] Cosmic Fantasy 3 - Bouken Shounen Rei (Japan)
+				// [PCE] Cosmic Fantasy 3 - Bouken Shounen Rei (Japan) http://redump.org/disc/2416/
 				// LBA[142873, 0x22e19]: P[ff], Q[41370000000000314673bc02]{ Data,      Copy NG,                  Track[37], Idx[00], RMSF[00:00:00], AMSF[31:46:73]}, RtoW[0, 0, 0, 0]
 				// LBA[142874, 0x22e1a]: P[ff], Q[420000000000000000746d7c]{ Data,      Copy NG,                  MediaCatalogNumber [0000000000000], AMSF[     :74]}, RtoW[0, 0, 0, 0]
 				// LBA[142875, 0x22e1b]: P[00], Q[413701000001003147002c45]{ Data,      Copy NG,                  Track[37], Idx[01], RMSF[00:00:01], AMSF[31:47:00]}, RtoW[0, 0, 0, 0]
