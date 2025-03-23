@@ -2487,7 +2487,7 @@ BOOL ReadSACDFileSystem(
 		BYTE Reserved;
 	} Locale;
 	typedef struct _TextChannel {
-		BYTE Max_Text_Channels;
+		BYTE Number_of_Text_Channels;
 		BYTE Reserved6[7];
 		Locale locale[8];
 	} Text_Channel;
@@ -2534,29 +2534,29 @@ BOOL ReadSACDFileSystem(
 
 	OutputVolDescLog(
 		OUTPUT_DHYPHEN_PLUS_STR("Master_TOC")
-		"\t Master_TOC_Signature: %.8" CHARWIDTH "s\n"
-		"\t         Spec_Version: %d.%02d\n"
-		"\t       Album_Set_Size: %u\n"
-		"\tAlbum_Sequence_Number: %u\n"
-		"\t Album_Catalog_Number: %.16" CHARWIDTH "s\n"
-		"\t         Album_Genre1: %02x %02x %02x %02x\n"
-		"\t         Album_Genre2: %02x %02x %02x %02x\n"
-		"\t         Album_Genre3: %02x %02x %02x %02x\n"
-		"\t         Album_Genre4: %02x %02x %02x %02x\n"
-		"\t  TWOCH_TOC_1_Address: %u (%#08x)\n"
-		"\t  TWOCH_TOC_2_Address: %u (%#08x)\n"
-		"\t     MC_TOC_1_Address: %u (%#08x)\n"
-		"\t     MC_TOC_2_Address: %u (%#08x)\n"
-		"\t    Disc_Flags_Hybrid: %hhu\n"
-		"\t        TWOCH_TOC_Len: %u (%#08x)\n"
-		"\t           MC_TOC_Len: %u (%#08x)\n"
-		"\t  Disc_Catalog_Number: %.16" CHARWIDTH "s\n"
-		"\t          Disc_Genre1: %02x %02x %02x %02x\n"
-		"\t          Disc_Genre2: %02x %02x %02x %02x\n"
-		"\t          Disc_Genre3: %02x %02x %02x %02x\n"
-		"\t          Disc_Genre4: %02x %02x %02x %02x\n"
-		"\t            Disc_Date: %u-%02u-%02u\n"
-		"\t    Max_Text_Channels: %u\n"
+		"\t   Master_TOC_Signature: %.8" CHARWIDTH "s\n"
+		"\t           Spec_Version: %d.%02d\n"
+		"\t         Album_Set_Size: %u\n"
+		"\t  Album_Sequence_Number: %u\n"
+		"\t   Album_Catalog_Number: %.16" CHARWIDTH "s\n"
+		"\t           Album_Genre1: %02x %02x %02x %02x\n"
+		"\t           Album_Genre2: %02x %02x %02x %02x\n"
+		"\t           Album_Genre3: %02x %02x %02x %02x\n"
+		"\t           Album_Genre4: %02x %02x %02x %02x\n"
+		"\t    TWOCH_TOC_1_Address: %u (%#08x)\n"
+		"\t    TWOCH_TOC_2_Address: %u (%#08x)\n"
+		"\t       MC_TOC_1_Address: %u (%#08x)\n"
+		"\t       MC_TOC_2_Address: %u (%#08x)\n"
+		"\t      Disc_Flags_Hybrid: %hhu\n"
+		"\t          TWOCH_TOC_Len: %u (%#08x)\n"
+		"\t             MC_TOC_Len: %u (%#08x)\n"
+		"\t    Disc_Catalog_Number: %.16" CHARWIDTH "s\n"
+		"\t            Disc_Genre1: %02x %02x %02x %02x\n"
+		"\t            Disc_Genre2: %02x %02x %02x %02x\n"
+		"\t            Disc_Genre3: %02x %02x %02x %02x\n"
+		"\t            Disc_Genre4: %02x %02x %02x %02x\n"
+		"\t              Disc_Date: %u-%02u-%02u\n"
+		"\tNumber_of_Text_Channels: %u\n"
 		, &mToc.Master_TOC_Signature[0]
 		, mToc.Major_Version, mToc.Minor_Version
 		, mToc.Album_Set_Size
@@ -2579,13 +2579,13 @@ BOOL ReadSACDFileSystem(
 		, mToc.Disc_Genre[2][0], mToc.Disc_Genre[2][1], mToc.Disc_Genre[2][2], mToc.Disc_Genre[2][3]
 		, mToc.Disc_Genre[3][0], mToc.Disc_Genre[3][1], mToc.Disc_Genre[3][2], mToc.Disc_Genre[3][3]
 		, mToc.Disc_Date_Y, mToc.Disc_Date_M, mToc.Disc_Date_D
-		, mToc.Txt_Ch.Max_Text_Channels
+		, mToc.Txt_Ch.Number_of_Text_Channels
 	);
 	_TCHAR Lang[][14] {
 		_T("UNKNOWN"), _T("ISO646"), _T("ISO8859_1"), _T("RIS506")
 		, _T("KSC5601"), _T("GB2312"), _T("BIG5"), _T("ISO8859_1_ESC")
 	};
-	for (INT i = 0; i < mToc.Txt_Ch.Max_Text_Channels; i++) {
+	for (INT i = 0; i < mToc.Txt_Ch.Number_of_Text_Channels; i++) {
 		OutputVolDescLog(
 			"\t     Language_Code[%d]: %.2" CHARWIDTH "s\n"
 			"\tCharacter_Set_Code[%d]: %s\n"
@@ -2779,66 +2779,98 @@ BOOL ReadSACDFileSystem(
 			BYTE Minor_Version;
 			USHORT Area_TOC_Length;
 			UINT Reserved1;
-			UINT Unknown1;				// 16..127 Area_Data 
-			BYTE Unknown2;
-			BYTE Frame_Format;
-			BYTE Reserved2[10];
-			BYTE N_Channels;
-			BYTE Unknown3[15];
-			BYTE Unknown4[16];
+			UINT Max_Byte_Rate;			// 16..127 Area_Data 
+			BYTE FS_Code;
+			BYTE Frame_Format : 4;
+			BYTE Reserved2 : 4;
+			BYTE Reserved3[10];
+			BYTE Number_of_Channels;
+			BYTE Loudspeaker_Config : 5;
+			BYTE Extra_Setting : 3;
+			BYTE Max_Available_Channels;
+			BYTE Reserved4 : 3;
+			BYTE AMF1 : 1;
+			BYTE AMF2 : 1;
+			BYTE AMF3 : 1;
+			BYTE AMF4 : 1;
+			BYTE Reserved5 : 1;
+			BYTE Reserved6[12];
+			BYTE Track_Attribute : 4;
+			BYTE Reserved7 : 4;
+			BYTE Reserved8[15];
 			BYTE m;
 			BYTE s;
 			BYTE f;
-			BYTE Reserved3;
-			BYTE Unknown5;
-			BYTE Last_Track_Number;
-			BYTE Reserved4[2];
-			UINT Audio_Start_Address;
-			UINT Audio_End_Address;
+			BYTE Reserved9;
+			BYTE Track_Offset;
+			BYTE Number_of_Track;
+			BYTE First_Bonus_Track_Number;
+			BYTE Reserved10;
+			UINT Track_Area_Start_Address;
+			UINT Track_Area_End_Address;
 			Text_Channel Txt_Ch;
+			BYTE Reserved11[8];
 			USHORT Track_Text_Ptr;		// 128..143 List_Pointers
 			USHORT Index_List_Ptr;
 			USHORT Access_List_Ptr;
 			USHORT Track_WebLink_List_Ptr;
-			BYTE Reserved7[8];
+			USHORT Track_List_3_Ptr;
+			USHORT Set_Of_Playlists_Ptr;
+			BYTE Reserved12[4];
 			BYTE Area_Text[1904];
 		} Area_TOC;
 		Area_TOC aToc = {};
 		memcpy(&aToc, lpBuf, sizeof(Area_TOC));
-		aToc.Unknown1 = MAKEUINT(MAKEWORD(lpBuf[0x13], lpBuf[0x12]), MAKEWORD(lpBuf[0x11], lpBuf[0x10]));
+		aToc.Max_Byte_Rate = MAKEUINT(MAKEWORD(lpBuf[0x13], lpBuf[0x12]), MAKEWORD(lpBuf[0x11], lpBuf[0x10]));
 		aToc.Area_TOC_Length = MAKEWORD(lpBuf[0xb], lpBuf[0xa]);
-		aToc.Audio_Start_Address = MAKEUINT(MAKEWORD(lpBuf[0x4b], lpBuf[0x4a]), MAKEWORD(lpBuf[0x49], lpBuf[0x48]));
-		aToc.Audio_End_Address = MAKEUINT(MAKEWORD(lpBuf[0x4f], lpBuf[0x4e]), MAKEWORD(lpBuf[0x4d], lpBuf[0x4c]));
+		aToc.Track_Area_Start_Address = MAKEUINT(MAKEWORD(lpBuf[0x4b], lpBuf[0x4a]), MAKEWORD(lpBuf[0x49], lpBuf[0x48]));
+		aToc.Track_Area_End_Address = MAKEUINT(MAKEWORD(lpBuf[0x4f], lpBuf[0x4e]), MAKEWORD(lpBuf[0x4d], lpBuf[0x4c]));
 
 		OutputVolDescLog(
 			OUTPUT_DHYPHEN_PLUS_STR("Area_TOC")
-			"\t    Area_TOC_Signature: %.8" CHARWIDTH "s\n"
-			"\t          Spec_Version: %d.%02d\n"
-			"\t       Area_TOC_Length: %u (%#02x)\n"
-			"\t               Unknown: %u (%#02x)\n"
-			"\t               Unknown: %u (%#02x)\n"
-			"\t          Frame_Format: %d\n"
-			"\t            N_Channels: %d\n"
-			"\t             Total MSF: %02d:%02d:%02d\n"
-			"\t               Unknown: %d\n"
-			"\t     Last_Track_Number: %d\n"
-			"\t   Audio_Start_Address: %u (%#02x)\n"
-			"\t     Audio_End_Address: %u (%#02x)\n"
-			"\t     Max_Text_Channels: %d\n"
+			"\t      Area_TOC_Signature: %.8" CHARWIDTH "s\n"
+			"\t            Spec_Version: %d.%02d\n"
+			"\t         Area_TOC_Length: %u (%#02x)\n"
+			"\t           Max_Byte_Rate: %u\n"
+			"\t                 FS_Code: %u\n"
+			"\t            Frame_Format: %d\n"
+			"\t      Number_of_Channels: %d\n"
+			"\t      Loudspeaker_Config: %d\n"
+			"\t           Extra_Setting: %d\n"
+			"\t  Max_Available_Channels: %d\n"
+			"\t                    AMF1: %d\n"
+			"\t                    AMF2: %d\n"
+			"\t                    AMF3: %d\n"
+			"\t                    AMF4: %d\n"
+			"\t         Track_Attribute: %d\n"
+			"\t               Total MSF: %02d:%02d:%02d\n"
+			"\t            Track_Offset: %d\n"
+			"\t         Number_of_Track: %d\n"
+			"\tFirst_Bonus_Track_Number: %d\n"
+			"\tTrack_Area_Start_Address: %u (%#02x)\n"
+			"\t  Track_Area_End_Address: %u (%#02x)\n"
+			"\t       Max_Text_Channels: %d\n"
 			, &lpBuf[0]
 			, aToc.Major_Version, aToc.Minor_Version
 			, aToc.Area_TOC_Length, aToc.Area_TOC_Length
-			, aToc.Unknown1, aToc.Unknown1
-			, aToc.Unknown2, aToc.Unknown2
+			, aToc.Max_Byte_Rate
+			, aToc.FS_Code
 			, aToc.Frame_Format
-			, aToc.N_Channels
+			, aToc.Number_of_Channels
+			, aToc.Loudspeaker_Config
+			, aToc.Extra_Setting
+			, aToc.Max_Available_Channels
+			, aToc.AMF1, aToc.AMF2, aToc.AMF3, aToc.AMF4
+			, aToc.Track_Attribute
 			, aToc.m, aToc.s, aToc.f
-			, aToc.Unknown5, aToc.Last_Track_Number
-			, aToc.Audio_Start_Address, aToc.Audio_Start_Address
-			, aToc.Audio_End_Address, aToc.Audio_End_Address
-			, aToc.Txt_Ch.Max_Text_Channels
+			, aToc.Track_Offset
+			, aToc.Number_of_Track
+			, aToc.First_Bonus_Track_Number
+			, aToc.Track_Area_Start_Address, aToc.Track_Area_Start_Address
+			, aToc.Track_Area_End_Address, aToc.Track_Area_End_Address
+			, aToc.Txt_Ch.Number_of_Text_Channels
 		);
-		for (INT i = 0; i < aToc.Txt_Ch.Max_Text_Channels; i++) {
+		for (INT i = 0; i < aToc.Txt_Ch.Number_of_Text_Channels; i++) {
 			OutputVolDescLog(
 				"\t      Language_Code[%d]: %.2" CHARWIDTH "s\n"
 				"\t Character_Set_Code[%d]: %s\n"
@@ -2851,57 +2883,139 @@ BOOL ReadSACDFileSystem(
 		aToc.Access_List_Ptr = MAKEWORD(lpBuf[0x85], lpBuf[0x84]);
 		aToc.Track_WebLink_List_Ptr = MAKEWORD(lpBuf[0x87], lpBuf[0x86]);
 		OutputVolDescLog(
-			"\t        Track_Text_Ptr: %u (%#02x)\n"
-			"\t        Index_List_Ptr: %u (%#02x)\n"
-			"\t       Access_List_Ptr: %u (%#02x)\n"
-			"\tTrack_WebLink_List_Ptr: %u (%#02x)\n"
-			, aToc.Track_Text_Ptr, aToc.Track_Text_Ptr
-			, aToc.Index_List_Ptr, aToc.Index_List_Ptr
-			, aToc.Access_List_Ptr, aToc.Access_List_Ptr
-			, aToc.Track_WebLink_List_Ptr, aToc.Track_WebLink_List_Ptr
+			"\t        Track_Text_Ptr: %u\n"
+			"\t        Index_List_Ptr: %u\n"
+			"\t       Access_List_Ptr: %u\n"
+			"\tTrack_WebLink_List_Ptr: %u\n"
+			"\t      Track_List_3_Ptr: %u\n"
+			"\t  Set_Of_Playlists_Ptr: %u\n"
+			, aToc.Track_Text_Ptr
+			, aToc.Index_List_Ptr
+			, aToc.Access_List_Ptr
+			, aToc.Track_WebLink_List_Ptr
+			, aToc.Track_List_3_Ptr
+			, aToc.Set_Of_Playlists_Ptr
 		);
 
-		for (LBA.AsULong = ulChToc[c] + 1; LBA.AsULong <= (ULONG)ulChToc[c] + 2; LBA.AsULong++) {
-			REVERSE_BYTES(&cdb.LogicalBlock, &LBA);
-
-			if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, lpBuf,
-				direction, DISC_MAIN_DATA_SIZE, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
-				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-				FreeAndNull(pBuf);
-				return FALSE;
-			}
-			OutputMainChannel(fileMainInfo, lpBuf, _T("Track_List"), (INT)LBA.AsULong, DISC_MAIN_DATA_SIZE);
-
-			typedef struct _Track_List {
-				CHAR Track_List_1_Signature[8];
-				UINT Track_Start_Address[255];
-				UINT Track_Length[255];
-			} Track_List;
-			Track_List tList = {};
-
+		for (INT i = 0; i < aToc.Txt_Ch.Number_of_Text_Channels; i++) {
+			WORD AD_Ptr = MAKEWORD(aToc.Area_Text[1 + i * 8], aToc.Area_Text[0 + i * 8]);
+			WORD AC_Ptr = MAKEWORD(aToc.Area_Text[3 + i * 8], aToc.Area_Text[2 + i * 8]);
+			WORD ADP_Ptr = MAKEWORD(aToc.Area_Text[5 + i * 8], aToc.Area_Text[4 + i * 8]);
+			WORD ACP_Ptr = MAKEWORD(aToc.Area_Text[7 + i * 8], aToc.Area_Text[6 + i * 8]);
 			OutputVolDescLog(
-				OUTPUT_DHYPHEN_PLUS_STR("Track_List")
-				"\t Track_List_1_Signature: %.8" CHARWIDTH "s\n"
-				, &lpBuf[0]
+				"\t         Area_Description_Ptr[%d]: %u\n"
+				"\t           Area_Copyright_Ptr[%d]: %u\n"
+				"\tArea_Description_Phonetic_Ptr[%d]: %u\n"
+				"\t  Area_Copyright_Phonetic_Ptr[%d]: %u\n"
+				, i + 1, AD_Ptr
+				, i + 1, AC_Ptr
+				, i + 1, ADP_Ptr
+				, i + 1, ACP_Ptr
 			);
-			for (INT i = 0; i < aToc.Last_Track_Number; i++) {
-				tList.Track_Start_Address[i] = MAKEUINT(
-					MAKEWORD(lpBuf[0xb + sizeof(UINT) * i], lpBuf[0xa + sizeof(UINT) * i])
-					, MAKEWORD(lpBuf[0x9 + sizeof(UINT) * i], lpBuf[0x8 + sizeof(UINT) * i]));
-				OutputVolDescLog(
-					"\tTrack_Start_Address[%02d]: %9u (%#x)\n"
-					, i + 1, tList.Track_Start_Address[i], tList.Track_Start_Address[i]
-				);
+			if (AD_Ptr) {
+				OutputVolDescLog("\t         Area_Description: %s\n", &aToc.Area_Text[AD_Ptr]);
 			}
-			for (INT i = 0; i < aToc.Last_Track_Number; i++) {
-				tList.Track_Length[i] = MAKEUINT(
-					MAKEWORD(lpBuf[0x407 + sizeof(UINT) * i], lpBuf[0x406 + sizeof(UINT) * i])
-					, MAKEWORD(lpBuf[0x405 + sizeof(UINT) * i], lpBuf[0x404 + sizeof(UINT) * i]));
-				OutputVolDescLog(
-					"\t       Track_Length[%02d]: %9u (%#x)\n"
-					, i + 1, tList.Track_Length[i], tList.Track_Length[i]
-				);
+			if (AC_Ptr) {
+				OutputVolDescLog("\t          Area_Copyrightn: %s\n", &aToc.Area_Text[AC_Ptr]);
 			}
+			if (ADP_Ptr) {
+				OutputVolDescLog("\tArea_Description_Phonetic: %s\n", &aToc.Area_Text[ADP_Ptr]);
+			}
+			if (ACP_Ptr) {
+				OutputVolDescLog("\t  Area_Copyright_Phonetic: %s\n", &aToc.Area_Text[ACP_Ptr]);
+			}
+		}
+
+		LBA.AsULong = ulChToc[c] + 1;
+		REVERSE_BYTES(&cdb.LogicalBlock, &LBA);
+
+		if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, lpBuf,
+			direction, DISC_MAIN_DATA_SIZE, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
+			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+			FreeAndNull(pBuf);
+			return FALSE;
+		}
+		OutputMainChannel(fileMainInfo, lpBuf, _T("Track_List_1"), (INT)LBA.AsULong, DISC_MAIN_DATA_SIZE);
+
+		typedef struct _Track_List_1 {
+			CHAR Track_List_1_Signature[8];
+			UINT Track_Start_Address[255];
+			UINT Track_Length[255];
+		} Track_List_1;
+		Track_List_1 tList1 = {};
+
+		OutputVolDescLog(
+			OUTPUT_DHYPHEN_PLUS_STR("Track_List_1")
+			"\t Track_List_1_Signature: %.8" CHARWIDTH "s\n"
+			, &lpBuf[0]
+		);
+		for (INT i = 0; i < aToc.Number_of_Track; i++) {
+			tList1.Track_Start_Address[i] = MAKEUINT(
+				MAKEWORD(lpBuf[0xb + sizeof(UINT) * i], lpBuf[0xa + sizeof(UINT) * i])
+				, MAKEWORD(lpBuf[0x9 + sizeof(UINT) * i], lpBuf[0x8 + sizeof(UINT) * i]));
+			OutputVolDescLog(
+				"\tTrack_Start_Address[%02d]: %9u (%#x)\n"
+				, i + 1, tList1.Track_Start_Address[i], tList1.Track_Start_Address[i]
+			);
+		}
+		for (INT i = 0; i < aToc.Number_of_Track; i++) {
+			tList1.Track_Length[i] = MAKEUINT(
+				MAKEWORD(lpBuf[0x407 + sizeof(UINT) * i], lpBuf[0x406 + sizeof(UINT) * i])
+				, MAKEWORD(lpBuf[0x405 + sizeof(UINT) * i], lpBuf[0x404 + sizeof(UINT) * i]));
+			OutputVolDescLog(
+				"\t       Track_Length[%02d]: %9u (%#x)\n"
+				, i + 1, tList1.Track_Length[i], tList1.Track_Length[i]
+			);
+		}
+		LBA.AsULong = ulChToc[c] + 2;
+		REVERSE_BYTES(&cdb.LogicalBlock, &LBA);
+
+		if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, lpBuf,
+			direction, DISC_MAIN_DATA_SIZE, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
+			|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+			FreeAndNull(pBuf);
+			return FALSE;
+		}
+		OutputMainChannel(fileMainInfo, lpBuf, _T("Track_List_2"), (INT)LBA.AsULong, DISC_MAIN_DATA_SIZE);
+
+		typedef struct _Track_Start_Time {
+			BYTE m;
+			BYTE s;
+			BYTE f;
+			BYTE Track_Mode;
+		} Track_Start_Time;
+		typedef struct _Track_Time_Length {
+			BYTE m;
+			BYTE s;
+			BYTE f;
+			BYTE Track_Flags;
+		} Track_Time_Length;
+		typedef struct _Track_List_2 {
+			CHAR Track_List_2_Signature[8];
+			Track_Start_Time Start_Time[255];
+			Track_Time_Length Time_Length[255];
+		} Track_List_2;
+		Track_List_2 tList2 = {};
+		memcpy(&tList2, lpBuf, DISC_MAIN_DATA_SIZE);
+
+		OutputVolDescLog(
+			OUTPUT_DHYPHEN_PLUS_STR("Track_List_2")
+			"\t   Track_List_2_Signature: %.8" CHARWIDTH "s\n"
+			, &lpBuf[0]
+		);
+		for (INT i = 0; i < aToc.Number_of_Track; i++) {
+			OutputVolDescLog(
+				"\tTrack_Start_Time_Code[%02d]: %02d:%02d:%02d, Track_Mode[%02d]: %02d\n"
+				, i + 1, tList2.Start_Time[i].m, tList2.Start_Time[i].s, tList2.Start_Time[i].f
+				, i + 1, tList2.Start_Time[i].Track_Mode
+			);
+		}
+		for (INT i = 0; i < aToc.Number_of_Track; i++) {
+			OutputVolDescLog(
+				"\t    Track_Time_Length[%02d]: %02d:%02d:%02d, Track_Flags[%02d]: %02d\n"
+				, i + 1, tList2.Time_Length[i].m, tList2.Time_Length[i].s, tList2.Time_Length[i].f
+				, i + 1, tList2.Time_Length[i].Track_Flags
+			);
 		}
 
 		LBA.AsULong = ulChToc[c] + 3;
@@ -2921,7 +3035,7 @@ BOOL ReadSACDFileSystem(
 			"\tISRC_and_Genre_List_Signature: %.8" CHARWIDTH "s\n"
 			, &lpBuf[0]
 		);
-		for (INT i = 0; i < aToc.Last_Track_Number; i++) {
+		for (INT i = 0; i < aToc.Number_of_Track; i++) {
 			OutputVolDescLog(
 				"\t           ISRC_and_Genre[%02d]: %.12" CHARWIDTH "s\n"
 				, i + 1, &lpBuf[0x8 + 12 * i]
@@ -2946,17 +3060,19 @@ BOOL ReadSACDFileSystem(
 				BYTE Entrys[3];
 			} Main_Acc_List;
 			typedef struct _Detailed_Access {
-				BYTE Sub_Entrys[3];
+				BYTE Sub_Entrys[9][3];
 			} Detailed_Access;
-#pragma pack(pop, acc)
 			typedef struct _Access_List {
 				CHAR Access_List_Signature[8];
 				USHORT N_Entries;
 				BYTE Main_Step_Size;
 				BYTE Reserved[5];
 				Main_Acc_List mAList[6550];
-				Detailed_Access dAccess[6550];
+				BYTE Reserved2[2];
+				Detailed_Access dAccess[1213];
+				BYTE Reserved3[16];
 			} Access_List;
+#pragma pack(pop, acc)
 			Access_List alist = {};
 			memcpy(&alist, lpBuf, sizeof(Access_List));
 			alist.N_Entries = MAKEWORD(lpBuf[0x9], lpBuf[0x8]);
@@ -2971,22 +3087,37 @@ BOOL ReadSACDFileSystem(
 				, alist.Main_Step_Size
 			);
 			for (INT i = 0; i < alist.N_Entries; i++) {
-				alist.mAList[i].Access_Flags = MAKEWORD(lpBuf[0x11 + 5 * i], lpBuf[0x10 + 5 * i]);
-				if (alist.mAList[i].Access_Flags != 0 || alist.mAList[i].Entrys[0] != 0 ||
-					alist.mAList[i].Entrys[1] != 0 || alist.mAList[i].Entrys[2] != 0) {
+				INT detailed = alist.mAList[i].Access_Flags & 0x0001;
+				OutputVolDescLog("\tDetailed: %d, ", detailed);
+				if (detailed) {
 					OutputVolDescLog(
-						"\t   Access_Flags[%04d]: %d\n"
-						"\t         Entrys[%04d]: %02x %02x %02x\n"
-						, i + 1, alist.mAList[i].Access_Flags
-						, i + 1, alist.mAList[i].Entrys[0], alist.mAList[i].Entrys[1], alist.mAList[i].Entrys[2]
+						"Detailed_List_Ptr: %5d, "
+						, alist.mAList[i].Access_Flags >> 1 & 0x7fff
 					);
 				}
-				if (alist.dAccess[i].Sub_Entrys[0] != 0 ||
-					alist.dAccess[i].Sub_Entrys[1] != 0 || alist.dAccess[i].Sub_Entrys[2] != 0) {
+				else {
 					OutputVolDescLog(
-						"\t     Sub_Entrys[%04d]: %02x %02x %02x\n"
-						, i + 1, alist.dAccess[i].Sub_Entrys[0], alist.dAccess[i].Sub_Entrys[1], alist.dAccess[i].Sub_Entrys[2]
+						"    Access_Margin: %5d, "
+						, alist.mAList[i].Access_Flags >> 1 & 0x7fff
 					);
+				}
+				OutputVolDescLog(
+					"Entrys[%04d]: %02x %02x %02x\n"
+					, i + 1, alist.mAList[i].Entrys[0], alist.mAList[i].Entrys[1], alist.mAList[i].Entrys[2]
+				);
+			}
+			for (INT i = 0, m = 0; i < alist.N_Entries; i++) {
+				INT detailed = alist.mAList[i].Access_Flags & 0x0001;
+				INT Access_Margin = alist.mAList[i].Access_Flags >> 1 & 0x7fff;
+				if (detailed || (!detailed && Access_Margin != 0 && Access_Margin != 128 && Access_Margin != 256)) {
+					for (INT j = 0; j < 9; j++) {
+						OutputVolDescLog(
+							"\tEntrys[%04d] Sub_Entrys[%04d][%02d]: %02x %02x %02x\n"
+							, i + 1, m + 1, j + 1, alist.dAccess[m].Sub_Entrys[j][0]
+							, alist.dAccess[m].Sub_Entrys[j][1], alist.dAccess[m].Sub_Entrys[j][2]
+						);
+					}
+					m++;
 				}
 			}
 		}
@@ -3006,44 +3137,118 @@ BOOL ReadSACDFileSystem(
 
 			typedef struct _Track_Text {
 				CHAR Track_Text_Signature[8];
-				USHORT Track_Text_Pos[255];
+				USHORT Track_Text_Item_Ptr[8][255];
 			} Track_Text;
 
 			Track_Text TTxt = {};
 			OutputVolDescLog(
 				OUTPUT_DHYPHEN_PLUS_STR("Track_Text")
-				"\tTrack_Text_Signature: %.8" CHARWIDTH "s\n"
+				"\t      Track_Text_Signature: %.8" CHARWIDTH "s\n"
 				, &lpBuf[0]
 			);
-			for (INT i = 0; i < aToc.Last_Track_Number; i++) {
-				TTxt.Track_Text_Pos[i] = MAKEWORD(lpBuf[0x9 + sizeof(USHORT) * i], lpBuf[0x8 + sizeof(USHORT) * i]);
-				OutputVolDescLog(
-					"\t  Track_Text_Pos[%02d]: %d (%#x)\n"
-					, i + 1, TTxt.Track_Text_Pos[i], TTxt.Track_Text_Pos[i]
-				);
+			for (INT h = 0; h < aToc.Txt_Ch.Number_of_Text_Channels; h++) {
+				for (INT i = 0; i < aToc.Number_of_Track; i++) {
+					TTxt.Track_Text_Item_Ptr[h][i] = MAKEWORD(lpBuf[0x9 + sizeof(USHORT) * i], lpBuf[0x8 + sizeof(USHORT) * i]);
+					OutputVolDescLog(
+						"\tTrack_Text_Item_Ptr[%d][%02d]: %d (%#x)\n"
+						, h + 1, i + 1, TTxt.Track_Text_Item_Ptr[h][i], TTxt.Track_Text_Item_Ptr[h][i]
+					);
+				}
 			}
 
-			LBA.AsULong = ulChToc[c] + aToc.Track_Text_Ptr + (TTxt.Track_Text_Pos[0] / DISC_MAIN_DATA_SIZE);
-			REVERSE_BYTES(&cdb.LogicalBlock, &LBA);
-			cdb.TransferLength[3] = 1;
+			ULONG nLBAbak = 0;
+			for (INT h = 0; h < aToc.Txt_Ch.Number_of_Text_Channels; h++) {
+				INT nOfs = 0;
+				for (INT i = 0; i < aToc.Number_of_Track; i++) {
+					if (TTxt.Track_Text_Item_Ptr[h][i]) {
+						LBA.AsULong = ulChToc[c] + aToc.Track_Text_Ptr + (TTxt.Track_Text_Item_Ptr[h][i] / DISC_MAIN_DATA_SIZE);
+						if (nLBAbak < LBA.AsULong) {
+							REVERSE_BYTES(&cdb.LogicalBlock, &LBA);
+							cdb.TransferLength[3] = 1;
 
-			if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, lpBuf,
-				direction, DISC_MAIN_DATA_SIZE, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
-				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-				FreeAndNull(pBuf);
-				return FALSE;
-			}
-			OutputMainChannel(fileMainInfo, lpBuf, _T("Title"), (INT)LBA.AsULong, DISC_MAIN_DATA_SIZE);
-			INT nOfs = 0;
-			for (INT i = 0; i < aToc.Last_Track_Number; i++) {
-				nOfs = TTxt.Track_Text_Pos[i] - TTxt.Track_Text_Pos[0];
-				if (lpBuf[nOfs + 0x04] == 0x01) {
-					OutputVolDescLog("\t           Title[%02d]:", i + 1);
+							if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, lpBuf,
+								direction, DISC_MAIN_DATA_SIZE, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
+								|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+								FreeAndNull(pBuf);
+								return FALSE;
+							}
+							OutputMainChannel(fileMainInfo, lpBuf, _T("Title"), (INT)LBA.AsULong, DISC_MAIN_DATA_SIZE);
+						}
+						OutputVolDescLog("\t     Number_of_Item[%d][%02d]: %02d, "
+							, h + 1, i + 1, lpBuf[nOfs]);
+						switch (lpBuf[nOfs + 4]) {
+						case 1:
+							OutputVolDescLog("Title[%d][%02d]: %s\n"
+								, h + 1, i + 1, &lpBuf[nOfs + 6]);
+							break;
+						case 2:
+							OutputVolDescLog("Performer[%d][%02d]: %s\n"
+								, h + 1, i + 1, &lpBuf[nOfs + 6]);
+							break;
+						case 3:
+							OutputVolDescLog("Songwriter[%d][%02d]: %s\n"
+								, h + 1, i + 1, &lpBuf[nOfs + 6]);
+							break;
+						case 4:
+							OutputVolDescLog("Composer[%d][%02d]: %s\n"
+								, h + 1, i + 1, &lpBuf[nOfs + 6]);
+							break;
+						case 5:
+							OutputVolDescLog("Arranger[%d][%02d]: %s\n"
+								, h + 1, i + 1, &lpBuf[nOfs + 6]);
+							break;
+						case 6:
+							OutputVolDescLog("Message[%d][%02d]: %s\n"
+								, h + 1, i + 1, &lpBuf[nOfs + 6]);
+							break;
+						case 7:
+							OutputVolDescLog("Extra Message[%d][%02d]: %s\n"
+								, h + 1, i + 1, &lpBuf[nOfs + 6]);
+							break;
+						case 8:
+							OutputVolDescLog("Copyright[%d][%02d]: %s\n"
+								, h + 1, i + 1, &lpBuf[nOfs + 6]);
+							break;
+						case 129:
+							OutputVolDescLog("Title, phonetic text[%d][%02d]: %s\n"
+								, h + 1, i + 1, &lpBuf[nOfs + 6]);
+							break;
+						case 130:
+							OutputVolDescLog("Performer, phonetic text[%d][%02d]: %s\n"
+								, h + 1, i + 1, &lpBuf[nOfs + 6]);
+							break;
+						case 131:
+							OutputVolDescLog("Songwriter, phonetic text[%d][%02d]: %s\n"
+								, h + 1, i + 1, &lpBuf[nOfs + 6]);
+							break;
+						case 132:
+							OutputVolDescLog("Composer, phonetic text[%d][%02d]: %s\n"
+								, h + 1, i + 1, &lpBuf[nOfs + 6]);
+							break;
+						case 133:
+							OutputVolDescLog("Arranger, phonetic text[%d][%02d]: %s\n"
+								, h + 1, i + 1, &lpBuf[nOfs + 6]);
+							break;
+						case 134:
+							OutputVolDescLog("Message, phonetic text[%d][%02d]: %s\n"
+								, h + 1, i + 1, &lpBuf[nOfs + 6]);
+							break;
+						case 135:
+							OutputVolDescLog("Extra Message, phonetic text[%d][%02d]: %s\n"
+								, h + 1, i + 1, &lpBuf[nOfs + 6]);
+							break;
+						case 136:
+							OutputVolDescLog("Copyright, phonetic text[%d][%02d]: %s\n"
+								, h + 1, i + 1, &lpBuf[nOfs + 6]);
+							break;
+						default:
+							OutputVolDescLog("Reserved\n");
+							break;
+						}
+						nOfs = TTxt.Track_Text_Item_Ptr[h][i + 1] - TTxt.Track_Text_Item_Ptr[h][0];
+						nLBAbak = LBA.AsULong;
+					}
 				}
-				for (INT j = 0; lpBuf[nOfs + 0x05 + j] != 0; j++) {
-					OutputVolDescLog("%c", lpBuf[nOfs + 0x05 + j]);
-				}
-				OutputVolDescLog("\n");
 			}
 		}
 	}
