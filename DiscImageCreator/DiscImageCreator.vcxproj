@@ -54,7 +54,7 @@
     <ProjectGuid>{3AB82BC0-7716-487C-B762-55598099CE69}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>DiscImageCreator</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.20348.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -222,7 +222,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>vld.lib</AdditionalDependencies>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MSBuildProgramFiles32)\Visual Leak Detector\lib\Win32</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
@@ -255,11 +256,14 @@
       <PreprocessorDefinitions>WIN64;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;_CRT_NON_CONFORMING_SWPRINTFS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
+      <AdditionalIncludeDirectories>$(MSBuildProgramFiles32)\Visual Leak Detector\include;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Advapi32.lib;shlwapi.lib</AdditionalDependencies>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MSBuildProgramFiles32)\Visual Leak Detector\lib\Win64</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
       <Command>CreateBuildDateTime.bat</Command>
