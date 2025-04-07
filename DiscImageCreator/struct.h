@@ -177,6 +177,7 @@ typedef struct _EXT_ARG {
 	BYTE byPack;
 	BYTE byD8;
 	BYTE byC2;
+	BYTE byC2New;
 	BYTE byCmi;
 	BYTE byFua;
 	BYTE byPre;
@@ -208,7 +209,6 @@ typedef struct _EXT_ARG {
 	BYTE byPadSector;
 	BYTE byMultiSectorReading; // for 0xF1 supported drive
 	BYTE byForceDescramble;
-	BYTE byPadding;
 	INT nAllSectors;			// for xgd2swap
 	UINT uiSecuritySector[16];	// for xgd2swap
 	INT nAudioCDOffsetNum;		// for /a and /vn

@@ -247,7 +247,7 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 #endif
 					CDFLAG::_READ_CD::_ERROR_FLAGS c2 = CDFLAG::_READ_CD::NoC2;
 					ReadCDForCheckingByteOrder(pExtArg, pDevice, &c2);
-					if (pExtArg->byC2) {
+					if (pExtArg->byC2 || pExtArg->byC2New) {
 						if (pDevice->FEATURE.byC2ErrorData && c2 != CDFLAG::_READ_CD::NoC2) {
 							if (NULL == (fpC2 = CreateOrOpenFile(
 								pszFullPath, NULL, NULL, NULL, NULL, _T(".c2"), _T("wb"), 0, 0))) {
@@ -296,7 +296,7 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 						}
 					}
 
-					if (pExtArg->byC2 && pDevice->byPlxtrDrive == _PLXTR_DRIVE_TYPE::No) {
+					if ((pExtArg->byC2 || pExtArg->byC2New) && pDevice->byPlxtrDrive == _PLXTR_DRIVE_TYPE::No) {
 						// Re-set c2 flag
 						c2 = pDevice->supportedC2Type;
 					}
@@ -540,7 +540,7 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 	if (*pExecType == cd || *pExecType == audio || *pExecType == data) {
 		FreeAndNull(pPFullToc);
 	}
-	if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
+	if ((pExtArg->byC2 || pExtArg->byC2New) && pDevice->FEATURE.byC2ErrorData) {
 		FcloseAndNull(fpC2);
 	}
 #ifndef _DEBUG
@@ -630,7 +630,7 @@ int exec(_TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFull
 			if (pExtArg->byScanProtectViaFile || pExtArg->byIntentionalSub) {
 				TerminateProtectData(&pDisc);
 			}
-			if (pExtArg->byC2 && device.FEATURE.byC2ErrorData) {
+			if ((pExtArg->byC2 || pExtArg->byC2New) && device.FEATURE.byC2ErrorData) {
 				TerminateC2(&pDisc);
 			}
 		}
@@ -1096,6 +1096,24 @@ int SetOptionF(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 	return TRUE;
 }
 
+int SetOptionC2New(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
+{
+	_TCHAR* endptr = NULL;
+	pExtArg->byC2New = TRUE;
+	if (argc > *i && _tcsncmp(argv[*i], _T("/"), 1)) {
+		pExtArg->uiMaxRereadNum = (UINT)_tcstoul(argv[(*i)++], &endptr, 10);
+		if (*endptr) {
+			OutputErrorString("[%s] is invalid argument. Please input integer.\n", endptr);
+			return FALSE;
+		}
+	}
+	else {
+		pExtArg->uiMaxRereadNum = DEFAULT_REREAD_VAL;
+		OutputString("/c2new val1 was omitted. set [%d]\n", DEFAULT_REREAD_VAL);
+	}
+	return TRUE;
+}
+
 int SetOptionC2(int argc, _TCHAR* argv[], PEXT_ARG pExtArg, int* i)
 {
 	_TCHAR* endptr = NULL;
@@ -1288,6 +1306,11 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 						pExtArg->byC2 = FALSE;
 					}
 				}
+				else if (cmdLen == 6 && !_tcsncmp(argv[i - 1], _T("/c2new"), cmdLen)) {
+					if (!SetOptionC2New(argc, argv, pExtArg, &i)) {
+						return FALSE;
+					}
+				}
 				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/f"), cmdLen)) {
 					if (!SetOptionF(argc, argv, pExtArg, &i)) {
 						return FALSE;
@@ -1295,7 +1318,7 @@ int checkArg(int argc, _TCHAR* argv[], PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _
 				}
 				else if (cmdLen == 2 && !_tcsncmp(argv[i - 1], _T("/p"), cmdLen)) {
 					pExtArg->byPre = TRUE;
-					if (pExtArg->byC2) {
+					if (pExtArg->byC2 || pExtArg->byC2New) {
 						OutputErrorString("/p can't use with /c2. /p was disabled\n");
 						pExtArg->byPre = FALSE;
 					}
@@ -1957,28 +1980,28 @@ void printUsage(void)
 		"Usage\n"
 		"\t/v\tPrint version\n"
 		"\tcd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/d] [/a (val)] [/aj] [/p]\n"
-		"\t   [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4) (val5)] [/f (val)]\n"
+		"\t   [/be (str) or /d8] [/c2new (val1)] [/c2 (val1) (val2) (val3) (val4) (val5)] [/f (val)]\n"
 		"\t   [/vn (val)] [/vnc] [/vnx] [/mscf] [/sf (val)] [/ss] [/np] [/nq] [/nr]\n"
 		"\t   [/nl] [/ns] [/s (val)] [/trp (val)] [/toc] [/fulltoc] [/fdesc (str)]\n"
 		"\t\tDump a CD from A to Z\n"
 		"\t\tFor PLEXTOR or drive that can scramble Dumping\n"
 		"\tswap <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/d] [/a (val)]\n"
-		"\t   [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4) (val5)] [/f (val)]\n"
+		"\t   [/be (str) or /d8] [/c2new (val1)] [/c2 (val1) (val2) (val3) (val4) (val5)] [/f (val)]\n"
 		"\t   [/p] [/sf (val)] [/ss] [/np] [/nq] [/nr] [/nl] [/ns] [/s (val)] [/74] [/trp (val)]\n"
 		"\t\tDump a CD from A to Z using swap trick\n"
 		"\t\tFor no PLEXTOR or drive that can't scramble dumping\n"
 		"\tdata <DriveLetter> <Filename> <DriveSpeed(0-72)> <StartLBA> <EndLBA+1>\n"
-		"\t     [/q] [/d] [/be (str) or /d8] [/c2 (val1) (val2) (val3) (val4) (val5)] [/f (val)]\n"
+		"\t     [/q] [/d] [/be (str) or /d8] [/c2new (val1)] [/c2 (val1) (val2) (val3) (val4) (val5)] [/f (val)]\n"
 		"\t     [/sf (val)] [/sk (val1) (val2)] [/ss] [/r] [/np] [/nq] [/nr] [/s (val)] [/t (val)]\n"
 		"\t\tDump a CD from start to end (using 'all' flag)\n"
 		"\t\tFor no PLEXTOR or drive that can't scramble dumping\n"
 		"\taudio <DriveLetter> <Filename> <DriveSpeed(0-72)> <StartLBA> <EndLBA+1>\n"
-		"\t      [/q] [/d] [/a (val)] [/c2 (val1) (val2) (val3) (val4) (val5)] [/f (val)]\n"
+		"\t      [/q] [/d] [/a (val)] [/c2new (val1)] [/c2 (val1) (val2) (val3) (val4) (val5)] [/f (val)]\n"
 		"\t      [/be (str) or /d8] [/sf (val)] [/np] [/nq] [/nr] [/s (val)]\n"
 		"\t\tDump a CD from start to end (using 'cdda' flag)\n"
 		"\t\tFor dumping a lead-in, lead-out mainly\n"
 		"\tgd <DriveLetter> <Filename> <DriveSpeed(0-72)> [/q] [/d] [/be (str) or /d8]\n"
-		"\t   [/c2 (val1) (val2) (val3) (val4) (val5)] [/f (val)] [/np] [/nq] [/nr] [/s (val)]\n"
+		"\t   [/c2new (val1)] [/c2 (val1) (val2) (val3) (val4) (val5)] [/f (val)] [/np] [/nq] [/nr] [/s (val)]\n"
 		"\t\tDump a HD area of GD from A to Z\n"
 		"\tdvd <DriveLetter> <Filename> <DriveSpeed(0-16)> [/c] [/f (val)] [/raw] [/q] [/d]\n"
 	);
@@ -2044,10 +2067,12 @@ void printUsage(void)
 		"\t\t\tstr\t raw: sub channel mode is raw (default)\n"
 		"\t\t\t   \tpack: sub channel mode is pack\n"
 		"\t/d8\tUse 0xd8 as the opcode for Reading CD forcibly\n"
-		"\t/c2\tContinue reading CD to recover C2 error existing sector\n"
+		"\t/c2new\tContinue reading CD to recover C2 error existing sector using C2 bit\n"
 	);
 	stopMessage();
 	OutputString(
+		"\t\t\tval1\tvalue to reread (default: 4000)\n"
+		"\t/c2\tContinue reading CD to recover C2 error existing sector\n"
 		"\t\t\tval1\tvalue to reread (default: 4000)\n"
 		"\t\t\tval2\treading speed when fixing the C2 error (default: same as the <DriveSpeed(0-72)>)\n"
 		"\t\t\tval3\tvalue to set the C2 offset (default: 0)\n"
@@ -2075,11 +2100,11 @@ void printUsage(void)
 		"\t/ss\tScan sector to detect protect. If reading error exists,\n"
 		"\t   \tcontinue reading and ignore c2 error on specific sector\n"
 		"\t\t\tFor ProtectCD-VOB\n"
-		"\t/t\tRead CD from the reverse\n"
-		"\t\t\tFor Tages\n"
 	);
 	stopMessage();
 	OutputString(
+		"\t/t\tRead CD from the reverse\n"
+		"\t\t\tFor Tages\n"
 		"\t\t\tval\tretry num (default:20)\n"
 		"\t/am\tScan anti-mod string\n"
 		"\t\t\tFor PlayStation\n"
@@ -2107,11 +2132,11 @@ void printUsage(void)
 		"\t\t\t   \t         ecc: descramble ecc error sector (e.g. some PSX)\n"
 		"\t\t\t   \t    sync ecc: descramble invalid sync sector and ecc error sector\n"
 		"\t\t\t   \t     edc ecc: descramble edc error sector and ecc error sector (e.g. some IBM-PC, SS, FMT)\n"
-		"\t\t\t   \tsync edc ecc: descramble invalid sync sector and edc error sector and ecc error sector\n"
-		"Option (for CD SubChannel)\n"
 	);
 	stopMessage();
 	OutputString(
+		"\t\t\t   \tsync edc ecc: descramble invalid sync sector and edc error sector and ecc error sector\n"
+		"Option (for CD SubChannel)\n"
 		"\t/np\tNot fix SubP\n"
 		"\t/nq\tNot fix SubQ\n"
 		"\t/nr\tNot fix SubRtoW\n"
@@ -2139,11 +2164,11 @@ void printUsage(void)
 		"\t\t\t  End LBA\tsector num\n"
 		"\t/raw\tDumping DVD by raw (2064 or 2384 bytes/sector)\n"
 		"\t\t\tComfirmed drive: Mediatec MT chip (Lite-on etc.), PLEXTOR\n"
-		"\t\t\t               Hitachi-LG GDR, GCC\n"
-		"\t\t\t -> GDR (8082N, 8161B to 8164B) and GCC (4160N, 4240N to 4247N)\n"
 	);
 	stopMessage();
 	OutputString(
+		"\t\t\t               Hitachi-LG GDR, GCC\n"
+		"\t\t\t -> GDR (8082N, 8161B to 8164B) and GCC (4160N, 4240N to 4247N)\n"
 		"\t\t\t    supports GC/Wii dumping\n"
 		"\t/avdp\tUse Anchor Volume Descriptor Pointer as file length\n"
 		"\t/ps\tThe sector is padded when reading error occurs\n"

@@ -609,6 +609,7 @@ BOOL ReadCDForSearchingOffset(
 		if (!ExecSearchingOffset(pExecType, pExtArg, pDevice, pDisc, lpCmd, nLBA, lpBuf
 			, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE, bGetDriveOffset, nDriveOffset)) {
 			pExtArg->byC2 = FALSE;
+			pExtArg->byC2New = FALSE;
 			pDevice->FEATURE.byC2ErrorData = FALSE;
 			// not return FALSE
 		}
@@ -631,7 +632,7 @@ BOOL ReadCDForSearchingOffset(
 			ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, pDisc->SCSI.nAllLength - 1, lpBuf
 				, CD_RAW_SECTOR_WITH_SUBCODE_SIZE, _T(__FUNCTION__), __LINE__);
 
-			if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
+			if ((pExtArg->byC2 || pExtArg->byC2New) && pDevice->FEATURE.byC2ErrorData) {
 				SetReadCDCommand(pDevice, &cdb, flg
 					, 1, CDFLAG::_READ_CD::byte294, CDFLAG::_READ_CD::NoSub);
 				memcpy(lpCmd, &cdb, CDB12GENERIC_LENGTH);
@@ -1041,7 +1042,7 @@ BOOL ReadCDForCheckingSubQAdrFirst(
 		type = CDFLAG::_READ_CD::All;
 	}
 	if (pExtArg->byD8 || pDevice->byPlxtrDrive) {
-		if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
+		if ((pExtArg->byC2 || pExtArg->byC2New) && pDevice->FEATURE.byC2ErrorData) {
 			byTransferLen = 2;
 			*uiBufLen = CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE * 2;
 			c2 = CDFLAG::_READ_CD::byte294;
@@ -1095,7 +1096,7 @@ BOOL ReadCDForCheckingSubQAdr(
 	pDiscPerSector->byTrackNum = BYTE(byIdxOfTrack + 1);
 	INT nSubOfs = CD_RAW_SECTOR_SIZE;
 	if (pExtArg->byD8 || pDevice->byPlxtrDrive) {
-		if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
+		if ((pExtArg->byC2 || pExtArg->byC2New) && pDevice->FEATURE.byC2ErrorData) {
 			if (pDevice->driveOrder == DRIVE_DATA_ORDER::MainC2Sub) {
 				nSubOfs = CD_RAW_SECTOR_WITH_C2_294_SIZE;
 			}
@@ -1303,7 +1304,7 @@ BOOL ReadCDForCheckingSubRtoW(
 	CDFLAG::_READ_CD::_ERROR_FLAGS c2 = CDFLAG::_READ_CD::NoC2;
 	CDFLAG::_READ_CD::_SUB_CHANNEL_SELECTION flg = CDFLAG::_READ_CD::Pack;
 	if (pExtArg->byD8 || pDevice->byPlxtrDrive) {
-		if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
+		if ((pExtArg->byC2 || pExtArg->byC2New) && pDevice->FEATURE.byC2ErrorData) {
 			uiBufLen = CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE;
 			c2 = CDFLAG::_READ_CD::byte294;
 			flg = CDFLAG::_READ_CD::Raw;
@@ -1956,7 +1957,7 @@ BOOL ReadCDForCheckingExe(
 					);
 					_tcscat(szTmpPath, _T("!extracted\\"));
 					ProcessDirectory(pExtArg, pDisc, szTmpPath, FILE_CREATE);
-					if (!SetupIterateCabinet(FullPathWithDrive, 0, (PSP_FILE_CALLBACK)CabinetCallback, szTmpPath)) {
+					if (!SetupIterateCabinet(FullPathWithDrive, 0, (PSP_FILE_CALLBACK)(PVOID)CabinetCallback, szTmpPath)) {
 						// 
 					}
 					// Search exe, dll from extracted file
@@ -2789,7 +2790,7 @@ VOID ReadCDForCheckingByteOrder(
 	CDFLAG::_READ_CD::_ERROR_FLAGS* c2
 ) {
 	SetBufferSizeForReadCD(pDevice, DRIVE_DATA_ORDER::NoC2);
-	if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
+	if ((pExtArg->byC2 || pExtArg->byC2New) && pDevice->FEATURE.byC2ErrorData) {
 		*c2 = CDFLAG::_READ_CD::byte294;
 		SetBufferSizeForReadCD(pDevice, DRIVE_DATA_ORDER::MainC2Sub);
 		pDevice->driveOrder = DRIVE_DATA_ORDER::MainC2Sub;
@@ -2870,7 +2871,7 @@ BOOL ReadCDCheck(
 			}
 		}
 		else if (pExtArg->byD8 || pDevice->byPlxtrDrive) {
-			if (!pExtArg->byC2) {
+			if (!pExtArg->byC2 && !pExtArg->byC2New) {
 				pDevice->sub = CDFLAG::_READ_CD::Pack;
 			}
 		}

@@ -399,7 +399,7 @@ BOOL InitLogFile(
 						OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 						throw FALSE;
 					}
-					if (pExtArg->byC2) {
+					if (pExtArg->byC2 || pExtArg->byC2New) {
 						if (NULL == (g_LogFile.fpC2Error = CreateOrOpenFile(
 							szFullPath, _T("_c2Error"), NULL, NULL, NULL, _T(".txt"), _T(WFLAG), 0, 0))) {
 							OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
@@ -540,7 +540,7 @@ VOID TerminateLogFile(
 				FcloseAndNull(g_LogFile.fpSubInfo);
 				FcloseAndNull(g_LogFile.fpSubError);
 				FcloseAndNull(g_LogFile.fpSubReadable);
-				if (pExtArg->byC2) {
+				if (pExtArg->byC2 || pExtArg->byC2New) {
 					FcloseAndNull(g_LogFile.fpC2Error);
 				}
 				if (pExtArg->byIntentionalSub || pExtArg->byLibCrypt) {

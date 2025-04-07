@@ -672,7 +672,7 @@ VOID WriteC2(
 	PDISC_PER_SECTOR pDiscPerSector,
 	FILE* fpC2
 ) {
-	if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
+	if ((pExtArg->byC2 || pExtArg->byC2New) && pDevice->FEATURE.byC2ErrorData) {
 		if (0 < pExtArg->uiC2Offset && pExtArg->uiC2Offset < CD_RAW_READ_C2_294_SIZE) {
 			fwrite(pDiscPerSector->data.current + pDevice->TRANSFER.uiBufC2Offset + pExtArg->uiC2Offset
 				, sizeof(BYTE), (size_t)CD_RAW_READ_C2_294_SIZE - pExtArg->uiC2Offset, fpC2);
@@ -834,7 +834,7 @@ VOID WriteErrorBuffer(
 		AlignColumnSubcode(lpSubcodeRaw, pDiscPerSector->subcode.current);
 		WriteSubChannel(pDisc, pDiscPerSector, lpSubcodeRaw, nLBA, fpSub);
 
-		if (pExtArg->byC2 && pDevice->FEATURE.byC2ErrorData) {
+		if ((pExtArg->byC2 || pExtArg->byC2New) && pDevice->FEATURE.byC2ErrorData) {
 			fwrite(pDiscPerSector->data.current + pDevice->TRANSFER.uiBufC2Offset
 				, sizeof(BYTE), CD_RAW_READ_C2_294_SIZE, fpC2);
 		}
