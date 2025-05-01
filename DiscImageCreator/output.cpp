@@ -1794,6 +1794,8 @@ BOOL CheckEcc(
 	case 3:
 		OutputLog(standardError | fileMainError, STR_LBA STR_TRACK "EccP/Q error. Skip descrambling\n", nLBA, nLBA, nTrack);
 		break;
+	default:
+		break;
 	}
 	if (nEccError != 0) {
 		OutputMainChannel(fileMainError, aSrcBuf, NULL, nLBA, CD_RAW_SECTOR_SIZE);
@@ -1852,7 +1854,7 @@ BOOL IsValidDataSector(
 		}
 		else if (mode == 0x01) {
 			edcSrc = MAKEUINT(MAKEWORD(aSrcBuf[0x810], aSrcBuf[0x811]), MAKEWORD(aSrcBuf[0x812], aSrcBuf[0x813]));
-			edcCalc = CalcEDC(aSrcBuf, 0x810);
+			edcCalc = (UINT)CalcEDC(aSrcBuf, 0x810);
 			if (edcSrc != edcCalc) {
 				if ((byDecMode & DESCRAMBLE_INVALID_EDC) == 0) {
 					OutputLog(standardError | fileMainError, STR_LBA STR_TRACK "Mode 1 edc error. Skip descrambling\n", nLBA, nLBA, nTrack);
@@ -1873,7 +1875,7 @@ BOOL IsValidDataSector(
 					OutputMainInfoWithLBALog("Mode 2 form 2 no edc\n", nLBA, nTrack);
 					return TRUE;
 				}
-				UINT edcCalc2 = CalcEDC(aSrcBuf + 0x10, 0x91c);
+				UINT edcCalc2 = (UINT)CalcEDC(aSrcBuf + 0x10, 0x91c);
 				if (edcSrc2 != edcCalc2) {
 					if ((byDecMode & DESCRAMBLE_INVALID_EDC) == 0) {
 						OutputLog(standardError | fileMainError, STR_LBA STR_TRACK "Mode 2 form 2 edc error. Skip descrambling\n", nLBA, nLBA, nTrack);
@@ -1888,7 +1890,7 @@ BOOL IsValidDataSector(
 			else {
 				// Mode 2 form 1
 				edcSrc = MAKEUINT(MAKEWORD(aSrcBuf[0x818], aSrcBuf[0x819]), MAKEWORD(aSrcBuf[0x81a], aSrcBuf[0x81b]));
-				edcCalc = CalcEDC(aSrcBuf + 0x10, 0x808);
+				edcCalc = (UINT)CalcEDC(aSrcBuf + 0x10, 0x808);
 				if (edcSrc != edcCalc) {
 					if ((byDecMode & DESCRAMBLE_INVALID_EDC) == 0) {
 						OutputLog(standardError | fileMainError, STR_LBA STR_TRACK "Mode 2 form 1 edc error. Skip descrambling\n", nLBA, nLBA, nTrack);

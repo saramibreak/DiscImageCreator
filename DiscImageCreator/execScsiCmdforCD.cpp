@@ -488,7 +488,7 @@ BOOL ReadCDForRereadingSectorNew(
 		bRet = bErr;
 	}
 
-	return TRUE;
+	return bRet;
 }
 
 BOOL ReadCDForRereadingSectorType1(
