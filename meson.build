@@ -38,6 +38,7 @@ executable(
     'DiscImageCreator/_external/crc32.cpp',
     'DiscImageCreator/_external/crc32ecma267.cpp',
     'DiscImageCreator/_external/crc6itu.cpp',
+    'DiscImageCreator/_external/ECCEDC.cpp',
     'DiscImageCreator/_external/md5c.cpp',
     'DiscImageCreator/_external/platform_util.cpp',
     'DiscImageCreator/_external/prngcd.cpp',
