@@ -1,4 +1,11 @@
 ================================= Change Log ==================================
+*2025-05-01
+- added /fdesc option to descramble sync/edc/ecc error sector
+- added /c2new option to recover the sector using c2 error bit
+- changed descramble algorithm (use edc and ecc)
+- fixed subQ channel when 1st pregap sector is MCN
+- fixed SACD log
+
 *2025-01-01
 - added /toc option for bad IDE-to-USB adatper (e.g. UGREEN's adapter)
 - added /fulltoc option for PX-W4824
