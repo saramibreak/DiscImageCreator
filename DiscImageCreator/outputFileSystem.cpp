@@ -90,7 +90,7 @@ VOID OutputFsDirectoryRecord(
 		"\t\tExtended Attribute Record Length: %u\n"
 		"\t\t              Location of Extent: %u\n"
 		"\t\t                     Data Length: %u\n"
-		"\t\t         Recording Date and Time: %d-%02u-%02uT%02u:%02u:%02u%+03d:%02d\n"
+		"\t\t         Recording Date and Time: %d-%02u-%02uT%02u:%02u:%02u%c%02d:%02d\n"
 		"\t\t                      File Flags: %u (%" CHARWIDTH "s)\n"
 		"\t\t                  File Unit Size: %u\n"
 		"\t\t             Interleave Gap Size: %u\n"
@@ -98,7 +98,7 @@ VOID OutputFsDirectoryRecord(
 		"\t\t       Length of File Identifier: %u\n"
 		"\t\t                 File Identifier: "
 		, lpBuf[0], lpBuf[1], uiExtentPos, uiDataLen, lpBuf[18] + 1900, lpBuf[19], lpBuf[20]
-		, lpBuf[21], lpBuf[22], lpBuf[23], (CHAR)lpBuf[24] / 4, (CHAR)lpBuf[24] % 4 * 15
+		, lpBuf[21], lpBuf[22], lpBuf[23], (CHAR)lpBuf[24] < 0 ? '-' : '+', abs((CHAR)lpBuf[24]) / 4, abs((CHAR)lpBuf[24]) % 4 * 15
 		, lpBuf[25], str, lpBuf[26], lpBuf[27], vsn, lpBuf[32]);
 	BOOL bSkip = FALSE;
 	for (INT n = 0; n < lpBuf[32]; n++) {
