@@ -1,4 +1,10 @@
 ================================= Change Log ==================================
+*2025-09-01
+- fixed timestamp in directory record
+- fixed sacd log
+- fixed misdetecting that non-zero data is sync bytes
+- fixed MCN sector ranges
+
 *2025-05-01
 - added /fdesc option to descramble sync/edc/ecc error sector
 - added /c2new option to recover the sector using c2 error bit
