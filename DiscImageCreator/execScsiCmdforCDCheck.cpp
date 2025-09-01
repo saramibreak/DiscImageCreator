@@ -993,7 +993,8 @@ BOOL ReadCDForCheckingSubQ1stIndex(
 				else {
 					BOOL bBreak = FALSE;
 					for (INT i = 0; i < CD_RAW_SECTOR_SIZE; i++) {
-						if (IsValidMainDataHeader(aMainBuf + i)) {
+						if (IsValidMainDataHeader(aMainBuf + i) &&
+							(aMainBuf[i + 12] & 0x01) && (aMainBuf[i + 13] & 0x80) && (aMainBuf[i + 15] & 0x60)) {
 							// CD-i Ready
 							pDisc->SCSI.trkType = (TRACK_TYPE)(TRACK_TYPE::pregapAudioWithSyncIn1stTrack | pDisc->SCSI.trkType);
 							bBreak = TRUE;
@@ -1092,7 +1093,8 @@ BOOL ReadCDForCheckingSubQAdr(
 	else {
 		nNumberOfSectors = pDisc->SCSI.nAllLength - nTmpLBA;
 	}
-	nNumberOfSectors = min(nNumberOfSectors, 500);
+	// Alphaville - The Breathtaking Blue (Germany) has large ranges
+	nNumberOfSectors = min(nNumberOfSectors, 1000);
 	pDiscPerSector->byTrackNum = BYTE(byIdxOfTrack + 1);
 	INT nSubOfs = CD_RAW_SECTOR_SIZE;
 	if (pExtArg->byD8 || pDevice->byPlxtrDrive) {
