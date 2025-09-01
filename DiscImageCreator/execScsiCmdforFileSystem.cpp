@@ -3133,7 +3133,7 @@ BOOL ReadSACDFileSystem(
 				FreeAndNull(pBuf);
 				return FALSE;
 			}
-			OutputMainChannel(fileMainInfo, lpBuf, _T("Track_Text"), (INT)LBA.AsULong, DISC_MAIN_DATA_SIZE);
+			OutputMainChannel(fileMainInfo, lpBuf, _T("Track_Text_Item_Ptr"), (INT)LBA.AsULong, DISC_MAIN_DATA_SIZE);
 
 			typedef struct _Track_Text {
 				CHAR Track_Text_Signature[8];
@@ -3155,98 +3155,108 @@ BOOL ReadSACDFileSystem(
 					);
 				}
 			}
+			INT track_text_size = TTxt.Track_Text_Item_Ptr[aToc.Txt_Ch.Number_of_Text_Channels - 1][aToc.Number_of_Track - 1] - TTxt.Track_Text_Item_Ptr[0][0];
+			INT track_text_sector = track_text_size / DISC_MAIN_DATA_SIZE;
+			if (track_text_size == 0 || track_text_size % DISC_MAIN_DATA_SIZE) {
+				track_text_sector++;
+			}
+			LBA.AsULong = ulChToc[c] + aToc.Track_Text_Ptr + (TTxt.Track_Text_Item_Ptr[0][0] / DISC_MAIN_DATA_SIZE);
+			REVERSE_BYTES(&cdb.LogicalBlock, &LBA);
+			cdb.TransferLength[3] = (UCHAR)track_text_sector;
 
-			ULONG nLBAbak = 0;
-			for (INT h = 0; h < aToc.Txt_Ch.Number_of_Text_Channels; h++) {
-				INT nOfs = 0;
-				for (INT i = 0; i < aToc.Number_of_Track; i++) {
+			if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, lpBuf,
+				direction, DISC_MAIN_DATA_SIZE * (DWORD)track_text_sector, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
+				|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
+				FreeAndNull(pBuf);
+				return FALSE;
+			}
+			OutputMainChannel(fileMainInfo, lpBuf, _T("Track_Text"), (INT)LBA.AsULong, DISC_MAIN_DATA_SIZE * (DWORD)track_text_sector);
+
+			for (int h = 0; h < aToc.Txt_Ch.Number_of_Text_Channels; h++) {
+				int nOfs = 0;
+				for (int i = 0; i < aToc.Number_of_Track; i++) {
 					if (TTxt.Track_Text_Item_Ptr[h][i]) {
-						LBA.AsULong = ulChToc[c] + aToc.Track_Text_Ptr + (TTxt.Track_Text_Item_Ptr[h][i] / DISC_MAIN_DATA_SIZE);
-						if (nLBAbak < LBA.AsULong) {
-							REVERSE_BYTES(&cdb.LogicalBlock, &LBA);
-							cdb.TransferLength[3] = 1;
-
-							if (!ScsiPassThroughDirect(pExtArg, pDevice, &cdb, CDB12GENERIC_LENGTH, lpBuf,
-								direction, DISC_MAIN_DATA_SIZE, &byScsiStatus, _T(__FUNCTION__), __LINE__, TRUE)
-								|| byScsiStatus >= SCSISTAT_CHECK_CONDITION) {
-								FreeAndNull(pBuf);
-								return FALSE;
-							}
-							OutputMainChannel(fileMainInfo, lpBuf, _T("Title"), (INT)LBA.AsULong, DISC_MAIN_DATA_SIZE);
-						}
-						OutputVolDescLog("\t     Number_of_Item[%d][%02d]: %02d, "
+						OutputVolDescLog("\t     Number_of_Item[%d][%02d]: %02d\n"
 							, h + 1, i + 1, lpBuf[nOfs]);
-						switch (lpBuf[nOfs + 4]) {
-						case 1:
-							OutputVolDescLog("Title[%d][%02d]: %s\n"
-								, h + 1, i + 1, &lpBuf[nOfs + 6]);
-							break;
-						case 2:
-							OutputVolDescLog("Performer[%d][%02d]: %s\n"
-								, h + 1, i + 1, &lpBuf[nOfs + 6]);
-							break;
-						case 3:
-							OutputVolDescLog("Songwriter[%d][%02d]: %s\n"
-								, h + 1, i + 1, &lpBuf[nOfs + 6]);
-							break;
-						case 4:
-							OutputVolDescLog("Composer[%d][%02d]: %s\n"
-								, h + 1, i + 1, &lpBuf[nOfs + 6]);
-							break;
-						case 5:
-							OutputVolDescLog("Arranger[%d][%02d]: %s\n"
-								, h + 1, i + 1, &lpBuf[nOfs + 6]);
-							break;
-						case 6:
-							OutputVolDescLog("Message[%d][%02d]: %s\n"
-								, h + 1, i + 1, &lpBuf[nOfs + 6]);
-							break;
-						case 7:
-							OutputVolDescLog("Extra Message[%d][%02d]: %s\n"
-								, h + 1, i + 1, &lpBuf[nOfs + 6]);
-							break;
-						case 8:
-							OutputVolDescLog("Copyright[%d][%02d]: %s\n"
-								, h + 1, i + 1, &lpBuf[nOfs + 6]);
-							break;
-						case 129:
-							OutputVolDescLog("Title, phonetic text[%d][%02d]: %s\n"
-								, h + 1, i + 1, &lpBuf[nOfs + 6]);
-							break;
-						case 130:
-							OutputVolDescLog("Performer, phonetic text[%d][%02d]: %s\n"
-								, h + 1, i + 1, &lpBuf[nOfs + 6]);
-							break;
-						case 131:
-							OutputVolDescLog("Songwriter, phonetic text[%d][%02d]: %s\n"
-								, h + 1, i + 1, &lpBuf[nOfs + 6]);
-							break;
-						case 132:
-							OutputVolDescLog("Composer, phonetic text[%d][%02d]: %s\n"
-								, h + 1, i + 1, &lpBuf[nOfs + 6]);
-							break;
-						case 133:
-							OutputVolDescLog("Arranger, phonetic text[%d][%02d]: %s\n"
-								, h + 1, i + 1, &lpBuf[nOfs + 6]);
-							break;
-						case 134:
-							OutputVolDescLog("Message, phonetic text[%d][%02d]: %s\n"
-								, h + 1, i + 1, &lpBuf[nOfs + 6]);
-							break;
-						case 135:
-							OutputVolDescLog("Extra Message, phonetic text[%d][%02d]: %s\n"
-								, h + 1, i + 1, &lpBuf[nOfs + 6]);
-							break;
-						case 136:
-							OutputVolDescLog("Copyright, phonetic text[%d][%02d]: %s\n"
-								, h + 1, i + 1, &lpBuf[nOfs + 6]);
-							break;
-						default:
-							OutputVolDescLog("Reserved\n");
-							break;
+						int n_item = lpBuf[nOfs];
+						nOfs += 4;
+						for (int j = 0; j < n_item; j++) {
+							switch (lpBuf[nOfs]) {
+							case 1:
+								OutputVolDescLog("\t              Title[%d][%02d]: %s\n"
+									, h + 1, i + 1, &lpBuf[nOfs + 2]);
+								break;
+							case 2:
+								OutputVolDescLog("\t          Performer[%d][%02d]: %s\n"
+									, h + 1, i + 1, &lpBuf[nOfs + 2]);
+								break;
+							case 3:
+								OutputVolDescLog("\t         Songwriter[%d][%02d]: %s\n"
+									, h + 1, i + 1, &lpBuf[nOfs + 2]);
+								break;
+							case 4:
+								OutputVolDescLog("\t           Composer[%d][%02d]: %s\n"
+									, h + 1, i + 1, &lpBuf[nOfs + 2]);
+								break;
+							case 5:
+								OutputVolDescLog("\t           Arranger[%d][%02d]: %s\n"
+									, h + 1, i + 1, &lpBuf[nOfs + 2]);
+								break;
+							case 6:
+								OutputVolDescLog("\t            Message[%d][%02d]: %s\n"
+									, h + 1, i + 1, &lpBuf[nOfs + 2]);
+								break;
+							case 7:
+								OutputVolDescLog("\t      Extra Message[%d][%02d]: %s\n"
+									, h + 1, i + 1, &lpBuf[nOfs + 2]);
+								break;
+							case 8:
+								OutputVolDescLog("\t          Copyright[%d][%02d]: %s\n"
+									, h + 1, i + 1, &lpBuf[nOfs + 2]);
+								break;
+							case 129:
+								OutputVolDescLog("\t        Title, phonetic text[%d][%02d]: %s\n"
+									, h + 1, i + 1, &lpBuf[nOfs + 2]);
+								break;
+							case 130:
+								OutputVolDescLog("\t    Performer, phonetic text[%d][%02d]: %s\n"
+									, h + 1, i + 1, &lpBuf[nOfs + 2]);
+								break;
+							case 131:
+								OutputVolDescLog("\t   Songwriter, phonetic text[%d][%02d]: %s\n"
+									, h + 1, i + 1, &lpBuf[nOfs + 2]);
+								break;
+							case 132:
+								OutputVolDescLog("\t     Composer, phonetic text[%d][%02d]: %s\n"
+									, h + 1, i + 1, &lpBuf[nOfs + 2]);
+								break;
+							case 133:
+								OutputVolDescLog("\t     Arranger, phonetic text[%d][%02d]: %s\n"
+									, h + 1, i + 1, &lpBuf[nOfs + 2]);
+								break;
+							case 134:
+								OutputVolDescLog("\t      Message, phonetic text[%d][%02d]: %s\n"
+									, h + 1, i + 1, &lpBuf[nOfs + 2]);
+								break;
+							case 135:
+								OutputVolDescLog("\tExtra Message, phonetic text[%d][%02d]: %s\n"
+									, h + 1, i + 1, &lpBuf[nOfs + 2]);
+								break;
+							case 136:
+								OutputVolDescLog("\t    Copyright, phonetic text[%d][%02d]: %s\n"
+									, h + 1, i + 1, &lpBuf[nOfs + 2]);
+								break;
+							default:
+								OutputVolDescLog("Reserved\n");
+								break;
+							}
+							nOfs += 2;
+							nOfs += strlen((const char*)&lpBuf[nOfs]) + 1;
+							if (nOfs % 4) {
+								nOfs += 4 - nOfs % 4;
+							}
 						}
 						nOfs = TTxt.Track_Text_Item_Ptr[h][i + 1] - TTxt.Track_Text_Item_Ptr[h][0];
-						nLBAbak = LBA.AsULong;
 					}
 				}
 			}
