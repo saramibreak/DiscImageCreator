@@ -2221,6 +2221,9 @@ BOOL ReadCDForCheckingExe(
 				}
 				int files = unshield_file_count(u);
 				for (int i = 0; i < files; i++) {
+					if (!unshield_file_is_valid(u, i)) {
+						continue;
+					}
 					const char* name = unshield_file_name(u, i);
 					const char* p = PathFindExtensionA(name);
 					if (!p || *p != '.' || p[1] == '\0') {
