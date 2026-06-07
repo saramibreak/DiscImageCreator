@@ -63,7 +63,7 @@ BOOL GetHandle(
 BOOL GetDriveOffsetManually(
 	LPINT lpDriveOffset
 ) {
-	_TCHAR aBuf[6] = {};
+	_TCHAR aBuf[6 + 1] = {};
 	OutputString(
 		"This drive doesn't define in driveOffset.txt\n"
 		"Please input drive offset(Samples): ");
