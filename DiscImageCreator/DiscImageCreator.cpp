@@ -42,10 +42,10 @@ BYTE g_aSyncHeader[SYNC_SIZE] = {
 
 // These static variable is set at printAndSetPath().
 static _TCHAR s_szCurrentdir[_MAX_PATH];
-static _TCHAR s_szDrive[_MAX_DRIVE];
-static _TCHAR s_szDir[_MAX_DIR];
-static _TCHAR s_szFname[_MAX_FNAME];
-static _TCHAR s_szExt[_MAX_EXT];
+static _TCHAR s_szDrive[_MAX_DRIVE + 1];
+static _TCHAR s_szDir[_MAX_DIR + 1];
+static _TCHAR s_szFname[_MAX_FNAME + 1];
+static _TCHAR s_szExt[_MAX_EXT + 1];
 
 // These static variable is set at checkArg().
 static UINT s_uiFix = 0;
