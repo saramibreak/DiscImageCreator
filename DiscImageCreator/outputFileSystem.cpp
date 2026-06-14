@@ -421,7 +421,7 @@ VOID OutputFsVolumeDescriptorDetail(
 			"\t                    Copyright File Identifier: %.18ls\n"
 			"\t                     Abstract File Identifier: %.18ls\n"
 			"\t                Bibliographic File Identifier: %.18ls\n"
-			, &lpWBuf, &lpWBuf[64], &lpWBuf[128], &lpWBuf[192], &lpWBufCopyright, &lpWBufAbstract, &lpWBufBibliographic);
+			, &lpWBuf[0], &lpWBuf[64], &lpWBuf[128], &lpWBuf[192], &lpWBufCopyright[0], &lpWBufAbstract[0], &lpWBufBibliographic[0]);
 	}
 	else {
 		OutputVolDescLog(
