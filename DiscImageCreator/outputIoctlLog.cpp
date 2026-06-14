@@ -3000,7 +3000,7 @@ VOID OutputScsiAddress(
 ) {
 	OutputDriveLog(
 		OUTPUT_DHYPHEN_PLUS_STR("IoctlScsiGetAddress")
-		"\t    Length: %lu\n"
+		"\t    Length: %u\n"
 		"\tPortNumber: %u\n"
 		"\t    PathId: %u\n"
 		"\t  TargetId: %u\n"
@@ -3018,11 +3018,11 @@ VOID OutputStorageAdaptorDescriptor(
 ) {
 	OutputDriveLog(
 		OUTPUT_DHYPHEN_PLUS_STR("StorageAdapterDescriptor")
-		"\t              Version: %lu\n"
-		"\t                 Size: %lu\n"
-		"\tMaximumTransferLength: %lu (bytes)\n"
-		"\t MaximumPhysicalPages: %lu\n"
-		"\t        AlignmentMask: %lu "
+		"\t              Version: %u\n"
+		"\t                 Size: %u\n"
+		"\tMaximumTransferLength: %u (bytes)\n"
+		"\t MaximumPhysicalPages: %u\n"
+		"\t        AlignmentMask: %u "
 		, pAdapterDescriptor->Version
 		, pAdapterDescriptor->Size
 		, pAdapterDescriptor->MaximumTransferLength
@@ -3630,10 +3630,10 @@ VOID OutputDiskGeometry(
 		DWORD dwDiskSize = pGeom[i].Cylinders.u.LowPart * pGeom[i].TracksPerCylinder *
 			pGeom[i].SectorsPerTrack * pGeom[i].BytesPerSector;
 		OutputDiscLog(
-			"\t        Cylinders: %lu\n"
-			"\tTracksPerCylinder: %lu\n"
-			"\t  SectorsPerTrack: %lu\n"
-			"\t   BytesPerSector: %lu (Bytes)\n"
+			"\t        Cylinders: %u\n"
+			"\tTracksPerCylinder: %u\n"
+			"\t  SectorsPerTrack: %u\n"
+			"\t   BytesPerSector: %u (Bytes)\n"
 			"\t--------------------------\n"
 			"\t         DiskSize: %lu (Bytes)\n\n"
 			, pGeom[i].Cylinders.u.LowPart
@@ -3652,7 +3652,7 @@ VOID OutputDiskGeometryEx(
 	OutputDiscLog(
 		OUTPUT_DHYPHEN_PLUS_STR("DISK_GEOMETRY_EX")
 		"\t            DiskSize: %lld (Bytes)\n"
-		"\t SizeOfPartitionInfo: %lu\n"
+		"\t SizeOfPartitionInfo: %u\n"
 		"\t      PartitionStyle: %d "
 		, pGeom->DiskSize.QuadPart
 		, partition->SizeOfPartitionInfo
@@ -3663,8 +3663,8 @@ VOID OutputDiskGeometryEx(
 		case PARTITION_STYLE_MBR:
 			OutputDiscLog(
 				"(MBR)\n"
-				"\t           Signiture: %lu\n"
-				"\t            CheckSum: %lu\n"
+				"\t           Signiture: %u\n"
+				"\t            CheckSum: %u\n"
 				, partition->Mbr.Signature
 				, partition->Mbr.CheckSum
 			);
@@ -3672,7 +3672,7 @@ VOID OutputDiskGeometryEx(
 		case PARTITION_STYLE_GPT:
 			OutputDiscLog(
 				"(GPT)\n"
-				"\t        DiskId.Data1: %lu\n"
+				"\t        DiskId.Data1: %u\n"
 				"\t        DiskId.Data2: %u\n"
 				"\t        DiskId.Data3: %u\n"
 				"\t        DiskId.Data4: %02x%02x%02x%02x%02x%02x%02x%02x\n"
@@ -3695,7 +3695,7 @@ VOID OutputDiskGeometryEx(
 	}
 
 	OutputDiscLog(
-		"\t    SizeOfDetectInfo: %lu\n"
+		"\t    SizeOfDetectInfo: %u\n"
 		"\t       DetectionType: %d "
 		, detection->SizeOfDetectInfo
 		, detection->DetectionType
@@ -3709,7 +3709,7 @@ VOID OutputDiskGeometryEx(
 			OutputDiscLog(
 				"(Int13)\n"
 				"\t         DriveSelect: %u\n"
-				"\t        MaxCylinders: %lu\n"
+				"\t        MaxCylinders: %u\n"
 				"\t     SectorsPerTrack: %u\n"
 				"\t            MaxHeads: %u\n"
 				"\t        NumberDrives: %u\n"
@@ -3725,9 +3725,9 @@ VOID OutputDiskGeometryEx(
 				"(ExInt13)\n"
 				"\t        ExBufferSize: %u\n"
 				"\t             ExFlags: %u\n"
-				"\t         ExCylinders: %lu\n"
-				"\t             ExHeads: %lu\n"
-				"\t   ExSectorsPerTrack: %lu\n"
+				"\t         ExCylinders: %u\n"
+				"\t             ExHeads: %u\n"
+				"\t   ExSectorsPerTrack: %u\n"
 				"\t   ExSectorsPerDrive: %llu\n"
 				"\t        ExSectorSize: %u\n"
 				"\t          ExReserved: %u\n"
@@ -3754,18 +3754,18 @@ VOID OutputRemovableDiskInfo(
 ) {
 	OutputDiscLog(
 		OUTPUT_DHYPHEN_PLUS_STR("DEVICE_MEDIA_INFO")
-		"\t          DeviceType: %lu ", pMedia->DeviceType
+		"\t          DeviceType: %u ", pMedia->DeviceType
 	);
 	OutputDeviceType(pMedia->DeviceType);
 	OutputDiscLog(
-		"\t      MediaInfoCount: %lu\n"
+		"\t      MediaInfoCount: %u\n"
 		, pMedia->MediaInfoCount
 	);
 	for (DWORD i = 0; i < pMedia->MediaInfoCount; i++) {
 		// TODO: pMedia->MediaInfo[i].DeviceSpecific.TapeInfo
 		STORAGE_MEDIA_TYPE mType = pMedia->MediaInfo[i].DeviceSpecific.RemovableDiskInfo.MediaType;
 		OutputDiscLog(
-			"\t           Cylinders: %lu\n"
+			"\t           Cylinders: %u\n"
 			"\t           MediaType: %d "
 			, pMedia->MediaInfo[i].DeviceSpecific.RemovableDiskInfo.Cylinders.u.LowPart
 			, mType
@@ -3779,10 +3779,10 @@ VOID OutputRemovableDiskInfo(
 
 		DWORD mc = pMedia->MediaInfo[i].DeviceSpecific.RemovableDiskInfo.MediaCharacteristics;
 		OutputDiscLog(
-			"\t   TracksPerCylinder: %lu\n"
-			"\t     SectorsPerTrack: %lu\n"
-			"\t      BytesPerSector: %lu\n"
-			"\t    NumberMediaSides: %lu\n"
+			"\t   TracksPerCylinder: %u\n"
+			"\t     SectorsPerTrack: %u\n"
+			"\t      BytesPerSector: %u\n"
+			"\t    NumberMediaSides: %u\n"
 			"\tMediaCharacteristics: 0x%08lx ("
 			, pMedia->MediaInfo[i].DeviceSpecific.RemovableDiskInfo.TracksPerCylinder
 			, pMedia->MediaInfo[i].DeviceSpecific.RemovableDiskInfo.SectorsPerTrack

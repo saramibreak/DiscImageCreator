@@ -2431,7 +2431,7 @@ BOOL ReadCDForCheckingExe(
 				PIMAGE_DOS_HEADER pIDh = (PIMAGE_DOS_HEADER)&lpBuf[0];
 				if (dwSize < (DWORD)pIDh->e_lfanew) {
 					if (pDevice->dwMaxTransferLength < (DWORD)pIDh->e_lfanew) {
-						OutputVolDescLog("%" CHARWIDTH "s: offset is very big (%ld). read skip [TODO]\n"
+						OutputVolDescLog("%" CHARWIDTH "s: offset is very big (%d). read skip [TODO]\n"
 							, pDisc->PROTECT.pNameForExe[n], pIDh->e_lfanew);
 					}
 					else {

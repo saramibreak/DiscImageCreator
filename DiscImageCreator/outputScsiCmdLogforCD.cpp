@@ -40,7 +40,7 @@ VOID OutputFsImageDosHeader(
 		"\t                   Overlay number: %04x\n"
 		"\t   OEM identifier (for e_oeminfo): %04x\n"
 		"\tOEM information; e_oemid specific: %04x\n"
-		"\t   File address of new exe header: %08ld\n"
+		"\t   File address of new exe header: %08d\n"
 		, sizeof(IMAGE_DOS_HEADER)
 		, pIdh->e_magic, pIdh->e_magic, pIdh->e_magic >> 8, pIdh->e_cblp, pIdh->e_cp
 		, pIdh->e_crlc, pIdh->e_cparhdr, pIdh->e_minalloc, pIdh->e_maxalloc
@@ -59,13 +59,13 @@ VOID OutputFsImageOS2Header(
 		"\t                   Revision number: %02d\n"
 		"\t             Offset of Entry Table: %04x\n"
 		"\t    Number of bytes in Entry Table: %04x\n"
-		"\t            Checksum of whole file: %08ld\n"
+		"\t            Checksum of whole file: %08d\n"
 		"\t                         Flag word: %04x\n"
 		"\t     Automatic data segment number: %04x\n"
 		"\t           Initial heap allocation: %04x\n"
 		"\t          Initial stack allocation: %04x\n"
-		"\t             Initial CS:IP setting: %08ld\n"
-		"\t             Initial SS:SP setting: %08ld\n"
+		"\t             Initial CS:IP setting: %08d\n"
+		"\t             Initial SS:SP setting: %08d\n"
 		"\t            Count of file segments: %04x\n"
 		"\t Entries in Module Reference Table: %04x\n"
 		"\t   Size of non-resident name table: %04x\n"
@@ -74,7 +74,7 @@ VOID OutputFsImageOS2Header(
 		"\t     Offset of resident name table: %04x\n"
 		"\t  Offset of Module Reference Table: %04x\n"
 		"\t    Offset of Imported Names Table: %04x\n"
-		"\tOffset of Non-resident Names Table: %08ld\n"
+		"\tOffset of Non-resident Names Table: %08d\n"
 		"\t          Count of movable entries: %04x\n"
 		"\t     Segment alignment shift count: %04x\n"
 		"\t        Count of resource segments: %04x\n"
@@ -105,7 +105,7 @@ VOID OutputFsImageNtHeader(
 ) {
 	OutputVolDescLog(
 		"\t========== IMAGE_NT_HEADERS (%zu bytes) ==========\n"
-		"\tSignature: %08lx (%c%c)\n"
+		"\tSignature: %08x (%c%c)\n"
 		"\t\t========== FileHeader ==========\n"
 		"\t\t\t             Machine: %04x "
 		, sizeof(IMAGE_NT_HEADERS32)
@@ -202,9 +202,9 @@ VOID OutputFsImageNtHeader(
 	GetTimeStamp(szTime, sizeof(szTime), pInh->FileHeader.TimeDateStamp);
 	OutputVolDescLog(
 		"\t\t\t    NumberOfSections: %04x\n"
-		"\t\t\t       TimeDateStamp: %08lx (%s)\n"
-		"\t\t\tPointerToSymbolTable: %08lx\n"
-		"\t\t\t     NumberOfSymbols: %08lx\n"
+		"\t\t\t       TimeDateStamp: %08x (%s)\n"
+		"\t\t\tPointerToSymbolTable: %08x\n"
+		"\t\t\t     NumberOfSymbols: %08x\n"
 		"\t\t\tSizeOfOptionalHeader: %04x\n"
 		"\t\t\t     Characteristics: %04x\n"
 		, pInh->FileHeader.NumberOfSections
@@ -264,25 +264,25 @@ VOID OutputFsImageNtHeader(
 		"\t\t\t                      Magic: %04x\n"
 		"\t\t\t         MajorLinkerVersion: %02x\n"
 		"\t\t\t         MinorLinkerVersion: %02x\n"
-		"\t\t\t                 SizeOfCode: %08lx\n"
-		"\t\t\t      SizeOfInitializedData: %08lx\n"
-		"\t\t\t    SizeOfUninitializedData: %08lx\n"
-		"\t\t\t        AddressOfEntryPoint: %08lx\n"
-		"\t\t\t                 BaseOfCode: %08lx\n"
-		"\t\t\t                 BaseOfData: %08lx\n"
-		"\t\t\t                  ImageBase: %08lx\n"
-		"\t\t\t           SectionAlignment: %08lx\n"
-		"\t\t\t              FileAlignment: %08lx\n"
+		"\t\t\t                 SizeOfCode: %08x\n"
+		"\t\t\t      SizeOfInitializedData: %08x\n"
+		"\t\t\t    SizeOfUninitializedData: %08x\n"
+		"\t\t\t        AddressOfEntryPoint: %08x\n"
+		"\t\t\t                 BaseOfCode: %08x\n"
+		"\t\t\t                 BaseOfData: %08x\n"
+		"\t\t\t                  ImageBase: %08x\n"
+		"\t\t\t           SectionAlignment: %08x\n"
+		"\t\t\t              FileAlignment: %08x\n"
 		"\t\t\tMajorOperatingSystemVersion: %04x\n"
 		"\t\t\tMinorOperatingSystemVersion: %04x\n"
 		"\t\t\t          MajorImageVersion: %04x\n"
 		"\t\t\t          MinorImageVersion: %04x\n"
 		"\t\t\t      MajorSubsystemVersion: %04x\n"
 		"\t\t\t      MinorSubsystemVersion: %04x\n"
-		"\t\t\t          Win32VersionValue: %08lx\n"
-		"\t\t\t                SizeOfImage: %08lx\n"
-		"\t\t\t              SizeOfHeaders: %08lx\n"
-		"\t\t\t                   CheckSum: %08lx\n"
+		"\t\t\t          Win32VersionValue: %08x\n"
+		"\t\t\t                SizeOfImage: %08x\n"
+		"\t\t\t              SizeOfHeaders: %08x\n"
+		"\t\t\t                   CheckSum: %08x\n"
 		"\t\t\t                  Subsystem: %04x "
 		, pInh->OptionalHeader.Magic, pInh->OptionalHeader.MajorLinkerVersion
 		, pInh->OptionalHeader.MinorLinkerVersion, pInh->OptionalHeader.SizeOfCode
@@ -391,12 +391,12 @@ VOID OutputFsImageNtHeader(
 	}
 
 	OutputVolDescLog(
-		"\t\t\t         SizeOfStackReserve: %08lx\n"
-		"\t\t\t          SizeOfStackCommit: %08lx\n"
-		"\t\t\t          SizeOfHeapReserve: %08lx\n"
-		"\t\t\t           SizeOfHeapCommit: %08lx\n"
-		"\t\t\t                LoaderFlags: %08lx\n"
-		"\t\t\t        NumberOfRvaAndSizes: %08lx\n"
+		"\t\t\t         SizeOfStackReserve: %08x\n"
+		"\t\t\t          SizeOfStackCommit: %08x\n"
+		"\t\t\t          SizeOfHeapReserve: %08x\n"
+		"\t\t\t           SizeOfHeapCommit: %08x\n"
+		"\t\t\t                LoaderFlags: %08x\n"
+		"\t\t\t        NumberOfRvaAndSizes: %08x\n"
 		, pInh->OptionalHeader.SizeOfStackReserve, pInh->OptionalHeader.SizeOfStackCommit
 		, pInh->OptionalHeader.SizeOfHeapReserve, pInh->OptionalHeader.SizeOfHeapCommit
 		, pInh->OptionalHeader.LoaderFlags, pInh->OptionalHeader.NumberOfRvaAndSizes
@@ -453,8 +453,8 @@ VOID OutputFsImageNtHeader(
 			break;
 		}
 		OutputVolDescLog(
-			"\t\t\t\t         VirtualAddress: %08lx\n"
-			"\t\t\t\t                   Size: %08lx\n"
+			"\t\t\t\t         VirtualAddress: %08x\n"
+			"\t\t\t\t                   Size: %08x\n"
 			, pInh->OptionalHeader.DataDirectory[i].VirtualAddress
 			, pInh->OptionalHeader.DataDirectory[i].Size
 		);
@@ -473,11 +473,11 @@ VOID OutputExportDirectory(
 
 	OutputVolDescLog(
 		"\t========== IMAGE_EXPORT_DIRECTORY ==========\n"
-		"\t\t      Characteristics: %08lx\n"
-		"\t\t        TimeDateStamp: %08lx (%s)\n"
+		"\t\t      Characteristics: %08x\n"
+		"\t\t        TimeDateStamp: %08x (%s)\n"
 		"\t\t         MajorVersion: %04x\n"
 		"\t\t         MinorVersion: %04x\n"
-		"\t\t                 Name: %08lx"
+		"\t\t                 Name: %08x"
 		, exp->Characteristics, exp->TimeDateStamp, szTime
 		, exp->MajorVersion, exp->MinorVersion, exp->Name
 	);
@@ -490,12 +490,12 @@ VOID OutputExportDirectory(
 	}
 	OutputVolDescLog(
 		" (%" CHARWIDTH "s)\n"
-		"\t\t                 Base: %08lx\n"
-		"\t\t    NumberOfFunctions: %08lx\n"
-		"\t\t        NumberOfNames: %08lx\n"
-		"\t\t   AddressOfFunctions: %08lx\n"
-		"\t\t       AddressOfNames: %08lx\n"
-		"\t\tAddressOfNameOrdinals: %08lx\n"
+		"\t\t                 Base: %08x\n"
+		"\t\t    NumberOfFunctions: %08x\n"
+		"\t\t        NumberOfNames: %08x\n"
+		"\t\t   AddressOfFunctions: %08x\n"
+		"\t\t       AddressOfNames: %08x\n"
+		"\t\tAddressOfNameOrdinals: %08x\n"
 		, &lpBuf[dwNameOfs], exp->Base
 		, exp->NumberOfFunctions, exp->NumberOfNames
 		, exp->AddressOfFunctions, exp->AddressOfNames
@@ -555,7 +555,7 @@ VOID OutputImportDirectory(
 	while (imp->Characteristics != 0) {
 		OutputVolDescLog(
 			"\t========== IMAGE_IMPORT_DESCRIPTOR %d ==========\n"
-			"\t\tOriginalFirstThunk: %08lx\n", ++nDllNum, imp->OriginalFirstThunk
+			"\t\tOriginalFirstThunk: %08x\n", ++nDllNum, imp->OriginalFirstThunk
 		);
 		DWORD dwTmpOfs = imp->Name - dwVaOfs;
 		if (dwBufSize < dwTmpOfs) {
@@ -563,10 +563,10 @@ VOID OutputImportDirectory(
 			break;
 		}
 		OutputVolDescLog(
-			"\t\t     TimeDateStamp: %08lx (%s)\n"
-			"\t\t    ForwarderChain: %08lx\n"
-			"\t\t              Name: %08lx (%" CHARWIDTH "s)\n"
-			"\t\t        FirstThunk: %08lx\n"
+			"\t\t     TimeDateStamp: %08x (%s)\n"
+			"\t\t    ForwarderChain: %08x\n"
+			"\t\t              Name: %08x (%" CHARWIDTH "s)\n"
+			"\t\t        FirstThunk: %08x\n"
 			, imp->TimeDateStamp, szTime, imp->ForwarderChain
 			, imp->Name, &lpBuf[dwTmpOfs], imp->FirstThunk
 		);
@@ -617,8 +617,8 @@ VOID OutputResourceDirectory(
 
 	OutputVolDescLog(
 		"%s========== IMAGE_RESOURCE_DIRECTORY ==========\n"
-		"%s\t      Characteristics: %08lx\n"
-		"%s\t        TimeDateStamp: %08lx (%s)\n"
+		"%s\t      Characteristics: %08x\n"
+		"%s\t        TimeDateStamp: %08x (%s)\n"
 		"%s\t         MajorVersion: %04x\n"
 		"%s\t         MinorVersion: %04x\n"
 		"%s\t NumberOfNamedEntries: %04x\n"
@@ -653,7 +653,7 @@ VOID OutputResourceDirectory(
 				return;
 			}
 			OutputVolDescLog(
-				"%s\t                 Name: %08lx (%" CHARWIDTH "s)\n"
+				"%s\t                 Name: %08x (%" CHARWIDTH "s)\n"
 				, pTab, dir->Name, &lpBuf[dwTmpOfs]
 			);
 		}
@@ -664,7 +664,7 @@ VOID OutputResourceDirectory(
 
 		if (dir->DataIsDirectory) {
 			OutputVolDescLog(
-				"%s\t    OffsetToDirectory: %08lx\n", pTab, dir->OffsetToDirectory);
+				"%s\t    OffsetToDirectory: %08x\n", pTab, dir->OffsetToDirectory);
 			size_t idx = _tcslen(&pTab[0]);
 			pTab[idx] = _T('\t');
 			OutputResourceDirectory(lpBuf, dwBufSize, dwResourceVirtualAddress, dwOfs, dir->OffsetToDirectory, lpwszFileVer, pTab);
@@ -678,10 +678,10 @@ VOID OutputResourceDirectory(
 			}
 			PIMAGE_RESOURCE_DATA_ENTRY data = (PIMAGE_RESOURCE_DATA_ENTRY)&lpBuf[dwTmpOfs];
 			OutputVolDescLog(
-				"%s\t    OffsetToDataEntry: %08lx\n"
-				"%s\t         OffsetToData: %08lx\n"
-				"%s\t                 Size: %08lx\n"
-				"%s\t             CodePage: %08lx\n"
+				"%s\t    OffsetToDataEntry: %08x\n"
+				"%s\t         OffsetToData: %08x\n"
+				"%s\t                 Size: %08x\n"
+				"%s\t             CodePage: %08x\n"
 				, pTab, dir->OffsetToData, pTab, data->OffsetToData, pTab, data->Size, pTab, data->CodePage
 			);
 			dwTmpOfs = dwOfs + data->OffsetToData - dwResourceVirtualAddress;
@@ -784,15 +784,15 @@ VOID OutputFsImageSectionHeader(
 	OutputVolDescLog(
 		"\t========== IMAGE_SECTION_HEADER (%zu bytes) ==========\n"
 		"\t                Name: %.8" CHARWIDTH "s\n"
-		"\t         VirtualSize: %08lx\n"
-		"\t      VirtualAddress: %08lx\n"
-		"\t       SizeOfRawData: %08lx\n"
-		"\t    PointerToRawData: %08lx\n"
-		"\tPointerToRelocations: %08lx\n"
-		"\tPointerToLinenumbers: %08lx\n"
+		"\t         VirtualSize: %08x\n"
+		"\t      VirtualAddress: %08x\n"
+		"\t       SizeOfRawData: %08x\n"
+		"\t    PointerToRawData: %08x\n"
+		"\tPointerToRelocations: %08x\n"
+		"\tPointerToLinenumbers: %08x\n"
 		"\t NumberOfRelocations: %04x\n"
 		"\t NumberOfLinenumbers: %04x\n"
-		"\t     Characteristics: %08lx\n"
+		"\t     Characteristics: %08x\n"
 		, sizeof(IMAGE_SECTION_HEADER), pIsh->Name
 		, pIsh->Misc.VirtualSize, pIsh->VirtualAddress, pIsh->SizeOfRawData, pIsh->PointerToRawData
 		, pIsh->PointerToRelocations, pIsh->PointerToLinenumbers, pIsh->NumberOfRelocations
