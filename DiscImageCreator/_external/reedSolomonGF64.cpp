@@ -41,6 +41,10 @@
  *   - Q decoder uses a robust analytical 1-error method (position brute-force) with high-degree syndromes.
  */
 
+#if defined(__linux__)
+#include "defineForLinux.h"
+#endif
+
  /* ===== GF(2^6) ===== */
 #define GF_PRIM6  0x43
 #define GF_SIZE   64
