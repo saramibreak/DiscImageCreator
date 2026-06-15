@@ -580,7 +580,7 @@ BOOL ScsiPassThroughDirect(
 			if (!pExtArg->byScanProtectViaFile) {
 				// When semaphore time out occurred, if doesn't execute sleep,
 				// UNIT_ATTENSION errors occurs next ScsiPassThroughDirect executing.
-				UINT milliseconds = 25000;
+				UINT milliseconds = 2500;
 				OutputLog(standardError | fileMainError
 					, "Please wait for %u milliseconds until the device is returned\n", milliseconds);
 				Sleep(milliseconds);
