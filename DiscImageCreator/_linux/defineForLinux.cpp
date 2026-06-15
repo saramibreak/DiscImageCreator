@@ -1,3 +1,7 @@
+#if defined(__linux__)
+#include "defineForLinux.h"
+#endif
+
 int Beep(int fz, int time)
 {
 	UNREFERENCED_PARAMETER(fz);
