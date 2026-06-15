@@ -3017,7 +3017,7 @@ BOOL ExecCheckingByteOrder(
 	LPBYTE pBuf = NULL;
 	LPBYTE lpBuf = NULL;
 	if (!GetAlignedCallocatedBuffer(pDevice, &pBuf,
-		CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE, &lpBuf, _T(__FUNCTION__), __LINE__)) {
+		CD_RAW_SECTOR_WITH_C2_AND_SUBCODE_SIZE, &lpBuf, _T(__FUNCTION__), __LINE__)) {
 		return FALSE;
 	}
 	BYTE lpCmd[CDB12GENERIC_LENGTH] = {};
@@ -3025,7 +3025,7 @@ BOOL ExecCheckingByteOrder(
 
 	BOOL bRet = TRUE;
 	if (!ExecReadCD(pExtArg, pDevice, lpCmd, 0, lpBuf
-		, CD_RAW_SECTOR_WITH_C2_294_AND_SUBCODE_SIZE, _T(__FUNCTION__), __LINE__)) {
+		, CD_RAW_SECTOR_WITH_C2_AND_SUBCODE_SIZE, _T(__FUNCTION__), __LINE__)) {
 		OutputLog(standardError | fileDrive,
 			"This drive doesn't support [OpCode: %#02x, C2flag: %d, SubCode: %x]\n"
 			, lpCmd[0], (lpCmd[9] & 0x6) >> 1, lpCmd[10]);
