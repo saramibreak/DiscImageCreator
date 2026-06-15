@@ -33,7 +33,7 @@
 
 #define DEFAULT_REREAD_VAL			(4000)
 #define DEFAULT_CACHE_DELETE_VAL	(1)
-#define DEFAULT_SPTD_TIMEOUT_VAL	(60)
+#define DEFAULT_SPTD_TIMEOUT_VAL	(50000)
 
 BYTE g_aSyncHeader[SYNC_SIZE] = {
 	0x00, 0xff, 0xff, 0xff, 0xff, 0xff,
