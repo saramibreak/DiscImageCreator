@@ -706,7 +706,7 @@ BOOL ReadDVDRaw(
 	FILE* fpRaw = NULL;
 	_TCHAR szMode[4] = _T("wb");
 	if (pExtArg->byResume || pExtArg->byFix) {
-		memcpy(szMode, _T("rb+"), 3);
+		strcpy(szMode, _T("rb+"));
 	}
 	_TCHAR szFnameAndExtRaw[_MAX_FNAME + _MAX_EXT] = {};
 	_TCHAR pszOutPath[_MAX_PATH] = {};

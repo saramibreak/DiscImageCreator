@@ -690,7 +690,7 @@ VOID OutputResourceDirectory(
 				return;
 			}
 			PFILE_VERSIONINFO finfo = (PFILE_VERSIONINFO)&lpBuf[dwTmpOfs];
-			if (!wcsncmp(finfo->ver.szKey, L"VS_VERSION_INFO", 16)) {
+			if (!wcsncmp(finfo->ver.szKey, L"VS_VERSION_INFO", 15)) {
 				LONG lOfs = 0;
 				do {
 					dwTmpOfs = dwOfs + data->OffsetToData - dwResourceVirtualAddress + sizeof(FILE_VERSIONINFO) + lOfs;
