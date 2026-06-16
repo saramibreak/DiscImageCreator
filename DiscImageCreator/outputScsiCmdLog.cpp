@@ -20,6 +20,18 @@
 #include "outputScsiCmdLog.h"
 #include "set.h"
 
+// lcb -> Left corner bracket
+// rcb -> Right corner bracket
+#ifdef _WIN32
+// on windows we use Shift_JIS
+const char* lcb = "\x81\x75";
+const char* rcb = "\x81\x76";
+#else
+// on rest we use UTF-8
+const char* lcb = "\xE3\x80\x8C";
+const char* rcb = "\xE3\x80\x8D";
+#endif
+
 VOID OutputInquiry(
 	PINQUIRYDATA pInquiry
 ) {
@@ -2178,8 +2190,8 @@ VOID OutputCDAtip(
 		);
 		if (pAtip->IsCdrw) {
 			OutputDiscLog(
-				"\t\t        => Lowest e2Tf Write-strategy Test Speed: %d "
-				, pAtip->A2Values[0] >> 4 & 0x07
+				"\t\t        => Lowest %se2T%sf Write-strategy Test Speed: %d "
+				, lcb, rcb, pAtip->A2Values[0] >> 4 & 0x07
 			);
 			switch (pAtip->A2Values[0] >> 4 & 0x07) {
 			case 2:
@@ -2194,8 +2206,8 @@ VOID OutputCDAtip(
 			}
 
 			OutputDiscLog(
-				"\t\t        => Highest e2Tf Write-strategy Test Speed: %d "
-				, pAtip->A2Values[0] & 0x0f
+				"\t\t        => Highest %se2T%sf Write-strategy Test Speed: %d "
+				, lcb, rcb, pAtip->A2Values[0] & 0x0f
 			);
 			switch (pAtip->A2Values[0] & 0x0f) {
 			case 6:
@@ -2213,8 +2225,8 @@ VOID OutputCDAtip(
 			}
 
 			OutputDiscLog(
-				"\t\t        => Optimum write power indication at 16x and e2Tf Write-strategy: %d "
-				, pAtip->A2Values[1] >> 4 & 0x07
+				"\t\t        => Optimum write power indication at 16x and %se2T%sf Write-strategy: %d "
+				, lcb, rcb, pAtip->A2Values[1] >> 4 & 0x07
 			);
 			switch (pAtip->A2Values[1] >> 4 & 0x07) {
 			case 0:
@@ -2247,8 +2259,8 @@ VOID OutputCDAtip(
 			}
 
 			OutputDiscLog(
-				"\t\t        => Optimum write power indication at HTS and e2Tf Write-strategy: %d "
-				, pAtip->A2Values[1] >> 1 & 0x07
+				"\t\t        => Optimum write power indication at HTS and %se2T%sf Write-strategy: %d "
+				, lcb, rcb, pAtip->A2Values[1] >> 1 & 0x07
 			);
 			switch (pAtip->A2Values[1] >> 1 & 0x07) {
 			case 0:
@@ -2281,8 +2293,8 @@ VOID OutputCDAtip(
 			}
 
 			OutputDiscLog(
-				"\t\t        => Optimum erase power indication at 16x and e2Tf Write-strategy: %d "
-				, pAtip->A2Values[2] >> 4 & 0x07
+				"\t\t        => Optimum erase power indication at 16x and %se2T%sf Write-strategy: %d "
+				, lcb, rcb, pAtip->A2Values[2] >> 4 & 0x07
 			);
 			switch (pAtip->A2Values[2] >> 4 & 0x07) {
 			case 0:
@@ -2315,8 +2327,8 @@ VOID OutputCDAtip(
 			}
 
 			OutputDiscLog(
-				"\t\t        => Optimum erase power indication at HTS and e2Tf Write-strategy: %d "
-				, pAtip->A2Values[2] >> 1 & 0x07
+				"\t\t        => Optimum erase power indication at HTS and %se2T%sf Write-strategy: %d "
+				, lcb, rcb, pAtip->A2Values[2] >> 1 & 0x07
 			);
 			switch (pAtip->A2Values[2] >> 1 & 0x07) {
 			case 0:
