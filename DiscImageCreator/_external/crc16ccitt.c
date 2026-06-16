@@ -19,9 +19,11 @@ void make_crc16_table(void)
 	for (i = 0; i <= UCHAR_MAX; i++) {
 		r = i << (16 - CHAR_BIT);
 		for (j = 0; j < CHAR_BIT; j++)
-			if (r & 0x8000U) r = (r << 1) ^ CRCPOLY1;
-			else             r <<= 1;
-			crctable[i] = r & 0xFFFFU;
+			if (r & 0x8000U)
+				r = (r << 1) ^ CRCPOLY1;
+			else
+				r <<= 1;
+		crctable[i] = r & 0xFFFFU;
 	}
 }
 
