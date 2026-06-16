@@ -101,7 +101,8 @@ executable(
   ],
   include_directories: inc,
   dependencies: deps,
-  cpp_args: ['-Wno-unknown-pragmas'],
+  cpp_args: [ '-Wno-unknown-pragmas'],
+  c_args: [ '-Wno-unknown-pragmas'],
   install: true,
   install_dir: get_option('bindir'),
 )
