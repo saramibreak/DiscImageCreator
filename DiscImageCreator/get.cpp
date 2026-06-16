@@ -163,7 +163,7 @@ BOOL GetDriveOffsetAuto(
 // https://hima-tubusi.blogspot.com/2014/09/strtok.html
 char* strtoks(char* s1, const char* s2) {
 	static char* str = 0;
-	register size_t i, j;
+	size_t i, j;
 
 	if (s1) {
 		str = s1;
