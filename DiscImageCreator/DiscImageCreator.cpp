@@ -1949,7 +1949,7 @@ int createCmdFile(int argc, _TCHAR* argv[], _TCHAR* pszFullPath, LPTSTR pszDateT
 		if (!g_LogFile.fpCommandLine) {
 			OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 			if (GetLastError() == 123) {
-				OutputErrorString("Please remove \\, /, :, *, ?, Åg, <, >, | of the filename\n");
+				OutputErrorString("Please remove \\, /, :, *, ?, \", \', <, >, | of the filename\n");
 			}
 			return FALSE;
 		}
