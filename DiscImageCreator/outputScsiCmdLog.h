@@ -15,6 +15,12 @@
  */
 #pragma once
 
+#include "forwardDeclaration.h"
+
+#if defined(__linux__)
+#include "defineForLinux.h"
+#endif
+
 VOID OutputInquiry(
 	PINQUIRYDATA pInquiry
 );
