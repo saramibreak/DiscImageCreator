@@ -107,6 +107,11 @@ executable(
   install_dir: get_option('bindir'),
 )
 
+# copy assets into build directory for easier testing
+fs = import('fs')
+fs.copyfile('Release_ANSI/driveOffset.txt')
+fs.copyfile('Release_ANSI/default.dat')
+
 install_data(
   sources: [
     'Release_ANSI/default.dat',
