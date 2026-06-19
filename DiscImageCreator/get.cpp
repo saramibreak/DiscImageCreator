@@ -48,7 +48,7 @@ BOOL GetHandle(
 		FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
 	if (pDevice->hDevice == INVALID_HANDLE_VALUE) {
 #elif defined(__linux__)
-	pDevice->hDevice = open(pDevice->drivepath, O_RDWR | O_NONBLOCK, 0777);
+	pDevice->hDevice = open(pDevice->drivepath, O_RDWR | O_EXCL | O_NONBLOCK, 0777);
 	if (pDevice->hDevice == -1) {
 #elif defined(__APPLE__) && defined(__MACH__)
 	pDevice->hDevice = GetSCSITaskInterface(pDevice->drivepath);
