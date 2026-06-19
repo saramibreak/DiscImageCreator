@@ -91,7 +91,7 @@ DWORD CalcEDC(BYTE* Buffer, DWORD size)
 {
 	BYTE* p = Buffer;
 	DWORD result = 0;
-	int i;
+	DWORD i;
 
 	for (i=0;i<size;i++){
 		result = EDC_crctable[(result ^ *p++) & 0xff] ^ (result >> 8);
