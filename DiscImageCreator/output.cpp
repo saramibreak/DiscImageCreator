@@ -47,10 +47,10 @@ FILE* CreateOrOpenFile(
 	BYTE byMaxTrackNum
 ) {
 	_TCHAR szDstPath[_MAX_PATH] = {};
-	_TCHAR szDrive[_MAX_DRIVE + 1] = {};
-	_TCHAR szDir[_MAX_DIR + 1] = {};
-	_TCHAR szFname[_MAX_FNAME + 1] = {};
-	_TCHAR szExt[_MAX_EXT + 1] = {};
+	_TCHAR szDrive[_MAX_DRIVE] = {};
+	_TCHAR szDir[_MAX_DIR] = {};
+	_TCHAR szFname[_MAX_FNAME] = {};
+	_TCHAR szExt[_MAX_EXT] = {};
 
 	_tsplitpath(pszPath, szDrive, szDir, szFname, szExt);
 	if (pszPlusFname) {
@@ -114,7 +114,7 @@ FILE* OpenProgrammabledFile(
 	LPCTSTR pszFname,
 	LPCTSTR pszMode
 ) {
-	_TCHAR szFullPath[_MAX_PATH + 1] = {};
+	_TCHAR szFullPath[_MAX_PATH] = {};
 	if (!::GetModuleFileName(NULL, szFullPath, SIZE_OF_ARRAY(szFullPath))) {
 		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
 		return NULL;
@@ -127,7 +127,7 @@ FILE* OpenProgrammabledFile(
 #endif
 	if (p) {
 		p[0] = 0;
-		_TCHAR szFullPathName[_MAX_PATH + 1 + _MAX_FNAME + 1] = {};
+		_TCHAR szFullPathName[_MAX_PATH + _MAX_FNAME] = {};
 #ifdef _WIN32
 		_sntprintf(szFullPathName
 			, SIZE_OF_ARRAY(szFullPathName), _T("%s\\%s"), szFullPath, pszFname);

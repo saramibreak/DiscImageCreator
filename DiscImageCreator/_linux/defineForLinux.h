@@ -2214,13 +2214,14 @@ typedef struct _AACS_READ_BINDING_NONCE {
 	};
 } AACS_READ_BINDING_NONCE, *PAACS_READ_BINDING_NONCE;
 
+#define NAME_NEEDED_SPACE 256
 
 // from stdlib.h
 #define _MAX_PATH   PATH_MAX
-#define _MAX_DRIVE  NAME_MAX
-#define _MAX_DIR    NAME_MAX
-#define _MAX_FNAME  NAME_MAX
-#define _MAX_EXT    NAME_MAX
+#define _MAX_DRIVE  NAME_NEEDED_SPACE
+#define _MAX_DIR    NAME_NEEDED_SPACE
+#define _MAX_FNAME  NAME_NEEDED_SPACE
+#define _MAX_EXT    NAME_NEEDED_SPACE
 
 #include <stdio.h>
 #include <stdlib.h>
