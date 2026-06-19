@@ -111,11 +111,15 @@ executable(
 fs = import('fs')
 fs.copyfile('Release_ANSI/driveOffset.txt')
 fs.copyfile('Release_ANSI/default.dat')
+fs.copyfile('Release_ANSI/C2ErrorProtect.txt')
+fs.copyfile('Release_ANSI/ReadErrorProtect.txt')
 
 install_data(
   sources: [
     'Release_ANSI/default.dat',
     'Release_ANSI/driveOffset.txt',
+    'Release_ANSI/C2ErrorProtect.txt',
+    'Release_ANSI/ReadErrorProtect.txt',
   ],
   install_dir: get_option('datadir') / meson.project_name(),
 )
