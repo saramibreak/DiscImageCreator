@@ -1,25 +1,25 @@
 ==================================== TODO =====================================
 [unintentioanl behavior (or bug)]
-. failed to read of LBA 16 http://forum.redump.org/post/94542/#p94542
-. the shifted offset be explained by ASUS drive or a Linux bug? http://forum.redump.org/post/90412/#p90412 http://forum.redump.org/post/93955/#p93955
-. The C2 errors are completely random and inconsistent Scooby-Doo! 2.0.0 for the iXL http://forum.redump.org/post/89722/#p89722 http://forum.redump.org/post/90011/#p90011
-. failed to read Directory Record of some XBOX discs http://forum.redump.org/post/97640/#p97640
-. PS2 unlicenced disc doesn't match the hash http://forum.redump.org/post/96246/#p96246 http://forum.redump.org/post/97804/#p97804
+. failed to read of LBA 16 https://forum.redump.info/viewtopic.php?p=26223#p26223
+. the shifted offset be explained by ASUS drive or a Linux bug? https://forum.redump.info/viewtopic.php?p=26083#p26083 https://forum.redump.info/viewtopic.php?p=26178#p26178
+. The C2 errors are completely random and inconsistent Scooby-Doo! 2.0.0 for the iXL https://forum.redump.info/viewtopic.php?p=26049#p26049 https://forum.redump.info/viewtopic.php?p=26062#p26062
+. failed to read Directory Record of some XBOX discs https://forum.redump.info/viewtopic.php?p=26364#p26364
+. PS2 unlicenced disc doesn't match the hash https://forum.redump.info/viewtopic.php?p=26314#p26314 https://forum.redump.info/viewtopic.php?p=26367#p26367
 
 [protection]
-. support DiscGuard http://forum.redump.org/post/94457/#p94457
+. support DiscGuard https://forum.redump.info/viewtopic.php?p=26217#p26217
 . support twin sector disc (for ALPHA-ROM, ROOT, TAGES)
-. support SafeDisc on DVD http://forum.redump.org/post/87385/#p87385
+. support SafeDisc on DVD https://forum.redump.info/viewtopic.php?p=26012#p26012
 
 [image]
 . support mdf/mds (for SecuROM v4.x or higher, StarForce, CD-Cops)
 . support cue file of sub-pchannel version
 
 [main]
-. support generating ecc/edc when unreadable sectors are generated http://forum.redump.org/post/93774/#p93774
+. support generating ecc/edc when unreadable sectors are generated https://forum.redump.info/viewtopic.php?p=26173#p26173
 
-. LBA 2174 has 2352+16 bytes? Due to this sector LBA 2175 ... last are all shifted. http://forum.redump.org/post/92408/#p92408
-. LBA 950 ... last are all shifted because LBA 949 is mastering error (2352 + 120 bytes) http://forum.redump.org/post/92507/#p92507
+. LBA 2174 has 2352+16 bytes? Due to this sector LBA 2175 ... last are all shifted. https://forum.redump.info/viewtopic.php?p=26141#p26141
+. LBA 950 ... last are all shifted because LBA 949 is mastering error (2352 + 120 bytes) https://forum.redump.info/viewtopic.php?p=26147#p26147
 
 [sub]
 . check parity P, Q for CD+G
@@ -88,7 +88,7 @@
       So, I can use these documents and source codes as reference, but I don't understand these yet.
 
 . sub fixing algo
-  http://forum.redump.org/post/61192/#p61192
+  https://forum.redump.info/viewtopic.php?p=24597#p24597
   1. You define 9 variables: SubRereadNum, CurrentSubReadNum, CurrentSectorNum, FixLevel, QCurrentSector, QNextSector, QGenSector, QEAN, QISRC.
   2. From commandline args you read FixLevel (should be between 0 and 96) and SubRereadNum (0 or larger)
   3. You read a sector with the LBA = CurrentSectorNum (0 by default) and put its Q-channel into QCurrentSector.
@@ -108,7 +108,7 @@
   5.4. If Q-CRC is good and QCurrentSector mode = 0x03 (ISRC): QISRC = QCurrentSector and QNextSector = QNextSector + 1 frame
   5.5. CurrentSectorNum = CurrentSectorNum + 1, CurrentSubReadNum = 0
 
-  http://forum.redump.org/post/61203/#p61203
+  https://forum.redump.info/viewtopic.php?p=24600#p24600
   For each of the P, R, S, T, U, V, W channels you just need to detect the padding byte for the current sector
   (if more than 6 bytes are 0x00 - the padding byte is 0x00, if more than 6 bytes are 0xFF - the padding byte is 0xFF), 
   then do a bit compare of the current sector against 000000000000000000000000 or FFFFFFFFFFFFFFFFFFFFFFFF or any other variant, if exists.
@@ -134,7 +134,7 @@
    => I know Lite-on drive reads lead-out (about 6750 sectors - 01:30:00)
 
 . search the offsets precisely
-  http://forum.redump.org/post/56707/#p56707
+  https://forum.redump.info/viewtopic.php?p=39485#p39485
   [quote]
   1.search sync. (IsValidMainDataHeader) "i" is 0x6c(108)
   2.get msf. (BcdToDec) "sm" is 0, "ss" is 01, "sf" is 70

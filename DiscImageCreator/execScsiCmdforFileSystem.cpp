@@ -163,7 +163,7 @@ BOOL IsValidExtent(
 	return FALSE;
 }
 
-// http://forum.redump.org/post/101790/#p101790
+// https://forum.redump.info/viewtopic.php?p=26462#p26462
 //#define TBL_TEST
 BOOL ReadDirectoryRecordDetail(
 	PEXEC_TYPE pExecType,
@@ -220,9 +220,9 @@ BOOL ReadDirectoryRecordDetail(
 			if (lpDirRec[0] >= MIN_LEN_DR) {
 #if 0
 				// Due to this code, other disc can't dump.
-				// http://forum.redump.org/post/81822/#p81822
+				// https://forum.redump.info/viewtopic.php?p=25785#p25785
 				if (lpDirRec[0] == MIN_LEN_DR && uiOfs > 0 && uiOfs % DISC_MAIN_DATA_SIZE == 0) {
-					// http://forum.redump.org/post/56490/#p56490
+					// https://forum.redump.info/viewtopic.php?p=24342#p24342
 					// [PC] SimCity 3000 (USA)
 					// Data Length should be 2048 because LBA 200205 is joliet
 					// ========== LBA[200204, 0x30e0c]: Directory Record ==========
@@ -901,9 +901,9 @@ BOOL ReadCDForFileSystem(
 				if (!ExecReadCD(pExtArg, pDevice, (LPBYTE)&cdb, nLBA, lpBuf,
 					DISC_MAIN_DATA_SIZE, _T(__FUNCTION__), __LINE__)) {
 					// some disc occur VENDOR UNIQUE ERROR
-					// http://forum.redump.org/post/101367/#p101367
+					// https://forum.redump.info/viewtopic.php?p=26454#p26454
 					// [FMT] Rainbow Islands: The Story of Bubble Bobble 2: Extra Version
-					// http://redump.org/disc/74148/
+					// https://redump.info/disc/74148/
 					throw TRUE;
 				}
 				// for MAC pattern 1

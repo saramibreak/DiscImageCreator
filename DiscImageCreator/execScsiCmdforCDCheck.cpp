@@ -261,7 +261,7 @@ BOOL ExecSearchingOffset(
 	else {
 		if (*pExecType == swap || IsDataDisc(pDisc) ||
 			pDisc->SCSI.trkType & TRACK_TYPE::pregapAudioWithSyncIn1stTrack) {
-			// http://forum.redump.org/post/81925/#p81925
+			// https://forum.redump.info/viewtopic.php?p=25786#p25786
 			INT nSectorNum = 5;
 			LPBYTE pBuf2 = NULL;
 			LPBYTE lpBuf2 = NULL;
@@ -297,9 +297,9 @@ BOOL ExecSearchingOffset(
 				else {
 					if (pDisc->MAIN.nCombinedOffset > 0) {
 						INT nOverRead = pDisc->MAIN.nCombinedOffset / CD_RAW_SECTOR_SIZE;
-						// [FMT] Sangokushi IV http://forum.redump.org/post/82784/#p82784
-						// [FMT] Lip 3: Lipstick Adventure 3 http://forum.redump.org/post/80180/#p80180
-						// [FMT] Gulf War: Soukouden http://forum.redump.org/topic/16418/addedfmt-5-new-dumps/
+						// [FMT] Sangokushi IV https://forum.redump.info/viewtopic.php?p=25806#p25806
+						// [FMT] Lip 3: Lipstick Adventure 3 https://forum.redump.info/viewtopic.php?p=25750#p25750
+						// [FMT] Gulf War: Soukouden https://forum.redump.info/viewtopic.php?p=39470
 						if (nOverRead > 0) {
 							if (k == 0) {
 								SetAndOutputCDOffset(pExtArg, pDisc, bGetDriveOffset
@@ -2914,9 +2914,9 @@ BOOL ReadCDForCheckingSecuROM(
 
 		// All SecuROM titles http://redump.org/discs/quicksearch/securom/protection/only
 		if ((nRLBA == 3000 || nRLBA == 3001) && nALBA == 299) { // 3001(00:40:01), 299(00:03:74)
-			// Aliens Versus Predator 2 (Disc 1) http://redump.org/disc/35861/
-			// Unreal Tournament 2003 (Disc 1) (Play Disc) http://redump.org/disc/21469/
-			// Unreal Tournament 2004 (Play Disc) http://redump.org/disc/61749/
+			// Aliens Versus Predator 2 (Disc 1) https://redump.info/disc/35861/
+			// Unreal Tournament 2003 (Disc 1) (Play Disc) https://redump.info/disc/21469/
+			// Unreal Tournament 2004 (Play Disc) https://redump.info/disc/61749/
 			OutputSubInfoWithLBALog(
 				"Detected intentional error. CRC-16 is original:[%02x%02x] and XORed with 0x8001:[%02x%02x] "
 				, -1, 0, pDiscPerSector->subcode.current[22] ^ 0x80, pDiscPerSector->subcode.current[23] ^ 0x01
@@ -2939,13 +2939,13 @@ BOOL ReadCDForCheckingSecuROM(
 				, pDiscPerSector->subcode.current[19], pDiscPerSector->subcode.current[20], pDiscPerSector->subcode.current[21]);
 
 			if (nRLBA == 167295) {
-				// Colin McRae Rally 2.0 (Europe) http://redump.org/disc/31587/
+				// Colin McRae Rally 2.0 (Europe) https://redump.info/disc/31587/
 				OutputLog(standardOut | fileDisc, "Detected intentional subchannel in LBA -1 => SecuROM 3rd version type 1 (a.k.a. NEW)\n");
 				pDisc->PROTECT.byExist = securomV3_1;
 			}
 			else if (nRLBA == 0) {
-				// Empire Earth (USA) http://redump.org/disc/45559/
-				// Diablo II: Lord of Destruction (Expansion Set) (USA) http://redump.org/disc/58232/
+				// Empire Earth (USA) https://redump.info/disc/45559/
+				// Diablo II: Lord of Destruction (Expansion Set) (USA) https://redump.info/disc/58232/
 				OutputLog(standardOut | fileDisc, "Detected intentional subchannel in LBA -1 => SecuROM 3rd version type 2 (a.k.a. NEW)\n");
 				pDisc->PROTECT.byExist = securomV3_2;
 			}
@@ -2982,7 +2982,7 @@ BOOL ReadCDForCheckingSecuROM(
 				, BcdToDec(pDiscPerSector->subcode.current[20]), BcdToDec(pDiscPerSector->subcode.current[21]));
 
 			if (nRLBA == 5001 && nALBA == 5151) { // 5001(01:06:51), 5151(01:08:51)
-				// Supreme Snowboarding (Europe) http://redump.org/disc/32182/
+				// Supreme Snowboarding (Europe) https://redump.info/disc/32182/
 				OutputLog(standardOut | fileDisc, "Detected intentional subchannel in LBA 5000 => SecuROM 2nd version (a.k.a. NEW)\n");
 				pDisc->PROTECT.byExist = securomV2;
 			}
@@ -2998,7 +2998,7 @@ BOOL ReadCDForCheckingSecuROM(
 						WORD reCalcXorCrc16 = (WORD)(reCalcCrc16 ^ 0x0080);
 						if (pDiscPerSector->subcode.current[22] == HIBYTE(reCalcXorCrc16) &&
 							pDiscPerSector->subcode.current[23] == LOBYTE(reCalcXorCrc16)) {
-							// FIFA 99 (Europe) http://redump.org/disc/23791/
+							// FIFA 99 (Europe) https://redump.info/disc/23791/
 							OutputLog(standardOut | fileDisc
 								, "Detected intentional subchannel in LBA %d => SecuROM 1st version (a.k.a. OLD)\n", nTmpLBA);
 							pDisc->PROTECT.byExist = securomV1;
