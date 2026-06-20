@@ -502,7 +502,7 @@ BOOL ReadTOCText(
 #ifdef TEST_CDTEXT_WITH_UNICODE
 		// Irregular CD-TEXT (Unicode is used)
 		// Taiwan release of Di Gi Charat Fantasy (Soundtrack Arrange CD)
-		// http://forum.redump.org/post/101001/#p101001
+		// https://forum.redump.info/viewtopic.php?p=26448#p26448
 		BYTE buf[] = {
 			0x1e, 0x02, 0x00, 0x00,
 			0x80, 0x00, 0x00, 0x80, 0xb0, 0x65, 0x57, 0x30, 0x44, 0x30, 0xbf, 0x30, 0xa4, 0x30, 0xc8, 0x30, 0x06, 0x57,
@@ -1052,7 +1052,7 @@ BOOL ReadCacheForLgAsus(
 ) {
 	CONST DWORD dwBufSize = F1_BUFFER_SIZE * F1_READ_SECTOR_SIZE;
 	BYTE aBuf[dwBufSize] = {};
-	// http://forum.redump.org/post/72629/#p72629
+	// https://forum.redump.info/viewtopic.php?p=25299#p25299
 	// F1 06 xx xx xx xx yy yy yy yy
 	// xx - address to read
 	// yy - length of data to return

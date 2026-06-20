@@ -17,8 +17,8 @@
 
 . can't get a drive name when use a part of IDE to USB adapter.
 
-. Plextor sometimes shifts some bytes when dumps the disc. http://forum.redump.org/post/91259/#p91259
+. Plextor sometimes shifts some bytes when dumps the disc. https://forum.redump.info/viewtopic.php?p=26118#p26118
 
-. C2 error pointer is not perfect. http://forum.redump.org/post/90835/#p90835
+. C2 error pointer is not perfect. https://forum.redump.info/viewtopic.php?p=26105#p26105
 
-. can not capture the console correctly. http://forum.redump.org/post/90764/#p90764
+. can not capture the console correctly. https://forum.redump.info/viewtopic.php?p=26096#p26096

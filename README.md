@@ -9,7 +9,7 @@
   [MPF](https://github.com/SabreTools/MPF) can work this program with GUI.
 
 ## Bug report
- To: http://forum.redump.org/topic/10483/discimagecreator/  
+ To: https://forum.redump.info/viewtopic.php?t=7568
   or  
  To: https://github.com/saramibreak/DiscImageCreator/issues
 
@@ -35,7 +35,7 @@
    - ASUS
      - BC-12D2HT (Combined offset minus disc only), BW-16D1HT (ditto)
        - BW-16D1HT Firmware 3.02 supports the combined offset plus disc  
-       See also http://wiki.redump.org/index.php?title=Optical_Disc_Drive_Compatibility#Non-Plextor_ODDs_.28Plextors_are_preferable.2C_as_more_testing_is_needed_for_these.29
+       See also https://wiki.redump.info/Optical_Disc_Drives:_CD_Compatibility_Technical_Details#MediaTek_Blu-ray_Drives
    - Hitachi-LG
      - UH12NS30 (Combined offset minus disc only)
 - CD: (Swappable drive) (This is the comfirmed drive list. Actually, many drive perhaps supports to swap)
@@ -46,7 +46,7 @@
 - GD:
    - TSSTcorp
      - TS-H353A, TS-H352C, TS-H192C
-     - http://forum.redump.org/post/14552/#p14552 <- This drive might be supported too.
+     - https://forum.redump.info/viewtopic.php?p=3524#p3524 <- This drive might be supported too.
 - DVD: All supported drive
 - DVD (Raw): 
      - PLEXTOR (No OEM Drive)
@@ -55,7 +55,7 @@
        - LH-18A1P
      - ASUS/LG
        - BW-16D1HT, BC-12D2HT etc. (Firmware 3.02 is needed.)
-       See also http://wiki.redump.org/index.php?title=Optical_Disc_Drive_Compatibility#Non-Plextor_ODDs_.28Plextors_are_preferable.2C_as_more_testing_is_needed_for_these.29
+       See also https://wiki.redump.info/Optical_Disc_Drives:_CD_Compatibility_Technical_Details#MediaTek_Blu-ray_Drives
      - Other
        - See "DVDRawBruteforce - Drive Sheet - Sheet1.tsv" in the Release_ANSI folder
 - GC/Wii
@@ -197,7 +197,7 @@ See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)
      => These needs DPM(Data position measurement). cue, ccd doesn't support DPM.
         You need to use the [Alcohol 120/52%](http://www.alcohol-soft.com/) to store it, 
   - Alpha-ROM, ROOT, TAGES [duplicated(double, triple) sector]  
-     => It can read in reverse, but specifications are not decided in redump.org
+     => It can read in reverse, but specifications are not decided in redump
 
   Nintendo Wii U
    => This is a BD based disc, but I don't know the details.
@@ -371,4 +371,4 @@ See LICENSE
  Trouble in regard to the use of this tool, I can not guarantee any.
 
 ## Gratitude
- Thank's redump.org users.
+ Thank's redump users.
