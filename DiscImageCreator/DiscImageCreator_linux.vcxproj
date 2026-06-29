@@ -66,14 +66,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ProjectPublicIncludePath>
     </ProjectPublicIncludePath>
-    <IncludePath>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\_external;$(IncludePath)</IncludePath>
+    <IncludePath>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\_external;$(MSBuildProjectDirectory)\_linux;$(IncludePath)</IncludePath>
     <TargetName>DiscImageCreator</TargetName>
     <LibraryPath>
     </LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetName>DiscImageCreator</TargetName>
-    <IncludePath>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\_external;$(IncludePath)</IncludePath>
+    <IncludePath>$(MSBuildProjectDirectory);$(MSBuildProjectDirectory)\_external;$(MSBuildProjectDirectory)\_linux;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="calcHash.cpp" />
@@ -355,26 +355,47 @@
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <ForcedIncludeFiles>$(ProjectDir)_linux/defineForLinux.h</ForcedIncludeFiles>
+      <ForcedIncludeFiles>
+      </ForcedIncludeFiles>
       <CAdditionalWarning>extra;no-unknown-pragmas;%(CAdditionalWarning)</CAdditionalWarning>
       <CppAdditionalWarning>extra;no-unknown-pragmas;cast-align;cast-qual;conditionally-supported;disabled-optimization;double-promotion;float-equal;format=2;format-signedness;init-self;inline;invalid-pch;logical-op;missing-include-dirs;multichar;noexcept;overlength-strings;packed;pointer-arith;redundant-decls;shadow;stack-protector;strict-aliasing=2;strict-null-sentinel;switch-default;switch-enum;trampolines;variadic-macros;vector-operation-performance;write-strings;unused-macros;%(CppAdditionalWarning)</CppAdditionalWarning>
       <Optimization>MaxSpeed</Optimization>
       <DebugInformationFormat>None</DebugInformationFormat>
     </ClCompile>
     <PreBuildEvent>
-      <Command>CreateBuildDateTime.bat</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <PreBuildEvent>
-      <Message>CreateBuildDateTime.h</Message>
+      <Message>
+      </Message>
     </PreBuildEvent>
     <Link>
       <AdditionalDependencies>-larchive;-lz;-lcrypto;-lssl;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>/usr/lib/x86_64-linux-gnu;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <CustomBuildStep>
+      <Command>
+      </Command>
+    </CustomBuildStep>
+    <RemotePreBuildEvent>
+      <Command>/usr/bin/env echo "#pragma once" &gt;buildDateTime.h
+/usr/bin/env echo &gt;&gt;buildDateTime.h
+/usr/bin/env echo -n "#define BUILD_DATE \"" &gt;&gt;buildDateTime.h
+date +%Y%m%d | tr -d '\n' &gt;&gt;buildDateTime.h
+/usr/bin/env echo "\"" &gt;&gt;buildDateTime.h
+/usr/bin/env echo -n "#define BUILD_TIME \"" &gt;&gt;buildDateTime.h
+date +%H%M%S | tr -d '\n' &gt;&gt;buildDateTime.h
+/usr/bin/env echo "\"" &gt;&gt;buildDateTime.h</Command>
+    </RemotePreBuildEvent>
+    <RemotePreBuildEvent>
+      <Message>generate buildDateTime.h</Message>
+    </RemotePreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <ForcedIncludeFiles>$(ProjectDir)_linux/defineForLinux.h</ForcedIncludeFiles>
+      <ForcedIncludeFiles>
+      </ForcedIncludeFiles>
       <CAdditionalWarning>no-unknown-pragmas;%(CAdditionalWarning)</CAdditionalWarning>
       <CppAdditionalWarning>no-unknown-pragmas;%(CppAdditionalWarning)</CppAdditionalWarning>
     </ClCompile>
@@ -386,6 +407,17 @@
       <Command>CreateBuildDateTime.bat</Command>
       <Message>CreateBuildDateTime.h</Message>
     </PreBuildEvent>
+    <RemotePreBuildEvent>
+      <Command>/usr/bin/env echo "#pragma once" &gt;buildDateTime.h
+/usr/bin/env echo &gt;&gt;buildDateTime.h
+/usr/bin/env echo -n "#define BUILD_DATE \"" &gt;&gt;buildDateTime.h
+date +%Y%m%d | tr -d '\n' &gt;&gt;buildDateTime.h
+/usr/bin/env echo "\"" &gt;&gt;buildDateTime.h
+/usr/bin/env echo -n "#define BUILD_TIME \"" &gt;&gt;buildDateTime.h
+date +%H%M%S | tr -d '\n' &gt;&gt;buildDateTime.h
+/usr/bin/env echo "\"" &gt;&gt;buildDateTime.h</Command>
+      <Message>generate buildDateTime.h</Message>
+    </RemotePreBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
