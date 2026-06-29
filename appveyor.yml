@@ -1,0 +1,149 @@
+version: 1.0.{build}
+image:
+- Visual Studio 2017
+- Ubuntu2404
+- macOS-Catalina
+build_script:
+- pwsh: >-
+    Write-Host "IMAGE=$env:APPVEYOR_BUILD_WORKER_IMAGE"
+
+
+    if ($env:APPVEYOR_BUILD_WORKER_IMAGE -eq "Visual Studio 2017") {
+        $vcvars = "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
+
+        $sdkBase = "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\SDK\ScopeCppSDK\SDK"
+        $includeDirs = @(
+            "$sdkBase\include\shared",
+            "$sdkBase\include\um"
+        ) | Where-Object { Test-Path $_ }
+
+        $buildDateTimeHeader = Join-Path $env:APPVEYOR_BUILD_FOLDER "DiscImageCreator\buildDateTime.h"
+
+        $jst = [System.TimeZoneInfo]::ConvertTimeBySystemTimeZoneId(
+            [DateTime]::UtcNow,
+            "Tokyo Standard Time"
+        )
+
+        $buildDate = $jst.ToString("yyyyMMdd")
+        $buildTime = $jst.ToString("HHmmss")
+
+        $headerLines = @(
+            "#pragma once",
+            "",
+            "#define BUILD_DATE `"$buildDate`"",
+            "#define BUILD_TIME `"$buildTime`""
+        )
+
+        Set-Content -Path $buildDateTimeHeader -Value $headerLines -Encoding ASCII
+
+        Write-Host "Generated $buildDateTimeHeader"
+        Get-Content $buildDateTimeHeader | ForEach-Object {
+            Write-Host $_
+        }
+
+        $zlibVersion = "1.3.2"
+        $ciRoot = Join-Path $env:APPVEYOR_BUILD_FOLDER "_ci"
+        $zlibRoot = Join-Path $ciRoot "zlib-$zlibVersion"
+        $zlibArchive = Join-Path $ciRoot "zlib-$zlibVersion.tar.gz"
+        $zlibTar = Join-Path $ciRoot "zlib-$zlibVersion.tar"
+
+        New-Item -ItemType Directory -Force -Path $ciRoot | Out-Null
+
+        if (!(Test-Path $zlibRoot)) {
+            Write-Host "Downloading zlib $zlibVersion"
+            Invoke-WebRequest -Uri "https://zlib.net/zlib-$zlibVersion.tar.gz" -OutFile $zlibArchive
+
+            7z x $zlibArchive "-o$ciRoot" -y
+            7z x $zlibTar "-o$ciRoot" -y
+        }
+
+        Write-Host "Building zlib with Visual Studio 2017 vcvars32"
+        Push-Location $zlibRoot
+
+        cmd /c "call `"$vcvars`" && nmake -f win32\Makefile.msc"
+        if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+        }
+
+        Pop-Location
+
+        $includeDirs += $zlibRoot
+
+        $env:CL = ($includeDirs | ForEach-Object { "/I`"$_`"" }) -join " "
+        $env:INCLUDE = (($includeDirs -join ";") + ";" + $env:INCLUDE)
+        $env:LIB = "$zlibRoot;$env:LIB"
+        $env:LINK = "/LIBPATH:`"$zlibRoot`" zlib.lib $env:LINK"
+
+        Write-Host "Using include dirs:"
+        foreach ($dir in $includeDirs) {
+            Write-Host "  $dir"
+        }
+
+        Write-Host "CL=$env:CL"
+        Write-Host "LIB=$env:LIB"
+        Write-Host "LINK=$env:LINK"
+
+        cmd /c "call `"$vcvars`" && msbuild DiscImageCreator.sln /m /p:Configuration=Release_ANSI /p:Platform=Win32 /p:PlatformToolset=v141_xp /v:m"
+    }
+
+    elseif ($env:APPVEYOR_BUILD_WORKER_IMAGE -eq "Ubuntu2404") {
+        bash -lc "set -e; sudo apt-get update; sudo apt-get install -y meson ninja-build pkg-config libarchive-dev zlib1g-dev libssl-dev; meson setup build --buildtype=release; meson compile -C build; mkdir -p artifacts; cp build/DiscImageCreator artifacts/DiscImageCreator; chmod +x artifacts/DiscImageCreator; ls -l artifacts; file artifacts/DiscImageCreator"
+    }
+
+    elseif ($env:APPVEYOR_BUILD_WORKER_IMAGE -eq "macOS-Catalina") {
+        $macScript = @'
+    set -e
+
+
+    export CI=1
+
+    export NONINTERACTIVE=1
+
+    export HOMEBREW_NO_AUTO_UPDATE=1
+
+    export HOMEBREW_NO_INSTALL_CLEANUP=1
+
+    export HOMEBREW_NO_ENV_HINTS=1
+
+
+    brew install meson ninja pkg-config libarchive openssl@3 zlib
+
+
+    export PKG_CONFIG_PATH="/usr/local/opt/libarchive/lib/pkgconfig:/usr/local/opt/openssl@3/lib/pkgconfig:/usr/local/opt/zlib/lib/pkgconfig:$PKG_CONFIG_PATH"
+
+    export CPPFLAGS="-I/usr/local/opt/libarchive/include -I/usr/local/opt/openssl@3/include -I/usr/local/opt/zlib/include $CPPFLAGS"
+
+    export LDFLAGS="-L/usr/local/opt/libarchive/lib -L/usr/local/opt/openssl@3/lib -L/usr/local/opt/zlib/lib $LDFLAGS"
+
+
+    meson setup build --buildtype=release
+
+    meson compile -C build
+
+
+    mkdir -p artifacts
+
+    cp build/DiscImageCreator artifacts/DiscImageCreator
+
+    chmod +x artifacts/DiscImageCreator
+
+    ls -l artifacts
+
+    file artifacts/DiscImageCreator
+
+    '@
+
+        bash -lc $macScript
+    }
+
+    else {
+        Write-Host "Unknown image"
+        exit 1
+    }
+artifacts:
+- path: Release_ANSI\DiscImageCreator.exe
+  name: DiscImageCreator
+- path: artifacts/DiscImageCreator
+  name: DiscImageCreator
+- path: artifacts/DiscImageCreator
+  name: DiscImageCreator
