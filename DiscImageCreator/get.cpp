@@ -50,6 +50,12 @@ BOOL GetHandle(
 #elif defined(__linux__)
 	pDevice->hDevice = open(pDevice->drivepath, O_RDWR | O_EXCL | O_NONBLOCK, 0777);
 	if (pDevice->hDevice == -1) {
+		// Write-protected / read-only media (e.g. a write-protected floppy)
+		// rejects O_RDWR with EROFS. Dumping only needs read access, so fall
+		// back to read-only; setDiscSpeed (which needs write) is then skipped.
+		pDevice->hDevice = open(pDevice->drivepath, O_RDONLY | O_EXCL | O_NONBLOCK, 0777);
+	}
+	if (pDevice->hDevice == -1) {
 #elif defined(__APPLE__) && defined(__MACH__)
 	pDevice->hDevice = GetSCSITaskInterface(pDevice->drivepath);
 	if (pDevice->hDevice == NULL) {
