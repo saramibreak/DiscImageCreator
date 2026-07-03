@@ -623,6 +623,15 @@ int DeviceIoControl(int fd, unsigned long ioCtlCode, void* inbuf, unsigned long 
 	UNREFERENCED_PARAMETER(d);
 	UNREFERENCED_PARAMETER(e);
 	PSCSI_PASS_THROUGH_DIRECT_WITH_BUFFER p = (PSCSI_PASS_THROUGH_DIRECT_WITH_BUFFER)inbuf;
+	if (p == NULL) {
+		// This Linux shim only implements the SCSI pass-through path, which
+		// requires a PSCSI_PASS_THROUGH_DIRECT_WITH_BUFFER input buffer.
+		// Callers that pass no buffer (e.g. the disk-geometry ioctls used by
+		// DiskGetMediaTypes for floppy media) would otherwise dereference NULL
+		// and crash; report failure instead.
+		SetLastError(EINVAL);
+		return FALSE;
+	}
 	int ret = ioctl(fd, ioCtlCode, &(p->io_hdr));
 	memcpy(&(p->SenseData), p->Dummy, 18);
 	ret = ret != -1 ? TRUE : FALSE;
