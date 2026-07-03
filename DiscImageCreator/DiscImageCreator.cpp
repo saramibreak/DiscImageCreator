@@ -172,7 +172,7 @@ int execForDumping(PEXEC_TYPE pExecType, PEXT_ARG pExtArg, _TCHAR* pszFullPath, 
 		make_crc_table();
 		HASH hash = {};
 		hash.uiMax = 0;
-		if (*pExecType == disk) {
+		if (*pExecType == fd || *pExecType == disk) {
 			hash.uiMax = 1; // .bin
 		}
 		else if (*pExecType == bd) {

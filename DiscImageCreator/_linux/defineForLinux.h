@@ -2240,6 +2240,7 @@ typedef struct _AACS_READ_BINDING_NONCE {
 #include <sys/statvfs.h>
 #if defined(__linux__)
 #include <linux/cdrom.h>
+#include <linux/fs.h>
 #include <linux/iso_fs.h>
 #include <linux/mmc/ioctl.h>
 #include <scsi/scsi.h>

@@ -21,12 +21,62 @@
 #include "outputIoctlLog.h"
 #include "outputFileSystem.h"
 
+#if defined(__linux__)
+// Well-known PC floppy formats. Windows fills the C/H/S fields of DISK_GEOMETRY
+// from the driver; Linux only exposes the total size and sector size (via
+// BLKGETSIZE64 / BLKSSZGET), so map the common sizes back to a realistic C/H/S
+// purely so the logged geometry matches Windows. The dump itself relies only on
+// the total size and sector size (see ReadDisk/Read10), never on C/H/S.
+static const struct {
+	DWORD64 u64Size;
+	MEDIA_TYPE mediaType;
+	UINT Cylinders;
+	UINT TracksPerCylinder;
+	UINT SectorsPerTrack;
+} s_FloppyGeometry[] = {
+	{ 1474560, F3_1Pt44_512, 80, 2, 18 }, // 3.5"  1.44MB
+	{ 2949120, F3_2Pt88_512, 80, 2, 36 }, // 3.5"  2.88MB
+	{  737280, F3_720_512,   80, 2,  9 }, // 3.5"  720KB
+	{ 1228800, F5_1Pt2_512,  80, 2, 15 }, // 5.25" 1.2MB
+	{  368640, F5_360_512,   40, 2,  9 }, // 5.25" 360KB
+	{  327680, F5_320_512,   40, 2,  8 }, // 5.25" 320KB
+	{  184320, F5_180_512,   40, 1,  9 }, // 5.25" 180KB
+	{  163840, F5_160_512,   40, 1,  8 }, // 5.25" 160KB
+};
+
+static void SetDiskGeometryForLinux(
+	DWORD64 u64DiskSize,
+	UINT uiSectorSize,
+	PDISK_GEOMETRY pGeom
+) {
+	pGeom->BytesPerSector = uiSectorSize;
+	for (size_t i = 0; i < SIZE_OF_ARRAY(s_FloppyGeometry); i++) {
+		if (s_FloppyGeometry[i].u64Size == u64DiskSize) {
+			pGeom->MediaType = s_FloppyGeometry[i].mediaType;
+			pGeom->Cylinders.QuadPart = s_FloppyGeometry[i].Cylinders;
+			pGeom->TracksPerCylinder = s_FloppyGeometry[i].TracksPerCylinder;
+			pGeom->SectorsPerTrack = s_FloppyGeometry[i].SectorsPerTrack;
+			return;
+		}
+	}
+	// Unknown medium: describe it as a single long track so that
+	// Cylinders * TracksPerCylinder * SectorsPerTrack * BytesPerSector still
+	// equals the true size.
+	pGeom->MediaType = RemovableMedia;
+	pGeom->TracksPerCylinder = 1;
+	pGeom->SectorsPerTrack = 1;
+	pGeom->Cylinders.QuadPart =
+		uiSectorSize ? (LONGLONG)(u64DiskSize / uiSectorSize) : 0;
+}
+#endif
+
 // ref: http://www.ioctls.net/
 BOOL DiskGetMediaTypes(
 	PDEVICE pDevice,
 	PDISC pDisc,
 	PDWORD64 pDiskSize
 ) {
+#if defined(_WIN32)
 	DISK_GEOMETRY geom[20] = {};
 	DWORD dwReturned = 0;
 	BOOL bRet = DeviceIoControl(pDevice->hDevice,
@@ -50,6 +100,38 @@ BOOL DiskGetMediaTypes(
 		pDisc->dwBytesPerSector = geom[0].BytesPerSector;
 	}
 	return bRet;
+#elif defined(__linux__)
+	// Windows reports floppy/disk geometry through IOCTL_DISK_GET_DRIVE_GEOMETRY,
+	// which has no direct Linux equivalent. Use the generic block-device ioctls
+	// instead: BLKGETSIZE64 returns the medium size in bytes and BLKSSZGET the
+	// logical sector size. Those two values are all the dump needs.
+	DWORD64 u64DiskSize = 0;
+	if (ioctl(pDevice->hDevice, BLKGETSIZE64, &u64DiskSize) == -1) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		return FALSE;
+	}
+	INT nSectorSize = 0;
+	if (ioctl(pDevice->hDevice, BLKSSZGET, &nSectorSize) == -1 || nSectorSize <= 0) {
+		OutputLastErrorNumAndString(_T(__FUNCTION__), __LINE__);
+		return FALSE;
+	}
+	DISK_GEOMETRY geom = {};
+	SetDiskGeometryForLinux(u64DiskSize, (UINT)nSectorSize, &geom);
+	OutputDiscLog(
+		OUTPUT_DHYPHEN_PLUS_STR("DISK_GEOMETRY")
+		"CurrentMediaType\n");
+	OutputDiskGeometry(&geom, 1);
+	*pDiskSize = u64DiskSize;
+	pDisc->dwBytesPerSector = (DWORD)nSectorSize;
+	return TRUE;
+#else
+	// Floppy/disk dumping via disk-geometry ioctls is not supported on this
+	// platform (e.g. macOS).
+	UNREFERENCED_PARAMETER(pDevice);
+	UNREFERENCED_PARAMETER(pDisc);
+	UNREFERENCED_PARAMETER(pDiskSize);
+	return FALSE;
+#endif
 }
 
 BOOL StorageGetMediaTypesEx(
