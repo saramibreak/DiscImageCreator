@@ -2252,6 +2252,7 @@ typedef struct _AACS_READ_BINDING_NONCE {
 #include <IOKit/IOBSD.h>
 #include <IOKit/IOKitLib.h>
 #include <IOKit/scsi/SCSITaskLib.h>
+#include <IOKit/storage/IOStorageDeviceCharacteristics.h>
 #define ENUM_DYLD_BOOL 1
 #include <mach-o/dyld.h>
 #endif
@@ -2498,6 +2499,22 @@ off_t SetFilePointer(int fd, off_t pos, void* a, int origin);
 
 off64_t SetFilePointerEx(int fd, LARGE_INTEGER pos, void* a, int origin);
 #elif defined(__APPLE__) && defined(__MACH__)
+#define MAX_AUTHORING_DEVICE_NUM	16
+
+typedef struct _AUTHORING_DEVICE {
+	io_service_t service;
+	char bsdName[16];    // "disk4". Empty while the drive holds no disc.
+	char driveName[80];  // "PLEXTOR DVDR   PX-760A". There with or without a disc.
+} AUTHORING_DEVICE, *PAUTHORING_DEVICE;
+
+void CopyTrimmedProperty(CFStringRef src, char* dst, size_t dstSize);
+
+void GetDriveBSDName(io_service_t service, char* dst, size_t dstSize);
+
+void GetDriveName(io_service_t service, char* dst, size_t dstSize);
+
+void OutputAvailableDrives(PAUTHORING_DEVICE pDevices, int nDeviceNum);
+
 SCSITaskInterface** GetSCSITaskInterface(char* path);
 
 int CloseHandle(SCSITaskInterface** task);

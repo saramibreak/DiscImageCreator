@@ -665,12 +665,76 @@ IOCFPlugInInterface** plugInInterface;
 MMCDeviceInterface** mmcInterface;
 SCSITaskDeviceInterface** interface;
 
+// Copies an IOKit string property, without the padding spaces it is stored with.
+void CopyTrimmedProperty(CFStringRef src, char* dst, size_t dstSize)
+{
+	dst[0] = 0;
+	if (!src || CFGetTypeID(src) != CFStringGetTypeID()
+		|| !CFStringGetCString(src, dst, (CFIndex)dstSize, kCFStringEncodingUTF8)) {
+		return;
+	}
+	size_t len = strlen(dst);
+	while (len > 0 && isspace((unsigned char)dst[len - 1])) {
+		dst[--len] = 0;
+	}
+}
+
+// The BSD name ("disk4") is not a property of the SCSI peripheral device. It belongs to the
+// IOMedia object that the block storage stack publishes below it, so it has to be searched
+// for recursively - and it only exists while a disc is loaded.
+void GetDriveBSDName(io_service_t service, char* dst, size_t dstSize)
+{
+	CFStringRef name = (CFStringRef)IORegistryEntrySearchCFProperty(service, kIOServicePlane
+		, CFSTR(kIOBSDNameKey), kCFAllocatorDefault, kIORegistryIterateRecursively);
+	CopyTrimmedProperty(name, dst, dstSize);
+	if (name) {
+		CFRelease(name);
+	}
+}
+
+// Vendor and product of the drive itself ("PLEXTOR DVDR   PX-760A"). Unlike the BSD name
+// this is there whether or not a disc is loaded, so it can also name an empty drive.
+void GetDriveName(io_service_t service, char* dst, size_t dstSize)
+{
+	dst[0] = 0;
+	CFDictionaryRef characteristics = (CFDictionaryRef)IORegistryEntrySearchCFProperty(
+		service, kIOServicePlane, CFSTR(kIOPropertyDeviceCharacteristicsKey)
+		, kCFAllocatorDefault, kIORegistryIterateRecursively | kIORegistryIterateParents);
+	if (!characteristics) {
+		return;
+	}
+	if (CFGetTypeID(characteristics) == CFDictionaryGetTypeID()) {
+		char vendor[16] = {};
+		char product[64] = {};
+		CopyTrimmedProperty((CFStringRef)CFDictionaryGetValue(
+			characteristics, CFSTR(kIOPropertyVendorNameKey)), vendor, sizeof(vendor));
+		CopyTrimmedProperty((CFStringRef)CFDictionaryGetValue(
+			characteristics, CFSTR(kIOPropertyProductNameKey)), product, sizeof(product));
+		// ATA drives report no vendor, everything is in the product name.
+		snprintf(dst, dstSize, "%s%s%s", vendor, vendor[0] && product[0] ? " " : "", product);
+	}
+	CFRelease(characteristics);
+}
+
+void OutputAvailableDrives(PAUTHORING_DEVICE pDevices, int nDeviceNum)
+{
+	if (nDeviceNum == 0) {
+		fprintf(stderr, "No drive supports SCSITaskAuthoringDevice\n");
+		return;
+	}
+	fprintf(stderr, "Available drive:\n");
+	for (int i = 0; i < nDeviceNum; i++) {
+		fprintf(stderr, "\t%-9s %s\n"
+			, pDevices[i].bsdName[0] ? pDevices[i].bsdName : "(no disc)", pDevices[i].driveName);
+	}
+}
+
 SCSITaskInterface** GetSCSITaskInterface(char* path)
 {
-	const char* bsdName = path;
+	const char* requested = path;
 	const char* slash = strrchr(path, '/');
 	if (slash) {
-		bsdName = slash + 1;   // "/dev/disk2" -> "disk2"
+		requested = slash + 1;   // "/dev/disk2" -> "disk2"
 	}
 	// Create the dictionaries
 	CFMutableDictionaryRef matchingDict = CFDictionaryCreateMutable(
@@ -694,36 +758,72 @@ SCSITaskInterface** GetSCSITaskInterface(char* path)
 		fprintf(stderr, "IOServiceGetMatchingServices failed: 0x%x\n", err);
 		return NULL;
 	}
-	io_service_t service = IO_OBJECT_NULL;
+	// The matching dictionary already asked for SCSITaskAuthoringDevice, so everything the
+	// iterator returns is one. Collect them all: the requested drive has to be picked out of
+	// them, and if it is not among them the others are worth reporting.
+	AUTHORING_DEVICE devices[MAX_AUTHORING_DEVICE_NUM] = {};
+	int nDeviceNum = 0;
 	io_service_t tmp;
 	while ((tmp = IOIteratorNext(iterator))) {
-		io_name_t service_class = "";
-		io_string_t service_path = "";
-		IORegistryEntryGetPath(tmp, kIOServicePlane, service_path);
-		IOObjectGetClass(tmp, service_class);
-
-		CFStringRef cat = (CFStringRef)IORegistryEntryCreateCFProperty(
-			tmp, CFSTR(kIOPropertySCSITaskDeviceCategory), kCFAllocatorDefault, 0);
-		if (cat) {
-			char buf[128];
-			if (CFStringGetCString(cat, buf, sizeof(buf), kCFStringEncodingUTF8)) {
-				if (strcmp(buf, kIOPropertySCSITaskAuthoringDevice) == 0) {
-					printf("Class: %s\nPath: %s\n", service_class, service_path);
-					service = tmp;
-					CFRelease(cat);
-					break;
-				}
-			}
-			CFRelease(cat);
+		if (nDeviceNum == MAX_AUTHORING_DEVICE_NUM) {
+			IOObjectRelease(tmp);
+			continue;
 		}
-
-		IOObjectRelease(tmp);
+		devices[nDeviceNum].service = tmp;
+		GetDriveBSDName(tmp, devices[nDeviceNum].bsdName, sizeof(devices[nDeviceNum].bsdName));
+		GetDriveName(tmp, devices[nDeviceNum].driveName, sizeof(devices[nDeviceNum].driveName));
+		nDeviceNum++;
 	}
 	IOObjectRelease(iterator);
-	if (!service) {
-		fprintf(stderr, "Not found SCSITaskAuthoringDevice\n");
+
+	// A loaded disc gives the drive a BSD name, which is unambiguous. Prefer it.
+	int nSelected = -1;
+	for (int i = 0; i < nDeviceNum; i++) {
+		if (devices[i].bsdName[0] && strcmp(devices[i].bsdName, requested) == 0) {
+			nSelected = i;
+			break;
+		}
+	}
+	// An empty drive has no BSD name, so eject/close/start/stop would have nothing to
+	// address it by. Match on the drive name for those, and refuse if it is not unique.
+	if (nSelected == -1) {
+		int nMatchNum = 0;
+		for (int i = 0; i < nDeviceNum; i++) {
+			if (devices[i].driveName[0] && strcasestr(devices[i].driveName, requested)) {
+				nSelected = i;
+				nMatchNum++;
+			}
+		}
+		if (nMatchNum > 1) {
+			fprintf(stderr, "Ambiguous drive: %s\n", requested);
+			OutputAvailableDrives(devices, nDeviceNum);
+			for (int i = 0; i < nDeviceNum; i++) {
+				IOObjectRelease(devices[i].service);
+			}
+			return NULL;
+		}
+	}
+	if (nSelected == -1) {
+		fprintf(stderr, "Not found the drive: %s\n", requested);
+		OutputAvailableDrives(devices, nDeviceNum);
+		for (int i = 0; i < nDeviceNum; i++) {
+			IOObjectRelease(devices[i].service);
+		}
 		return NULL;
 	}
+
+	io_service_t service = devices[nSelected].service;
+	for (int i = 0; i < nDeviceNum; i++) {
+		if (i != nSelected) {
+			IOObjectRelease(devices[i].service);
+		}
+	}
+	io_name_t service_class = "";
+	io_string_t service_path = "";
+	IOObjectGetClass(service, service_class);
+	IORegistryEntryGetPath(service, kIOServicePlane, service_path);
+	printf("Class: %s\nPath: %s\n", service_class, service_path);
+
 	CFTypeRef prop = IORegistryEntryCreateCFProperty(service, CFSTR("IOCFPlugInTypes"), kCFAllocatorDefault, 0);
 	if (!prop) {
 	    fprintf(stderr, "Not found IOCFPlugInTypes\n");
@@ -733,12 +833,16 @@ SCSITaskInterface** GetSCSITaskInterface(char* path)
 	    CFRelease(prop);
 	}
 
-	char unmountCmd[256];
-	snprintf(unmountCmd, sizeof(unmountCmd),
-		"diskutil unmountDisk %s > /dev/null", bsdName);
-	printf("unmountCmd: %s\n", unmountCmd);
-	if (system(unmountCmd) != 0) {
-		fprintf(stderr, "Failed: system(unmountDisk)\n");
+	// Unmount the drive that is about to be opened. There is nothing to unmount when it
+	// holds no disc, and ObtainExclusiveAccess fails on a drive that is still mounted.
+	if (devices[nSelected].bsdName[0]) {
+		char unmountCmd[256];
+		snprintf(unmountCmd, sizeof(unmountCmd),
+			"diskutil unmountDisk %s > /dev/null", devices[nSelected].bsdName);
+		printf("unmountCmd: %s\n", unmountCmd);
+		if (system(unmountCmd) != 0) {
+			fprintf(stderr, "Failed: system(unmountDisk)\n");
+		}
 	}
 
 	SInt32        score;
