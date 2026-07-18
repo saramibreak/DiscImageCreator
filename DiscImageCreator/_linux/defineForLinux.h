@@ -13,7 +13,7 @@ typedef unsigned short      UINT16, *PUINT16;
 typedef unsigned int        UINT32, *PUINT32;
 typedef unsigned long long  UINT64, *PUINT64, ULONGLONG;
 
-#if defined(__x86_64__)
+#if __SIZEOF_POINTER__ == 8
 typedef long long INT_PTR, *PINT_PTR;
 typedef unsigned long long UINT_PTR, *PUINT_PTR;
 
