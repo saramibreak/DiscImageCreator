@@ -2,7 +2,7 @@ version: 1.0.{build}
 image:
 - Visual Studio 2017
 - Ubuntu2404
-- macOS-Catalina
+- macos-mojave
 build_script:
 - pwsh: >-
     Write-Host "IMAGE=$env:APPVEYOR_BUILD_WORKER_IMAGE"
@@ -90,50 +90,124 @@ build_script:
         bash -lc "set -e; sudo apt-get update; sudo apt-get install -y meson ninja-build pkg-config libarchive-dev zlib1g-dev libssl-dev; meson setup build --buildtype=release; meson compile -C build; mkdir -p artifacts; cp build/DiscImageCreator artifacts/DiscImageCreator; chmod +x artifacts/DiscImageCreator; ls -l artifacts; file artifacts/DiscImageCreator"
     }
 
-    elseif ($env:APPVEYOR_BUILD_WORKER_IMAGE -eq "macOS-Catalina") {
-        $macScript = @'
-    set -e
+    elseif ($env:APPVEYOR_BUILD_WORKER_IMAGE -eq "macOS-Mojave") {
+        $ErrorActionPreference = "Stop"
 
+        $env:CI = "1"
+        $env:NONINTERACTIVE = "1"
+        $env:HOMEBREW_NO_AUTO_UPDATE = "1"
+        $env:HOMEBREW_NO_INSTALL_CLEANUP = "1"
+        $env:HOMEBREW_NO_ENV_HINTS = "1"
 
-    export CI=1
+        & brew install meson ninja pkg-config libarchive openssl@1.1 zlib
+        if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+        }
 
-    export NONINTERACTIVE=1
+        $libarchivePrefix = (& brew --prefix libarchive).Trim()
+        if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+        }
 
-    export HOMEBREW_NO_AUTO_UPDATE=1
+        $opensslPrefix = (& brew --prefix openssl@1.1).Trim()
+        if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+        }
 
-    export HOMEBREW_NO_INSTALL_CLEANUP=1
+        $zlibPrefix = (& brew --prefix zlib).Trim()
+        if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+        }
 
-    export HOMEBREW_NO_ENV_HINTS=1
+        Write-Host "libarchive prefix: $libarchivePrefix"
+        Write-Host "OpenSSL prefix:    $opensslPrefix"
+        Write-Host "zlib prefix:       $zlibPrefix"
 
+        $pkgConfigPaths = @(
+            "$libarchivePrefix/lib/pkgconfig",
+            "$opensslPrefix/lib/pkgconfig",
+            "$zlibPrefix/lib/pkgconfig"
+        )
 
-    brew install meson ninja pkg-config libarchive openssl@3 zlib
+        if ($env:PKG_CONFIG_PATH) {
+            $pkgConfigPaths += $env:PKG_CONFIG_PATH
+        }
 
+        $env:PKG_CONFIG_PATH = $pkgConfigPaths -join ":"
 
-    export PKG_CONFIG_PATH="/usr/local/opt/libarchive/lib/pkgconfig:/usr/local/opt/openssl@3/lib/pkgconfig:/usr/local/opt/zlib/lib/pkgconfig:$PKG_CONFIG_PATH"
+        $cppFlags = @(
+            "-I$libarchivePrefix/include",
+            "-I$opensslPrefix/include",
+            "-I$zlibPrefix/include"
+        )
 
-    export CPPFLAGS="-I/usr/local/opt/libarchive/include -I/usr/local/opt/openssl@3/include -I/usr/local/opt/zlib/include $CPPFLAGS"
+        if ($env:CPPFLAGS) {
+            $cppFlags += $env:CPPFLAGS
+        }
 
-    export LDFLAGS="-L/usr/local/opt/libarchive/lib -L/usr/local/opt/openssl@3/lib -L/usr/local/opt/zlib/lib $LDFLAGS"
+        $env:CPPFLAGS = $cppFlags -join " "
 
+        $ldFlags = @(
+            "-L$libarchivePrefix/lib",
+            "-L$opensslPrefix/lib",
+            "-L$zlibPrefix/lib"
+        )
 
-    meson setup build --buildtype=release
+        if ($env:LDFLAGS) {
+            $ldFlags += $env:LDFLAGS
+        }
 
-    meson compile -C build
+        $env:LDFLAGS = $ldFlags -join " "
 
+        Write-Host "PKG_CONFIG_PATH=$env:PKG_CONFIG_PATH"
+        Write-Host "CPPFLAGS=$env:CPPFLAGS"
+        Write-Host "LDFLAGS=$env:LDFLAGS"
 
-    mkdir -p artifacts
+        Write-Host "--- dependency versions ---"
 
-    cp build/DiscImageCreator artifacts/DiscImageCreator
+        & pkg-config --modversion libarchive
+        if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+        }
 
-    chmod +x artifacts/DiscImageCreator
+        & pkg-config --modversion openssl
+        if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+        }
 
-    ls -l artifacts
+        & pkg-config --modversion zlib
+        if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+        }
 
-    file artifacts/DiscImageCreator
+        Write-Host "--- meson setup ---"
 
-    '@
+        & meson setup build --buildtype=release
+        if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+        }
 
-        bash -lc $macScript
+        Write-Host "--- meson compile ---"
+
+        & meson compile -C build
+        if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+        }
+
+        New-Item -ItemType Directory -Force -Path "artifacts" | Out-Null
+        Copy-Item "build/DiscImageCreator" "artifacts/DiscImageCreator" -Force
+
+        & chmod +x "artifacts/DiscImageCreator"
+        if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+        }
+
+        Get-ChildItem "artifacts"
+
+        & file "artifacts/DiscImageCreator"
+        if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+        }
     }
 
     else {

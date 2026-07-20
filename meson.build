@@ -109,10 +109,34 @@ executable(
 
 # copy assets into build directory for easier testing
 fs = import('fs')
-fs.copyfile('Release_ANSI/driveOffset.txt')
-fs.copyfile('Release_ANSI/default.dat')
-fs.copyfile('Release_ANSI/C2ErrorProtect.txt')
-fs.copyfile('Release_ANSI/ReadErrorProtect.txt')
+
+if meson.version().version_compare('>=0.64.0')
+  fs.copyfile('Release_ANSI/driveOffset.txt')
+  fs.copyfile('Release_ANSI/default.dat')
+  fs.copyfile('Release_ANSI/C2ErrorProtect.txt')
+  fs.copyfile('Release_ANSI/ReadErrorProtect.txt')
+else
+  configure_file(
+    input: 'Release_ANSI/driveOffset.txt',
+    output: 'driveOffset.txt',
+    copy: true,
+  )
+  configure_file(
+    input: 'Release_ANSI/default.dat',
+    output: 'default.dat',
+    copy: true,
+  )
+  configure_file(
+    input: 'Release_ANSI/C2ErrorProtect.txt',
+    output: 'C2ErrorProtect.txt',
+    copy: true,
+  )
+  configure_file(
+    input: 'Release_ANSI/ReadErrorProtect.txt',
+    output: 'ReadErrorProtect.txt',
+    copy: true,
+  )
+endif
 
 install_data(
   sources: [
