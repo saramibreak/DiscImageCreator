@@ -3087,9 +3087,11 @@ BOOL ReadCDOutOfRange(
 	PDISC_PER_SECTOR pDiscPerSector = &discPerSector;
 	BOOL bReread = FALSE;
 	BYTE bakSkipSubP = pExtArg->bySkipSubP;
+	BYTE bakSkipSubRtoW = pExtArg->bySkipSubRtoW;
 
 	pDiscPerSector->byTrackNum = pDisc->SCSI.toc.FirstTrack;
 	pExtArg->bySkipSubP = TRUE;
+	pExtArg->bySkipSubRtoW = TRUE;
 
 	INT nOverreadSize = pDisc->MAIN.nCombinedOffset / CD_RAW_SECTOR_SIZE;
 	if (pDisc->MAIN.nCombinedOffset < 0) {
@@ -3220,6 +3222,7 @@ BOOL ReadCDOutOfRange(
 
 		if (!bPregap || !bOK2ndSessionLeadin) {
 			pExtArg->bySkipSubP = bakSkipSubP;
+			pExtArg->bySkipSubRtoW = bakSkipSubRtoW;
 			return FALSE;
 		}
 
@@ -3767,5 +3770,6 @@ BOOL ReadCDOutOfRange(
 		}
 	}
 	pExtArg->bySkipSubP = bakSkipSubP;
+	pExtArg->bySkipSubRtoW = bakSkipSubRtoW;
 	return TRUE;
 }
