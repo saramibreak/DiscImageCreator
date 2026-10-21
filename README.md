@@ -291,7 +291,7 @@ See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)
   - zlib1g-dev, libarchive, libssl-dev
 
 - macOS
-  - MacOSX.sdk, libarchive, openssl@3
+  - MacOSX.sdk, libarchive
 
 ## License & Copyright
 See LICENSE  
