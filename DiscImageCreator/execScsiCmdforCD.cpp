@@ -3499,7 +3499,7 @@ BOOL ReadCDOutOfRange(
 			OutputLog(standardOut | fileDisc, "can't read\n");
 			return FALSE;
 		}
-		if (b1stPregapSector) {
+		if (bTrack1) {
 			AlignRowSubcode(pDiscPerSector->subcode.current, &aBuf[CD_RAW_SECTOR_SIZE]);
 			AlignRowSubcode(pDiscPerSector->subcode.next, &aBuf[CD_RAW_SECTOR_WITH_SUBCODE_SIZE + CD_RAW_SECTOR_SIZE]);
 
@@ -3512,7 +3512,7 @@ BOOL ReadCDOutOfRange(
 			AlignRowSubcode(lpSubcode, &aBuf[CD_RAW_SECTOR_SIZE]);
 			AlignRowSubcode(lpSubcodeNext, &aBuf[CD_RAW_SECTOR_WITH_SUBCODE_SIZE + CD_RAW_SECTOR_SIZE]);
 		}
-#if 0
+#ifdef _DEBUG
 		OutputCDSub96Align(standardOut, lpSubcode, i);
 #endif
 		BOOL bLastPregapSector = FALSE;
@@ -3588,9 +3588,9 @@ BOOL ReadCDOutOfRange(
 				}
 			}
 			else if (nOverreadSize == -3) {
-				fwrite(addr2, sizeof(BYTE), size, fpMain);
+				fwrite(addr, sizeof(BYTE), size, fpMain);
+				fwrite(addr2, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpMain);
 				fwrite(addr3, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpMain);
-				fwrite(addr4, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpMain);
 				fwrite(aBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpMain);
 				if ((pDisc->SCSI.toc.TrackData[0].Control & AUDIO_DATA_TRACK) == 0) {
 					bNonZeroByteExistIn = HasNonZeroByte(aBuf, CD_RAW_SECTOR_SIZE, 0, &uiByteOffsetIn, POSITIVE);
@@ -3600,8 +3600,8 @@ BOOL ReadCDOutOfRange(
 				}
 			}
 			else if (nOverreadSize == -2) {
-				fwrite(addr3, sizeof(BYTE), size, fpMain);
-				fwrite(addr4, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpMain);
+				fwrite(addr, sizeof(BYTE), size, fpMain);
+				fwrite(addr2, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpMain);
 				fwrite(aBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpMain);
 				if ((pDisc->SCSI.toc.TrackData[0].Control & AUDIO_DATA_TRACK) == 0) {
 					bNonZeroByteExistIn = HasNonZeroByte(aBuf, CD_RAW_SECTOR_SIZE, 0, &uiByteOffsetIn, POSITIVE);
@@ -3611,7 +3611,7 @@ BOOL ReadCDOutOfRange(
 				}
 			}
 			else if (nOverreadSize == -1) {
-				fwrite(addr4, sizeof(BYTE), size, fpMain);
+				fwrite(addr, sizeof(BYTE), size, fpMain);
 				fwrite(aBuf, sizeof(BYTE), CD_RAW_SECTOR_SIZE, fpMain);
 				if ((pDisc->SCSI.toc.TrackData[0].Control & AUDIO_DATA_TRACK) == 0) {
 					bNonZeroByteExistIn = HasNonZeroByte(aBuf, CD_RAW_SECTOR_SIZE, 0, &uiByteOffsetIn, POSITIVE);
