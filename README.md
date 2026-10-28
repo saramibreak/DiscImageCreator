@@ -351,8 +351,8 @@ See LICENSE
 
 - About Release_ANSI folder  
   driveOffset.txt.  
-    http://www.accuraterip.com/driveoffsets.htm  
-    Copyright 2023. All Rights Reserved.  
+    https://www.accuraterip.com/driveoffsets.htm  
+    Copyright © illustrate 2026, All Rights Reserved  
 
   DVDRawBruteforce - Drive Sheet - Sheet1  
     https://docs.google.com/spreadsheets/d/1pu3oXHRJ_qlyXrsHUyXOzD5mNp7dU8rgrfVuRBLyQFA/edit?pli=1#gid=0
