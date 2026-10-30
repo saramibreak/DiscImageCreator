@@ -1359,7 +1359,8 @@ BOOL FixSubChannel(
 	PDISC pDisc,
 	PDISC_PER_SECTOR pDiscPerSector,
 	INT nLBA,
-	LPBOOL bReread
+	LPBOOL bReread,
+	BOOL bManualSubQFix
 ) {
 	if (pDisc->SUB.nSubChannelOffset) {
 		SetTmpSubchFromBuffer(&pDiscPerSector->subch.next, pDiscPerSector->subcode.next);
@@ -1468,7 +1469,7 @@ BOOL FixSubChannel(
 					OutputSubErrorWithLBALog("Q [crc16 unmatch] Fix manually\n", nLBA, pDiscPerSector->byTrackNum);
 				}
 			}
-			else {
+			else if (bManualSubQFix) {
 				OutputSubErrorLog("NG. Fix manually\n");
 //				OutputCDC2Error296(fileSubError, pDiscPerSector->data.current + 2352, nLBA);
 //				OutputCDSub96Raw(fileSubError, pDiscPerSector->data.current + 2352 + 294, nLBA);
@@ -1480,15 +1481,17 @@ BOOL FixSubChannel(
 				OutputSubErrorWithLBALog("Q crc16 is 0. Main-channel may be corrupt\n", nLBA, pDiscPerSector->byTrackNum);
 				*bReread = FALSE;
 			}
-			FixSubQ(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA);
-			if (pDiscPerSector->subch.current.byAdr == ADR_ENCODES_MEDIA_CATALOG) {
-				UpdateTmpSubchForMCN(pDisc, pDiscPerSector, nLBA);
-			}
-			else if (pDiscPerSector->subch.current.byAdr == ADR_ENCODES_ISRC) {
-				UpdateTmpSubchForISRC(&pDiscPerSector->subch);
-			}
-			else if (pDiscPerSector->subch.current.byAdr == ADR_ENCODES_6) {
-				UpdateTmpSubchForAdr6(pDisc, pDiscPerSector, nLBA);
+			if (bManualSubQFix) {
+				FixSubQ(pExecType, pExtArg, pDisc, pDiscPerSector, nLBA);
+				if (pDiscPerSector->subch.current.byAdr == ADR_ENCODES_MEDIA_CATALOG) {
+					UpdateTmpSubchForMCN(pDisc, pDiscPerSector, nLBA);
+				}
+				else if (pDiscPerSector->subch.current.byAdr == ADR_ENCODES_ISRC) {
+					UpdateTmpSubchForISRC(&pDiscPerSector->subch);
+				}
+				else if (pDiscPerSector->subch.current.byAdr == ADR_ENCODES_6) {
+					UpdateTmpSubchForAdr6(pDisc, pDiscPerSector, nLBA);
+				}
 			}
 		}
 	}

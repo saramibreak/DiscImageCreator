@@ -30,5 +30,6 @@ BOOL FixSubChannel(
 	PDISC pDisc,
 	PDISC_PER_SECTOR pDiscPerSector,
 	INT nLBA,
-	LPBOOL bReread
+	LPBOOL bReread,
+	BOOL bManualSubQFix
 );
