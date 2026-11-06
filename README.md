@@ -290,8 +290,8 @@ See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)
 - Linux
   - zlib1g-dev, libarchive, libssl-dev
 
-- macOS
-  - MacOSX.sdk, libarchive
+- macOS (10.15 or higher)
+  - MacOSX.sdk 10.15 or higher (libarchive and zlib are part of macOS)
 
 ## License & Copyright
 See LICENSE  
@@ -311,6 +311,12 @@ See LICENSE
   libunshield  
     https://github.com/twogood/unshield  
     Unshield uses the MIT license.
+
+  libarchive (archive.h, archive_entry.h of the macOS 10.15 libarchive, used for the macOS build)  
+    https://github.com/apple-oss-distributions/libarchive/tree/libarchive-72.11.2  
+    BSD 2-Clause License  
+    Copyright (c) 2003-2010 Tim Kientzle  
+    Copyright (c) 2016 Martin Matuska
 
   rijndael-alg-fst.cpp/h  
     Vincent Rijmen <vincent.rijmen@esat.kuleuven.ac.be>  
