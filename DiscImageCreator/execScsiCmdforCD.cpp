@@ -3492,6 +3492,7 @@ BOOL ReadCDOutOfRange(
 	UINT uiByteOffsetIn = 0;
 	BOOL bNonZeroByteExistIn = FALSE;
 	BOOL b1stPregapSector = FALSE;
+	BOOL bLastPregapSector = FALSE;
 	BOOL bTrack1 = FALSE;
 	INT n1stLeadinLBA = -150;
 	BYTE aBufBak[CD_RAW_SECTOR_WITH_SUBCODE_SIZE * 4] = {};
@@ -3526,7 +3527,6 @@ BOOL ReadCDOutOfRange(
 #ifdef _DEBUG
 		OutputCDSub96Align(standardOut, lpSubcode, i);
 #endif
-		BOOL bLastPregapSector = FALSE;
 		if ((lpSubcode[12] & 0x0f) == ADR_ENCODES_MEDIA_CATALOG || (lpSubcode[12] & 0x0f) == ADR_ENCODES_ISRC) {
 			memcpy(lpSubcodeTmp, lpSubcodeNext, CD_RAW_READ_SUBCODE_SIZE);
 		}
@@ -3706,6 +3706,8 @@ BOOL ReadCDOutOfRange(
 		}
 		else {
 			OutputLog(standardError | fileMainError, "Failed to get pregap sectors of track 1 starting from minus LBA\n");
+			FcloseAndNull(fpMain);
+			FcloseAndNull(fpSub);
 			return FALSE;
 		}
 	}
@@ -3713,8 +3715,14 @@ BOOL ReadCDOutOfRange(
 	FcloseAndNull(fpSub);
 
 	if (!_tcsncmp(ext, _T(".scm"), SIZE_OF_ARRAY(ext))) {
-		ConvertScmToBin(pszPath, appendName0, __LINE__);
-		if (bTrack1) {
+		if (!bTrack1) {
+			OutputErrorString("Failed to read 1st pregap sector\n");
+		}
+		else if (!bLastPregapSector) {
+			OutputErrorString("Failed to read last pregap sector\n");
+		}
+		else {
+			ConvertScmToBin(pszPath, appendName0, __LINE__);
 			ConvertScmToBin(pszPath, appendName1, __LINE__);
 		}
 	}
