@@ -11,8 +11,20 @@ conf_data = configuration_data()
 if target_machine.system() in ['linux', 'darwin']
   build_date = run_command('date', '+%Y%m%d').stdout().strip()
   build_time = run_command('date', '+%H%M%S').stdout().strip()
-  libarchive_dep = dependency('libarchive', required: true, method: 'pkg-config')
-  zlib_dep = dependency('zlib', required: true, method: 'pkg-config')
+  if host_machine.system() == 'darwin'
+    # libarchive (CAB reader since macOS 10.15) and zlib come with macOS; the SDK lacks the libarchive headers
+    cc = meson.get_compiler('c')
+    libarchive_dep = declare_dependency(
+      dependencies: cc.find_library('archive', required: true),
+      include_directories: include_directories('DiscImageCreator/_external/libarchive'),
+    )
+    zlib_dep = cc.find_library('z', required: true)
+    add_project_arguments('-mmacosx-version-min=10.15', language : ['c', 'cpp'])
+    add_project_link_arguments('-mmacosx-version-min=10.15', language : ['c', 'cpp'])
+  else
+    libarchive_dep = dependency('libarchive', required: true, method: 'pkg-config')
+    zlib_dep = dependency('zlib', required: true, method: 'pkg-config')
+  endif
   add_project_arguments('-include', 'defineForLinux.h', language : 'cpp')
   inc = [include_directories('DiscImageCreator/'), include_directories('DiscImageCreator/_external'), include_directories('DiscImageCreator/_linux')]
 endif

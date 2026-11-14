@@ -7,7 +7,7 @@ skip_tags: true
 image:
 - Visual Studio 2017
 - Ubuntu2404
-- macos-mojave
+- macos-sonoma
 build_script:
 - pwsh: >-
     Write-Host "IMAGE=$env:APPVEYOR_BUILD_WORKER_IMAGE"
@@ -95,7 +95,7 @@ build_script:
         bash -lc "set -e; sudo apt-get update; sudo apt-get install -y meson ninja-build pkg-config libarchive-dev zlib1g-dev libssl-dev; meson setup build --buildtype=release; meson compile -C build; mkdir -p artifacts; cp build/DiscImageCreator artifacts/DiscImageCreator; chmod +x artifacts/DiscImageCreator; ls -l artifacts; file artifacts/DiscImageCreator"
     }
 
-    elseif ($env:APPVEYOR_BUILD_WORKER_IMAGE -eq "macOS-Mojave") {
+    elseif ($env:APPVEYOR_BUILD_WORKER_IMAGE -eq "macOS-Sonoma") {
         $ErrorActionPreference = "Stop"
 
         $env:CI = "1"
@@ -104,83 +104,7 @@ build_script:
         $env:HOMEBREW_NO_INSTALL_CLEANUP = "1"
         $env:HOMEBREW_NO_ENV_HINTS = "1"
 
-        & brew install meson ninja pkg-config libarchive openssl@1.1 zlib
-        if ($LASTEXITCODE -ne 0) {
-            exit $LASTEXITCODE
-        }
-
-        $libarchivePrefix = (& brew --prefix libarchive).Trim()
-        if ($LASTEXITCODE -ne 0) {
-            exit $LASTEXITCODE
-        }
-
-        $opensslPrefix = (& brew --prefix openssl@1.1).Trim()
-        if ($LASTEXITCODE -ne 0) {
-            exit $LASTEXITCODE
-        }
-
-        $zlibPrefix = (& brew --prefix zlib).Trim()
-        if ($LASTEXITCODE -ne 0) {
-            exit $LASTEXITCODE
-        }
-
-        Write-Host "libarchive prefix: $libarchivePrefix"
-        Write-Host "OpenSSL prefix:    $opensslPrefix"
-        Write-Host "zlib prefix:       $zlibPrefix"
-
-        $pkgConfigPaths = @(
-            "$libarchivePrefix/lib/pkgconfig",
-            "$opensslPrefix/lib/pkgconfig",
-            "$zlibPrefix/lib/pkgconfig"
-        )
-
-        if ($env:PKG_CONFIG_PATH) {
-            $pkgConfigPaths += $env:PKG_CONFIG_PATH
-        }
-
-        $env:PKG_CONFIG_PATH = $pkgConfigPaths -join ":"
-
-        $cppFlags = @(
-            "-I$libarchivePrefix/include",
-            "-I$opensslPrefix/include",
-            "-I$zlibPrefix/include"
-        )
-
-        if ($env:CPPFLAGS) {
-            $cppFlags += $env:CPPFLAGS
-        }
-
-        $env:CPPFLAGS = $cppFlags -join " "
-
-        $ldFlags = @(
-            "-L$libarchivePrefix/lib",
-            "-L$opensslPrefix/lib",
-            "-L$zlibPrefix/lib"
-        )
-
-        if ($env:LDFLAGS) {
-            $ldFlags += $env:LDFLAGS
-        }
-
-        $env:LDFLAGS = $ldFlags -join " "
-
-        Write-Host "PKG_CONFIG_PATH=$env:PKG_CONFIG_PATH"
-        Write-Host "CPPFLAGS=$env:CPPFLAGS"
-        Write-Host "LDFLAGS=$env:LDFLAGS"
-
-        Write-Host "--- dependency versions ---"
-
-        & pkg-config --modversion libarchive
-        if ($LASTEXITCODE -ne 0) {
-            exit $LASTEXITCODE
-        }
-
-        & pkg-config --modversion openssl
-        if ($LASTEXITCODE -ne 0) {
-            exit $LASTEXITCODE
-        }
-
-        & pkg-config --modversion zlib
+        & brew install meson ninja
         if ($LASTEXITCODE -ne 0) {
             exit $LASTEXITCODE
         }

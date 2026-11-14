@@ -4,14 +4,11 @@ ifeq ($(shell uname),Linux)
   LDLIBS := -larchive -lz -lcrypto -lssl
   CRYPTO_BACKEND := _external/ps3auth/crypto_backend_openssl.o
 else ifeq ($(shell uname),Darwin)
-  PKG_CONFIG ?= pkg-config
-  PC_DEPS := libarchive zlib
-  INCFLAGS := -I. -I_external -I_linux \
-              $(shell $(PKG_CONFIG) --cflags $(PC_DEPS))
-  LDFLAGS := -framework CoreFoundation -framework IOKit \
-             $(shell $(PKG_CONFIG) --libs-only-L     $(PC_DEPS)) \
-             $(shell $(PKG_CONFIG) --libs-only-other $(PC_DEPS))
-  LDLIBS := $(shell $(PKG_CONFIG) --libs-only-l     $(PC_DEPS))
+  # libarchive (CAB reader since macOS 10.15) and zlib come with macOS; the SDK lacks the libarchive headers
+  export MACOSX_DEPLOYMENT_TARGET ?= 10.15
+  INCFLAGS := -I. -I_external -I_linux -I_external/libarchive
+  LDFLAGS := -framework CoreFoundation -framework IOKit
+  LDLIBS := -larchive -lz
   CRYPTO_BACKEND := _external/ps3auth/crypto_backend_commoncrypto.o
 endif
 CFLAGS := 
