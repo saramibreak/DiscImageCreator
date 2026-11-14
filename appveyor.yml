@@ -46,7 +46,7 @@ build_script:
             Write-Host $_
         }
 
-        $zlibVersion = "1.3.2"
+        $zlibVersion = "1.4"
         $ciRoot = Join-Path $env:APPVEYOR_BUILD_FOLDER "_ci"
         $zlibRoot = Join-Path $ciRoot "zlib-$zlibVersion"
         $zlibArchive = Join-Path $ciRoot "zlib-$zlibVersion.tar.gz"
