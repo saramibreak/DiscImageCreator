@@ -3237,8 +3237,12 @@ BOOL ReadCDOutOfRange(
 				OutputErrorString("Failed to read 2nd session pregap last sector\n");
 			}
 			else {
-				ConvertScmToBin(pszPath, appendName0, __LINE__);
-				ConvertScmToBin(pszPath, appendName1, __LINE__);
+				if (ConvertScmToBin(pszPath, appendName0, __LINE__)) {
+					OutputString("Successfully converted %s.scm to %s.bin\n", appendName0, appendName0);
+				}
+				if (ConvertScmToBin(pszPath, appendName1, __LINE__)) {
+					OutputString("Successfully converted %s.scm to %s.bin\n", appendName1, appendName1);
+				}
 			}
 		}
 		
@@ -3295,7 +3299,9 @@ BOOL ReadCDOutOfRange(
 		FcloseAndNull(fpSub);
 
 		if (!_tcsncmp(ext, _T(".scm"), SIZE_OF_ARRAY(ext))) {
-			ConvertScmToBin(pszPath, appendNameA2, __LINE__);
+			if (ConvertScmToBin(pszPath, appendNameA2, __LINE__)) {
+				OutputString("Successfully converted %s.scm to %s.bin\n", appendNameA2, appendNameA2);
+			}
 		}
 
 		if ((pDisc->SCSI.toc.TrackData[pDisc->SCSI.toc.LastTrack - 1].Control & AUDIO_DATA_TRACK) == 0) {
@@ -3409,7 +3415,9 @@ BOOL ReadCDOutOfRange(
 	FcloseAndNull(fpSub);
 
 	if (!_tcsncmp(ext, _T(".scm"), SIZE_OF_ARRAY(ext))) {
-		ConvertScmToBin(pszPath, appendNameA, __LINE__);
+		if (ConvertScmToBin(pszPath, appendNameA, __LINE__)) {
+			OutputString("Successfully converted %s.scm to %s.bin\n", appendNameA, appendNameA);
+		}
 	}
 
 	if ((pDisc->SCSI.toc.TrackData[pDisc->SCSI.toc.LastTrack - 1].Control & AUDIO_DATA_TRACK) == 0) {
@@ -3722,8 +3730,12 @@ BOOL ReadCDOutOfRange(
 			OutputErrorString("Failed to read last pregap sector\n");
 		}
 		else {
-			ConvertScmToBin(pszPath, appendName0, __LINE__);
-			ConvertScmToBin(pszPath, appendName1, __LINE__);
+			if (ConvertScmToBin(pszPath, appendName0, __LINE__)) {
+				OutputString("Successfully converted %s.scm to %s.bin\n", appendName0, appendName0);
+			}
+			if (ConvertScmToBin(pszPath, appendName1, __LINE__)) {
+				OutputString("Successfully converted %s.scm to %s.bin\n", appendName1, appendName1);
+			}
 		}
 	}
 
