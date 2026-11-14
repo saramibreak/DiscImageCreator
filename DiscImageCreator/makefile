@@ -2,15 +2,17 @@ TARGET := DiscImageCreator
 ifeq ($(shell uname),Linux)
   INCFLAGS := -I. -I_external -I_linux
   LDLIBS := -larchive -lz -lcrypto -lssl
+  CRYPTO_BACKEND := _external/ps3auth/crypto_backend_openssl.o
 else ifeq ($(shell uname),Darwin)
   PKG_CONFIG ?= pkg-config
-  PC_DEPS := libarchive zlib openssl
+  PC_DEPS := libarchive zlib
   INCFLAGS := -I. -I_external -I_linux \
               $(shell $(PKG_CONFIG) --cflags $(PC_DEPS))
   LDFLAGS := -framework CoreFoundation -framework IOKit \
              $(shell $(PKG_CONFIG) --libs-only-L     $(PC_DEPS)) \
              $(shell $(PKG_CONFIG) --libs-only-other $(PC_DEPS))
   LDLIBS := $(shell $(PKG_CONFIG) --libs-only-l     $(PC_DEPS))
+  CRYPTO_BACKEND := _external/ps3auth/crypto_backend_commoncrypto.o
 endif
 CFLAGS := 
 CXXFLAGS := -include _linux/defineForLinux.h -std=c++11
@@ -55,7 +57,7 @@ SOURCES_C := \
   _external/libunshield/libunshield.o \
   _external/libunshield/log.o \
   _external/ps3auth/auth_service.o \
-  _external/ps3auth/crypto_backend_openssl.o \
+  $(CRYPTO_BACKEND) \
   _external/ps3auth/data_unwrap.o \
   _external/ps3auth/drive_proto.o \
   _external/ps3auth/odd_ctx.o \
