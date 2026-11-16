@@ -11,7 +11,7 @@ conf_data = configuration_data()
 if target_machine.system() in ['linux', 'darwin']
   build_date = run_command('date', '+%Y%m%d').stdout().strip()
   build_time = run_command('date', '+%H%M%S').stdout().strip()
-  zlib_dep = dependency('zlib', required: true, method: 'pkg-config')
+  zlib_dep = dependency('zlib', required: true, method: 'system')
   add_project_arguments('-include', 'defineForLinux.h', language : 'cpp')
   inc = [include_directories('DiscImageCreator/'), include_directories('DiscImageCreator/_external'), include_directories('DiscImageCreator/_linux')]
 endif
@@ -28,7 +28,7 @@ if host_machine.system() == 'darwin'
   deps += applefw_dep
   crypto_backend = 'DiscImageCreator/_external/ps3auth/crypto_backend_commoncrypto.c'
 else
-  deps += dependency('openssl', required: true, method: 'pkg-config')
+  deps += dependency('openssl', required: true, method: 'system')
 endif
 
 conf_data.set('build_date', build_date)
@@ -58,7 +58,7 @@ libarchive_lib = static_library(
     'DiscImageCreator/_external/libarchive/archive_virtual.c',
   ],
   include_directories: inc,
-  dependencies: zlib_dep,
+  dependencies: zlib_dep.partial_dependency(compile_args: true, includes: true),
   c_args: ['-DHAVE_CONFIG_H'],
 )
 

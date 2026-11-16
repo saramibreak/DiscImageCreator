@@ -2572,8 +2572,6 @@ typedef struct _FILEPATHS_A {
 
 #include <dirent.h>
 #include <fnmatch.h>
-#include <archive.h>
-#include <archive_entry.h>
 
 #define FILE_ATTRIBUTE_READONLY   0x00000001
 #define FILE_ATTRIBUTE_DIRECTORY  0x00000010

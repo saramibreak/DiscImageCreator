@@ -4,14 +4,9 @@ ifeq ($(shell uname),Linux)
   LDLIBS := -lz -lcrypto -lssl
   CRYPTO_BACKEND := _external/ps3auth/crypto_backend_openssl.o
 else ifeq ($(shell uname),Darwin)
-  PKG_CONFIG ?= pkg-config
-  PC_DEPS := zlib
-  INCFLAGS := -I. -I_external -I_linux \
-              $(shell $(PKG_CONFIG) --cflags $(PC_DEPS))
-  LDFLAGS := -framework CoreFoundation -framework IOKit \
-             $(shell $(PKG_CONFIG) --libs-only-L     $(PC_DEPS)) \
-             $(shell $(PKG_CONFIG) --libs-only-other $(PC_DEPS))
-  LDLIBS := $(shell $(PKG_CONFIG) --libs-only-l     $(PC_DEPS))
+  INCFLAGS := -I. -I_external -I_linux
+  LDFLAGS := -framework CoreFoundation -framework IOKit
+  LDLIBS := -lz
   CRYPTO_BACKEND := _external/ps3auth/crypto_backend_commoncrypto.o
 endif
 CFLAGS := 

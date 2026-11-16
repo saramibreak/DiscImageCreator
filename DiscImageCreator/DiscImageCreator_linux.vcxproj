@@ -342,6 +342,7 @@
     <ClInclude Include="_external\libarchive\archive_string.h" />
     <ClInclude Include="_external\libarchive\archive_string_composition.h" />
     <ClInclude Include="_external\libarchive\config.h" />
+    <ClInclude Include="_external\libarchive\config_linux.h" />
     <ClInclude Include="_external\libunshield\cabfile.h" />
     <ClInclude Include="_external\libunshield\converter.h" />
     <ClInclude Include="_external\libunshield\dirent.h" />

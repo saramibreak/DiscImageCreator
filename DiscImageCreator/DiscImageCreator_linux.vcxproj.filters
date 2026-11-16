@@ -485,5 +485,8 @@
     <ClInclude Include="_external\libarchive\archive_random_private.h">
       <Filter>_external\libarchive</Filter>
     </ClInclude>
+    <ClInclude Include="_external\libarchive\config_linux.h">
+      <Filter>_external\libarchive</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
