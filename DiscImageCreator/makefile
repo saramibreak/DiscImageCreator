@@ -1,11 +1,11 @@
 TARGET := DiscImageCreator
 ifeq ($(shell uname),Linux)
   INCFLAGS := -I. -I_external -I_linux
-  LDLIBS := -larchive -lz -lcrypto -lssl
+  LDLIBS := -lz -lcrypto -lssl
   CRYPTO_BACKEND := _external/ps3auth/crypto_backend_openssl.o
 else ifeq ($(shell uname),Darwin)
   PKG_CONFIG ?= pkg-config
-  PC_DEPS := libarchive zlib
+  PC_DEPS := zlib
   INCFLAGS := -I. -I_external -I_linux \
               $(shell $(PKG_CONFIG) --cflags $(PC_DEPS))
   LDFLAGS := -framework CoreFoundation -framework IOKit \
@@ -48,6 +48,19 @@ SOURCES_C := \
   _external/sha224-256.o \
   _external/sha384-512.o \
   _external/xxhash.o \
+  _external/libarchive/archive_acl.o \
+  _external/libarchive/archive_check_magic.o \
+  _external/libarchive/archive_entry.o \
+  _external/libarchive/archive_entry_sparse.o \
+  _external/libarchive/archive_entry_xattr.o \
+  _external/libarchive/archive_read.o \
+  _external/libarchive/archive_read_open_filename.o \
+  _external/libarchive/archive_read_support_filter_none.o \
+  _external/libarchive/archive_read_support_format_cab.o \
+  _external/libarchive/archive_string.o \
+  _external/libarchive/archive_string_sprintf.o \
+  _external/libarchive/archive_util.o \
+  _external/libarchive/archive_virtual.o \
   _external/libunshield/component.o \
   _external/libunshield/converter.o \
   _external/libunshield/directory.o \
@@ -100,6 +113,9 @@ OBJECTS := $(SOURCES_C:.c=.o) $(SOURCES_CXX:.cpp=.o)
 all: $(TARGET)
 $(TARGET): buildDateTime $(OBJECTS)
 	$(CXX) -o $@ $(OBJECTS) $(LDFLAGS) $(LDLIBS)
+
+# libarchive-specific preprocessor definitions
+$(filter _external/libarchive/%.o,$(SOURCES_C)): CFLAGS += -DHAVE_CONFIG_H
 
 %.o: %.c
 	$(CC) -c -o $@ $< $(CFLAGS) $(INCFLAGS)

@@ -22,6 +22,9 @@
     <Filter Include="_external\ps3auth">
       <UniqueIdentifier>{c9943432-0ef3-472e-a76a-b7301d0fda70}</UniqueIdentifier>
     </Filter>
+    <Filter Include="_external\libarchive">
+      <UniqueIdentifier>{974a6ac1-de2b-49b2-aca1-31d57a057bb6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="calcHash.cpp">
@@ -194,6 +197,45 @@
     </ClCompile>
     <ClCompile Include="_external\ps3auth\odd_tables.c">
       <Filter>_external\ps3auth</Filter>
+    </ClCompile>
+    <ClCompile Include="_external\libarchive\archive_entry.c">
+      <Filter>_external\libarchive</Filter>
+    </ClCompile>
+    <ClCompile Include="_external\libarchive\archive_read.c">
+      <Filter>_external\libarchive</Filter>
+    </ClCompile>
+    <ClCompile Include="_external\libarchive\archive_read_support_format_cab.c">
+      <Filter>_external\libarchive</Filter>
+    </ClCompile>
+    <ClCompile Include="_external\libarchive\archive_virtual.c">
+      <Filter>_external\libarchive</Filter>
+    </ClCompile>
+    <ClCompile Include="_external\libarchive\archive_read_support_filter_none.c">
+      <Filter>_external\libarchive</Filter>
+    </ClCompile>
+    <ClCompile Include="_external\libarchive\archive_read_open_filename.c">
+      <Filter>_external\libarchive</Filter>
+    </ClCompile>
+    <ClCompile Include="_external\libarchive\archive_string.c">
+      <Filter>_external\libarchive</Filter>
+    </ClCompile>
+    <ClCompile Include="_external\libarchive\archive_util.c">
+      <Filter>_external\libarchive</Filter>
+    </ClCompile>
+    <ClCompile Include="_external\libarchive\archive_acl.c">
+      <Filter>_external\libarchive</Filter>
+    </ClCompile>
+    <ClCompile Include="_external\libarchive\archive_entry_sparse.c">
+      <Filter>_external\libarchive</Filter>
+    </ClCompile>
+    <ClCompile Include="_external\libarchive\archive_entry_xattr.c">
+      <Filter>_external\libarchive</Filter>
+    </ClCompile>
+    <ClCompile Include="_external\libarchive\archive_check_magic.c">
+      <Filter>_external\libarchive</Filter>
+    </ClCompile>
+    <ClCompile Include="_external\libarchive\archive_string_sprintf.c">
+      <Filter>_external\libarchive</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -397,6 +439,51 @@
     </ClInclude>
     <ClInclude Include="_external\ps3auth\odd_tables.h">
       <Filter>_external\ps3auth</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\libarchive\archive.h">
+      <Filter>_external\libarchive</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\libarchive\archive_entry.h">
+      <Filter>_external\libarchive</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\libarchive\archive_platform.h">
+      <Filter>_external\libarchive</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\libarchive\archive_acl_private.h">
+      <Filter>_external\libarchive</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\libarchive\archive_string.h">
+      <Filter>_external\libarchive</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\libarchive\archive_entry_locale.h">
+      <Filter>_external\libarchive</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\libarchive\archive_integer.h">
+      <Filter>_external\libarchive</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\libarchive\archive_private.h">
+      <Filter>_external\libarchive</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\libarchive\archive_entry_private.h">
+      <Filter>_external\libarchive</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\libarchive\config.h">
+      <Filter>_external\libarchive</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\libarchive\archive_read_private.h">
+      <Filter>_external\libarchive</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\libarchive\archive_endian.h">
+      <Filter>_external\libarchive</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\libarchive\archive_platform_stat.h">
+      <Filter>_external\libarchive</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\libarchive\archive_string_composition.h">
+      <Filter>_external\libarchive</Filter>
+    </ClInclude>
+    <ClInclude Include="_external\libarchive\archive_random_private.h">
+      <Filter>_external\libarchive</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

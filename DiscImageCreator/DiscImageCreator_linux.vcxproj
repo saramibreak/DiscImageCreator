@@ -132,6 +132,19 @@
       </ForcedIncludeFiles>
     </ClCompile>
     <ClCompile Include="_external\ECCEDC.cpp" />
+    <ClCompile Include="_external\libarchive\archive_acl.c" />
+    <ClCompile Include="_external\libarchive\archive_check_magic.c" />
+    <ClCompile Include="_external\libarchive\archive_entry.c" />
+    <ClCompile Include="_external\libarchive\archive_entry_sparse.c" />
+    <ClCompile Include="_external\libarchive\archive_entry_xattr.c" />
+    <ClCompile Include="_external\libarchive\archive_read.c" />
+    <ClCompile Include="_external\libarchive\archive_read_open_filename.c" />
+    <ClCompile Include="_external\libarchive\archive_read_support_filter_none.c" />
+    <ClCompile Include="_external\libarchive\archive_read_support_format_cab.c" />
+    <ClCompile Include="_external\libarchive\archive_string.c" />
+    <ClCompile Include="_external\libarchive\archive_string_sprintf.c" />
+    <ClCompile Include="_external\libarchive\archive_util.c" />
+    <ClCompile Include="_external\libarchive\archive_virtual.c" />
     <ClCompile Include="_external\libunshield\component.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CompileAsC</CompileAs>
       <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -314,6 +327,21 @@
     <ClInclude Include="_external\crc16ccitt.h" />
     <ClInclude Include="_external\crc32.h" />
     <ClInclude Include="_external\global.h" />
+    <ClInclude Include="_external\libarchive\archive.h" />
+    <ClInclude Include="_external\libarchive\archive_acl_private.h" />
+    <ClInclude Include="_external\libarchive\archive_endian.h" />
+    <ClInclude Include="_external\libarchive\archive_entry.h" />
+    <ClInclude Include="_external\libarchive\archive_entry_locale.h" />
+    <ClInclude Include="_external\libarchive\archive_entry_private.h" />
+    <ClInclude Include="_external\libarchive\archive_integer.h" />
+    <ClInclude Include="_external\libarchive\archive_platform.h" />
+    <ClInclude Include="_external\libarchive\archive_platform_stat.h" />
+    <ClInclude Include="_external\libarchive\archive_private.h" />
+    <ClInclude Include="_external\libarchive\archive_random_private.h" />
+    <ClInclude Include="_external\libarchive\archive_read_private.h" />
+    <ClInclude Include="_external\libarchive\archive_string.h" />
+    <ClInclude Include="_external\libarchive\archive_string_composition.h" />
+    <ClInclude Include="_external\libarchive\config.h" />
     <ClInclude Include="_external\libunshield\cabfile.h" />
     <ClInclude Include="_external\libunshield\converter.h" />
     <ClInclude Include="_external\libunshield\dirent.h" />
@@ -361,6 +389,7 @@
       <CppAdditionalWarning>extra;no-unknown-pragmas;cast-align;cast-qual;conditionally-supported;disabled-optimization;double-promotion;float-equal;format=2;format-signedness;init-self;inline;invalid-pch;logical-op;missing-include-dirs;multichar;noexcept;overlength-strings;packed;pointer-arith;redundant-decls;shadow;stack-protector;strict-aliasing=2;strict-null-sentinel;switch-default;switch-enum;trampolines;variadic-macros;vector-operation-performance;write-strings;unused-macros;%(CppAdditionalWarning)</CppAdditionalWarning>
       <Optimization>MaxSpeed</Optimization>
       <DebugInformationFormat>None</DebugInformationFormat>
+      <PreprocessorDefinitions>HAVE_CONFIG_H;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <PreBuildEvent>
       <Command>
@@ -371,7 +400,7 @@
       </Message>
     </PreBuildEvent>
     <Link>
-      <AdditionalDependencies>-larchive;-lz;-lcrypto;-lssl;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>-lz;-lcrypto;-lssl;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>/usr/lib/x86_64-linux-gnu;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <CustomBuildStep>
@@ -398,9 +427,10 @@ date +%H%M%S | tr -d '\n' &gt;&gt;buildDateTime.h
       </ForcedIncludeFiles>
       <CAdditionalWarning>no-unknown-pragmas;%(CAdditionalWarning)</CAdditionalWarning>
       <CppAdditionalWarning>no-unknown-pragmas;%(CppAdditionalWarning)</CppAdditionalWarning>
+      <PreprocessorDefinitions>HAVE_CONFIG_H;</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>-larchive;-lz;-lcrypto;-lssl;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>-lz;-lcrypto;-lssl;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>/usr/lib/x86_64-linux-gnu;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>

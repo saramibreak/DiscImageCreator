@@ -28,6 +28,8 @@
 #include "outputScsiCmdLogforCD.h"
 #include "set.h"
 #include "_external/NonStandardFunction.h"
+#include "_external/libarchive/archive.h"
+#include "_external/libarchive/archive_entry.h"
 #include "_external/libunshield/libunshield.h"
 
 #ifndef min
@@ -1588,7 +1590,7 @@ int MySetupIterateCabinetA(
 	if (!a) return -1;
 
 	archive_read_support_format_cab(a);
-	archive_read_support_filter_all(a);
+	archive_read_support_filter_none(a);
 
 	if (archive_read_open_filename(a, cabinetFile, 10240) != ARCHIVE_OK) {
 		goto cleanup;

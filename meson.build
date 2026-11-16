@@ -11,13 +11,12 @@ conf_data = configuration_data()
 if target_machine.system() in ['linux', 'darwin']
   build_date = run_command('date', '+%Y%m%d').stdout().strip()
   build_time = run_command('date', '+%H%M%S').stdout().strip()
-  libarchive_dep = dependency('libarchive', required: true, method: 'pkg-config')
   zlib_dep = dependency('zlib', required: true, method: 'pkg-config')
   add_project_arguments('-include', 'defineForLinux.h', language : 'cpp')
   inc = [include_directories('DiscImageCreator/'), include_directories('DiscImageCreator/_external'), include_directories('DiscImageCreator/_linux')]
 endif
 
-deps = [libarchive_dep, zlib_dep]
+deps = [zlib_dep]
 crypto_backend = 'DiscImageCreator/_external/ps3auth/crypto_backend_openssl.c'
 
 if host_machine.system() == 'darwin'
@@ -39,6 +38,28 @@ builddatetime_h = configure_file(
   input: 'DiscImageCreator/buildDateTime.h.in',
   output: 'buildDateTime.h',
   configuration: conf_data,
+)
+
+libarchive_lib = static_library(
+  'archive_cab',
+  sources: [
+    'DiscImageCreator/_external/libarchive/archive_acl.c',
+    'DiscImageCreator/_external/libarchive/archive_check_magic.c',
+    'DiscImageCreator/_external/libarchive/archive_entry.c',
+    'DiscImageCreator/_external/libarchive/archive_entry_sparse.c',
+    'DiscImageCreator/_external/libarchive/archive_entry_xattr.c',
+    'DiscImageCreator/_external/libarchive/archive_read.c',
+    'DiscImageCreator/_external/libarchive/archive_read_open_filename.c',
+    'DiscImageCreator/_external/libarchive/archive_read_support_filter_none.c',
+    'DiscImageCreator/_external/libarchive/archive_read_support_format_cab.c',
+    'DiscImageCreator/_external/libarchive/archive_string.c',
+    'DiscImageCreator/_external/libarchive/archive_string_sprintf.c',
+    'DiscImageCreator/_external/libarchive/archive_util.c',
+    'DiscImageCreator/_external/libarchive/archive_virtual.c',
+  ],
+  include_directories: inc,
+  dependencies: zlib_dep,
+  c_args: ['-DHAVE_CONFIG_H'],
 )
 
 executable(
@@ -104,6 +125,7 @@ executable(
   ],
   include_directories: inc,
   dependencies: deps,
+  link_with: libarchive_lib,
   cpp_args: [ '-Wall', '-Wextra', '-Wno-unknown-pragmas'],
   c_args: [ '-Wall', '-Wextra', '-Wno-unknown-pragmas'],
   install: true,

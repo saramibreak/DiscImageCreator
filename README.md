@@ -288,10 +288,10 @@ See [wiki](https://github.com/saramibreak/DiscImageCreator/wiki)
       https://docs.microsoft.com/en-us/windows/wsl/install-win10
 
 - Linux
-  - zlib1g-dev, libarchive, libssl-dev
+  - zlib1g-dev, libssl-dev
 
 - macOS
-  - MacOSX.sdk, libarchive
+  - MacOSX.sdk
 
 ## License & Copyright
 See LICENSE  
@@ -308,9 +308,14 @@ See LICENSE
     https://web.archive.org/web/20201123161416/http://abgx360.cc/  
     Copyright 2008-2012 by Seacrest <Seacrest[at]abgx360[dot]net>
 
+  libarchive  
+    https://github.com/libarchive/libarchive  
+    Copyright (c) 2003-2018 Tim Kientzle  
+    All rights reserved.
+    
   libunshield  
     https://github.com/twogood/unshield  
-    Unshield uses the MIT license.
+    Copyright (c) 2003 David Eriksson
 
   rijndael-alg-fst.cpp/h  
     Vincent Rijmen <vincent.rijmen@esat.kuleuven.ac.be>  
@@ -352,7 +357,7 @@ See LICENSE
 - About Release_ANSI folder  
   driveOffset.txt.  
     https://www.accuraterip.com/driveoffsets.htm  
-    Copyright © illustrate 2026, All Rights Reserved  
+    Copyright © illustrate 2026, All Rights Reserved
 
   DVDRawBruteforce - Drive Sheet - Sheet1  
     https://docs.google.com/spreadsheets/d/1pu3oXHRJ_qlyXrsHUyXOzD5mNp7dU8rgrfVuRBLyQFA/edit?pli=1#gid=0
