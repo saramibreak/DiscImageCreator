@@ -1058,7 +1058,11 @@ typedef uint64_t uintmax_t;
 #define HAVE_STDARG_H 1
 
 /* Define to 1 if you have the <stdckdint.h> header file. */
+#if defined(__has_include)
+#if __has_include(<stdckdint.h>)
 #define HAVE_STDCKDINT_H 1
+#endif
+#endif
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #define HAVE_STDINT_H 1
