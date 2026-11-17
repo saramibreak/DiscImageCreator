@@ -8,10 +8,10 @@ image:
 - Visual Studio 2017
 - Ubuntu2404
 - macos-mojave
+- macos-sequoia
 build_script:
-- pwsh: >-
+- pwsh: |
     Write-Host "IMAGE=$env:APPVEYOR_BUILD_WORKER_IMAGE"
-
 
     if ($env:APPVEYOR_BUILD_WORKER_IMAGE -eq "Visual Studio 2017") {
         $vcvars = "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
@@ -24,13 +24,9 @@ build_script:
 
         $buildDateTimeHeader = Join-Path $env:APPVEYOR_BUILD_FOLDER "DiscImageCreator\buildDateTime.h"
 
-        $jst = [System.TimeZoneInfo]::ConvertTimeBySystemTimeZoneId(
-            [DateTime]::UtcNow,
-            "Tokyo Standard Time"
-        )
-
-        $buildDate = $jst.ToString("yyyyMMdd")
-        $buildTime = $jst.ToString("HHmmss")
+        $buildNow = Get-Date
+        $buildDate = $buildNow.ToString("yyyyMMdd")
+        $buildTime = $buildNow.ToString("HHmmss")
 
         $headerLines = @(
             "#pragma once",
@@ -89,98 +85,39 @@ build_script:
         Write-Host "LINK=$env:LINK"
 
         cmd /c "call `"$vcvars`" && msbuild DiscImageCreator.sln /m /p:Configuration=Release_ANSI /p:Platform=Win32 /p:PlatformToolset=v141_xp /v:m"
+        if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+        }
     }
 
     elseif ($env:APPVEYOR_BUILD_WORKER_IMAGE -eq "Ubuntu2404") {
-        bash -lc "set -e; sudo apt-get update; sudo apt-get install -y meson ninja-build pkg-config libarchive-dev zlib1g-dev libssl-dev; meson setup build --buildtype=release; meson compile -C build; mkdir -p artifacts; cp build/DiscImageCreator artifacts/DiscImageCreator; chmod +x artifacts/DiscImageCreator; ls -l artifacts; file artifacts/DiscImageCreator"
+        bash -lc "set -e; sudo apt-get update; sudo apt-get install -y meson ninja-build zlib1g-dev libssl-dev; meson setup build --buildtype=release; meson compile -C build; mkdir -p artifacts; cp build/DiscImageCreator artifacts/DiscImageCreator; chmod +x artifacts/DiscImageCreator; ls -l artifacts; file artifacts/DiscImageCreator"
     }
 
-    elseif ($env:APPVEYOR_BUILD_WORKER_IMAGE -eq "macOS-Mojave") {
+    elseif ($env:APPVEYOR_BUILD_WORKER_IMAGE -in @("macOS-Mojave", "macOS-Sequoia")) {
         $ErrorActionPreference = "Stop"
 
+        # Use the macOS SDK's zlib, CommonCrypto, CoreFoundation, and IOKit.
+        # libarchive and libunshield are compiled from the repository sources.
+        # Homebrew is only used for the build tools.
         $env:CI = "1"
         $env:NONINTERACTIVE = "1"
         $env:HOMEBREW_NO_AUTO_UPDATE = "1"
         $env:HOMEBREW_NO_INSTALL_CLEANUP = "1"
         $env:HOMEBREW_NO_ENV_HINTS = "1"
 
-        & brew install meson ninja pkg-config libarchive openssl@1.1 zlib
+        & brew install meson ninja
         if ($LASTEXITCODE -ne 0) {
             exit $LASTEXITCODE
         }
 
-        $libarchivePrefix = (& brew --prefix libarchive).Trim()
+        Write-Host "--- build tool versions ---"
+        & meson --version
         if ($LASTEXITCODE -ne 0) {
             exit $LASTEXITCODE
         }
 
-        $opensslPrefix = (& brew --prefix openssl@1.1).Trim()
-        if ($LASTEXITCODE -ne 0) {
-            exit $LASTEXITCODE
-        }
-
-        $zlibPrefix = (& brew --prefix zlib).Trim()
-        if ($LASTEXITCODE -ne 0) {
-            exit $LASTEXITCODE
-        }
-
-        Write-Host "libarchive prefix: $libarchivePrefix"
-        Write-Host "OpenSSL prefix:    $opensslPrefix"
-        Write-Host "zlib prefix:       $zlibPrefix"
-
-        $pkgConfigPaths = @(
-            "$libarchivePrefix/lib/pkgconfig",
-            "$opensslPrefix/lib/pkgconfig",
-            "$zlibPrefix/lib/pkgconfig"
-        )
-
-        if ($env:PKG_CONFIG_PATH) {
-            $pkgConfigPaths += $env:PKG_CONFIG_PATH
-        }
-
-        $env:PKG_CONFIG_PATH = $pkgConfigPaths -join ":"
-
-        $cppFlags = @(
-            "-I$libarchivePrefix/include",
-            "-I$opensslPrefix/include",
-            "-I$zlibPrefix/include"
-        )
-
-        if ($env:CPPFLAGS) {
-            $cppFlags += $env:CPPFLAGS
-        }
-
-        $env:CPPFLAGS = $cppFlags -join " "
-
-        $ldFlags = @(
-            "-L$libarchivePrefix/lib",
-            "-L$opensslPrefix/lib",
-            "-L$zlibPrefix/lib"
-        )
-
-        if ($env:LDFLAGS) {
-            $ldFlags += $env:LDFLAGS
-        }
-
-        $env:LDFLAGS = $ldFlags -join " "
-
-        Write-Host "PKG_CONFIG_PATH=$env:PKG_CONFIG_PATH"
-        Write-Host "CPPFLAGS=$env:CPPFLAGS"
-        Write-Host "LDFLAGS=$env:LDFLAGS"
-
-        Write-Host "--- dependency versions ---"
-
-        & pkg-config --modversion libarchive
-        if ($LASTEXITCODE -ne 0) {
-            exit $LASTEXITCODE
-        }
-
-        & pkg-config --modversion openssl
-        if ($LASTEXITCODE -ne 0) {
-            exit $LASTEXITCODE
-        }
-
-        & pkg-config --modversion zlib
+        & ninja --version
         if ($LASTEXITCODE -ne 0) {
             exit $LASTEXITCODE
         }
@@ -221,8 +158,6 @@ build_script:
     }
 artifacts:
 - path: Release_ANSI\DiscImageCreator.exe
-  name: DiscImageCreator
-- path: artifacts/DiscImageCreator
   name: DiscImageCreator
 - path: artifacts/DiscImageCreator
   name: DiscImageCreator
