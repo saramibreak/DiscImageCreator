@@ -258,7 +258,7 @@ typedef struct _DEVICE {
 #if defined(_WIN32)
 	BYTE byDriveLetter;
 #elif defined(__linux__)
-	CHAR drivepath[10];
+	CHAR drivepath[512];
 #elif defined(__APPLE__) && defined(__MACH__)
 	CHAR drivepath[512];
 #endif
